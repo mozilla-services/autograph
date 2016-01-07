@@ -31,11 +31,14 @@ Every month-or-so, the autograph signers are refreshed with new certificates val
 Authorization: All API calls require a [hawk](https://github.com/hueniverse/hawk) Authorization header.
 
 ### POST /api/v1/sign
+#### Authentication
+[hawk](https://github.com/hueniverse/hawk)
+#### Request
 Request a signature on the body of the request. The data to sign must be encoded in base64 and submitted as `multipart/form-data` under the `b64data=` key.
 ```bash
 curl -X POST -F "b64data=Y2FyaWJvdQo=" http://localhost:3000/api/v1/sign
 ```
-Accepted parameters are:
+Query parameters:
 * `hash` a base64 encoded hash. If specified, autograph will sign this value instead of hashing and signing the request body.
 ```bash
 curl -X POST http://localhost:3000/api/v1/sign&hash=ZGIyMzhiZTQ3OWRjNzU5ZDQ2NGY4MDRhZGY2ZTVmZWJlNmRiNGYxYzRhYzRhZWYwN2IxYzZiNTVi=
@@ -43,4 +46,29 @@ curl -X POST http://localhost:3000/api/v1/sign&hash=ZGIyMzhiZTQ3OWRjNzU5ZDQ2NGY4
 * `keyid` an identifier of a signing key, if one must be specified (autograph will determine one otherwise).
 ```bash
 curl -X POST -F "b64data=Y2FyaWJvdQo=" http://localhost:3000/api/v1/sign?keyid=newtab-prod-20160107
+```
+#### Response
+A successful request return a `201 Created` with a response body containing signature elements encoded in JSON.
+```json
+[
+  {
+    "ref": 1d7febd28f,
+    "certificates": [
+      {
+        "type": "signer",
+        "location": "https://certrepo.example.net/db238be479dc759d464f804adf6e5febe6db4f1c4ac4aef07b1c6b55bb258954"
+      },
+      {
+        "type": "intermediate",
+        "location": "https://certrepo.example.net/21bf51a750ab3b26b68428ff9a5542c212b7696906e95cdde90a14564cbe30e1"
+      }
+    ],
+    "signatures": [
+      {
+        "encoding": "b64url",
+        "signature": "PWUsOnvlhZV0I4k4hwGFMc3LQcUlS-l1UwD0cNevPv3ux7T9moHX_JZHc75cmnyo-hUkW6s-c6AaNr_dyxg2528OLY53voIqwTsiYll1iPElS9TV0xOo3awuwnYcctOp"
+      }
+    ]
+  }
+]
 ```
