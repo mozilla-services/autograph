@@ -12,7 +12,13 @@ Finally, digital signature helps us use Content Delivery Network without worryin
 
 ### Signing
 
+Autograph exposes a REST API that services can query to request signature of their data. Autograph knows which key should be used to sign the data of a service based on the service's authentication token. Access control and rate limiting are performed at that layer as well.
+
+![signing.png](docs/statics/Autograph signing.png)
+
+
 ### Certificate issuance
 
 Autograph signs data using ECDSA keys. The associated public keys are signed by intermediate certs stored in HSMs. The private key of the root CA that signs those intermediates is stored offline, and the public cert is stored in NSS. Upon verification of a signature issued by Autograph, clients verify the full chain of trust against the root CAs, like any other PKI.
 
+![signing.png](docs/statics/Autograph issuance.png)
