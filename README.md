@@ -1,5 +1,5 @@
 # Autograph
-A signing service that implements [Content-Signature](https://github.com/martinthomson/content-signature/) and other signing methods.
+Autograph is a cryptographic signature service that implements [Content-Signature](https://github.com/martinthomson/content-signature/) and other signing methods.
 
 ## Rationale
 As we rapidly increase the number of services that send configuration data to Firefox agents, we also increase the probability of a service being compromised to serve fraudulent data to our users. Autograph implements a way to sign the information sent from backend services to Firefox user-agents, and protect them from a service compromise.
@@ -16,9 +16,31 @@ Autograph exposes a REST API that services can query to request signature of the
 
 ![signing.png](docs/statics/Autograph signing.png)
 
+### Certificate issuance and renewal
 
-### Certificate issuance
-
-Autograph signs data using ECDSA keys. The associated public keys are signed by intermediate certs stored in HSMs. The private key of the root CA that signs those intermediates is stored offline, and the public cert is stored in NSS. Upon verification of a signature issued by Autograph, clients verify the full chain of trust against the root CAs, like any other PKI.
+Autograph signs data using ECDSA keys. The autograph public certs are signed by intermediate certs stored in HSMs, themselves signed by a Root CA stored offline. The Root CA is trusted in NSS, but for specific purposes only (eg. not signing website certs). Upon verification of a signature issued by Autograph, Firefox clients verify the full chain of trust against the root CAs, like any other PKI.
 
 ![signing.png](docs/statics/Autograph issuance.png)
+
+Accessing the RootCA requires multiple people and a key ceremony, so we only do it every couple of years to reissue intermediate certificates. The intermediates are kept safely in HSMs where their private keys cannot be exported or stolen.
+
+Every month-or-so, the autograph signers are refreshed with new certificates valid for only short period of time. Upon refresh, autograph calls the HSMs API with a CSR to obtain signed certificates. Those certificates are then stored in a public location when Firefox agents can retrieve them to verify signatures.
+
+## API
+
+Authorization: All API calls require a [hawk](https://github.com/hueniverse/hawk) Authorization header.
+
+### POST /api/v1/sign
+Request a signature on the body of the request. The data to sign must be encoded in base64 and submitted as `multipart/form-data` under the `b64data=` key.
+```bash
+curl -X POST -F "b64data=Y2FyaWJvdQo=" http://localhost:3000/api/v1/sign
+```
+Accepted parameters are:
+* `hash` a base64 encoded hash. If specified, autograph will sign this value instead of hashing and signing the request body.
+```bash
+curl -X POST http://localhost:3000/api/v1/sign&hash=ZGIyMzhiZTQ3OWRjNzU5ZDQ2NGY4MDRhZGY2ZTVmZWJlNmRiNGYxYzRhYzRhZWYwN2IxYzZiNTVi=
+```
+* `keyid` an identifier of a signing key, if one must be specified (autograph will determine one otherwise).
+```bash
+curl -X POST -F "b64data=Y2FyaWJvdQo=" http://localhost:3000/api/v1/sign?keyid=newtab-prod-20160107
+```
