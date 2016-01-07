@@ -52,7 +52,7 @@ A successful request return a `201 Created` with a response body containing sign
 ```json
 [
   {
-    "ref": 1d7febd28f,
+    "ref": "1d7febd28f",
     "certificates": [
       {
         "type": "signer",
