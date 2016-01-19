@@ -7,8 +7,6 @@
 package main
 
 import (
-	"crypto/sha512"
-	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -22,27 +20,6 @@ type autographer struct {
 
 func (a *autographer) addSigner(signer Signer) {
 	a.signers = append(a.signers, signer)
-}
-
-type signaturerequest struct {
-	Type  string `json:"type"`
-	Data  string `json:"data"`
-	KeyID string `json:"keyid"`
-}
-
-type signatureresponse struct {
-	Ref         string          `json:"ref"`
-	Certificate certificate     `json:"certificate"`
-	Signatures  []signaturedata `json:"signatures"`
-}
-type certificate struct {
-	X5u           string `json:"x5u,omitempty"`
-	EncryptionKey string `json:"encryptionkey,omitempty"`
-}
-type signaturedata struct {
-	Encoding  string `json:"encoding,omitempty"`
-	Signature string `json:"signature,omitempty"`
-	Hash      string `json:"hashalgorithm,omitempty"`
 }
 
 // The signature endpoint accepts a list of signature requests in a HAWK authenticated POST request
@@ -69,26 +46,9 @@ func (a *autographer) signature(w http.ResponseWriter, r *http.Request) {
 	}
 	sigresps := make([]signatureresponse, len(sigreqs))
 	for i, sigreq := range sigreqs {
-		var hash []byte
-		switch sigreq.Type {
-		case "hash":
-			hash, err = base64.StdEncoding.DecodeString(sigreq.Data)
-			if err != nil {
-				httpError(w, http.StatusBadRequest, "failed to decode base64 data: %v", err)
-				return
-			}
-		case "raw":
-			data, err := base64.StdEncoding.DecodeString(sigreq.Data)
-			if err != nil {
-				httpError(w, http.StatusBadRequest, "failed to decode base64 data: %v", err)
-				return
-			}
-			md := sha512.New384()
-			md.Write([]byte("Content-Signature:\x00"))
-			md.Write(data)
-			hash = md.Sum(nil)
-		default:
-			httpError(w, http.StatusBadRequest, "unknown signature request type %q", sigreq.Type)
+		hash, err := getInputHash(sigreq)
+		if err != nil {
+			httpError(w, http.StatusBadRequest, "%v", err)
 			return
 		}
 		rawsig, err := a.signers[0].sign(hash)
@@ -112,6 +72,7 @@ func (a *autographer) signature(w http.ResponseWriter, r *http.Request) {
 	w.Write(respdata)
 }
 
+// heartbeat returns a simple message indicating that the API is alive and well
 func (a *autographer) heartbeat(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		httpError(w, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)

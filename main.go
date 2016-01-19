@@ -10,7 +10,9 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/mozilla-services/go-mozlog"
 
@@ -20,6 +22,7 @@ import (
 func init() {
 	// initialize the logger
 	mozlog.Logger.LoggerName = "Autograph"
+	rand.Seed(time.Now().UnixNano())
 }
 
 func main() {
