@@ -1,7 +1,6 @@
 sudo: required
 language: go
 go:
-  - 1.5
   - tip
 services:
   - docker
@@ -10,7 +9,20 @@ env:
     - DOCKER_EMAIL=jvehent@mozilla.com
     - DOCKER_USERNAME=jvehent
     - secure: "UtDpLEZJLDhGjKyh0SzuvOfsZ5dMS3RZfwNQjUyHfIqDMopTloXTYFiaXUCFwvqRIPl4blZIsGJVRKeDMYY1diH70Gv/Dhe0ka2YfU4wOafrBTJ6CaYu3+TLbJa4eW+7mWgRP5Ev4QEHXIJQQwbSc4xQd35pu07effIzE8tu9GR1a89QB5snE7ZtPM0nV7sMtahI9lUgkWipfkG1ilNu/QVV3w1JtToOloB+rbswnETnk7cgyk1Yt5lubRbE26kRxIaLyguz6A6mNp9nmKL9CUiwW7QszcODpvmCd3oMCyyiBTX/RFTHpMunpIj6C/+KD/JUhhplU/0aqN/o+lrckCUFgyqsKawYeHc33v4H32SSXESl4X49PyRD/FnAjYaUQz1DdemlrFN90Ry5XvR37IDHF5kvU4xvbrZU5ubPrAxwNItA1br54/avxniD0l6pLZX2rlLodo6sC0GIRcL51xVI5TqGmpuK3VtwJC+zikYGVlTIN4ta9OOHpy8oWnEnZsKWIT2UaxukSsGslJngGS9l8P5kLwYMBP8BFL8BbNiCTCKkGEb+jv3RqQiveTAyil5f3UG1hn4W11B39/susxv/GGQdGBllv4Jly8vOhnUCYPPjDtbp7l3We6bGl1HARbwrn33iZm+hvzDrAi0DmZbYTJE+cGpnN/FKnq7oJJY="
-script:
-    - make && docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+
+before_install:
+    - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+
+install:
     - docker build -t jvehent/autograph -f Dockerfile .
-    - docker push jvehent/autograph:latest
+
+script:
+    - make
+    - docker run -d jvehent/autograph
+    - "if [ $(docker ps --filter 'name=jvehent/autograph' | wc -l) -ne 1 ]; then echo 'Should have found one container running and did not'; exit 666; fi"
+    - docker stop $(docker ps -q)
+
+after_success:
+    # push containers into docker hub
+    - "if [[ $TRAVIS_BRANCH == master ]]; then DBRANCH=latest; else DBRANCH=$TRAVIS_BRANCH; fi; docker tag jvehent/autograph jvehent/autograph:$DBRANCH; docker push jvehent/autograph:$DBRANCH"
+    - "if [ ! -z $TRAVIS_TAG ]; then docker tag jvehent/autograph jvehent/autograph:$TRAVIS_TAG; docker push jvehent/autograph:$TRAVIS_TAG"
