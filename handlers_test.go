@@ -75,7 +75,7 @@ func TestSignaturePass(t *testing.T) {
 		t.Fatal(err)
 	}
 	w := httptest.NewRecorder()
-	ag.signature(w, req)
+	ag.handleSignature(w, req)
 	if w.Code != 200 || w.Body.String() == "" {
 		t.Fatalf("failed with %d: %s", w.Code, w.Body.String())
 	}
@@ -114,9 +114,33 @@ func TestSignatureFail(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		ag.signature(w, req)
+		ag.handleSignature(w, req)
 		if w.Code == 200 {
 			t.Fatalf("test case %d failed with %d: %s", i, w.Code, w.Body.String())
+		}
+	}
+}
+
+func TestHeartbeat(t *testing.T) {
+	var TESTCASES = []struct {
+		expect int
+		method string
+	}{
+		{http.StatusOK, `GET`},
+		{http.StatusMethodNotAllowed, `POST`},
+		{http.StatusMethodNotAllowed, `PUT`},
+		{http.StatusMethodNotAllowed, `HEAD`},
+	}
+	for i, testcase := range TESTCASES {
+		req, err := http.NewRequest(testcase.method, "http://foo.bar/__heartbeat__", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		ag.handleHeartbeat(w, req)
+		if w.Code != testcase.expect {
+			t.Fatalf("test case %d failed with code %d but %d was expected",
+				i, w.Code, testcase.expect)
 		}
 	}
 }

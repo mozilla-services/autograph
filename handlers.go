@@ -22,14 +22,20 @@ func (a *autographer) addSigner(signer Signer) {
 	a.signers = append(a.signers, signer)
 }
 
-// The signature endpoint accepts a list of signature requests in a HAWK authenticated POST request
+// handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
 // and calls the signers to generate signature responses.
-func (a *autographer) signature(w http.ResponseWriter, r *http.Request) {
+func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		httpError(w, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts POST only", r.Method)
 		return
 	}
-	if !a.authorized(r.Header.Get("Authorization")) {
+	userid, authorized, err := a.authorize(r)
+	if err != nil {
+		httpError(w, http.StatusInternalServerError, "authorization verification failed: %v", err)
+		return
+	}
+
+	if !authorized {
 		httpError(w, http.StatusUnauthorized, "request is not authorized; provide a valid HAWK authorization")
 		return
 	}
@@ -51,7 +57,12 @@ func (a *autographer) signature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, http.StatusBadRequest, "%v", err)
 			return
 		}
-		rawsig, err := a.signers[0].sign(hash)
+		signerId, err := a.getSignerId(userid, sigreq.KeyID)
+		if err != nil || (signerId > (len(a.signers) - 1)) {
+			httpError(w, http.StatusInternalServerError, "no valid signer found for userid %q", userid)
+			return
+		}
+		rawsig, err := a.signers[signerId].sign(hash)
 		if err != nil {
 			httpError(w, http.StatusInternalServerError, "signing failed with error: %v", err)
 			return
@@ -72,15 +83,11 @@ func (a *autographer) signature(w http.ResponseWriter, r *http.Request) {
 	w.Write(respdata)
 }
 
-// heartbeat returns a simple message indicating that the API is alive and well
-func (a *autographer) heartbeat(w http.ResponseWriter, r *http.Request) {
+// handleHeartbeat returns a simple message indicating that the API is alive and well
+func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		httpError(w, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
 		return
 	}
 	w.Write([]byte("ohai"))
-}
-
-func (a *autographer) authorized(auth string) bool {
-	return true
 }
