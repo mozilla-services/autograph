@@ -34,7 +34,7 @@ func main() {
 		showVersion bool
 		err         error
 	)
-	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
+	flag.StringVar(&cfgFile, "c", "/etc/autograph/autograph.yaml", "Path to configuration file")
 	flag.BoolVar(&showVersion, "V", false, "Show build version and exit")
 	flag.Parse()
 
