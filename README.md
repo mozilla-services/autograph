@@ -3,6 +3,8 @@ Autograph is a cryptographic signature service that implements
 [Content-Signature](https://github.com/martinthomson/content-signature/)
 and other signing methods.
 
+[![Build Status](https://travis-ci.org/mozilla-services/autograph.svg?branch=master)](https://travis-ci.org/mozilla-services/autograph)
+
 ## Rationale
 
 As we rapidly increase the number of services that send configuration data to
@@ -62,7 +64,7 @@ signatures.
 Authorization: All API calls require a
 [hawk](https://github.com/hueniverse/hawk) Authorization header.
 
-### POST /api/v1/sign
+### /signature
 
 #### Request
 
@@ -76,19 +78,20 @@ submitted, autograph only verifies their length (eg. 48 bytes for sha384).
 
 example:
 ```bash
-POST /api/v1/sign
+POST /signature
 Host: autograph.example.net
 Content-type: application/json
 Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="
 
 [
     {
-        "type": "hash",
-        "data": "ZGIyMzhiZTQ3OWRjNzU5ZDQ2NGY4MDRhZGY2ZTVmZWJlNmRiNGYxYzRhYzRhZWYwN2IxYzZiNTVi="
+        "template": "content-signature",
+        "input": "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"
     },
     {
-        "type": "raw",
-        "data": "c2lnbl9tZQo=",
+        "template": "content-signature",
+        "hashwith": "sha384",
+        "input": "c2lnbl9tZQo=",
         "keyid": "123456"
     }
 ]
@@ -97,11 +100,16 @@ Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="som
 Body format:
 The request body is a json array where each entry of the array is an object to sign. The parameters are:
 
-* type: "hash" or "raw" depending on whether the data to sign is a hash (sha256,
-  ...) or raw data that must be hashed prior signing. If the type is "raw",
-  Autograph will pick a hash algorithm to hash the data.
+* template: tells Autograph to template the input data using custom logic. This
+  is used to add or change the input data prior to hash and signing it. If set
+  to "content-signature", the header `Content-Signature:\x00` is prepended to
+  the input data prior to signing.
 
-* data: base64 encoded data to sign
+* hashwith: the algorithm to hash the input data with prior to signing. If
+  omitted, autograph considers that the input data provided has already been
+  hashed.
+
+* input: base64 encoded data to sign
 
 * keyid: allows the caller to specify a key to sign the data with. This
   parameter is optional, and Autograph will pick a key based on the caller's
@@ -117,13 +125,13 @@ A successful request return a `201 Created` with a response body containing sign
     "ref": "1d7febd28f",
     "certificate": {
         "x5u": "https://certrepo.example.net/db238be479dc759d464f804adf6e5febe6db4f1c4ac4aef07b1c6b55bb258954",
-        "encryption-key": "keyid=a1b2c3; p256ecdsa=BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
+        "encryptionkey": "keyid=a1b2c3; p256ecdsa=BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
     },
     "signatures": [
       {
         "encoding": "b64url",
         "signature": "PWUsOnvlhZV0I4k4hwGFMc3LQcUlS-l1UwD0cNevPv3ux7T9moHX_JZHc75cmnyo-hUkW6s-c6AaNr_dyxg2528OLY53voIqwTsiYll1iPElS9TV0xOo3awuwnYcctOp",
-        "hash_algorithm": "sha256"
+        "hashalgorithm": "sha256"
       }
     ]
   },
@@ -131,13 +139,13 @@ A successful request return a `201 Created` with a response body containing sign
     "ref": "9aefebd25c",
     "certificate": {
         "x5u": "https://certrepo.example.net/db238be479dc759d464f804adf6e5febe6db4f1c4ac4aef07b1c6b55bb258954",
-        "encryption-key": "keyid=a1b2c3; p256ecdsa=BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
+        "encryptionkey": "keyid=a1b2c3; p256ecdsa=BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
     },
     "signatures": [
       {
         "encoding": "b64url",
         "signature": "PWUsOnvlhZV0I4k4hwGFMc3LQcUlS-l1UwD0cNevPv3ux7T9moHX_JZHc75cmnyo-hUkW6s-c6AaNr_dyxg2528OLY53voIqwTsiYll1iPElS9TV0xOo3awuwnYcctOp",
-        "hash_algorithm": "sha256"
+        "hashalgorithm": "sha256"
       }
     ]
   }
