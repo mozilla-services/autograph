@@ -25,7 +25,6 @@ func digest(data []byte, alg string) (hashed []byte, err error) {
 	case "sha512":
 		md = sha512.New()
 	}
-	md.Write([]byte("Content-Signature:\x00"))
 	md.Write(data)
 	hashed = md.Sum(nil)
 	return
