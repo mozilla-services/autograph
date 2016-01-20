@@ -10,11 +10,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
-	"time"
+	"os"
 
 	"github.com/mozilla-services/go-mozlog"
 
@@ -24,24 +24,28 @@ import (
 func init() {
 	// initialize the logger
 	mozlog.Logger.LoggerName = "Autograph"
-	rand.Seed(time.Now().UnixNano())
 }
 
 func main() {
 	var (
-		ag      *autographer
-		conf    configuration
-		cfgFile string
+		ag          *autographer
+		conf        configuration
+		cfgFile     string
 		showVersion bool
+		err         error
 	)
 	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
 	flag.BoolVar(&showVersion, "V", false, "Show build version and exit")
 	flag.Parse()
 
-	conf.loadFromFile(cfgFile)
 	if showVersion {
 		fmt.Println(Version)
 		os.Exit(0)
+	}
+
+	err = conf.loadFromFile(cfgFile)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// initialize signers from the configuration
@@ -54,13 +58,13 @@ func main() {
 
 	// start serving
 	mux := http.NewServeMux()
-	mux.HandleFunc("/__heartbeat__", ag.heartbeat)
-	mux.HandleFunc("/signature", ag.signature)
+	mux.HandleFunc("/__heartbeat__", ag.handleHeartbeat)
+	mux.HandleFunc("/signature", ag.handleSignature)
 	server := &http.Server{
 		Addr:    conf.Server.Listen,
 		Handler: mux,
 	}
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,13 +78,14 @@ type configuration struct {
 	Signers []Signer
 }
 
-func (c *configuration) loadFromFile(path string) {
+func (c *configuration) loadFromFile(path string) error {
 	fd, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	err = yaml.Unmarshal(fd, &c)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
