@@ -7,40 +7,20 @@
 package main
 
 import (
+	"crypto/rand"
+	"math/big"
 	"strconv"
-	"sync"
-	"time"
 )
 
-type id struct {
-	value float64
-	sync.Mutex
-}
-
-var globalID id
-
-// GenID() returns a float64 ID number that is unique to this process. The ID is initialized
-// at the number of seconds since MIG's creation date, shifted 16 bits to the right and incremented
-// by one every time a new ID is requested. The resulting value must fit in 53 bits of precision
-// provided by the float64 type.
-func genID() float64 {
-	globalID.Lock()
-	defer globalID.Unlock()
-	if globalID.value < 1 {
-		// if id hasn't been initialized yet, set it to number of seconds since
-		// MIG's inception, plus one
-		tmpid := int64(time.Since(time.Unix(1367258400, 0)).Seconds() + 1)
-		tmpid = tmpid << 16
-		globalID.value = float64(tmpid)
-		return globalID.value
+// id returns a 128bits random id encoded in base36
+func id() string {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
 	}
-	globalID.value++
-	return globalID.value
-
-}
-
-// GenHexID returns a string with an hexadecimal encoded ID
-func genB32ID() string {
-	id := genID()
-	return strconv.FormatUint(uint64(id), 36)
+	x, y := new(big.Int), new(big.Int)
+	x.SetBytes(b[:8])
+	y.SetBytes(b[8:])
+	return strconv.FormatUint(x.Uint64(), 36) + strconv.FormatUint(y.Uint64(), 36)
 }

@@ -61,7 +61,7 @@ func (a *autographer) signature(w http.ResponseWriter, r *http.Request) {
 			Signature: rawsig.toBase64Url(),
 			Hash:      "sha384",
 		})
-		sigresps[i].Ref = genB32ID()
+		sigresps[i].Ref = id()
 	}
 	respdata, err := json.Marshal(sigresps)
 	if err != nil {
