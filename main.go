@@ -6,6 +6,8 @@
 
 package main
 
+//go:generate ./version.sh
+
 import (
 	"flag"
 	"io/ioutil"
@@ -30,11 +32,17 @@ func main() {
 		ag      *autographer
 		conf    configuration
 		cfgFile string
+		showVersion bool
 	)
 	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
+	flag.BoolVar(&showVersion, "V", false, "Show build version and exit")
 	flag.Parse()
 
 	conf.loadFromFile(cfgFile)
+	if showVersion {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
 
 	// initialize signers from the configuration
 	// and store them into the autographer handler
