@@ -76,7 +76,7 @@ func TestSignaturePass(t *testing.T) {
 	}
 	w := httptest.NewRecorder()
 	ag.handleSignature(w, req)
-	if w.Code != 200 || w.Body.String() == "" {
+	if w.Code != http.StatusCreated || w.Body.String() == "" {
 		t.Fatalf("failed with %d: %s", w.Code, w.Body.String())
 	}
 
@@ -115,7 +115,7 @@ func TestSignatureFail(t *testing.T) {
 		}
 		w := httptest.NewRecorder()
 		ag.handleSignature(w, req)
-		if w.Code == 200 {
+		if w.Code == http.StatusCreated {
 			t.Fatalf("test case %d failed with %d: %s", i, w.Code, w.Body.String())
 		}
 	}
