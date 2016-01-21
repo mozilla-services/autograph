@@ -80,6 +80,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("signing operation succeeded:%s", respdata)
+	w.WriteHeader(http.StatusCreated)
 	w.Write(respdata)
 }
 
