@@ -9,8 +9,11 @@ package main
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/x509"
 	"encoding/json"
+	"hash"
 	"log"
 	"math/big"
 	"net/http"
@@ -18,6 +21,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/mozilla-services/hawk-go"
 )
 
 var (
@@ -28,7 +33,13 @@ var (
 func TestMain(m *testing.M) {
 	// load the signers
 	ag = new(autographer)
-	for _, sgc := range []Signer{Signer{PrivateKey: privatekey}} {
+	for _, sgc := range []Signer{
+		Signer{
+			PrivateKey:      privatekey,
+			AuthorizedUsers: []string{`tester`},
+			HawkToken:       `fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu`,
+		},
+	} {
 		sgc.init()
 		ag.addSigner(sgc)
 	}
@@ -74,10 +85,13 @@ func TestSignaturePass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	req.Header.Set("Content-Type", "application/json")
+	authheader := getAuthHeader(req, ag.signers[0].AuthorizedUsers[0], ag.signers[0].HawkToken, sha256.New, id(), "application/json", body)
+	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
 	ag.handleSignature(w, req)
 	if w.Code != http.StatusCreated || w.Body.String() == "" {
-		t.Fatalf("failed with %d: %s", w.Code, w.Body.String())
+		t.Errorf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
 	}
 
 	// verify that we got a proper signature response, with a valid signature
@@ -87,12 +101,12 @@ func TestSignaturePass(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(responses) != len(TESTCASES) {
-		t.Fatalf("failed to receive as many responses (%d) as we sent requests (%d)",
+		t.Errorf("failed to receive as many responses (%d) as we sent requests (%d)",
 			len(responses), len(TESTCASES))
 	}
 	for i, response := range responses {
 		if !verify(t, TESTCASES[i], response) {
-			t.Fatalf("signature verification failed in response %d", i)
+			t.Errorf("signature verification failed in response %d; request was: %+v", i, req)
 		}
 	}
 }
@@ -102,7 +116,7 @@ func TestSignatureFail(t *testing.T) {
 		method string
 		body   string
 	}{
-		{`GET`, `[{"signaturetype": "content-signature", "inputtype": "raw", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		{`GET`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
 		{`POST`, ``},
 		{`PUT`, ``},
 		{`HEAD`, ``},
@@ -113,12 +127,68 @@ func TestSignatureFail(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		req.Header.Set("Content-Type", "application/json")
+		authheader := getAuthHeader(req, ag.signers[0].AuthorizedUsers[0], ag.signers[0].HawkToken, sha256.New, id(), "application/json", []byte(testcase.body))
+		req.Header.Set("Authorization", authheader)
 		w := httptest.NewRecorder()
 		ag.handleSignature(w, req)
 		if w.Code == http.StatusCreated {
-			t.Fatalf("test case %d failed with %d: %s", i, w.Code, w.Body.String())
+			t.Errorf("test case %d failed with %d: %s", i, w.Code, w.Body.String())
 		}
 	}
+}
+
+func TestAuthFail(t *testing.T) {
+	var TESTCASES = []struct {
+		user        string
+		token       string
+		hash        func() hash.Hash
+		contenttype string
+		body        string
+	}{
+		// test bad user
+		{`baduser`, `fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu`, sha256.New, `application/json`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		// test bad token
+		{`tester`, `badtoken`, sha256.New, `application/json`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		// test wrong hash
+		{`tester`, `fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu`, sha512.New, `application/json`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		// test wrong content type
+		{`tester`, `fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu`, sha256.New, `test/plain`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		// test missing payload
+		{`tester`, `fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu`, sha256.New, `application/json`, ``},
+	}
+	for i, testcase := range TESTCASES {
+		body := strings.NewReader(`[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`)
+		req, err := http.NewRequest("POST", "http://foo.bar/signature", body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		authheader := getAuthHeader(req, testcase.user, testcase.token, testcase.hash, id(), testcase.contenttype, []byte(testcase.body))
+		req.Header.Set("Authorization", authheader)
+		t.Log(i, authheader)
+		w := httptest.NewRecorder()
+		ag.handleSignature(w, req)
+		if w.Code != 500 {
+			t.Errorf("test case %d was authorized with %d and should have failed; authorization header was: %s; response was: %s",
+				i, w.Code, req.Header.Get("Authorization"), w.Body.String())
+		}
+	}
+}
+
+func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash, ext, contenttype string, payload []byte) string {
+
+	auth := hawk.NewRequestAuth(req,
+		&hawk.Credentials{
+			ID:   user,
+			Key:  token,
+			Hash: hash},
+		0)
+	auth.Ext = ext
+	payloadhash := auth.PayloadHash(contenttype)
+	payloadhash.Write(payload)
+	auth.SetHash(payloadhash)
+	return auth.RequestHeader()
 }
 
 func TestHeartbeat(t *testing.T) {
@@ -139,7 +209,7 @@ func TestHeartbeat(t *testing.T) {
 		w := httptest.NewRecorder()
 		ag.handleHeartbeat(w, req)
 		if w.Code != testcase.expect {
-			t.Fatalf("test case %d failed with code %d but %d was expected",
+			t.Errorf("test case %d failed with code %d but %d was expected",
 				i, w.Code, testcase.expect)
 		}
 	}
@@ -149,12 +219,12 @@ func TestHeartbeat(t *testing.T) {
 func verify(t *testing.T, request signaturerequest, response signatureresponse) bool {
 	hash, err := getInputHash(request)
 	if err != nil {
-		t.Fatalf("%v", err)
+		t.Errorf("%v", err)
 	}
 	for _, sig := range response.Signatures {
 		sigBytes, err := fromBase64URL(sig.Signature)
 		if err != nil {
-			t.Fatalf("failed to decode base64 signature data: %v", err)
+			t.Errorf("failed to decode base65 signature data: %v", err)
 		}
 		r, s := new(big.Int), new(big.Int)
 		r.SetBytes(sigBytes[:len(sigBytes)/2])

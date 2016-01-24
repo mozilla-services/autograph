@@ -6,4 +6,4 @@ signers:
       publickey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE4k3FmG7dFoOt3Tuzl76abTRtK8sb/r/ibCSeVKa96RbrOX2ciscz/TT8wfqBYS/8cN4zMe1+f7wRmkNrCUojZR1ZKmYM2BeiUOMlMoqk2O7+uwsn1DwNQSYP58TkvZt6"
       authorizedusers:
           - tester
-
+      hawktoken: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu

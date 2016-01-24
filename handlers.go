@@ -16,6 +16,7 @@ import (
 // A autographer signs input data with a private key
 type autographer struct {
 	signers []Signer
+	nonces  []nonce
 }
 
 func (a *autographer) addSigner(signer Signer) {
@@ -29,19 +30,18 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts POST only", r.Method)
 		return
 	}
-	userid, authorized, err := a.authorize(r)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		httpError(w, http.StatusBadRequest, "failed to read request body: %s", err)
+		return
+	}
+	userid, authorized, err := a.authorize(r, body)
 	if err != nil {
 		httpError(w, http.StatusInternalServerError, "authorization verification failed: %v", err)
 		return
 	}
-
 	if !authorized {
 		httpError(w, http.StatusUnauthorized, "request is not authorized; provide a valid HAWK authorization")
-		return
-	}
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		httpError(w, http.StatusBadRequest, "failed to read request body: %s", err)
 		return
 	}
 	var sigreqs []signaturerequest
@@ -57,12 +57,12 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, http.StatusBadRequest, "%v", err)
 			return
 		}
-		signerId, err := a.getSignerId(userid, sigreq.KeyID)
-		if err != nil || (signerId > (len(a.signers) - 1)) {
+		signerID, err := a.getSignerID(userid, sigreq.KeyID)
+		if err != nil || (signerID > (len(a.signers) - 1)) {
 			httpError(w, http.StatusInternalServerError, "no valid signer found for userid %q", userid)
 			return
 		}
-		rawsig, err := a.signers[signerId].sign(hash)
+		rawsig, err := a.signers[signerID].sign(hash)
 		if err != nil {
 			httpError(w, http.StatusInternalServerError, "signing failed with error: %v", err)
 			return

@@ -12,5 +12,5 @@ fi
 cat > version.go <<HERE
 package main
 
-const Version = "${VERSION}"
+const version = "${VERSION}"
 HERE

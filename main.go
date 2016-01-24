@@ -39,7 +39,7 @@ func main() {
 	flag.Parse()
 
 	if showVersion {
-		fmt.Println(Version)
+		fmt.Println(version)
 		os.Exit(0)
 	}
 
@@ -55,6 +55,7 @@ func main() {
 		sgc.init()
 		ag.addSigner(sgc)
 	}
+	go ag.removeNonces()
 
 	// start serving
 	mux := http.NewServeMux()
