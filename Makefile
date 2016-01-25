@@ -7,7 +7,7 @@ GO 			:= GO15VENDOREXPERIMENT=1 go
 GOGETTER	:= GOPATH=$(shell pwd)/.tmpdeps go get -d
 GOLINT 		:= golint
 
-all: test lint vet generate install
+all: test vet generate install
 
 install:
 	$(GO) install github.com/mozilla-services/autograph

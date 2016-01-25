@@ -11,12 +11,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sync"
 )
 
 // A autographer signs input data with a private key
 type autographer struct {
-	signers []Signer
-	nonces  []nonce
+	signers    []Signer
+	nonces     []nonce
+	noncesLock sync.Mutex
 }
 
 func (a *autographer) addSigner(signer Signer) {

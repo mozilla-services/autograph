@@ -89,18 +89,21 @@ func (a *autographer) lookupNonce(val string, ts time.Time, creds *hawk.Credenti
 			return false
 		}
 	}
+	a.noncesLock.Lock()
 	a.nonces = append(a.nonces, nonce{value: val, timestamp: time.Now()})
+	a.noncesLock.Unlock()
 	return true
 }
 
 func (a *autographer) removeNonces() {
+	now := time.Now()
 	for i, n := range a.nonces {
-		now := time.Now()
 		if now.Sub(n.timestamp) > maxauthage {
 			// the nonce is too old, delete it
+			a.noncesLock.Lock()
 			a.nonces = append(a.nonces[:i], a.nonces[i+1:]...)
+			a.noncesLock.Unlock()
 		}
-		time.Sleep(maxauthage)
 	}
 }
 

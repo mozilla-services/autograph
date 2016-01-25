@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/mozilla-services/go-mozlog"
 
@@ -55,7 +56,12 @@ func main() {
 		sgc.init()
 		ag.addSigner(sgc)
 	}
-	go ag.removeNonces()
+	go func() {
+		for {
+			ag.removeNonces()
+			time.Sleep(maxauthage)
+		}
+	}()
 
 	// start serving
 	mux := http.NewServeMux()
