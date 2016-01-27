@@ -28,28 +28,26 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 	}
 	auth, err = hawk.ParseRequestHeader(r.Header.Get("Authorization"))
 	if err != nil {
-		return
+		return "", false, err
 	}
-	if time.Now().Sub(auth.Timestamp) > maxauthage {
+	if time.Now().UTC().Sub(auth.Timestamp) > maxauthage {
 		return "", false, fmt.Errorf("authorization header is older than %s", maxauthage.String())
 	}
 	userid = auth.Credentials.ID
 	auth, err = hawk.NewAuthFromRequest(r, a.lookupCred(auth.Credentials.ID), a.lookupNonce)
 	if err != nil {
-		return
+		return "", false, err
 	}
 	err = auth.Valid()
 	if err != nil {
-		return
+		return "", false, err
 	}
 	payloadhash := auth.PayloadHash(r.Header.Get("Content-Type"))
 	payloadhash.Write(body)
 	if !auth.ValidHash(payloadhash) {
-		err = fmt.Errorf("payload validation failed")
-		return
+		return "", false, fmt.Errorf("payload validation failed")
 	}
-	authorize = true
-	return
+	return userid, true, nil
 }
 
 func (a *autographer) lookupCred(id string) hawk.CredentialsLookupFunc {
