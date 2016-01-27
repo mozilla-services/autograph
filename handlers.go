@@ -11,18 +11,24 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"sync"
+
+	"github.com/hashicorp/golang-lru"
 )
 
 // A autographer signs input data with a private key
 type autographer struct {
-	signers    []Signer
-	nonces     []nonce
-	noncesLock sync.Mutex
+	signers []Signer
+	nonces  *lru.Cache
 }
 
 func (a *autographer) addSigner(signer Signer) {
 	a.signers = append(a.signers, signer)
+}
+
+func NewAutographer(cachesize int) (a *autographer, err error) {
+	a = new(autographer)
+	a.nonces, err = lru.New(cachesize)
+	return
 }
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request

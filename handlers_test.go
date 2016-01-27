@@ -32,7 +32,11 @@ var (
 
 func TestMain(m *testing.M) {
 	// load the signers
-	ag = new(autographer)
+	var err error
+	ag, err = NewAutographer(1)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for _, sgc := range []Signer{
 		Signer{
 			PrivateKey:      privatekey,

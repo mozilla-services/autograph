@@ -76,33 +76,12 @@ func (a *autographer) lookupCred(id string) hawk.CredentialsLookupFunc {
 	}
 }
 
-type nonce struct {
-	value     string
-	timestamp time.Time
-}
-
 func (a *autographer) lookupNonce(val string, ts time.Time, creds *hawk.Credentials) bool {
-	for _, n := range a.nonces {
-		if val == n.value {
-			return false
-		}
+	if a.nonces.Contains(val) {
+		return false
 	}
-	a.noncesLock.Lock()
-	a.nonces = append(a.nonces, nonce{value: val, timestamp: time.Now()})
-	a.noncesLock.Unlock()
+	a.nonces.Add(val, time.Now())
 	return true
-}
-
-func (a *autographer) removeNonces() {
-	now := time.Now()
-	for i, n := range a.nonces {
-		if now.Sub(n.timestamp) > maxauthage {
-			// the nonce is too old, delete it
-			a.noncesLock.Lock()
-			a.nonces = append(a.nonces[:i], a.nonces[i+1:]...)
-			a.noncesLock.Unlock()
-		}
-	}
 }
 
 // getSignerId returns the signer identifier for the user. If a keyid is specified,

@@ -16,6 +16,7 @@ go_vendor_dependencies:
 	$(GOGETTER) gopkg.in/yaml.v2
 	$(GOGETTER) github.com/mozilla-services/go-mozlog
 	$(GOGETTER) github.com/mozilla-services/hawk-go
+	$(GOGETTER) github.com/hashicorp/golang-lru
 	echo 'removing .git from vendored pkg and moving them to vendor'
 	find .tmpdeps/src -type d -name ".git" ! -name ".gitignore" -exec rm -rf {} \; || exit 0
 	cp -ar .tmpdeps/src/* vendor/

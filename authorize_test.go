@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/mozilla-services/hawk-go"
 )
@@ -92,16 +91,35 @@ func TestDuplicateNonce(t *testing.T) {
 }
 
 func TestRemoveExpiredNonce(t *testing.T) {
-	ag.nonces = make([]nonce, 0)
-	ag.nonces = append(ag.nonces, nonce{value: "shouldexpire", timestamp: time.Now().Add(-2 * maxauthage)})
-	ag.nonces = append(ag.nonces, nonce{value: "iscurrent", timestamp: time.Now()})
-	ag.removeNonces()
-	if len(ag.nonces) != 1 {
-		t.Errorf("found %d nonces when only one was expected", len(ag.nonces))
+	req, err := http.NewRequest("POST", "http://foo.bar/signature", nil)
+	if err != nil {
+		t.Fatal(err)
 	}
-	for _, nonce := range ag.nonces {
-		if nonce.value == "shouldexpire" {
-			t.Errorf("found nonce `shouldexpire` which should have been expired")
-		}
+
+	auth1 := hawk.NewRequestAuth(req,
+		&hawk.Credentials{
+			ID:   ag.signers[0].AuthorizedUsers[0],
+			Key:  ag.signers[0].HawkToken,
+			Hash: sha256.New},
+		0)
+	req.Header.Set("Authorization", auth1.RequestHeader())
+	_, _, err = ag.authorize(req, nil)
+
+	auth2 := hawk.NewRequestAuth(req,
+		&hawk.Credentials{
+			ID:   ag.signers[0].AuthorizedUsers[0],
+			Key:  ag.signers[0].HawkToken,
+			Hash: sha256.New},
+		0)
+	req.Header.Set("Authorization", auth2.RequestHeader())
+	_, _, err = ag.authorize(req, nil)
+
+	if ag.nonces.Contains(auth1.Nonce) {
+		t.Errorf("First nonce %q found in cache, should have been removed", auth1.Nonce)
+		t.Logf("nonces: %+v", ag.nonces.Keys())
+	}
+	if !ag.nonces.Contains(auth2.Nonce) {
+		t.Errorf("Second nonce %q not found in cache, should have been present", auth2.Nonce)
+		t.Logf("nonces: %+v", ag.nonces.Keys())
 	}
 }
