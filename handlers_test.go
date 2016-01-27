@@ -11,56 +11,16 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/sha512"
-	"crypto/x509"
 	"encoding/json"
 	"hash"
-	"log"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/mozilla-services/hawk-go"
 )
-
-var (
-	ag     *autographer
-	pubkey *ecdsa.PublicKey
-)
-
-func TestMain(m *testing.M) {
-	// load the signers
-	var err error
-	ag, err = NewAutographer(1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, sgc := range []Signer{
-		Signer{
-			PrivateKey:      privatekey,
-			AuthorizedUsers: []string{`tester`},
-			HawkToken:       `fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu`,
-		},
-	} {
-		sgc.init()
-		ag.addSigner(sgc)
-	}
-	// parse the public key
-	data, err := fromBase64URL(publickey)
-	if err != nil {
-		log.Fatal(err)
-	}
-	keyInterface, err := x509.ParsePKIXPublicKey(data)
-	if err != nil {
-		log.Fatal(err)
-	}
-	pubkey = keyInterface.(*ecdsa.PublicKey)
-	// run the tests and exit
-	r := m.Run()
-	os.Exit(r)
-}
 
 func TestSignaturePass(t *testing.T) {
 	var TESTCASES = []signaturerequest{
@@ -90,7 +50,7 @@ func TestSignaturePass(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, ag.signers[0].AuthorizedUsers[0], ag.signers[0].HawkToken, sha256.New, id(), "application/json", body)
+	authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", body)
 	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
 	ag.handleSignature(w, req)
@@ -115,6 +75,27 @@ func TestSignaturePass(t *testing.T) {
 	}
 }
 
+// verify an ecdsa signature
+func verify(t *testing.T, request signaturerequest, response signatureresponse) bool {
+	hash, err := getInputHash(request)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	for _, sig := range response.Signatures {
+		sigBytes, err := fromBase64URL(sig.Signature)
+		if err != nil {
+			t.Errorf("failed to decode base65 signature data: %v", err)
+		}
+		r, s := new(big.Int), new(big.Int)
+		r.SetBytes(sigBytes[:len(sigBytes)/2])
+		s.SetBytes(sigBytes[len(sigBytes)/2:])
+		if !ecdsa.Verify(ag.signers[0].ecdsaPrivKey.Public().(*ecdsa.PublicKey), hash, r, s) {
+			return false
+		}
+	}
+	return true
+}
+
 func TestSignatureFail(t *testing.T) {
 	var TESTCASES = []struct {
 		method string
@@ -132,7 +113,7 @@ func TestSignatureFail(t *testing.T) {
 			t.Fatal(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
-		authheader := getAuthHeader(req, ag.signers[0].AuthorizedUsers[0], ag.signers[0].HawkToken, sha256.New, id(), "application/json", []byte(testcase.body))
+		authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", []byte(testcase.body))
 		req.Header.Set("Authorization", authheader)
 		w := httptest.NewRecorder()
 		ag.handleSignature(w, req)
@@ -181,7 +162,6 @@ func TestAuthFail(t *testing.T) {
 }
 
 func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash, ext, contenttype string, payload []byte) string {
-
 	auth := hawk.NewRequestAuth(req,
 		&hawk.Credentials{
 			ID:   user,
@@ -219,26 +199,21 @@ func TestHeartbeat(t *testing.T) {
 	}
 }
 
-// verify an ecdsa signature
-func verify(t *testing.T, request signaturerequest, response signatureresponse) bool {
-	hash, err := getInputHash(request)
-	if err != nil {
-		t.Errorf("%v", err)
+func TestAddDuplicateAuthorization(t *testing.T) {
+	var authorizations = []authorization{
+		authorization{
+			ID: "alice",
+		},
+		authorization{
+			ID: "alice",
+		},
 	}
-	for _, sig := range response.Signatures {
-		sigBytes, err := fromBase64URL(sig.Signature)
-		if err != nil {
-			t.Errorf("failed to decode base65 signature data: %v", err)
+	defer func() {
+		if e := recover(); e != nil {
+			if e != `authorization id 'alice' already defined, duplicates are not permitted` {
+				t.Errorf("expected authorization loading to fail with duplicate error but got: %v", e)
+			}
 		}
-		r, s := new(big.Int), new(big.Int)
-		r.SetBytes(sigBytes[:len(sigBytes)/2])
-		s.SetBytes(sigBytes[len(sigBytes)/2:])
-		if !ecdsa.Verify(pubkey, hash, r, s) {
-			return false
-		}
-	}
-	return true
+	}()
+	ag.addAuthorizations(authorizations)
 }
-
-const privatekey string = "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
-const publickey string = "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE4k3FmG7dFoOt3Tuzl76abTRtK8sb/r/ibCSeVKa96RbrOX2ciscz/TT8wfqBYS/8cN4zMe1+f7wRmkNrCUojZR1ZKmYM2BeiUOMlMoqk2O7+uwsn1DwNQSYP58TkvZt6"

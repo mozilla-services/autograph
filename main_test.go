@@ -7,11 +7,40 @@
 package main
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"testing"
+	"time"
 )
+
+var (
+	ag     *autographer
+	pubkey *ecdsa.PublicKey
+	conf   configuration
+)
+
+func TestMain(m *testing.M) {
+	// load the signers
+	err := conf.loadFromFile(os.Getenv("GOPATH") + "/src/github.com/mozilla-services/autograph/autograph.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("%+v\n", conf)
+	ag, err = newAutographer(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ag.addSigners(conf.Signers)
+	ag.addAuthorizations(conf.Authorizations)
+	ag.makeSignerIndex()
+	// run the tests and exit
+	r := m.Run()
+	os.Exit(r)
+}
 
 func TestConfigLoad(t *testing.T) {
 	testcases := []struct {
@@ -23,23 +52,23 @@ server:
     listen: "localhost:8000"
 
 signers:
-    - privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
-      publickey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE4k3FmG7dFoOt3Tuzl76abTRtK8sb/r/ibCSeVKa96RbrOX2ciscz/TT8wfqBYS/8cN4zMe1+f7wRmkNrCUojZR1ZKmYM2BeiUOMlMoqk2O7+uwsn1DwNQSYP58TkvZt6"
-      authorizedusers:
-          - tester`)},
+    - id: testsigner1
+      privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
+`)},
 		{true, []byte(`
 server:
     listen: "localhost:8000"
 
 signers:
-    - privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
-      publickey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE4k3FmG7dFoOt3Tuzl76abTRtK8sb/r/ibCSeVKa96RbrOX2ciscz/TT8wfqBYS/8cN4zMe1+f7wRmkNrCUojZR1ZKmYM2BeiUOMlMoqk2O7+uwsn1DwNQSYP58TkvZt6"
-      authorizedusers:
-          - tester
-    - privatekey: "MIGkAgEBBDs5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
-      publickey: "MHYwEAYHKoZYS/8cN4zMe1+f7wRmkNrCUojZR1ZKmYM2BeiUOMlMoqk2O7+uwsn1DwNQSYP58TkvZt6"
-      authorizedusers:
-          - bob
+    - id: testsigner1
+      privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
+    - id: testsigner2
+      privatekey: "MIGkAgEBBDs5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
+authorizations:
+    - id: tester
+      key: oiqwhfoqihfoiqeheouqqouhfdq
+      signers:
+          - testsigner1
 `)},
 		// bogus yaml
 		{false, []byte(`{{{{{{{`)},
@@ -50,15 +79,14 @@ server:
 
 signers:
 	- privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
-	  publickey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE4k3FmG7dFoOt3Tuzl76abTRtK8sb/r/ibCSeVKa96RbrOX2ciscz/TT8wfqBYS/8cN4zMe1+f7wRmkNrCUojZR1ZKmYM2BeiUOMlMoqk2O7+uwsn1DwNQSYP58TkvZt6"
-	  authorizedusers:
-		- tester
+authorizations:
+	- tester
 `)},
 	}
 	for i, testcase := range testcases {
 		var conf configuration
 		// write conf file to /tmp and read it back
-		fd, err := ioutil.TempFile("", "tlsobsrunnertestconf")
+		fd, err := ioutil.TempFile("", "autographtestconf")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -89,5 +117,25 @@ func TestConfigLoadFileNotExist(t *testing.T) {
 	err := conf.loadFromFile("/tmp/a/b/c/d/e/f/e/d/c/b/a/oned97fy2qoelfahd018oehfa9we8ohf219")
 	if err == nil {
 		t.Fatalf("should have file with file not found, but passed")
+	}
+}
+
+func TestStartMain(t *testing.T) {
+	go main()
+	time.Sleep(200 * time.Millisecond)
+	resp, err := http.Get("http://localhost:8000/__heartbeat__")
+	if err != nil {
+		t.Error(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	if fmt.Sprintf("%s", body) != "ohai" {
+		t.Errorf("expected heartbeat message 'ohai', got %q", body)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected response code %d, got %d", http.StatusOK, resp.StatusCode)
 	}
 }

@@ -12,31 +12,41 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
-	"strings"
 )
 
-// A Signer provides the configuration and key material to
+// A signer provides the configuration and key material to
 // allow an authorized user to sign data with a private key
-type Signer struct {
-	PrivateKey      string
-	AuthorizedUsers []string
-	HawkToken       string
-	ecdsaPrivKey    *ecdsa.PrivateKey
+type signer struct {
+	ID           string
+	PrivateKey   string
+	PublicKey    string
+	ecdsaPrivKey *ecdsa.PrivateKey
 }
 
-func (s *Signer) init() {
+func (s *signer) init() error {
+	if s.ID == "" {
+		return fmt.Errorf("missing signer ID in signer configuration")
+	}
+	if s.PrivateKey == "" {
+		return fmt.Errorf("missing private key in signer configuration")
+	}
 	rawkey, err := base64.StdEncoding.DecodeString(s.PrivateKey)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	s.ecdsaPrivKey, err = x509.ParseECPrivateKey(rawkey)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	return
+	pubkeybytes, err := x509.MarshalPKIXPublicKey(s.ecdsaPrivKey.Public())
+	if err != nil {
+		return err
+	}
+	s.PublicKey = base64.StdEncoding.EncodeToString(pubkeybytes)
+	return nil
 }
 
-func (s *Signer) sign(data []byte) (sig signature, err error) {
+func (s *signer) sign(data []byte) (sig signature, err error) {
 	R, S, err := ecdsa.Sign(rand.Reader, s.ecdsaPrivKey, data)
 	if err != nil {
 		return nil, fmt.Errorf("signing error: %v", err)
@@ -54,18 +64,6 @@ func (s *signature) toBase64Url() string {
 	return toBase64URL([]byte(*s))
 }
 
-func toBase64URL(b []byte) string {
-	return b64Tob64url(base64.StdEncoding.EncodeToString(b))
-}
-
-func b64Tob64url(s string) string {
-	// convert base64url characters back to regular base64 alphabet
-	s = strings.Replace(s, "+", "-", -1)
-	s = strings.Replace(s, "/", "_", -1)
-	s = strings.TrimRight(s, "=")
-	return s
-}
-
 func (s *signature) fromBase64Url(b64 string) error {
 	data, err := fromBase64URL(b64)
 	if err != nil {
@@ -73,24 +71,6 @@ func (s *signature) fromBase64Url(b64 string) error {
 	}
 	*s = signature(data)
 	return nil
-}
-
-func fromBase64URL(s string) ([]byte, error) {
-	b, err := base64.StdEncoding.DecodeString(b64urlTob64(s))
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-func b64urlTob64(s string) string {
-	// convert base64url characters back to regular base64 alphabet
-	s = strings.Replace(s, "-", "+", -1)
-	s = strings.Replace(s, "_", "/", -1)
-	if l := len(s) % 4; l > 0 {
-		s += strings.Repeat("=", 4-l)
-	}
-	return s
 }
 
 type signaturerequest struct {
@@ -115,7 +95,7 @@ type signaturedata struct {
 	Hash      string `json:"hashalgorithm,omitempty"`
 }
 
-// getInputHash returns the hash bytes of the signature input. Templating is applied if necessary.
+// getInputHash returns a hash of the signature input data. Templating is applied if necessary.
 func getInputHash(sigreq signaturerequest) (hash []byte, err error) {
 	hashinput, err := fromBase64URL(sigreq.Input)
 	if sigreq.Template != "" {
