@@ -39,7 +39,7 @@ func main() {
 	flag.Parse()
 
 	if showVersion {
-		fmt.Println(Version)
+		fmt.Println(version)
 		os.Exit(0)
 	}
 
@@ -50,7 +50,10 @@ func main() {
 
 	// initialize signers from the configuration
 	// and store them into the autographer handler
-	ag = new(autographer)
+	ag, err = NewAutographer(conf.Server.NonceCacheSize)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for _, sgc := range conf.Signers {
 		sgc.init()
 		ag.addSigner(sgc)
@@ -73,7 +76,8 @@ func main() {
 // configuration loads a yaml file that contains the configuration of Autograph
 type configuration struct {
 	Server struct {
-		Listen string
+		Listen         string
+		NonceCacheSize int
 	}
 	Signers []Signer
 }

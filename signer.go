@@ -20,6 +20,7 @@ import (
 type Signer struct {
 	PrivateKey      string
 	AuthorizedUsers []string
+	HawkToken       string
 	ecdsaPrivKey    *ecdsa.PrivateKey
 }
 
