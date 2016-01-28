@@ -15,9 +15,6 @@ install:
 
 script:
     - make
-    - docker run -d jvehent/autograph
-    - "if [ $(docker ps --filter 'name=jvehent/autograph' | wc -l) -ne 1 ]; then echo 'Should have found one container running and did not'; exit 666; fi"
-    - docker stop $(docker ps -q)
 
 after_success:
     # push containers into docker hub
