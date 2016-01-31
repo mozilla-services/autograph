@@ -124,7 +124,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		}
 		signerID, err := a.getSignerID(userid, sigreq.KeyID)
 		if err != nil || signerID < 0 {
-			httpError(w, http.StatusInternalServerError, "could not get signer: %v", err)
+			httpError(w, http.StatusUnauthorized, "%v", err)
 			return
 		}
 		rawsig, err := a.signers[signerID].sign(hash)

@@ -88,11 +88,15 @@ func (a *autographer) lookupNonce(val string, ts time.Time, creds *hawk.Credenti
 }
 
 // getSignerId returns the signer identifier for the user. If a keyid is specified,
-// the corresponding signer is returned. If no signer is found, an error is returned.
+// the corresponding signer is returned. If no signer is found, an error is returned
+// and the signer identifier is set to -1.
 func (a *autographer) getSignerID(userid, keyid string) (int, error) {
 	tag := userid + "+" + keyid
 	if _, ok := a.signerIndex[tag]; !ok {
-		return -1, fmt.Errorf("no signer found for auth ID %q and key ID %q", userid, keyid)
+		if keyid == "" {
+			return -1, fmt.Errorf("%q does not have a default signing key", userid)
+		}
+		return -1, fmt.Errorf("%q is not authorized to sign with key ID %q", userid, keyid)
 	}
 	return a.signerIndex[tag], nil
 }

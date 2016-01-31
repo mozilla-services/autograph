@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%+v\n", conf)
+	log.Printf("configuration: %+v\n", conf)
 	ag, err = newAutographer(1)
 	if err != nil {
 		log.Fatal(err)
@@ -37,6 +37,7 @@ func TestMain(m *testing.M) {
 	ag.addSigners(conf.Signers)
 	ag.addAuthorizations(conf.Authorizations)
 	ag.makeSignerIndex()
+	log.Printf("autographer: %+v\n", ag)
 	// run the tests and exit
 	r := m.Run()
 	os.Exit(r)
