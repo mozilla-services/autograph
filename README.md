@@ -4,6 +4,7 @@ Autograph is a cryptographic signature service that implements
 and other signing methods.
 
 [![Build Status](https://travis-ci.org/mozilla-services/autograph.svg?branch=master)](https://travis-ci.org/mozilla-services/autograph)
+[![Coverage Status](https://coveralls.io/repos/github/mozilla-services/autograph/badge.svg?branch=master)](https://coveralls.io/github/mozilla-services/autograph?branch=master)
 
 ## Rationale
 
