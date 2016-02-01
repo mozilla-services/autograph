@@ -15,7 +15,12 @@ import (
 	"github.com/mozilla-services/hawk-go"
 )
 
-const maxauthage time.Duration = 60 * time.Second
+// an authorization
+type authorization struct {
+	ID      string
+	Key     string
+	Signers []string
+}
 
 // authorize validates the hawk authorization header on a request
 // and returns the userid and a boolean indicating authorization status
@@ -29,9 +34,6 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 	auth, err = hawk.ParseRequestHeader(r.Header.Get("Authorization"))
 	if err != nil {
 		return "", false, err
-	}
-	if time.Now().UTC().Sub(auth.Timestamp) > maxauthage {
-		return "", false, fmt.Errorf("authorization header is older than %s", maxauthage.String())
 	}
 	userid = auth.Credentials.ID
 	auth, err = hawk.NewAuthFromRequest(r, a.lookupCred(auth.Credentials.ID), a.lookupNonce)
@@ -50,17 +52,16 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 	return userid, true, nil
 }
 
+// lookupCred searches the authorizations for a user whose id matches the provided
+// id string. If found, a Credential function is return to complete the hawk authorization.
+// If not found, a function that returns an error is returned.
 func (a *autographer) lookupCred(id string) hawk.CredentialsLookupFunc {
-	for _, signer := range a.signers {
-		for _, autheduser := range signer.AuthorizedUsers {
-			if autheduser == id {
-				// matching user found, return its token
-				return func(creds *hawk.Credentials) error {
-					creds.Key = signer.HawkToken
-					creds.Hash = sha256.New
-					return nil
-				}
-			}
+	if _, ok := a.auths[id]; ok {
+		// matching user found, return its token
+		return func(creds *hawk.Credentials) error {
+			creds.Key = a.auths[id].Key
+			creds.Hash = sha256.New
+			return nil
 		}
 	}
 	// credentials not found, return a function that returns a CredentialError
@@ -76,6 +77,8 @@ func (a *autographer) lookupCred(id string) hawk.CredentialsLookupFunc {
 	}
 }
 
+// lookupNonce searches the LRU cache for a previous nonce that matches the value provided in
+// val. If found, this is a replay attack, and `false` is returned.
 func (a *autographer) lookupNonce(val string, ts time.Time, creds *hawk.Credentials) bool {
 	if a.nonces.Contains(val) {
 		return false
@@ -85,7 +88,15 @@ func (a *autographer) lookupNonce(val string, ts time.Time, creds *hawk.Credenti
 }
 
 // getSignerId returns the signer identifier for the user. If a keyid is specified,
-// the corresponding signer is returned. If no signer is found, an error is returned.
-func (a *autographer) getSignerID(userid, keyid string) (signerID int, err error) {
-	return 0, nil
+// the corresponding signer is returned. If no signer is found, an error is returned
+// and the signer identifier is set to -1.
+func (a *autographer) getSignerID(userid, keyid string) (int, error) {
+	tag := userid + "+" + keyid
+	if _, ok := a.signerIndex[tag]; !ok {
+		if keyid == "" {
+			return -1, fmt.Errorf("%q does not have a default signing key", userid)
+		}
+		return -1, fmt.Errorf("%q is not authorized to sign with key ID %q", userid, keyid)
+	}
+	return a.signerIndex[tag], nil
 }

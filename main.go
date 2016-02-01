@@ -26,6 +26,16 @@ func init() {
 	mozlog.Logger.LoggerName = "Autograph"
 }
 
+// configuration loads a yaml file that contains the configuration of Autograph
+type configuration struct {
+	Server struct {
+		Listen         string
+		NonceCacheSize int
+	}
+	Signers        []signer
+	Authorizations []authorization
+}
+
 func main() {
 	var (
 		ag          *autographer
@@ -34,7 +44,7 @@ func main() {
 		showVersion bool
 		err         error
 	)
-	flag.StringVar(&cfgFile, "c", "/etc/autograph/autograph.yaml", "Path to configuration file")
+	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
 	flag.BoolVar(&showVersion, "V", false, "Show build version and exit")
 	flag.Parse()
 
@@ -50,14 +60,13 @@ func main() {
 
 	// initialize signers from the configuration
 	// and store them into the autographer handler
-	ag, err = NewAutographer(conf.Server.NonceCacheSize)
+	ag, err = newAutographer(conf.Server.NonceCacheSize)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, sgc := range conf.Signers {
-		sgc.init()
-		ag.addSigner(sgc)
-	}
+	ag.addSigners(conf.Signers)
+	ag.addAuthorizations(conf.Authorizations)
+	ag.makeSignerIndex()
 
 	// start serving
 	mux := http.NewServeMux()
@@ -67,19 +76,11 @@ func main() {
 		Addr:    conf.Server.Listen,
 		Handler: mux,
 	}
+	log.Println("Starting Autograph API on", conf.Server.Listen)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-// configuration loads a yaml file that contains the configuration of Autograph
-type configuration struct {
-	Server struct {
-		Listen         string
-		NonceCacheSize int
-	}
-	Signers []Signer
 }
 
 func (c *configuration) loadFromFile(path string) error {

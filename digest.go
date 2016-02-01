@@ -10,6 +10,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"fmt"
 	"hash"
 )
 
@@ -24,6 +25,8 @@ func digest(data []byte, alg string) (hashed []byte, err error) {
 		md = sha512.New384()
 	case "sha512":
 		md = sha512.New()
+	default:
+		return nil, fmt.Errorf("unsupported digest algorithm %q", alg)
 	}
 	md.Write(data)
 	hashed = md.Sum(nil)

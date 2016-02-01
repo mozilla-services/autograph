@@ -9,7 +9,6 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -49,6 +48,24 @@ func TestBogusAuthorization(t *testing.T) {
 	}
 }
 
+func TestBadPayload(t *testing.T) {
+	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	bodyrdr := bytes.NewReader(body)
+	req, err := http.NewRequest("POST", "http://foo.bar/signature", bodyrdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", []byte(`9247oldfjd18weohfa`))
+	req.Header.Set("Authorization", authheader)
+	_, authorize, err := ag.authorize(req, body)
+	if authorize {
+		t.Errorf("expected auth to fail with payload validation failed but succeeded")
+	}
+	if err.Error() != "payload validation failed" {
+		t.Errorf("expected auth to fail with payload validation failed but got error: %v", err)
+	}
+}
+
 func TestExpiredAuth(t *testing.T) {
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -57,12 +74,12 @@ func TestExpiredAuth(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", `Hawk id="tester", mac="nVg5STp2fD+P7G3ELmUztb3hP/LQajwD+FDQM7rZvhw=", ts="1453681057", nonce="TKLzwtGS", hash="sL12YYG2CnALd5o5dqHRKjNO0AvgmPPeIqlfZQfszfo=", ext="59d2rtbmji6617pthvwa1h370"`)
+	req.Header.Set("Authorization", `Hawk id="bob", mac="nVg5STp2fD+P7G3ELmUztb3hP/LQajwD+FDQM7rZvhw=", ts="1453681057", nonce="TKLzwtGS", hash="sL12YYG2CnALd5o5dqHRKjNO0AvgmPPeIqlfZQfszfo=", ext="59d2rtbmji6617pthvwa1h370"`)
 	_, authorize, err := ag.authorize(req, body)
 	if authorize {
 		t.Errorf("expected auth to fail with expired timestamp but succeeded")
 	}
-	if err.Error() != fmt.Sprintf("authorization header is older than %s", maxauthage.String()) {
+	if err.Error() != hawk.ErrTimestampSkew.Error() {
 		t.Errorf("expected auth to fail with expired timestamp but got error: %v", err)
 	}
 }
@@ -75,7 +92,7 @@ func TestDuplicateNonce(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, ag.signers[0].AuthorizedUsers[0], ag.signers[0].HawkToken, sha256.New, id(), "application/json", body)
+	authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", body)
 	req.Header.Set("Authorization", authheader)
 	// run it once
 	_, authorize, err := ag.authorize(req, body)
@@ -90,7 +107,7 @@ func TestDuplicateNonce(t *testing.T) {
 
 }
 
-func TestRemoveExpiredNonce(t *testing.T) {
+func TestNonceFromLRU(t *testing.T) {
 	req, err := http.NewRequest("POST", "http://foo.bar/signature", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -98,8 +115,8 @@ func TestRemoveExpiredNonce(t *testing.T) {
 
 	auth1 := hawk.NewRequestAuth(req,
 		&hawk.Credentials{
-			ID:   ag.signers[0].AuthorizedUsers[0],
-			Key:  ag.signers[0].HawkToken,
+			ID:   ag.auths[conf.Authorizations[0].ID].ID,
+			Key:  ag.auths[conf.Authorizations[0].ID].Key,
 			Hash: sha256.New},
 		0)
 	req.Header.Set("Authorization", auth1.RequestHeader())
@@ -107,8 +124,8 @@ func TestRemoveExpiredNonce(t *testing.T) {
 
 	auth2 := hawk.NewRequestAuth(req,
 		&hawk.Credentials{
-			ID:   ag.signers[0].AuthorizedUsers[0],
-			Key:  ag.signers[0].HawkToken,
+			ID:   ag.auths[conf.Authorizations[0].ID].ID,
+			Key:  ag.auths[conf.Authorizations[0].ID].Key,
 			Hash: sha256.New},
 		0)
 	req.Header.Set("Authorization", auth2.RequestHeader())
@@ -121,5 +138,19 @@ func TestRemoveExpiredNonce(t *testing.T) {
 	if !ag.nonces.Contains(auth2.Nonce) {
 		t.Errorf("Second nonce %q not found in cache, should have been present", auth2.Nonce)
 		t.Logf("nonces: %+v", ag.nonces.Keys())
+	}
+}
+
+func TestSignerNotFound(t *testing.T) {
+	pos, err := ag.getSignerID(`unknown018qoegdxc`, `unkown093ytid`)
+	if err == nil || pos != -1 {
+		t.Errorf("expected to fail lookup up a signer but succeeded")
+	}
+}
+
+func TestDefaultSignerNotFound(t *testing.T) {
+	pos, err := ag.getSignerID(`unknown018qoegdxc`, ``)
+	if err == nil || pos != -1 {
+		t.Errorf("expected to fail lookup up a signer but succeeded")
 	}
 }

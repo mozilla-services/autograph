@@ -4,6 +4,7 @@ Autograph is a cryptographic signature service that implements
 and other signing methods.
 
 [![Build Status](https://travis-ci.org/mozilla-services/autograph.svg?branch=master)](https://travis-ci.org/mozilla-services/autograph)
+[![Coverage Status](https://coveralls.io/repos/github/mozilla-services/autograph/badge.svg?branch=master)](https://coveralls.io/github/mozilla-services/autograph?branch=master)
 
 ## Rationale
 
@@ -150,4 +151,97 @@ A successful request return a `201 Created` with a response body containing sign
     ]
   }
 ]
+```
+
+## Configuration
+
+The configuration lives in `autograph.yaml` and is expected in
+`/etc/autograph/autograph.yaml` (use flag `-c` to provide an alternate
+location).
+
+Define an address and port for the API to listen on:
+```yaml
+server:
+    listen: "192.168.1.28:8000"
+```
+
+Then configure the signers. Each signer is composed of an identifier
+and a private key (the public key is extracted from the private key).
+
+To generate a key pair with openssl, use:
+```bash
+$ openssl ecparam -out /tmp/testkey2 -name secp384r1 -genkey
+
+$ openssl ec -in /tmp/testkey2 -text
+...
+-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDC32Lv42JlmEnaPHe+UG6wtrG39vHZAQtvUPTPgJP8Bflfsy0T30Q/5
+AMXvh0EgFbigBwYFK4EEACKhZANiAAS74cJMSG3ZjlTcjBZl5pHnimoCxAM+XL3f
+jLy0FvStcQqyWkMacmAY3MqM4YxvyBNv5J+JJPAkskYVomQzk3/8La+D2UQuj6Xu
+ReTKJie8EppVvrXwMAjhSy5zsuq7/gI=
+-----END EC PRIVATE KEY-----
+```
+
+Take the base64 keys from the BEGIN blocks are add them to the configuration
+file unwrapped:
+```yaml
+signers:
+    - id: appkey2
+      privatekey: "MIGkAgEBBDC32Lv42JlmEnaPHe+UG6wtrG39vHZAQtvUPTPgJP8Bflfsy0T30Q/5AMXvh0EgFbigBwYFK4EEACKhZANiAAS74cJMSG3ZjlTcjBZl5pHnimoCxAM+XL3fjLy0FvStcQqyWkMacmAY3MqM4YxvyBNv5J+JJPAkskYVomQzk3/8La+D2UQuj6XuReTKJie8EppVvrXwMAjhSy5zsuq7/gI="
+```
+
+Authorizations map an arbitrary username and key to a list of signers. The
+key does not need to be generated in any special way, but you can use the tool
+in `tools/maketoken/main.go` to obtain a random 256bits string:
+```bash
+$ go run tools/maketoken/main.go
+256bits random token: xsdxco7uy0pn1ei004pdkl4ex1krdu6z6o1rl1dweooo7t7tk0
+```
+
+Then add it to the configuration as follows:
+```yaml
+authorizations:
+    - id: alice
+      key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
+      signers:
+          - appkey1
+          - appkey2
+    - id: bob
+      key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d
+      signers:
+          - appkey2
+```
+
+The configuration above allows `alice` to request signatures from both `appkey1`
+and `appkey2`, while `bob` is only allowed to request signatures from `appkey2`.
+
+Note that, when a user is allowed to sign with more than one signer, and no
+specific signer key id is provided in the signing request, autograph will use
+the first signer in the list. For example, if alice requests a signature without
+providing a key id, the private key from `appkey1` will be used to sign her
+request.
+
+### Build and running
+
+Build the autograph binary using make:
+```bash
+$ make
+GO15VENDOREXPERIMENT=1 go test github.com/mozilla-services/autograph
+ok      github.com/mozilla-services/autograph   0.070s
+GO15VENDOREXPERIMENT=1 go vet github.com/mozilla-services/autograph
+GO15VENDOREXPERIMENT=1 go generate
+GO15VENDOREXPERIMENT=1 go install github.com/mozilla-services/autograph
+```
+
+The binary is located in `$GOPATH/bin/autograph` and can be started with the
+configuration file:
+```bash
+$ $GOPATH/bin/autograph -c autograph.yaml 
+{"Timestamp":1453721399358695130,"Type":"app.log","Logger":"Autograph","Hostname":"gator1","EnvVersion":"2.0","Pid":17287,"Fields":{"msg":"main.go:74: Starting Autograph API on localhost:8000"}}
+```
+
+You can test that the API is alive by querying its heartbeat URL:
+```bash
+$ curl localhost:8000/__heartbeat__
+ohai
 ```
