@@ -136,7 +136,7 @@ func TestAuthFail(t *testing.T) {
 		t.Log(i, authheader)
 		w := httptest.NewRecorder()
 		ag.handleSignature(w, req)
-		if w.Code != 500 {
+		if w.Code != http.StatusUnauthorized {
 			t.Errorf("test case %d was authorized with %d and should have failed; authorization header was: %s; response was: %s",
 				i, w.Code, req.Header.Get("Authorization"), w.Body.String())
 		}
@@ -167,6 +167,7 @@ func TestHeartbeat(t *testing.T) {
 	}
 }
 
+// Two authorizations sharing the same ID should fail
 func TestAddDuplicateAuthorization(t *testing.T) {
 	var authorizations = []authorization{
 		authorization{
@@ -189,6 +190,26 @@ func TestAddDuplicateAuthorization(t *testing.T) {
 	}
 	tmpag.addSigners(conf.Signers)
 	tmpag.addAuthorizations(authorizations)
+}
+
+// An authorization without at least one signer configured should not have
+// a default signer configured in the signerIndex
+func TestAuthWithoutSigner(t *testing.T) {
+	var authorizations = []authorization{
+		authorization{
+			ID: "alice",
+		},
+	}
+	tmpag, err := newAutographer(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tmpag.addSigners(conf.Signers)
+	tmpag.addAuthorizations(authorizations)
+	tmpag.makeSignerIndex()
+	if _, ok := tmpag.signerIndex[authorizations[0].ID+"+"]; ok {
+		t.Errorf("found a default signer but shouldn't have")
+	}
 }
 
 // verify that user `alice` and `bob` are allowed to sign

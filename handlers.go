@@ -74,6 +74,7 @@ func (a *autographer) makeSignerIndex() {
 	// is specified in the signing request. This entry maps to the first
 	// authorized signer
 	for _, auth := range a.auths {
+		// if the authorization has no signer configured, skip it
 		if len(auth.Signers) < 1 {
 			continue
 		}
@@ -101,12 +102,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userid, authorized, err := a.authorize(r, body)
-	if err != nil {
-		httpError(w, http.StatusInternalServerError, "authorization verification failed: %v", err)
-		return
-	}
-	if !authorized {
-		httpError(w, http.StatusUnauthorized, "request is not authorized; provide a valid HAWK authorization")
+	if err != nil || !authorized {
+		httpError(w, http.StatusUnauthorized, "authorization verification failed: %v", err)
 		return
 	}
 	var sigreqs []signaturerequest

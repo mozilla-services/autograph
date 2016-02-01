@@ -147,3 +147,10 @@ func TestSignerNotFound(t *testing.T) {
 		t.Errorf("expected to fail lookup up a signer but succeeded")
 	}
 }
+
+func TestDefaultSignerNotFound(t *testing.T) {
+	pos, err := ag.getSignerID(`unknown018qoegdxc`, ``)
+	if err == nil || pos != -1 {
+		t.Errorf("expected to fail lookup up a signer but succeeded")
+	}
+}
