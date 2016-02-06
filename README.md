@@ -159,14 +159,18 @@ The configuration lives in `autograph.yaml` and is expected in
 `/etc/autograph/autograph.yaml` (use flag `-c` to provide an alternate
 location).
 
+### Listener
+
 Define an address and port for the API to listen on:
 ```yaml
 server:
     listen: "192.168.1.28:8000"
 ```
 
+### Signers
 Then configure the signers. Each signer is composed of an identifier
-and a private key (the public key is extracted from the private key).
+and an ECDSA private key (any curve [supported by
+Go](https://godoc.org/crypto/elliptic) works).
 
 To generate a key pair with openssl, use:
 ```bash
@@ -189,6 +193,13 @@ signers:
     - id: appkey2
       privatekey: "MIGkAgEBBDC32Lv42JlmEnaPHe+UG6wtrG39vHZAQtvUPTPgJP8Bflfsy0T30Q/5AMXvh0EgFbigBwYFK4EEACKhZANiAAS74cJMSG3ZjlTcjBZl5pHnimoCxAM+XL3fjLy0FvStcQqyWkMacmAY3MqM4YxvyBNv5J+JJPAkskYVomQzk3/8La+D2UQuj6XuReTKJie8EppVvrXwMAjhSy5zsuq7/gI="
 ```
+
+Note that Autograph does not make any assumption as to how the public key is
+distributed. You can either serve it as a hardcoded public key to your clients,
+or use a public key infrastructure and have the pubkey in a X.509 certificate
+signed by a root CA. This is entirely up to you.
+
+### Authorizations
 
 Authorizations map an arbitrary username and key to a list of signers. The
 key does not need to be generated in any special way, but you can use the tool
@@ -244,4 +255,26 @@ You can test that the API is alive by querying its heartbeat URL:
 ```bash
 $ curl localhost:8000/__heartbeat__
 ohai
+```
+
+## Test Key/Cert
+For dev and testing purposes, the private key `appkey1` can be used with the
+following self-signed certificate:
+```
+-----BEGIN CERTIFICATE-----
+MIICjjCCAhUCCQC92fl+HNcL+zAKBggqhkjOPQQDAjCBsDELMAkGA1UEBhMCVVMx
+EzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxHDAa
+BgNVBAoTE01vemlsbGEgQ29ycG9yYXRpb24xFzAVBgNVBAsTDkNsb3VkIFNlcnZp
+Y2VzMRYwFAYDVQQDEw1BdXRvZ3JhcGggRGV2MSUwIwYJKoZIhvcNAQkBFhZob3N0
+bWFzdGVyQG1vemlsbGEuY29tMB4XDTE2MDIwNjAwMDYwMloXDTI2MDIwMzAwMDYw
+MlowgbAxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQH
+Ew1Nb3VudGFpbiBWaWV3MRwwGgYDVQQKExNNb3ppbGxhIENvcnBvcmF0aW9uMRcw
+FQYDVQQLEw5DbG91ZCBTZXJ2aWNlczEWMBQGA1UEAxMNQXV0b2dyYXBoIERldjEl
+MCMGCSqGSIb3DQEJARYWaG9zdG1hc3RlckBtb3ppbGxhLmNvbTB2MBAGByqGSM49
+AgEGBSuBBAAiA2IABOJNxZhu3RaDrd07s5e+mm00bSvLG/6/4mwknlSmvekW6zl9
+nIrHM/00/MH6gWEv/HDeMzHtfn+8EZpDawlKI2UdWSpmDNgXolDjJTKKpNju/rsL
+J9Q8DUEmD+fE5L2bejAKBggqhkjOPQQDAgNnADBkAjARjtum9oq77JL9fhZ46Q1S
+vxT5RAdzQRp9/l3OqnUP+kK42tRk05c9UGDFXLLVH/4CMH/ZmcpvtM0sCjeAWzGs
+gnw91z0443965WZmaeBKpbinxB1PpnNMCnPhd9J/Hz40+Q==
+-----END CERTIFICATE-----
 ```
