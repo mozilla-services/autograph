@@ -126,7 +126,7 @@ A successful request return a `201 Created` with a response body containing sign
     "ref": "1d7febd28f",
     "certificate": {
         "x5u": "https://certrepo.example.net/db238be479dc759d464f804adf6e5febe6db4f1c4ac4aef07b1c6b55bb258954",
-        "encryptionkey": "keyid=a1b2c3; p256ecdsa=BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
+        "encryptionkey": "BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
     },
     "signatures": [
       {
@@ -140,7 +140,7 @@ A successful request return a `201 Created` with a response body containing sign
     "ref": "9aefebd25c",
     "certificate": {
         "x5u": "https://certrepo.example.net/db238be479dc759d464f804adf6e5febe6db4f1c4ac4aef07b1c6b55bb258954",
-        "encryptionkey": "keyid=a1b2c3; p256ecdsa=BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
+        "encryptionkey": "BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
     },
     "signatures": [
       {
