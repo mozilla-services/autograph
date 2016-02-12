@@ -8,6 +8,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"crypto/x509"
 	"fmt"
 	"testing"
 )
@@ -91,5 +93,25 @@ func TestGetInputHash(t *testing.T) {
 					i, testcase.hash, fmt.Sprintf("%x", hash))
 			}
 		}
+	}
+}
+
+func TestGetCertificate(t *testing.T) {
+	c, err := ag.signers[0].getCertificate()
+	if err != nil {
+		t.Fatal(err)
+	}
+	kb, err := fromBase64URL(c.EncryptionKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	keyInterface, err := x509.ParsePKIXPublicKey(kb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pubKey := keyInterface.(*ecdsa.PublicKey)
+	if len(pubKey.X.String()) < 10 || len(pubKey.Y.String()) < 10 {
+		t.Errorf("invalid X/Y values in public key: X=%s; Y=%s",
+			pubKey.X.String(), pubkey.Y.String())
 	}
 }

@@ -134,6 +134,11 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			Signature: rawsig.toBase64Url(),
 			Hash:      "sha384",
 		})
+		sigresps[i].Certificate, err = a.signers[signerID].getCertificate()
+		if err != nil {
+			httpError(w, http.StatusInternalServerError, "failed to retrieve signing certificate: %v", err)
+			return
+		}
 		sigresps[i].Ref = id()
 	}
 	respdata, err := json.Marshal(sigresps)

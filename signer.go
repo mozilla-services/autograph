@@ -95,6 +95,18 @@ type signaturedata struct {
 	Hash      string `json:"hashalgorithm,omitempty"`
 }
 
+// getCertificate return the certificate data (x5u and/or encryption)
+// associated with a given signer
+func (s *signer) getCertificate() (c certificate, err error) {
+	pubKey := s.ecdsaPrivKey.Public().(*ecdsa.PublicKey)
+	pubKeyDER, err := x509.MarshalPKIXPublicKey(pubKey)
+	if err != nil {
+		return
+	}
+	c.EncryptionKey = toBase64URL(pubKeyDER)
+	return
+}
+
 // getInputHash returns a hash of the signature input data. Templating is applied if necessary.
 func getInputHash(sigreq signaturerequest) (hash []byte, err error) {
 	hashinput, err := fromBase64URL(sigreq.Input)
