@@ -177,7 +177,9 @@ To generate a key pair with openssl, use:
 $ openssl ecparam -out /tmp/testkey2 -name secp384r1 -genkey
 
 $ openssl ec -in /tmp/testkey2 -text
-...
+-----BEGIN EC PARAMETERS-----
+BgUrgQQAIg==
+-----END EC PARAMETERS-----
 -----BEGIN EC PRIVATE KEY-----
 MIGkAgEBBDC32Lv42JlmEnaPHe+UG6wtrG39vHZAQtvUPTPgJP8Bflfsy0T30Q/5
 AMXvh0EgFbigBwYFK4EEACKhZANiAAS74cJMSG3ZjlTcjBZl5pHnimoCxAM+XL3f
@@ -186,8 +188,8 @@ ReTKJie8EppVvrXwMAjhSy5zsuq7/gI=
 -----END EC PRIVATE KEY-----
 ```
 
-Take the base64 keys from the BEGIN blocks are add them to the configuration
-file unwrapped:
+Take the base64 keys from the `BEGIN EC PRIVATE KEY` to `END EC PRIVATE KEY`
+blocks and add them to the configuration file as a single line.
 ```yaml
 signers:
     - id: appkey2
