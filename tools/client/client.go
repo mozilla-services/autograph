@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -93,7 +95,7 @@ func main() {
 		log.Fatal("sent %d signature requests and got %d responses, something's wrong", len(requests), len(responses))
 	}
 	for i, response := range responses {
-		if verify(requests[i].Input, response.Signatures[0].Signature, response.Certificate.EncryptionKey) {
+		if verify(requests[i], response) {
 			fmt.Fprintf(os.Stderr, "response %d pass\n", i)
 		} else {
 			log.Fatal("response %d does not pass!", i)
@@ -121,16 +123,20 @@ func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash,
 }
 
 // verify an ecdsa signature
-func verify(b64data, b64sig, b64pubkey string) bool {
-	//hash, err := getInputHash(request)
-	//if err != nil {
-	//	t.Error(err)
-	//}
-	data, err := fromBase64URL(b64data)
+func verify(req signaturerequest, resp signatureresponse) bool {
+	data, err := fromBase64URL(req.Input)
 	if err != nil {
 		log.Fatal(err)
 	}
-	keyBytes, err := fromBase64URL(b64pubkey)
+	if req.HashWith != "" {
+		// hash the input data with the provided algorithm
+		data, err = digest(data, req.HashWith)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	keyBytes, err := fromBase64URL(resp.Certificate.EncryptionKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -139,7 +145,7 @@ func verify(b64data, b64sig, b64pubkey string) bool {
 		log.Fatal(err)
 	}
 	pubKey := keyInterface.(*ecdsa.PublicKey)
-	sigBytes, err := fromBase64URL(b64sig)
+	sigBytes, err := fromBase64URL(resp.Signatures[0].Signature)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -168,4 +174,23 @@ func b64urlTob64(s string) string {
 		s += strings.Repeat("=", 4-l)
 	}
 	return s
+}
+
+func digest(data []byte, alg string) (hashed []byte, err error) {
+	var md hash.Hash
+	switch alg {
+	case "sha1":
+		md = sha1.New()
+	case "sha256":
+		md = sha256.New()
+	case "sha384":
+		md = sha512.New384()
+	case "sha512":
+		md = sha512.New()
+	default:
+		return nil, fmt.Errorf("unsupported digest algorithm %q", alg)
+	}
+	md.Write(data)
+	hashed = md.Sum(nil)
+	return
 }
