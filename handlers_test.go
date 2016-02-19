@@ -384,6 +384,36 @@ func TestHashWith(t *testing.T) {
 	}
 }
 
+func TestContentType(t *testing.T) {
+	var TESTCASES = []signaturerequest{
+		signaturerequest{
+			Template: "content-signature",
+			HashWith: "sha384",
+			Input:    "Y2FyaWJvdXZpbmRpZXV4Cg==",
+		},
+	}
+	userid := conf.Authorizations[0].ID
+	body, err := json.Marshal(TESTCASES)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rdr := bytes.NewReader(body)
+	req, err := http.NewRequest("POST", "http://foo.bar/signature", rdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	authheader := getAuthHeader(req, ag.auths[userid].ID, ag.auths[userid].Key,
+		sha256.New, id(), "application/json", body)
+	req.Header.Set("Authorization", authheader)
+	w := httptest.NewRecorder()
+	ag.handleSignature(w, req)
+	if w.Header().Get("Content-Type") != "application/json" {
+		t.Errorf("expected response with content type 'application/json' but got %q instead",
+			w.Header().Get("Content-Type"))
+	}
+}
+
 func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash, ext, contenttype string, payload []byte) string {
 	auth := hawk.NewRequestAuth(req,
 		&hawk.Credentials{

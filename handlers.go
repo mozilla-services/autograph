@@ -181,6 +181,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("signing operation succeeded. userid=%q; request=%s; response=%s",
 		userid, body, respdata)
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(respdata)
 }
