@@ -25,6 +25,9 @@ def main():
     argparser.add_argument('-t', dest='target',
                            default="http://localhost:8000/signature",
                            help="signing api URL (default: http://localhost:8000/signature)")
+    argparser.add_argument('-e', dest='encoding',
+                           default="rs_base64url",
+                           help="signature encoding format (default: rs_base64url)")
     args = argparser.parse_args()
 
     # try to load the input data as base64, and if that fails treat it as raw data instead
@@ -36,13 +39,18 @@ def main():
     # build and run the signature request
     sigreq = [{
         "input": base64.b64encode(inputdata),
-        "hashwith": args.hashwith
+        "hashwith": args.hashwith,
+        "signature_encoding": args.encoding
     }]
     print("signature request: %s" % sigreq)
     r = requests.post(args.target, json = sigreq, auth = HawkAuth(id=args.hawkid, key=args.hawkkey))
     r.raise_for_status()
     print("signature response: %s" % r.text)
     sigresp = json.loads(r.text)
+
+    if args.encoding != "rs_base64url":
+        print("unable to verify signature: encoding is %s and I only know rs_base64url" % args.encoding)
+        return
 
     # the public key is converted to regular base64, and loaded
     pubkeystr = un_urlsafe(sigresp[0]["certificate"]["encryptionkey"])

@@ -63,7 +63,8 @@ signatures.
 ## API
 
 Authorization: All API calls require a
-[hawk](https://github.com/hueniverse/hawk) Authorization header.
+[hawk](https://github.com/hueniverse/hawk) Authorization header with payload
+signature enabled. Example code for can be found in the `tools` directory.
 
 ### /signature
 
@@ -86,7 +87,6 @@ Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="som
 
 [
     {
-        "template": "content-signature",
         "input": "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"
     },
     {
@@ -108,13 +108,33 @@ The request body is a json array where each entry of the array is an object to s
 
 * hashwith: the algorithm to hash the input data with prior to signing. If
   omitted, autograph considers that the input data provided has already been
-  hashed.
+  hashed, and does not perform any hashing on it.
 
 * input: base64 encoded data to sign
 
 * keyid: allows the caller to specify a key to sign the data with. This
   parameter is optional, and Autograph will pick a key based on the caller's
   permission if omitted.
+
+* signature_encoding: by default, signatures returned by autograph use a R||S
+  string format encoded with base64_urlsafe. The R||S format simply concatenates
+  the two integer value that compose an ECDSA signature into one big number
+  (for p384, each value is 48 bytes long, so the total is 96 bytes). This format
+  avoid relying on ASN.1 parser to read the signatures, but can make it difficult
+  to verify signatures without custom code. The base64_urlsafe encoding format
+  strips base64 padding and replaces characters  `+` and `/` with `-` and `_`
+  respectively.
+  The R||S base64_urlsafe format complies with the Content Signature protocol,
+  and is needed to verify signatures in Firefox. But, if needed, autograph can
+  return signatures in other formats:
+   * `rs_base64url` is the default format and returns the signature in R||S
+     format with base64 url safe encoding.
+   * `rs_base64` returns the signature in R||S format with regular base64 encoding
+     instead of base64_urlsafe.
+   * `der_base64` returns the signature in DER ASN.1 format, encoded with
+     regular base64. This format is useful to verify signatures with OpenSSL or
+     other libraries.
+   * `der_base64url` is similar to the previous one but uses base64 urlsafe.
 
 #### Response
 

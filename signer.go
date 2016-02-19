@@ -12,7 +12,12 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+	"math/big"
 )
+
+type ecdsaSignature struct {
+	R, S *big.Int // fields must be exported for ASN.1 marshalling
+}
 
 // A signer provides the configuration and key material to
 // allow an authorized user to sign data with a private key
@@ -46,53 +51,14 @@ func (s *signer) init() error {
 	return nil
 }
 
-func (s *signer) sign(data []byte) (sig signature, err error) {
-	R, S, err := ecdsa.Sign(rand.Reader, s.ecdsaPrivKey, data)
+// sign takes input data and returns an ecdsa signature
+func (s *signer) sign(data []byte) (sig *ecdsaSignature, err error) {
+	sig = new(ecdsaSignature)
+	sig.R, sig.S, err = ecdsa.Sign(rand.Reader, s.ecdsaPrivKey, data)
 	if err != nil {
 		return nil, fmt.Errorf("signing error: %v", err)
 	}
-	// sig = r||s
-	sig = make([]byte, len(R.Bytes())+len(S.Bytes()))
-	copy(sig[:len(R.Bytes())], R.Bytes())
-	copy(sig[len(R.Bytes()):], S.Bytes())
 	return
-}
-
-type signature []byte
-
-func (s *signature) toBase64Url() string {
-	return toBase64URL([]byte(*s))
-}
-
-func (s *signature) fromBase64Url(b64 string) error {
-	data, err := fromBase64URL(b64)
-	if err != nil {
-		return err
-	}
-	*s = signature(data)
-	return nil
-}
-
-type signaturerequest struct {
-	Template string `json:"template"`
-	HashWith string `json:"hashwith"`
-	Input    string `json:"input"`
-	KeyID    string `json:"keyid"`
-}
-
-type signatureresponse struct {
-	Ref         string          `json:"ref"`
-	Certificate certificate     `json:"certificate"`
-	Signatures  []signaturedata `json:"signatures"`
-}
-type certificate struct {
-	X5u           string `json:"x5u,omitempty"`
-	EncryptionKey string `json:"encryptionkey,omitempty"`
-}
-type signaturedata struct {
-	Encoding  string `json:"encoding,omitempty"`
-	Signature string `json:"signature,omitempty"`
-	Hash      string `json:"hashalgorithm,omitempty"`
 }
 
 // getCertificate return the certificate data (x5u and/or encryption)

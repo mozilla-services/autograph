@@ -7,7 +7,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/ecdsa"
 	"crypto/x509"
 	"fmt"
@@ -30,33 +29,7 @@ func TestInitFail(t *testing.T) {
 			t.Errorf("expected to fail with '%v' but failed with '%v' instead", testcase.expectError, err)
 		}
 		if err == nil {
-			t.Errorf("expiected to fail with '%v' but succeeded", testcase.expectError)
-		}
-	}
-}
-
-func TestFromB64URL(t *testing.T) {
-	TESTCASES := []struct {
-		expectError string
-		b64         string
-		sig         []byte
-	}{
-		{"illegal base64 data at input byte 0", "{{{{{{", nil},
-		{"", "XBKzej3i6TAFZc3VZsuCekn-4dYWJBE4-b3OOtKrOV-JIzIvAnAhnOV1aj-kEm07kh-FciIxV-Xk2QUQlRQzHO7oW7E4mXkMKkbbAcvL0CFrItTObhfhKnBnpAE9ql1O", []byte("\x5c\x12\xb3\x7a\x3d\xe2\xe9\x30\x05\x65\xcd\xd5\x66\xcb\x82\x7a\x49\xfe\xe1\xd6\x16\x24\x11\x38\xf9\xbd\xce\x3a\xd2\xab\x39\x5f\x89\x23\x32\x2f\x02\x70\x21\x9c\xe5\x75\x6a\x3f\xa4\x12\x6d\x3b\x92\x1f\x85\x72\x22\x31\x57\xe5\xe4\xd9\x05\x10\x95\x14\x33\x1c\xee\xe8\x5b\xb1\x38\x99\x79\x0c\x2a\x46\xdb\x01\xcb\xcb\xd0\x21\x6b\x22\xd4\xce\x6e\x17\xe1\x2a\x70\x67\xa4\x01\x3d\xaa\x5d\x4e")},
-	}
-	for _, testcase := range TESTCASES {
-		var s signature
-		err := s.fromBase64Url(testcase.b64)
-		if testcase.expectError == "" && err != nil {
-			t.Errorf("failed to load signature from base64 data: %v", err)
-		}
-		if testcase.expectError != "" && testcase.expectError != err.Error() {
-			t.Errorf("expected to fail with error %q but got error %q", testcase.expectError, err)
-		}
-		if testcase.expectError == "" && err == nil {
-			if !bytes.Equal(testcase.sig, s) {
-				t.Errorf("decoded base64 data doesn't match expected data")
-			}
+			t.Errorf("expected to fail with '%v' but succeeded", testcase.expectError)
 		}
 	}
 }
