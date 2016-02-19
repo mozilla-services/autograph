@@ -8,6 +8,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -193,4 +194,17 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("ohai"))
+}
+
+// handleVersion returns the current version of the API
+func (a *autographer) handleVersion(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		httpError(w, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		return
+	}
+	w.Write([]byte(fmt.Sprintf(`{
+"source": "https://github.com/mozilla-services/autograph",
+"version": "%s",
+"commit": "%s"
+}`, version, commit)))
 }

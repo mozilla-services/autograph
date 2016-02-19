@@ -167,6 +167,30 @@ func TestHeartbeat(t *testing.T) {
 	}
 }
 
+func TestVersion(t *testing.T) {
+	var TESTCASES = []struct {
+		expect int
+		method string
+	}{
+		{http.StatusOK, `GET`},
+		{http.StatusMethodNotAllowed, `POST`},
+		{http.StatusMethodNotAllowed, `PUT`},
+		{http.StatusMethodNotAllowed, `HEAD`},
+	}
+	for i, testcase := range TESTCASES {
+		req, err := http.NewRequest(testcase.method, "http://foo.bar/__version__", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		ag.handleVersion(w, req)
+		if w.Code != testcase.expect {
+			t.Errorf("test case %d failed with code %d but %d was expected",
+				i, w.Code, testcase.expect)
+		}
+	}
+}
+
 // Two authorizations sharing the same ID should fail
 func TestAddDuplicateAuthorization(t *testing.T) {
 	var authorizations = []authorization{
