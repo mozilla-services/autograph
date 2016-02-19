@@ -334,6 +334,56 @@ func TestSignerUnauthorized(t *testing.T) {
 	}
 }
 
+// verify that the hash set in the request is returned in the response, and if no hash is set, none is returned
+func TestHashWith(t *testing.T) {
+	userid := conf.Authorizations[0].ID
+	var TESTCASES = []signaturerequest{
+		// request signature that need to prepend the content-signature:\x00 header
+		signaturerequest{
+			HashWith: "sha384",
+			Input:    "Y2FyaWJvdXZpbmRpZXV4Cg==",
+			KeyID:    ag.auths[userid].Signers[0],
+		},
+		signaturerequest{
+			Input: "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d",
+			KeyID: ag.auths[userid].Signers[0],
+		},
+	}
+	body, err := json.Marshal(TESTCASES)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rdr := bytes.NewReader(body)
+	req, err := http.NewRequest("POST", "http://foo.bar/signature", rdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	authheader := getAuthHeader(req, ag.auths[userid].ID, ag.auths[userid].Key,
+		sha256.New, id(), "application/json", body)
+	req.Header.Set("Authorization", authheader)
+	w := httptest.NewRecorder()
+	ag.handleSignature(w, req)
+	if w.Code != http.StatusCreated {
+		t.Errorf("expected to succeed with %d but got %d: %s; request was: %+v", http.StatusCreated, w.Code, w.Body.String(), req)
+	}
+	var responses []signatureresponse
+	err = json.Unmarshal(w.Body.Bytes(), &responses)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(responses) != len(TESTCASES) {
+		t.Errorf("failed to receive as many responses (%d) as we sent requests (%d)",
+			len(responses), len(TESTCASES))
+	}
+	for i, response := range responses {
+		if response.Signatures[0].Hash != TESTCASES[i].HashWith {
+			t.Errorf("expected to get hash %q in response but got %q instead",
+				TESTCASES[i].HashWith, response.Signatures[0].Hash)
+		}
+	}
+}
+
 func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash, ext, contenttype string, payload []byte) string {
 	auth := hawk.NewRequestAuth(req,
 		&hawk.Credentials{

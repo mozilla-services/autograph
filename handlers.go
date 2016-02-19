@@ -132,7 +132,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		sigresps[i].Signatures = append(sigresps[i].Signatures, signaturedata{
 			Encoding:  "b64url",
 			Signature: rawsig.toBase64Url(),
-			Hash:      "sha384",
+			Hash:      sigreq.HashWith,
 		})
 		sigresps[i].Certificate, err = a.signers[signerID].getCertificate()
 		if err != nil {
