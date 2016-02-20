@@ -10,6 +10,8 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"fmt"
+	"math/big"
+	"strings"
 	"testing"
 )
 
@@ -70,11 +72,7 @@ func TestGetInputHash(t *testing.T) {
 }
 
 func TestGetPubKey(t *testing.T) {
-	pub, err := ag.signers[0].getPubKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-	kb, err := fromBase64URL(pub)
+	kb, err := fromBase64URL(ag.signers[0].PublicKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,5 +84,47 @@ func TestGetPubKey(t *testing.T) {
 	if len(pubKey.X.String()) < 10 || len(pubKey.Y.String()) < 10 {
 		t.Errorf("invalid X/Y values in public key: X=%s; Y=%s",
 			pubKey.X.String(), pubkey.Y.String())
+	}
+}
+
+func TestContentSignatureX5U(t *testing.T) {
+	sig := new(ecdsaSignature)
+	sig.R, sig.S = new(big.Int), new(big.Int)
+	sig.R.UnmarshalText([]byte("6259915849506081953195822778836906638312880422565351933025739850554626487283192654040697419197598947387738806787988"))
+	sig.S.UnmarshalText([]byte("5943508783332546705852262942555715397696959766757176458821265258714412617334569990327433520177942823437637818778521"))
+	cs, err := ag.signers[1].ContentSignature(sig)
+	if err != nil {
+		t.Error(err)
+	}
+	if cs[0:4] != "x5u=" {
+		t.Errorf("expected x5u prefix in content-signature but got %q", cs[0:4])
+	}
+}
+
+func TestContentSignatureKeyID(t *testing.T) {
+	sig := new(ecdsaSignature)
+	sig.R, sig.S = new(big.Int), new(big.Int)
+	sig.R.UnmarshalText([]byte("6259915849506081953195822778836906638312880422565351933025739850554626487283192654040697419197598947387738806787988"))
+	sig.S.UnmarshalText([]byte("5943508783332546705852262942555715397696959766757176458821265258714412617334569990327433520177942823437637818778521"))
+	cs, err := ag.signers[0].ContentSignature(sig)
+	if err != nil {
+		t.Error(err)
+	}
+	if cs[0:13] != "keyid=appkey1" {
+		t.Errorf("expected keyid prefix in content-signature but got %q", cs[0:13])
+	}
+}
+
+func TestContentSignatureP384(t *testing.T) {
+	sig := new(ecdsaSignature)
+	sig.R, sig.S = new(big.Int), new(big.Int)
+	sig.R.UnmarshalText([]byte("6259915849506081953195822778836906638312880422565351933025739850554626487283192654040697419197598947387738806787988"))
+	sig.S.UnmarshalText([]byte("5943508783332546705852262942555715397696959766757176458821265258714412617334569990327433520177942823437637818778521"))
+	cs, err := ag.signers[0].ContentSignature(sig)
+	if err != nil {
+		t.Error(err)
+	}
+	if !strings.Contains(cs, "p384ecdsa") {
+		t.Errorf("expected 'p384ecdsa' key in content-signature but did not find it")
 	}
 }

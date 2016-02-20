@@ -25,6 +25,7 @@ type signer struct {
 	ID           string
 	PrivateKey   string
 	PublicKey    string
+	X5U          string
 	ecdsaPrivKey *ecdsa.PrivateKey
 }
 
@@ -61,15 +62,25 @@ func (s *signer) sign(data []byte) (sig *ecdsaSignature, err error) {
 	return
 }
 
-// getPubKey returns the DER encoded public key that corresponds
-// to the signer's private key
-func (s *signer) getPubKey() (string, error) {
-	pubKey := s.ecdsaPrivKey.Public().(*ecdsa.PublicKey)
-	pubKeyDER, err := x509.MarshalPKIXPublicKey(pubKey)
+// ContentSignatureString returns a content-signature header string
+func (s *signer) ContentSignature(ecdsaSig *ecdsaSignature) (string, error) {
+	encodedsig, err := encode(ecdsaSig, "rs_base64url")
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(pubKeyDER), nil
+	var csid string
+	switch s.ecdsaPrivKey.Curve.Params().Name {
+	case "P-256":
+		csid = "p256ecdsa"
+	case "P-384":
+		csid = "p384ecdsa"
+	default:
+		return "", fmt.Errorf("unknown curve name %q", s.ecdsaPrivKey.Curve.Params().Name)
+	}
+	if s.X5U != "" {
+		return fmt.Sprintf("x5u=%s; %s=%s", s.X5U, csid, encodedsig), nil
+	}
+	return fmt.Sprintf("keyid=%s; %s=%s", s.ID, csid, encodedsig), nil
 }
 
 // getInputHash returns a hash of the signature input data. Templating is applied if necessary.

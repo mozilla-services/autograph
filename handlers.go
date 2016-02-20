@@ -160,15 +160,19 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, http.StatusInternalServerError, "encoding failed with error: %v", err)
 			return
 		}
-		sigresps[i].Encoding = sigreq.Encoding
-		sigresps[i].Signature = encodedsig
-		sigresps[i].Hash = sigreq.HashWith
-		sigresps[i].PublicKey, err = a.signers[signerID].getPubKey()
+		encodedcs, err := a.signers[signerID].ContentSignature(ecdsaSig)
 		if err != nil {
-			httpError(w, http.StatusInternalServerError, "failed to retrieve signing public key: %v", err)
+			httpError(w, http.StatusInternalServerError, "failed to retrieve content-signature: %v", err)
 			return
 		}
-		sigresps[i].Ref = id()
+		sigresps[i] = signatureresponse{
+			Ref:              id(),
+			PublicKey:        a.signers[signerID].PublicKey,
+			Hash:             sigreq.HashWith,
+			Encoding:         sigreq.Encoding,
+			Signature:        encodedsig,
+			ContentSignature: encodedcs,
+		}
 	}
 	respdata, err := json.Marshal(sigresps)
 	if err != nil {
