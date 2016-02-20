@@ -401,9 +401,9 @@ func TestHashWith(t *testing.T) {
 			len(responses), len(TESTCASES))
 	}
 	for i, response := range responses {
-		if response.Signatures[0].Hash != TESTCASES[i].HashWith {
+		if response.Hash != TESTCASES[i].HashWith {
 			t.Errorf("expected to get hash %q in response but got %q instead",
-				TESTCASES[i].HashWith, response.Signatures[0].Hash)
+				TESTCASES[i].HashWith, response.Hash)
 		}
 	}
 }
@@ -463,17 +463,16 @@ func verify(t *testing.T, request signaturerequest, response signatureresponse, 
 		t.Error(err)
 	}
 	pubkey := ag.signers[signerID].ecdsaPrivKey.Public()
-	for _, sig := range response.Signatures {
-		sigBytes, err := fromBase64URL(sig.Signature)
-		if err != nil {
-			t.Errorf("failed to decode base65 signature data: %v", err)
-		}
-		r, s := new(big.Int), new(big.Int)
-		r.SetBytes(sigBytes[:len(sigBytes)/2])
-		s.SetBytes(sigBytes[len(sigBytes)/2:])
-		if !ecdsa.Verify(pubkey.(*ecdsa.PublicKey), hash, r, s) {
-			return false
-		}
+	sigBytes, err := fromBase64URL(response.Signature)
+	if err != nil {
+		t.Errorf("failed to decode base65 signature data: %v", err)
 	}
+	r, s := new(big.Int), new(big.Int)
+	r.SetBytes(sigBytes[:len(sigBytes)/2])
+	s.SetBytes(sigBytes[len(sigBytes)/2:])
+	if !ecdsa.Verify(pubkey.(*ecdsa.PublicKey), hash, r, s) {
+		return false
+	}
+
 	return true
 }

@@ -61,16 +61,15 @@ func (s *signer) sign(data []byte) (sig *ecdsaSignature, err error) {
 	return
 }
 
-// getCertificate return the certificate data (x5u and/or encryption)
-// associated with a given signer
-func (s *signer) getCertificate() (c certificate, err error) {
+// getPubKey returns the DER encoded public key that corresponds
+// to the signer's private key
+func (s *signer) getPubKey() (string, error) {
 	pubKey := s.ecdsaPrivKey.Public().(*ecdsa.PublicKey)
 	pubKeyDER, err := x509.MarshalPKIXPublicKey(pubKey)
 	if err != nil {
-		return
+		return "", err
 	}
-	c.EncryptionKey = toBase64URL(pubKeyDER)
-	return
+	return base64.StdEncoding.EncodeToString(pubKeyDER), nil
 }
 
 // getInputHash returns a hash of the signature input data. Templating is applied if necessary.

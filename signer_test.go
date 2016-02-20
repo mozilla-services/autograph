@@ -69,12 +69,12 @@ func TestGetInputHash(t *testing.T) {
 	}
 }
 
-func TestGetCertificate(t *testing.T) {
-	c, err := ag.signers[0].getCertificate()
+func TestGetPubKey(t *testing.T) {
+	pub, err := ag.signers[0].getPubKey()
 	if err != nil {
 		t.Fatal(err)
 	}
-	kb, err := fromBase64URL(c.EncryptionKey)
+	kb, err := fromBase64URL(pub)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/golang-lru"
 )
 
+// a signaturerequest is sent by an autograph client to request
+// a signature on input data
 type signaturerequest struct {
 	Template string `json:"template"`
 	HashWith string `json:"hashwith"`
@@ -24,21 +26,16 @@ type signaturerequest struct {
 	Encoding string `json:"signature_encoding"`
 }
 
+// a signatureresponse is returned by autograph to a client with
+// a signature computed on input data
 type signatureresponse struct {
-	Ref         string          `json:"ref"`
-	Certificate certificate     `json:"certificate"`
-	Signatures  []signaturedata `json:"signatures"`
-}
-
-type certificate struct {
-	X5u           string `json:"x5u,omitempty"`
-	EncryptionKey string `json:"encryptionkey,omitempty"`
-}
-
-type signaturedata struct {
-	Encoding  string `json:"encoding,omitempty"`
-	Signature string `json:"signature"`
-	Hash      string `json:"hashalgorithm,omitempty"`
+	Ref              string `json:"ref"`
+	X5u              string `json:"x5u,omitempty"`
+	PublicKey        string `json:"publickey,omitempty"`
+	Hash             string `json:"hashalgorithm,omitempty"`
+	Encoding         string `json:"signature_encoding,omitempty"`
+	Signature        string `json:"signature"`
+	ContentSignature string `json:"content-signature,omitempty"`
 }
 
 // A autographer signs input data with a private key
@@ -163,14 +160,12 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, http.StatusInternalServerError, "encoding failed with error: %v", err)
 			return
 		}
-		sigresps[i].Signatures = append(sigresps[i].Signatures, signaturedata{
-			Encoding:  sigreq.Encoding,
-			Signature: encodedsig,
-			Hash:      sigreq.HashWith,
-		})
-		sigresps[i].Certificate, err = a.signers[signerID].getCertificate()
+		sigresps[i].Encoding = sigreq.Encoding
+		sigresps[i].Signature = encodedsig
+		sigresps[i].Hash = sigreq.HashWith
+		sigresps[i].PublicKey, err = a.signers[signerID].getPubKey()
 		if err != nil {
-			httpError(w, http.StatusInternalServerError, "failed to retrieve signing certificate: %v", err)
+			httpError(w, http.StatusInternalServerError, "failed to retrieve signing public key: %v", err)
 			return
 		}
 		sigresps[i].Ref = id()
