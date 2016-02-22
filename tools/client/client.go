@@ -33,8 +33,8 @@ type signaturerequest struct {
 type signatureresponse struct {
 	Ref              string `json:"ref"`
 	X5u              string `json:"x5u,omitempty"`
-	PublicKey        string `json:"publickey,omitempty"`
-	Hash             string `json:"hashalgorithm,omitempty"`
+	PublicKey        string `json:"public_key,omitempty"`
+	Hash             string `json:"hash_algorithm,omitempty"`
 	Encoding         string `json:"signature_encoding,omitempty"`
 	Signature        string `json:"signature"`
 	ContentSignature string `json:"content-signature,omitempty"`

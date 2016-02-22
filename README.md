@@ -124,7 +124,8 @@ The request body is a json array where each entry of the array is an object to s
   to verify signatures without custom code. The base64_urlsafe encoding format
   strips base64 padding and replaces characters  `+` and `/` with `-` and `_`
   respectively.
-  The R||S base64_urlsafe format complies with the Content Signature protocol,
+  The R||S base64_urlsafe format complies with the
+  [Content-Signature](https://github.com/martinthomson/content-signature/) protocol,
   and is needed to verify signatures in Firefox. But, if needed, autograph can
   return signatures in other formats:
    * `rs_base64url` is the default format and returns the signature in R||S
@@ -138,40 +139,54 @@ The request body is a json array where each entry of the array is an object to s
 
 #### Response
 
-A successful request return a `201 Created` with a response body containing signature elements encoded in JSON. The ordering of the response array is identical to the request array.
+A successful request return a `201 Created` with a response body containing
+signature elements encoded in JSON. The ordering of the response array is
+identical to the request array, such that signing request 1 maps to signing
+response 1, etc...
 
 ```json
 [
-  {
-    "ref": "1d7febd28f",
-    "certificate": {
-        "x5u": "https://certrepo.example.net/db238be479dc759d464f804adf6e5febe6db4f1c4ac4aef07b1c6b55bb258954",
-        "encryptionkey": "BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
-    },
-    "signatures": [
-      {
-        "encoding": "b64url",
-        "signature": "PWUsOnvlhZV0I4k4hwGFMc3LQcUlS-l1UwD0cNevPv3ux7T9moHX_JZHc75cmnyo-hUkW6s-c6AaNr_dyxg2528OLY53voIqwTsiYll1iPElS9TV0xOo3awuwnYcctOp",
-        "hashalgorithm": "sha256"
-      }
-    ]
-  },
-  {
-    "ref": "9aefebd25c",
-    "certificate": {
-        "x5u": "https://certrepo.example.net/db238be479dc759d464f804adf6e5febe6db4f1c4ac4aef07b1c6b55bb258954",
-        "encryptionkey": "BDUJCg0PKtFrgI_lc5ar9qBm83cH_QJomSjXYUkIlswXKTdYLlJjFEWlIThQ0Y-TFZyBbUinNp-rou13Wve_Y_A"
-    },
-    "signatures": [
-      {
-        "encoding": "b64url",
-        "signature": "PWUsOnvlhZV0I4k4hwGFMc3LQcUlS-l1UwD0cNevPv3ux7T9moHX_JZHc75cmnyo-hUkW6s-c6AaNr_dyxg2528OLY53voIqwTsiYll1iPElS9TV0xOo3awuwnYcctOp",
-        "hashalgorithm": "sha256"
-      }
-    ]
-  }
+    {
+        "ref": "20e5t7zv0jh6n1cts4opu4vsup",
+        "signature": "MS8ZXMzr9YVttwuHgZ_SxlPogZKm_mYO6SsEiqupBeu01ELO_xP6huN4bXBn-ZH1ZJkbgBeVQ_QKd8wW9_ggJxDaPpQ3COFcpW_SdHaiEOLBcKt_SrKmLVIWHE3wc3lV",
+        "signature_encoding": "rs_base64url",
+        "hash_algorithm": "sha384",
+        "public_key": "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEu+HCTEht2Y5U3IwWZeaR54pqAsQDPly934y8tBb0rXEKslpDGnJgGNzKjOGMb8gTb+SfiSTwJLJGFaJkM5N//C2vg9lELo+l7kXkyiYnvBKaVb618DAI4Usuc7Lqu/4C",
+        "x5u": "https://bucket.example.net/appkey2.pem",
+        "content-signature": "x5u=https://bucket.example.net/appkey2.pem; p384ecdsa=MS8ZXMzr9YVttwuHgZ_SxlPogZKm_mYO6SsEiqupBeu01ELO_xP6huN4bXBn-ZH1ZJkbgBeVQ_QKd8wW9_ggJxDaPpQ3COFcpW_SdHaiEOLBcKt_SrKmLVIWHE3wc3lV"
+    }
 ]
 ```
+Each signature response contains the following fields:
+
+* `ref` is a random string that acts as a reference number for logging and
+  tracking.
+
+* `signature` is the ECDSA signature of the input data submitting in the
+  signing request.
+
+* `signature_encoding` is the encoding format of the `signature`. If none
+  was specified in the signature request, `rs_base64url` is used.
+
+* `hash_algorithm` is the SHA function used to sign the input data. If
+  none was specificed in the signature request, autograph assumed the
+  input data was hashed prior to requesting signature, and this value is empty.
+
+* `public_key` is the DER encoded public key that maps to the signing key
+  used to generate the signature. This value can be used by clients to verify
+  signatures. The DER format is supported by OpenSSL and most libraries.
+
+* `x5u` is the URL to the certificate chain that can be used to verify the
+  signature. This value is returned when the signing key maps to a public
+  certificate which is part of a PKI. In such environments, the X5U value
+  will point to a file that contains PEM encoded certificates. The signing
+  certificate will be first, followed by any intermediate. The Root CA that
+  represents that base of the chain is not included in the X5U URL, and must
+  be trusted by applications through other means (like a local truststore).
+
+* `content-signature` is the raw HTTP header of the Content-Signature protocol.
+  This value should not be interpreted by the client application, but passed
+  along unmodified to verifying libraries, such as the Content Verifier in Firefox.
 
 ## Configuration
 

@@ -30,9 +30,9 @@ type signaturerequest struct {
 // a signature computed on input data
 type signatureresponse struct {
 	Ref              string `json:"ref"`
-	X5u              string `json:"x5u,omitempty"`
-	PublicKey        string `json:"publickey,omitempty"`
-	Hash             string `json:"hashalgorithm,omitempty"`
+	X5U              string `json:"x5u,omitempty"`
+	PublicKey        string `json:"public_key,omitempty"`
+	Hash             string `json:"hash_algorithm,omitempty"`
 	Encoding         string `json:"signature_encoding,omitempty"`
 	Signature        string `json:"signature"`
 	ContentSignature string `json:"content-signature,omitempty"`
@@ -167,6 +167,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		}
 		sigresps[i] = signatureresponse{
 			Ref:              id(),
+			X5U:              a.signers[signerID].X5U,
 			PublicKey:        a.signers[signerID].PublicKey,
 			Hash:             sigreq.HashWith,
 			Encoding:         sigreq.Encoding,

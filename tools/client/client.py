@@ -53,15 +53,20 @@ def main():
         return
 
     # the public key is converted to regular base64, and loaded
-    pubkeystr = un_urlsafe(sigresp[0]["publickey"])
+    pubkeystr = un_urlsafe(sigresp[0]["public_key"])
     vk = ecdsa.VerifyingKey.from_pem(pubkeystr)
 
     # the signature is b64 decoded to obtain bytes
     sigdata = base64.b64decode(un_urlsafe(sigresp[0]["signature"].encode("utf-8")))
 
     hashfunc = None
-    if sigreq[0]["hashwith"] == "sha384":
-        hashfunc = hashlib.sha384
+    if "hash_algorithm" in sigresp[0]:
+        if sigresp[0]["hash_algorithm"] == "sha384":
+            hashfunc = hashlib.sha384
+        if sigresp[0]["hash_algorithm"] == "sha256":
+            hashfunc = hashlib.sha256
+        if sigresp[0]["hash_algorithm"] == "sha512":
+            hashfunc = hashlib.sha512
 
     # perform verification
     print("signature validation: %s" % vk.verify(sigdata, inputdata, hashfunc=hashfunc, sigdecode=ecdsa.util.sigdecode_string))
