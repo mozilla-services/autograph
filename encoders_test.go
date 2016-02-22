@@ -8,6 +8,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 	"testing"
 )
@@ -17,7 +18,7 @@ func TestEncodeDecode(t *testing.T) {
 	sig.R, sig.S = new(big.Int), new(big.Int)
 	sig.R.UnmarshalText([]byte("6259915849506081953195822778836906638312880422565351933025739850554626487283192654040697419197598947387738806787988"))
 	sig.S.UnmarshalText([]byte("5943508783332546705852262942555715397696959766757176458821265258714412617334569990327433520177942823437637818778521"))
-	for _, format := range []string{"rs_base64", "rs_base64url", "der_base64", "der_base64url"} {
+	for _, format := range []string{"", "rs_base64", "rs_base64url", "der_base64", "der_base64url"} {
 		str, err := encode(sig, format)
 		if err != nil {
 			t.Error(err)
@@ -55,5 +56,30 @@ func TestFromB64URL(t *testing.T) {
 				t.Errorf("decoded base64 data doesn't match expected data")
 			}
 		}
+	}
+}
+
+func TestEncodeUnknownFormat(t *testing.T) {
+	sig := new(ecdsaSignature)
+	sig.R, sig.S = new(big.Int), new(big.Int)
+	sig.R.UnmarshalText([]byte("6259915849506081953195822778836906638312880422565351933025739850554626487283192654040697419197598947387738806787988"))
+	sig.S.UnmarshalText([]byte("5943508783332546705852262942555715397696959766757176458821265258714412617334569990327433520177942823437637818778521"))
+	_, err := encode(sig, "somethingrandom")
+	if fmt.Sprintf("%v", err) != `unknown encoding format "somethingrandom"` {
+		t.Errorf("expected to fail with unknown format, but didn't")
+	}
+}
+
+func TestDecodeUnknownFormat(t *testing.T) {
+	_, err := decode("blah", "somethingrandom")
+	if fmt.Sprintf("%v", err) != `unknown decoding format "somethingrandom"` {
+		t.Errorf("expected to fail with unknown format, but didn't")
+	}
+}
+
+func TestBadDecodeString(t *testing.T) {
+	_, err := decode("{{{{{{{{", "")
+	if err == nil {
+		t.Errorf("expected to fail decoding, but didn't")
 	}
 }
