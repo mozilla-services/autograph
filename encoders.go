@@ -18,7 +18,7 @@ func encode(sig *ecdsaSignature, format string) (str string, err error) {
 	if len(format) < 4 {
 		format = "rs_base64url"
 	}
-	if format[0:9] == "rs_base64" {
+	if strings.HasPrefix(format, "rs_base64") {
 		// return default rs_base64url format
 		rs := make([]byte, len(sig.R.Bytes())+len(sig.S.Bytes()))
 		copy(rs[:len(sig.R.Bytes())], sig.R.Bytes())
@@ -29,7 +29,7 @@ func encode(sig *ecdsaSignature, format string) (str string, err error) {
 		}
 		return str, nil
 	}
-	if format[0:10] == "der_base64" {
+	if strings.HasPrefix(format, "der_base64") {
 		der, err := asn1.Marshal(*sig)
 		if err != nil {
 			return "", fmt.Errorf("asn1 marshalling failed with error: %v", err)
@@ -53,13 +53,13 @@ func decode(str, format string) (sig *ecdsaSignature, err error) {
 	if err != nil {
 		return nil, err
 	}
-	if format[0:9] == "rs_base64" {
+	if strings.HasPrefix(format, "rs_base64") {
 		sig.R, sig.S = new(big.Int), new(big.Int)
 		sig.R.SetBytes(data[:len(data)/2])
 		sig.S.SetBytes(data[len(data)/2:])
 		return sig, nil
 	}
-	if format[0:10] == "der_base64" {
+	if strings.HasPrefix(format, "der_base64") {
 		_, err = asn1.Unmarshal(data, sig)
 		return sig, err
 	}
