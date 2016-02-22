@@ -14,6 +14,5 @@ before_install:
     - go get github.com/mattn/goveralls
 
 script:
-    - make vet lint generate
-    - go test -v -covermode=count -coverprofile=coverage.out github.com/mozilla-services/autograph
+    - make vet lint generate test
     - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
