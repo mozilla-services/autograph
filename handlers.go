@@ -8,12 +8,35 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/hashicorp/golang-lru"
 )
+
+// a signaturerequest is sent by an autograph client to request
+// a signature on input data
+type signaturerequest struct {
+	Template string `json:"template"`
+	HashWith string `json:"hashwith"`
+	Input    string `json:"input"`
+	KeyID    string `json:"keyid"`
+	Encoding string `json:"signature_encoding"`
+}
+
+// a signatureresponse is returned by autograph to a client with
+// a signature computed on input data
+type signatureresponse struct {
+	Ref              string `json:"ref"`
+	X5U              string `json:"x5u,omitempty"`
+	PublicKey        string `json:"public_key,omitempty"`
+	Hash             string `json:"hash_algorithm,omitempty"`
+	Encoding         string `json:"signature_encoding,omitempty"`
+	Signature        string `json:"signature"`
+	ContentSignature string `json:"content-signature,omitempty"`
+}
 
 // A autographer signs input data with a private key
 type autographer struct {
@@ -113,6 +136,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sigresps := make([]signatureresponse, len(sigreqs))
+	// Each signature requested in the http request body is processed individually.
+	// For each, a signer is looked up, and used to compute a raw signature
+	// the signature is then encoded appropriately, and added to the response slice
 	for i, sigreq := range sigreqs {
 		hash, err := getInputHash(sigreq)
 		if err != nil {
@@ -124,29 +150,39 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, http.StatusUnauthorized, "%v", err)
 			return
 		}
-		rawsig, err := a.signers[signerID].sign(hash)
+		ecdsaSig, err := a.signers[signerID].sign(hash)
 		if err != nil {
 			httpError(w, http.StatusInternalServerError, "signing failed with error: %v", err)
 			return
 		}
-		sigresps[i].Signatures = append(sigresps[i].Signatures, signaturedata{
-			Encoding:  "b64url",
-			Signature: rawsig.toBase64Url(),
-			Hash:      "sha384",
-		})
-		sigresps[i].Certificate, err = a.signers[signerID].getCertificate()
+		encodedsig, err := encode(ecdsaSig, sigreq.Encoding)
 		if err != nil {
-			httpError(w, http.StatusInternalServerError, "failed to retrieve signing certificate: %v", err)
+			httpError(w, http.StatusInternalServerError, "encoding failed with error: %v", err)
 			return
 		}
-		sigresps[i].Ref = id()
+		encodedcs, err := a.signers[signerID].ContentSignature(ecdsaSig)
+		if err != nil {
+			httpError(w, http.StatusInternalServerError, "failed to retrieve content-signature: %v", err)
+			return
+		}
+		sigresps[i] = signatureresponse{
+			Ref:              id(),
+			X5U:              a.signers[signerID].X5U,
+			PublicKey:        a.signers[signerID].PublicKey,
+			Hash:             sigreq.HashWith,
+			Encoding:         sigreq.Encoding,
+			Signature:        encodedsig,
+			ContentSignature: encodedcs,
+		}
 	}
 	respdata, err := json.Marshal(sigresps)
 	if err != nil {
 		httpError(w, http.StatusInternalServerError, "signing failed with error: %v", err)
 		return
 	}
-	log.Printf("signing operation succeeded:%s", respdata)
+	log.Printf("signing operation succeeded. userid=%q; request=%s; response=%s",
+		userid, body, respdata)
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(respdata)
 }
@@ -158,4 +194,17 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte("ohai"))
+}
+
+// handleVersion returns the current version of the API
+func (a *autographer) handleVersion(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		httpError(w, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		return
+	}
+	w.Write([]byte(fmt.Sprintf(`{
+"source": "https://github.com/mozilla-services/autograph",
+"version": "%s",
+"commit": "%s"
+}`, version, commit)))
 }

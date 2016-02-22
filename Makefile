@@ -29,7 +29,10 @@ vet:
 	$(GO) vet $(PROJECT)
 
 test:
-	$(GO) test github.com/mozilla-services/autograph
+	$(GO) test -covermode=count -coverprofile=coverage.out github.com/mozilla-services/autograph
+
+showcoverage: test
+	$(GO) tool cover -html=coverage.out
 
 generate:
 	$(GO) generate

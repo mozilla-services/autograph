@@ -25,6 +25,9 @@ def main():
     argparser.add_argument('-t', dest='target',
                            default="http://localhost:8000/signature",
                            help="signing api URL (default: http://localhost:8000/signature)")
+    argparser.add_argument('-e', dest='encoding',
+                           default="rs_base64url",
+                           help="signature encoding format (default: rs_base64url)")
     args = argparser.parse_args()
 
     # try to load the input data as base64, and if that fails treat it as raw data instead
@@ -36,7 +39,8 @@ def main():
     # build and run the signature request
     sigreq = [{
         "input": base64.b64encode(inputdata),
-        "hashwith": args.hashwith
+        "hashwith": args.hashwith,
+        "signature_encoding": args.encoding
     }]
     print("signature request: %s" % sigreq)
     r = requests.post(args.target, json = sigreq, auth = HawkAuth(id=args.hawkid, key=args.hawkkey))
@@ -44,16 +48,25 @@ def main():
     print("signature response: %s" % r.text)
     sigresp = json.loads(r.text)
 
+    if args.encoding != "rs_base64url":
+        print("unable to verify signature: encoding is %s and I only know rs_base64url" % args.encoding)
+        return
+
     # the public key is converted to regular base64, and loaded
-    pubkeystr = un_urlsafe(sigresp[0]["certificate"]["encryptionkey"])
+    pubkeystr = un_urlsafe(sigresp[0]["public_key"])
     vk = ecdsa.VerifyingKey.from_pem(pubkeystr)
 
     # the signature is b64 decoded to obtain bytes
-    sigdata = base64.b64decode(un_urlsafe(sigresp[0]["signatures"][0]["signature"].encode("utf-8")))
+    sigdata = base64.b64decode(un_urlsafe(sigresp[0]["signature"].encode("utf-8")))
 
     hashfunc = None
-    if sigreq[0]["hashwith"] == "sha384":
-        hashfunc = hashlib.sha384
+    if "hash_algorithm" in sigresp[0]:
+        if sigresp[0]["hash_algorithm"] == "sha384":
+            hashfunc = hashlib.sha384
+        if sigresp[0]["hash_algorithm"] == "sha256":
+            hashfunc = hashlib.sha256
+        if sigresp[0]["hash_algorithm"] == "sha512":
+            hashfunc = hashlib.sha512
 
     # perform verification
     print("signature validation: %s" % vk.verify(sigdata, inputdata, hashfunc=hashfunc, sigdecode=ecdsa.util.sigdecode_string))

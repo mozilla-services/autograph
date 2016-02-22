@@ -31,18 +31,13 @@ type signaturerequest struct {
 }
 
 type signatureresponse struct {
-	Ref         string          `json:"ref"`
-	Certificate certificate     `json:"certificate"`
-	Signatures  []signaturedata `json:"signatures"`
-}
-type certificate struct {
-	X5u           string `json:"x5u,omitempty"`
-	EncryptionKey string `json:"encryptionkey,omitempty"`
-}
-type signaturedata struct {
-	Encoding  string `json:"encoding,omitempty"`
-	Signature string `json:"signature,omitempty"`
-	Hash      string `json:"hashalgorithm,omitempty"`
+	Ref              string `json:"ref"`
+	X5u              string `json:"x5u,omitempty"`
+	PublicKey        string `json:"public_key,omitempty"`
+	Hash             string `json:"hash_algorithm,omitempty"`
+	Encoding         string `json:"signature_encoding,omitempty"`
+	Signature        string `json:"signature"`
+	ContentSignature string `json:"content-signature,omitempty"`
 }
 
 func main() {
@@ -136,7 +131,7 @@ func verify(req signaturerequest, resp signatureresponse) bool {
 		}
 	}
 
-	keyBytes, err := fromBase64URL(resp.Certificate.EncryptionKey)
+	keyBytes, err := fromBase64URL(resp.PublicKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -145,7 +140,7 @@ func verify(req signaturerequest, resp signatureresponse) bool {
 		log.Fatal(err)
 	}
 	pubKey := keyInterface.(*ecdsa.PublicKey)
-	sigBytes, err := fromBase64URL(resp.Signatures[0].Signature)
+	sigBytes, err := fromBase64URL(resp.Signature)
 	if err != nil {
 		log.Fatal(err)
 	}

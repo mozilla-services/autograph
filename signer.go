@@ -12,7 +12,12 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+	"math/big"
 )
+
+type ecdsaSignature struct {
+	R, S *big.Int // fields must be exported for ASN.1 marshalling
+}
 
 // A signer provides the configuration and key material to
 // allow an authorized user to sign data with a private key
@@ -20,6 +25,7 @@ type signer struct {
 	ID           string
 	PrivateKey   string
 	PublicKey    string
+	X5U          string
 	ecdsaPrivKey *ecdsa.PrivateKey
 }
 
@@ -46,65 +52,35 @@ func (s *signer) init() error {
 	return nil
 }
 
-func (s *signer) sign(data []byte) (sig signature, err error) {
-	R, S, err := ecdsa.Sign(rand.Reader, s.ecdsaPrivKey, data)
+// sign takes input data and returns an ecdsa signature
+func (s *signer) sign(data []byte) (sig *ecdsaSignature, err error) {
+	sig = new(ecdsaSignature)
+	sig.R, sig.S, err = ecdsa.Sign(rand.Reader, s.ecdsaPrivKey, data)
 	if err != nil {
 		return nil, fmt.Errorf("signing error: %v", err)
 	}
-	// sig = r||s
-	sig = make([]byte, len(R.Bytes())+len(S.Bytes()))
-	copy(sig[:len(R.Bytes())], R.Bytes())
-	copy(sig[len(R.Bytes()):], S.Bytes())
 	return
 }
 
-type signature []byte
-
-func (s *signature) toBase64Url() string {
-	return toBase64URL([]byte(*s))
-}
-
-func (s *signature) fromBase64Url(b64 string) error {
-	data, err := fromBase64URL(b64)
+// ContentSignatureString returns a content-signature header string
+func (s *signer) ContentSignature(ecdsaSig *ecdsaSignature) (string, error) {
+	encodedsig, err := encode(ecdsaSig, "rs_base64url")
 	if err != nil {
-		return err
+		return "", err
 	}
-	*s = signature(data)
-	return nil
-}
-
-type signaturerequest struct {
-	Template string `json:"template"`
-	HashWith string `json:"hashwith"`
-	Input    string `json:"input"`
-	KeyID    string `json:"keyid"`
-}
-
-type signatureresponse struct {
-	Ref         string          `json:"ref"`
-	Certificate certificate     `json:"certificate"`
-	Signatures  []signaturedata `json:"signatures"`
-}
-type certificate struct {
-	X5u           string `json:"x5u,omitempty"`
-	EncryptionKey string `json:"encryptionkey,omitempty"`
-}
-type signaturedata struct {
-	Encoding  string `json:"encoding,omitempty"`
-	Signature string `json:"signature,omitempty"`
-	Hash      string `json:"hashalgorithm,omitempty"`
-}
-
-// getCertificate return the certificate data (x5u and/or encryption)
-// associated with a given signer
-func (s *signer) getCertificate() (c certificate, err error) {
-	pubKey := s.ecdsaPrivKey.Public().(*ecdsa.PublicKey)
-	pubKeyDER, err := x509.MarshalPKIXPublicKey(pubKey)
-	if err != nil {
-		return
+	var csid string
+	switch s.ecdsaPrivKey.Curve.Params().Name {
+	case "P-256":
+		csid = "p256ecdsa"
+	case "P-384":
+		csid = "p384ecdsa"
+	default:
+		return "", fmt.Errorf("unknown curve name %q", s.ecdsaPrivKey.Curve.Params().Name)
 	}
-	c.EncryptionKey = toBase64URL(pubKeyDER)
-	return
+	if s.X5U != "" {
+		return fmt.Sprintf("x5u=%s; %s=%s", s.X5U, csid, encodedsig), nil
+	}
+	return fmt.Sprintf("keyid=%s; %s=%s", s.ID, csid, encodedsig), nil
 }
 
 // getInputHash returns a hash of the signature input data. Templating is applied if necessary.

@@ -71,6 +71,7 @@ func main() {
 	// start serving
 	mux := http.NewServeMux()
 	mux.HandleFunc("/__heartbeat__", ag.handleHeartbeat)
+	mux.HandleFunc("/__version__", ag.handleVersion)
 	mux.HandleFunc("/signature", ag.handleSignature)
 	server := &http.Server{
 		Addr:    conf.Server.Listen,
