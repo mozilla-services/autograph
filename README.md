@@ -66,33 +66,35 @@ Authorization: All API calls require a
 [hawk](https://github.com/hueniverse/hawk) Authorization header with payload
 signature enabled. Example code for can be found in the `tools` directory.
 
-### /signature
+### /sign/data
 
 #### Request
 
-Request a signature. The data to sign is passed in the request body using the
-JSON format described below. The caller can either request the signature of raw
-data or the signature of pre-computed hashes.
+Request a signature on raw data. The data to sign is passed in the request body
+using the JSON format described below.
 
 When requesting the signature of raw data, autograph will determine which hash
-function to use based on the key type (eg. p384 with sha384). If hashes are
-submitted, autograph only verifies their length (eg. 48 bytes for sha384).
+function to use based on the key type (eg. p384 with sha384). The caller can
+also force a specific hash algorithm with the `hashwith` parameter.
+
+The request body is an array of signature requests, to allow for batching signature
+of multiple inputs into a single API request.
 
 example:
 ```bash
-POST /signature
+POST /sign/data
 Host: autograph.example.net
 Content-type: application/json
 Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="
 
 [
     {
-        "input": "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"
+        "input": "c29tZSB2ZXJ5IGxvbmcgaW5wdXQgdGhhdCBkb2VzIG5vdCBjb250YWluIGFueXRoaW5nIGludGVyZXN0aW5nIG90aGVyIHRoYW4gdGFraW5nIHNwYWNlCg=="
     },
     {
+        "input": "c2lnbl9tZQo=",
         "template": "content-signature",
         "hashwith": "sha384",
-        "input": "c2lnbl9tZQo=",
         "keyid": "123456"
     }
 ]
@@ -107,8 +109,8 @@ The request body is a json array where each entry of the array is an object to s
   the input data prior to signing.
 
 * hashwith: the algorithm to hash the input data with prior to signing. If
-  omitted, autograph considers that the input data provided has already been
-  hashed, and does not perform any hashing on it.
+  omitted, autograph will select the appropriate hash algorithm to use based on
+  the private key (sha256 for P-256, sha384 for P-384, sha512 as a fallback).
 
 * input: base64 encoded data to sign
 
@@ -187,6 +189,44 @@ Each signature response contains the following fields:
 * `content-signature` is the raw HTTP header of the Content-Signature protocol.
   This value should not be interpreted by the client application, but passed
   along unmodified to verifying libraries, such as the Content Verifier in Firefox.
+
+### /sign/hash
+
+#### Request
+
+Request a signature on a hash. The hash is provided as a base64 encoded bytes
+array, and is not manipulated at all by autograph before signing.
+
+example:
+```bash
+POST /sign/hash
+Host: autograph.example.net
+Content-type: application/json
+Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="
+
+[
+    {
+        "input": "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"
+    },
+    {
+        "input": "Z4hdf5N8tHlwG82JLywb4X2U+VGWWry4dzwIC3vk6j32mryUHxUel9SWk5Trff8f",
+        "keyid": "123456"
+    }
+]
+```
+
+Body format:
+The request body is a json array where each entry of the array is an object to sign. The parameters are:
+
+* input: base64 encoded hash to sign
+
+* keyid: see `/sign/data`
+
+* signature_encoding: see `/sign/data`
+
+#### Response
+
+See `/sign/data`, the response format is identical.
 
 ## Configuration
 

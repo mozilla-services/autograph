@@ -19,11 +19,11 @@ import (
 // a signaturerequest is sent by an autograph client to request
 // a signature on input data
 type signaturerequest struct {
-	Template string `json:"template"`
-	HashWith string `json:"hashwith"`
+	Template string `json:"template,omitempty"`
+	HashWith string `json:"hashwith,omitempty"`
 	Input    string `json:"input"`
-	KeyID    string `json:"keyid"`
-	Encoding string `json:"signature_encoding"`
+	KeyID    string `json:"keyid,omitempty"`
+	Encoding string `json:"signature_encoding,omitempty"`
 }
 
 // a signatureresponse is returned by autograph to a client with
@@ -140,15 +140,47 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	// For each, a signer is looked up, and used to compute a raw signature
 	// the signature is then encoded appropriately, and added to the response slice
 	for i, sigreq := range sigreqs {
-		hash, err := getInputHash(sigreq)
-		if err != nil {
-			httpError(w, http.StatusBadRequest, "%v", err)
-			return
-		}
+		var (
+			hash []byte
+			alg  string
+		)
 		signerID, err := a.getSignerID(userid, sigreq.KeyID)
 		if err != nil || signerID < 0 {
 			httpError(w, http.StatusUnauthorized, "%v", err)
 			return
+		}
+		switch r.URL.RequestURI() {
+		case "/sign/hash":
+			// the '/sign/hash' endpoint does not allow requesting a particular hash or template
+			// since those need to be computed before calling autograph.
+			if sigreq.HashWith != "" || sigreq.Template != "" {
+				httpError(w, http.StatusBadRequest,
+					"hashwith and template parameters are not permitted on the /sign/hash endpoint")
+				return
+			}
+			hash, err = fromBase64URL(sigreq.Input)
+			if err != nil {
+				httpError(w, http.StatusBadRequest, "%v", err)
+				return
+			}
+		case "/sign/data":
+			// other endpoints, like '/sign/data', will template and hash the input prior to signing
+			alg, hash, err = templateAndHash(sigreq, a.signers[signerID].ecdsaPrivKey.Curve.Params().Name)
+			if err != nil {
+				httpError(w, http.StatusBadRequest, "%v", err)
+				return
+			}
+		// TODO: remove this case as soon as backward compat is no longer needed, or on 2016-06-01
+		case "/signature":
+			if sigreq.HashWith == "" {
+				hash, err = fromBase64URL(sigreq.Input)
+			} else {
+				alg, hash, err = templateAndHash(sigreq, a.signers[signerID].ecdsaPrivKey.Curve.Params().Name)
+			}
+			if err != nil {
+				httpError(w, http.StatusBadRequest, "%v", err)
+				return
+			}
 		}
 		ecdsaSig, err := a.signers[signerID].sign(hash)
 		if err != nil {
@@ -169,7 +201,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			Ref:              id(),
 			X5U:              a.signers[signerID].X5U,
 			PublicKey:        a.signers[signerID].PublicKey,
-			Hash:             sigreq.HashWith,
+			Hash:             alg,
 			Encoding:         sigreq.Encoding,
 			Signature:        encodedsig,
 			ContentSignature: encodedcs,

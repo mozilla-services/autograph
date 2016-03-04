@@ -36,7 +36,7 @@ func TestInitFail(t *testing.T) {
 	}
 }
 
-func TestGetInputHash(t *testing.T) {
+func TestTemplateAndHash(t *testing.T) {
 	TESTCASES := []struct {
 		sigreq      signaturerequest
 		hash        string
@@ -46,15 +46,13 @@ func TestGetInputHash(t *testing.T) {
 		{sigreq: signaturerequest{Input: "Y2FyaWJvdW1hdXJpY2UK", HashWith: "sha384"}, hash: "7e0509bd09f58d97575f6fcf06358e90fa47dfceecfc93694933352685287f11656fd060f116225c2bfd1954f5a31748"},
 		// apply a template to the string then hash it with sha384
 		{sigreq: signaturerequest{Template: "content-signature", Input: "Y2FyaWJvdW1hdXJpY2UK", HashWith: "sha384"}, hash: "e8c5eecea3e754b7028438b1f61174a695369c3eef603b7ebbf50cf906ce65425855d1d3c7e4a7c5d5e63c765ddd0699"},
-		// string already hashed, return it untouched
-		{sigreq: signaturerequest{Input: "6MXuzqPnVLcChDix9hF0ppU2nD7vYDt+u/UM+QbOZUJYVdHTx+SnxdXmPHZd3QaZ"}, hash: "e8c5eecea3e754b7028438b1f61174a695369c3eef603b7ebbf50cf906ce65425855d1d3c7e4a7c5d5e63c765ddd0699"},
 		// unsupported hash method
 		{sigreq: signaturerequest{Input: "Y2FyaWJvdW1hdXJpY2UK", HashWith: "md5"}, expectError: `unsupported digest algorithm "md5"`},
 		// unsupported template
 		{sigreq: signaturerequest{Template: "caribou", Input: "Y2FyaWJvdW1hdXJpY2UK"}, expectError: `unknown template "caribou"`},
 	}
 	for i, testcase := range TESTCASES {
-		hash, err := getInputHash(testcase.sigreq)
+		_, hash, err := templateAndHash(testcase.sigreq, "P-384")
 		if err != nil {
 			if testcase.expectError == "" {
 				t.Errorf("test case %d expected to succeed but failed with error: %v", i, err)
