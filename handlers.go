@@ -155,7 +155,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, http.StatusInternalServerError, "signing failed with error: %v", err)
 			return
 		}
-		encodedsig, err := encode(ecdsaSig, sigreq.Encoding)
+		encodedsig, err := encode(ecdsaSig, a.signers[signerID].siglen, sigreq.Encoding)
 		if err != nil {
 			httpError(w, http.StatusInternalServerError, "encoding failed with error: %v", err)
 			return

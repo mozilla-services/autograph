@@ -27,6 +27,7 @@ type signer struct {
 	PublicKey    string
 	X5U          string
 	ecdsaPrivKey *ecdsa.PrivateKey
+	siglen       int
 }
 
 func (s *signer) init() error {
@@ -49,6 +50,9 @@ func (s *signer) init() error {
 		return err
 	}
 	s.PublicKey = base64.StdEncoding.EncodeToString(pubkeybytes)
+	// the signature length is double the size size of the curve field, in bytes
+	// (each R and S value is equal to the size of the curve field)
+	s.siglen = (s.ecdsaPrivKey.Params().BitSize / 8) * 2
 	return nil
 }
 
@@ -64,7 +68,7 @@ func (s *signer) sign(data []byte) (sig *ecdsaSignature, err error) {
 
 // ContentSignatureString returns a content-signature header string
 func (s *signer) ContentSignature(ecdsaSig *ecdsaSignature) (string, error) {
-	encodedsig, err := encode(ecdsaSig, "rs_base64url")
+	encodedsig, err := encode(ecdsaSig, s.siglen, "rs_base64url")
 	if err != nil {
 		return "", err
 	}
