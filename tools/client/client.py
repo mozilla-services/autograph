@@ -6,7 +6,8 @@ import hashlib
 import base64
 import requests
 from requests_hawk import HawkAuth
-import argparse 
+import argparse
+
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -43,7 +44,7 @@ def main():
         "signature_encoding": args.encoding
     }]
     print("signature request: %s" % sigreq)
-    r = requests.post(args.target, json = sigreq, auth = HawkAuth(id=args.hawkid, key=args.hawkkey))
+    r = requests.post(args.target, json=sigreq, auth=HawkAuth(id=args.hawkid, key=args.hawkkey))
     r.raise_for_status()
     print("signature response: %s" % r.text)
     sigresp = json.loads(r.text)
@@ -71,12 +72,14 @@ def main():
     # perform verification
     print("signature validation: %s" % vk.verify(sigdata, inputdata, hashfunc=hashfunc, sigdecode=ecdsa.util.sigdecode_string))
 
+
 def un_urlsafe(input):
     input = str(input).replace("_", "/")
     input = str(input).replace("-", "+")
     if len(input) % 4 > 0:
-        input += "=" * (len(input) % 4)
+        input += "=" * (4 - len(input) % 4)
     return input
-  
+
+
 if __name__ == '__main__':
     main()
