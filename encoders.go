@@ -16,9 +16,11 @@ import (
 
 const (
 	// RSB64 represents the R||S signature encoded in base64
+	// Following DL/ECSSA format spec from IEEE Std 1363-2000
 	RSB64 = "rs_base64"
 
 	// RSB64URL represents the R||S signature encoded in base64 URL safe [default]
+	// Following DL/ECSSA format spec from IEEE Std 1363-2000
 	RSB64URL = "rs_base64url"
 
 	// DERB64 represents the DER signature encoded in base64
@@ -28,16 +30,22 @@ const (
 	DERB64URL = "der_base64url"
 )
 
-func encode(sig *ecdsaSignature, format string) (str string, err error) {
+func encode(sig *ecdsaSignature, siglen int, format string) (str string, err error) {
 	if format == "" {
 		// use this format by default, if none is set
 		format = RSB64URL
 	}
 	if strings.HasPrefix(format, RSB64) {
-		// return default rs_base64url format
-		rs := make([]byte, len(sig.R.Bytes())+len(sig.S.Bytes()))
-		copy(rs[:len(sig.R.Bytes())], sig.R.Bytes())
-		copy(rs[len(sig.S.Bytes()):], sig.S.Bytes())
+		// write R and S into a slice of len
+		// both R and S are zero-padded to the left to be exactly
+		// len/2 in length
+		Rstart := (siglen / 2) - len(sig.R.Bytes())
+		Rend := (siglen / 2)
+		Sstart := siglen - len(sig.S.Bytes())
+		Send := siglen
+		rs := make([]byte, siglen)
+		copy(rs[Rstart:Rend], sig.R.Bytes())
+		copy(rs[Sstart:Send], sig.S.Bytes())
 		str = base64.StdEncoding.EncodeToString(rs)
 		if format == RSB64URL {
 			str = b64Tob64url(str)

@@ -15,11 +15,12 @@ import (
 
 func TestEncodeDecode(t *testing.T) {
 	sig := new(ecdsaSignature)
+	siglen := 96
 	sig.R, sig.S = new(big.Int), new(big.Int)
 	sig.R.UnmarshalText([]byte("6259915849506081953195822778836906638312880422565351933025739850554626487283192654040697419197598947387738806787988"))
 	sig.S.UnmarshalText([]byte("5943508783332546705852262942555715397696959766757176458821265258714412617334569990327433520177942823437637818778521"))
 	for _, format := range []string{"", "rs_base64", "rs_base64url", "der_base64", "der_base64url"} {
-		str, err := encode(sig, format)
+		str, err := encode(sig, siglen, format)
 		if err != nil {
 			t.Error(err)
 		}
@@ -34,6 +35,38 @@ func TestEncodeDecode(t *testing.T) {
 	}
 }
 
+func TestEncodeDecodeWithPadding(t *testing.T) {
+	TESTCASES := []struct {
+		siglen int
+		R      string
+		S      string
+	}{
+		{96, "2128066202487217241539270666680448722972693699940038599787429812251636356699680994967769608052734582226276770140879", "108241770093221671004852343318847354670379493045829426776218162732683913479472713406018140729513260136708922285166"},
+		{96, "111072053423331555492457222311902329496194472749479844347044796559168697529752903003136003847320923581342328976742", "27407168111906593754315382063905994340883263312680042518128418929507621149854352250321363323835060648900578339084406"},
+		{96, "8785674129730864930499752157730675177314024034613814144278953415721326426726774412625213492567185922012617440733352", "23049031040197223126992382691786449731136998814239966806935666296303914636458655229985399407408184235392126750899"},
+	}
+	for _, testcase := range TESTCASES {
+		sig := new(ecdsaSignature)
+		siglen := testcase.siglen
+		sig.R, sig.S = new(big.Int), new(big.Int)
+		sig.R.UnmarshalText([]byte(testcase.R))
+		sig.S.UnmarshalText([]byte(testcase.S))
+		for _, format := range []string{"", "rs_base64", "rs_base64url", "der_base64", "der_base64url"} {
+			str, err := encode(sig, siglen, format)
+			if err != nil {
+				t.Error(err)
+			}
+			t.Log(str)
+			sig2, err := decode(str, format)
+			if err != nil {
+				t.Error(err)
+			}
+			if sig.R.String() != sig2.R.String() || sig.S.String() != sig2.S.String() {
+				t.Errorf("failed to encode/decode ecdsa signature in format %q", format)
+			}
+		}
+	}
+}
 func TestFromB64URL(t *testing.T) {
 	TESTCASES := []struct {
 		expectError string
@@ -61,10 +94,11 @@ func TestFromB64URL(t *testing.T) {
 
 func TestEncodeUnknownFormat(t *testing.T) {
 	sig := new(ecdsaSignature)
+	siglen := 96
 	sig.R, sig.S = new(big.Int), new(big.Int)
 	sig.R.UnmarshalText([]byte("6259915849506081953195822778836906638312880422565351933025739850554626487283192654040697419197598947387738806787988"))
 	sig.S.UnmarshalText([]byte("5943508783332546705852262942555715397696959766757176458821265258714412617334569990327433520177942823437637818778521"))
-	_, err := encode(sig, "somethingrandom")
+	_, err := encode(sig, siglen, "somethingrandom")
 	if fmt.Sprintf("%v", err) != `unknown encoding format "somethingrandom"` {
 		t.Errorf("expected to fail with unknown format, but didn't")
 	}

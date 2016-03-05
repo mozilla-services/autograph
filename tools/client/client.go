@@ -16,7 +16,6 @@ import (
 	"log"
 	"math/big"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -43,13 +42,15 @@ type signatureresponse struct {
 func main() {
 	var (
 		userid, pass, sigreq, url string
+		iter, maxworkers          int
 	)
 
 	flag.StringVar(&userid, "u", "alice", "User ID")
 	flag.StringVar(&pass, "p", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", "Secret passphrase")
 	flag.StringVar(&sigreq, "r", `[{"input": "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`, "JSON signing request")
 	flag.StringVar(&url, "t", `http://localhost:8000/signature`, "signing api URL")
-
+	flag.IntVar(&iter, "i", 1, "number of signatures to request")
+	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
 	flag.Parse()
 
 	// verify format of signature request
@@ -61,46 +62,68 @@ func main() {
 	if len(requests) == 0 {
 		log.Fatal("no signature request found in input: %s", sigreq)
 	}
+	tr := &http.Transport{
+		DisableKeepAlives: false,
+	}
+	cli := &http.Client{Transport: tr}
 
-	// prepare the http request, with hawk token
-	rdr := bytes.NewReader([]byte(sigreq))
-	req, err := http.NewRequest("POST", url, rdr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, userid, pass, sha256.New, fmt.Sprintf("%d", time.Now().Nanosecond()), "application/json", []byte(sigreq))
-	req.Header.Set("Authorization", authheader)
-
-	cli := &http.Client{}
-	resp, err := cli.Do(req)
-	if err != nil || resp == nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-
-	// verify that we got a proper signature response, with a valid signature
-	var responses []signatureresponse
-	err = json.Unmarshal(body, &responses)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(requests) != len(responses) {
-		log.Fatal("sent %d signature requests and got %d responses, something's wrong", len(requests), len(responses))
-	}
-	for i, response := range responses {
-		if verify(requests[i], response) {
-			fmt.Fprintf(os.Stderr, "response %d pass\n", i)
-		} else {
-			log.Fatal("response %d does not pass!", i)
+	workers := 0
+	for i := 0; i < iter; i++ {
+		for {
+			if workers < maxworkers {
+				break
+			}
+			time.Sleep(time.Second)
 		}
+		workers++
+		go func() {
+			// prepare the http request, with hawk token
+			rdr := bytes.NewReader([]byte(sigreq))
+			req, err := http.NewRequest("POST", url, rdr)
+			if err != nil {
+				log.Fatal(err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+			authheader := getAuthHeader(req, userid, pass, sha256.New, fmt.Sprintf("%d", time.Now().Nanosecond()), "application/json", []byte(sigreq))
+			req.Header.Set("Authorization", authheader)
+
+			resp, err := cli.Do(req)
+			if err != nil || resp == nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+
+			// verify that we got a proper signature response, with a valid signature
+			var responses []signatureresponse
+			err = json.Unmarshal(body, &responses)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if len(requests) != len(responses) {
+				log.Fatal("sent %d signature requests and got %d responses, something's wrong", len(requests), len(responses))
+			}
+			for i, response := range responses {
+				if verify(requests[i], response) {
+					log.Printf("signature %d pass", i)
+				} else {
+					log.Fatal("response %d does not pass!", i)
+				}
+			}
+			pretty, err := json.MarshalIndent(responses, "", "  ")
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("%s\n", pretty)
+			workers--
+		}()
 	}
-	pretty, err := json.MarshalIndent(responses, "", "  ")
-	if err != nil {
-		log.Fatal(err)
+	for {
+		if workers <= 0 {
+			break
+		}
+		time.Sleep(time.Second)
 	}
-	fmt.Printf("%s\n", pretty)
 }
 
 func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash, ext, contenttype string, payload []byte) string {
