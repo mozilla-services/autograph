@@ -34,17 +34,19 @@ func TestSignaturePass(t *testing.T) {
 				// request signature that need to prepend the content-signature:\x00 header
 				signaturerequest{
 					Template: "content-signature",
-					HashWith: "sha384",
 					Input:    "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
+					KeyID:    "appkey1",
 				},
 				// request signature of a precomputed sha384 hash
 				signaturerequest{
 					Input: "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d",
+					KeyID: "appkey2",
 				},
 				// request signature of raw data that already has the content-signature header prepended
 				signaturerequest{
 					HashWith: "sha384",
 					Input:    "Q29udGVudC1TaWduYXR1cmU6ADwhRE9DVFlQRSBIVE1MPgo8aHRtbD4KPCEtLSBodHRwczovL2J1Z3ppbGxhLm1vemlsbGEub3JnL3Nob3dfYnVnLmNnaT9pZD0xMjI2OTI4IC0tPgo8aGVhZD4KICA8bWV0YSBjaGFyc2V0PSJ1dGYtOCI+CiAgPHRpdGxlPlRlc3RwYWdlIGZvciBidWcgMTIyNjkyODwvdGl0bGU+CjwvaGVhZD4KPGJvZHk+CiAgSnVzdCBhIGZ1bGx5IGdvb2QgdGVzdHBhZ2UgZm9yIEJ1ZyAxMjI2OTI4PGJyLz4KPC9ib2R5Pgo8L2h0bWw+Cg==",
+					KeyID:    "appkey3",
 				},
 			}},
 		{
@@ -55,15 +57,18 @@ func TestSignaturePass(t *testing.T) {
 					Template: "content-signature",
 					HashWith: "sha384",
 					Input:    "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
+					KeyID:    "appkey2",
 				},
 				// request signature that will use the default hash function
 				signaturerequest{
 					Input: "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
+					KeyID: "appkey3",
 				},
 				// request signature of raw data that already has the content-signature header prepended
 				signaturerequest{
 					HashWith: "sha384",
 					Input:    "Q29udGVudC1TaWduYXR1cmU6ADwhRE9DVFlQRSBIVE1MPgo8aHRtbD4KPCEtLSBodHRwczovL2J1Z3ppbGxhLm1vemlsbGEub3JnL3Nob3dfYnVnLmNnaT9pZD0xMjI2OTI4IC0tPgo8aGVhZD4KICA8bWV0YSBjaGFyc2V0PSJ1dGYtOCI+CiAgPHRpdGxlPlRlc3RwYWdlIGZvciBidWcgMTIyNjkyODwvdGl0bGU+CjwvaGVhZD4KPGJvZHk+CiAgSnVzdCBhIGZ1bGx5IGdvb2QgdGVzdHBhZ2UgZm9yIEJ1ZyAxMjI2OTI4PGJyLz4KPC9ib2R5Pgo8L2h0bWw+Cg==",
+					KeyID:    "appkey1",
 				},
 			}},
 		{
@@ -114,80 +119,30 @@ func TestSignaturePass(t *testing.T) {
 	}
 }
 
-func TestSignHashFail(t *testing.T) {
-	var TESTCASES = []signaturerequest{
-		// request signature that need to prepend the content-signature:\x00 header
-		signaturerequest{
-			Template: "content-signature",
-			HashWith: "sha384",
-			Input:    "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
-		},
-		// request signature of a precomputed sha384 hash
-		signaturerequest{
-			Input: "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d",
-		},
-		// request signature of raw data that already has the content-signature header prepended
-		signaturerequest{
-			HashWith: "sha384",
-			Input:    "Q29udGVudC1TaWduYXR1cmU6ADwhRE9DVFlQRSBIVE1MPgo8aHRtbD4KPCEtLSBodHRwczovL2J1Z3ppbGxhLm1vemlsbGEub3JnL3Nob3dfYnVnLmNnaT9pZD0xMjI2OTI4IC0tPgo8aGVhZD4KICA8bWV0YSBjaGFyc2V0PSJ1dGYtOCI+CiAgPHRpdGxlPlRlc3RwYWdlIGZvciBidWcgMTIyNjkyODwvdGl0bGU+CjwvaGVhZD4KPGJvZHk+CiAgSnVzdCBhIGZ1bGx5IGdvb2QgdGVzdHBhZ2UgZm9yIEJ1ZyAxMjI2OTI4PGJyLz4KPC9ib2R5Pgo8L2h0bWw+Cg==",
-		},
-	}
-	userid := conf.Authorizations[0].ID
-	body, err := json.Marshal(TESTCASES)
-	if err != nil {
-		t.Fatal(err)
-	}
-	rdr := bytes.NewReader(body)
-	req, err := http.NewRequest("POST", "http://foo.bar/signature", rdr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, ag.auths[userid].ID, ag.auths[userid].Key,
-		sha256.New, id(), "application/json", body)
-	req.Header.Set("Authorization", authheader)
-	w := httptest.NewRecorder()
-	ag.handleSignature(w, req)
-	if w.Code != http.StatusCreated || w.Body.String() == "" {
-		t.Fatalf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
-	}
-
-	// verify that we got a proper signature response, with a valid signature
-	var responses []signatureresponse
-	err = json.Unmarshal(w.Body.Bytes(), &responses)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(responses) != len(TESTCASES) {
-		t.Fatalf("failed to receive as many responses (%d) as we sent requests (%d)",
-			len(responses), len(TESTCASES))
-	}
-	for i, response := range responses {
-		if !verify(t, TESTCASES[i], response, userid, "/signature") {
-			t.Fatalf("signature verification failed in response %d; request was: %+v", i, req)
-		}
-	}
-}
-
 func TestSignatureFail(t *testing.T) {
 	var TESTCASES = []struct {
 		endpoint string
 		method   string
 		body     string
 	}{
-		{`/signature`, `GET`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		// missing request body
 		{`/signature`, `POST`, ``},
+		{`/sign/data`, `POST`, ``},
+		{`/sign/hash`, `POST`, ``},
+		// bad hashwith algorithm
+		{`/signature`, `POST`, `[{"hashwith":"md5", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		{`/sign/data`, `POST`, `[{"hashwith":"md5", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		// hashwith and template parameters are forbidden on this endpoint
+		{`/sign/hash`, `POST`, `[{"hashwith": "sha384", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		{`/sign/hash`, `POST`, `[{"template":"content-signature", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		// no GET, PUT or HEAD requests on these endpoints
+		{`/signature`, `GET`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
 		{`/signature`, `PUT`, ``},
 		{`/signature`, `HEAD`, ``},
 		{`/sign/data`, `GET`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
-		{`/sign/data`, `POST`, `[{"hashwith":"md5", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
-		{`/sign/data`, `POST`, ``},
 		{`/sign/data`, `PUT`, ``},
 		{`/sign/data`, `HEAD`, ``},
 		{`/sign/hash`, `GET`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
-		{`/sign/hash`, `POST`, `[{"hashwith": "sha384", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
-		{`/sign/hash`, `POST`, `[{"template":"content-signature", "hashwith": "sha384", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
-		{`/sign/hash`, `POST`, ``},
 		{`/sign/hash`, `PUT`, ``},
 		{`/sign/hash`, `HEAD`, ``},
 	}
@@ -246,6 +201,49 @@ func TestAuthFail(t *testing.T) {
 	}
 }
 
+func TestContentSignatureInResponse(t *testing.T) {
+	var TESTCASES = []struct {
+		expect   bool
+		endpoint string
+		body     string
+	}{
+		{true, `/sign/data`, `[{"template": "content-signature", "hashwith": "sha384", "input":"PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNo"}]`},
+		{true, `/signature`, `[{"template": "content-signature", "hashwith": "sha384", "input":"PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNo"}]`},
+		{true, `/sign/hash`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		{false, `/sign/data`, `[{"hashwith": "sha384", "input":"PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNo"}]`},
+		{false, `/signature`, `[{"hashwith": "sha384", "input":"PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNo"}]`},
+	}
+	for i, testcase := range TESTCASES {
+		body := strings.NewReader(testcase.body)
+		req, err := http.NewRequest("POST", "http://foo.bar"+testcase.endpoint, body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", []byte(testcase.body))
+		req.Header.Set("Authorization", authheader)
+		w := httptest.NewRecorder()
+		ag.handleSignature(w, req)
+		if w.Code != http.StatusCreated {
+			t.Fatalf("test case %d failed with %d: %s", i, w.Code, w.Body.String())
+		}
+		var responses []signatureresponse
+		err = json.Unmarshal(w.Body.Bytes(), &responses)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for j, response := range responses {
+			if testcase.expect && response.ContentSignature == "" {
+				t.Fatalf("in test case %d on endpoint %q, expected to find content-signature but didn't; request was %+v",
+					i, testcase.endpoint, j, req)
+			}
+			if !testcase.expect && response.ContentSignature != "" {
+				t.Fatalf("in test case %d on endpoint %q, expected to not find content-signature but did; request was %+v",
+					i, testcase.endpoint, j, req)
+			}
+		}
+	}
+}
 func TestHeartbeat(t *testing.T) {
 	var TESTCASES = []struct {
 		expect int
@@ -550,7 +548,7 @@ func verify(t *testing.T, request signaturerequest, response signatureresponse, 
 	pubkey := ag.signers[signerID].ecdsaPrivKey.Public()
 	sigBytes, err := fromBase64URL(response.Signature)
 	if err != nil {
-		t.Fatalf("failed to decode base65 signature data: %v", err)
+		t.Fatalf("failed to decode base64 signature data: %v", err)
 	}
 	r, s := new(big.Int), new(big.Int)
 	r.SetBytes(sigBytes[:len(sigBytes)/2])

@@ -117,9 +117,10 @@ func templateAndHash(sigreq signaturerequest, curveName string) (string, []byte,
 	case "P-384":
 		hash, err := digest(hashinput, "sha384")
 		return "sha384", hash, err
+	default:
+		hash, err := digest(hashinput, "sha512")
+		return "sha512", hash, err
 	}
-	hash, err := digest(hashinput, "sha512")
-	return "sha512", hash, err
 }
 
 // applyTemplate returns a templated input using custom rules. This is used when requesting a

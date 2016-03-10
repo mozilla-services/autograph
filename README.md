@@ -187,8 +187,10 @@ Each signature response contains the following fields:
   be trusted by applications through other means (like a local truststore).
 
 * `content-signature` is the raw HTTP header of the Content-Signature protocol.
-  This value should not be interpreted by the client application, but passed
-  along unmodified to verifying libraries, such as the Content Verifier in Firefox.
+  This value is only returned if the signature requested a `content-signature`
+  template to be applied to the data. It should not be interpreted by client
+  applications, but passed unmodified to verifying libraries, such as the Content
+  Verifier in Firefox.
 
 ### /sign/hash
 
@@ -196,6 +198,8 @@ Each signature response contains the following fields:
 
 Request a signature on a hash. The hash is provided as a base64 encoded bytes
 array, and is not manipulated at all by autograph before signing.
+
+This endpoint always returns a `content-signature` with every response.
 
 example:
 ```bash

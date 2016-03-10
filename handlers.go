@@ -141,8 +141,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	// the signature is then encoded appropriately, and added to the response slice
 	for i, sigreq := range sigreqs {
 		var (
-			hash []byte
-			alg  string
+			isHashReq                  bool
+			hash                       []byte
+			alg, encodedcs, encodedsig string
 		)
 		signerID, err := a.getSignerID(userid, sigreq.KeyID)
 		if err != nil || signerID < 0 {
@@ -151,6 +152,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		}
 		switch r.URL.RequestURI() {
 		case "/sign/hash":
+			isHashReq = true
 			// the '/sign/hash' endpoint does not allow requesting a particular hash or template
 			// since those need to be computed before calling autograph.
 			if sigreq.HashWith != "" || sigreq.Template != "" {
@@ -187,15 +189,17 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, http.StatusInternalServerError, "signing failed with error: %v", err)
 			return
 		}
-		encodedsig, err := encode(ecdsaSig, a.signers[signerID].siglen, sigreq.Encoding)
+		encodedsig, err = encode(ecdsaSig, a.signers[signerID].siglen, sigreq.Encoding)
 		if err != nil {
 			httpError(w, http.StatusInternalServerError, "encoding failed with error: %v", err)
 			return
 		}
-		encodedcs, err := a.signers[signerID].ContentSignature(ecdsaSig)
-		if err != nil {
-			httpError(w, http.StatusInternalServerError, "failed to retrieve content-signature: %v", err)
-			return
+		if isHashReq || sigreq.Template == "content-signature" {
+			encodedcs, err = a.signers[signerID].ContentSignature(ecdsaSig)
+			if err != nil {
+				httpError(w, http.StatusInternalServerError, "failed to retrieve content-signature: %v", err)
+				return
+			}
 		}
 		sigresps[i] = signatureresponse{
 			Ref:              id(),

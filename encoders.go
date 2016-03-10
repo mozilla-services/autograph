@@ -31,6 +31,9 @@ const (
 )
 
 func encode(sig *ecdsaSignature, siglen int, format string) (str string, err error) {
+	if len(sig.R.Bytes()) < 1 || len(sig.S.Bytes()) < 1 {
+		return "", fmt.Errorf("empty values R and S cannot be encoded")
+	}
 	if format == "" {
 		// use this format by default, if none is set
 		format = RSB64URL
