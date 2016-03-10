@@ -52,7 +52,11 @@ func (s *signer) init() error {
 	s.PublicKey = base64.StdEncoding.EncodeToString(pubkeybytes)
 	// the signature length is double the size size of the curve field, in bytes
 	// (each R and S value is equal to the size of the curve field)
-	s.siglen = (s.ecdsaPrivKey.Params().BitSize / 8) * 2
+	// If the curve field it not a multiple of 8, round to the upper multiple of 8
+	s.siglen = 8 - (s.ecdsaPrivKey.Params().BitSize % 8)
+	s.siglen += s.ecdsaPrivKey.Params().BitSize
+	s.siglen /= 8
+	s.siglen *= 2
 	return nil
 }
 
