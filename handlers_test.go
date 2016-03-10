@@ -234,12 +234,12 @@ func TestContentSignatureInResponse(t *testing.T) {
 		}
 		for j, response := range responses {
 			if testcase.expect && response.ContentSignature == "" {
-				t.Fatalf("in test case %d on endpoint %q, expected to find content-signature but didn't; request was %+v",
-					i, testcase.endpoint, j, req)
+				t.Fatalf("in test case %d response %d on endpoint %q, expected to find content-signature but didn't; request was %+v",
+					i, j, testcase.endpoint, req)
 			}
 			if !testcase.expect && response.ContentSignature != "" {
-				t.Fatalf("in test case %d on endpoint %q, expected to not find content-signature but did; request was %+v",
-					i, testcase.endpoint, j, req)
+				t.Fatalf("in test case %d response %d on endpoint %q, expected to not find content-signature but did; request was %+v",
+					i, j, testcase.endpoint, req)
 			}
 		}
 	}

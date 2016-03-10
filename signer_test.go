@@ -95,7 +95,7 @@ func TestContentSignatureX5U(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(cs) < 5 {
-		t.Fatal("content signature has bad length %d", len(cs))
+		t.Fatalf("content signature has bad length %d", len(cs))
 	}
 	if !strings.HasPrefix(cs, "x5u=") {
 		t.Fatalf("expected x5u prefix in content-signature but got %q", cs[0:4])
@@ -112,7 +112,7 @@ func TestContentSignatureKeyID(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(cs) < 13 {
-		t.Fatal("content signature has bad length %d", len(cs))
+		t.Fatalf("content signature has bad length %d", len(cs))
 	}
 	if !strings.HasPrefix(cs, "keyid=appkey1") {
 		t.Fatalf("expected keyid prefix in content-signature but got %q", cs[0:13])
