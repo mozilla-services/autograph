@@ -19,7 +19,7 @@ import (
 func TestMissingAuthorization(t *testing.T) {
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
-	req, err := http.NewRequest("POST", "http://foo.bar/signature", bodyrdr)
+	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestMissingAuthorization(t *testing.T) {
 func TestBogusAuthorization(t *testing.T) {
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
-	req, err := http.NewRequest("POST", "http://foo.bar/signature", bodyrdr)
+	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func TestBogusAuthorization(t *testing.T) {
 func TestBadPayload(t *testing.T) {
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
-	req, err := http.NewRequest("POST", "http://foo.bar/signature", bodyrdr)
+	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestBadPayload(t *testing.T) {
 func TestExpiredAuth(t *testing.T) {
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
-	req, err := http.NewRequest("POST", "http://foo.bar/signature", bodyrdr)
+	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +88,7 @@ func TestExpiredAuth(t *testing.T) {
 func TestDuplicateNonce(t *testing.T) {
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
-	req, err := http.NewRequest("POST", "http://foo.bar/signature", bodyrdr)
+	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,7 +109,7 @@ func TestDuplicateNonce(t *testing.T) {
 }
 
 func TestNonceFromLRU(t *testing.T) {
-	req, err := http.NewRequest("POST", "http://foo.bar/signature", nil)
+	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
