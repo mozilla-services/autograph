@@ -72,7 +72,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/__heartbeat__", ag.handleHeartbeat)
 	mux.HandleFunc("/__version__", ag.handleVersion)
-	mux.HandleFunc("/signature", ag.handleSignature)
+	mux.HandleFunc("/signature", ag.handleSignature) // TODO: remove on or after 2016-06-01
+	mux.HandleFunc("/sign/data", ag.handleSignature)
+	mux.HandleFunc("/sign/hash", ag.handleSignature)
 	server := &http.Server{
 		Addr:    conf.Server.Listen,
 		Handler: mux,

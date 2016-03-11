@@ -52,7 +52,14 @@ func (s *signer) init() error {
 	s.PublicKey = base64.StdEncoding.EncodeToString(pubkeybytes)
 	// the signature length is double the size size of the curve field, in bytes
 	// (each R and S value is equal to the size of the curve field)
-	s.siglen = (s.ecdsaPrivKey.Params().BitSize / 8) * 2
+	// If the curve field it not a multiple of 8, round to the upper multiple of 8
+	if s.ecdsaPrivKey.Params().BitSize%8 != 0 {
+		s.siglen = 8 - (s.ecdsaPrivKey.Params().BitSize % 8)
+	}
+	s.siglen += s.ecdsaPrivKey.Params().BitSize
+	s.siglen /= 8
+	s.siglen *= 2
+
 	return nil
 }
 
@@ -87,26 +94,36 @@ func (s *signer) ContentSignature(ecdsaSig *ecdsaSignature) (string, error) {
 	return fmt.Sprintf("keyid=%s; %s=%s", s.ID, csid, encodedsig), nil
 }
 
-// getInputHash returns a hash of the signature input data. Templating is applied if necessary.
-func getInputHash(sigreq signaturerequest) (hash []byte, err error) {
+// templateAndHash returns a hash of the signature input data. Templating is applied if necessary.
+func templateAndHash(sigreq signaturerequest, curveName string) (string, []byte, error) {
 	hashinput, err := fromBase64URL(sigreq.Input)
+	if err != nil {
+		return "", nil, err
+	}
 	if sigreq.Template != "" {
 		hashinput, err = applyTemplate(hashinput, sigreq.Template)
 		if err != nil {
-			return
+			return "", nil, err
 		}
 	}
-	if sigreq.HashWith == "" {
-		// take the input data as is
-		hash = hashinput
-	} else {
-		// hash the input data with the provided algorithm
-		hash, err = digest(hashinput, sigreq.HashWith)
-		if err != nil {
-			return
-		}
+	// If we have a digest algorithm in the request, use it
+	// otherwise try to infer it from the curve of the signer
+	// and finally default to sha512
+	if sigreq.HashWith != "" {
+		hash, err := digest(hashinput, sigreq.HashWith)
+		return sigreq.HashWith, hash, err
 	}
-	return
+	switch curveName {
+	case "P-256":
+		hash, err := digest(hashinput, "sha256")
+		return "sha256", hash, err
+	case "P-384":
+		hash, err := digest(hashinput, "sha384")
+		return "sha384", hash, err
+	default:
+		hash, err := digest(hashinput, "sha512")
+		return "sha512", hash, err
+	}
 }
 
 // applyTemplate returns a templated input using custom rules. This is used when requesting a

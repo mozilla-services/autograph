@@ -9,6 +9,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"log"
 	"net/http"
 	"testing"
 
@@ -153,4 +154,29 @@ func TestDefaultSignerNotFound(t *testing.T) {
 	if err == nil || pos != -1 {
 		t.Errorf("expected to fail lookup up a signer but succeeded")
 	}
+}
+
+// Two authorizations sharing the same ID should fail
+func TestAddDuplicateAuthorization(t *testing.T) {
+	var authorizations = []authorization{
+		authorization{
+			ID: "alice",
+		},
+		authorization{
+			ID: "alice",
+		},
+	}
+	defer func() {
+		if e := recover(); e != nil {
+			if e != `authorization id 'alice' already defined, duplicates are not permitted` {
+				t.Fatalf("expected authorization loading to fail with duplicate error but got: %v", e)
+			}
+		}
+	}()
+	tmpag, err := newAutographer(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tmpag.addSigners(conf.Signers)
+	tmpag.addAuthorizations(authorizations)
 }

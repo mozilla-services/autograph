@@ -18,13 +18,15 @@ def main():
                            help="input string, can be base64, or just raw data")
     argparser.add_argument('--hashwith', dest='hashwith',
                            help="algorithm to hash the input data with (default: none)")
+    argparser.add_argument('--template', dest='template',
+                           help="template to apply to the data before hashing it (default: None)")
     argparser.add_argument('-u', dest='hawkid', default="alice",
                            help="hawk id (default: alice)")
     argparser.add_argument('-p', dest='hawkkey',
                            default="fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu",
                            help="hawk key (default: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu)")
     argparser.add_argument('-t', dest='target',
-                           default="http://localhost:8000/signature",
+                           default="http://localhost:8000/sign/data",
                            help="signing api URL (default: http://localhost:8000/signature)")
     argparser.add_argument('-e', dest='encoding',
                            default="rs_base64url",
@@ -39,6 +41,7 @@ def main():
 
     # build and run the signature request
     sigreq = [{
+        "template": args.template,
         "input": base64.b64encode(inputdata),
         "hashwith": args.hashwith,
         "signature_encoding": args.encoding
@@ -70,7 +73,10 @@ def main():
             hashfunc = hashlib.sha512
 
     # perform verification
-    print("signature validation: %s" % vk.verify(sigdata, inputdata, hashfunc=hashfunc, sigdecode=ecdsa.util.sigdecode_string))
+    if hashfunc:
+        print("signature validation: %s" % vk.verify(sigdata, inputdata, hashfunc=hashfunc, sigdecode=ecdsa.util.sigdecode_string))
+    else:
+        print("signature validation: %s" % vk.verify_digest(sigdata, inputdata, sigdecode=ecdsa.util.sigdecode_string))
 
 
 def un_urlsafe(input):

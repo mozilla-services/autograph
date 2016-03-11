@@ -44,11 +44,10 @@ func main() {
 		userid, pass, sigreq, url string
 		iter, maxworkers          int
 	)
-
 	flag.StringVar(&userid, "u", "alice", "User ID")
 	flag.StringVar(&pass, "p", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", "Secret passphrase")
-	flag.StringVar(&sigreq, "r", `[{"input": "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`, "JSON signing request")
-	flag.StringVar(&url, "t", `http://localhost:8000/signature`, "signing api URL")
+	flag.StringVar(&sigreq, "r", `[{"input": "Y2FyaWJvdW1hdXJpY2UK"}]`, "JSON signing request")
+	flag.StringVar(&url, "t", `http://localhost:8000/sign/data`, "signing api URL")
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
 	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
 	flag.Parse()
@@ -104,10 +103,10 @@ func main() {
 				log.Fatal("sent %d signature requests and got %d responses, something's wrong", len(requests), len(responses))
 			}
 			for i, response := range responses {
-				if verify(requests[i], response) {
+				if verify(requests[i], response, req.URL.RequestURI()) {
 					log.Printf("signature %d pass", i)
 				} else {
-					log.Fatal("response %d does not pass!", i)
+					log.Fatalf("response %d does not pass!", i)
 				}
 			}
 			pretty, err := json.MarshalIndent(responses, "", "  ")
@@ -141,19 +140,7 @@ func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash,
 }
 
 // verify an ecdsa signature
-func verify(req signaturerequest, resp signatureresponse) bool {
-	data, err := fromBase64URL(req.Input)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if req.HashWith != "" {
-		// hash the input data with the provided algorithm
-		data, err = digest(data, req.HashWith)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
+func verify(req signaturerequest, resp signatureresponse, endpoint string) bool {
 	keyBytes, err := fromBase64URL(resp.PublicKey)
 	if err != nil {
 		log.Fatal(err)
@@ -163,6 +150,27 @@ func verify(req signaturerequest, resp signatureresponse) bool {
 		log.Fatal(err)
 	}
 	pubKey := keyInterface.(*ecdsa.PublicKey)
+	data, err := fromBase64URL(req.Input)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if endpoint == "/sign/data" {
+		if req.HashWith != "" {
+			data, err = digest(data, req.HashWith)
+		} else {
+			switch pubKey.Params().Name {
+			case "P-256":
+				data, err = digest(data, "sha256")
+			case "P-384":
+				data, err = digest(data, "sha384")
+			default:
+				data, err = digest(data, "sha512")
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
 	sigBytes, err := fromBase64URL(resp.Signature)
 	if err != nil {
 		log.Fatal(err)
