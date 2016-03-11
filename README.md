@@ -197,7 +197,8 @@ Each signature response contains the following fields:
 #### Request
 
 Request a signature on a hash. The hash is provided as a base64 encoded bytes
-array, and is not manipulated at all by autograph before signing.
+array, and is not manipulated at all by autograph before signing. You must
+ensure that data is templated prior to hashing it and calling autograph.
 
 This endpoint always returns a `content-signature` with every response.
 
