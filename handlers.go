@@ -172,17 +172,6 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, http.StatusBadRequest, "%v", err)
 				return
 			}
-		// TODO: remove this case as soon as backward compat is no longer needed, or on 2016-06-01
-		case "/signature":
-			if sigreq.HashWith == "" {
-				hash, err = fromBase64URL(sigreq.Input)
-			} else {
-				alg, hash, err = templateAndHash(sigreq, a.signers[signerID].ecdsaPrivKey.Curve.Params().Name)
-			}
-			if err != nil {
-				httpError(w, http.StatusBadRequest, "%v", err)
-				return
-			}
 		}
 		ecdsaSig, err := a.signers[signerID].sign(hash)
 		if err != nil {
