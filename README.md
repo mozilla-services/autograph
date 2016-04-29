@@ -254,9 +254,9 @@ Go](https://godoc.org/crypto/elliptic) works).
 
 To generate a key pair with openssl, use:
 ```bash
-$ openssl ecparam -out /tmp/testkey2 -name secp384r1 -genkey
+$ openssl ecparam -out /tmp/autograph-dev.key -name secp384r1 -genkey
 
-$ openssl ec -in /tmp/testkey2 -text
+$ openssl ec -in /tmp/autograph-dev.key -text
 -----BEGIN EC PARAMETERS-----
 BgUrgQQAIg==
 -----END EC PARAMETERS-----
@@ -276,10 +276,27 @@ signers:
       privatekey: "MIGkAgEBBDC32Lv42JlmEnaPHe+UG6wtrG39vHZAQtvUPTPgJP8Bflfsy0T30Q/5AMXvh0EgFbigBwYFK4EEACKhZANiAAS74cJMSG3ZjlTcjBZl5pHnimoCxAM+XL3fjLy0FvStcQqyWkMacmAY3MqM4YxvyBNv5J+JJPAkskYVomQzk3/8La+D2UQuj6XuReTKJie8EppVvrXwMAjhSy5zsuq7/gI="
 ```
 
-Note that Autograph does not make any assumption as to how the public key is
-distributed. You can either serve it as a hardcoded public key to your clients,
-or use a public key infrastructure and have the pubkey in a X.509 certificate
-signed by a root CA. This is entirely up to you.
+Based on the `privatekey`, autograph will return the corresponding `publickey`
+in the JSON responses. If you're using a PKI and want to verify signatures with
+a X.509 certificate, you can generate this certificate based on the private key,
+store it someplace, and tell autograph to return its location in the `x5u`
+value.
+
+```bash
+# first make a CSR based on the private key
+$ openssl req -new -key /tmp/autograph-dev.key -out /tmp/autograph-dev.csr
+
+# then self sign the CSR
+$ openssl x509 -req -days 365 -in /tmp/autograph-dev.csr -signkey /tmp/autograph-dev.key -out /tmp/autograph-dev.crt
+```
+
+Store the CRT on `http://example.net/certs/autograph-dev.crt` and set the x5u value in `autograph.yaml`.
+```yaml
+signers:
+    - id: appkey2
+      privatekey: "MIGkAgEBBDC32Lv42JlmEnaPHe+....."
+      x5u: "http://example.net/certs/autograph-dev.crt"
+```
 
 ### Authorizations
 
