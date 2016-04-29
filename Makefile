@@ -22,6 +22,9 @@ go_vendor_dependencies:
 	cp -ar .tmpdeps/src/* vendor/
 	rm -rf .tmpdeps
 
+tag: all
+	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
+
 lint:
 	$(GOLINT) $(PROJECT)
 
