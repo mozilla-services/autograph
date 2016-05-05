@@ -77,6 +77,7 @@ func main() {
 	// start serving
 	mux := http.NewServeMux()
 	mux.HandleFunc("/__heartbeat__", ag.handleHeartbeat)
+	mux.HandleFunc("/__lbheartbeat__", ag.handleHeartbeat)
 	mux.HandleFunc("/__version__", ag.handleVersion)
 	mux.HandleFunc("/sign/data", ag.handleSignature)
 	mux.HandleFunc("/sign/hash", ag.handleSignature)
