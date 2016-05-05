@@ -205,11 +205,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, http.StatusInternalServerError, "signing failed with error: %v", err)
 		return
 	}
-	log.Printf("signing operation succeeded. userid=%q; request=%s; response=%s",
-		userid, body, respdata)
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(respdata)
+	log.Printf("signing operation from %q succeeded", userid)
 }
 
 // handleHeartbeat returns a simple message indicating that the API is alive and well
