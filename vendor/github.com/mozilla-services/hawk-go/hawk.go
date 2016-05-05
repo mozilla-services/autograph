@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"hash"
@@ -80,7 +81,14 @@ type Credentials struct {
 	Delegate string
 }
 
-func (creds *Credentials) MAC() hash.Hash { return hmac.New(creds.Hash, []byte(creds.Key)) }
+func (creds *Credentials) MAC() hash.Hash {
+	if creds.Hash != nil {
+		return hmac.New(creds.Hash, []byte(creds.Key))
+	} else {
+		// use a default hash
+		return hmac.New(sha256.New, []byte(creds.Key))
+	}
+}
 
 type AuthType int
 

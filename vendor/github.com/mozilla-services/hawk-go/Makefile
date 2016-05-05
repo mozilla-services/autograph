@@ -1,8 +1,25 @@
-GOGETTER	:= GOPATH=$(shell pwd)/.tmpdeps go get -d
+GO = GO15VENDOREXPERIMENT=1 go
+GOLINT = golint
 
-go_vendor_dependencies:
-	$(GOGETTER) launchpad.net/gocheck
-	echo 'removing .git from vendored pkg and moving them to vendor'
-	find .tmpdeps/src -type d -name ".git" ! -name ".gitignore" -exec rm -rf {} \; || exit 0
-	cp -ar .tmpdeps/src/* vendor/
-	rm -rf .tmpdeps
+all: test vet generate
+
+tag: all
+	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
+
+lint:
+	$(GOLINT) github.com/mozilla-services/hawk-go
+
+vet:
+	$(GO) vet github.com/mozilla-services/hawk-go
+
+test:
+	$(GO) test -covermode=count -coverprofile=coverage.out github.com/mozilla-services/hawk-go
+
+showcoverage: test
+	$(GO) tool cover -html=coverage.out
+
+generate:
+	$(GO) generate
+
+.PHONY: all test generate
+
