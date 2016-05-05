@@ -24,6 +24,7 @@ import (
 func init() {
 	// initialize the logger
 	mozlog.Logger.LoggerName = "Autograph"
+	log.SetFlags(0)
 }
 
 // configuration loads a yaml file that contains the configuration of Autograph
@@ -42,10 +43,12 @@ func main() {
 		conf        configuration
 		cfgFile     string
 		showVersion bool
+		debug       bool
 		err         error
 	)
 	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
 	flag.BoolVar(&showVersion, "V", false, "Show build version and exit")
+	flag.BoolVar(&debug, "D", false, "Print debug logs")
 	flag.Parse()
 
 	if showVersion {
@@ -68,9 +71,15 @@ func main() {
 	ag.addAuthorizations(conf.Authorizations)
 	ag.makeSignerIndex()
 
+	if debug {
+		ag.enableDebug()
+		log.SetFlags(log.Lshortfile)
+	}
+
 	// start serving
 	mux := http.NewServeMux()
 	mux.HandleFunc("/__heartbeat__", ag.handleHeartbeat)
+	mux.HandleFunc("/__lbheartbeat__", ag.handleHeartbeat)
 	mux.HandleFunc("/__version__", ag.handleVersion)
 	mux.HandleFunc("/sign/data", ag.handleSignature)
 	mux.HandleFunc("/sign/hash", ag.handleSignature)

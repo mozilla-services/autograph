@@ -44,11 +44,22 @@ type autographer struct {
 	auths       map[string]authorization
 	signerIndex map[string]int
 	nonces      *lru.Cache
+	debug       bool
 }
 
 func newAutographer(cachesize int) (a *autographer, err error) {
 	a = new(autographer)
 	a.nonces, err = lru.New(cachesize)
+	return
+}
+
+func (a *autographer) enableDebug() {
+	a.debug = true
+	return
+}
+
+func (a *autographer) disableDebug() {
+	a.debug = false
 	return
 }
 
@@ -135,6 +146,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, http.StatusBadRequest, "failed to parse request body: %v", err)
 		return
 	}
+	if a.debug {
+		log.Printf("signature request: %s", body)
+	}
 	sigresps := make([]signatureresponse, len(sigreqs))
 	// Each signature requested in the http request body is processed individually.
 	// For each, a signer is looked up, and used to compute a raw signature
@@ -205,11 +219,13 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, http.StatusInternalServerError, "signing failed with error: %v", err)
 		return
 	}
-	log.Printf("signing operation succeeded. userid=%q; request=%s; response=%s",
-		userid, body, respdata)
+	if a.debug {
+		log.Printf("signature response: %s", respdata)
+	}
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(respdata)
+	log.Printf("signing operation from %q succeeded", userid)
 }
 
 // handleHeartbeat returns a simple message indicating that the API is alive and well
@@ -230,6 +246,7 @@ func (a *autographer) handleVersion(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{
 "source": "https://github.com/mozilla-services/autograph",
 "version": "%s",
-"commit": "%s"
+"commit": "%s",
+"build": "https://travis-ci.org/mozilla-services/autograph"
 }`, version, commit)))
 }
