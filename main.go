@@ -24,6 +24,7 @@ import (
 func init() {
 	// initialize the logger
 	mozlog.Logger.LoggerName = "Autograph"
+	log.SetFlags(0)
 }
 
 // configuration loads a yaml file that contains the configuration of Autograph
@@ -72,6 +73,7 @@ func main() {
 
 	if debug {
 		ag.enableDebug()
+		log.SetFlags(log.Lshortfile)
 	}
 
 	// start serving
