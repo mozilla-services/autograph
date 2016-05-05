@@ -42,10 +42,12 @@ func main() {
 		conf        configuration
 		cfgFile     string
 		showVersion bool
+		debug       bool
 		err         error
 	)
 	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
 	flag.BoolVar(&showVersion, "V", false, "Show build version and exit")
+	flag.BoolVar(&debug, "D", false, "Print debug logs")
 	flag.Parse()
 
 	if showVersion {
@@ -67,6 +69,10 @@ func main() {
 	ag.addSigners(conf.Signers)
 	ag.addAuthorizations(conf.Authorizations)
 	ag.makeSignerIndex()
+
+	if debug {
+		ag.enableDebug()
+	}
 
 	// start serving
 	mux := http.NewServeMux()

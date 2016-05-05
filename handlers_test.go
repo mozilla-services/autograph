@@ -488,6 +488,17 @@ func TestContentType(t *testing.T) {
 	}
 }
 
+func TestDebug(t *testing.T) {
+	ag.enableDebug()
+	if !ag.debug {
+		t.Fatalf("expected debug mode to be enabled, but is disabled")
+	}
+	ag.disableDebug()
+	if ag.debug {
+		t.Fatalf("expected debug mode to be disabled, but is enabled")
+	}
+}
+
 func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash, ext, contenttype string, payload []byte) string {
 	auth := hawk.NewRequestAuth(req,
 		&hawk.Credentials{
