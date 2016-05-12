@@ -3,6 +3,7 @@ MAINTAINER Julien Vehent
 ENV PROJECT=github.com/mozilla-services/autograph
 ENV PROJECTNAME=autograph
 ENV GO15VENDOREXPERIMENT=1
+EXPOSE 8000
 
 ADD . /go/src/$PROJECT
 
@@ -14,4 +15,4 @@ USER $PROJECTNAME
 
 RUN go install $PROJECT
 
-ENTRYPOINT /go/bin/$PROJECTNAME
+CMD /go/bin/$PROJECTNAME -c /etc/$PROJECTNAME/autograph.yaml
