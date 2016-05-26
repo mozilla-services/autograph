@@ -60,6 +60,11 @@ API with a CSR to obtain signed certificates. Those certificates are then
 stored in a public location when Firefox agents can retrieve them to verify
 signatures.
 
+The full sequence from Root CA key ceremony to Firefox clients verifying
+signatures is described in the diagram below.
+
+![pkisequence](docs/statics/ContentSignaturePKI.png)
+
 ## API
 
 Authorization: All API calls require a
