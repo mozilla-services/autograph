@@ -39,8 +39,8 @@ opt Signature Issuance
 end
 
 opt Signature verification
-  Firefox->>Firefox: check local cache for x5u
-  Firefox->>CDN: get x5u/chain.pem
+  Firefox->>Firefox: check http cache for x5u
+  Firefox->>CDN: if not in cache, get x5u
   CDN-->>Firefox: Cee+Ci+Ca
   note left of Firefox: Cee+Ci+Ca
   Firefox->>Firefox: Verify Content-Signature using Cee
