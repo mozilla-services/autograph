@@ -1,0 +1,50 @@
+sequenceDiagram
+participant Root CA
+participant HSM
+participant Autograph
+participant Service Admin
+participant Service DB
+participant Service Endpoint
+participant CDN
+participant Firefox
+
+opt Chain of Trust Issuance
+  Root CA->>Root CA: make key pair, store privkey offline
+  note left of Root CA: Ca, ttl=10years
+  
+  HSM->>HSM: make key pair, store privkey in hsm
+  HSM->>Root CA: get signed intermediate cert Ci
+  Root CA-->>HSM: Ci
+  note left of HSM: Ci, ttl=2years
+
+  Autograph->>Autograph: make key pair on server
+  Autograph->>HSM: get signed end-entity cert Cee
+  HSM-->>Autograph: Cee
+  note left of Autograph: Cee, ttl=45days
+  
+  Autograph->>CDN: publish chain of trust Cee+Ci+Ca at location x5u
+  note left of CDN: Cee+Ci+Ca
+
+end
+
+opt Signature Issuance
+  Service Admin->>Autograph: POST /sign/data
+  Autograph-->>Service Admin: Content-Signature
+  Service Admin->>Service DB: insert Data+Content-Signature
+  note left of Service DB: Data + Content-Signature
+  Firefox->>Service Endpoint: get /data
+  Service Endpoint->>Service DB: select data
+  Service Endpoint-->>Firefox: Data + Content-Signature
+  note left of Firefox: Data + Content-Signature
+end
+
+opt Signature verification
+  Firefox->>Firefox: check local cache for x5u
+  Firefox->>CDN: get x5u/chain.pem
+  CDN-->>Firefox: Cee+Ci+Ca
+  note left of Firefox: Cee+Ci+Ca
+  Firefox->>Firefox: Verify Content-Signature using Cee
+  Firefox->>Firefox: Verify chain of trust Cee+Ci+Ca
+  Firefox->>Firefox: Verify public key hash of Ca with configuration
+  Firefox->>Firefox: pass Data to next step
+end
