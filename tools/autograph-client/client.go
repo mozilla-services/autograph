@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mozilla-services/hawk-go"
+	"go.mozilla.org/hawk"
 )
 
 type signaturerequest struct {
@@ -155,16 +155,25 @@ func verify(req signaturerequest, resp signatureresponse, endpoint string) bool 
 		log.Fatal(err)
 	}
 	if endpoint == "/sign/data" {
+		var templated []byte
+		if req.Template == "content-signature" {
+			templated = make([]byte, len("Content-Signature:\x00")+len(data))
+			copy(templated[:len("Content-Signature:\x00")], []byte("Content-Signature:\x00"))
+			copy(templated[len("Content-Signature:\x00"):], data)
+		} else {
+			templated = make([]byte, len(data))
+			copy(templated, data)
+		}
 		if req.HashWith != "" {
-			data, err = digest(data, req.HashWith)
+			data, err = digest(templated, req.HashWith)
 		} else {
 			switch pubKey.Params().Name {
 			case "P-256":
-				data, err = digest(data, "sha256")
+				data, err = digest(templated, "sha256")
 			case "P-384":
-				data, err = digest(data, "sha384")
+				data, err = digest(templated, "sha384")
 			default:
-				data, err = digest(data, "sha512")
+				data, err = digest(templated, "sha512")
 			}
 			if err != nil {
 				log.Fatal(err)
