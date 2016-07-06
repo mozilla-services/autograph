@@ -8,13 +8,20 @@ signers:
     # a p384 key, the standard
     - id: appkey1
       privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
+
     # a p256 key
     - id: appkey2
       privatekey: "MHcCAQEEIFB72ld2Ga9bAiVE8/IzNfFskDCnu7Ws8iJDcgzDbwlToAoGCCqGSM49AwEHoUQDQgAESGiwKilbISFLmmeEI83U5qtAuq3ktoKfWKgzbC5rkpEVIzaaYOpdbrtLkvBqK0SxIJOf2nVgmdIfLYY8JXWH5Q=="
       x5u: https://bucket.example.net/appkey2.pem
+
     # p521, for testing, don't use p521
     - id: appkey3
       privatekey: "MIHcAgEBBEIAE1XrqPG1wKb/3TTlmZ4abd+aJQ1eT7xmTA+hIY5Nj6B4wY4G570M9Xxke5LP0kx1nMZRAoQGG5w5M1mE6oFWw2GgBwYFK4EEACOhgYkDgYYABAAYziNDPmlSc82ukUtXpI/Hc7TQ9GeVKGd4FXVY79wpzS4DwPRalfOdI1/EIPQheNHHXCMupZFVzC01cQSQ1gM16QH+AoQSjixV0lrbeJQgzz6lAFTyTjEYZw6rzx5ur+ubt/dWBMO6XkYYgIpr7AesDlN5OPyy7bKHxTWArci+2DXekw=="
+
+    # Normandy dev chain with x5u on github
+    - id: normankey
+      privatekey: "MIGkAgEBBDCZFHf46zW7Wp5fgwc2zL42+Uir4qCj/MMxqhXhRuGQMCR0+RWLqE0DpX0gjKsqWT2gBwYFK4EEACKhZANiAARUQqIIAiTBGDVUWw/wk5h1IXpreq+BtE+gQr15O4tusHpCLGjOxwpHiJYnxk45fpE8JGAV19UOhmqMUEU0k31C1EGTSZW0ducSvHrh3a8wXShZ6dxLWHItbbCGA6A7Puk="
+      x5u: "https://raw.githubusercontent.com/mozilla-services/autograph/master/docs/statics/normandy.content-signature.mozilla.org-20210705.dev.chain"
 
 authorizations:
     - id: alice
@@ -23,7 +30,13 @@ authorizations:
           - appkey1
           - appkey2
           - appkey3
+
     - id: bob
       key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d
       signers:
           - appkey2
+
+    - id: normandev
+      key: 3dhoaupudifjjvm7xznd9bn73159xn3xwr77b61kzdjwzzsjts
+      signers:
+          - normankey
