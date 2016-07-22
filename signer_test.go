@@ -97,8 +97,8 @@ func TestContentSignatureX5U(t *testing.T) {
 	if len(cs) < 5 {
 		t.Fatalf("content signature has bad length %d", len(cs))
 	}
-	if !strings.HasPrefix(cs, "x5u=") {
-		t.Fatalf("expected x5u prefix in content-signature but got %q", cs[0:4])
+	if !strings.HasPrefix(cs, `x5u="`) {
+		t.Fatalf("expected x5u prefix in content-signature but got %q", cs[0:5])
 	}
 }
 

@@ -89,7 +89,7 @@ func (s *signer) ContentSignature(ecdsaSig *ecdsaSignature) (string, error) {
 		return "", fmt.Errorf("unknown curve name %q", s.ecdsaPrivKey.Curve.Params().Name)
 	}
 	if s.X5U != "" {
-		return fmt.Sprintf("x5u=%s;%s=%s", s.X5U, csid, encodedsig), nil
+		return fmt.Sprintf("x5u=\"%s\";%s=%s", s.X5U, csid, encodedsig), nil
 	}
 	return fmt.Sprintf("keyid=%s;%s=%s", s.ID, csid, encodedsig), nil
 }
