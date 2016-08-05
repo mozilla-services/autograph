@@ -181,6 +181,7 @@ response 1, etc...
 [
     {
         "ref": "20e5t7zv0jh6n1cts4opu4vsup",
+        "signer_id": "alice",
         "signature": "MS8ZXMzr9YVttwuHgZ_SxlPogZKm_mYO6SsEiqupBeu01ELO_xP6huN4bXBn-ZH1ZJkbgBeVQ_QKd8wW9_ggJxDaPpQ3COFcpW_SdHaiEOLBcKt_SrKmLVIWHE3wc3lV",
         "signature_encoding": "rs_base64url",
         "hash_algorithm": "sha384",
@@ -263,6 +264,68 @@ The request body is a json array where each entry of the array is an object to s
 #### Response
 
 See `/sign/data`, the response format is identical.
+
+
+### /__monitor__
+
+This is a special endpoint designed to monitor the status of all signers without
+granting signing privileged to a monitoring client. It requires a special user
+named `monitor` that can request a signature of the string `AUTOGRAPH MONITORING`
+by all active signers.
+
+#### Request
+
+The endpoint accepts a GET request without query parameter or request body. The
+`Hawk` authorization of the user named `monitor` is required.
+
+```bash
+GET /__monitor__
+
+Host: autograph.example.net
+Content-type: application/json
+Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="
+```
+
+#### Response
+
+See `/sign/data`, the response format is identical.
+For each signer, two responses are returned: one with Content-Signature
+templating applied to the input data, and one without.
+
+The monitoring client should verify the signature returned with each response.
+If X5U values are provided, the monitoring client should verify that certificate
+chains are hosted at those locations, and that certificate are not too close to
+their expiration date.
+
+### /__heartbeat__ and /__lbheartbeat__
+
+Heartbeating endpoints designed to answer load balancers with a 200 OK.
+
+```bash
+HTTP/1.1 200 OK
+Date: Fri, 05 Aug 2016 20:19:54 GMT
+Content-Length: 4
+Content-Type: text/plain; charset=utf-8
+
+ohai
+```
+
+### /__version__
+
+Returns metadata about the autograph version.
+```bash
+HTTP/1.1 200 OK
+Date: Fri, 05 Aug 2016 20:20:54 GMT
+Content-Length: 209
+Content-Type: text/plain; charset=utf-8
+
+{
+"source": "https://github.com/mozilla-services/autograph",
+"version": "20160512.0-19fbb91",
+"commit": "19fbb910e2bd81cdd71fba2d1a297852a3ca17e8",
+"build": "https://travis-ci.org/mozilla-services/autograph"
+}
+```
 
 ## Configuration
 
