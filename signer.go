@@ -85,6 +85,8 @@ func (s *signer) ContentSignature(ecdsaSig *ecdsaSignature) (string, error) {
 		csid = "p256ecdsa"
 	case "P-384":
 		csid = "p384ecdsa"
+	case "P-521":
+		csid = "p521ecdsa"
 	default:
 		return "", fmt.Errorf("unknown curve name %q", s.ecdsaPrivKey.Curve.Params().Name)
 	}

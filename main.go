@@ -35,6 +35,7 @@ type configuration struct {
 	}
 	Signers        []signer
 	Authorizations []authorization
+	Monitoring     authorization
 }
 
 func main() {
@@ -69,6 +70,7 @@ func main() {
 	}
 	ag.addSigners(conf.Signers)
 	ag.addAuthorizations(conf.Authorizations)
+	ag.addMonitoring(conf.Monitoring)
 	ag.makeSignerIndex()
 
 	if debug {
@@ -81,6 +83,7 @@ func main() {
 	mux.HandleFunc("/__heartbeat__", ag.handleHeartbeat)
 	mux.HandleFunc("/__lbheartbeat__", ag.handleHeartbeat)
 	mux.HandleFunc("/__version__", ag.handleVersion)
+	mux.HandleFunc("/__monitor__", ag.handleMonitor)
 	mux.HandleFunc("/sign/data", ag.handleSignature)
 	mux.HandleFunc("/sign/hash", ag.handleSignature)
 	server := &http.Server{
