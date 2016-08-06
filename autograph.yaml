@@ -40,3 +40,6 @@ authorizations:
       key: 3dhoaupudifjjvm7xznd9bn73159xn3xwr77b61kzdjwzzsjts
       signers:
           - normankey
+
+monitoring:
+    key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs

@@ -320,7 +320,7 @@ Content-Length: 209
 Content-Type: text/plain; charset=utf-8
 
 {
-"source": "https://github.com/mozilla-services/autograph",
+"source": "https://go.mozilla.org/autograph",
 "version": "20160512.0-19fbb91",
 "commit": "19fbb910e2bd81cdd71fba2d1a297852a3ca17e8",
 "build": "https://travis-ci.org/mozilla-services/autograph"
@@ -430,11 +430,6 @@ request.
 Build the autograph binary using make:
 ```bash
 $ make
-GO15VENDOREXPERIMENT=1 go test github.com/mozilla-services/autograph
-ok      github.com/mozilla-services/autograph   0.070s
-GO15VENDOREXPERIMENT=1 go vet github.com/mozilla-services/autograph
-GO15VENDOREXPERIMENT=1 go generate
-GO15VENDOREXPERIMENT=1 go install github.com/mozilla-services/autograph
 ```
 
 The binary is located in `$GOPATH/bin/autograph` and can be started with the

@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mozilla-services/hawk-go"
+	"go.mozilla.org/hawk"
 )
 
 // an authorization

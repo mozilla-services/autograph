@@ -16,7 +16,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/mozilla-services/go-mozlog"
+	"go.mozilla.org/mozlog"
 
 	"gopkg.in/yaml.v2"
 )

@@ -25,7 +25,7 @@ var (
 
 func TestMain(m *testing.M) {
 	// load the signers
-	err := conf.loadFromFile(os.Getenv("GOPATH") + "/src/github.com/mozilla-services/autograph/autograph.yaml")
+	err := conf.loadFromFile(os.Getenv("GOPATH") + "/src/go.mozilla.org/autograph/autograph.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}

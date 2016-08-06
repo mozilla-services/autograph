@@ -246,7 +246,7 @@ func (a *autographer) handleVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte(fmt.Sprintf(`{
-"source": "https://github.com/mozilla-services/autograph",
+"source": "https://go.mozilla.org/autograph",
 "version": "%s",
 "commit": "%s",
 "build": "https://travis-ci.org/mozilla-services/autograph"
