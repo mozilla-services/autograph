@@ -181,7 +181,7 @@ response 1, etc...
 [
     {
         "ref": "20e5t7zv0jh6n1cts4opu4vsup",
-        "signer_id": "alice",
+        "signer_id": "appkey1",
         "signature": "MS8ZXMzr9YVttwuHgZ_SxlPogZKm_mYO6SsEiqupBeu01ELO_xP6huN4bXBn-ZH1ZJkbgBeVQ_QKd8wW9_ggJxDaPpQ3COFcpW_SdHaiEOLBcKt_SrKmLVIWHE3wc3lV",
         "signature_encoding": "rs_base64url",
         "hash_algorithm": "sha384",
@@ -195,6 +195,8 @@ Each signature response contains the following fields:
 
 * `ref` is a random string that acts as a reference number for logging and
   tracking.
+
+* `signer_id` is ID of the signer in configuration.
 
 * `signature` is the ECDSA signature of the input data submitting in the
   signing request.

@@ -207,7 +207,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		}
 		sigresps[i] = signatureresponse{
 			Ref:              id(),
-			SignerID:         userid,
+			SignerID:         a.signers[signerID].ID,
 			X5U:              a.signers[signerID].X5U,
 			PublicKey:        a.signers[signerID].PublicKey,
 			Hash:             alg,
