@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
-import ecdsa
-import json
-import hashlib
-import base64
-import requests
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from datetime import datetime, timedelta
 from requests_hawk import HawkAuth
+import base64
+import ecdsa
+import hashlib
+import json
+import requests
 
 
 def autograph_monitor(event, context):
@@ -56,6 +59,34 @@ def autograph_monitor(event, context):
         print("%s%s signature validation: %s" % (sig["signer_id"], hascontentsig, isgoodsig))
         if not isgoodsig:
             raise
+
+        # if there's a x5u in the response, retrieve the chain
+        # and check the validity of the certificates
+        if "x5u" in sig:
+            r = requests.get(sig["x5u"])
+            r.raise_for_status()
+            pos = 0
+            raw_certs = []
+            raw_cert = ""
+            in2weeks = datetime.utcnow() + timedelta(days=15)
+
+            for row in r.text.splitlines():
+                raw_cert += str(row) + "\n"
+                if row == "-----END CERTIFICATE-----":
+                    pos += 1
+                    raw_certs.insert(pos, raw_cert)
+                    raw_cert = ""
+
+            for raw_cert in raw_certs:
+                cert = x509.load_pem_x509_certificate(raw_cert, default_backend())
+                print("%s\texpires: %s" % (
+                    cert.subject.get_attributes_for_oid(
+                        x509.oid.NameOID.COMMON_NAME)[0].value,
+                    cert.not_valid_after)
+                )
+                if cert.not_valid_after < in2weeks:
+                    print("Certificate expires soon!")
+                    raise
 
 
 def un_urlsafe(input):
