@@ -51,6 +51,8 @@ type autographer struct {
 func newAutographer(cachesize int) (a *autographer, err error) {
 	a = new(autographer)
 	a.nonces, err = lru.New(cachesize)
+	a.auths = make(map[string]authorization)
+	a.signerIndex = make(map[string]int)
 	return
 }
 
@@ -80,7 +82,6 @@ func (a *autographer) addSigners(signers []signer) {
 // addAuthorizations reads a list of authorizations from the configuration and
 // stores them into the autographer handler as a map indexed by user id, for fast lookup.
 func (a *autographer) addAuthorizations(auths []authorization) {
-	a.auths = make(map[string]authorization)
 	for _, auth := range auths {
 		if _, ok := a.auths[auth.ID]; ok {
 			panic("authorization id '" + auth.ID + "' already defined, duplicates are not permitted")
@@ -92,7 +93,6 @@ func (a *autographer) addAuthorizations(auths []authorization) {
 // makeSignerIndex creates a map of authorization IDs and signer IDs to
 // quickly locate a signer based on the user requesting the signature.
 func (a *autographer) makeSignerIndex() {
-	a.signerIndex = make(map[string]int)
 	// add an entry for each authid+signerid pair
 	for _, auth := range a.auths {
 		for _, sid := range auth.Signers {

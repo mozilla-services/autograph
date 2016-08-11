@@ -36,6 +36,7 @@ func TestMain(m *testing.M) {
 	}
 	ag.addSigners(conf.Signers)
 	ag.addAuthorizations(conf.Authorizations)
+	ag.addMonitoring(conf.Monitoring)
 	ag.makeSignerIndex()
 	log.Printf("autographer: %+v\n", ag)
 	// run the tests and exit
@@ -55,6 +56,9 @@ server:
 signers:
     - id: testsigner1
       privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
+
+monitoring:
+    key: qowidhqowidhqoihdqodwh
 `)},
 		{true, []byte(`
 server:
