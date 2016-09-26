@@ -8,16 +8,33 @@ import base64
 import ecdsa
 import hashlib
 import json
+import os
 import requests
-
+import sops
 
 def autograph_monitor(event, context):
     inputdata = "AUTOGRAPH MONITORING"
+
+    # Get configuration by decrypting the local monitor.autograph.yaml file
+    # using sops
+    workdir = ""
+    key = ""
+    if 'LAMBDA_TASK_ROOT' in os.environ:
+        workdir = os.environ['LAMBDA_TASK_ROOT'] + "/"
+    try:
+        path = workdir+"monitor.autograph.yaml"
+        pathtype = sops.detect_filetype(path)
+        tree = sops.load_file_into_tree(path, pathtype)
+        sops_key, tree = sops.get_key(tree)
+        tree = sops.walk_and_decrypt(tree, sops_key)
+        key = tree.get('monitoringkey')
+    except Exception:
+        print('Failed to decrypt %s' % path)
+        raise
+
+    # call the monitoring endpoint
     r = requests.get("http://localhost:8000/__monitor__",
-            auth=HawkAuth(
-                id="monitor",
-                key="19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs"
-            )
+            auth=HawkAuth(id="monitor", key=key)
         )
     r.raise_for_status()
     sigresp = json.loads(r.text)
