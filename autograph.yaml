@@ -12,7 +12,6 @@ signers:
     # a p256 key
     - id: appkey2
       privatekey: "MHcCAQEEIFB72ld2Ga9bAiVE8/IzNfFskDCnu7Ws8iJDcgzDbwlToAoGCCqGSM49AwEHoUQDQgAESGiwKilbISFLmmeEI83U5qtAuq3ktoKfWKgzbC5rkpEVIzaaYOpdbrtLkvBqK0SxIJOf2nVgmdIfLYY8JXWH5Q=="
-      x5u: https://bucket.example.net/appkey2.pem
 
     # p521, for testing, don't use p521
     - id: appkey3
