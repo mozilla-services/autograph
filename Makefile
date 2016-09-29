@@ -12,15 +12,8 @@ all: test vet generate install
 install:
 	$(GO) install $(PROJECT)
 
-go_vendor_dependencies:
-	$(GOGETTER) gopkg.in/yaml.v2
-	$(GOGETTER) go.mozilla.org/mozlog
-	$(GOGETTER) go.mozilla.org/hawk
-	$(GOGETTER) github.com/hashicorp/golang-lru
-	echo 'removing .git from vendored pkg and moving them to vendor'
-	find .tmpdeps/src -type d -name ".git" ! -name ".gitignore" -exec rm -rf {} \; || exit 0
-	cp -ar .tmpdeps/src/* vendor/
-	rm -rf .tmpdeps
+vendor:
+	govend -u
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
@@ -40,4 +33,4 @@ showcoverage: test
 generate:
 	$(GO) generate
 
-.PHONY: all test generate clean autograph
+.PHONY: all test generate clean autograph vendor
