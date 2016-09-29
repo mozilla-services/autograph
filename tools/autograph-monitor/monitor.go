@@ -218,22 +218,9 @@ func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error
 func verifyCertChain(certs []*x509.Certificate) error {
 	for i, cert := range certs {
 		if (i + 1) == len(certs) {
-			// this is the last cert, it should be self signed
-			if !bytes.Equal(cert.RawSubject, cert.RawIssuer) {
-				return fmt.Errorf("Certificate %d is root but has different subject and issuer, should be equal", i)
-			}
-			if !cert.IsCA {
-				return fmt.Errorf("Certificate %d is root but doesn't have CA flag", i)
-			}
-			if conf.RootHash != "" {
-				rhash := strings.Replace(conf.RootHash, ":", "", -1)
-				// We're configure to check the root hash matches expected value
-				h := sha256.Sum256(cert.Raw)
-				chash := fmt.Sprintf("%X", h[:])
-				if rhash != chash {
-					return fmt.Errorf("Certificate %d is root but does not match expected hash: expected=%s; got=%s",
-						i, rhash, chash)
-				}
+			err := verifyRoot(cert)
+			if err != nil {
+				return fmt.Errorf("Certificate %d is root but fails validation: %v", i, err)
 			}
 			log.Printf("Certificate %d is a valid root", i)
 		} else {
@@ -251,6 +238,36 @@ func verifyCertChain(certs []*x509.Certificate) error {
 			return fmt.Errorf("Certificate %d is not yet valid: notBefore=%s", i, cert.NotBefore)
 		}
 		log.Printf("Certificate %d is valid from %s to %s", i, cert.NotBefore, cert.NotAfter)
+	}
+	return nil
+}
+
+func verifyRoot(cert *x509.Certificate) error {
+	// this is the last cert, it should be self signed
+	if !bytes.Equal(cert.RawSubject, cert.RawIssuer) {
+		return fmt.Errorf("subject does not match issuer, should be equal")
+	}
+	if !cert.IsCA {
+		return fmt.Errorf("missing IS CA extension")
+	}
+	if conf.RootHash != "" {
+		rhash := strings.Replace(conf.RootHash, ":", "", -1)
+		// We're configure to check the root hash matches expected value
+		h := sha256.Sum256(cert.Raw)
+		chash := fmt.Sprintf("%X", h[:])
+		if rhash != chash {
+			return fmt.Errorf("hash does not match expected root: expected=%s; got=%s", rhash, chash)
+		}
+	}
+	hasCodeSigningExtension := false
+	for _, ext := range cert.ExtKeyUsage {
+		if ext == x509.ExtKeyUsageCodeSigning {
+			hasCodeSigningExtension = true
+			break
+		}
+	}
+	if !hasCodeSigningExtension {
+		return fmt.Errorf("missing codeSigning key usage extension")
 	}
 	return nil
 }
