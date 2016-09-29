@@ -8,10 +8,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path"
 
 	"github.com/hashicorp/golang-lru"
 )
@@ -239,16 +240,27 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ohai"))
 }
 
-// handleVersion returns the current version of the API
-func (a *autographer) handleVersion(w http.ResponseWriter, r *http.Request) {
+func handleVersion(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		httpError(w, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
 		return
 	}
-	w.Write([]byte(fmt.Sprintf(`{
-"source": "https://go.mozilla.org/autograph",
-"version": "%s",
-"commit": "%s",
-"build": "https://travis-ci.org/mozilla-services/autograph"
-}`, version, commit)))
+	dir, err := os.Getwd()
+	if err != nil {
+		httpError(w, http.StatusInternalServerError, "Could not get CWD")
+		return
+	}
+	filename := path.Clean(dir + string(os.PathSeparator) + "version.json")
+	f, err := os.Open(filename)
+	if err != nil {
+		httpError(w, http.StatusNotFound, "version.json file not found")
+		return
+	}
+	stat, err := f.Stat()
+	if err != nil {
+		httpError(w, http.StatusInternalServerError, "stat failed on version.json")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	http.ServeContent(w, r, "version.json", stat.ModTime(), f)
 }
