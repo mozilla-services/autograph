@@ -90,7 +90,7 @@ func TestContentSignatureX5U(t *testing.T) {
 	sig.R, sig.S = new(big.Int), new(big.Int)
 	sig.R.UnmarshalText([]byte("45933104068702215119207656331641464004108591709124158714346498322678291032657"))
 	sig.S.UnmarshalText([]byte("90009770794458046386862684372261044768681426946813328792272882608403522348029"))
-	cs, err := ag.signers[1].ContentSignature(sig)
+	cs, err := ag.signers[3].ContentSignature(sig)
 	if err != nil {
 		t.Fatal(err)
 	}

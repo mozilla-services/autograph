@@ -12,7 +12,6 @@ signers:
     # a p256 key
     - id: appkey2
       privatekey: "MHcCAQEEIFB72ld2Ga9bAiVE8/IzNfFskDCnu7Ws8iJDcgzDbwlToAoGCCqGSM49AwEHoUQDQgAESGiwKilbISFLmmeEI83U5qtAuq3ktoKfWKgzbC5rkpEVIzaaYOpdbrtLkvBqK0SxIJOf2nVgmdIfLYY8JXWH5Q=="
-      x5u: https://bucket.example.net/appkey2.pem
 
     # p521, for testing, don't use p521
     - id: appkey3
@@ -30,6 +29,7 @@ authorizations:
           - appkey1
           - appkey2
           - appkey3
+          - normankey
 
     - id: bob
       key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d
@@ -40,3 +40,6 @@ authorizations:
       key: 3dhoaupudifjjvm7xznd9bn73159xn3xwr77b61kzdjwzzsjts
       signers:
           - normankey
+
+monitoring:
+    key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs

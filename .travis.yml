@@ -5,6 +5,8 @@ go:
     - 1.7
     - tip
 
+go_import_path: go.mozilla.org/autograph
+
 matrix:
     fast_finish: true
 
