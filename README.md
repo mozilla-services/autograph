@@ -8,6 +8,14 @@ and other signing methods.
 
 ## Installation
 
+### Using Docker
+
+`docker pull mozilla/autograph && docker run mozilla/autograph`
+
+This will download the latest build of autograph from DockerHub and run it with its dev configuration.
+
+### Using go get
+
 If you don't yet have a GOPATH, export one:
 ```bash
 $ export GOPATH=$HOME/go
@@ -31,27 +39,6 @@ $ go get go.mozilla.org/autograph/tools/autograph-client
 $ $GOPATH/bin/autograph-client -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu -t http://localhost:8000/sign/data -r '[{"input": "Y2FyaWJvdW1hdXJpY2UK"}]'
 2016/08/23 17:25:55 signature 0 pass
 ```
-
-## Rationale
-
-As we rapidly increase the number of services that send configuration data to
-Firefox agents, we also increase the probability of a service being
-compromised to serve fraudulent data to our users. Autograph implements a way
-to sign the information sent from backend services to Firefox user-agents, and
-protect them from a service compromise.
-
-Digital signature adds an extra layer to the ones already provided by TLS and
-certificates pinning. As we grow our service infrastructure, the risk of a
-vulnerability on our public endpoints increases, and an attacker could exploit
-a vulnerability to serve bad data from trusted sites directly. TLS with
-certificate pinning prevents bad actors from creating fraudulent Firefox
-services, but does not reduce the impact a break-in would have on our users.
-Digital signature provides this extra layer.
-
-Finally, digital signature helps us use Content Delivery Network without
-worrying that a CDN compromise would end-up serving bad data to our users.
-Signing at the source reduces the pressure off of the infrastructure and
-allows us to rely on vendors without worrying about data integrity.
 
 ## Architecture
 
@@ -468,3 +455,24 @@ vxT5RAdzQRp9/l3OqnUP+kK42tRk05c9UGDFXLLVH/4CMH/ZmcpvtM0sCjeAWzGs
 gnw91z0443965WZmaeBKpbinxB1PpnNMCnPhd9J/Hz40+Q==
 -----END CERTIFICATE-----
 ```
+
+## Content Signature Rationale
+
+As we rapidly increase the number of services that send configuration data to
+Firefox agents, we also increase the probability of a service being
+compromised to serve fraudulent data to our users. Autograph implements a way
+to sign the information sent from backend services to Firefox user-agents, and
+protect them from a service compromise.
+
+Digital signature adds an extra layer to the ones already provided by TLS and
+certificates pinning. As we grow our service infrastructure, the risk of a
+vulnerability on our public endpoints increases, and an attacker could exploit
+a vulnerability to serve bad data from trusted sites directly. TLS with
+certificate pinning prevents bad actors from creating fraudulent Firefox
+services, but does not reduce the impact a break-in would have on our users.
+Digital signature provides this extra layer.
+
+Finally, digital signature helps us use Content Delivery Network without
+worrying that a CDN compromise would end-up serving bad data to our users.
+Signing at the source reduces the pressure off of the infrastructure and
+allows us to rely on vendors without worrying about data integrity.
