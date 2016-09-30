@@ -1,18 +1,20 @@
-FROM golang:1.5
-MAINTAINER Julien Vehent
-ENV PROJECT=github.com/mozilla-services/autograph
-ENV PROJECTNAME=autograph
-ENV GO15VENDOREXPERIMENT=1
+FROM golang:1.7
+MAINTAINER Mozilla
 EXPOSE 8000
 
-ADD . /go/src/$PROJECT
+RUN addgroup --gid 10001 app
+RUN adduser --gid 10001 --uid 10001 \
+    --home /app --shell /sbin/nologin \
+    --disabled-password app
 
-RUN mkdir /etc/$PROJECTNAME
-ADD autograph.yaml /etc/$PROJECTNAME/
+RUN apt update
+RUN apt -y upgrade
 
-RUN groupadd -r $PROJECTNAME && useradd -r -g $PROJECTNAME $PROJECTNAME
-USER $PROJECTNAME
+ADD . /go/src/go.mozilla.org/autograph
+ADD autograph.yaml /app
+ADD version.json /app
 
-RUN go install $PROJECT
+RUN go install go.mozilla.org/autograph
 
-CMD /go/bin/$PROJECTNAME -c /etc/$PROJECTNAME/autograph.yaml
+WORKDIR /app
+CMD /go/bin/autograph
