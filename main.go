@@ -10,11 +10,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 
 	"go.mozilla.org/mozlog"
 
@@ -40,22 +38,15 @@ type configuration struct {
 
 func main() {
 	var (
-		ag          *autographer
-		conf        configuration
-		cfgFile     string
-		showVersion bool
-		debug       bool
-		err         error
+		ag      *autographer
+		conf    configuration
+		cfgFile string
+		debug   bool
+		err     error
 	)
 	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
-	flag.BoolVar(&showVersion, "V", false, "Show build version and exit")
 	flag.BoolVar(&debug, "D", false, "Print debug logs")
 	flag.Parse()
-
-	if showVersion {
-		fmt.Println(version)
-		os.Exit(0)
-	}
 
 	err = conf.loadFromFile(cfgFile)
 	if err != nil {
@@ -82,7 +73,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/__heartbeat__", ag.handleHeartbeat)
 	mux.HandleFunc("/__lbheartbeat__", ag.handleHeartbeat)
-	mux.HandleFunc("/__version__", ag.handleVersion)
+	mux.HandleFunc("/__version__", handleVersion)
 	mux.HandleFunc("/__monitor__", ag.handleMonitor)
 	mux.HandleFunc("/sign/data", ag.handleSignature)
 	mux.HandleFunc("/sign/hash", ag.handleSignature)

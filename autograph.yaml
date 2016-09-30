@@ -1,5 +1,5 @@
 server:
-    listen: "localhost:8000"
+    listen: "0.0.0.0:8000"
     # cache 500k nonces to protect from authorization replay attacks
     noncecachesize: 524288
 

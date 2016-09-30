@@ -1,20 +1,41 @@
 language: go
 go:
-    - 1.5
-    - 1.6
-    - 1.7
-    - tip
-
+- 1.7
+services:
+- docker
 go_import_path: go.mozilla.org/autograph
-
 matrix:
-    fast_finish: true
+  fast_finish: true
 
 before_install:
-    - go get golang.org/x/tools/cmd/cover
-    - go get github.com/golang/lint/golint
-    - go get github.com/mattn/goveralls
+- go get golang.org/x/tools/cmd/cover
+- go get github.com/golang/lint/golint
+- go get github.com/mattn/goveralls
 
 script:
-    - make vet lint generate test
-    - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
+- make vet lint generate test
+- goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
+- docker build -t "app:build" .
+
+# Run a synthetic monitoring test against the container
+- |
+    id=$(docker run -d "app:build")
+    [ -z "$id" ] && exit 1
+    cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-monitor
+    go run monitor.go
+    docker kill $id
+
+# If we're on the master branch, push the container to DockerHub
+- |
+    if [ "$TRAVIS_BRANCH" == "master" ]; then
+        docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+        docker tag app:build mozilla/autograph:latest
+        docker push mozilla/autograph:latest
+        docker logout
+    fi
+
+env:
+  global:
+  - secure: cTH3JeH9aOyjXOTO/YxQZfA9l5X0BtE1JLcRW6VaQkT/j5de1rbB5QNCftVaztd7ry10M/xsivtSTPJecE3utd1bdBaaxR7yB4vP68UtJA1fUQtjwQ5aiN7etPd0e+/FT2LYPBL1eKBVJQcVNVI0TZKngYZTAEEd0YF2fsu9fz/IsmG4qdPCr7VzaqTPOYhoausS43uK6Gxmk2bSWOHowpnHFDdNIrcehan24MuAKUUi50akVsPDXbsVxMC06Z4ZoRkVq9yVJFJsx7ampsKZoh4d5Cocom6BvJu/lZw5PYGd2W/bd/rTmNegWnWOLT1SoP3g2V//QL4p+l/ynbzVXxctvuxk9zk9byYff6xUnZfXCdNvB/wfyDWXJMUgmCVl7s+c+4axgjoVHKerkfP97dUFEE9aX3aU/+ECJGIRI861Vmy8lZTetluloxo3IA5LK2o/76ADulsm0TMQeBBqppkzwpCedWhOlWrfWX9pURF1klT2BJqkB/bBZtAwsONkEL9GZorW9pZ/5NWmJG8+njXQKUnRIOr+fj8uUEp/xWWdzDTU3UeeLLRWFmuYzNMHp6xfFmkB5hrxNnAPE5PT1CTfxZTmMpSZxmLhfhAmybbbseXSQ8Z1mO494bs7PpkGDIxuC3DkLLu7e4KLVTNxxWK1R2+EUtpVD8ni+uxZ+qs=
+  - secure: OjXP2mTLwSI8RxpkV0q+XIA/vhkAx17YtEEJuaHpybUa0zdT2EDuB4dcKGH2G6eDskyMi0zEKed9Ro2YzT5LivgOnruY2mKN+yNfFcbGSoRLc7g99+n8jaONw3htJyrGlBdjakj4xnkjWpObJ6glUJoYZxSSPX2ZcNt6okOI+k+RjdxRGK0HVk6vLq/7nlm4sjkovPaihZpLRo2FO3X5pp8XNxva6dtQzcG5zzPLvob6Xr5ewvYunfYl/n3Hbu7iLudzYhF8Vz1mybHwK/kHLdIj9mBD1X9SsQdnFyl/RAaIUeY9e4qew7MthfaCg72D1oNS2xs4m611F4CxZUiwRt6d6zujT0jCuiNCDTyhgMwokwaQS/5l7Th77MmLWBDuzfvCzfrM9ZQYRmzEpG5OUZxrAC5eCehLgFB2PcEFQIznF4QHoBMuy5G1ALQYr16C41VkUXKm1X9s0mtnPUmzKvImHTapMwaNampaPWfA9TTWEXtks9OvRz0aBavTZsOZ2wQG4Cf8pZx2nvz0eyD/pP2/ooWnBqjo5ipgFqA4rtp5NZRUTcZLRDY5ZK8hQlpi/ydeERRTQiRPEejCKvFRcCblb+VaYwtZiY+mz2kVBCi7FRqzCBmil2HNT3tecGh6mDi0bHIKpsdzTAmhLwbcCOT+Dk6v2ruMNOWik/oO2kk=
+  - secure: XAxbAz1gi8gMdpHh/pGIJXktT89b9w76rnFX30kFdp21j6kI4Ifd+W4m0sYUZbv57bKK4WdIY0CIaWnoukRAW88ppFWDGSjoHJdKGdGTtk60kLab4gqAyHNLJxHEI7JKJn8hXplhxqWHmiscS2NO7+Qu2bIaHusRHt5lmtcn/xsdtOPCJRHKuLTgc02PYpvXyewJIZ2nFOKw4Qv/pCeAaYCKGYXohD57M/iYiAcozZRPKc0+YwlGK1kJYtfkFXPjW0DiwVbWJHjXhBwmDnMYrtccW//y2re426UuCLLyiXZjk1uU/gTbfc/iXnypIfIzo4/JL+eyEcHfaibkvT0lDojFNRxj5ANblE3xfjmQ6rxx41oCl1sPCUwAsEDhvOsCRaizlqRtdVzrxYVqy40zjOtAP+9PG/eMfDRLnp3YwCut5gWUA7svBJw/V/TQHGFsEFjbdWPw6ecbduFKvYtNqX0R3x+Qedm0DZTZisMu4wEbaUnLhOJQ4reBcxAdkmvPzA/pkUtQtyPEi0z6eiJ/O3up5p0qUgrUM5tN4lWSD3PeVcjLgRWI35a8gzbdoqO2NOh495aS1ZKIlyCm6I3ZWZqY/3By7iC2wJeHZI6ibwa8QgdQJLm5IQ5X8YuxhH3siCLlBYaPXJXpVRGe5+uWj1qa4uxJ67XAnf60BYS2Djc=
