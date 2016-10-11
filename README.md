@@ -254,6 +254,37 @@ The request body is a json array where each entry of the array is an object to s
 
 See `/sign/data`, the response format is identical.
 
+### /sign/addon
+
+Request an signature S/MIME detached signature of an addon signature file,
+either using the signer's private key or using an ephemeral key/cert when
+`make_ephemeral_cert` is `true`.
+
+#### Request
+
+The endpoint accepts a multipart POST request with two parameters:
+
+* `addon_id` is the unique identifier of the addon
+
+* `file` is the signature file of the addon (eg. mozilla.sf)
+
+* `make_ephemeral_cert` is a boolean that indicates whether a signing
+  certificate should be created to sign the file with. If set to true,
+  Autograph generates an ephemeral signing certificate and an ephemeral
+  private key, signs the certificate with the configured signer's private
+  key (here acting as an intermediate), and uses the ephemeral private key
+  to sign the signature file.
+  The ephemeral certificate is returned in the detached signature, alongside
+  the intermediate. The ephemeral private key is thrown away.
+  For most addons, `make_ephemeral_cert` should be true because it's the
+  standard way to sign. Some addons, like hotfixes or system addons, use
+  predefine keys instead of ephemeral ones and thus should leave
+  `make_ephemeral_cert` to false.
+
+#### Response
+
+A successful request return a `201 Created` with a response body containing
+an S/MIME detached signature encoded with Base 64.
 
 ### /__monitor__
 
@@ -456,7 +487,9 @@ gnw91z0443965WZmaeBKpbinxB1PpnNMCnPhd9J/Hz40+Q==
 -----END CERTIFICATE-----
 ```
 
-## Content Signature Rationale
+## Content Signature
+
+### Rationale
 
 As we rapidly increase the number of services that send configuration data to
 Firefox agents, we also increase the probability of a service being
@@ -476,3 +509,55 @@ Finally, digital signature helps us use Content Delivery Network without
 worrying that a CDN compromise would end-up serving bad data to our users.
 Signing at the source reduces the pressure off of the infrastructure and
 allows us to rely on vendors without worrying about data integrity.
+
+### Algorithm
+
+## Addon Signing (XPI)
+
+### Algorithm
+
+Addons are XPI files (zip archives) where each file in the archives is hashed
+with SHA-1 and MD5, and the manifest containing all the hashes is signed. To
+request a signature, the client must first compute the manifest file (stored in
+`META-INF/manifest.mf` in the XPI), then make a signature file (stored in
+`META-INF/mozilla.sf`) and submit the `sf` file to the signing API, alongside
+the addon ID (typically an email address). The signing API returns an S/MIME
+detached signature the client must store under `META-INF/mozilla.rsa`.
+
+The signature file `mozilla.sf` simply contains md5.sha1 hashes of `manifest.mf`.
+(eg. `openssl dgst -binary -sha1 manifest.mf | base64`)
+
+To compute the signature, the signing API first generates an RSA key pair for
+the addon, called "ephemeral" because thrown away after signature. The certificate
+containing the public ephemeral key is signed by an intermediate issuer, itself
+signed by the AMO Root CA trusted in Firefox.
+
+The addon's certificate must have the following properties
+* SHA-256 signed
+* RSA public key of 2048 bits
+* subject CN set to the addon identifier (addon_id in the POST request)
+* 10 years validity
+
+The ephemeral private key is used to sign the signature file `mozilla.sf` using
+the PKCS #7 format (S/MIME detached signature). The detached signature contains
+the ephemeral certificate and the AMO intermediate cert.
+
+When installing addons, Firefox does the following verifications:
+
+* verify the signature of `mozilla.sf` using `mozilla.rsa`
+* verify the signing cert chains back to the AMO Root CA
+* verify the hash of `manifest.mf` matches the hash stored in `mozilla.sf`
+* verify the hashes of all files in the XPI match the hashes stored in `manifest.mf`
+* verify all files in the XPI are listed in `manifest.mf`
+
+If the addon is a system addon, the Organisational Unit (OU) of the signing cert
+must be set to "Mozilla Components".
+
+If the addon is a hotfix, its ID must match the pref `extensions.hotfix.id`
+(currently `firefox-hotfix@mozilla.org`) and its signing cert must match the
+fingerprints set in `extensions.hotfix.certs.1.sha1Fingerprint` or
+`extensions.hotfix.certs.2.sha1Fingerprint`.
+
+refs:
+* https://dxr.mozilla.org/mozilla-central/source/toolkit/mozapps/extensions/internal/XPIProvider.jsm
+* https://developer.mozilla.org/en-US/docs/Signing_a_XPI
