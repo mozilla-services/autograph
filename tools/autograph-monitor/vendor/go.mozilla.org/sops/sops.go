@@ -1,15 +1,16 @@
-package sops
+package sops //import "go.mozilla.org/sops"
 
 import (
 	"crypto/rand"
 	"crypto/sha512"
 	"fmt"
-	"go.mozilla.org/sops/kms"
-	"go.mozilla.org/sops/pgp"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"go.mozilla.org/sops/kms"
+	"go.mozilla.org/sops/pgp"
 )
 
 // DefaultUnencryptedSuffix is the default suffix a TreeItem key has to end with for sops to leave its Value unencrypted
@@ -31,19 +32,52 @@ type DataKeyCipher interface {
 	Decrypt(value string, key []byte, path string) (plaintext interface{}, stashValue interface{}, err error)
 }
 
+// Comment represents a comment in the sops tree for the file formats that actually support them.
+type Comment struct {
+	Value string
+}
+
 // TreeItem is an item inside sops's tree
 type TreeItem struct {
-	Key   string
+	Key   interface{}
 	Value interface{}
 }
 
 // TreeBranch is a branch inside sops's tree. It is a slice of TreeItems and is therefore ordered
 type TreeBranch []TreeItem
 
+// ReplaceValue replaces the value under the provided key with the newValue provided.
+// Returns an error if the key was not found.
+func (branch TreeBranch) ReplaceValue(key interface{}, newValue interface{}) error {
+	replaced := false
+	for i, kv := range branch {
+		if kv.Key == key {
+			branch[i].Value = newValue
+			replaced = true
+			break
+		}
+	}
+	if !replaced {
+		return fmt.Errorf("Key not found")
+	}
+	return nil
+}
+
 // Tree is the data structure used by sops to represent documents internally
 type Tree struct {
 	Branch   TreeBranch
 	Metadata Metadata
+}
+
+// TrimTreePathComponent trimps a tree path component so that it's a valid tree key
+func TrimTreePathComponent(component string) (string, error) {
+	if component[len(component)-1] != ']' {
+		return "", fmt.Errorf("Invalid component")
+	}
+	component = component[:len(component)-1]
+	component = strings.Replace(component, `"`, "", 2)
+	component = strings.Replace(component, `'`, "", 2)
+	return component, nil
 }
 
 // Truncate truncates the tree following Python dictionary access syntax, for example, ["foo"][2].
@@ -54,12 +88,10 @@ func (tree TreeBranch) Truncate(path string) (interface{}, error) {
 		if component == "" {
 			continue
 		}
-		if component[len(component)-1] != ']' {
+		component, err := TrimTreePathComponent(component)
+		if err != nil {
 			return nil, fmt.Errorf("Invalid tree path format string: %s", path)
 		}
-		component = component[:len(component)-1]
-		component = strings.Replace(component, `"`, "", 2)
-		component = strings.Replace(component, `'`, "", 2)
 		i, err := strconv.Atoi(component)
 		if err != nil {
 			for _, item := range current.(TreeBranch) {
@@ -99,6 +131,9 @@ func (tree TreeBranch) walkValue(in interface{}, path []string, onLeaves func(in
 
 func (tree TreeBranch) walkSlice(in []interface{}, path []string, onLeaves func(in interface{}, path []string) (interface{}, error)) ([]interface{}, error) {
 	for i, v := range in {
+		if _, ok := v.(Comment); ok {
+			continue
+		}
 		newV, err := tree.walkValue(v, path, onLeaves)
 		if err != nil {
 			return nil, err
@@ -110,7 +145,10 @@ func (tree TreeBranch) walkSlice(in []interface{}, path []string, onLeaves func(
 
 func (tree TreeBranch) walkBranch(in TreeBranch, path []string, onLeaves func(in interface{}, path []string) (interface{}, error)) (TreeBranch, error) {
 	for i, item := range in {
-		newV, err := tree.walkValue(item.Value, append(path, item.Key), onLeaves)
+		if _, ok := item.Key.(Comment); ok {
+			continue
+		}
+		newV, err := tree.walkValue(item.Value, append(path, item.Key.(string)), onLeaves)
 		if err != nil {
 			return nil, err
 		}
@@ -195,18 +233,13 @@ func (tree Tree) Decrypt(key []byte, cipher DataKeyCipher, stash map[string][]in
 }
 
 // GenerateDataKey generates a new random data key and encrypts it with all MasterKeys.
-func (tree Tree) GenerateDataKey() ([]byte, error) {
+func (tree Tree) GenerateDataKey() ([]byte, []error) {
 	newKey := make([]byte, 32)
 	_, err := rand.Read(newKey)
 	if err != nil {
-		return nil, fmt.Errorf("Could not generate random key: %s", err)
+		return nil, []error{fmt.Errorf("Could not generate random key: %s", err)}
 	}
-	for _, ks := range tree.Metadata.KeySources {
-		for _, k := range ks.Keys {
-			k.Encrypt(newKey)
-		}
-	}
-	return newKey, nil
+	return newKey, tree.Metadata.UpdateMasterKeys(newKey)
 }
 
 // Metadata holds information about a file encrypted by sops
@@ -254,27 +287,47 @@ func (m *Metadata) MasterKeyCount() int {
 // RemoveMasterKeys removes all of the provided keys from the metadata's KeySources, if they exist there.
 func (m *Metadata) RemoveMasterKeys(keys []MasterKey) {
 	for j, ks := range m.KeySources {
-		for i, k := range ks.Keys {
-			for _, k2 := range keys {
-				if k.ToString() == k2.ToString() {
-					ks.Keys = append(ks.Keys[:i], ks.Keys[i+1:]...)
+		var newKeys []MasterKey
+		for _, k := range ks.Keys {
+			matchFound := false
+			for _, keyToRemove := range keys {
+				if k.ToString() == keyToRemove.ToString() {
+					matchFound = true
+					break
 				}
 			}
+			if !matchFound {
+				newKeys = append(newKeys, k)
+			}
 		}
-		m.KeySources[j] = ks
+		m.KeySources[j].Keys = newKeys
 	}
 }
 
-// UpdateMasterKeys encrypts the data key with all master keys if it's needed
-func (m *Metadata) UpdateMasterKeys(dataKey []byte) {
+// UpdateMasterKeysIfNeeded encrypts the data key with all master keys if it's needed
+func (m *Metadata) UpdateMasterKeysIfNeeded(dataKey []byte) (errs []error) {
 	for _, ks := range m.KeySources {
 		for _, k := range ks.Keys {
 			err := k.EncryptIfNeeded(dataKey)
 			if err != nil {
-				fmt.Println("[WARNING]: could not encrypt data key with master key ", k.ToString())
+				errs = append(errs, fmt.Errorf("Failed to encrypt new data key with master key %q: %v\n", k.ToString(), err))
 			}
 		}
 	}
+	return
+}
+
+// UpdateMasterKeys encrypts the data key with all master keys
+func (m *Metadata) UpdateMasterKeys(dataKey []byte) (errs []error) {
+	for _, ks := range m.KeySources {
+		for _, k := range ks.Keys {
+			err := k.Encrypt(dataKey)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("Failed to encrypt new data key with master key %q: %v\n", k.ToString(), err))
+			}
+		}
+	}
+	return
 }
 
 // AddPGPMasterKeys parses the input comma separated string of GPG fingerprints, generates a PGP MasterKey for each fingerprint, and adds the keys to the PGP KeySource
@@ -283,8 +336,8 @@ func (m *Metadata) AddPGPMasterKeys(pgpFps string) {
 		if ks.Name == "pgp" {
 			var keys []MasterKey
 			for _, k := range pgp.MasterKeysFromFingerprintString(pgpFps) {
-				keys = append(keys, &k)
-				fmt.Println("Keys to add:", keys)
+				keys = append(keys, k)
+				fmt.Printf("Adding new PGP master key: %X\n", k.Fingerprint)
 			}
 			ks.Keys = append(ks.Keys, keys...)
 			m.KeySources[i] = ks
@@ -293,12 +346,13 @@ func (m *Metadata) AddPGPMasterKeys(pgpFps string) {
 }
 
 // AddKMSMasterKeys parses the input comma separated string of AWS KMS ARNs, generates a KMS MasterKey for each ARN, and then adds the keys to the KMS KeySource
-func (m *Metadata) AddKMSMasterKeys(kmsArns string) {
+func (m *Metadata) AddKMSMasterKeys(kmsArns string, context map[string]*string) {
 	for i, ks := range m.KeySources {
 		if ks.Name == "kms" {
 			var keys []MasterKey
-			for _, k := range kms.MasterKeysFromArnString(kmsArns) {
-				keys = append(keys, &k)
+			for _, k := range kms.MasterKeysFromArnString(kmsArns, context) {
+				keys = append(keys, k)
+				fmt.Printf("Adding new KMS master key: %s\n", k.Arn)
 			}
 			ks.Keys = append(ks.Keys, keys...)
 			m.KeySources[i] = ks
@@ -310,7 +364,7 @@ func (m *Metadata) AddKMSMasterKeys(kmsArns string) {
 func (m *Metadata) RemovePGPMasterKeys(pgpFps string) {
 	var keys []MasterKey
 	for _, k := range pgp.MasterKeysFromFingerprintString(pgpFps) {
-		keys = append(keys, &k)
+		keys = append(keys, k)
 	}
 	m.RemoveMasterKeys(keys)
 }
@@ -318,8 +372,8 @@ func (m *Metadata) RemovePGPMasterKeys(pgpFps string) {
 // RemoveKMSMasterKeys takes a comma separated string of AWS KMS ARNs and removes the keys corresponding to those ARNs from the metadata's KeySources
 func (m *Metadata) RemoveKMSMasterKeys(arns string) {
 	var keys []MasterKey
-	for _, k := range kms.MasterKeysFromArnString(arns) {
-		keys = append(keys, &k)
+	for _, k := range kms.MasterKeysFromArnString(arns, nil) {
+		keys = append(keys, k)
 	}
 	m.RemoveMasterKeys(keys)
 }
@@ -351,7 +405,7 @@ func (m Metadata) GetDataKey() ([]byte, error) {
 			}
 		}
 	}
-	return nil, fmt.Errorf("Could not get master key")
+	return nil, fmt.Errorf("Could not get data key")
 }
 
 // ToBytes converts a string, int, float or bool to a byte representation.

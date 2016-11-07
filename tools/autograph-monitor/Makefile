@@ -6,4 +6,4 @@ vendor:
 	govend -u
 clean:
 	rm autograph-monitor autograph-monitor.zip
-
+.PHONY: vendor clean build

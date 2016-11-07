@@ -1,15 +1,16 @@
-package json
+package json //import "go.mozilla.org/sops/json"
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"go.mozilla.org/sops"
-	"go.mozilla.org/sops/kms"
-	"go.mozilla.org/sops/pgp"
 	"io"
 	"strconv"
 	"time"
+
+	"go.mozilla.org/sops"
+	"go.mozilla.org/sops/kms"
+	"go.mozilla.org/sops/pgp"
 )
 
 // Store handles storage of JSON data.
@@ -138,6 +139,14 @@ func (store Store) encodeValue(v interface{}, pad string) ([]byte, error) {
 	switch v := v.(type) {
 	case sops.TreeBranch:
 		return store.encodeTree(v, pad+"\t")
+	case []interface{}:
+		// Remove all comments
+		for i, value := range v {
+			if _, ok := value.(sops.Comment); ok {
+				v = append(v[:i], v[i+1:]...)
+			}
+		}
+		return json.Marshal(v)
 	default:
 		return json.Marshal(v)
 	}
@@ -146,11 +155,14 @@ func (store Store) encodeValue(v interface{}, pad string) ([]byte, error) {
 func (store Store) encodeTree(tree sops.TreeBranch, pad string) ([]byte, error) {
 	out := pad + "{\n"
 	for i, item := range tree {
+		if _, ok := item.Key.(sops.Comment); ok {
+			continue
+		}
 		v, err := store.encodeValue(item.Value, pad)
 		if err != nil {
 			return nil, fmt.Errorf("Error encoding value %s: %s", v, err)
 		}
-		out += pad + "\t" + `"` + item.Key + `": ` + string(v)
+		out += pad + "\t" + `"` + item.Key.(string) + `": ` + string(v)
 		if i != len(tree)-1 {
 			out += ",\n"
 		}
@@ -247,7 +259,11 @@ func (store Store) kmsEntries(in []interface{}) (sops.KeySource, error) {
 	var keys []sops.MasterKey
 	keysource := sops.KeySource{Name: "kms", Keys: keys}
 	for _, v := range in {
-		entry := v.(map[string]interface{})
+		entry, ok := v.(map[string]interface{})
+		if !ok {
+			fmt.Println("KMS entry has invalid format, skipping...")
+			continue
+		}
 		key := &kms.MasterKey{}
 		key.Arn = entry["arn"].(string)
 		key.EncryptedKey = entry["enc"].(string)
@@ -259,6 +275,9 @@ func (store Store) kmsEntries(in []interface{}) (sops.KeySource, error) {
 		if err != nil {
 			return keysource, fmt.Errorf("Could not parse creation date: %s", err)
 		}
+		if _, ok := entry["context"]; ok {
+			key.EncryptionContext = kms.ParseKMSContext(entry["context"].(string))
+		}
 		key.CreationDate = creationDate
 		keysource.Keys = append(keysource.Keys, key)
 	}
@@ -269,7 +288,11 @@ func (store Store) pgpEntries(in []interface{}) (sops.KeySource, error) {
 	var keys []sops.MasterKey
 	keysource := sops.KeySource{Name: "pgp", Keys: keys}
 	for _, v := range in {
-		entry := v.(map[string]interface{})
+		entry, ok := v.(map[string]interface{})
+		if !ok {
+			fmt.Println("PGP entry has invalid format, skipping...")
+			continue
+		}
 		key := &pgp.MasterKey{}
 		key.Fingerprint = entry["fp"].(string)
 		key.EncryptedKey = entry["enc"].(string)
