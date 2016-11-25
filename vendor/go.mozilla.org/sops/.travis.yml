@@ -1,12 +1,13 @@
 language: go
 go:
+  - 1.6
+  - 1.7
   - tip
 go_import_path: go.mozilla.org/sops/
-before_intall:
-  - go get -t -v ./...
-
+before_install:
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y
+  - source ~/.cargo/env
 script:
-  - make test
-  
+  - make
 after_success:
   - bash <(curl -s https://codecov.io/bash)

@@ -1,68 +1,41 @@
 SOPS: Secrets OPerationS
 ========================
 
-**sop** is an editor of encrypted files that supports YAML, JSON and BINARY formats and encrypts with AWS KMS and PGP (via GnuPG). Watch `the demo <https://www.youtube.com/watch?v=YTEVyLXFiq0>`_.
+**sops** is an editor of encrypted files that supports YAML, JSON and BINARY
+formats and encrypts with AWS KMS and PGP (via GnuPG).
+Watch `the demo <https://www.youtube.com/watch?v=YTEVyLXFiq0>`_.
 
-.. image:: http://i.imgur.com/IL6dlhm.gif
+.. image:: https://i.imgur.com/X0TM5NI.gif
 
 .. image:: https://travis-ci.org/mozilla/sops.svg?branch=master
 	:target: https://travis-ci.org/mozilla/sops
 
-**Questions?** ping "ulfr" in `#security` on `irc.mozilla.org <https://wiki.mozilla.org/IRC>`_
-(use a web client like `mibbit <https://chat.mibbit.com>`_ ).
-
-.. sectnum::
-.. contents:: Table of Contents
-
-Installation
-------------
-
-* RHEL family::
-
-	sudo yum install gcc git libffi-devel libyaml-devel make openssl openssl-devel python-devel python-pip
-	sudo pip install --upgrade sops
-
-* Debian family::
-
-	sudo apt-get install gcc git libffi-dev libssl-dev libyaml-dev make openssl python-dev python-pip
-	sudo pip install --upgrade sops
-
-* MacOS Brew Install::
-
-	brew install sops
-
-* MacOS Manual Install::
-
-	brew install libffi libyaml python [1]
-	pip install sops
-
-1. http://docs.python-guide.org/en/latest/starting/install/osx/#doing-it-right
-
-In a virtualenv
-~~~~~~~~~~~~~~~
-
-Assuming you already have libffi and libyaml installed, the following commands will install sops in a virtualenv:
+Install **sops** with:
 
 .. code:: bash
 
-    $ sudo pip install virtualenv --upgrade
-    $ virtualenv ~/sopsvenv
-    $ source ~/sopsvenv/bin/activate
-    $ pip install -U sops
-    $ sops -v
-    sops 1.9
+	$ go get -u go.mozilla.org/sops/cmd/sops
 
-Test with the dev PGP key
-~~~~~~~~~~~~~~~~~~~~~~~~~
-Clone the repository, load the test PGP key and open the test files::
+(requires Go >= 1.6)
 
-	$ git clone https://github.com/mozilla/sops.git
-	$ cd sops
-	$ gpg --import tests/sops_functional_tests_key.asc
-	$ sops example.yaml
+If you don't have Go installed, set it up with:
 
-This last step will decrypt `example.yaml` using the test private key. To create
-your own secrets files using keys under your control, keep reading.
+.. code:: bash
+
+	$ {apt,yum,brew} install golang
+	$ echo 'GOPATH=~/go' >> ~/.bashrc
+	$ source ~/.bashrc
+	$ mkdir $GOPATH
+
+Or whatever variation of the above fits your system and shell.
+
+**Questions?** ping "ulfr" in `#security` on `irc.mozilla.org <https://wiki.mozilla.org/IRC>`_
+(use a web client like `mibbit <https://chat.mibbit.com>`_ ).
+
+**What happened to Python Sops?** We rewrote Sops in Go to solve a number of deployment issues, but the Python branch still exists under `python-sops`. You can still `pip install sops`, but we strongly recommend you use the Go version instead.
+
+.. sectnum::
+.. contents:: Table of Contents
 
 Usage
 -----
@@ -94,15 +67,22 @@ separated, in the **SOPS_PGP_FP** env variable.
 Note: you can use both PGP and KMS simultaneously.
 
 Then simply call `sops` with a file path as argument. It will handle the
-encryption/decryption transparently and open the cleartext file in an editor.
+encryption/decryption transparently and open the cleartext file in an editor
 
 .. code:: bash
 
 	$ sops mynewtestfile.yaml
 	mynewtestfile.yaml doesn't exist, creating it.
 	please wait while an encryption key is being generated and stored in a secure fashion
-	[... editing happens in vim, or whatever $EDITOR is set to ...]
 	file written to mynewtestfile.yaml
+
+.
+Editing will happen in whatever $EDITOR is set to, or, if it's not set, in vim.
+Keep in mind that sops will wait for the editor to exit, and then try to reencrypt
+the file. Some GUI editors (atom, sublime) spawn a child process and then exit
+immediately. They usually have an option to wait for the main editor window to be
+closed before exiting. See [#127](https://github.com/mozilla/sops/issues/127) for
+more information.
 
 The resulting encrypted file looks like this:
 
@@ -160,6 +140,19 @@ Given that, the only command a `sops` user needs is:
 `<file>` will be opened, decrypted, passed to a text editor (vim by default),
 encrypted if modified, and saved back to its original location. All of these
 steps, apart from the actual editing, are transparent to the user.
+
+Test with the dev PGP key
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to test **sops** without having to do a bunch of setup, you can use
+the example files and pgp key provided with the repository::
+
+	$ git clone https://github.com/mozilla/sops.git
+	$ cd sops
+	$ gpg --import tests/sops_functional_tests_key.asc
+	$ sops example.yaml
+
+This last step will decrypt `example.yaml` using the test private key.
 
 Adding and removing keys
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -270,6 +263,48 @@ appending it to the ARN of the master key, separated by a **+** sign::
 	<KMS ARN>+<ROLE ARN>
 	arn:aws:kms:us-west-2:927034868273:key/fe86dd69-4132-404c-ab86-4269956b4500+arn:aws:iam::927034868273:role/sops-dev-xyz
 
+AWS KMS Encryption Context
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SOPS has the ability to use AWS KMS key policy and encryption context
+<http://docs.aws.amazon.com/kms/latest/developerguide/encryption-context.html>
+to refine the access control of a given KMS master key.
+
+When creating a new file, you can specify encryption context in the
+`--encryption-context` flag by comma separated list of key-value pairs:
+
+When creating a new file, you can specify encryption context in the
+`--encryption-context` flag by comma separated list of key-value pairs:
+
+.. code:: bash
+
+	$ sops --encryption-context Environment:production,Role:web-server test.dev.yaml
+
+The format of the Encrypt Context string is `<EncryptionContext Key>:<EncryptionContext Value>,<EncryptionContext Key>:<EncryptionContext Value>,...`
+
+The encryption context will be stored in the file metadata and does
+not need to be provided at decryption.
+
+Encryption contexts can be used in conjunction with KMS Key Policies to define
+roles that can only access a given context. An example policy is shown below:
+
+.. code:: json
+
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::111122223333:role/RoleForExampleApp"
+      },
+      "Action": "kms:Decrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:EncryptionContext:AppName": "ExampleApp",
+          "kms:EncryptionContext:FilePath": "/var/opt/secrets/"
+        }
+      }
+    }
+
 Key Rotation
 ~~~~~~~~~~~~
 
@@ -336,6 +371,19 @@ Creating a new file with the right keys is now as simple as
 Note that the configuration file is ignored when KMS or PGP parameters are
 passed on the sops command line or in environment variables.
 
+Specify a different GPG executable
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`sops` checks for the `SOPS_GPG_EXEC` environment variable. If specified, 
+it will attempt to use the executable set there instead of the default 
+of `gpg`.
+
+Example: place the following in your `~/.bashrc`
+
+.. code:: bash
+
+	SOPS_GPG_EXEC = 'your_gpg_client_wrapper'
+	
 Important information on types
 ------------------------------
 
@@ -521,7 +569,7 @@ values, like keys, without needing an extra parser.
 
 .. code:: bash
 
-	$ sops -d ~/git/svc/sops/example.yaml -t '["app2"]["key"]'
+	$ sops -d ~/git/svc/sops/example.yaml --extract '["app2"]["key"]'
 	-----BEGIN RSA PRIVATE KEY-----
 	MIIBPAIBAAJBAPTMNIyHuZtpLYc7VsHQtwOkWYobkUblmHWRmbXzlAX6K8tMf3Wf
 	ImcbNkqAKnELzFAPSBeEMhrBN0PyOC9lYlMCAwEAAQJBALXD4sjuBn1E7Y9aGiMz
@@ -538,8 +586,33 @@ them.
 
 .. code:: bash
 
-	$ sops -d ~/git/svc/sops/example.yaml -t '["an_array"][1]'
+	$ sops -d ~/git/svc/sops/example.yaml --extract '["an_array"][1]'
 	secretuser2
+
+Set a sub-part in a document tree
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`sops` can set a specific part of a YAML or JSON document, by providing
+the path and value in the `--set` command line flag. This is useful to
+set specific values, like keys, without needing an editor.
+
+.. code:: bash
+
+	$ sops ~/git/svc/sops/example.yaml --set '["app2"]["key"]' '"app2keystringvalue"'
+
+The tree path syntax uses regular python dictionary syntax, without the
+variable name. Set to keys by naming them, and array elements by
+numbering them.
+
+.. code:: bash
+
+	$ sops ~/git/svc/sops/example.yaml --set '["an_array"][1]' '"secretuser2"'
+
+The value must be formatted as json.
+
+.. code:: bash
+
+	$ sops ~/git/svc/sops/example.yaml --set '["an_array"][1]' '{"uid1":null,"uid2":1000,"uid3":["bob"]}'
 
 Using sops as a library in a python script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -835,8 +908,8 @@ Backward compatibility
 ----------------------
 
 `sops` will remain backward compatible on the major version, meaning that all
-improvements brought to the 1.X branch (current) will maintain the file format
-introduced in **1.0**.
+improvements brought to the 1.X and 2.X branches (current) will maintain the
+file format introduced in **1.0**.
 
 License
 -------
@@ -844,13 +917,24 @@ Mozilla Public License Version 2.0
 
 Authors
 -------
-* Julien Vehent <jvehent@mozilla.com> (lead & maintainer)
 
-* Daniel Thornton <dthornton@mozilla.com>
-* Alexis Metaireau <alexis@mozilla.com>
-* Rémy Hubscher <natim@mozilla.com>
-* Todd Wolfson <todd@twolfson.com>
-* Brian Hourigan <bhourigan@mozilla.com>
+By commit count:
+
+* Julien Vehent
+* Adrian Utrilla
+* Jeremiah Orem
+* Rémy HUBSCHER
+* Daniel Thorn
+* Dick Tang
+* Alexis Métaireau
+* Brian Hourigan
+* Todd Wolfson
+* Chris Kolosiwsky
+* Boris Kourtoukov
+* Elliot Murphy
+* Ivan Malopinsky
+* Jonathan Barratt
+
 
 Credits
 -------

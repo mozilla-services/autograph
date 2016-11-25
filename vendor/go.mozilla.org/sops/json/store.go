@@ -1,15 +1,16 @@
-package json
+package json //import "go.mozilla.org/sops/json"
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"go.mozilla.org/sops"
-	"go.mozilla.org/sops/kms"
-	"go.mozilla.org/sops/pgp"
 	"io"
 	"strconv"
 	"time"
+
+	"go.mozilla.org/sops"
+	"go.mozilla.org/sops/kms"
+	"go.mozilla.org/sops/pgp"
 )
 
 // Store handles storage of JSON data.
@@ -34,6 +35,11 @@ func (store BinaryStore) Marshal(tree sops.TreeBranch) ([]byte, error) {
 // MarshalWithMetadata takes a sops tree branch and sops metadata and marshals them to json.
 func (store BinaryStore) MarshalWithMetadata(tree sops.TreeBranch, metadata sops.Metadata) ([]byte, error) {
 	return store.store.MarshalWithMetadata(tree, metadata)
+}
+
+// MarshalValue is unusable for BinaryStore
+func (store BinaryStore) MarshalValue(v interface{}) ([]byte, error) {
+	return nil, fmt.Errorf("Binary files are not structured and extracting a single value is not possible")
 }
 
 // Unmarshal takes an input byte slice and returns a sops tree branch
@@ -134,38 +140,72 @@ func (store Store) treeBranchFromJSONDecoder(dec *json.Decoder) (sops.TreeBranch
 	}
 }
 
-func (store Store) encodeValue(v interface{}, pad string) ([]byte, error) {
+func (store Store) encodeValue(v interface{}) ([]byte, error) {
 	switch v := v.(type) {
 	case sops.TreeBranch:
-		return store.encodeTree(v, pad+"\t")
+		return store.encodeTree(v)
+	case []interface{}:
+		return store.encodeArray(v)
 	default:
 		return json.Marshal(v)
 	}
 }
 
-func (store Store) encodeTree(tree sops.TreeBranch, pad string) ([]byte, error) {
-	out := pad + "{\n"
+func (store Store) encodeArray(array []interface{}) ([]byte, error) {
+	out := "["
+	for i, item := range array {
+		if _, ok := item.(sops.Comment); ok {
+			continue
+		}
+		v, err := store.encodeValue(item)
+		if err != nil {
+			return nil, err
+		}
+		out += string(v)
+		if i != len(array)-1 {
+			out += ","
+		}
+	}
+	out += "]"
+	return []byte(out), nil
+}
+
+func (store Store) encodeTree(tree sops.TreeBranch) ([]byte, error) {
+	out := "{"
 	for i, item := range tree {
-		v, err := store.encodeValue(item.Value, pad)
+		if _, ok := item.Key.(sops.Comment); ok {
+			continue
+		}
+		v, err := store.encodeValue(item.Value)
 		if err != nil {
 			return nil, fmt.Errorf("Error encoding value %s: %s", v, err)
 		}
-		out += pad + "\t" + `"` + item.Key + `": ` + string(v)
+		out += `"` + item.Key.(string) + `": ` + string(v)
 		if i != len(tree)-1 {
-			out += ",\n"
+			out += ","
 		}
 	}
-	return []byte(out + "\n" + pad + "}"), nil
+	return []byte(out + "}"), nil
 }
 
 func (store Store) jsonFromTreeBranch(branch sops.TreeBranch) ([]byte, error) {
-	return store.encodeTree(branch, "")
+	out, err := store.encodeTree(branch)
+	if err != nil {
+		return nil, err
+	}
+	return store.reindentJSON(out)
 }
 
 func (store Store) treeBranchFromJSON(in []byte) (sops.TreeBranch, error) {
 	dec := json.NewDecoder(bytes.NewReader(in))
 	dec.Token()
 	return store.treeBranchFromJSONDecoder(dec)
+}
+
+func (store Store) reindentJSON(in []byte) ([]byte, error) {
+	var out bytes.Buffer
+	err := json.Indent(&out, in, "", "\t")
+	return out.Bytes(), err
 }
 
 // Unmarshal takes an input json string and returns a sops tree branch
@@ -199,6 +239,15 @@ func (store Store) MarshalWithMetadata(tree sops.TreeBranch, metadata sops.Metad
 		return nil, fmt.Errorf("Error marshaling to json: %s", err)
 	}
 	return out, nil
+}
+
+// MarshalValue takes any value and returns a json formatted string
+func (store Store) MarshalValue(v interface{}) ([]byte, error) {
+	s, err := store.encodeValue(v)
+	if err != nil {
+		return nil, err
+	}
+	return store.reindentJSON(s)
 }
 
 // UnmarshalMetadata takes a json string and extracts sops' metadata from it
@@ -247,7 +296,11 @@ func (store Store) kmsEntries(in []interface{}) (sops.KeySource, error) {
 	var keys []sops.MasterKey
 	keysource := sops.KeySource{Name: "kms", Keys: keys}
 	for _, v := range in {
-		entry := v.(map[string]interface{})
+		entry, ok := v.(map[string]interface{})
+		if !ok {
+			fmt.Println("KMS entry has invalid format, skipping...")
+			continue
+		}
 		key := &kms.MasterKey{}
 		key.Arn = entry["arn"].(string)
 		key.EncryptedKey = entry["enc"].(string)
@@ -259,6 +312,9 @@ func (store Store) kmsEntries(in []interface{}) (sops.KeySource, error) {
 		if err != nil {
 			return keysource, fmt.Errorf("Could not parse creation date: %s", err)
 		}
+		if _, ok := entry["context"]; ok {
+			key.EncryptionContext = kms.ParseKMSContext(entry["context"].(string))
+		}
 		key.CreationDate = creationDate
 		keysource.Keys = append(keysource.Keys, key)
 	}
@@ -269,7 +325,11 @@ func (store Store) pgpEntries(in []interface{}) (sops.KeySource, error) {
 	var keys []sops.MasterKey
 	keysource := sops.KeySource{Name: "pgp", Keys: keys}
 	for _, v := range in {
-		entry := v.(map[string]interface{})
+		entry, ok := v.(map[string]interface{})
+		if !ok {
+			fmt.Println("PGP entry has invalid format, skipping...")
+			continue
+		}
 		key := &pgp.MasterKey{}
 		key.Fingerprint = entry["fp"].(string)
 		key.EncryptedKey = entry["enc"].(string)
