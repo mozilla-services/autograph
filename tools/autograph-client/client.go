@@ -31,6 +31,7 @@ type signaturerequest struct {
 
 type signatureresponse struct {
 	Ref              string `json:"ref"`
+	SignerID         string `json:"signer_id"`
 	X5u              string `json:"x5u,omitempty"`
 	PublicKey        string `json:"public_key,omitempty"`
 	Hash             string `json:"hash_algorithm,omitempty"`
@@ -43,6 +44,7 @@ func main() {
 	var (
 		userid, pass, sigreq, url string
 		iter, maxworkers          int
+		debug                     bool
 	)
 	flag.StringVar(&userid, "u", "alice", "User ID")
 	flag.StringVar(&pass, "p", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", "Secret passphrase")
@@ -50,6 +52,7 @@ func main() {
 	flag.StringVar(&url, "t", `http://localhost:8000/sign/data`, "signing api URL")
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
 	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
+	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
 
 	// verify format of signature request
@@ -85,13 +88,21 @@ func main() {
 			req.Header.Set("Content-Type", "application/json")
 			authheader := getAuthHeader(req, userid, pass, sha256.New, fmt.Sprintf("%d", time.Now().Nanosecond()), "application/json", []byte(sigreq))
 			req.Header.Set("Authorization", authheader)
-
+			if debug {
+				fmt.Printf("DEBUG: sending request\nDEBUG: %+v\nDEBUG: %s\n", req, sigreq)
+			}
 			resp, err := cli.Do(req)
 			if err != nil || resp == nil {
 				log.Fatal(err)
 			}
+			if debug {
+				fmt.Printf("DEBUG: received response\nDEBUG: %+v\n", resp)
+			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
+			if debug {
+				fmt.Printf("DEBUG: %s\n", body)
+			}
 
 			// verify that we got a proper signature response, with a valid signature
 			var responses []signatureresponse
@@ -104,16 +115,11 @@ func main() {
 			}
 			for i, response := range responses {
 				if verify(requests[i], response, req.URL.RequestURI()) {
-					log.Printf("signature %d pass", i)
+					log.Printf("signature %d from signer %q passes", i, response.SignerID)
 				} else {
-					log.Fatalf("response %d does not pass!", i)
+					log.Fatalf("response %d from signer %q does not pass!", i, response.SignerID)
 				}
 			}
-			pretty, err := json.MarshalIndent(responses, "", "  ")
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Printf("%s\n", pretty)
 			workers--
 		}()
 	}
