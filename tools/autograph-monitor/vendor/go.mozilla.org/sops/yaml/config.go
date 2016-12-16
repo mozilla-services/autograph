@@ -1,12 +1,13 @@
-package yaml
+package yaml //import "go.mozilla.org/sops/yaml"
 
 import (
 	"fmt"
-	"github.com/autrilla/yaml"
 	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
+
+	"github.com/mozilla-services/yaml"
 )
 
 type fileSystem interface {

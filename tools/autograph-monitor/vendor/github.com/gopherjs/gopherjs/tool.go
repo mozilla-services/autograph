@@ -20,6 +20,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -74,6 +75,9 @@ func main() {
 	tags := pflag.String("tags", "", "a list of build tags to consider satisfied during the build")
 	flagTags := pflag.Lookup("tags")
 
+	pflag.BoolVar(&options.MapToLocalDisk, "localmap", false, "use local paths for sourcemap")
+	flagLocalMap := pflag.Lookup("localmap")
+
 	cmdBuild := &cobra.Command{
 		Use:   "build [packages]",
 		Short: "compile packages and dependencies",
@@ -85,6 +89,7 @@ func main() {
 	cmdBuild.Flags().AddFlag(flagMinify)
 	cmdBuild.Flags().AddFlag(flagColor)
 	cmdBuild.Flags().AddFlag(flagTags)
+	cmdBuild.Flags().AddFlag(flagLocalMap)
 	cmdBuild.Run = func(cmd *cobra.Command, args []string) {
 		options.BuildTags = strings.Fields(*tags)
 		for {
@@ -161,6 +166,7 @@ func main() {
 	cmdInstall.Flags().AddFlag(flagMinify)
 	cmdInstall.Flags().AddFlag(flagColor)
 	cmdInstall.Flags().AddFlag(flagTags)
+	cmdInstall.Flags().AddFlag(flagLocalMap)
 	cmdInstall.Run = func(cmd *cobra.Command, args []string) {
 		options.BuildTags = strings.Fields(*tags)
 		for {
@@ -233,6 +239,7 @@ func main() {
 	cmdGet.Flags().AddFlag(flagMinify)
 	cmdGet.Flags().AddFlag(flagColor)
 	cmdGet.Flags().AddFlag(flagTags)
+	cmdGet.Flags().AddFlag(flagLocalMap)
 	cmdGet.Run = cmdInstall.Run
 
 	cmdRun := &cobra.Command{
@@ -288,6 +295,7 @@ func main() {
 	cmdTest.Flags().AddFlag(flagMinify)
 	cmdTest.Flags().AddFlag(flagColor)
 	cmdTest.Flags().AddFlag(flagTags)
+	cmdTest.Flags().AddFlag(flagLocalMap)
 	cmdTest.Run = func(cmd *cobra.Command, args []string) {
 		options.BuildTags = strings.Fields(*tags)
 		os.Exit(handleError(func() error {
@@ -474,6 +482,7 @@ func main() {
 	cmdServe.Flags().AddFlag(flagMinify)
 	cmdServe.Flags().AddFlag(flagColor)
 	cmdServe.Flags().AddFlag(flagTags)
+	cmdServe.Flags().AddFlag(flagLocalMap)
 	var addr string
 	cmdServe.Flags().StringVarP(&addr, "http", "", ":8080", "HTTP bind address to serve")
 	cmdServe.Run = func(cmd *cobra.Command, args []string) {
@@ -591,7 +600,7 @@ func (fs serveCommandFileSystem) Open(requestName string) (http.File, error) {
 
 				sourceMapFilter := &compiler.SourceMapFilter{Writer: buf}
 				m := &sourcemap.Map{File: base + ".js"}
-				sourceMapFilter.MappingCallback = gbuild.NewMappingCallback(m, fs.options.GOROOT, fs.options.GOPATH)
+				sourceMapFilter.MappingCallback = gbuild.NewMappingCallback(m, fs.options.GOROOT, fs.options.GOPATH, fs.options.MapToLocalDisk)
 
 				deps, err := compiler.ImportDependencies(archive, s.BuildImportPath)
 				if err != nil {
@@ -779,9 +788,10 @@ type testFuncs struct {
 }
 
 type testFunc struct {
-	Package string // imported package name (_test or _xtest)
-	Name    string // function name
-	Output  string // output, for examples
+	Package   string // imported package name (_test or _xtest)
+	Name      string // function name
+	Output    string // output, for examples
+	Unordered bool   // output is allowed to be unordered.
 }
 
 var testFileSet = token.NewFileSet()
@@ -805,18 +815,28 @@ func (t *testFuncs) load(filename, pkg string, doImport, seen *bool) error {
 			if t.TestMain != nil {
 				return errors.New("multiple definitions of TestMain")
 			}
-			t.TestMain = &testFunc{pkg, name, ""}
+			t.TestMain = &testFunc{pkg, name, "", false}
 			*doImport, *seen = true, true
 		case isTest(name, "Test"):
-			t.Tests = append(t.Tests, testFunc{pkg, name, ""})
+			t.Tests = append(t.Tests, testFunc{pkg, name, "", false})
 			*doImport, *seen = true, true
 		case isTest(name, "Benchmark"):
-			t.Benchmarks = append(t.Benchmarks, testFunc{pkg, name, ""})
+			t.Benchmarks = append(t.Benchmarks, testFunc{pkg, name, "", false})
 			*doImport, *seen = true, true
 		}
 	}
-	// TODO: Support examples, populate t.Examples here.
-	//       Blocking on https://github.com/gopherjs/gopherjs/issues/381 being resolved.
+	ex := doc.Examples(f)
+	sort.Sort(byOrder(ex))
+	for _, e := range ex {
+		*doImport = true // import test file whether executed or not
+		if e.Output == "" && !e.EmptyOutput {
+			// Don't run examples with no output.
+			continue
+		}
+		t.Examples = append(t.Examples, testFunc{pkg, "Example" + e.Name, e.Output, e.Unordered})
+		*seen = true
+	}
+
 	return nil
 }
 
@@ -897,7 +917,7 @@ var benchmarks = []testing.InternalBenchmark{
 
 var examples = []testing.InternalExample{
 {{range .Examples}}
-	{"{{.Name}}", {{.Package}}.{{.Name}}, {{.Output | printf "%q"}}},
+	{"{{.Name}}", {{.Package}}.{{.Name}}, {{.Output | printf "%q"}}, {{.Unordered}}},
 {{end}}
 }
 

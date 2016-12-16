@@ -4,13 +4,12 @@
 
 PROJECT		:= go.mozilla.org/sops
 GO 		:= GO15VENDOREXPERIMENT=1 go
-GOGETTER	:= GOPATH=$(shell pwd)/.tmpdeps go get -d
 GOLINT 		:= golint
 
-all: test vet generate install
+all: test vet generate install functional-tests
 
 install:
-	$(GO) install github.com/mozilla-services/autograph
+	$(GO) install go.mozilla.org/sops/cmd/sops
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
@@ -18,19 +17,22 @@ tag: all
 lint:
 	$(GOLINT) $(PROJECT)
 
+vendor:
+	govend -u
+
 vet:
 	$(GO) vet $(PROJECT)
 
 test:
 	touch coverage.txt
-	$(GO) test -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
-	$(GO) test ./aes -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
-	$(GO) test ./cmd/sops -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
-	$(GO) test ./json -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
-	$(GO) test ./yaml -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
+	$(GO) test -coverprofile=coverage_tmp.txt -covermode=atomic $(PROJECT) && cat coverage_tmp.txt >> coverage.txt
+	$(GO) test $(PROJECT)/aes -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
+	$(GO) test $(PROJECT)/cmd/sops -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
+	$(GO) test $(PROJECT)/json -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
+	$(GO) test $(PROJECT)/yaml -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
 	gpg --import pgp/sops_functional_tests_key.asc 2>&1 1>/dev/null || exit 0
-	$(GO) test ./pgp -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
-	$(GO) test ./kms -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
+	$(GO) test $(PROJECT)/pgp -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
+	$(GO) test $(PROJECT)/kms -coverprofile=coverage_tmp.txt -covermode=atomic && cat coverage_tmp.txt >> coverage.txt
 
 showcoverage: test
 	$(GO) tool cover -html=coverage.out
@@ -38,4 +40,8 @@ showcoverage: test
 generate:
 	$(GO) generate
 
-.PHONY: all test generate clean autograph
+functional-tests:
+	$(GO) build -o functional-tests/sops go.mozilla.org/sops/cmd/sops
+	cd functional-tests && cargo test
+
+.PHONY: all test generate clean vendor functional-tests

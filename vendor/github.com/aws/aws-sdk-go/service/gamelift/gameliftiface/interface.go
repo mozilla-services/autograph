@@ -139,6 +139,10 @@ type GameLiftAPI interface {
 
 	DescribeGameSessions(*gamelift.DescribeGameSessionsInput) (*gamelift.DescribeGameSessionsOutput, error)
 
+	DescribeInstancesRequest(*gamelift.DescribeInstancesInput) (*request.Request, *gamelift.DescribeInstancesOutput)
+
+	DescribeInstances(*gamelift.DescribeInstancesInput) (*gamelift.DescribeInstancesOutput, error)
+
 	DescribePlayerSessionsRequest(*gamelift.DescribePlayerSessionsInput) (*request.Request, *gamelift.DescribePlayerSessionsOutput)
 
 	DescribePlayerSessions(*gamelift.DescribePlayerSessionsInput) (*gamelift.DescribePlayerSessionsOutput, error)
@@ -154,6 +158,10 @@ type GameLiftAPI interface {
 	GetGameSessionLogUrlRequest(*gamelift.GetGameSessionLogUrlInput) (*request.Request, *gamelift.GetGameSessionLogUrlOutput)
 
 	GetGameSessionLogUrl(*gamelift.GetGameSessionLogUrlInput) (*gamelift.GetGameSessionLogUrlOutput, error)
+
+	GetInstanceAccessRequest(*gamelift.GetInstanceAccessInput) (*request.Request, *gamelift.GetInstanceAccessOutput)
+
+	GetInstanceAccess(*gamelift.GetInstanceAccessInput) (*gamelift.GetInstanceAccessOutput, error)
 
 	ListAliasesRequest(*gamelift.ListAliasesInput) (*request.Request, *gamelift.ListAliasesOutput)
 

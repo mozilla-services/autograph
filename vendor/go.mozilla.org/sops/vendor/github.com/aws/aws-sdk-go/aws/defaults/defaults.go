@@ -72,6 +72,7 @@ func Handlers() request.Handlers {
 	handlers.Build.PushBackNamed(corehandlers.SDKVersionUserAgentHandler)
 	handlers.Build.AfterEachFn = request.HandlerListStopOnError
 	handlers.Sign.PushBackNamed(corehandlers.BuildContentLengthHandler)
+	handlers.Send.PushBackNamed(corehandlers.ValidateReqSigHandler)
 	handlers.Send.PushBackNamed(corehandlers.SendHandler)
 	handlers.AfterRetry.PushBackNamed(corehandlers.AfterRetryHandler)
 	handlers.ValidateResponse.PushBackNamed(corehandlers.ValidateResponseHandler)
@@ -120,7 +121,7 @@ func ecsCredProvider(cfg aws.Config, handlers request.Handlers, uri string) cred
 
 func ec2RoleProvider(cfg aws.Config, handlers request.Handlers) credentials.Provider {
 	endpoint, signingRegion := endpoints.EndpointForRegion(ec2metadata.ServiceName,
-		aws.StringValue(cfg.Region), true)
+		aws.StringValue(cfg.Region), true, false)
 
 	return &ec2rolecreds.EC2RoleProvider{
 		Client:       ec2metadata.NewClient(cfg, handlers, endpoint, signingRegion),

@@ -84,6 +84,53 @@ func ExampleCognitoIdentityProvider_AdminConfirmSignUp() {
 	fmt.Println(resp)
 }
 
+func ExampleCognitoIdentityProvider_AdminCreateUser() {
+	sess, err := session.NewSession()
+	if err != nil {
+		fmt.Println("failed to create session,", err)
+		return
+	}
+
+	svc := cognitoidentityprovider.New(sess)
+
+	params := &cognitoidentityprovider.AdminCreateUserInput{
+		UserPoolId: aws.String("UserPoolIdType"), // Required
+		Username:   aws.String("UsernameType"),   // Required
+		DesiredDeliveryMediums: []*string{
+			aws.String("DeliveryMediumType"), // Required
+			// More values...
+		},
+		ForceAliasCreation: aws.Bool(true),
+		MessageAction:      aws.String("MessageActionType"),
+		TemporaryPassword:  aws.String("PasswordType"),
+		UserAttributes: []*cognitoidentityprovider.AttributeType{
+			{ // Required
+				Name:  aws.String("AttributeNameType"), // Required
+				Value: aws.String("AttributeValueType"),
+			},
+			// More values...
+		},
+		ValidationData: []*cognitoidentityprovider.AttributeType{
+			{ // Required
+				Name:  aws.String("AttributeNameType"), // Required
+				Value: aws.String("AttributeValueType"),
+			},
+			// More values...
+		},
+	}
+	resp, err := svc.AdminCreateUser(params)
+
+	if err != nil {
+		// Print the error, cast err to awserr.Error to get the Code and
+		// Message from an error.
+		fmt.Println(err.Error())
+		return
+	}
+
+	// Pretty-print the response data.
+	fmt.Println(resp)
+}
+
 func ExampleCognitoIdentityProvider_AdminDeleteUser() {
 	sess, err := session.NewSession()
 	if err != nil {
@@ -667,6 +714,15 @@ func ExampleCognitoIdentityProvider_CreateUserPool() {
 
 	params := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName: aws.String("UserPoolNameType"), // Required
+		AdminCreateUserConfig: &cognitoidentityprovider.AdminCreateUserConfigType{
+			AllowAdminCreateUserOnly: aws.Bool(true),
+			InviteMessageTemplate: &cognitoidentityprovider.MessageTemplateType{
+				EmailMessage: aws.String("EmailVerificationMessageType"),
+				EmailSubject: aws.String("EmailVerificationSubjectType"),
+				SMSMessage:   aws.String("SmsVerificationMessageType"),
+			},
+			UnusedAccountValidityDays: aws.Int64(1),
+		},
 		AliasAttributes: []*string{
 			aws.String("AliasAttributeType"), // Required
 			// More values...
@@ -705,10 +761,28 @@ func ExampleCognitoIdentityProvider_CreateUserPool() {
 				RequireUppercase: aws.Bool(true),
 			},
 		},
+		Schema: []*cognitoidentityprovider.SchemaAttributeType{
+			{ // Required
+				AttributeDataType:      aws.String("AttributeDataType"),
+				DeveloperOnlyAttribute: aws.Bool(true),
+				Mutable:                aws.Bool(true),
+				Name:                   aws.String("CustomAttributeNameType"),
+				NumberAttributeConstraints: &cognitoidentityprovider.NumberAttributeConstraintsType{
+					MaxValue: aws.String("StringType"),
+					MinValue: aws.String("StringType"),
+				},
+				Required: aws.Bool(true),
+				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+					MaxLength: aws.String("StringType"),
+					MinLength: aws.String("StringType"),
+				},
+			},
+			// More values...
+		},
 		SmsAuthenticationMessage: aws.String("SmsVerificationMessageType"),
 		SmsConfiguration: &cognitoidentityprovider.SmsConfigurationType{
+			SnsCallerArn: aws.String("ArnType"), // Required
 			ExternalId:   aws.String("StringType"),
-			SnsCallerArn: aws.String("ArnType"),
 		},
 		SmsVerificationMessage: aws.String("SmsVerificationMessageType"),
 	}
@@ -1554,6 +1628,15 @@ func ExampleCognitoIdentityProvider_UpdateUserPool() {
 
 	params := &cognitoidentityprovider.UpdateUserPoolInput{
 		UserPoolId: aws.String("UserPoolIdType"), // Required
+		AdminCreateUserConfig: &cognitoidentityprovider.AdminCreateUserConfigType{
+			AllowAdminCreateUserOnly: aws.Bool(true),
+			InviteMessageTemplate: &cognitoidentityprovider.MessageTemplateType{
+				EmailMessage: aws.String("EmailVerificationMessageType"),
+				EmailSubject: aws.String("EmailVerificationSubjectType"),
+				SMSMessage:   aws.String("SmsVerificationMessageType"),
+			},
+			UnusedAccountValidityDays: aws.Int64(1),
+		},
 		AutoVerifiedAttributes: []*string{
 			aws.String("VerifiedAttributeType"), // Required
 			// More values...
@@ -1590,8 +1673,8 @@ func ExampleCognitoIdentityProvider_UpdateUserPool() {
 		},
 		SmsAuthenticationMessage: aws.String("SmsVerificationMessageType"),
 		SmsConfiguration: &cognitoidentityprovider.SmsConfigurationType{
+			SnsCallerArn: aws.String("ArnType"), // Required
 			ExternalId:   aws.String("StringType"),
-			SnsCallerArn: aws.String("ArnType"),
 		},
 		SmsVerificationMessage: aws.String("SmsVerificationMessageType"),
 	}

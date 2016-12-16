@@ -104,6 +104,8 @@ const opInputService1TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService1TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -139,6 +141,14 @@ func (c *InputService1ProtocolTest) InputService1TestCaseOperation1Request(input
 	return
 }
 
+// InputService1TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService1TestCaseOperation1 for usage and error information.
 func (c *InputService1ProtocolTest) InputService1TestCaseOperation1(input *InputService1TestShapeInputShape) (*InputService1TestShapeInputService1TestCaseOperation1Output, error) {
 	req, out := c.InputService1TestCaseOperation1Request(input)
 	err := req.Send()
@@ -151,6 +161,8 @@ const opInputService1TestCaseOperation2 = "OperationName"
 // client's request for the InputService1TestCaseOperation2 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService1TestCaseOperation2 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -187,6 +199,14 @@ func (c *InputService1ProtocolTest) InputService1TestCaseOperation2Request(input
 	return
 }
 
+// InputService1TestCaseOperation2 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService1TestCaseOperation2 for usage and error information.
 func (c *InputService1ProtocolTest) InputService1TestCaseOperation2(input *InputService1TestShapeInputShape) (*InputService1TestShapeInputService1TestCaseOperation2Output, error) {
 	req, out := c.InputService1TestCaseOperation2Request(input)
 	err := req.Send()
@@ -199,6 +219,8 @@ const opInputService1TestCaseOperation3 = "OperationName"
 // client's request for the InputService1TestCaseOperation3 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService1TestCaseOperation3 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -235,6 +257,14 @@ func (c *InputService1ProtocolTest) InputService1TestCaseOperation3Request(input
 	return
 }
 
+// InputService1TestCaseOperation3 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService1TestCaseOperation3 for usage and error information.
 func (c *InputService1ProtocolTest) InputService1TestCaseOperation3(input *InputService1TestShapeInputShape) (*InputService1TestShapeInputService1TestCaseOperation3Output, error) {
 	req, out := c.InputService1TestCaseOperation3Request(input)
 	err := req.Send()
@@ -261,6 +291,24 @@ type InputService1TestShapeInputShape struct {
 	Baz *bool `type:"boolean"`
 
 	Foo *string `type:"string"`
+}
+
+// SetBar sets the Bar field's value.
+func (s *InputService1TestShapeInputShape) SetBar(v string) *InputService1TestShapeInputShape {
+	s.Bar = &v
+	return s
+}
+
+// SetBaz sets the Baz field's value.
+func (s *InputService1TestShapeInputShape) SetBaz(v bool) *InputService1TestShapeInputShape {
+	s.Baz = &v
+	return s
+}
+
+// SetFoo sets the Foo field's value.
+func (s *InputService1TestShapeInputShape) SetFoo(v string) *InputService1TestShapeInputShape {
+	s.Foo = &v
+	return s
 }
 
 //The service client's operations are safe to be used concurrently.
@@ -324,6 +372,8 @@ const opInputService2TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService2TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -359,6 +409,14 @@ func (c *InputService2ProtocolTest) InputService2TestCaseOperation1Request(input
 	return
 }
 
+// InputService2TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService2TestCaseOperation1 for usage and error information.
 func (c *InputService2ProtocolTest) InputService2TestCaseOperation1(input *InputService2TestShapeInputService2TestCaseOperation1Input) (*InputService2TestShapeInputService2TestCaseOperation1Output, error) {
 	req, out := c.InputService2TestCaseOperation1Request(input)
 	err := req.Send()
@@ -371,6 +429,12 @@ type InputService2TestShapeInputService2TestCaseOperation1Input struct {
 	StructArg *InputService2TestShapeStructType `type:"structure"`
 }
 
+// SetStructArg sets the StructArg field's value.
+func (s *InputService2TestShapeInputService2TestCaseOperation1Input) SetStructArg(v *InputService2TestShapeStructType) *InputService2TestShapeInputService2TestCaseOperation1Input {
+	s.StructArg = v
+	return s
+}
+
 type InputService2TestShapeInputService2TestCaseOperation1Output struct {
 	_ struct{} `type:"structure"`
 }
@@ -379,6 +443,12 @@ type InputService2TestShapeStructType struct {
 	_ struct{} `type:"structure"`
 
 	ScalarArg *string `type:"string"`
+}
+
+// SetScalarArg sets the ScalarArg field's value.
+func (s *InputService2TestShapeStructType) SetScalarArg(v string) *InputService2TestShapeStructType {
+	s.ScalarArg = &v
+	return s
 }
 
 //The service client's operations are safe to be used concurrently.
@@ -442,6 +512,8 @@ const opInputService3TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService3TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -477,6 +549,14 @@ func (c *InputService3ProtocolTest) InputService3TestCaseOperation1Request(input
 	return
 }
 
+// InputService3TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService3TestCaseOperation1 for usage and error information.
 func (c *InputService3ProtocolTest) InputService3TestCaseOperation1(input *InputService3TestShapeInputShape) (*InputService3TestShapeInputService3TestCaseOperation1Output, error) {
 	req, out := c.InputService3TestCaseOperation1Request(input)
 	err := req.Send()
@@ -489,6 +569,8 @@ const opInputService3TestCaseOperation2 = "OperationName"
 // client's request for the InputService3TestCaseOperation2 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService3TestCaseOperation2 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -525,6 +607,14 @@ func (c *InputService3ProtocolTest) InputService3TestCaseOperation2Request(input
 	return
 }
 
+// InputService3TestCaseOperation2 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService3TestCaseOperation2 for usage and error information.
 func (c *InputService3ProtocolTest) InputService3TestCaseOperation2(input *InputService3TestShapeInputShape) (*InputService3TestShapeInputService3TestCaseOperation2Output, error) {
 	req, out := c.InputService3TestCaseOperation2Request(input)
 	err := req.Send()
@@ -543,6 +633,12 @@ type InputService3TestShapeInputShape struct {
 	_ struct{} `type:"structure"`
 
 	ListArg []*string `type:"list"`
+}
+
+// SetListArg sets the ListArg field's value.
+func (s *InputService3TestShapeInputShape) SetListArg(v []*string) *InputService3TestShapeInputShape {
+	s.ListArg = v
+	return s
 }
 
 //The service client's operations are safe to be used concurrently.
@@ -606,6 +702,8 @@ const opInputService4TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService4TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -641,6 +739,14 @@ func (c *InputService4ProtocolTest) InputService4TestCaseOperation1Request(input
 	return
 }
 
+// InputService4TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService4TestCaseOperation1 for usage and error information.
 func (c *InputService4ProtocolTest) InputService4TestCaseOperation1(input *InputService4TestShapeInputShape) (*InputService4TestShapeInputService4TestCaseOperation1Output, error) {
 	req, out := c.InputService4TestCaseOperation1Request(input)
 	err := req.Send()
@@ -653,6 +759,8 @@ const opInputService4TestCaseOperation2 = "OperationName"
 // client's request for the InputService4TestCaseOperation2 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService4TestCaseOperation2 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -689,6 +797,14 @@ func (c *InputService4ProtocolTest) InputService4TestCaseOperation2Request(input
 	return
 }
 
+// InputService4TestCaseOperation2 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService4TestCaseOperation2 for usage and error information.
 func (c *InputService4ProtocolTest) InputService4TestCaseOperation2(input *InputService4TestShapeInputShape) (*InputService4TestShapeInputService4TestCaseOperation2Output, error) {
 	req, out := c.InputService4TestCaseOperation2Request(input)
 	err := req.Send()
@@ -711,6 +827,24 @@ type InputService4TestShapeInputShape struct {
 	NamedListArg []*string `locationNameList:"Foo" type:"list" flattened:"true"`
 
 	ScalarArg *string `type:"string"`
+}
+
+// SetListArg sets the ListArg field's value.
+func (s *InputService4TestShapeInputShape) SetListArg(v []*string) *InputService4TestShapeInputShape {
+	s.ListArg = v
+	return s
+}
+
+// SetNamedListArg sets the NamedListArg field's value.
+func (s *InputService4TestShapeInputShape) SetNamedListArg(v []*string) *InputService4TestShapeInputShape {
+	s.NamedListArg = v
+	return s
+}
+
+// SetScalarArg sets the ScalarArg field's value.
+func (s *InputService4TestShapeInputShape) SetScalarArg(v string) *InputService4TestShapeInputShape {
+	s.ScalarArg = &v
+	return s
 }
 
 //The service client's operations are safe to be used concurrently.
@@ -774,6 +908,8 @@ const opInputService5TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService5TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -809,6 +945,14 @@ func (c *InputService5ProtocolTest) InputService5TestCaseOperation1Request(input
 	return
 }
 
+// InputService5TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService5TestCaseOperation1 for usage and error information.
 func (c *InputService5ProtocolTest) InputService5TestCaseOperation1(input *InputService5TestShapeInputService5TestCaseOperation1Input) (*InputService5TestShapeInputService5TestCaseOperation1Output, error) {
 	req, out := c.InputService5TestCaseOperation1Request(input)
 	err := req.Send()
@@ -819,6 +963,12 @@ type InputService5TestShapeInputService5TestCaseOperation1Input struct {
 	_ struct{} `type:"structure"`
 
 	MapArg map[string]*string `type:"map" flattened:"true"`
+}
+
+// SetMapArg sets the MapArg field's value.
+func (s *InputService5TestShapeInputService5TestCaseOperation1Input) SetMapArg(v map[string]*string) *InputService5TestShapeInputService5TestCaseOperation1Input {
+	s.MapArg = v
+	return s
 }
 
 type InputService5TestShapeInputService5TestCaseOperation1Output struct {
@@ -886,6 +1036,8 @@ const opInputService6TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService6TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -921,6 +1073,14 @@ func (c *InputService6ProtocolTest) InputService6TestCaseOperation1Request(input
 	return
 }
 
+// InputService6TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService6TestCaseOperation1 for usage and error information.
 func (c *InputService6ProtocolTest) InputService6TestCaseOperation1(input *InputService6TestShapeInputService6TestCaseOperation1Input) (*InputService6TestShapeInputService6TestCaseOperation1Output, error) {
 	req, out := c.InputService6TestCaseOperation1Request(input)
 	err := req.Send()
@@ -931,6 +1091,12 @@ type InputService6TestShapeInputService6TestCaseOperation1Input struct {
 	_ struct{} `type:"structure"`
 
 	ListArg []*string `locationNameList:"item" type:"list"`
+}
+
+// SetListArg sets the ListArg field's value.
+func (s *InputService6TestShapeInputService6TestCaseOperation1Input) SetListArg(v []*string) *InputService6TestShapeInputService6TestCaseOperation1Input {
+	s.ListArg = v
+	return s
 }
 
 type InputService6TestShapeInputService6TestCaseOperation1Output struct {
@@ -998,6 +1164,8 @@ const opInputService7TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService7TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -1033,6 +1201,14 @@ func (c *InputService7ProtocolTest) InputService7TestCaseOperation1Request(input
 	return
 }
 
+// InputService7TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService7TestCaseOperation1 for usage and error information.
 func (c *InputService7ProtocolTest) InputService7TestCaseOperation1(input *InputService7TestShapeInputService7TestCaseOperation1Input) (*InputService7TestShapeInputService7TestCaseOperation1Output, error) {
 	req, out := c.InputService7TestCaseOperation1Request(input)
 	err := req.Send()
@@ -1045,6 +1221,18 @@ type InputService7TestShapeInputService7TestCaseOperation1Input struct {
 	ListArg []*string `locationNameList:"ListArgLocation" type:"list" flattened:"true"`
 
 	ScalarArg *string `type:"string"`
+}
+
+// SetListArg sets the ListArg field's value.
+func (s *InputService7TestShapeInputService7TestCaseOperation1Input) SetListArg(v []*string) *InputService7TestShapeInputService7TestCaseOperation1Input {
+	s.ListArg = v
+	return s
+}
+
+// SetScalarArg sets the ScalarArg field's value.
+func (s *InputService7TestShapeInputService7TestCaseOperation1Input) SetScalarArg(v string) *InputService7TestShapeInputService7TestCaseOperation1Input {
+	s.ScalarArg = &v
+	return s
 }
 
 type InputService7TestShapeInputService7TestCaseOperation1Output struct {
@@ -1112,6 +1300,8 @@ const opInputService8TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService8TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -1147,6 +1337,14 @@ func (c *InputService8ProtocolTest) InputService8TestCaseOperation1Request(input
 	return
 }
 
+// InputService8TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService8TestCaseOperation1 for usage and error information.
 func (c *InputService8ProtocolTest) InputService8TestCaseOperation1(input *InputService8TestShapeInputService8TestCaseOperation1Input) (*InputService8TestShapeInputService8TestCaseOperation1Output, error) {
 	req, out := c.InputService8TestCaseOperation1Request(input)
 	err := req.Send()
@@ -1157,6 +1355,12 @@ type InputService8TestShapeInputService8TestCaseOperation1Input struct {
 	_ struct{} `type:"structure"`
 
 	MapArg map[string]*string `type:"map"`
+}
+
+// SetMapArg sets the MapArg field's value.
+func (s *InputService8TestShapeInputService8TestCaseOperation1Input) SetMapArg(v map[string]*string) *InputService8TestShapeInputService8TestCaseOperation1Input {
+	s.MapArg = v
+	return s
 }
 
 type InputService8TestShapeInputService8TestCaseOperation1Output struct {
@@ -1224,6 +1428,8 @@ const opInputService9TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService9TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -1259,6 +1465,14 @@ func (c *InputService9ProtocolTest) InputService9TestCaseOperation1Request(input
 	return
 }
 
+// InputService9TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService9TestCaseOperation1 for usage and error information.
 func (c *InputService9ProtocolTest) InputService9TestCaseOperation1(input *InputService9TestShapeInputService9TestCaseOperation1Input) (*InputService9TestShapeInputService9TestCaseOperation1Output, error) {
 	req, out := c.InputService9TestCaseOperation1Request(input)
 	err := req.Send()
@@ -1269,6 +1483,12 @@ type InputService9TestShapeInputService9TestCaseOperation1Input struct {
 	_ struct{} `type:"structure"`
 
 	MapArg map[string]*string `locationNameKey:"TheKey" locationNameValue:"TheValue" type:"map"`
+}
+
+// SetMapArg sets the MapArg field's value.
+func (s *InputService9TestShapeInputService9TestCaseOperation1Input) SetMapArg(v map[string]*string) *InputService9TestShapeInputService9TestCaseOperation1Input {
+	s.MapArg = v
+	return s
 }
 
 type InputService9TestShapeInputService9TestCaseOperation1Output struct {
@@ -1336,6 +1556,8 @@ const opInputService10TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService10TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -1371,6 +1593,14 @@ func (c *InputService10ProtocolTest) InputService10TestCaseOperation1Request(inp
 	return
 }
 
+// InputService10TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService10TestCaseOperation1 for usage and error information.
 func (c *InputService10ProtocolTest) InputService10TestCaseOperation1(input *InputService10TestShapeInputService10TestCaseOperation1Input) (*InputService10TestShapeInputService10TestCaseOperation1Output, error) {
 	req, out := c.InputService10TestCaseOperation1Request(input)
 	err := req.Send()
@@ -1382,6 +1612,12 @@ type InputService10TestShapeInputService10TestCaseOperation1Input struct {
 
 	// BlobArg is automatically base64 encoded/decoded by the SDK.
 	BlobArg []byte `type:"blob"`
+}
+
+// SetBlobArg sets the BlobArg field's value.
+func (s *InputService10TestShapeInputService10TestCaseOperation1Input) SetBlobArg(v []byte) *InputService10TestShapeInputService10TestCaseOperation1Input {
+	s.BlobArg = v
+	return s
 }
 
 type InputService10TestShapeInputService10TestCaseOperation1Output struct {
@@ -1449,6 +1685,8 @@ const opInputService11TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService11TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -1484,6 +1722,14 @@ func (c *InputService11ProtocolTest) InputService11TestCaseOperation1Request(inp
 	return
 }
 
+// InputService11TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService11TestCaseOperation1 for usage and error information.
 func (c *InputService11ProtocolTest) InputService11TestCaseOperation1(input *InputService11TestShapeInputService11TestCaseOperation1Input) (*InputService11TestShapeInputService11TestCaseOperation1Output, error) {
 	req, out := c.InputService11TestCaseOperation1Request(input)
 	err := req.Send()
@@ -1494,6 +1740,12 @@ type InputService11TestShapeInputService11TestCaseOperation1Input struct {
 	_ struct{} `type:"structure"`
 
 	TimeArg *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+}
+
+// SetTimeArg sets the TimeArg field's value.
+func (s *InputService11TestShapeInputService11TestCaseOperation1Input) SetTimeArg(v time.Time) *InputService11TestShapeInputService11TestCaseOperation1Input {
+	s.TimeArg = &v
+	return s
 }
 
 type InputService11TestShapeInputService11TestCaseOperation1Output struct {
@@ -1561,6 +1813,8 @@ const opInputService12TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService12TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -1596,6 +1850,14 @@ func (c *InputService12ProtocolTest) InputService12TestCaseOperation1Request(inp
 	return
 }
 
+// InputService12TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService12TestCaseOperation1 for usage and error information.
 func (c *InputService12ProtocolTest) InputService12TestCaseOperation1(input *InputService12TestShapeInputShape) (*InputService12TestShapeInputService12TestCaseOperation1Output, error) {
 	req, out := c.InputService12TestCaseOperation1Request(input)
 	err := req.Send()
@@ -1608,6 +1870,8 @@ const opInputService12TestCaseOperation2 = "OperationName"
 // client's request for the InputService12TestCaseOperation2 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService12TestCaseOperation2 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -1644,6 +1908,14 @@ func (c *InputService12ProtocolTest) InputService12TestCaseOperation2Request(inp
 	return
 }
 
+// InputService12TestCaseOperation2 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService12TestCaseOperation2 for usage and error information.
 func (c *InputService12ProtocolTest) InputService12TestCaseOperation2(input *InputService12TestShapeInputShape) (*InputService12TestShapeInputService12TestCaseOperation2Output, error) {
 	req, out := c.InputService12TestCaseOperation2Request(input)
 	err := req.Send()
@@ -1656,6 +1928,8 @@ const opInputService12TestCaseOperation3 = "OperationName"
 // client's request for the InputService12TestCaseOperation3 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService12TestCaseOperation3 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -1692,6 +1966,14 @@ func (c *InputService12ProtocolTest) InputService12TestCaseOperation3Request(inp
 	return
 }
 
+// InputService12TestCaseOperation3 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService12TestCaseOperation3 for usage and error information.
 func (c *InputService12ProtocolTest) InputService12TestCaseOperation3(input *InputService12TestShapeInputShape) (*InputService12TestShapeInputService12TestCaseOperation3Output, error) {
 	req, out := c.InputService12TestCaseOperation3Request(input)
 	err := req.Send()
@@ -1704,6 +1986,8 @@ const opInputService12TestCaseOperation4 = "OperationName"
 // client's request for the InputService12TestCaseOperation4 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService12TestCaseOperation4 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -1740,6 +2024,14 @@ func (c *InputService12ProtocolTest) InputService12TestCaseOperation4Request(inp
 	return
 }
 
+// InputService12TestCaseOperation4 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService12TestCaseOperation4 for usage and error information.
 func (c *InputService12ProtocolTest) InputService12TestCaseOperation4(input *InputService12TestShapeInputShape) (*InputService12TestShapeInputService12TestCaseOperation4Output, error) {
 	req, out := c.InputService12TestCaseOperation4Request(input)
 	err := req.Send()
@@ -1752,6 +2044,8 @@ const opInputService12TestCaseOperation5 = "OperationName"
 // client's request for the InputService12TestCaseOperation5 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService12TestCaseOperation5 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -1788,6 +2082,14 @@ func (c *InputService12ProtocolTest) InputService12TestCaseOperation5Request(inp
 	return
 }
 
+// InputService12TestCaseOperation5 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService12TestCaseOperation5 for usage and error information.
 func (c *InputService12ProtocolTest) InputService12TestCaseOperation5(input *InputService12TestShapeInputShape) (*InputService12TestShapeInputService12TestCaseOperation5Output, error) {
 	req, out := c.InputService12TestCaseOperation5Request(input)
 	err := req.Send()
@@ -1800,6 +2102,8 @@ const opInputService12TestCaseOperation6 = "OperationName"
 // client's request for the InputService12TestCaseOperation6 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService12TestCaseOperation6 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -1836,6 +2140,14 @@ func (c *InputService12ProtocolTest) InputService12TestCaseOperation6Request(inp
 	return
 }
 
+// InputService12TestCaseOperation6 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService12TestCaseOperation6 for usage and error information.
 func (c *InputService12ProtocolTest) InputService12TestCaseOperation6(input *InputService12TestShapeInputShape) (*InputService12TestShapeInputService12TestCaseOperation6Output, error) {
 	req, out := c.InputService12TestCaseOperation6Request(input)
 	err := req.Send()
@@ -1872,6 +2184,12 @@ type InputService12TestShapeInputShape struct {
 	RecursiveStruct *InputService12TestShapeRecursiveStructType `type:"structure"`
 }
 
+// SetRecursiveStruct sets the RecursiveStruct field's value.
+func (s *InputService12TestShapeInputShape) SetRecursiveStruct(v *InputService12TestShapeRecursiveStructType) *InputService12TestShapeInputShape {
+	s.RecursiveStruct = v
+	return s
+}
+
 type InputService12TestShapeRecursiveStructType struct {
 	_ struct{} `type:"structure"`
 
@@ -1882,6 +2200,30 @@ type InputService12TestShapeRecursiveStructType struct {
 	RecursiveMap map[string]*InputService12TestShapeRecursiveStructType `type:"map"`
 
 	RecursiveStruct *InputService12TestShapeRecursiveStructType `type:"structure"`
+}
+
+// SetNoRecurse sets the NoRecurse field's value.
+func (s *InputService12TestShapeRecursiveStructType) SetNoRecurse(v string) *InputService12TestShapeRecursiveStructType {
+	s.NoRecurse = &v
+	return s
+}
+
+// SetRecursiveList sets the RecursiveList field's value.
+func (s *InputService12TestShapeRecursiveStructType) SetRecursiveList(v []*InputService12TestShapeRecursiveStructType) *InputService12TestShapeRecursiveStructType {
+	s.RecursiveList = v
+	return s
+}
+
+// SetRecursiveMap sets the RecursiveMap field's value.
+func (s *InputService12TestShapeRecursiveStructType) SetRecursiveMap(v map[string]*InputService12TestShapeRecursiveStructType) *InputService12TestShapeRecursiveStructType {
+	s.RecursiveMap = v
+	return s
+}
+
+// SetRecursiveStruct sets the RecursiveStruct field's value.
+func (s *InputService12TestShapeRecursiveStructType) SetRecursiveStruct(v *InputService12TestShapeRecursiveStructType) *InputService12TestShapeRecursiveStructType {
+	s.RecursiveStruct = v
+	return s
 }
 
 //The service client's operations are safe to be used concurrently.
@@ -1945,6 +2287,8 @@ const opInputService13TestCaseOperation1 = "OperationName"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See InputService13TestCaseOperation1 for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -1981,6 +2325,14 @@ func (c *InputService13ProtocolTest) InputService13TestCaseOperation1Request(inp
 	return
 }
 
+// InputService13TestCaseOperation1 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService13TestCaseOperation1 for usage and error information.
 func (c *InputService13ProtocolTest) InputService13TestCaseOperation1(input *InputService13TestShapeInputShape) (*InputService13TestShapeInputService13TestCaseOperation1Output, error) {
 	req, out := c.InputService13TestCaseOperation1Request(input)
 	err := req.Send()
@@ -1993,6 +2345,8 @@ const opInputService13TestCaseOperation2 = "OperationName"
 // client's request for the InputService13TestCaseOperation2 operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See InputService13TestCaseOperation2 for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -2030,6 +2384,14 @@ func (c *InputService13ProtocolTest) InputService13TestCaseOperation2Request(inp
 	return
 }
 
+// InputService13TestCaseOperation2 API operation for .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for 's
+// API operation InputService13TestCaseOperation2 for usage and error information.
 func (c *InputService13ProtocolTest) InputService13TestCaseOperation2(input *InputService13TestShapeInputShape) (*InputService13TestShapeInputService13TestCaseOperation2Output, error) {
 	req, out := c.InputService13TestCaseOperation2Request(input)
 	err := req.Send()
@@ -2048,6 +2410,12 @@ type InputService13TestShapeInputShape struct {
 	_ struct{} `type:"structure"`
 
 	Token *string `type:"string" idempotencyToken:"true"`
+}
+
+// SetToken sets the Token field's value.
+func (s *InputService13TestShapeInputShape) SetToken(v string) *InputService13TestShapeInputShape {
+	s.Token = &v
+	return s
 }
 
 //

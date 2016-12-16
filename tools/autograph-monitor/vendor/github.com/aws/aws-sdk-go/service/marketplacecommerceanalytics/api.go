@@ -17,6 +17,8 @@ const opGenerateDataSet = "GenerateDataSet"
 // value can be used to capture response data after the request's "Send" method
 // is called.
 //
+// See GenerateDataSet for usage and error information.
+//
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
 // access properties on the request object before or after sending the request. If
@@ -51,6 +53,8 @@ func (c *MarketplaceCommerceAnalytics) GenerateDataSetRequest(input *GenerateDat
 	return
 }
 
+// GenerateDataSet API operation for AWS Marketplace Commerce Analytics.
+//
 // Given a data set type and data set publication date, asynchronously publishes
 // the requested data set to the specified S3 bucket and notifies the specified
 // SNS topic once the data is available. Returns a unique request identifier
@@ -61,6 +65,18 @@ func (c *MarketplaceCommerceAnalytics) GenerateDataSetRequest(input *GenerateDat
 // will be overwritten by the new file. Requires a Role with an attached permissions
 // policy providing Allow permissions for the following actions: s3:PutObject,
 // s3:GetBucketLocation, sns:GetTopicAttributes, sns:Publish, iam:GetRolePolicy.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Marketplace Commerce Analytics's
+// API operation GenerateDataSet for usage and error information.
+//
+// Returned Error Codes:
+//   * Exception
+//   This exception is thrown when an internal service error occurs.
+//
 func (c *MarketplaceCommerceAnalytics) GenerateDataSet(input *GenerateDataSetInput) (*GenerateDataSetOutput, error) {
 	req, out := c.GenerateDataSetRequest(input)
 	err := req.Send()
@@ -73,6 +89,8 @@ const opStartSupportDataExport = "StartSupportDataExport"
 // client's request for the StartSupportDataExport operation. The "output" return
 // value can be used to capture response data after the request's "Send" method
 // is called.
+//
+// See StartSupportDataExport for usage and error information.
 //
 // Creating a request object using this method should be used when you want to inject
 // custom logic into the request's lifecycle using a custom handler, or if you want to
@@ -108,6 +126,8 @@ func (c *MarketplaceCommerceAnalytics) StartSupportDataExportRequest(input *Star
 	return
 }
 
+// StartSupportDataExport API operation for AWS Marketplace Commerce Analytics.
+//
 // Given a data set type and a from date, asynchronously publishes the requested
 // customer support data to the specified S3 bucket and notifies the specified
 // SNS topic once the data is available. Returns a unique request identifier
@@ -119,6 +139,18 @@ func (c *MarketplaceCommerceAnalytics) StartSupportDataExportRequest(input *Star
 // an attached permissions policy providing Allow permissions for the following
 // actions: s3:PutObject, s3:GetBucketLocation, sns:GetTopicAttributes, sns:Publish,
 // iam:GetRolePolicy.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Marketplace Commerce Analytics's
+// API operation StartSupportDataExport for usage and error information.
+//
+// Returned Error Codes:
+//   * Exception
+//   This exception is thrown when an internal service error occurs.
+//
 func (c *MarketplaceCommerceAnalytics) StartSupportDataExport(input *StartSupportDataExportInput) (*StartSupportDataExportOutput, error) {
 	req, out := c.StartSupportDataExportRequest(input)
 	err := req.Send()
@@ -140,36 +172,57 @@ type GenerateDataSetInput struct {
 	// a date with day-level granularity within the desired week (the day value
 	// will be ignored). For monthly data sets, provide a date with month-level
 	// granularity for the desired month (the day value will be ignored).
+	//
+	// DataSetPublicationDate is a required field
 	DataSetPublicationDate *time.Time `locationName:"dataSetPublicationDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The desired data set type.
 	//
-	//   customer_subscriber_hourly_monthly_subscriptions - Available daily by
-	// 5:00 PM Pacific Time since 2014-07-21. customer_subscriber_annual_subscriptions
-	// - Available daily by 5:00 PM Pacific Time since 2014-07-21. daily_business_usage_by_instance_type
-	// - Available daily by 5:00 PM Pacific Time since 2015-01-26. daily_business_fees
-	// - Available daily by 5:00 PM Pacific Time since 2015-01-26. daily_business_free_trial_conversions
-	// - Available daily by 5:00 PM Pacific Time since 2015-01-26. daily_business_new_instances
-	// - Available daily by 5:00 PM Pacific Time since 2015-01-26. daily_business_new_product_subscribers
-	// - Available daily by 5:00 PM Pacific Time since 2015-01-26. daily_business_canceled_product_subscribers
-	// - Available daily by 5:00 PM Pacific Time since 2015-01-26. monthly_revenue_billing_and_revenue_data
-	// - Available monthly on the 4th day of the month by 5:00 PM Pacific Time since
-	// 2015-02. monthly_revenue_annual_subscriptions - Available monthly on the
-	// 4th day of the month by 5:00 PM Pacific Time since 2015-02. disbursed_amount_by_product
-	// - Available every 30 days by 5:00 PM Pacific Time since 2015-01-26. disbursed_amount_by_product_with_uncollected_funds
-	// -This data set is only available from 2012-04-19 until 2015-01-25. After
-	// 2015-01-25, this data set was split into three data sets: disbursed_amount_by_product,
-	// disbursed_amount_by_age_of_uncollected_funds, and disbursed_amount_by_age_of_disbursed_funds.
-	//  disbursed_amount_by_customer_geo - Available every 30 days by 5:00 PM Pacific
-	// Time since 2012-04-19. disbursed_amount_by_age_of_uncollected_funds - Available
-	// every 30 days by 5:00 PM Pacific Time since 2015-01-26. disbursed_amount_by_age_of_disbursed_funds
-	// - Available every 30 days by 5:00 PM Pacific Time since 2015-01-26. customer_profile_by_industry
-	// - Available daily by 5:00 PM Pacific Time since 2015-10-01. customer_profile_by_revenue
-	// - Available daily by 5:00 PM Pacific Time since 2015-10-01. customer_profile_by_geography
-	// - Available daily by 5:00 PM Pacific Time since 2015-10-01.
+	// customer_subscriber_hourly_monthly_subscriptions - Available daily by 5:00
+	// PM Pacific Time since 2014-07-21.
+	// customer_subscriber_annual_subscriptions - Available daily by 5:00 PM Pacific
+	// Time since 2014-07-21.
+	// daily_business_usage_by_instance_type - Available daily by 5:00 PM Pacific
+	// Time since 2015-01-26.
+	// daily_business_fees - Available daily by 5:00 PM Pacific Time since 2015-01-26.
+	//
+	// daily_business_free_trial_conversions - Available daily by 5:00 PM Pacific
+	// Time since 2015-01-26.
+	// daily_business_new_instances - Available daily by 5:00 PM Pacific Time since
+	// 2015-01-26.
+	// daily_business_new_product_subscribers - Available daily by 5:00 PM Pacific
+	// Time since 2015-01-26.
+	// daily_business_canceled_product_subscribers - Available daily by 5:00 PM
+	// Pacific Time since 2015-01-26.
+	// monthly_revenue_billing_and_revenue_data - Available monthly on the 4th day
+	// of the month by 5:00 PM Pacific Time since 2015-02.
+	// monthly_revenue_annual_subscriptions - Available monthly on the 4th day of
+	// the month by 5:00 PM Pacific Time since 2015-02.
+	// disbursed_amount_by_product - Available every 30 days by 5:00 PM Pacific
+	// Time since 2015-01-26.
+	// disbursed_amount_by_product_with_uncollected_funds -This data set is only
+	// available from 2012-04-19 until 2015-01-25. After 2015-01-25, this data set
+	// was split into three data sets: disbursed_amount_by_product, disbursed_amount_by_age_of_uncollected_funds,
+	// and disbursed_amount_by_age_of_disbursed_funds.
+	// disbursed_amount_by_customer_geo - Available every 30 days by 5:00 PM Pacific
+	// Time since 2012-04-19.
+	// disbursed_amount_by_age_of_uncollected_funds - Available every 30 days by
+	// 5:00 PM Pacific Time since 2015-01-26.
+	// disbursed_amount_by_age_of_disbursed_funds - Available every 30 days by 5:00
+	// PM Pacific Time since 2015-01-26.
+	// customer_profile_by_industry - Available daily by 5:00 PM Pacific Time since
+	// 2015-10-01.
+	// customer_profile_by_revenue - Available daily by 5:00 PM Pacific Time since
+	// 2015-10-01.
+	// customer_profile_by_geography - Available daily by 5:00 PM Pacific Time since
+	// 2015-10-01.
+	//
+	// DataSetType is a required field
 	DataSetType *string `locationName:"dataSetType" min:"1" type:"string" required:"true" enum:"DataSetType"`
 
 	// The name (friendly name, not ARN) of the destination S3 bucket.
+	//
+	// DestinationS3BucketName is a required field
 	DestinationS3BucketName *string `locationName:"destinationS3BucketName" min:"1" type:"string" required:"true"`
 
 	// (Optional) The desired S3 prefix for the published data set, similar to a
@@ -182,10 +235,14 @@ type GenerateDataSetInput struct {
 
 	// The Amazon Resource Name (ARN) of the Role with an attached permissions policy
 	// to interact with the provided AWS services.
+	//
+	// RoleNameArn is a required field
 	RoleNameArn *string `locationName:"roleNameArn" min:"1" type:"string" required:"true"`
 
 	// Amazon Resource Name (ARN) for the SNS Topic that will be notified when the
 	// data set has been published or if an error has occurred.
+	//
+	// SnsTopicArn is a required field
 	SnsTopicArn *string `locationName:"snsTopicArn" min:"1" type:"string" required:"true"`
 }
 
@@ -239,6 +296,48 @@ func (s *GenerateDataSetInput) Validate() error {
 	return nil
 }
 
+// SetCustomerDefinedValues sets the CustomerDefinedValues field's value.
+func (s *GenerateDataSetInput) SetCustomerDefinedValues(v map[string]*string) *GenerateDataSetInput {
+	s.CustomerDefinedValues = v
+	return s
+}
+
+// SetDataSetPublicationDate sets the DataSetPublicationDate field's value.
+func (s *GenerateDataSetInput) SetDataSetPublicationDate(v time.Time) *GenerateDataSetInput {
+	s.DataSetPublicationDate = &v
+	return s
+}
+
+// SetDataSetType sets the DataSetType field's value.
+func (s *GenerateDataSetInput) SetDataSetType(v string) *GenerateDataSetInput {
+	s.DataSetType = &v
+	return s
+}
+
+// SetDestinationS3BucketName sets the DestinationS3BucketName field's value.
+func (s *GenerateDataSetInput) SetDestinationS3BucketName(v string) *GenerateDataSetInput {
+	s.DestinationS3BucketName = &v
+	return s
+}
+
+// SetDestinationS3Prefix sets the DestinationS3Prefix field's value.
+func (s *GenerateDataSetInput) SetDestinationS3Prefix(v string) *GenerateDataSetInput {
+	s.DestinationS3Prefix = &v
+	return s
+}
+
+// SetRoleNameArn sets the RoleNameArn field's value.
+func (s *GenerateDataSetInput) SetRoleNameArn(v string) *GenerateDataSetInput {
+	s.RoleNameArn = &v
+	return s
+}
+
+// SetSnsTopicArn sets the SnsTopicArn field's value.
+func (s *GenerateDataSetInput) SetSnsTopicArn(v string) *GenerateDataSetInput {
+	s.SnsTopicArn = &v
+	return s
+}
+
 // Container for the result of the GenerateDataSet operation.
 type GenerateDataSetOutput struct {
 	_ struct{} `type:"structure"`
@@ -259,6 +358,12 @@ func (s GenerateDataSetOutput) GoString() string {
 	return s.String()
 }
 
+// SetDataSetRequestId sets the DataSetRequestId field's value.
+func (s *GenerateDataSetOutput) SetDataSetRequestId(v string) *GenerateDataSetOutput {
+	s.DataSetRequestId = &v
+	return s
+}
+
 // Container for the parameters to the StartSupportDataExport operation.
 type StartSupportDataExportInput struct {
 	_ struct{} `type:"structure"`
@@ -275,14 +380,18 @@ type StartSupportDataExportInput struct {
 	// Code, Operation Type, and Operation Time. Currently, only the test_customer_support_contacts_data
 	// value is supported
 	//
-	//   customer_support_contacts_data Customer support contact data. The data
-	// set will contain all changes (Creates, Updates, and Deletes) to customer
-	// support contact data from the date specified in the from_date parameter.
+	// customer_support_contacts_data Customer support contact data. The data set
+	// will contain all changes (Creates, Updates, and Deletes) to customer support
+	// contact data from the date specified in the from_date parameter.
 	// test_customer_support_contacts_data An example data set containing static
 	// test data in the same format as customer_support_contacts_data
+	//
+	// DataSetType is a required field
 	DataSetType *string `locationName:"dataSetType" min:"1" type:"string" required:"true" enum:"SupportDataSetType"`
 
 	// The name (friendly name, not ARN) of the destination S3 bucket.
+	//
+	// DestinationS3BucketName is a required field
 	DestinationS3BucketName *string `locationName:"destinationS3BucketName" min:"1" type:"string" required:"true"`
 
 	// (Optional) The desired S3 prefix for the published data set, similar to a
@@ -295,14 +404,20 @@ type StartSupportDataExportInput struct {
 
 	// The start date from which to retrieve the data set. This parameter only affects
 	// the customer_support_contacts_data data set type.
+	//
+	// FromDate is a required field
 	FromDate *time.Time `locationName:"fromDate" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the Role with an attached permissions policy
 	// to interact with the provided AWS services.
+	//
+	// RoleNameArn is a required field
 	RoleNameArn *string `locationName:"roleNameArn" min:"1" type:"string" required:"true"`
 
 	// Amazon Resource Name (ARN) for the SNS Topic that will be notified when the
 	// data set has been published or if an error has occurred.
+	//
+	// SnsTopicArn is a required field
 	SnsTopicArn *string `locationName:"snsTopicArn" min:"1" type:"string" required:"true"`
 }
 
@@ -356,6 +471,48 @@ func (s *StartSupportDataExportInput) Validate() error {
 	return nil
 }
 
+// SetCustomerDefinedValues sets the CustomerDefinedValues field's value.
+func (s *StartSupportDataExportInput) SetCustomerDefinedValues(v map[string]*string) *StartSupportDataExportInput {
+	s.CustomerDefinedValues = v
+	return s
+}
+
+// SetDataSetType sets the DataSetType field's value.
+func (s *StartSupportDataExportInput) SetDataSetType(v string) *StartSupportDataExportInput {
+	s.DataSetType = &v
+	return s
+}
+
+// SetDestinationS3BucketName sets the DestinationS3BucketName field's value.
+func (s *StartSupportDataExportInput) SetDestinationS3BucketName(v string) *StartSupportDataExportInput {
+	s.DestinationS3BucketName = &v
+	return s
+}
+
+// SetDestinationS3Prefix sets the DestinationS3Prefix field's value.
+func (s *StartSupportDataExportInput) SetDestinationS3Prefix(v string) *StartSupportDataExportInput {
+	s.DestinationS3Prefix = &v
+	return s
+}
+
+// SetFromDate sets the FromDate field's value.
+func (s *StartSupportDataExportInput) SetFromDate(v time.Time) *StartSupportDataExportInput {
+	s.FromDate = &v
+	return s
+}
+
+// SetRoleNameArn sets the RoleNameArn field's value.
+func (s *StartSupportDataExportInput) SetRoleNameArn(v string) *StartSupportDataExportInput {
+	s.RoleNameArn = &v
+	return s
+}
+
+// SetSnsTopicArn sets the SnsTopicArn field's value.
+func (s *StartSupportDataExportInput) SetSnsTopicArn(v string) *StartSupportDataExportInput {
+	s.SnsTopicArn = &v
+	return s
+}
+
 // Container for the result of the StartSupportDataExport operation.
 type StartSupportDataExportOutput struct {
 	_ struct{} `type:"structure"`
@@ -376,48 +533,72 @@ func (s StartSupportDataExportOutput) GoString() string {
 	return s.String()
 }
 
+// SetDataSetRequestId sets the DataSetRequestId field's value.
+func (s *StartSupportDataExportOutput) SetDataSetRequestId(v string) *StartSupportDataExportOutput {
+	s.DataSetRequestId = &v
+	return s
+}
+
 const (
-	// @enum DataSetType
+	// DataSetTypeCustomerSubscriberHourlyMonthlySubscriptions is a DataSetType enum value
 	DataSetTypeCustomerSubscriberHourlyMonthlySubscriptions = "customer_subscriber_hourly_monthly_subscriptions"
-	// @enum DataSetType
+
+	// DataSetTypeCustomerSubscriberAnnualSubscriptions is a DataSetType enum value
 	DataSetTypeCustomerSubscriberAnnualSubscriptions = "customer_subscriber_annual_subscriptions"
-	// @enum DataSetType
+
+	// DataSetTypeDailyBusinessUsageByInstanceType is a DataSetType enum value
 	DataSetTypeDailyBusinessUsageByInstanceType = "daily_business_usage_by_instance_type"
-	// @enum DataSetType
+
+	// DataSetTypeDailyBusinessFees is a DataSetType enum value
 	DataSetTypeDailyBusinessFees = "daily_business_fees"
-	// @enum DataSetType
+
+	// DataSetTypeDailyBusinessFreeTrialConversions is a DataSetType enum value
 	DataSetTypeDailyBusinessFreeTrialConversions = "daily_business_free_trial_conversions"
-	// @enum DataSetType
+
+	// DataSetTypeDailyBusinessNewInstances is a DataSetType enum value
 	DataSetTypeDailyBusinessNewInstances = "daily_business_new_instances"
-	// @enum DataSetType
+
+	// DataSetTypeDailyBusinessNewProductSubscribers is a DataSetType enum value
 	DataSetTypeDailyBusinessNewProductSubscribers = "daily_business_new_product_subscribers"
-	// @enum DataSetType
+
+	// DataSetTypeDailyBusinessCanceledProductSubscribers is a DataSetType enum value
 	DataSetTypeDailyBusinessCanceledProductSubscribers = "daily_business_canceled_product_subscribers"
-	// @enum DataSetType
+
+	// DataSetTypeMonthlyRevenueBillingAndRevenueData is a DataSetType enum value
 	DataSetTypeMonthlyRevenueBillingAndRevenueData = "monthly_revenue_billing_and_revenue_data"
-	// @enum DataSetType
+
+	// DataSetTypeMonthlyRevenueAnnualSubscriptions is a DataSetType enum value
 	DataSetTypeMonthlyRevenueAnnualSubscriptions = "monthly_revenue_annual_subscriptions"
-	// @enum DataSetType
+
+	// DataSetTypeDisbursedAmountByProduct is a DataSetType enum value
 	DataSetTypeDisbursedAmountByProduct = "disbursed_amount_by_product"
-	// @enum DataSetType
+
+	// DataSetTypeDisbursedAmountByProductWithUncollectedFunds is a DataSetType enum value
 	DataSetTypeDisbursedAmountByProductWithUncollectedFunds = "disbursed_amount_by_product_with_uncollected_funds"
-	// @enum DataSetType
+
+	// DataSetTypeDisbursedAmountByCustomerGeo is a DataSetType enum value
 	DataSetTypeDisbursedAmountByCustomerGeo = "disbursed_amount_by_customer_geo"
-	// @enum DataSetType
+
+	// DataSetTypeDisbursedAmountByAgeOfUncollectedFunds is a DataSetType enum value
 	DataSetTypeDisbursedAmountByAgeOfUncollectedFunds = "disbursed_amount_by_age_of_uncollected_funds"
-	// @enum DataSetType
+
+	// DataSetTypeDisbursedAmountByAgeOfDisbursedFunds is a DataSetType enum value
 	DataSetTypeDisbursedAmountByAgeOfDisbursedFunds = "disbursed_amount_by_age_of_disbursed_funds"
-	// @enum DataSetType
+
+	// DataSetTypeCustomerProfileByIndustry is a DataSetType enum value
 	DataSetTypeCustomerProfileByIndustry = "customer_profile_by_industry"
-	// @enum DataSetType
+
+	// DataSetTypeCustomerProfileByRevenue is a DataSetType enum value
 	DataSetTypeCustomerProfileByRevenue = "customer_profile_by_revenue"
-	// @enum DataSetType
+
+	// DataSetTypeCustomerProfileByGeography is a DataSetType enum value
 	DataSetTypeCustomerProfileByGeography = "customer_profile_by_geography"
 )
 
 const (
-	// @enum SupportDataSetType
+	// SupportDataSetTypeCustomerSupportContactsData is a SupportDataSetType enum value
 	SupportDataSetTypeCustomerSupportContactsData = "customer_support_contacts_data"
-	// @enum SupportDataSetType
+
+	// SupportDataSetTypeTestCustomerSupportContactsData is a SupportDataSetType enum value
 	SupportDataSetTypeTestCustomerSupportContactsData = "test_customer_support_contacts_data"
 )

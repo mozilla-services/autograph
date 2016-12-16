@@ -6,7 +6,7 @@ GopherJS - A compiler from Go to JavaScript
 GopherJS compiles Go code ([golang.org](https://golang.org/)) to pure JavaScript code. Its main purpose is to give you the opportunity to write front-end code in Go which will still run in all browsers. Give GopherJS a try on the [GopherJS Playground](http://gopherjs.github.io/playground/).
 
 ### What is supported?
-Nearly everything, including Goroutines ([compatibility table](https://github.com/gopherjs/gopherjs/blob/master/doc/packages.md)). Performance is quite good in most cases, see [HTML5 game engine benchmark](https://ajhager.github.io/engi/demos/botmark.html). Cgo is not supported.
+Nearly everything, including Goroutines ([compatibility table](https://github.com/gopherjs/gopherjs/blob/master/doc/packages.md)). Performance is quite good in most cases, see [HTML5 game engine benchmark](https://ajhager.github.io/engi/demos/botmark.html). Cgo is not supported. Using a vendored copy of GopherJS is currently not supported, see [#415](https://github.com/gopherjs/gopherjs/issues/415).
 
 ### Installation and Usage
 Get or update GopherJS and dependencies with:
@@ -46,11 +46,11 @@ If you include an argument, it will be the root from which everything is served.
 
 ### Community
 - [#gopherjs Channel on Gophers Slack](https://gophers.slack.com/messages/gopherjs/) (invites to Gophers Slack are available [here](http://blog.gopheracademy.com/gophers-slack-community/#how-can-i-be-invited-to-join:2facdc921b2310f18cb851c36fa92369))
-- [Google Group](https://groups.google.com/d/forum/gopherjs)
 - [Bindings to JavaScript APIs and libraries](https://github.com/gopherjs/gopherjs/wiki/bindings)
 - [GopherJS on Twitter](https://twitter.com/GopherJS)
 
 ### Getting started
+
 #### Interacting with the DOM
 The package `github.com/gopherjs/gopherjs/js` (see [documentation](https://godoc.org/github.com/gopherjs/gopherjs/js)) provides functions for interacting with native JavaScript APIs. For example the line
 

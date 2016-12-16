@@ -30,6 +30,7 @@ import (
 
 type signatureresponse struct {
 	Ref              string `json:"ref"`
+	SignerID         string `json:"signer_id"`
 	X5U              string `json:"x5u,omitempty"`
 	PublicKey        string `json:"public_key,omitempty"`
 	Hash             string `json:"hash_algorithm,omitempty"`
@@ -94,10 +95,10 @@ func main() {
 		err = verify(response)
 		if err != nil {
 			failed = true
-			log.Printf("Response %d does not pass: %v", i, err)
+			log.Printf("Response %d from signer %q does not pass: %v", i, err, response.SignerID)
 			log.Printf("Response was: %+v", response)
 		} else {
-			log.Printf("Response %d passes verification", i)
+			log.Printf("Response %d from signer %q passes verification", i, response.SignerID)
 		}
 	}
 	if failed {
@@ -220,24 +221,30 @@ func verifyCertChain(certs []*x509.Certificate) error {
 		if (i + 1) == len(certs) {
 			err := verifyRoot(cert)
 			if err != nil {
-				return fmt.Errorf("Certificate %d is root but fails validation: %v", i, err)
+				return fmt.Errorf("Certificate %d %q is root but fails validation: %v",
+					i, cert.Subject.CommonName, err)
 			}
-			log.Printf("Certificate %d is a valid root", i)
+			log.Printf("Certificate %d %q is a valid root", i, cert.Subject.CommonName)
 		} else {
 			// check that cert is signed by parent
 			err := cert.CheckSignatureFrom(certs[i+1])
 			if err != nil {
-				return fmt.Errorf("Certificate %d is not signed by parent certificate %d: %v", i, i+1, err)
+				return fmt.Errorf("Certificate %d %q is not signed by parent certificate %d %q: %v",
+					i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName, err)
 			}
-			log.Printf("Certificate %d has a valid signature from parent certificate %d", i, i+1)
+			log.Printf("Certificate %d %q has a valid signature from parent certificate %d %q",
+				i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName)
 		}
 		if time.Now().Add(15 * 24 * time.Hour).After(cert.NotAfter) {
-			return fmt.Errorf("Certificate %d expires in less than 15 days: notAfter=%s", i, cert.NotAfter)
+			return fmt.Errorf("Certificate %d %q expires in less than 15 days: notAfter=%s",
+				i, cert.Subject.CommonName, cert.NotAfter)
 		}
 		if time.Now().Before(cert.NotBefore) {
-			return fmt.Errorf("Certificate %d is not yet valid: notBefore=%s", i, cert.NotBefore)
+			return fmt.Errorf("Certificate %d %q is not yet valid: notBefore=%s",
+				i, cert.Subject.CommonName, cert.NotBefore)
 		}
-		log.Printf("Certificate %d is valid from %s to %s", i, cert.NotBefore, cert.NotAfter)
+		log.Printf("Certificate %d %q is valid from %s to %s",
+			i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter)
 	}
 	return nil
 }

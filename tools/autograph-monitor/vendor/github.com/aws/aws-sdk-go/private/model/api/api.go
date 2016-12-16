@@ -1,3 +1,5 @@
+// +build codegen
+
 // Package api represents API abstractions for rendering service generated files.
 package api
 
@@ -36,6 +38,9 @@ type API struct {
 
 	// Set to true to not generate validation shapes
 	NoValidataShapeMethods bool
+
+	// Set to true to not generate struct field accessors
+	NoGenStructFieldAccessors bool
 
 	SvcClientImportPath string
 
@@ -161,10 +166,16 @@ func (a *API) ShapeNames() []string {
 }
 
 // ShapeList returns a slice of shape pointers used by the API.
+//
+// Will exclude error shapes from the list of shapes returned.
 func (a *API) ShapeList() []*Shape {
-	list := make([]*Shape, len(a.Shapes))
-	for i, n := range a.ShapeNames() {
-		list[i] = a.Shapes[n]
+	list := make([]*Shape, 0, len(a.Shapes))
+	for _, n := range a.ShapeNames() {
+		// Ignore error shapes in list
+		if a.Shapes[n].IsError {
+			continue
+		}
+		list = append(list, a.Shapes[n])
 	}
 	return list
 }

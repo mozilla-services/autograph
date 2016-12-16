@@ -25,14 +25,18 @@ script:
     go run monitor.go
     docker kill $id
 
-# If we're on the master branch, push the container to DockerHub
+# If a TRAVIS_TAG is set, this build follows a git tag --push and should trigger
+# a release of a tagged container to dockerhub. Otherwise, we tag as latest.
 - |
-    if [ "$TRAVIS_BRANCH" == "master" ]; then
-        docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+    docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+    if [ ! -z "$TRAVIS_TAG" ]; then
+        docker tag app:build mozilla/autograph:${TRAVIS_TAG}
+        docker push mozilla/autograph:${TRAVIS_TAG}
+    else
         docker tag app:build mozilla/autograph:latest
         docker push mozilla/autograph:latest
-        docker logout
     fi
+    docker logout
 
 env:
   global:
