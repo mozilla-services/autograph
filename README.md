@@ -521,16 +521,18 @@ with SHA-1 and MD5, and the manifest containing all the hashes is signed. To
 request a signature, the client must first compute the manifest file (stored in
 `META-INF/manifest.mf` in the XPI), then make a signature file (stored in
 `META-INF/mozilla.sf`) and submit the `sf` file to the signing API, alongside
-the addon ID (typically an email address). The signing API returns an S/MIME
-detached signature the client must store under `META-INF/mozilla.rsa`.
+the addon ID (a string that typically ressembles an email address).
 
-The signature file `mozilla.sf` simply contains md5.sha1 hashes of `manifest.mf`.
+The signature file `mozilla.sf` contains md5 & sha1 hashes of `manifest.mf`.
 (eg. `openssl dgst -binary -sha1 manifest.mf | base64`)
 
+The signing API returns an S/MIME detached signature the client must store
+under `META-INF/mozilla.rsa`.
+
 To compute the signature, the signing API first generates an RSA key pair for
-the addon, called "ephemeral" because thrown away after signature. The certificate
-containing the public ephemeral key is signed by an intermediate issuer, itself
-signed by the AMO Root CA trusted in Firefox.
+the addon, called "ephemeral" because it is thrown away after signing.
+The certificate containing the public ephemeral key is signed by an
+intermediate issuer, itself signed by the Firefox Root CA (AMO Root).
 
 The addon's certificate must have the following properties
 * SHA-256 signed
