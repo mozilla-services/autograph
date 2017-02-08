@@ -1,30 +1,6 @@
 {
   "version": "1.0",
   "examples": {
-    "CreateByteMatchSet": [
-      {
-        "input": {
-          "ChangeToken": "abcd12f2-46da-4fdb-b8d5-fbd4c466928f",
-          "Name": "ByteMatchNameExample"
-        },
-        "output": {
-          "ByteMatchSet": {
-            "ByteMatchSetId": "exampleIDs3t-46da-4fdb-b8d5-abc321j569j5",
-            "Name": "ByteMatchNameExample"
-          },
-          "ChangeToken": "abcd12f2-46da-4fdb-b8d5-fbd4c466928f"
-        },
-        "comments": {
-          "input": {
-          },
-          "output": {
-          }
-        },
-        "description": "The following example creates a byte match set named ByteMatchNameExample.",
-        "id": "createbytematchset-1473272359328",
-        "title": "To create a byte match set"
-      }
-    ],
     "CreateIPSet": [
       {
         "input": {

@@ -127,7 +127,11 @@ func main() {
 				for _, pkgPath := range args {
 					pkgPath = filepath.ToSlash(pkgPath)
 					if s.Watcher != nil {
-						s.Watcher.Add(pkgPath)
+						pkg, err := gbuild.NewBuildContext(s.InstallSuffix(), options.BuildTags).Import(pkgPath, "", build.FindOnly)
+						if err != nil {
+							return err
+						}
+						s.Watcher.Add(pkg.Dir)
 					}
 					pkg, err := gbuild.Import(pkgPath, 0, s.InstallSuffix(), options.BuildTags)
 					if err != nil {
@@ -229,6 +233,25 @@ func main() {
 		}
 	}
 
+	cmdDoc := &cobra.Command{
+		Use:   "doc [arguments]",
+		Short: "display documentation for the requested, package, method or symbol",
+	}
+	cmdDoc.Run = func(cmd *cobra.Command, args []string) {
+		exitCode := handleError(func() error {
+			goDoc := exec.Command("go", append([]string{"doc"}, args...)...)
+			goDoc.Stdout = os.Stdout
+			goDoc.Stderr = os.Stderr
+			goDoc.Env = append(os.Environ(), "GOARCH=js")
+			if err := goDoc.Run(); err != nil {
+				return err
+			}
+			return nil
+		}, options, nil)
+
+		os.Exit(exitCode)
+	}
+
 	cmdGet := &cobra.Command{
 		Use:   "get [packages]",
 		Short: "download and install packages and dependencies",
@@ -287,6 +310,7 @@ func main() {
 		Short: "test packages",
 	}
 	bench := cmdTest.Flags().String("bench", "", "Run benchmarks matching the regular expression. By default, no benchmarks run. To run all benchmarks, use '--bench=.'.")
+	benchtime := cmdTest.Flags().String("benchtime", "", "Run enough iterations of each benchmark to take t, specified as a time.Duration (for example, -benchtime 1h30s). The default is 1 second (1s).")
 	run := cmdTest.Flags().String("run", "", "Run only those tests and examples matching the regular expression.")
 	short := cmdTest.Flags().Bool("short", false, "Tell long-running tests to shorten their run time.")
 	verbose := cmdTest.Flags().BoolP("verbose", "v", false, "Log all tests as they are run. Also print all text from Log and Logf calls even if the test succeeds.")
@@ -449,6 +473,9 @@ func main() {
 				if *bench != "" {
 					args = append(args, "-test.bench", *bench)
 				}
+				if *benchtime != "" {
+					args = append(args, "-test.benchtime", *benchtime)
+				}
 				if *run != "" {
 					args = append(args, "-test.run", *run)
 				}
@@ -536,7 +563,7 @@ func main() {
 		Use:  "gopherjs",
 		Long: "GopherJS is a tool for compiling Go source code to JavaScript.",
 	}
-	rootCmd.AddCommand(cmdBuild, cmdGet, cmdInstall, cmdRun, cmdTest, cmdServe, cmdVersion)
+	rootCmd.AddCommand(cmdBuild, cmdGet, cmdInstall, cmdRun, cmdTest, cmdServe, cmdVersion, cmdDoc)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(2)

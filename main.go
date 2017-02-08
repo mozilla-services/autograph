@@ -16,7 +16,7 @@ import (
 
 	"go.mozilla.org/mozlog"
 
-	"gopkg.in/yaml.v2"
+	"github.com/mozilla-services/yaml"
 )
 
 func init() {

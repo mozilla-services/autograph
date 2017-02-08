@@ -37,6 +37,7 @@ const opBatchMeterUsage = "BatchMeterUsage"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/BatchMeterUsage
 func (c *MarketplaceMetering) BatchMeterUsageRequest(input *BatchMeterUsageInput) (req *request.Request, output *BatchMeterUsageOutput) {
 	op := &request.Operation{
 		Name:       opBatchMeterUsage,
@@ -48,9 +49,8 @@ func (c *MarketplaceMetering) BatchMeterUsageRequest(input *BatchMeterUsageInput
 		input = &BatchMeterUsageInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &BatchMeterUsageOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -75,27 +75,28 @@ func (c *MarketplaceMetering) BatchMeterUsageRequest(input *BatchMeterUsageInput
 // API operation BatchMeterUsage for usage and error information.
 //
 // Returned Error Codes:
-//   * InternalServiceErrorException
+//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
 //   An internal error has occurred. Retry your request. If the problem persists,
 //   post a message with details on the AWS forums.
 //
-//   * InvalidProductCodeException
+//   * ErrCodeInvalidProductCodeException "InvalidProductCodeException"
 //   The product code passed does not match the product code used for publishing
 //   the product.
 //
-//   * InvalidUsageDimensionException
+//   * ErrCodeInvalidUsageDimensionException "InvalidUsageDimensionException"
 //   The usage dimension does not match one of the UsageDimensions associated
 //   with products.
 //
-//   * InvalidCustomerIdentifierException
+//   * ErrCodeInvalidCustomerIdentifierException "InvalidCustomerIdentifierException"
 //   You have metered usage for a CustomerIdentifier that does not exist.
 //
-//   * TimestampOutOfBoundsException
+//   * ErrCodeTimestampOutOfBoundsException "TimestampOutOfBoundsException"
 //   The timestamp value passed in the meterUsage() is out of allowed range.
 //
-//   * ThrottlingException
+//   * ErrCodeThrottlingException "ThrottlingException"
 //   The calls to the MeterUsage API are throttled.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/BatchMeterUsage
 func (c *MarketplaceMetering) BatchMeterUsage(input *BatchMeterUsageInput) (*BatchMeterUsageOutput, error) {
 	req, out := c.BatchMeterUsageRequest(input)
 	err := req.Send()
@@ -128,6 +129,7 @@ const opMeterUsage = "MeterUsage"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/MeterUsage
 func (c *MarketplaceMetering) MeterUsageRequest(input *MeterUsageInput) (req *request.Request, output *MeterUsageOutput) {
 	op := &request.Operation{
 		Name:       opMeterUsage,
@@ -139,9 +141,8 @@ func (c *MarketplaceMetering) MeterUsageRequest(input *MeterUsageInput) (req *re
 		input = &MeterUsageInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &MeterUsageOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -161,33 +162,34 @@ func (c *MarketplaceMetering) MeterUsageRequest(input *MeterUsageInput) (req *re
 // API operation MeterUsage for usage and error information.
 //
 // Returned Error Codes:
-//   * InternalServiceErrorException
+//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
 //   An internal error has occurred. Retry your request. If the problem persists,
 //   post a message with details on the AWS forums.
 //
-//   * InvalidProductCodeException
+//   * ErrCodeInvalidProductCodeException "InvalidProductCodeException"
 //   The product code passed does not match the product code used for publishing
 //   the product.
 //
-//   * InvalidUsageDimensionException
+//   * ErrCodeInvalidUsageDimensionException "InvalidUsageDimensionException"
 //   The usage dimension does not match one of the UsageDimensions associated
 //   with products.
 //
-//   * InvalidEndpointRegionException
+//   * ErrCodeInvalidEndpointRegionException "InvalidEndpointRegionException"
 //   The endpoint being called is in a region different from your EC2 instance.
 //   The region of the Metering service endpoint and the region of the EC2 instance
 //   must match.
 //
-//   * TimestampOutOfBoundsException
+//   * ErrCodeTimestampOutOfBoundsException "TimestampOutOfBoundsException"
 //   The timestamp value passed in the meterUsage() is out of allowed range.
 //
-//   * DuplicateRequestException
+//   * ErrCodeDuplicateRequestException "DuplicateRequestException"
 //   A metering record has already been emitted by the same EC2 instance for the
 //   given {usageDimension, timestamp} with a different usageQuantity.
 //
-//   * ThrottlingException
+//   * ErrCodeThrottlingException "ThrottlingException"
 //   The calls to the MeterUsage API are throttled.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/MeterUsage
 func (c *MarketplaceMetering) MeterUsage(input *MeterUsageInput) (*MeterUsageOutput, error) {
 	req, out := c.MeterUsageRequest(input)
 	err := req.Send()
@@ -220,6 +222,7 @@ const opResolveCustomer = "ResolveCustomer"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/ResolveCustomer
 func (c *MarketplaceMetering) ResolveCustomerRequest(input *ResolveCustomerInput) (req *request.Request, output *ResolveCustomerOutput) {
 	op := &request.Operation{
 		Name:       opResolveCustomer,
@@ -231,9 +234,8 @@ func (c *MarketplaceMetering) ResolveCustomerRequest(input *ResolveCustomerInput
 		input = &ResolveCustomerInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ResolveCustomerOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -252,23 +254,23 @@ func (c *MarketplaceMetering) ResolveCustomerRequest(input *ResolveCustomerInput
 // API operation ResolveCustomer for usage and error information.
 //
 // Returned Error Codes:
-//   * InvalidTokenException
-
+//   * ErrCodeInvalidTokenException "InvalidTokenException"
 //
-//   * ExpiredTokenException
+//   * ErrCodeExpiredTokenException "ExpiredTokenException"
 //   The submitted registration token has expired. This can happen if the buyer's
 //   browser takes too long to redirect to your page, the buyer has resubmitted
 //   the registration token, or your application has held on to the registration
 //   token for too long. Your SaaS registration website should redeem this token
 //   as soon as it is submitted by the buyer's browser.
 //
-//   * ThrottlingException
+//   * ErrCodeThrottlingException "ThrottlingException"
 //   The calls to the MeterUsage API are throttled.
 //
-//   * InternalServiceErrorException
+//   * ErrCodeInternalServiceErrorException "InternalServiceErrorException"
 //   An internal error has occurred. Retry your request. If the problem persists,
 //   post a message with details on the AWS forums.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/ResolveCustomer
 func (c *MarketplaceMetering) ResolveCustomer(input *ResolveCustomerInput) (*ResolveCustomerOutput, error) {
 	req, out := c.ResolveCustomerRequest(input)
 	err := req.Send()
@@ -277,6 +279,7 @@ func (c *MarketplaceMetering) ResolveCustomer(input *ResolveCustomerInput) (*Res
 
 // A BatchMeterUsageRequest contains UsageRecords, which indicate quantities
 // of usage within your application.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/BatchMeterUsageRequest
 type BatchMeterUsageInput struct {
 	_ struct{} `type:"structure"`
 
@@ -347,6 +350,7 @@ func (s *BatchMeterUsageInput) SetUsageRecords(v []*UsageRecord) *BatchMeterUsag
 
 // Contains the UsageRecords processed by BatchMeterUsage and any records that
 // have failed due to transient error.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/BatchMeterUsageResult
 type BatchMeterUsageOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -382,6 +386,7 @@ func (s *BatchMeterUsageOutput) SetUnprocessedRecords(v []*UsageRecord) *BatchMe
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/MeterUsageRequest
 type MeterUsageInput struct {
 	_ struct{} `type:"structure"`
 
@@ -488,6 +493,7 @@ func (s *MeterUsageInput) SetUsageQuantity(v int64) *MeterUsageInput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/MeterUsageResult
 type MeterUsageOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -511,6 +517,7 @@ func (s *MeterUsageOutput) SetMeteringRecordId(v string) *MeterUsageOutput {
 }
 
 // Contains input to the ResolveCustomer operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/ResolveCustomerRequest
 type ResolveCustomerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -553,6 +560,7 @@ func (s *ResolveCustomerInput) SetRegistrationToken(v string) *ResolveCustomerIn
 
 // The result of the ResolveCustomer operation. Contains the CustomerIdentifier
 // and product code.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/ResolveCustomerResult
 type ResolveCustomerOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -594,6 +602,7 @@ func (s *ResolveCustomerOutput) SetProductCode(v string) *ResolveCustomerOutput 
 //
 // Multiple requests with the same UsageRecords as input will be deduplicated
 // to prevent double charges.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/UsageRecord
 type UsageRecord struct {
 	_ struct{} `type:"structure"`
 
@@ -689,6 +698,7 @@ func (s *UsageRecord) SetTimestamp(v time.Time) *UsageRecord {
 
 // A UsageRecordResult indicates the status of a given UsageRecord processed
 // by BatchMeterUsage.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/meteringmarketplace-2016-01-14/UsageRecordResult
 type UsageRecordResult struct {
 	_ struct{} `type:"structure"`
 
