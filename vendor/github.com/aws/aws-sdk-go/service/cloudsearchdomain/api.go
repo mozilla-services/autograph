@@ -6,6 +6,7 @@ package cloudsearchdomain
 import (
 	"io"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
 )
@@ -35,7 +36,6 @@ const opSearch = "Search"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *CloudSearchDomain) SearchRequest(input *SearchInput) (req *request.Request, output *SearchOutput) {
 	op := &request.Operation{
 		Name:       opSearch,
@@ -47,9 +47,8 @@ func (c *CloudSearchDomain) SearchRequest(input *SearchInput) (req *request.Requ
 		input = &SearchInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &SearchOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -85,13 +84,28 @@ func (c *CloudSearchDomain) SearchRequest(input *SearchInput) (req *request.Requ
 // API operation Search for usage and error information.
 //
 // Returned Error Codes:
-//   * SearchException
+//   * ErrCodeSearchException "SearchException"
 //   Information about any problems encountered while processing a search request.
 //
 func (c *CloudSearchDomain) Search(input *SearchInput) (*SearchOutput, error) {
 	req, out := c.SearchRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// SearchWithContext is the same as Search with the addition of
+// the ability to pass a context and additional request options.
+//
+// See Search for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudSearchDomain) SearchWithContext(ctx aws.Context, input *SearchInput, opts ...request.Option) (*SearchOutput, error) {
+	req, out := c.SearchRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opSuggest = "Suggest"
@@ -119,7 +133,6 @@ const opSuggest = "Suggest"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *CloudSearchDomain) SuggestRequest(input *SuggestInput) (req *request.Request, output *SuggestOutput) {
 	op := &request.Operation{
 		Name:       opSuggest,
@@ -131,9 +144,8 @@ func (c *CloudSearchDomain) SuggestRequest(input *SuggestInput) (req *request.Re
 		input = &SuggestInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &SuggestOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -165,13 +177,28 @@ func (c *CloudSearchDomain) SuggestRequest(input *SuggestInput) (req *request.Re
 // API operation Suggest for usage and error information.
 //
 // Returned Error Codes:
-//   * SearchException
+//   * ErrCodeSearchException "SearchException"
 //   Information about any problems encountered while processing a search request.
 //
 func (c *CloudSearchDomain) Suggest(input *SuggestInput) (*SuggestOutput, error) {
 	req, out := c.SuggestRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// SuggestWithContext is the same as Suggest with the addition of
+// the ability to pass a context and additional request options.
+//
+// See Suggest for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudSearchDomain) SuggestWithContext(ctx aws.Context, input *SuggestInput, opts ...request.Option) (*SuggestOutput, error) {
+	req, out := c.SuggestRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUploadDocuments = "UploadDocuments"
@@ -199,7 +226,6 @@ const opUploadDocuments = "UploadDocuments"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *CloudSearchDomain) UploadDocumentsRequest(input *UploadDocumentsInput) (req *request.Request, output *UploadDocumentsOutput) {
 	op := &request.Operation{
 		Name:       opUploadDocuments,
@@ -211,9 +237,8 @@ func (c *CloudSearchDomain) UploadDocumentsRequest(input *UploadDocumentsInput) 
 		input = &UploadDocumentsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &UploadDocumentsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -250,13 +275,28 @@ func (c *CloudSearchDomain) UploadDocumentsRequest(input *UploadDocumentsInput) 
 // API operation UploadDocuments for usage and error information.
 //
 // Returned Error Codes:
-//   * DocumentServiceException
+//   * ErrCodeDocumentServiceException "DocumentServiceException"
 //   Information about any problems encountered while processing an upload request.
 //
 func (c *CloudSearchDomain) UploadDocuments(input *UploadDocumentsInput) (*UploadDocumentsOutput, error) {
 	req, out := c.UploadDocumentsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UploadDocumentsWithContext is the same as UploadDocuments with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UploadDocuments for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudSearchDomain) UploadDocumentsWithContext(ctx aws.Context, input *UploadDocumentsInput, opts ...request.Option) (*UploadDocumentsOutput, error) {
+	req, out := c.UploadDocumentsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // A container for facet information.

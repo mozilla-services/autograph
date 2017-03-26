@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol"
@@ -39,6 +40,7 @@ const opDeleteAlarms = "DeleteAlarms"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DeleteAlarms
 func (c *CloudWatch) DeleteAlarmsRequest(input *DeleteAlarmsInput) (req *request.Request, output *DeleteAlarmsOutput) {
 	op := &request.Operation{
 		Name:       opDeleteAlarms,
@@ -50,11 +52,10 @@ func (c *CloudWatch) DeleteAlarmsRequest(input *DeleteAlarmsInput) (req *request
 		input = &DeleteAlarmsInput{}
 	}
 
+	output = &DeleteAlarmsOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteAlarmsOutput{}
-	req.Data = output
 	return
 }
 
@@ -70,13 +71,29 @@ func (c *CloudWatch) DeleteAlarmsRequest(input *DeleteAlarmsInput) (req *request
 // API operation DeleteAlarms for usage and error information.
 //
 // Returned Error Codes:
-//   * ResourceNotFound
+//   * ErrCodeResourceNotFound "ResourceNotFound"
 //   The named resource does not exist.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DeleteAlarms
 func (c *CloudWatch) DeleteAlarms(input *DeleteAlarmsInput) (*DeleteAlarmsOutput, error) {
 	req, out := c.DeleteAlarmsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteAlarmsWithContext is the same as DeleteAlarms with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteAlarms for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) DeleteAlarmsWithContext(ctx aws.Context, input *DeleteAlarmsInput, opts ...request.Option) (*DeleteAlarmsOutput, error) {
+	req, out := c.DeleteAlarmsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDescribeAlarmHistory = "DescribeAlarmHistory"
@@ -105,6 +122,7 @@ const opDescribeAlarmHistory = "DescribeAlarmHistory"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmHistory
 func (c *CloudWatch) DescribeAlarmHistoryRequest(input *DescribeAlarmHistoryInput) (req *request.Request, output *DescribeAlarmHistoryOutput) {
 	op := &request.Operation{
 		Name:       opDescribeAlarmHistory,
@@ -122,9 +140,8 @@ func (c *CloudWatch) DescribeAlarmHistoryRequest(input *DescribeAlarmHistoryInpu
 		input = &DescribeAlarmHistoryInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DescribeAlarmHistoryOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -145,13 +162,29 @@ func (c *CloudWatch) DescribeAlarmHistoryRequest(input *DescribeAlarmHistoryInpu
 // API operation DescribeAlarmHistory for usage and error information.
 //
 // Returned Error Codes:
-//   * InvalidNextToken
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The next token specified is invalid.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmHistory
 func (c *CloudWatch) DescribeAlarmHistory(input *DescribeAlarmHistoryInput) (*DescribeAlarmHistoryOutput, error) {
 	req, out := c.DescribeAlarmHistoryRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DescribeAlarmHistoryWithContext is the same as DescribeAlarmHistory with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAlarmHistory for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) DescribeAlarmHistoryWithContext(ctx aws.Context, input *DescribeAlarmHistoryInput, opts ...request.Option) (*DescribeAlarmHistoryOutput, error) {
+	req, out := c.DescribeAlarmHistoryRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // DescribeAlarmHistoryPages iterates over the pages of a DescribeAlarmHistory operation,
@@ -171,12 +204,33 @@ func (c *CloudWatch) DescribeAlarmHistory(input *DescribeAlarmHistoryInput) (*De
 //            return pageNum <= 3
 //        })
 //
-func (c *CloudWatch) DescribeAlarmHistoryPages(input *DescribeAlarmHistoryInput, fn func(p *DescribeAlarmHistoryOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.DescribeAlarmHistoryRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*DescribeAlarmHistoryOutput), lastPage)
-	})
+func (c *CloudWatch) DescribeAlarmHistoryPages(input *DescribeAlarmHistoryInput, fn func(*DescribeAlarmHistoryOutput, bool) bool) error {
+	return c.DescribeAlarmHistoryPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeAlarmHistoryPagesWithContext same as DescribeAlarmHistoryPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) DescribeAlarmHistoryPagesWithContext(ctx aws.Context, input *DescribeAlarmHistoryInput, fn func(*DescribeAlarmHistoryOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.DescribeAlarmHistoryRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeAlarmHistoryOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opDescribeAlarms = "DescribeAlarms"
@@ -205,6 +259,7 @@ const opDescribeAlarms = "DescribeAlarms"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarms
 func (c *CloudWatch) DescribeAlarmsRequest(input *DescribeAlarmsInput) (req *request.Request, output *DescribeAlarmsOutput) {
 	op := &request.Operation{
 		Name:       opDescribeAlarms,
@@ -222,9 +277,8 @@ func (c *CloudWatch) DescribeAlarmsRequest(input *DescribeAlarmsInput) (req *req
 		input = &DescribeAlarmsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DescribeAlarmsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -242,13 +296,29 @@ func (c *CloudWatch) DescribeAlarmsRequest(input *DescribeAlarmsInput) (req *req
 // API operation DescribeAlarms for usage and error information.
 //
 // Returned Error Codes:
-//   * InvalidNextToken
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
 //   The next token specified is invalid.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarms
 func (c *CloudWatch) DescribeAlarms(input *DescribeAlarmsInput) (*DescribeAlarmsOutput, error) {
 	req, out := c.DescribeAlarmsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DescribeAlarmsWithContext is the same as DescribeAlarms with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAlarms for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) DescribeAlarmsWithContext(ctx aws.Context, input *DescribeAlarmsInput, opts ...request.Option) (*DescribeAlarmsOutput, error) {
+	req, out := c.DescribeAlarmsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // DescribeAlarmsPages iterates over the pages of a DescribeAlarms operation,
@@ -268,12 +338,33 @@ func (c *CloudWatch) DescribeAlarms(input *DescribeAlarmsInput) (*DescribeAlarms
 //            return pageNum <= 3
 //        })
 //
-func (c *CloudWatch) DescribeAlarmsPages(input *DescribeAlarmsInput, fn func(p *DescribeAlarmsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.DescribeAlarmsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*DescribeAlarmsOutput), lastPage)
-	})
+func (c *CloudWatch) DescribeAlarmsPages(input *DescribeAlarmsInput, fn func(*DescribeAlarmsOutput, bool) bool) error {
+	return c.DescribeAlarmsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeAlarmsPagesWithContext same as DescribeAlarmsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) DescribeAlarmsPagesWithContext(ctx aws.Context, input *DescribeAlarmsInput, fn func(*DescribeAlarmsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.DescribeAlarmsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeAlarmsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opDescribeAlarmsForMetric = "DescribeAlarmsForMetric"
@@ -302,6 +393,7 @@ const opDescribeAlarmsForMetric = "DescribeAlarmsForMetric"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmsForMetric
 func (c *CloudWatch) DescribeAlarmsForMetricRequest(input *DescribeAlarmsForMetricInput) (req *request.Request, output *DescribeAlarmsForMetricOutput) {
 	op := &request.Operation{
 		Name:       opDescribeAlarmsForMetric,
@@ -313,9 +405,8 @@ func (c *CloudWatch) DescribeAlarmsForMetricRequest(input *DescribeAlarmsForMetr
 		input = &DescribeAlarmsForMetricInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DescribeAlarmsForMetricOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -330,10 +421,26 @@ func (c *CloudWatch) DescribeAlarmsForMetricRequest(input *DescribeAlarmsForMetr
 //
 // See the AWS API reference guide for Amazon CloudWatch's
 // API operation DescribeAlarmsForMetric for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmsForMetric
 func (c *CloudWatch) DescribeAlarmsForMetric(input *DescribeAlarmsForMetricInput) (*DescribeAlarmsForMetricOutput, error) {
 	req, out := c.DescribeAlarmsForMetricRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DescribeAlarmsForMetricWithContext is the same as DescribeAlarmsForMetric with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAlarmsForMetric for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) DescribeAlarmsForMetricWithContext(ctx aws.Context, input *DescribeAlarmsForMetricInput, opts ...request.Option) (*DescribeAlarmsForMetricOutput, error) {
+	req, out := c.DescribeAlarmsForMetricRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDisableAlarmActions = "DisableAlarmActions"
@@ -362,6 +469,7 @@ const opDisableAlarmActions = "DisableAlarmActions"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DisableAlarmActions
 func (c *CloudWatch) DisableAlarmActionsRequest(input *DisableAlarmActionsInput) (req *request.Request, output *DisableAlarmActionsOutput) {
 	op := &request.Operation{
 		Name:       opDisableAlarmActions,
@@ -373,11 +481,10 @@ func (c *CloudWatch) DisableAlarmActionsRequest(input *DisableAlarmActionsInput)
 		input = &DisableAlarmActionsInput{}
 	}
 
+	output = &DisableAlarmActionsOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DisableAlarmActionsOutput{}
-	req.Data = output
 	return
 }
 
@@ -392,10 +499,26 @@ func (c *CloudWatch) DisableAlarmActionsRequest(input *DisableAlarmActionsInput)
 //
 // See the AWS API reference guide for Amazon CloudWatch's
 // API operation DisableAlarmActions for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DisableAlarmActions
 func (c *CloudWatch) DisableAlarmActions(input *DisableAlarmActionsInput) (*DisableAlarmActionsOutput, error) {
 	req, out := c.DisableAlarmActionsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DisableAlarmActionsWithContext is the same as DisableAlarmActions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisableAlarmActions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) DisableAlarmActionsWithContext(ctx aws.Context, input *DisableAlarmActionsInput, opts ...request.Option) (*DisableAlarmActionsOutput, error) {
+	req, out := c.DisableAlarmActionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opEnableAlarmActions = "EnableAlarmActions"
@@ -424,6 +547,7 @@ const opEnableAlarmActions = "EnableAlarmActions"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/EnableAlarmActions
 func (c *CloudWatch) EnableAlarmActionsRequest(input *EnableAlarmActionsInput) (req *request.Request, output *EnableAlarmActionsOutput) {
 	op := &request.Operation{
 		Name:       opEnableAlarmActions,
@@ -435,11 +559,10 @@ func (c *CloudWatch) EnableAlarmActionsRequest(input *EnableAlarmActionsInput) (
 		input = &EnableAlarmActionsInput{}
 	}
 
+	output = &EnableAlarmActionsOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &EnableAlarmActionsOutput{}
-	req.Data = output
 	return
 }
 
@@ -453,10 +576,26 @@ func (c *CloudWatch) EnableAlarmActionsRequest(input *EnableAlarmActionsInput) (
 //
 // See the AWS API reference guide for Amazon CloudWatch's
 // API operation EnableAlarmActions for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/EnableAlarmActions
 func (c *CloudWatch) EnableAlarmActions(input *EnableAlarmActionsInput) (*EnableAlarmActionsOutput, error) {
 	req, out := c.EnableAlarmActionsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// EnableAlarmActionsWithContext is the same as EnableAlarmActions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See EnableAlarmActions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) EnableAlarmActionsWithContext(ctx aws.Context, input *EnableAlarmActionsInput, opts ...request.Option) (*EnableAlarmActionsOutput, error) {
+	req, out := c.EnableAlarmActionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetMetricStatistics = "GetMetricStatistics"
@@ -485,6 +624,7 @@ const opGetMetricStatistics = "GetMetricStatistics"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/GetMetricStatistics
 func (c *CloudWatch) GetMetricStatisticsRequest(input *GetMetricStatisticsInput) (req *request.Request, output *GetMetricStatisticsOutput) {
 	op := &request.Operation{
 		Name:       opGetMetricStatistics,
@@ -496,9 +636,8 @@ func (c *CloudWatch) GetMetricStatisticsRequest(input *GetMetricStatisticsInput)
 		input = &GetMetricStatisticsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetMetricStatisticsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -545,22 +684,38 @@ func (c *CloudWatch) GetMetricStatisticsRequest(input *GetMetricStatisticsInput)
 // API operation GetMetricStatistics for usage and error information.
 //
 // Returned Error Codes:
-//   * InvalidParameterValue
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value of an input parameter is bad or out-of-range.
 //
-//   * MissingParameter
+//   * ErrCodeMissingRequiredParameterException "MissingParameter"
 //   An input parameter that is required is missing.
 //
-//   * InvalidParameterCombination
+//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombination"
 //   Parameters that cannot be used together were used together.
 //
-//   * InternalServiceError
+//   * ErrCodeInternalServiceFault "InternalServiceError"
 //   Request processing has failed due to some unknown error, exception, or failure.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/GetMetricStatistics
 func (c *CloudWatch) GetMetricStatistics(input *GetMetricStatisticsInput) (*GetMetricStatisticsOutput, error) {
 	req, out := c.GetMetricStatisticsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetMetricStatisticsWithContext is the same as GetMetricStatistics with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetMetricStatistics for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) GetMetricStatisticsWithContext(ctx aws.Context, input *GetMetricStatisticsInput, opts ...request.Option) (*GetMetricStatisticsOutput, error) {
+	req, out := c.GetMetricStatisticsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opListMetrics = "ListMetrics"
@@ -589,6 +744,7 @@ const opListMetrics = "ListMetrics"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/ListMetrics
 func (c *CloudWatch) ListMetricsRequest(input *ListMetricsInput) (req *request.Request, output *ListMetricsOutput) {
 	op := &request.Operation{
 		Name:       opListMetrics,
@@ -606,9 +762,8 @@ func (c *CloudWatch) ListMetricsRequest(input *ListMetricsInput) (req *request.R
 		input = &ListMetricsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListMetricsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -632,16 +787,32 @@ func (c *CloudWatch) ListMetricsRequest(input *ListMetricsInput) (req *request.R
 // API operation ListMetrics for usage and error information.
 //
 // Returned Error Codes:
-//   * InternalServiceError
+//   * ErrCodeInternalServiceFault "InternalServiceError"
 //   Request processing has failed due to some unknown error, exception, or failure.
 //
-//   * InvalidParameterValue
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value of an input parameter is bad or out-of-range.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/ListMetrics
 func (c *CloudWatch) ListMetrics(input *ListMetricsInput) (*ListMetricsOutput, error) {
 	req, out := c.ListMetricsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListMetricsWithContext is the same as ListMetrics with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListMetrics for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) ListMetricsWithContext(ctx aws.Context, input *ListMetricsInput, opts ...request.Option) (*ListMetricsOutput, error) {
+	req, out := c.ListMetricsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListMetricsPages iterates over the pages of a ListMetrics operation,
@@ -661,12 +832,33 @@ func (c *CloudWatch) ListMetrics(input *ListMetricsInput) (*ListMetricsOutput, e
 //            return pageNum <= 3
 //        })
 //
-func (c *CloudWatch) ListMetricsPages(input *ListMetricsInput, fn func(p *ListMetricsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListMetricsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListMetricsOutput), lastPage)
-	})
+func (c *CloudWatch) ListMetricsPages(input *ListMetricsInput, fn func(*ListMetricsOutput, bool) bool) error {
+	return c.ListMetricsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListMetricsPagesWithContext same as ListMetricsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) ListMetricsPagesWithContext(ctx aws.Context, input *ListMetricsInput, fn func(*ListMetricsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListMetricsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListMetricsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opPutMetricAlarm = "PutMetricAlarm"
@@ -695,6 +887,7 @@ const opPutMetricAlarm = "PutMetricAlarm"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutMetricAlarm
 func (c *CloudWatch) PutMetricAlarmRequest(input *PutMetricAlarmInput) (req *request.Request, output *PutMetricAlarmOutput) {
 	op := &request.Operation{
 		Name:       opPutMetricAlarm,
@@ -706,11 +899,10 @@ func (c *CloudWatch) PutMetricAlarmRequest(input *PutMetricAlarmInput) (req *req
 		input = &PutMetricAlarmInput{}
 	}
 
+	output = &PutMetricAlarmOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &PutMetricAlarmOutput{}
-	req.Data = output
 	return
 }
 
@@ -767,13 +959,29 @@ func (c *CloudWatch) PutMetricAlarmRequest(input *PutMetricAlarmInput) (req *req
 // API operation PutMetricAlarm for usage and error information.
 //
 // Returned Error Codes:
-//   * LimitExceeded
+//   * ErrCodeLimitExceededFault "LimitExceeded"
 //   The quota for alarms for this customer has already been reached.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutMetricAlarm
 func (c *CloudWatch) PutMetricAlarm(input *PutMetricAlarmInput) (*PutMetricAlarmOutput, error) {
 	req, out := c.PutMetricAlarmRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// PutMetricAlarmWithContext is the same as PutMetricAlarm with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutMetricAlarm for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) PutMetricAlarmWithContext(ctx aws.Context, input *PutMetricAlarmInput, opts ...request.Option) (*PutMetricAlarmOutput, error) {
+	req, out := c.PutMetricAlarmRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opPutMetricData = "PutMetricData"
@@ -802,6 +1010,7 @@ const opPutMetricData = "PutMetricData"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutMetricData
 func (c *CloudWatch) PutMetricDataRequest(input *PutMetricDataInput) (req *request.Request, output *PutMetricDataOutput) {
 	op := &request.Operation{
 		Name:       opPutMetricData,
@@ -813,11 +1022,10 @@ func (c *CloudWatch) PutMetricDataRequest(input *PutMetricDataInput) (req *reque
 		input = &PutMetricDataInput{}
 	}
 
+	output = &PutMetricDataOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &PutMetricDataOutput{}
-	req.Data = output
 	return
 }
 
@@ -850,22 +1058,38 @@ func (c *CloudWatch) PutMetricDataRequest(input *PutMetricDataInput) (req *reque
 // API operation PutMetricData for usage and error information.
 //
 // Returned Error Codes:
-//   * InvalidParameterValue
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value of an input parameter is bad or out-of-range.
 //
-//   * MissingParameter
+//   * ErrCodeMissingRequiredParameterException "MissingParameter"
 //   An input parameter that is required is missing.
 //
-//   * InvalidParameterCombination
+//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombination"
 //   Parameters that cannot be used together were used together.
 //
-//   * InternalServiceError
+//   * ErrCodeInternalServiceFault "InternalServiceError"
 //   Request processing has failed due to some unknown error, exception, or failure.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutMetricData
 func (c *CloudWatch) PutMetricData(input *PutMetricDataInput) (*PutMetricDataOutput, error) {
 	req, out := c.PutMetricDataRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// PutMetricDataWithContext is the same as PutMetricData with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutMetricData for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) PutMetricDataWithContext(ctx aws.Context, input *PutMetricDataInput, opts ...request.Option) (*PutMetricDataOutput, error) {
+	req, out := c.PutMetricDataRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opSetAlarmState = "SetAlarmState"
@@ -894,6 +1118,7 @@ const opSetAlarmState = "SetAlarmState"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/SetAlarmState
 func (c *CloudWatch) SetAlarmStateRequest(input *SetAlarmStateInput) (req *request.Request, output *SetAlarmStateOutput) {
 	op := &request.Operation{
 		Name:       opSetAlarmState,
@@ -905,11 +1130,10 @@ func (c *CloudWatch) SetAlarmStateRequest(input *SetAlarmStateInput) (req *reque
 		input = &SetAlarmStateInput{}
 	}
 
+	output = &SetAlarmStateOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &SetAlarmStateOutput{}
-	req.Data = output
 	return
 }
 
@@ -932,19 +1156,36 @@ func (c *CloudWatch) SetAlarmStateRequest(input *SetAlarmStateInput) (req *reque
 // API operation SetAlarmState for usage and error information.
 //
 // Returned Error Codes:
-//   * ResourceNotFound
+//   * ErrCodeResourceNotFound "ResourceNotFound"
 //   The named resource does not exist.
 //
-//   * InvalidFormat
+//   * ErrCodeInvalidFormatFault "InvalidFormat"
 //   Data was not syntactically valid JSON.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/SetAlarmState
 func (c *CloudWatch) SetAlarmState(input *SetAlarmStateInput) (*SetAlarmStateOutput, error) {
 	req, out := c.SetAlarmStateRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// SetAlarmStateWithContext is the same as SetAlarmState with the addition of
+// the ability to pass a context and additional request options.
+//
+// See SetAlarmState for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) SetAlarmStateWithContext(ctx aws.Context, input *SetAlarmStateInput, opts ...request.Option) (*SetAlarmStateOutput, error) {
+	req, out := c.SetAlarmStateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // Represents the history of a specific alarm.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/AlarmHistoryItem
 type AlarmHistoryItem struct {
 	_ struct{} `type:"structure"`
 
@@ -1006,6 +1247,7 @@ func (s *AlarmHistoryItem) SetTimestamp(v time.Time) *AlarmHistoryItem {
 
 // Encapsulates the statistical data that Amazon CloudWatch computes from metric
 // data.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/Datapoint
 type Datapoint struct {
 	_ struct{} `type:"structure"`
 
@@ -1093,6 +1335,7 @@ func (s *Datapoint) SetUnit(v string) *Datapoint {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DeleteAlarmsInput
 type DeleteAlarmsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1131,6 +1374,7 @@ func (s *DeleteAlarmsInput) SetAlarmNames(v []*string) *DeleteAlarmsInput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DeleteAlarmsOutput
 type DeleteAlarmsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1145,6 +1389,7 @@ func (s DeleteAlarmsOutput) GoString() string {
 	return s.String()
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmHistoryInput
 type DescribeAlarmHistoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1230,6 +1475,7 @@ func (s *DescribeAlarmHistoryInput) SetStartDate(v time.Time) *DescribeAlarmHist
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmHistoryOutput
 type DescribeAlarmHistoryOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1262,6 +1508,7 @@ func (s *DescribeAlarmHistoryOutput) SetNextToken(v string) *DescribeAlarmHistor
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmsForMetricInput
 type DescribeAlarmsForMetricInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1381,6 +1628,7 @@ func (s *DescribeAlarmsForMetricInput) SetUnit(v string) *DescribeAlarmsForMetri
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmsForMetricOutput
 type DescribeAlarmsForMetricOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1404,6 +1652,7 @@ func (s *DescribeAlarmsForMetricOutput) SetMetricAlarms(v []*MetricAlarm) *Descr
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmsInput
 type DescribeAlarmsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1493,6 +1742,7 @@ func (s *DescribeAlarmsInput) SetStateValue(v string) *DescribeAlarmsInput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAlarmsOutput
 type DescribeAlarmsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1526,6 +1776,7 @@ func (s *DescribeAlarmsOutput) SetNextToken(v string) *DescribeAlarmsOutput {
 }
 
 // Expands the identity of a metric.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/Dimension
 type Dimension struct {
 	_ struct{} `type:"structure"`
 
@@ -1585,6 +1836,7 @@ func (s *Dimension) SetValue(v string) *Dimension {
 }
 
 // Represents filters for a dimension.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DimensionFilter
 type DimensionFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -1638,6 +1890,7 @@ func (s *DimensionFilter) SetValue(v string) *DimensionFilter {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DisableAlarmActionsInput
 type DisableAlarmActionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1676,6 +1929,7 @@ func (s *DisableAlarmActionsInput) SetAlarmNames(v []*string) *DisableAlarmActio
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DisableAlarmActionsOutput
 type DisableAlarmActionsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1690,6 +1944,7 @@ func (s DisableAlarmActionsOutput) GoString() string {
 	return s.String()
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/EnableAlarmActionsInput
 type EnableAlarmActionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1728,6 +1983,7 @@ func (s *EnableAlarmActionsInput) SetAlarmNames(v []*string) *EnableAlarmActions
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/EnableAlarmActionsOutput
 type EnableAlarmActionsOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -1742,6 +1998,7 @@ func (s EnableAlarmActionsOutput) GoString() string {
 	return s.String()
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/GetMetricStatisticsInput
 type GetMetricStatisticsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1937,6 +2194,7 @@ func (s *GetMetricStatisticsInput) SetUnit(v string) *GetMetricStatisticsInput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/GetMetricStatisticsOutput
 type GetMetricStatisticsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -1969,6 +2227,7 @@ func (s *GetMetricStatisticsOutput) SetLabel(v string) *GetMetricStatisticsOutpu
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/ListMetricsInput
 type ListMetricsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2046,6 +2305,7 @@ func (s *ListMetricsInput) SetNextToken(v string) *ListMetricsInput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/ListMetricsOutput
 type ListMetricsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -2079,6 +2339,7 @@ func (s *ListMetricsOutput) SetNextToken(v string) *ListMetricsOutput {
 }
 
 // Represents a specific metric.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/Metric
 type Metric struct {
 	_ struct{} `type:"structure"`
 
@@ -2121,6 +2382,7 @@ func (s *Metric) SetNamespace(v string) *Metric {
 }
 
 // Represents an alarm.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/MetricAlarm
 type MetricAlarm struct {
 	_ struct{} `type:"structure"`
 
@@ -2343,6 +2605,7 @@ func (s *MetricAlarm) SetUnit(v string) *MetricAlarm {
 
 // Encapsulates the information sent to either create a metric or add new values
 // to be aggregated into an existing metric.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/MetricDatum
 type MetricDatum struct {
 	_ struct{} `type:"structure"`
 
@@ -2451,6 +2714,7 @@ func (s *MetricDatum) SetValue(v float64) *MetricDatum {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutMetricAlarmInput
 type PutMetricAlarmInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2717,6 +2981,7 @@ func (s *PutMetricAlarmInput) SetUnit(v string) *PutMetricAlarmInput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutMetricAlarmOutput
 type PutMetricAlarmOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2731,6 +2996,7 @@ func (s PutMetricAlarmOutput) GoString() string {
 	return s.String()
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutMetricDataInput
 type PutMetricDataInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2799,6 +3065,7 @@ func (s *PutMetricDataInput) SetNamespace(v string) *PutMetricDataInput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutMetricDataOutput
 type PutMetricDataOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2813,6 +3080,7 @@ func (s PutMetricDataOutput) GoString() string {
 	return s.String()
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/SetAlarmStateInput
 type SetAlarmStateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2892,6 +3160,7 @@ func (s *SetAlarmStateInput) SetStateValue(v string) *SetAlarmStateInput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/SetAlarmStateOutput
 type SetAlarmStateOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -2907,6 +3176,7 @@ func (s SetAlarmStateOutput) GoString() string {
 }
 
 // Represents a set of statistics that describes a specific metric.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/StatisticSet
 type StatisticSet struct {
 	_ struct{} `type:"structure"`
 

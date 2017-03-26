@@ -117,23 +117,6 @@ func Unmarshal(in []byte, out interface{}) (err error) {
 	return nil
 }
 
-type YAMLMarshaler struct {
-	Indent int
-}
-
-func (m *YAMLMarshaler) Marshal(in interface{}) (out []byte, err error) {
-	defer handleErr(&err)
-	if m.Indent == 0 {
-		m.Indent = 2
-	}
-	e := newEncoderWithIndent(m.Indent)
-	defer e.destroy()
-	e.marshal("", reflect.ValueOf(in))
-	e.finish()
-	out = e.out
-	return
-}
-
 // Marshal serializes the value provided into a YAML document. The structure
 // of the generated document will reflect the structure of the value itself.
 // Maps and pointers (to struct, string, int, etc) are accepted as the in value.

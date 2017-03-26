@@ -8,7 +8,8 @@
     "serviceAbbreviation":"CloudTrail",
     "serviceFullName":"AWS CloudTrail",
     "signatureVersion":"v4",
-    "targetPrefix":"com.amazonaws.cloudtrail.v20131101.CloudTrail_20131101"
+    "targetPrefix":"com.amazonaws.cloudtrail.v20131101.CloudTrail_20131101",
+    "uid":"cloudtrail-2013-11-01"
   },
   "operations":{
     "AddTags":{
@@ -413,6 +414,7 @@
     },
     "GetEventSelectorsRequest":{
       "type":"structure",
+      "required":["TrailName"],
       "members":{
         "TrailName":{"shape":"String"}
       }
@@ -692,6 +694,10 @@
     },
     "PutEventSelectorsRequest":{
       "type":"structure",
+      "required":[
+        "TrailName",
+        "EventSelectors"
+      ],
       "members":{
         "TrailName":{"shape":"String"},
         "EventSelectors":{"shape":"EventSelectors"}

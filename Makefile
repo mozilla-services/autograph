@@ -13,7 +13,8 @@ install:
 	$(GO) install $(PROJECT)
 
 vendor:
-	govend -u
+	go get -u github.com/golang/dep/...
+	dep ensure -update
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"

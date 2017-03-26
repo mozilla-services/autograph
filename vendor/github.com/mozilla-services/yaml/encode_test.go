@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mozilla.org/yaml.v2"
 	. "gopkg.in/check.v1"
+	"gopkg.in/yaml.v2"
 	"net"
 	"os"
 )
@@ -305,10 +305,6 @@ var marshalTests = []struct {
 	{
 		map[string]time.Time{"a": time.Unix(1424801979, 0)},
 		"a: 2015-02-24T18:19:39Z\n",
-	},
-	{
-		map[string]string{"a": "2015-02-24T18:19:39Z"},
-		"a: '2015-02-24T18:19:39Z'\n",
 	},
 
 	// Ensure strings containing ": " are quoted (reported as PR #43, but not reproducible).

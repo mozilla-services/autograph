@@ -2,21 +2,28 @@ SOPS: Secrets OPerationS
 ========================
 
 **sops** is an editor of encrypted files that supports YAML, JSON and BINARY
-formats and encrypts with AWS KMS and PGP (via GnuPG).
-Watch `the demo <https://www.youtube.com/watch?v=YTEVyLXFiq0>`_.
+formats and encrypts with AWS KMS and PGP.
+(`demo <https://www.youtube.com/watch?v=YTEVyLXFiq0>`_)
 
 .. image:: https://i.imgur.com/X0TM5NI.gif
+
+------------
+
+.. image:: https://godoc.org/go.mozilla.org/sops?status.svg
+	:target: https://godoc.org/go.mozilla.org/sops
 
 .. image:: https://travis-ci.org/mozilla/sops.svg?branch=master
 	:target: https://travis-ci.org/mozilla/sops
 
-Install **sops** with:
+Install the **sops** command line with:
 
 .. code:: bash
 
 	$ go get -u go.mozilla.org/sops/cmd/sops
 
 (requires Go >= 1.6)
+
+Or download RPM & DEB packages from `go.mozilla.org/sops/dist/ <https://go.mozilla.org/sops/dist/>`_.
 
 If you don't have Go installed, set it up with:
 
@@ -29,10 +36,12 @@ If you don't have Go installed, set it up with:
 
 Or whatever variation of the above fits your system and shell.
 
+To use **sops** as a library, take a look at the `decrypt package <https://godoc.org/go.mozilla.org/sops/decrypt>`_.
+
 **Questions?** ping "ulfr" in `#security` on `irc.mozilla.org <https://wiki.mozilla.org/IRC>`_
 (use a web client like `mibbit <https://chat.mibbit.com>`_ ).
 
-**What happened to Python Sops?** We rewrote Sops in Go to solve a number of deployment issues, but the Python branch still exists under `python-sops`. You can still `pip install sops`, but we strongly recommend you use the Go version instead.
+**What happened to Python Sops?** We rewrote Sops in Go to solve a number of deployment issues, but the Python branch still exists under `python-sops`. We will keep maintaining it for a while, and you can still `pip install sops`, but we strongly recommend you use the Go version instead.
 
 .. sectnum::
 .. contents:: Table of Contents
@@ -48,7 +57,7 @@ recommended to use at least two master keys in different regions.
 
 	export SOPS_KMS_ARN="arn:aws:kms:us-east-1:656532927350:key/920aff2e-c5f1-4040-943a-047fa387b27e,arn:aws:kms:ap-southeast-1:656532927350:key/9006a8aa-0fa6-4c14-930e-a2dfb916de1d"
 
-Your AWS credentials must be present in `~/.aws/credentials`. sops uses boto3.
+Your AWS credentials must be present in `~/.aws/credentials`. sops uses aws-sdk-go.
 
 .. code::
 

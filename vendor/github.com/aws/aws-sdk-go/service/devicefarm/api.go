@@ -6,6 +6,7 @@ package devicefarm
 import (
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
 )
@@ -36,6 +37,7 @@ const opCreateDevicePool = "CreateDevicePool"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateDevicePool
 func (c *DeviceFarm) CreateDevicePoolRequest(input *CreateDevicePoolInput) (req *request.Request, output *CreateDevicePoolOutput) {
 	op := &request.Operation{
 		Name:       opCreateDevicePool,
@@ -47,9 +49,8 @@ func (c *DeviceFarm) CreateDevicePoolRequest(input *CreateDevicePoolInput) (req 
 		input = &CreateDevicePoolInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &CreateDevicePoolOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -65,22 +66,127 @@ func (c *DeviceFarm) CreateDevicePoolRequest(input *CreateDevicePoolInput) (req 
 // API operation CreateDevicePool for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateDevicePool
 func (c *DeviceFarm) CreateDevicePool(input *CreateDevicePoolInput) (*CreateDevicePoolOutput, error) {
 	req, out := c.CreateDevicePoolRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateDevicePoolWithContext is the same as CreateDevicePool with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDevicePool for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) CreateDevicePoolWithContext(ctx aws.Context, input *CreateDevicePoolInput, opts ...request.Option) (*CreateDevicePoolOutput, error) {
+	req, out := c.CreateDevicePoolRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateNetworkProfile = "CreateNetworkProfile"
+
+// CreateNetworkProfileRequest generates a "aws/request.Request" representing the
+// client's request for the CreateNetworkProfile operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See CreateNetworkProfile for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateNetworkProfile method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateNetworkProfileRequest method.
+//    req, resp := client.CreateNetworkProfileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateNetworkProfile
+func (c *DeviceFarm) CreateNetworkProfileRequest(input *CreateNetworkProfileInput) (req *request.Request, output *CreateNetworkProfileOutput) {
+	op := &request.Operation{
+		Name:       opCreateNetworkProfile,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateNetworkProfileInput{}
+	}
+
+	output = &CreateNetworkProfileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateNetworkProfile API operation for AWS Device Farm.
+//
+// Creates a network profile.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation CreateNetworkProfile for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeArgumentException "ArgumentException"
+//   An invalid argument was specified.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit was exceeded.
+//
+//   * ErrCodeServiceAccountException "ServiceAccountException"
+//   There was a problem with the service account.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateNetworkProfile
+func (c *DeviceFarm) CreateNetworkProfile(input *CreateNetworkProfileInput) (*CreateNetworkProfileOutput, error) {
+	req, out := c.CreateNetworkProfileRequest(input)
+	return out, req.Send()
+}
+
+// CreateNetworkProfileWithContext is the same as CreateNetworkProfile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateNetworkProfile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) CreateNetworkProfileWithContext(ctx aws.Context, input *CreateNetworkProfileInput, opts ...request.Option) (*CreateNetworkProfileOutput, error) {
+	req, out := c.CreateNetworkProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateProject = "CreateProject"
@@ -109,6 +215,7 @@ const opCreateProject = "CreateProject"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateProject
 func (c *DeviceFarm) CreateProjectRequest(input *CreateProjectInput) (req *request.Request, output *CreateProjectOutput) {
 	op := &request.Operation{
 		Name:       opCreateProject,
@@ -120,9 +227,8 @@ func (c *DeviceFarm) CreateProjectRequest(input *CreateProjectInput) (req *reque
 		input = &CreateProjectInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &CreateProjectOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -138,22 +244,38 @@ func (c *DeviceFarm) CreateProjectRequest(input *CreateProjectInput) (req *reque
 // API operation CreateProject for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateProject
 func (c *DeviceFarm) CreateProject(input *CreateProjectInput) (*CreateProjectOutput, error) {
 	req, out := c.CreateProjectRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateProjectWithContext is the same as CreateProject with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateProject for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) CreateProjectWithContext(ctx aws.Context, input *CreateProjectInput, opts ...request.Option) (*CreateProjectOutput, error) {
+	req, out := c.CreateProjectRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateRemoteAccessSession = "CreateRemoteAccessSession"
@@ -182,6 +304,7 @@ const opCreateRemoteAccessSession = "CreateRemoteAccessSession"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateRemoteAccessSession
 func (c *DeviceFarm) CreateRemoteAccessSessionRequest(input *CreateRemoteAccessSessionInput) (req *request.Request, output *CreateRemoteAccessSessionOutput) {
 	op := &request.Operation{
 		Name:       opCreateRemoteAccessSession,
@@ -193,9 +316,8 @@ func (c *DeviceFarm) CreateRemoteAccessSessionRequest(input *CreateRemoteAccessS
 		input = &CreateRemoteAccessSessionInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &CreateRemoteAccessSessionOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -211,22 +333,38 @@ func (c *DeviceFarm) CreateRemoteAccessSessionRequest(input *CreateRemoteAccessS
 // API operation CreateRemoteAccessSession for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateRemoteAccessSession
 func (c *DeviceFarm) CreateRemoteAccessSession(input *CreateRemoteAccessSessionInput) (*CreateRemoteAccessSessionOutput, error) {
 	req, out := c.CreateRemoteAccessSessionRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateRemoteAccessSessionWithContext is the same as CreateRemoteAccessSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateRemoteAccessSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) CreateRemoteAccessSessionWithContext(ctx aws.Context, input *CreateRemoteAccessSessionInput, opts ...request.Option) (*CreateRemoteAccessSessionOutput, error) {
+	req, out := c.CreateRemoteAccessSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateUpload = "CreateUpload"
@@ -255,6 +393,7 @@ const opCreateUpload = "CreateUpload"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateUpload
 func (c *DeviceFarm) CreateUploadRequest(input *CreateUploadInput) (req *request.Request, output *CreateUploadOutput) {
 	op := &request.Operation{
 		Name:       opCreateUpload,
@@ -266,9 +405,8 @@ func (c *DeviceFarm) CreateUploadRequest(input *CreateUploadInput) (req *request
 		input = &CreateUploadInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &CreateUploadOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -284,22 +422,38 @@ func (c *DeviceFarm) CreateUploadRequest(input *CreateUploadInput) (req *request
 // API operation CreateUpload for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateUpload
 func (c *DeviceFarm) CreateUpload(input *CreateUploadInput) (*CreateUploadOutput, error) {
 	req, out := c.CreateUploadRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateUploadWithContext is the same as CreateUpload with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateUpload for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) CreateUploadWithContext(ctx aws.Context, input *CreateUploadInput, opts ...request.Option) (*CreateUploadOutput, error) {
+	req, out := c.CreateUploadRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteDevicePool = "DeleteDevicePool"
@@ -328,6 +482,7 @@ const opDeleteDevicePool = "DeleteDevicePool"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteDevicePool
 func (c *DeviceFarm) DeleteDevicePoolRequest(input *DeleteDevicePoolInput) (req *request.Request, output *DeleteDevicePoolOutput) {
 	op := &request.Operation{
 		Name:       opDeleteDevicePool,
@@ -339,9 +494,8 @@ func (c *DeviceFarm) DeleteDevicePoolRequest(input *DeleteDevicePoolInput) (req 
 		input = &DeleteDevicePoolInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DeleteDevicePoolOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -358,22 +512,127 @@ func (c *DeviceFarm) DeleteDevicePoolRequest(input *DeleteDevicePoolInput) (req 
 // API operation DeleteDevicePool for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteDevicePool
 func (c *DeviceFarm) DeleteDevicePool(input *DeleteDevicePoolInput) (*DeleteDevicePoolOutput, error) {
 	req, out := c.DeleteDevicePoolRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteDevicePoolWithContext is the same as DeleteDevicePool with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDevicePool for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) DeleteDevicePoolWithContext(ctx aws.Context, input *DeleteDevicePoolInput, opts ...request.Option) (*DeleteDevicePoolOutput, error) {
+	req, out := c.DeleteDevicePoolRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteNetworkProfile = "DeleteNetworkProfile"
+
+// DeleteNetworkProfileRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteNetworkProfile operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DeleteNetworkProfile for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteNetworkProfile method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteNetworkProfileRequest method.
+//    req, resp := client.DeleteNetworkProfileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteNetworkProfile
+func (c *DeviceFarm) DeleteNetworkProfileRequest(input *DeleteNetworkProfileInput) (req *request.Request, output *DeleteNetworkProfileOutput) {
+	op := &request.Operation{
+		Name:       opDeleteNetworkProfile,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteNetworkProfileInput{}
+	}
+
+	output = &DeleteNetworkProfileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteNetworkProfile API operation for AWS Device Farm.
+//
+// Deletes a network profile.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation DeleteNetworkProfile for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeArgumentException "ArgumentException"
+//   An invalid argument was specified.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit was exceeded.
+//
+//   * ErrCodeServiceAccountException "ServiceAccountException"
+//   There was a problem with the service account.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteNetworkProfile
+func (c *DeviceFarm) DeleteNetworkProfile(input *DeleteNetworkProfileInput) (*DeleteNetworkProfileOutput, error) {
+	req, out := c.DeleteNetworkProfileRequest(input)
+	return out, req.Send()
+}
+
+// DeleteNetworkProfileWithContext is the same as DeleteNetworkProfile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteNetworkProfile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) DeleteNetworkProfileWithContext(ctx aws.Context, input *DeleteNetworkProfileInput, opts ...request.Option) (*DeleteNetworkProfileOutput, error) {
+	req, out := c.DeleteNetworkProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteProject = "DeleteProject"
@@ -402,6 +661,7 @@ const opDeleteProject = "DeleteProject"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteProject
 func (c *DeviceFarm) DeleteProjectRequest(input *DeleteProjectInput) (req *request.Request, output *DeleteProjectOutput) {
 	op := &request.Operation{
 		Name:       opDeleteProject,
@@ -413,9 +673,8 @@ func (c *DeviceFarm) DeleteProjectRequest(input *DeleteProjectInput) (req *reque
 		input = &DeleteProjectInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DeleteProjectOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -433,22 +692,38 @@ func (c *DeviceFarm) DeleteProjectRequest(input *DeleteProjectInput) (req *reque
 // API operation DeleteProject for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteProject
 func (c *DeviceFarm) DeleteProject(input *DeleteProjectInput) (*DeleteProjectOutput, error) {
 	req, out := c.DeleteProjectRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteProjectWithContext is the same as DeleteProject with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteProject for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) DeleteProjectWithContext(ctx aws.Context, input *DeleteProjectInput, opts ...request.Option) (*DeleteProjectOutput, error) {
+	req, out := c.DeleteProjectRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteRemoteAccessSession = "DeleteRemoteAccessSession"
@@ -477,6 +752,7 @@ const opDeleteRemoteAccessSession = "DeleteRemoteAccessSession"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteRemoteAccessSession
 func (c *DeviceFarm) DeleteRemoteAccessSessionRequest(input *DeleteRemoteAccessSessionInput) (req *request.Request, output *DeleteRemoteAccessSessionOutput) {
 	op := &request.Operation{
 		Name:       opDeleteRemoteAccessSession,
@@ -488,9 +764,8 @@ func (c *DeviceFarm) DeleteRemoteAccessSessionRequest(input *DeleteRemoteAccessS
 		input = &DeleteRemoteAccessSessionInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DeleteRemoteAccessSessionOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -506,22 +781,38 @@ func (c *DeviceFarm) DeleteRemoteAccessSessionRequest(input *DeleteRemoteAccessS
 // API operation DeleteRemoteAccessSession for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteRemoteAccessSession
 func (c *DeviceFarm) DeleteRemoteAccessSession(input *DeleteRemoteAccessSessionInput) (*DeleteRemoteAccessSessionOutput, error) {
 	req, out := c.DeleteRemoteAccessSessionRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteRemoteAccessSessionWithContext is the same as DeleteRemoteAccessSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRemoteAccessSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) DeleteRemoteAccessSessionWithContext(ctx aws.Context, input *DeleteRemoteAccessSessionInput, opts ...request.Option) (*DeleteRemoteAccessSessionOutput, error) {
+	req, out := c.DeleteRemoteAccessSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteRun = "DeleteRun"
@@ -550,6 +841,7 @@ const opDeleteRun = "DeleteRun"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteRun
 func (c *DeviceFarm) DeleteRunRequest(input *DeleteRunInput) (req *request.Request, output *DeleteRunOutput) {
 	op := &request.Operation{
 		Name:       opDeleteRun,
@@ -561,9 +853,8 @@ func (c *DeviceFarm) DeleteRunRequest(input *DeleteRunInput) (req *request.Reque
 		input = &DeleteRunInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DeleteRunOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -581,22 +872,38 @@ func (c *DeviceFarm) DeleteRunRequest(input *DeleteRunInput) (req *request.Reque
 // API operation DeleteRun for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteRun
 func (c *DeviceFarm) DeleteRun(input *DeleteRunInput) (*DeleteRunOutput, error) {
 	req, out := c.DeleteRunRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteRunWithContext is the same as DeleteRun with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRun for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) DeleteRunWithContext(ctx aws.Context, input *DeleteRunInput, opts ...request.Option) (*DeleteRunOutput, error) {
+	req, out := c.DeleteRunRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteUpload = "DeleteUpload"
@@ -625,6 +932,7 @@ const opDeleteUpload = "DeleteUpload"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteUpload
 func (c *DeviceFarm) DeleteUploadRequest(input *DeleteUploadInput) (req *request.Request, output *DeleteUploadOutput) {
 	op := &request.Operation{
 		Name:       opDeleteUpload,
@@ -636,9 +944,8 @@ func (c *DeviceFarm) DeleteUploadRequest(input *DeleteUploadInput) (req *request
 		input = &DeleteUploadInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DeleteUploadOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -654,22 +961,38 @@ func (c *DeviceFarm) DeleteUploadRequest(input *DeleteUploadInput) (req *request
 // API operation DeleteUpload for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteUpload
 func (c *DeviceFarm) DeleteUpload(input *DeleteUploadInput) (*DeleteUploadOutput, error) {
 	req, out := c.DeleteUploadRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteUploadWithContext is the same as DeleteUpload with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteUpload for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) DeleteUploadWithContext(ctx aws.Context, input *DeleteUploadInput, opts ...request.Option) (*DeleteUploadOutput, error) {
+	req, out := c.DeleteUploadRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetAccountSettings = "GetAccountSettings"
@@ -698,6 +1021,7 @@ const opGetAccountSettings = "GetAccountSettings"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetAccountSettings
 func (c *DeviceFarm) GetAccountSettingsRequest(input *GetAccountSettingsInput) (req *request.Request, output *GetAccountSettingsOutput) {
 	op := &request.Operation{
 		Name:       opGetAccountSettings,
@@ -709,9 +1033,8 @@ func (c *DeviceFarm) GetAccountSettingsRequest(input *GetAccountSettingsInput) (
 		input = &GetAccountSettingsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetAccountSettingsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -728,22 +1051,38 @@ func (c *DeviceFarm) GetAccountSettingsRequest(input *GetAccountSettingsInput) (
 // API operation GetAccountSettings for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetAccountSettings
 func (c *DeviceFarm) GetAccountSettings(input *GetAccountSettingsInput) (*GetAccountSettingsOutput, error) {
 	req, out := c.GetAccountSettingsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetAccountSettingsWithContext is the same as GetAccountSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetAccountSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetAccountSettingsWithContext(ctx aws.Context, input *GetAccountSettingsInput, opts ...request.Option) (*GetAccountSettingsOutput, error) {
+	req, out := c.GetAccountSettingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetDevice = "GetDevice"
@@ -772,6 +1111,7 @@ const opGetDevice = "GetDevice"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevice
 func (c *DeviceFarm) GetDeviceRequest(input *GetDeviceInput) (req *request.Request, output *GetDeviceOutput) {
 	op := &request.Operation{
 		Name:       opGetDevice,
@@ -783,9 +1123,8 @@ func (c *DeviceFarm) GetDeviceRequest(input *GetDeviceInput) (req *request.Reque
 		input = &GetDeviceInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetDeviceOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -801,22 +1140,38 @@ func (c *DeviceFarm) GetDeviceRequest(input *GetDeviceInput) (req *request.Reque
 // API operation GetDevice for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevice
 func (c *DeviceFarm) GetDevice(input *GetDeviceInput) (*GetDeviceOutput, error) {
 	req, out := c.GetDeviceRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetDeviceWithContext is the same as GetDevice with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDevice for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetDeviceWithContext(ctx aws.Context, input *GetDeviceInput, opts ...request.Option) (*GetDeviceOutput, error) {
+	req, out := c.GetDeviceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetDevicePool = "GetDevicePool"
@@ -845,6 +1200,7 @@ const opGetDevicePool = "GetDevicePool"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevicePool
 func (c *DeviceFarm) GetDevicePoolRequest(input *GetDevicePoolInput) (req *request.Request, output *GetDevicePoolOutput) {
 	op := &request.Operation{
 		Name:       opGetDevicePool,
@@ -856,9 +1212,8 @@ func (c *DeviceFarm) GetDevicePoolRequest(input *GetDevicePoolInput) (req *reque
 		input = &GetDevicePoolInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetDevicePoolOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -874,22 +1229,38 @@ func (c *DeviceFarm) GetDevicePoolRequest(input *GetDevicePoolInput) (req *reque
 // API operation GetDevicePool for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevicePool
 func (c *DeviceFarm) GetDevicePool(input *GetDevicePoolInput) (*GetDevicePoolOutput, error) {
 	req, out := c.GetDevicePoolRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetDevicePoolWithContext is the same as GetDevicePool with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDevicePool for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetDevicePoolWithContext(ctx aws.Context, input *GetDevicePoolInput, opts ...request.Option) (*GetDevicePoolOutput, error) {
+	req, out := c.GetDevicePoolRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetDevicePoolCompatibility = "GetDevicePoolCompatibility"
@@ -918,6 +1289,7 @@ const opGetDevicePoolCompatibility = "GetDevicePoolCompatibility"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevicePoolCompatibility
 func (c *DeviceFarm) GetDevicePoolCompatibilityRequest(input *GetDevicePoolCompatibilityInput) (req *request.Request, output *GetDevicePoolCompatibilityOutput) {
 	op := &request.Operation{
 		Name:       opGetDevicePoolCompatibility,
@@ -929,9 +1301,8 @@ func (c *DeviceFarm) GetDevicePoolCompatibilityRequest(input *GetDevicePoolCompa
 		input = &GetDevicePoolCompatibilityInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetDevicePoolCompatibilityOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -947,22 +1318,38 @@ func (c *DeviceFarm) GetDevicePoolCompatibilityRequest(input *GetDevicePoolCompa
 // API operation GetDevicePoolCompatibility for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevicePoolCompatibility
 func (c *DeviceFarm) GetDevicePoolCompatibility(input *GetDevicePoolCompatibilityInput) (*GetDevicePoolCompatibilityOutput, error) {
 	req, out := c.GetDevicePoolCompatibilityRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetDevicePoolCompatibilityWithContext is the same as GetDevicePoolCompatibility with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDevicePoolCompatibility for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetDevicePoolCompatibilityWithContext(ctx aws.Context, input *GetDevicePoolCompatibilityInput, opts ...request.Option) (*GetDevicePoolCompatibilityOutput, error) {
+	req, out := c.GetDevicePoolCompatibilityRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetJob = "GetJob"
@@ -991,6 +1378,7 @@ const opGetJob = "GetJob"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetJob
 func (c *DeviceFarm) GetJobRequest(input *GetJobInput) (req *request.Request, output *GetJobOutput) {
 	op := &request.Operation{
 		Name:       opGetJob,
@@ -1002,9 +1390,8 @@ func (c *DeviceFarm) GetJobRequest(input *GetJobInput) (req *request.Request, ou
 		input = &GetJobInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetJobOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1020,22 +1407,127 @@ func (c *DeviceFarm) GetJobRequest(input *GetJobInput) (req *request.Request, ou
 // API operation GetJob for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetJob
 func (c *DeviceFarm) GetJob(input *GetJobInput) (*GetJobOutput, error) {
 	req, out := c.GetJobRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetJobWithContext is the same as GetJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetJobWithContext(ctx aws.Context, input *GetJobInput, opts ...request.Option) (*GetJobOutput, error) {
+	req, out := c.GetJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetNetworkProfile = "GetNetworkProfile"
+
+// GetNetworkProfileRequest generates a "aws/request.Request" representing the
+// client's request for the GetNetworkProfile operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetNetworkProfile for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetNetworkProfile method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetNetworkProfileRequest method.
+//    req, resp := client.GetNetworkProfileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetNetworkProfile
+func (c *DeviceFarm) GetNetworkProfileRequest(input *GetNetworkProfileInput) (req *request.Request, output *GetNetworkProfileOutput) {
+	op := &request.Operation{
+		Name:       opGetNetworkProfile,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetNetworkProfileInput{}
+	}
+
+	output = &GetNetworkProfileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetNetworkProfile API operation for AWS Device Farm.
+//
+// Returns information about a network profile.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation GetNetworkProfile for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeArgumentException "ArgumentException"
+//   An invalid argument was specified.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit was exceeded.
+//
+//   * ErrCodeServiceAccountException "ServiceAccountException"
+//   There was a problem with the service account.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetNetworkProfile
+func (c *DeviceFarm) GetNetworkProfile(input *GetNetworkProfileInput) (*GetNetworkProfileOutput, error) {
+	req, out := c.GetNetworkProfileRequest(input)
+	return out, req.Send()
+}
+
+// GetNetworkProfileWithContext is the same as GetNetworkProfile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetNetworkProfile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetNetworkProfileWithContext(ctx aws.Context, input *GetNetworkProfileInput, opts ...request.Option) (*GetNetworkProfileOutput, error) {
+	req, out := c.GetNetworkProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetOfferingStatus = "GetOfferingStatus"
@@ -1064,6 +1556,7 @@ const opGetOfferingStatus = "GetOfferingStatus"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetOfferingStatus
 func (c *DeviceFarm) GetOfferingStatusRequest(input *GetOfferingStatusInput) (req *request.Request, output *GetOfferingStatusOutput) {
 	op := &request.Operation{
 		Name:       opGetOfferingStatus,
@@ -1081,9 +1574,8 @@ func (c *DeviceFarm) GetOfferingStatusRequest(input *GetOfferingStatusInput) (re
 		input = &GetOfferingStatusInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetOfferingStatusOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1104,26 +1596,42 @@ func (c *DeviceFarm) GetOfferingStatusRequest(input *GetOfferingStatusInput) (re
 // API operation GetOfferingStatus for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * NotEligibleException
+//   * ErrCodeNotEligibleException "NotEligibleException"
 //   Exception gets thrown when a user is not eligible to perform the specified
 //   transaction.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetOfferingStatus
 func (c *DeviceFarm) GetOfferingStatus(input *GetOfferingStatusInput) (*GetOfferingStatusOutput, error) {
 	req, out := c.GetOfferingStatusRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetOfferingStatusWithContext is the same as GetOfferingStatus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetOfferingStatus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetOfferingStatusWithContext(ctx aws.Context, input *GetOfferingStatusInput, opts ...request.Option) (*GetOfferingStatusOutput, error) {
+	req, out := c.GetOfferingStatusRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetOfferingStatusPages iterates over the pages of a GetOfferingStatus operation,
@@ -1143,12 +1651,33 @@ func (c *DeviceFarm) GetOfferingStatus(input *GetOfferingStatusInput) (*GetOffer
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) GetOfferingStatusPages(input *GetOfferingStatusInput, fn func(p *GetOfferingStatusOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetOfferingStatusRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetOfferingStatusOutput), lastPage)
-	})
+func (c *DeviceFarm) GetOfferingStatusPages(input *GetOfferingStatusInput, fn func(*GetOfferingStatusOutput, bool) bool) error {
+	return c.GetOfferingStatusPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetOfferingStatusPagesWithContext same as GetOfferingStatusPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetOfferingStatusPagesWithContext(ctx aws.Context, input *GetOfferingStatusInput, fn func(*GetOfferingStatusOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetOfferingStatusRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetOfferingStatusOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetProject = "GetProject"
@@ -1177,6 +1706,7 @@ const opGetProject = "GetProject"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetProject
 func (c *DeviceFarm) GetProjectRequest(input *GetProjectInput) (req *request.Request, output *GetProjectOutput) {
 	op := &request.Operation{
 		Name:       opGetProject,
@@ -1188,9 +1718,8 @@ func (c *DeviceFarm) GetProjectRequest(input *GetProjectInput) (req *request.Req
 		input = &GetProjectInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetProjectOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1206,22 +1735,38 @@ func (c *DeviceFarm) GetProjectRequest(input *GetProjectInput) (req *request.Req
 // API operation GetProject for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetProject
 func (c *DeviceFarm) GetProject(input *GetProjectInput) (*GetProjectOutput, error) {
 	req, out := c.GetProjectRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetProjectWithContext is the same as GetProject with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetProject for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetProjectWithContext(ctx aws.Context, input *GetProjectInput, opts ...request.Option) (*GetProjectOutput, error) {
+	req, out := c.GetProjectRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetRemoteAccessSession = "GetRemoteAccessSession"
@@ -1250,6 +1795,7 @@ const opGetRemoteAccessSession = "GetRemoteAccessSession"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRemoteAccessSession
 func (c *DeviceFarm) GetRemoteAccessSessionRequest(input *GetRemoteAccessSessionInput) (req *request.Request, output *GetRemoteAccessSessionOutput) {
 	op := &request.Operation{
 		Name:       opGetRemoteAccessSession,
@@ -1261,9 +1807,8 @@ func (c *DeviceFarm) GetRemoteAccessSessionRequest(input *GetRemoteAccessSession
 		input = &GetRemoteAccessSessionInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetRemoteAccessSessionOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1279,22 +1824,38 @@ func (c *DeviceFarm) GetRemoteAccessSessionRequest(input *GetRemoteAccessSession
 // API operation GetRemoteAccessSession for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRemoteAccessSession
 func (c *DeviceFarm) GetRemoteAccessSession(input *GetRemoteAccessSessionInput) (*GetRemoteAccessSessionOutput, error) {
 	req, out := c.GetRemoteAccessSessionRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetRemoteAccessSessionWithContext is the same as GetRemoteAccessSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetRemoteAccessSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetRemoteAccessSessionWithContext(ctx aws.Context, input *GetRemoteAccessSessionInput, opts ...request.Option) (*GetRemoteAccessSessionOutput, error) {
+	req, out := c.GetRemoteAccessSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetRun = "GetRun"
@@ -1323,6 +1884,7 @@ const opGetRun = "GetRun"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRun
 func (c *DeviceFarm) GetRunRequest(input *GetRunInput) (req *request.Request, output *GetRunOutput) {
 	op := &request.Operation{
 		Name:       opGetRun,
@@ -1334,9 +1896,8 @@ func (c *DeviceFarm) GetRunRequest(input *GetRunInput) (req *request.Request, ou
 		input = &GetRunInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetRunOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1352,22 +1913,38 @@ func (c *DeviceFarm) GetRunRequest(input *GetRunInput) (req *request.Request, ou
 // API operation GetRun for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRun
 func (c *DeviceFarm) GetRun(input *GetRunInput) (*GetRunOutput, error) {
 	req, out := c.GetRunRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetRunWithContext is the same as GetRun with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetRun for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetRunWithContext(ctx aws.Context, input *GetRunInput, opts ...request.Option) (*GetRunOutput, error) {
+	req, out := c.GetRunRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetSuite = "GetSuite"
@@ -1396,6 +1973,7 @@ const opGetSuite = "GetSuite"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetSuite
 func (c *DeviceFarm) GetSuiteRequest(input *GetSuiteInput) (req *request.Request, output *GetSuiteOutput) {
 	op := &request.Operation{
 		Name:       opGetSuite,
@@ -1407,9 +1985,8 @@ func (c *DeviceFarm) GetSuiteRequest(input *GetSuiteInput) (req *request.Request
 		input = &GetSuiteInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetSuiteOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1425,22 +2002,38 @@ func (c *DeviceFarm) GetSuiteRequest(input *GetSuiteInput) (req *request.Request
 // API operation GetSuite for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetSuite
 func (c *DeviceFarm) GetSuite(input *GetSuiteInput) (*GetSuiteOutput, error) {
 	req, out := c.GetSuiteRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetSuiteWithContext is the same as GetSuite with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSuite for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetSuiteWithContext(ctx aws.Context, input *GetSuiteInput, opts ...request.Option) (*GetSuiteOutput, error) {
+	req, out := c.GetSuiteRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetTest = "GetTest"
@@ -1469,6 +2062,7 @@ const opGetTest = "GetTest"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetTest
 func (c *DeviceFarm) GetTestRequest(input *GetTestInput) (req *request.Request, output *GetTestOutput) {
 	op := &request.Operation{
 		Name:       opGetTest,
@@ -1480,9 +2074,8 @@ func (c *DeviceFarm) GetTestRequest(input *GetTestInput) (req *request.Request, 
 		input = &GetTestInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetTestOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1498,22 +2091,38 @@ func (c *DeviceFarm) GetTestRequest(input *GetTestInput) (req *request.Request, 
 // API operation GetTest for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetTest
 func (c *DeviceFarm) GetTest(input *GetTestInput) (*GetTestOutput, error) {
 	req, out := c.GetTestRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetTestWithContext is the same as GetTest with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetTest for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetTestWithContext(ctx aws.Context, input *GetTestInput, opts ...request.Option) (*GetTestOutput, error) {
+	req, out := c.GetTestRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetUpload = "GetUpload"
@@ -1542,6 +2151,7 @@ const opGetUpload = "GetUpload"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetUpload
 func (c *DeviceFarm) GetUploadRequest(input *GetUploadInput) (req *request.Request, output *GetUploadOutput) {
 	op := &request.Operation{
 		Name:       opGetUpload,
@@ -1553,9 +2163,8 @@ func (c *DeviceFarm) GetUploadRequest(input *GetUploadInput) (req *request.Reque
 		input = &GetUploadInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetUploadOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1571,22 +2180,38 @@ func (c *DeviceFarm) GetUploadRequest(input *GetUploadInput) (req *request.Reque
 // API operation GetUpload for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetUpload
 func (c *DeviceFarm) GetUpload(input *GetUploadInput) (*GetUploadOutput, error) {
 	req, out := c.GetUploadRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetUploadWithContext is the same as GetUpload with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetUpload for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) GetUploadWithContext(ctx aws.Context, input *GetUploadInput, opts ...request.Option) (*GetUploadOutput, error) {
+	req, out := c.GetUploadRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opInstallToRemoteAccessSession = "InstallToRemoteAccessSession"
@@ -1615,6 +2240,7 @@ const opInstallToRemoteAccessSession = "InstallToRemoteAccessSession"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/InstallToRemoteAccessSession
 func (c *DeviceFarm) InstallToRemoteAccessSessionRequest(input *InstallToRemoteAccessSessionInput) (req *request.Request, output *InstallToRemoteAccessSessionOutput) {
 	op := &request.Operation{
 		Name:       opInstallToRemoteAccessSession,
@@ -1626,9 +2252,8 @@ func (c *DeviceFarm) InstallToRemoteAccessSessionRequest(input *InstallToRemoteA
 		input = &InstallToRemoteAccessSessionInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &InstallToRemoteAccessSessionOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1646,22 +2271,38 @@ func (c *DeviceFarm) InstallToRemoteAccessSessionRequest(input *InstallToRemoteA
 // API operation InstallToRemoteAccessSession for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/InstallToRemoteAccessSession
 func (c *DeviceFarm) InstallToRemoteAccessSession(input *InstallToRemoteAccessSessionInput) (*InstallToRemoteAccessSessionOutput, error) {
 	req, out := c.InstallToRemoteAccessSessionRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// InstallToRemoteAccessSessionWithContext is the same as InstallToRemoteAccessSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See InstallToRemoteAccessSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) InstallToRemoteAccessSessionWithContext(ctx aws.Context, input *InstallToRemoteAccessSessionInput, opts ...request.Option) (*InstallToRemoteAccessSessionOutput, error) {
+	req, out := c.InstallToRemoteAccessSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opListArtifacts = "ListArtifacts"
@@ -1690,6 +2331,7 @@ const opListArtifacts = "ListArtifacts"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListArtifacts
 func (c *DeviceFarm) ListArtifactsRequest(input *ListArtifactsInput) (req *request.Request, output *ListArtifactsOutput) {
 	op := &request.Operation{
 		Name:       opListArtifacts,
@@ -1707,9 +2349,8 @@ func (c *DeviceFarm) ListArtifactsRequest(input *ListArtifactsInput) (req *reque
 		input = &ListArtifactsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListArtifactsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1725,22 +2366,38 @@ func (c *DeviceFarm) ListArtifactsRequest(input *ListArtifactsInput) (req *reque
 // API operation ListArtifacts for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListArtifacts
 func (c *DeviceFarm) ListArtifacts(input *ListArtifactsInput) (*ListArtifactsOutput, error) {
 	req, out := c.ListArtifactsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListArtifactsWithContext is the same as ListArtifacts with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListArtifacts for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListArtifactsWithContext(ctx aws.Context, input *ListArtifactsInput, opts ...request.Option) (*ListArtifactsOutput, error) {
+	req, out := c.ListArtifactsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListArtifactsPages iterates over the pages of a ListArtifacts operation,
@@ -1760,12 +2417,33 @@ func (c *DeviceFarm) ListArtifacts(input *ListArtifactsInput) (*ListArtifactsOut
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListArtifactsPages(input *ListArtifactsInput, fn func(p *ListArtifactsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListArtifactsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListArtifactsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListArtifactsPages(input *ListArtifactsInput, fn func(*ListArtifactsOutput, bool) bool) error {
+	return c.ListArtifactsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListArtifactsPagesWithContext same as ListArtifactsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListArtifactsPagesWithContext(ctx aws.Context, input *ListArtifactsInput, fn func(*ListArtifactsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListArtifactsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListArtifactsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListDevicePools = "ListDevicePools"
@@ -1794,6 +2472,7 @@ const opListDevicePools = "ListDevicePools"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListDevicePools
 func (c *DeviceFarm) ListDevicePoolsRequest(input *ListDevicePoolsInput) (req *request.Request, output *ListDevicePoolsOutput) {
 	op := &request.Operation{
 		Name:       opListDevicePools,
@@ -1811,9 +2490,8 @@ func (c *DeviceFarm) ListDevicePoolsRequest(input *ListDevicePoolsInput) (req *r
 		input = &ListDevicePoolsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListDevicePoolsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1829,22 +2507,38 @@ func (c *DeviceFarm) ListDevicePoolsRequest(input *ListDevicePoolsInput) (req *r
 // API operation ListDevicePools for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListDevicePools
 func (c *DeviceFarm) ListDevicePools(input *ListDevicePoolsInput) (*ListDevicePoolsOutput, error) {
 	req, out := c.ListDevicePoolsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListDevicePoolsWithContext is the same as ListDevicePools with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDevicePools for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListDevicePoolsWithContext(ctx aws.Context, input *ListDevicePoolsInput, opts ...request.Option) (*ListDevicePoolsOutput, error) {
+	req, out := c.ListDevicePoolsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListDevicePoolsPages iterates over the pages of a ListDevicePools operation,
@@ -1864,12 +2558,33 @@ func (c *DeviceFarm) ListDevicePools(input *ListDevicePoolsInput) (*ListDevicePo
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListDevicePoolsPages(input *ListDevicePoolsInput, fn func(p *ListDevicePoolsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListDevicePoolsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListDevicePoolsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListDevicePoolsPages(input *ListDevicePoolsInput, fn func(*ListDevicePoolsOutput, bool) bool) error {
+	return c.ListDevicePoolsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDevicePoolsPagesWithContext same as ListDevicePoolsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListDevicePoolsPagesWithContext(ctx aws.Context, input *ListDevicePoolsInput, fn func(*ListDevicePoolsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListDevicePoolsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListDevicePoolsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListDevices = "ListDevices"
@@ -1898,6 +2613,7 @@ const opListDevices = "ListDevices"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListDevices
 func (c *DeviceFarm) ListDevicesRequest(input *ListDevicesInput) (req *request.Request, output *ListDevicesOutput) {
 	op := &request.Operation{
 		Name:       opListDevices,
@@ -1915,9 +2631,8 @@ func (c *DeviceFarm) ListDevicesRequest(input *ListDevicesInput) (req *request.R
 		input = &ListDevicesInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListDevicesOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -1933,22 +2648,38 @@ func (c *DeviceFarm) ListDevicesRequest(input *ListDevicesInput) (req *request.R
 // API operation ListDevices for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListDevices
 func (c *DeviceFarm) ListDevices(input *ListDevicesInput) (*ListDevicesOutput, error) {
 	req, out := c.ListDevicesRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListDevicesWithContext is the same as ListDevices with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDevices for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListDevicesWithContext(ctx aws.Context, input *ListDevicesInput, opts ...request.Option) (*ListDevicesOutput, error) {
+	req, out := c.ListDevicesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListDevicesPages iterates over the pages of a ListDevices operation,
@@ -1968,12 +2699,33 @@ func (c *DeviceFarm) ListDevices(input *ListDevicesInput) (*ListDevicesOutput, e
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListDevicesPages(input *ListDevicesInput, fn func(p *ListDevicesOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListDevicesRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListDevicesOutput), lastPage)
-	})
+func (c *DeviceFarm) ListDevicesPages(input *ListDevicesInput, fn func(*ListDevicesOutput, bool) bool) error {
+	return c.ListDevicesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDevicesPagesWithContext same as ListDevicesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListDevicesPagesWithContext(ctx aws.Context, input *ListDevicesInput, fn func(*ListDevicesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListDevicesRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListDevicesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListJobs = "ListJobs"
@@ -2002,6 +2754,7 @@ const opListJobs = "ListJobs"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListJobs
 func (c *DeviceFarm) ListJobsRequest(input *ListJobsInput) (req *request.Request, output *ListJobsOutput) {
 	op := &request.Operation{
 		Name:       opListJobs,
@@ -2019,9 +2772,8 @@ func (c *DeviceFarm) ListJobsRequest(input *ListJobsInput) (req *request.Request
 		input = &ListJobsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListJobsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2037,22 +2789,38 @@ func (c *DeviceFarm) ListJobsRequest(input *ListJobsInput) (req *request.Request
 // API operation ListJobs for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListJobs
 func (c *DeviceFarm) ListJobs(input *ListJobsInput) (*ListJobsOutput, error) {
 	req, out := c.ListJobsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListJobsWithContext is the same as ListJobs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListJobs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts ...request.Option) (*ListJobsOutput, error) {
+	req, out := c.ListJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListJobsPages iterates over the pages of a ListJobs operation,
@@ -2072,12 +2840,122 @@ func (c *DeviceFarm) ListJobs(input *ListJobsInput) (*ListJobsOutput, error) {
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListJobsPages(input *ListJobsInput, fn func(p *ListJobsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListJobsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListJobsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListJobsPages(input *ListJobsInput, fn func(*ListJobsOutput, bool) bool) error {
+	return c.ListJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListJobsPagesWithContext same as ListJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, fn func(*ListJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListJobsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opListNetworkProfiles = "ListNetworkProfiles"
+
+// ListNetworkProfilesRequest generates a "aws/request.Request" representing the
+// client's request for the ListNetworkProfiles operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListNetworkProfiles for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListNetworkProfiles method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListNetworkProfilesRequest method.
+//    req, resp := client.ListNetworkProfilesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListNetworkProfiles
+func (c *DeviceFarm) ListNetworkProfilesRequest(input *ListNetworkProfilesInput) (req *request.Request, output *ListNetworkProfilesOutput) {
+	op := &request.Operation{
+		Name:       opListNetworkProfiles,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListNetworkProfilesInput{}
+	}
+
+	output = &ListNetworkProfilesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListNetworkProfiles API operation for AWS Device Farm.
+//
+// Returns the list of available network profiles.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation ListNetworkProfiles for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeArgumentException "ArgumentException"
+//   An invalid argument was specified.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit was exceeded.
+//
+//   * ErrCodeServiceAccountException "ServiceAccountException"
+//   There was a problem with the service account.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListNetworkProfiles
+func (c *DeviceFarm) ListNetworkProfiles(input *ListNetworkProfilesInput) (*ListNetworkProfilesOutput, error) {
+	req, out := c.ListNetworkProfilesRequest(input)
+	return out, req.Send()
+}
+
+// ListNetworkProfilesWithContext is the same as ListNetworkProfiles with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListNetworkProfiles for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListNetworkProfilesWithContext(ctx aws.Context, input *ListNetworkProfilesInput, opts ...request.Option) (*ListNetworkProfilesOutput, error) {
+	req, out := c.ListNetworkProfilesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opListOfferingTransactions = "ListOfferingTransactions"
@@ -2106,6 +2984,7 @@ const opListOfferingTransactions = "ListOfferingTransactions"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListOfferingTransactions
 func (c *DeviceFarm) ListOfferingTransactionsRequest(input *ListOfferingTransactionsInput) (req *request.Request, output *ListOfferingTransactionsOutput) {
 	op := &request.Operation{
 		Name:       opListOfferingTransactions,
@@ -2123,9 +3002,8 @@ func (c *DeviceFarm) ListOfferingTransactionsRequest(input *ListOfferingTransact
 		input = &ListOfferingTransactionsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListOfferingTransactionsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2146,26 +3024,42 @@ func (c *DeviceFarm) ListOfferingTransactionsRequest(input *ListOfferingTransact
 // API operation ListOfferingTransactions for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * NotEligibleException
+//   * ErrCodeNotEligibleException "NotEligibleException"
 //   Exception gets thrown when a user is not eligible to perform the specified
 //   transaction.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListOfferingTransactions
 func (c *DeviceFarm) ListOfferingTransactions(input *ListOfferingTransactionsInput) (*ListOfferingTransactionsOutput, error) {
 	req, out := c.ListOfferingTransactionsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListOfferingTransactionsWithContext is the same as ListOfferingTransactions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListOfferingTransactions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListOfferingTransactionsWithContext(ctx aws.Context, input *ListOfferingTransactionsInput, opts ...request.Option) (*ListOfferingTransactionsOutput, error) {
+	req, out := c.ListOfferingTransactionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListOfferingTransactionsPages iterates over the pages of a ListOfferingTransactions operation,
@@ -2185,12 +3079,33 @@ func (c *DeviceFarm) ListOfferingTransactions(input *ListOfferingTransactionsInp
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListOfferingTransactionsPages(input *ListOfferingTransactionsInput, fn func(p *ListOfferingTransactionsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListOfferingTransactionsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListOfferingTransactionsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListOfferingTransactionsPages(input *ListOfferingTransactionsInput, fn func(*ListOfferingTransactionsOutput, bool) bool) error {
+	return c.ListOfferingTransactionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListOfferingTransactionsPagesWithContext same as ListOfferingTransactionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListOfferingTransactionsPagesWithContext(ctx aws.Context, input *ListOfferingTransactionsInput, fn func(*ListOfferingTransactionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListOfferingTransactionsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListOfferingTransactionsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListOfferings = "ListOfferings"
@@ -2219,6 +3134,7 @@ const opListOfferings = "ListOfferings"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListOfferings
 func (c *DeviceFarm) ListOfferingsRequest(input *ListOfferingsInput) (req *request.Request, output *ListOfferingsOutput) {
 	op := &request.Operation{
 		Name:       opListOfferings,
@@ -2236,9 +3152,8 @@ func (c *DeviceFarm) ListOfferingsRequest(input *ListOfferingsInput) (req *reque
 		input = &ListOfferingsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListOfferingsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2259,26 +3174,42 @@ func (c *DeviceFarm) ListOfferingsRequest(input *ListOfferingsInput) (req *reque
 // API operation ListOfferings for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * NotEligibleException
+//   * ErrCodeNotEligibleException "NotEligibleException"
 //   Exception gets thrown when a user is not eligible to perform the specified
 //   transaction.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListOfferings
 func (c *DeviceFarm) ListOfferings(input *ListOfferingsInput) (*ListOfferingsOutput, error) {
 	req, out := c.ListOfferingsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListOfferingsWithContext is the same as ListOfferings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListOfferings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListOfferingsWithContext(ctx aws.Context, input *ListOfferingsInput, opts ...request.Option) (*ListOfferingsOutput, error) {
+	req, out := c.ListOfferingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListOfferingsPages iterates over the pages of a ListOfferings operation,
@@ -2298,12 +3229,33 @@ func (c *DeviceFarm) ListOfferings(input *ListOfferingsInput) (*ListOfferingsOut
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListOfferingsPages(input *ListOfferingsInput, fn func(p *ListOfferingsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListOfferingsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListOfferingsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListOfferingsPages(input *ListOfferingsInput, fn func(*ListOfferingsOutput, bool) bool) error {
+	return c.ListOfferingsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListOfferingsPagesWithContext same as ListOfferingsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListOfferingsPagesWithContext(ctx aws.Context, input *ListOfferingsInput, fn func(*ListOfferingsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListOfferingsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListOfferingsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListProjects = "ListProjects"
@@ -2332,6 +3284,7 @@ const opListProjects = "ListProjects"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListProjects
 func (c *DeviceFarm) ListProjectsRequest(input *ListProjectsInput) (req *request.Request, output *ListProjectsOutput) {
 	op := &request.Operation{
 		Name:       opListProjects,
@@ -2349,9 +3302,8 @@ func (c *DeviceFarm) ListProjectsRequest(input *ListProjectsInput) (req *request
 		input = &ListProjectsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListProjectsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2367,22 +3319,38 @@ func (c *DeviceFarm) ListProjectsRequest(input *ListProjectsInput) (req *request
 // API operation ListProjects for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListProjects
 func (c *DeviceFarm) ListProjects(input *ListProjectsInput) (*ListProjectsOutput, error) {
 	req, out := c.ListProjectsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListProjectsWithContext is the same as ListProjects with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListProjects for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListProjectsWithContext(ctx aws.Context, input *ListProjectsInput, opts ...request.Option) (*ListProjectsOutput, error) {
+	req, out := c.ListProjectsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListProjectsPages iterates over the pages of a ListProjects operation,
@@ -2402,12 +3370,33 @@ func (c *DeviceFarm) ListProjects(input *ListProjectsInput) (*ListProjectsOutput
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListProjectsPages(input *ListProjectsInput, fn func(p *ListProjectsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListProjectsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListProjectsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListProjectsPages(input *ListProjectsInput, fn func(*ListProjectsOutput, bool) bool) error {
+	return c.ListProjectsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListProjectsPagesWithContext same as ListProjectsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListProjectsPagesWithContext(ctx aws.Context, input *ListProjectsInput, fn func(*ListProjectsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListProjectsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListProjectsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListRemoteAccessSessions = "ListRemoteAccessSessions"
@@ -2436,6 +3425,7 @@ const opListRemoteAccessSessions = "ListRemoteAccessSessions"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRemoteAccessSessions
 func (c *DeviceFarm) ListRemoteAccessSessionsRequest(input *ListRemoteAccessSessionsInput) (req *request.Request, output *ListRemoteAccessSessionsOutput) {
 	op := &request.Operation{
 		Name:       opListRemoteAccessSessions,
@@ -2447,9 +3437,8 @@ func (c *DeviceFarm) ListRemoteAccessSessionsRequest(input *ListRemoteAccessSess
 		input = &ListRemoteAccessSessionsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListRemoteAccessSessionsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2465,22 +3454,38 @@ func (c *DeviceFarm) ListRemoteAccessSessionsRequest(input *ListRemoteAccessSess
 // API operation ListRemoteAccessSessions for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRemoteAccessSessions
 func (c *DeviceFarm) ListRemoteAccessSessions(input *ListRemoteAccessSessionsInput) (*ListRemoteAccessSessionsOutput, error) {
 	req, out := c.ListRemoteAccessSessionsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListRemoteAccessSessionsWithContext is the same as ListRemoteAccessSessions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListRemoteAccessSessions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListRemoteAccessSessionsWithContext(ctx aws.Context, input *ListRemoteAccessSessionsInput, opts ...request.Option) (*ListRemoteAccessSessionsOutput, error) {
+	req, out := c.ListRemoteAccessSessionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opListRuns = "ListRuns"
@@ -2509,6 +3514,7 @@ const opListRuns = "ListRuns"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRuns
 func (c *DeviceFarm) ListRunsRequest(input *ListRunsInput) (req *request.Request, output *ListRunsOutput) {
 	op := &request.Operation{
 		Name:       opListRuns,
@@ -2526,9 +3532,8 @@ func (c *DeviceFarm) ListRunsRequest(input *ListRunsInput) (req *request.Request
 		input = &ListRunsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListRunsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2544,22 +3549,38 @@ func (c *DeviceFarm) ListRunsRequest(input *ListRunsInput) (req *request.Request
 // API operation ListRuns for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRuns
 func (c *DeviceFarm) ListRuns(input *ListRunsInput) (*ListRunsOutput, error) {
 	req, out := c.ListRunsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListRunsWithContext is the same as ListRuns with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListRuns for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListRunsWithContext(ctx aws.Context, input *ListRunsInput, opts ...request.Option) (*ListRunsOutput, error) {
+	req, out := c.ListRunsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListRunsPages iterates over the pages of a ListRuns operation,
@@ -2579,12 +3600,33 @@ func (c *DeviceFarm) ListRuns(input *ListRunsInput) (*ListRunsOutput, error) {
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListRunsPages(input *ListRunsInput, fn func(p *ListRunsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListRunsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListRunsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListRunsPages(input *ListRunsInput, fn func(*ListRunsOutput, bool) bool) error {
+	return c.ListRunsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListRunsPagesWithContext same as ListRunsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListRunsPagesWithContext(ctx aws.Context, input *ListRunsInput, fn func(*ListRunsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListRunsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListRunsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListSamples = "ListSamples"
@@ -2613,6 +3655,7 @@ const opListSamples = "ListSamples"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListSamples
 func (c *DeviceFarm) ListSamplesRequest(input *ListSamplesInput) (req *request.Request, output *ListSamplesOutput) {
 	op := &request.Operation{
 		Name:       opListSamples,
@@ -2630,9 +3673,8 @@ func (c *DeviceFarm) ListSamplesRequest(input *ListSamplesInput) (req *request.R
 		input = &ListSamplesInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListSamplesOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2648,22 +3690,38 @@ func (c *DeviceFarm) ListSamplesRequest(input *ListSamplesInput) (req *request.R
 // API operation ListSamples for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListSamples
 func (c *DeviceFarm) ListSamples(input *ListSamplesInput) (*ListSamplesOutput, error) {
 	req, out := c.ListSamplesRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListSamplesWithContext is the same as ListSamples with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListSamples for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListSamplesWithContext(ctx aws.Context, input *ListSamplesInput, opts ...request.Option) (*ListSamplesOutput, error) {
+	req, out := c.ListSamplesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListSamplesPages iterates over the pages of a ListSamples operation,
@@ -2683,12 +3741,33 @@ func (c *DeviceFarm) ListSamples(input *ListSamplesInput) (*ListSamplesOutput, e
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListSamplesPages(input *ListSamplesInput, fn func(p *ListSamplesOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListSamplesRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListSamplesOutput), lastPage)
-	})
+func (c *DeviceFarm) ListSamplesPages(input *ListSamplesInput, fn func(*ListSamplesOutput, bool) bool) error {
+	return c.ListSamplesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListSamplesPagesWithContext same as ListSamplesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListSamplesPagesWithContext(ctx aws.Context, input *ListSamplesInput, fn func(*ListSamplesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListSamplesRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListSamplesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListSuites = "ListSuites"
@@ -2717,6 +3796,7 @@ const opListSuites = "ListSuites"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListSuites
 func (c *DeviceFarm) ListSuitesRequest(input *ListSuitesInput) (req *request.Request, output *ListSuitesOutput) {
 	op := &request.Operation{
 		Name:       opListSuites,
@@ -2734,9 +3814,8 @@ func (c *DeviceFarm) ListSuitesRequest(input *ListSuitesInput) (req *request.Req
 		input = &ListSuitesInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListSuitesOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2752,22 +3831,38 @@ func (c *DeviceFarm) ListSuitesRequest(input *ListSuitesInput) (req *request.Req
 // API operation ListSuites for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListSuites
 func (c *DeviceFarm) ListSuites(input *ListSuitesInput) (*ListSuitesOutput, error) {
 	req, out := c.ListSuitesRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListSuitesWithContext is the same as ListSuites with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListSuites for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListSuitesWithContext(ctx aws.Context, input *ListSuitesInput, opts ...request.Option) (*ListSuitesOutput, error) {
+	req, out := c.ListSuitesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListSuitesPages iterates over the pages of a ListSuites operation,
@@ -2787,12 +3882,33 @@ func (c *DeviceFarm) ListSuites(input *ListSuitesInput) (*ListSuitesOutput, erro
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListSuitesPages(input *ListSuitesInput, fn func(p *ListSuitesOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListSuitesRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListSuitesOutput), lastPage)
-	})
+func (c *DeviceFarm) ListSuitesPages(input *ListSuitesInput, fn func(*ListSuitesOutput, bool) bool) error {
+	return c.ListSuitesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListSuitesPagesWithContext same as ListSuitesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListSuitesPagesWithContext(ctx aws.Context, input *ListSuitesInput, fn func(*ListSuitesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListSuitesRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListSuitesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListTests = "ListTests"
@@ -2821,6 +3937,7 @@ const opListTests = "ListTests"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListTests
 func (c *DeviceFarm) ListTestsRequest(input *ListTestsInput) (req *request.Request, output *ListTestsOutput) {
 	op := &request.Operation{
 		Name:       opListTests,
@@ -2838,9 +3955,8 @@ func (c *DeviceFarm) ListTestsRequest(input *ListTestsInput) (req *request.Reque
 		input = &ListTestsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListTestsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2856,22 +3972,38 @@ func (c *DeviceFarm) ListTestsRequest(input *ListTestsInput) (req *request.Reque
 // API operation ListTests for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListTests
 func (c *DeviceFarm) ListTests(input *ListTestsInput) (*ListTestsOutput, error) {
 	req, out := c.ListTestsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListTestsWithContext is the same as ListTests with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTests for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListTestsWithContext(ctx aws.Context, input *ListTestsInput, opts ...request.Option) (*ListTestsOutput, error) {
+	req, out := c.ListTestsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListTestsPages iterates over the pages of a ListTests operation,
@@ -2891,12 +4023,33 @@ func (c *DeviceFarm) ListTests(input *ListTestsInput) (*ListTestsOutput, error) 
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListTestsPages(input *ListTestsInput, fn func(p *ListTestsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListTestsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListTestsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListTestsPages(input *ListTestsInput, fn func(*ListTestsOutput, bool) bool) error {
+	return c.ListTestsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTestsPagesWithContext same as ListTestsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListTestsPagesWithContext(ctx aws.Context, input *ListTestsInput, fn func(*ListTestsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListTestsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTestsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListUniqueProblems = "ListUniqueProblems"
@@ -2925,6 +4078,7 @@ const opListUniqueProblems = "ListUniqueProblems"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListUniqueProblems
 func (c *DeviceFarm) ListUniqueProblemsRequest(input *ListUniqueProblemsInput) (req *request.Request, output *ListUniqueProblemsOutput) {
 	op := &request.Operation{
 		Name:       opListUniqueProblems,
@@ -2942,9 +4096,8 @@ func (c *DeviceFarm) ListUniqueProblemsRequest(input *ListUniqueProblemsInput) (
 		input = &ListUniqueProblemsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListUniqueProblemsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2960,22 +4113,38 @@ func (c *DeviceFarm) ListUniqueProblemsRequest(input *ListUniqueProblemsInput) (
 // API operation ListUniqueProblems for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListUniqueProblems
 func (c *DeviceFarm) ListUniqueProblems(input *ListUniqueProblemsInput) (*ListUniqueProblemsOutput, error) {
 	req, out := c.ListUniqueProblemsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListUniqueProblemsWithContext is the same as ListUniqueProblems with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListUniqueProblems for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListUniqueProblemsWithContext(ctx aws.Context, input *ListUniqueProblemsInput, opts ...request.Option) (*ListUniqueProblemsOutput, error) {
+	req, out := c.ListUniqueProblemsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListUniqueProblemsPages iterates over the pages of a ListUniqueProblems operation,
@@ -2995,12 +4164,33 @@ func (c *DeviceFarm) ListUniqueProblems(input *ListUniqueProblemsInput) (*ListUn
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListUniqueProblemsPages(input *ListUniqueProblemsInput, fn func(p *ListUniqueProblemsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListUniqueProblemsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListUniqueProblemsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListUniqueProblemsPages(input *ListUniqueProblemsInput, fn func(*ListUniqueProblemsOutput, bool) bool) error {
+	return c.ListUniqueProblemsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListUniqueProblemsPagesWithContext same as ListUniqueProblemsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListUniqueProblemsPagesWithContext(ctx aws.Context, input *ListUniqueProblemsInput, fn func(*ListUniqueProblemsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListUniqueProblemsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListUniqueProblemsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListUploads = "ListUploads"
@@ -3029,6 +4219,7 @@ const opListUploads = "ListUploads"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListUploads
 func (c *DeviceFarm) ListUploadsRequest(input *ListUploadsInput) (req *request.Request, output *ListUploadsOutput) {
 	op := &request.Operation{
 		Name:       opListUploads,
@@ -3046,9 +4237,8 @@ func (c *DeviceFarm) ListUploadsRequest(input *ListUploadsInput) (req *request.R
 		input = &ListUploadsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ListUploadsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3064,22 +4254,38 @@ func (c *DeviceFarm) ListUploadsRequest(input *ListUploadsInput) (req *request.R
 // API operation ListUploads for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListUploads
 func (c *DeviceFarm) ListUploads(input *ListUploadsInput) (*ListUploadsOutput, error) {
 	req, out := c.ListUploadsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ListUploadsWithContext is the same as ListUploads with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListUploads for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListUploadsWithContext(ctx aws.Context, input *ListUploadsInput, opts ...request.Option) (*ListUploadsOutput, error) {
+	req, out := c.ListUploadsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // ListUploadsPages iterates over the pages of a ListUploads operation,
@@ -3099,12 +4305,33 @@ func (c *DeviceFarm) ListUploads(input *ListUploadsInput) (*ListUploadsOutput, e
 //            return pageNum <= 3
 //        })
 //
-func (c *DeviceFarm) ListUploadsPages(input *ListUploadsInput, fn func(p *ListUploadsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.ListUploadsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*ListUploadsOutput), lastPage)
-	})
+func (c *DeviceFarm) ListUploadsPages(input *ListUploadsInput, fn func(*ListUploadsOutput, bool) bool) error {
+	return c.ListUploadsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListUploadsPagesWithContext same as ListUploadsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListUploadsPagesWithContext(ctx aws.Context, input *ListUploadsInput, fn func(*ListUploadsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.ListUploadsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListUploadsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opPurchaseOffering = "PurchaseOffering"
@@ -3133,6 +4360,7 @@ const opPurchaseOffering = "PurchaseOffering"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/PurchaseOffering
 func (c *DeviceFarm) PurchaseOfferingRequest(input *PurchaseOfferingInput) (req *request.Request, output *PurchaseOfferingOutput) {
 	op := &request.Operation{
 		Name:       opPurchaseOffering,
@@ -3144,9 +4372,8 @@ func (c *DeviceFarm) PurchaseOfferingRequest(input *PurchaseOfferingInput) (req 
 		input = &PurchaseOfferingInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &PurchaseOfferingOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3167,26 +4394,42 @@ func (c *DeviceFarm) PurchaseOfferingRequest(input *PurchaseOfferingInput) (req 
 // API operation PurchaseOffering for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * NotEligibleException
+//   * ErrCodeNotEligibleException "NotEligibleException"
 //   Exception gets thrown when a user is not eligible to perform the specified
 //   transaction.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/PurchaseOffering
 func (c *DeviceFarm) PurchaseOffering(input *PurchaseOfferingInput) (*PurchaseOfferingOutput, error) {
 	req, out := c.PurchaseOfferingRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// PurchaseOfferingWithContext is the same as PurchaseOffering with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PurchaseOffering for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) PurchaseOfferingWithContext(ctx aws.Context, input *PurchaseOfferingInput, opts ...request.Option) (*PurchaseOfferingOutput, error) {
+	req, out := c.PurchaseOfferingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opRenewOffering = "RenewOffering"
@@ -3215,6 +4458,7 @@ const opRenewOffering = "RenewOffering"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/RenewOffering
 func (c *DeviceFarm) RenewOfferingRequest(input *RenewOfferingInput) (req *request.Request, output *RenewOfferingOutput) {
 	op := &request.Operation{
 		Name:       opRenewOffering,
@@ -3226,9 +4470,8 @@ func (c *DeviceFarm) RenewOfferingRequest(input *RenewOfferingInput) (req *reque
 		input = &RenewOfferingInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &RenewOfferingOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3248,26 +4491,42 @@ func (c *DeviceFarm) RenewOfferingRequest(input *RenewOfferingInput) (req *reque
 // API operation RenewOffering for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * NotEligibleException
+//   * ErrCodeNotEligibleException "NotEligibleException"
 //   Exception gets thrown when a user is not eligible to perform the specified
 //   transaction.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/RenewOffering
 func (c *DeviceFarm) RenewOffering(input *RenewOfferingInput) (*RenewOfferingOutput, error) {
 	req, out := c.RenewOfferingRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// RenewOfferingWithContext is the same as RenewOffering with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RenewOffering for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) RenewOfferingWithContext(ctx aws.Context, input *RenewOfferingInput, opts ...request.Option) (*RenewOfferingOutput, error) {
+	req, out := c.RenewOfferingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opScheduleRun = "ScheduleRun"
@@ -3296,6 +4555,7 @@ const opScheduleRun = "ScheduleRun"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ScheduleRun
 func (c *DeviceFarm) ScheduleRunRequest(input *ScheduleRunInput) (req *request.Request, output *ScheduleRunOutput) {
 	op := &request.Operation{
 		Name:       opScheduleRun,
@@ -3307,9 +4567,8 @@ func (c *DeviceFarm) ScheduleRunRequest(input *ScheduleRunInput) (req *request.R
 		input = &ScheduleRunInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ScheduleRunOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3325,25 +4584,41 @@ func (c *DeviceFarm) ScheduleRunRequest(input *ScheduleRunInput) (req *request.R
 // API operation ScheduleRun for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * IdempotencyException
+//   * ErrCodeIdempotencyException "IdempotencyException"
 //   An entity with the same name already exists.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ScheduleRun
 func (c *DeviceFarm) ScheduleRun(input *ScheduleRunInput) (*ScheduleRunOutput, error) {
 	req, out := c.ScheduleRunRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ScheduleRunWithContext is the same as ScheduleRun with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ScheduleRun for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ScheduleRunWithContext(ctx aws.Context, input *ScheduleRunInput, opts ...request.Option) (*ScheduleRunOutput, error) {
+	req, out := c.ScheduleRunRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opStopRemoteAccessSession = "StopRemoteAccessSession"
@@ -3372,6 +4647,7 @@ const opStopRemoteAccessSession = "StopRemoteAccessSession"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRemoteAccessSession
 func (c *DeviceFarm) StopRemoteAccessSessionRequest(input *StopRemoteAccessSessionInput) (req *request.Request, output *StopRemoteAccessSessionOutput) {
 	op := &request.Operation{
 		Name:       opStopRemoteAccessSession,
@@ -3383,9 +4659,8 @@ func (c *DeviceFarm) StopRemoteAccessSessionRequest(input *StopRemoteAccessSessi
 		input = &StopRemoteAccessSessionInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &StopRemoteAccessSessionOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3401,22 +4676,38 @@ func (c *DeviceFarm) StopRemoteAccessSessionRequest(input *StopRemoteAccessSessi
 // API operation StopRemoteAccessSession for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRemoteAccessSession
 func (c *DeviceFarm) StopRemoteAccessSession(input *StopRemoteAccessSessionInput) (*StopRemoteAccessSessionOutput, error) {
 	req, out := c.StopRemoteAccessSessionRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// StopRemoteAccessSessionWithContext is the same as StopRemoteAccessSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopRemoteAccessSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) StopRemoteAccessSessionWithContext(ctx aws.Context, input *StopRemoteAccessSessionInput, opts ...request.Option) (*StopRemoteAccessSessionOutput, error) {
+	req, out := c.StopRemoteAccessSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opStopRun = "StopRun"
@@ -3445,6 +4736,7 @@ const opStopRun = "StopRun"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRun
 func (c *DeviceFarm) StopRunRequest(input *StopRunInput) (req *request.Request, output *StopRunOutput) {
 	op := &request.Operation{
 		Name:       opStopRun,
@@ -3456,9 +4748,8 @@ func (c *DeviceFarm) StopRunRequest(input *StopRunInput) (req *request.Request, 
 		input = &StopRunInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &StopRunOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3479,22 +4770,38 @@ func (c *DeviceFarm) StopRunRequest(input *StopRunInput) (req *request.Request, 
 // API operation StopRun for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRun
 func (c *DeviceFarm) StopRun(input *StopRunInput) (*StopRunOutput, error) {
 	req, out := c.StopRunRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// StopRunWithContext is the same as StopRun with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopRun for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) StopRunWithContext(ctx aws.Context, input *StopRunInput, opts ...request.Option) (*StopRunOutput, error) {
+	req, out := c.StopRunRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateDevicePool = "UpdateDevicePool"
@@ -3523,6 +4830,7 @@ const opUpdateDevicePool = "UpdateDevicePool"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateDevicePool
 func (c *DeviceFarm) UpdateDevicePoolRequest(input *UpdateDevicePoolInput) (req *request.Request, output *UpdateDevicePoolOutput) {
 	op := &request.Operation{
 		Name:       opUpdateDevicePool,
@@ -3534,9 +4842,8 @@ func (c *DeviceFarm) UpdateDevicePoolRequest(input *UpdateDevicePoolInput) (req 
 		input = &UpdateDevicePoolInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &UpdateDevicePoolOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3554,22 +4861,127 @@ func (c *DeviceFarm) UpdateDevicePoolRequest(input *UpdateDevicePoolInput) (req 
 // API operation UpdateDevicePool for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateDevicePool
 func (c *DeviceFarm) UpdateDevicePool(input *UpdateDevicePoolInput) (*UpdateDevicePoolOutput, error) {
 	req, out := c.UpdateDevicePoolRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateDevicePoolWithContext is the same as UpdateDevicePool with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDevicePool for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) UpdateDevicePoolWithContext(ctx aws.Context, input *UpdateDevicePoolInput, opts ...request.Option) (*UpdateDevicePoolOutput, error) {
+	req, out := c.UpdateDevicePoolRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateNetworkProfile = "UpdateNetworkProfile"
+
+// UpdateNetworkProfileRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateNetworkProfile operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See UpdateNetworkProfile for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateNetworkProfile method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateNetworkProfileRequest method.
+//    req, resp := client.UpdateNetworkProfileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateNetworkProfile
+func (c *DeviceFarm) UpdateNetworkProfileRequest(input *UpdateNetworkProfileInput) (req *request.Request, output *UpdateNetworkProfileOutput) {
+	op := &request.Operation{
+		Name:       opUpdateNetworkProfile,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateNetworkProfileInput{}
+	}
+
+	output = &UpdateNetworkProfileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateNetworkProfile API operation for AWS Device Farm.
+//
+// Updates the network profile with specific settings.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation UpdateNetworkProfile for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeArgumentException "ArgumentException"
+//   An invalid argument was specified.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit was exceeded.
+//
+//   * ErrCodeServiceAccountException "ServiceAccountException"
+//   There was a problem with the service account.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateNetworkProfile
+func (c *DeviceFarm) UpdateNetworkProfile(input *UpdateNetworkProfileInput) (*UpdateNetworkProfileOutput, error) {
+	req, out := c.UpdateNetworkProfileRequest(input)
+	return out, req.Send()
+}
+
+// UpdateNetworkProfileWithContext is the same as UpdateNetworkProfile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateNetworkProfile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) UpdateNetworkProfileWithContext(ctx aws.Context, input *UpdateNetworkProfileInput, opts ...request.Option) (*UpdateNetworkProfileOutput, error) {
+	req, out := c.UpdateNetworkProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateProject = "UpdateProject"
@@ -3598,6 +5010,7 @@ const opUpdateProject = "UpdateProject"
 //        fmt.Println(resp)
 //    }
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateProject
 func (c *DeviceFarm) UpdateProjectRequest(input *UpdateProjectInput) (req *request.Request, output *UpdateProjectOutput) {
 	op := &request.Operation{
 		Name:       opUpdateProject,
@@ -3609,9 +5022,8 @@ func (c *DeviceFarm) UpdateProjectRequest(input *UpdateProjectInput) (req *reque
 		input = &UpdateProjectInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &UpdateProjectOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3627,30 +5039,54 @@ func (c *DeviceFarm) UpdateProjectRequest(input *UpdateProjectInput) (req *reque
 // API operation UpdateProject for usage and error information.
 //
 // Returned Error Codes:
-//   * ArgumentException
+//   * ErrCodeArgumentException "ArgumentException"
 //   An invalid argument was specified.
 //
-//   * NotFoundException
+//   * ErrCodeNotFoundException "NotFoundException"
 //   The specified entity was not found.
 //
-//   * LimitExceededException
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //   A limit was exceeded.
 //
-//   * ServiceAccountException
+//   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
 //
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateProject
 func (c *DeviceFarm) UpdateProject(input *UpdateProjectInput) (*UpdateProjectOutput, error) {
 	req, out := c.UpdateProjectRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateProjectWithContext is the same as UpdateProject with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateProject for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) UpdateProjectWithContext(ctx aws.Context, input *UpdateProjectInput, opts ...request.Option) (*UpdateProjectOutput, error) {
+	req, out := c.UpdateProjectRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // A container for account-level settings within AWS Device Farm.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/AccountSettings
 type AccountSettings struct {
 	_ struct{} `type:"structure"`
 
 	// The AWS account number specified in the AccountSettings container.
 	AwsAccountNumber *string `locationName:"awsAccountNumber" min:"2" type:"string"`
+
+	// The default number of minutes (at the account level) a test run will execute
+	// before it times out. Default value is 60 minutes.
+	DefaultJobTimeoutMinutes *int64 `locationName:"defaultJobTimeoutMinutes" type:"integer"`
+
+	// The maximum number of minutes a test run will execute before it times out.
+	MaxJobTimeoutMinutes *int64 `locationName:"maxJobTimeoutMinutes" type:"integer"`
 
 	// Returns the unmetered devices you have purchased or want to purchase.
 	UnmeteredDevices map[string]*int64 `locationName:"unmeteredDevices" type:"map"`
@@ -3676,6 +5112,18 @@ func (s *AccountSettings) SetAwsAccountNumber(v string) *AccountSettings {
 	return s
 }
 
+// SetDefaultJobTimeoutMinutes sets the DefaultJobTimeoutMinutes field's value.
+func (s *AccountSettings) SetDefaultJobTimeoutMinutes(v int64) *AccountSettings {
+	s.DefaultJobTimeoutMinutes = &v
+	return s
+}
+
+// SetMaxJobTimeoutMinutes sets the MaxJobTimeoutMinutes field's value.
+func (s *AccountSettings) SetMaxJobTimeoutMinutes(v int64) *AccountSettings {
+	s.MaxJobTimeoutMinutes = &v
+	return s
+}
+
 // SetUnmeteredDevices sets the UnmeteredDevices field's value.
 func (s *AccountSettings) SetUnmeteredDevices(v map[string]*int64) *AccountSettings {
 	s.UnmeteredDevices = v
@@ -3689,6 +5137,7 @@ func (s *AccountSettings) SetUnmeteredRemoteAccessDevices(v map[string]*int64) *
 }
 
 // Represents the output of a test. Examples of artifacts include logs and screenshots.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Artifact
 type Artifact struct {
 	_ struct{} `type:"structure"`
 
@@ -3801,6 +5250,7 @@ func (s *Artifact) SetUrl(v string) *Artifact {
 // Represents the amount of CPU that an app is using on a physical device.
 //
 // Note that this does not represent system-wide CPU usage.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CPU
 type CPU struct {
 	_ struct{} `type:"structure"`
 
@@ -3844,6 +5294,7 @@ func (s *CPU) SetFrequency(v string) *CPU {
 }
 
 // Represents entity counters.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Counters
 type Counters struct {
 	_ struct{} `type:"structure"`
 
@@ -3922,6 +5373,7 @@ func (s *Counters) SetWarned(v int64) *Counters {
 }
 
 // Represents a request to the create device pool operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateDevicePoolRequest
 type CreateDevicePoolInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4001,6 +5453,7 @@ func (s *CreateDevicePoolInput) SetRules(v []*Rule) *CreateDevicePoolInput {
 }
 
 // Represents the result of a create device pool request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateDevicePoolResult
 type CreateDevicePoolOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4024,9 +5477,190 @@ func (s *CreateDevicePoolOutput) SetDevicePool(v *DevicePool) *CreateDevicePoolO
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateNetworkProfileRequest
+type CreateNetworkProfileInput struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the network profile.
+	Description *string `locationName:"description" type:"string"`
+
+	// The data throughput rate in bits per second, as an integer from 0 to 104857600.
+	DownlinkBandwidthBits *int64 `locationName:"downlinkBandwidthBits" type:"long"`
+
+	// Delay time for all packets to destination in milliseconds as an integer from
+	// 0 to 2000.
+	DownlinkDelayMs *int64 `locationName:"downlinkDelayMs" type:"long"`
+
+	// Time variation in the delay of received packets in milliseconds as an integer
+	// from 0 to 2000.
+	DownlinkJitterMs *int64 `locationName:"downlinkJitterMs" type:"long"`
+
+	// Proportion of received packets that fail to arrive from 0 to 100 percent.
+	DownlinkLossPercent *int64 `locationName:"downlinkLossPercent" type:"integer"`
+
+	// The name you wish to specify for the new network profile.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the project for which you want to create
+	// a network profile.
+	//
+	// ProjectArn is a required field
+	ProjectArn *string `locationName:"projectArn" min:"32" type:"string" required:"true"`
+
+	// The type of network profile you wish to create. Valid values are listed below.
+	Type *string `locationName:"type" type:"string" enum:"NetworkProfileType"`
+
+	// The data throughput rate in bits per second, as an integer from 0 to 104857600.
+	UplinkBandwidthBits *int64 `locationName:"uplinkBandwidthBits" type:"long"`
+
+	// Delay time for all packets to destination in milliseconds as an integer from
+	// 0 to 2000.
+	UplinkDelayMs *int64 `locationName:"uplinkDelayMs" type:"long"`
+
+	// Time variation in the delay of received packets in milliseconds as an integer
+	// from 0 to 2000.
+	UplinkJitterMs *int64 `locationName:"uplinkJitterMs" type:"long"`
+
+	// Proportion of transmitted packets that fail to arrive from 0 to 100 percent.
+	UplinkLossPercent *int64 `locationName:"uplinkLossPercent" type:"integer"`
+}
+
+// String returns the string representation
+func (s CreateNetworkProfileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateNetworkProfileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateNetworkProfileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateNetworkProfileInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.ProjectArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProjectArn"))
+	}
+	if s.ProjectArn != nil && len(*s.ProjectArn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("ProjectArn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateNetworkProfileInput) SetDescription(v string) *CreateNetworkProfileInput {
+	s.Description = &v
+	return s
+}
+
+// SetDownlinkBandwidthBits sets the DownlinkBandwidthBits field's value.
+func (s *CreateNetworkProfileInput) SetDownlinkBandwidthBits(v int64) *CreateNetworkProfileInput {
+	s.DownlinkBandwidthBits = &v
+	return s
+}
+
+// SetDownlinkDelayMs sets the DownlinkDelayMs field's value.
+func (s *CreateNetworkProfileInput) SetDownlinkDelayMs(v int64) *CreateNetworkProfileInput {
+	s.DownlinkDelayMs = &v
+	return s
+}
+
+// SetDownlinkJitterMs sets the DownlinkJitterMs field's value.
+func (s *CreateNetworkProfileInput) SetDownlinkJitterMs(v int64) *CreateNetworkProfileInput {
+	s.DownlinkJitterMs = &v
+	return s
+}
+
+// SetDownlinkLossPercent sets the DownlinkLossPercent field's value.
+func (s *CreateNetworkProfileInput) SetDownlinkLossPercent(v int64) *CreateNetworkProfileInput {
+	s.DownlinkLossPercent = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateNetworkProfileInput) SetName(v string) *CreateNetworkProfileInput {
+	s.Name = &v
+	return s
+}
+
+// SetProjectArn sets the ProjectArn field's value.
+func (s *CreateNetworkProfileInput) SetProjectArn(v string) *CreateNetworkProfileInput {
+	s.ProjectArn = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *CreateNetworkProfileInput) SetType(v string) *CreateNetworkProfileInput {
+	s.Type = &v
+	return s
+}
+
+// SetUplinkBandwidthBits sets the UplinkBandwidthBits field's value.
+func (s *CreateNetworkProfileInput) SetUplinkBandwidthBits(v int64) *CreateNetworkProfileInput {
+	s.UplinkBandwidthBits = &v
+	return s
+}
+
+// SetUplinkDelayMs sets the UplinkDelayMs field's value.
+func (s *CreateNetworkProfileInput) SetUplinkDelayMs(v int64) *CreateNetworkProfileInput {
+	s.UplinkDelayMs = &v
+	return s
+}
+
+// SetUplinkJitterMs sets the UplinkJitterMs field's value.
+func (s *CreateNetworkProfileInput) SetUplinkJitterMs(v int64) *CreateNetworkProfileInput {
+	s.UplinkJitterMs = &v
+	return s
+}
+
+// SetUplinkLossPercent sets the UplinkLossPercent field's value.
+func (s *CreateNetworkProfileInput) SetUplinkLossPercent(v int64) *CreateNetworkProfileInput {
+	s.UplinkLossPercent = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateNetworkProfileResult
+type CreateNetworkProfileOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The network profile that is returned by the create network profile request.
+	NetworkProfile *NetworkProfile `locationName:"networkProfile" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateNetworkProfileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateNetworkProfileOutput) GoString() string {
+	return s.String()
+}
+
+// SetNetworkProfile sets the NetworkProfile field's value.
+func (s *CreateNetworkProfileOutput) SetNetworkProfile(v *NetworkProfile) *CreateNetworkProfileOutput {
+	s.NetworkProfile = v
+	return s
+}
+
 // Represents a request to the create project operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateProjectRequest
 type CreateProjectInput struct {
 	_ struct{} `type:"structure"`
+
+	// Sets the execution timeout value (in minutes) for a project. All test runs
+	// in this project will use the specified execution timeout value unless overridden
+	// when scheduling a run.
+	DefaultJobTimeoutMinutes *int64 `locationName:"defaultJobTimeoutMinutes" type:"integer"`
 
 	// The project's name.
 	//
@@ -4057,6 +5691,12 @@ func (s *CreateProjectInput) Validate() error {
 	return nil
 }
 
+// SetDefaultJobTimeoutMinutes sets the DefaultJobTimeoutMinutes field's value.
+func (s *CreateProjectInput) SetDefaultJobTimeoutMinutes(v int64) *CreateProjectInput {
+	s.DefaultJobTimeoutMinutes = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *CreateProjectInput) SetName(v string) *CreateProjectInput {
 	s.Name = &v
@@ -4064,6 +5704,7 @@ func (s *CreateProjectInput) SetName(v string) *CreateProjectInput {
 }
 
 // Represents the result of a create project request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateProjectResult
 type CreateProjectOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4089,6 +5730,7 @@ func (s *CreateProjectOutput) SetProject(v *Project) *CreateProjectOutput {
 
 // Creates the configuration settings for a remote access session, including
 // the device model and type.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateRemoteAccessSessionConfiguration
 type CreateRemoteAccessSessionConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -4113,6 +5755,7 @@ func (s *CreateRemoteAccessSessionConfiguration) SetBillingMethod(v string) *Cre
 }
 
 // Creates and submits a request to start a remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateRemoteAccessSessionRequest
 type CreateRemoteAccessSessionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4192,6 +5835,7 @@ func (s *CreateRemoteAccessSessionInput) SetProjectArn(v string) *CreateRemoteAc
 }
 
 // Represents the server response from a request to create a remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateRemoteAccessSessionResult
 type CreateRemoteAccessSessionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4217,6 +5861,7 @@ func (s *CreateRemoteAccessSessionOutput) SetRemoteAccessSession(v *RemoteAccess
 }
 
 // Represents a request to the create upload operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateUploadRequest
 type CreateUploadInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4339,6 +5984,7 @@ func (s *CreateUploadInput) SetType(v string) *CreateUploadInput {
 }
 
 // Represents the result of a create upload request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateUploadResult
 type CreateUploadOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4363,6 +6009,7 @@ func (s *CreateUploadOutput) SetUpload(v *Upload) *CreateUploadOutput {
 }
 
 // Represents a request to the delete device pool operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteDevicePoolRequest
 type DeleteDevicePoolInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4406,6 +6053,7 @@ func (s *DeleteDevicePoolInput) SetArn(v string) *DeleteDevicePoolInput {
 }
 
 // Represents the result of a delete device pool request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteDevicePoolResult
 type DeleteDevicePoolOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4420,7 +6068,65 @@ func (s DeleteDevicePoolOutput) GoString() string {
 	return s.String()
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteNetworkProfileRequest
+type DeleteNetworkProfileInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the network profile you want to delete.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteNetworkProfileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteNetworkProfileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteNetworkProfileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteNetworkProfileInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteNetworkProfileInput) SetArn(v string) *DeleteNetworkProfileInput {
+	s.Arn = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteNetworkProfileResult
+type DeleteNetworkProfileOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteNetworkProfileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteNetworkProfileOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a request to the delete project operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteProjectRequest
 type DeleteProjectInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4464,6 +6170,7 @@ func (s *DeleteProjectInput) SetArn(v string) *DeleteProjectInput {
 }
 
 // Represents the result of a delete project request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteProjectResult
 type DeleteProjectOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4479,6 +6186,7 @@ func (s DeleteProjectOutput) GoString() string {
 }
 
 // Represents the request to delete the specified remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteRemoteAccessSessionRequest
 type DeleteRemoteAccessSessionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4523,6 +6231,7 @@ func (s *DeleteRemoteAccessSessionInput) SetArn(v string) *DeleteRemoteAccessSes
 
 // The response from the server when a request is made to delete the remote
 // access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteRemoteAccessSessionResult
 type DeleteRemoteAccessSessionOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4538,6 +6247,7 @@ func (s DeleteRemoteAccessSessionOutput) GoString() string {
 }
 
 // Represents a request to the delete run operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteRunRequest
 type DeleteRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4580,6 +6290,7 @@ func (s *DeleteRunInput) SetArn(v string) *DeleteRunInput {
 }
 
 // Represents the result of a delete run request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteRunResult
 type DeleteRunOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4595,6 +6306,7 @@ func (s DeleteRunOutput) GoString() string {
 }
 
 // Represents a request to the delete upload operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteUploadRequest
 type DeleteUploadInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4638,6 +6350,7 @@ func (s *DeleteUploadInput) SetArn(v string) *DeleteUploadInput {
 }
 
 // Represents the result of a delete upload request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeleteUploadResult
 type DeleteUploadOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -4653,6 +6366,7 @@ func (s DeleteUploadOutput) GoString() string {
 }
 
 // Represents a device type that an app is tested against.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Device
 type Device struct {
 	_ struct{} `type:"structure"`
 
@@ -4717,8 +6431,7 @@ type Device struct {
 	// Specifies whether remote access has been enabled for the specified device.
 	RemoteAccessEnabled *bool `locationName:"remoteAccessEnabled" type:"boolean"`
 
-	// Represents the screen resolution of a device in height and width, expressed
-	// in pixels.
+	// The resolution of the device.
 	Resolution *Resolution `locationName:"resolution" type:"structure"`
 }
 
@@ -4836,6 +6549,7 @@ func (s *Device) SetResolution(v *Resolution) *Device {
 
 // Represents the total (metered or unmetered) minutes used by the resource
 // to run tests. Contains the sum of minutes consumed by all children.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DeviceMinutes
 type DeviceMinutes struct {
 	_ struct{} `type:"structure"`
 
@@ -4881,6 +6595,7 @@ func (s *DeviceMinutes) SetUnmetered(v float64) *DeviceMinutes {
 }
 
 // Represents a collection of device types.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DevicePool
 type DevicePool struct {
 	_ struct{} `type:"structure"`
 
@@ -4948,13 +6663,14 @@ func (s *DevicePool) SetType(v string) *DevicePool {
 }
 
 // Represents a device pool compatibility result.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/DevicePoolCompatibilityResult
 type DevicePoolCompatibilityResult struct {
 	_ struct{} `type:"structure"`
 
 	// Whether the result was compatible with the device pool.
 	Compatible *bool `locationName:"compatible" type:"boolean"`
 
-	// Represents a device type that an app is tested against.
+	// The device (phone or tablet) that you wish to return information about.
 	Device *Device `locationName:"device" type:"structure"`
 
 	// Information about the compatibility.
@@ -4989,7 +6705,34 @@ func (s *DevicePoolCompatibilityResult) SetIncompatibilityMessages(v []*Incompat
 	return s
 }
 
+// Represents configuration information about a test run, such as the execution
+// timeout (in minutes).
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ExecutionConfiguration
+type ExecutionConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The number of minutes a test run will execute before it times out.
+	JobTimeoutMinutes *int64 `locationName:"jobTimeoutMinutes" type:"integer"`
+}
+
+// String returns the string representation
+func (s ExecutionConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecutionConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetJobTimeoutMinutes sets the JobTimeoutMinutes field's value.
+func (s *ExecutionConfiguration) SetJobTimeoutMinutes(v int64) *ExecutionConfiguration {
+	s.JobTimeoutMinutes = &v
+	return s
+}
+
 // Represents the request sent to retrieve the account settings.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetAccountSettingsRequest
 type GetAccountSettingsInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -5006,10 +6749,11 @@ func (s GetAccountSettingsInput) GoString() string {
 
 // Represents the account settings return values from the GetAccountSettings
 // request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetAccountSettingsResult
 type GetAccountSettingsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A container for account-level settings within AWS Device Farm.
+	// The account settings.
 	AccountSettings *AccountSettings `locationName:"accountSettings" type:"structure"`
 }
 
@@ -5030,6 +6774,7 @@ func (s *GetAccountSettingsOutput) SetAccountSettings(v *AccountSettings) *GetAc
 }
 
 // Represents a request to the get device request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDeviceRequest
 type GetDeviceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5072,10 +6817,11 @@ func (s *GetDeviceInput) SetArn(v string) *GetDeviceInput {
 }
 
 // Represents the result of a get device request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDeviceResult
 type GetDeviceOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents a device type that an app is tested against.
+	// An object containing information about the requested device.
 	Device *Device `locationName:"device" type:"structure"`
 }
 
@@ -5096,6 +6842,7 @@ func (s *GetDeviceOutput) SetDevice(v *Device) *GetDeviceOutput {
 }
 
 // Represents a request to the get device pool compatibility operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevicePoolCompatibilityRequest
 type GetDevicePoolCompatibilityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5191,6 +6938,7 @@ func (s *GetDevicePoolCompatibilityInput) SetTestType(v string) *GetDevicePoolCo
 }
 
 // Represents the result of describe device pool compatibility request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevicePoolCompatibilityResult
 type GetDevicePoolCompatibilityOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5224,6 +6972,7 @@ func (s *GetDevicePoolCompatibilityOutput) SetIncompatibleDevices(v []*DevicePoo
 }
 
 // Represents a request to the get device pool operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevicePoolRequest
 type GetDevicePoolInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5266,10 +7015,11 @@ func (s *GetDevicePoolInput) SetArn(v string) *GetDevicePoolInput {
 }
 
 // Represents the result of a get device pool request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetDevicePoolResult
 type GetDevicePoolOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents a collection of device types.
+	// An object containing information about the requested device pool.
 	DevicePool *DevicePool `locationName:"devicePool" type:"structure"`
 }
 
@@ -5290,6 +7040,7 @@ func (s *GetDevicePoolOutput) SetDevicePool(v *DevicePool) *GetDevicePoolOutput 
 }
 
 // Represents a request to the get job operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetJobRequest
 type GetJobInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5332,10 +7083,11 @@ func (s *GetJobInput) SetArn(v string) *GetJobInput {
 }
 
 // Represents the result of a get job request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetJobResult
 type GetJobOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents a device.
+	// An object containing information about the requested job.
 	Job *Job `locationName:"job" type:"structure"`
 }
 
@@ -5355,8 +7107,76 @@ func (s *GetJobOutput) SetJob(v *Job) *GetJobOutput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetNetworkProfileRequest
+type GetNetworkProfileInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the network profile you want to return
+	// information about.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetNetworkProfileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetNetworkProfileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetNetworkProfileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetNetworkProfileInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *GetNetworkProfileInput) SetArn(v string) *GetNetworkProfileInput {
+	s.Arn = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetNetworkProfileResult
+type GetNetworkProfileOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The network profile.
+	NetworkProfile *NetworkProfile `locationName:"networkProfile" type:"structure"`
+}
+
+// String returns the string representation
+func (s GetNetworkProfileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetNetworkProfileOutput) GoString() string {
+	return s.String()
+}
+
+// SetNetworkProfile sets the NetworkProfile field's value.
+func (s *GetNetworkProfileOutput) SetNetworkProfile(v *NetworkProfile) *GetNetworkProfileOutput {
+	s.NetworkProfile = v
+	return s
+}
+
 // Represents the request to retrieve the offering status for the specified
 // customer or account.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetOfferingStatusRequest
 type GetOfferingStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5395,6 +7215,7 @@ func (s *GetOfferingStatusInput) SetNextToken(v string) *GetOfferingStatusInput 
 }
 
 // Returns the status result for a device offering.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetOfferingStatusResult
 type GetOfferingStatusOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5438,6 +7259,7 @@ func (s *GetOfferingStatusOutput) SetNextToken(v string) *GetOfferingStatusOutpu
 }
 
 // Represents a request to the get project operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetProjectRequest
 type GetProjectInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5480,11 +7302,11 @@ func (s *GetProjectInput) SetArn(v string) *GetProjectInput {
 }
 
 // Represents the result of a get project request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetProjectResult
 type GetProjectOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents an operating-system neutral workspace for running and managing
-	// tests.
+	// The project you wish to get information about.
 	Project *Project `locationName:"project" type:"structure"`
 }
 
@@ -5506,6 +7328,7 @@ func (s *GetProjectOutput) SetProject(v *Project) *GetProjectOutput {
 
 // Represents the request to get information about the specified remote access
 // session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRemoteAccessSessionRequest
 type GetRemoteAccessSessionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5550,6 +7373,7 @@ func (s *GetRemoteAccessSessionInput) SetArn(v string) *GetRemoteAccessSessionIn
 
 // Represents the response from the server that lists detailed information about
 // the remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRemoteAccessSessionResult
 type GetRemoteAccessSessionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5574,6 +7398,7 @@ func (s *GetRemoteAccessSessionOutput) SetRemoteAccessSession(v *RemoteAccessSes
 }
 
 // Represents a request to the get run operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRunRequest
 type GetRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5616,10 +7441,11 @@ func (s *GetRunInput) SetArn(v string) *GetRunInput {
 }
 
 // Represents the result of a get run request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetRunResult
 type GetRunOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents an app on a set of devices with a specific test and configuration.
+	// The run you wish to get results from.
 	Run *Run `locationName:"run" type:"structure"`
 }
 
@@ -5640,6 +7466,7 @@ func (s *GetRunOutput) SetRun(v *Run) *GetRunOutput {
 }
 
 // Represents a request to the get suite operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetSuiteRequest
 type GetSuiteInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5682,10 +7509,11 @@ func (s *GetSuiteInput) SetArn(v string) *GetSuiteInput {
 }
 
 // Represents the result of a get suite request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetSuiteResult
 type GetSuiteOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents a collection of one or more tests.
+	// A collection of one or more tests.
 	Suite *Suite `locationName:"suite" type:"structure"`
 }
 
@@ -5706,6 +7534,7 @@ func (s *GetSuiteOutput) SetSuite(v *Suite) *GetSuiteOutput {
 }
 
 // Represents a request to the get test operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetTestRequest
 type GetTestInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5748,10 +7577,11 @@ func (s *GetTestInput) SetArn(v string) *GetTestInput {
 }
 
 // Represents the result of a get test request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetTestResult
 type GetTestOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents a condition that is evaluated.
+	// A test condition that is evaluated.
 	Test *Test `locationName:"test" type:"structure"`
 }
 
@@ -5772,6 +7602,7 @@ func (s *GetTestOutput) SetTest(v *Test) *GetTestOutput {
 }
 
 // Represents a request to the get upload operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetUploadRequest
 type GetUploadInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5814,6 +7645,7 @@ func (s *GetUploadInput) SetArn(v string) *GetUploadInput {
 }
 
 // Represents the result of a get upload request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/GetUploadResult
 type GetUploadOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -5838,6 +7670,7 @@ func (s *GetUploadOutput) SetUpload(v *Upload) *GetUploadOutput {
 }
 
 // Represents information about incompatibility.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/IncompatibilityMessage
 type IncompatibilityMessage struct {
 	_ struct{} `type:"structure"`
 
@@ -5882,6 +7715,7 @@ func (s *IncompatibilityMessage) SetType(v string) *IncompatibilityMessage {
 
 // Represents the request to install an Android application (in .apk format)
 // or an iOS application (in .ipa format) as part of a remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/InstallToRemoteAccessSessionRequest
 type InstallToRemoteAccessSessionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5944,10 +7778,11 @@ func (s *InstallToRemoteAccessSessionInput) SetRemoteAccessSessionArn(v string) 
 
 // Represents the response from the server after AWS Device Farm makes a request
 // to install to a remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/InstallToRemoteAccessSessionResult
 type InstallToRemoteAccessSessionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An app or a set of one or more tests to upload or that have been uploaded.
+	// An app to upload or that has been uploaded.
 	AppUpload *Upload `locationName:"appUpload" type:"structure"`
 }
 
@@ -5968,6 +7803,7 @@ func (s *InstallToRemoteAccessSessionOutput) SetAppUpload(v *Upload) *InstallToR
 }
 
 // Represents a device.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Job
 type Job struct {
 	_ struct{} `type:"structure"`
 
@@ -5980,7 +7816,7 @@ type Job struct {
 	// When the job was created.
 	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
-	// Represents a device type that an app is tested against.
+	// The device (phone or tablet).
 	Device *Device `locationName:"device" type:"structure"`
 
 	// Represents the total (metered or unmetered) minutes used by the job.
@@ -6159,6 +7995,7 @@ func (s *Job) SetType(v string) *Job {
 }
 
 // Represents a request to the list artifacts operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListArtifactsRequest
 type ListArtifactsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6236,6 +8073,7 @@ func (s *ListArtifactsInput) SetType(v string) *ListArtifactsInput {
 }
 
 // Represents the result of a list artifacts operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListArtifactsResult
 type ListArtifactsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6271,6 +8109,7 @@ func (s *ListArtifactsOutput) SetNextToken(v string) *ListArtifactsOutput {
 }
 
 // Represents the result of a list device pools request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListDevicePoolsRequest
 type ListDevicePoolsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6342,6 +8181,7 @@ func (s *ListDevicePoolsInput) SetType(v string) *ListDevicePoolsInput {
 }
 
 // Represents the result of a list device pools request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListDevicePoolsResult
 type ListDevicePoolsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6377,6 +8217,7 @@ func (s *ListDevicePoolsOutput) SetNextToken(v string) *ListDevicePoolsOutput {
 }
 
 // Represents the result of a list devices request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListDevicesRequest
 type ListDevicesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6427,6 +8268,7 @@ func (s *ListDevicesInput) SetNextToken(v string) *ListDevicesInput {
 }
 
 // Represents the result of a list devices operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListDevicesResult
 type ListDevicesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6462,6 +8304,7 @@ func (s *ListDevicesOutput) SetNextToken(v string) *ListDevicesOutput {
 }
 
 // Represents a request to the list jobs operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListJobsRequest
 type ListJobsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6517,6 +8360,7 @@ func (s *ListJobsInput) SetNextToken(v string) *ListJobsInput {
 }
 
 // Represents the result of a list jobs request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListJobsResult
 type ListJobsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6551,7 +8395,108 @@ func (s *ListJobsOutput) SetNextToken(v string) *ListJobsOutput {
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListNetworkProfilesRequest
+type ListNetworkProfilesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the project for which you want to list
+	// network profiles.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+
+	// An identifier that was returned from the previous call to this operation,
+	// which can be used to return the next set of items in the list.
+	NextToken *string `locationName:"nextToken" min:"4" type:"string"`
+
+	// The type of network profile you wish to return information about. Valid values
+	// are listed below.
+	Type *string `locationName:"type" type:"string" enum:"NetworkProfileType"`
+}
+
+// String returns the string representation
+func (s ListNetworkProfilesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNetworkProfilesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListNetworkProfilesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListNetworkProfilesInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 4 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 4))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *ListNetworkProfilesInput) SetArn(v string) *ListNetworkProfilesInput {
+	s.Arn = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListNetworkProfilesInput) SetNextToken(v string) *ListNetworkProfilesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ListNetworkProfilesInput) SetType(v string) *ListNetworkProfilesInput {
+	s.Type = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListNetworkProfilesResult
+type ListNetworkProfilesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of the available network profiles.
+	NetworkProfiles []*NetworkProfile `locationName:"networkProfiles" type:"list"`
+
+	// An identifier that was returned from the previous call to this operation,
+	// which can be used to return the next set of items in the list.
+	NextToken *string `locationName:"nextToken" min:"4" type:"string"`
+}
+
+// String returns the string representation
+func (s ListNetworkProfilesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNetworkProfilesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNetworkProfiles sets the NetworkProfiles field's value.
+func (s *ListNetworkProfilesOutput) SetNetworkProfiles(v []*NetworkProfile) *ListNetworkProfilesOutput {
+	s.NetworkProfiles = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListNetworkProfilesOutput) SetNextToken(v string) *ListNetworkProfilesOutput {
+	s.NextToken = &v
+	return s
+}
+
 // Represents the request to list the offering transaction history.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListOfferingTransactionsRequest
 type ListOfferingTransactionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6590,6 +8535,7 @@ func (s *ListOfferingTransactionsInput) SetNextToken(v string) *ListOfferingTran
 }
 
 // Returns the transaction log of the specified offerings.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListOfferingTransactionsResult
 type ListOfferingTransactionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6625,6 +8571,7 @@ func (s *ListOfferingTransactionsOutput) SetOfferingTransactions(v []*OfferingTr
 }
 
 // Represents the request to list all offerings.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListOfferingsRequest
 type ListOfferingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6663,6 +8610,7 @@ func (s *ListOfferingsInput) SetNextToken(v string) *ListOfferingsInput {
 }
 
 // Represents the return values of the list of offerings.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListOfferingsResult
 type ListOfferingsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6697,6 +8645,7 @@ func (s *ListOfferingsOutput) SetOfferings(v []*Offering) *ListOfferingsOutput {
 }
 
 // Represents a request to the list projects operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListProjectsRequest
 type ListProjectsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6749,6 +8698,7 @@ func (s *ListProjectsInput) SetNextToken(v string) *ListProjectsInput {
 }
 
 // Represents the result of a list projects request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListProjectsResult
 type ListProjectsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6784,6 +8734,7 @@ func (s *ListProjectsOutput) SetProjects(v []*Project) *ListProjectsOutput {
 }
 
 // Represents the request to return information about the remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRemoteAccessSessionsRequest
 type ListRemoteAccessSessionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6841,6 +8792,7 @@ func (s *ListRemoteAccessSessionsInput) SetNextToken(v string) *ListRemoteAccess
 
 // Represents the response from the server after AWS Device Farm makes a request
 // to return information about the remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRemoteAccessSessionsResult
 type ListRemoteAccessSessionsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6876,6 +8828,7 @@ func (s *ListRemoteAccessSessionsOutput) SetRemoteAccessSessions(v []*RemoteAcce
 }
 
 // Represents a request to the list runs operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRunsRequest
 type ListRunsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6932,6 +8885,7 @@ func (s *ListRunsInput) SetNextToken(v string) *ListRunsInput {
 }
 
 // Represents the result of a list runs request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListRunsResult
 type ListRunsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6967,6 +8921,7 @@ func (s *ListRunsOutput) SetRuns(v []*Run) *ListRunsOutput {
 }
 
 // Represents a request to the list samples operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListSamplesRequest
 type ListSamplesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7023,6 +8978,7 @@ func (s *ListSamplesInput) SetNextToken(v string) *ListSamplesInput {
 }
 
 // Represents the result of a list samples request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListSamplesResult
 type ListSamplesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7058,6 +9014,7 @@ func (s *ListSamplesOutput) SetSamples(v []*Sample) *ListSamplesOutput {
 }
 
 // Represents a request to the list suites operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListSuitesRequest
 type ListSuitesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7113,6 +9070,7 @@ func (s *ListSuitesInput) SetNextToken(v string) *ListSuitesInput {
 }
 
 // Represents the result of a list suites request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListSuitesResult
 type ListSuitesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7148,6 +9106,7 @@ func (s *ListSuitesOutput) SetSuites(v []*Suite) *ListSuitesOutput {
 }
 
 // Represents a request to the list tests operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListTestsRequest
 type ListTestsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7203,6 +9162,7 @@ func (s *ListTestsInput) SetNextToken(v string) *ListTestsInput {
 }
 
 // Represents the result of a list tests request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListTestsResult
 type ListTestsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7238,6 +9198,7 @@ func (s *ListTestsOutput) SetTests(v []*Test) *ListTestsOutput {
 }
 
 // Represents a request to the list unique problems operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListUniqueProblemsRequest
 type ListUniqueProblemsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7293,6 +9254,7 @@ func (s *ListUniqueProblemsInput) SetNextToken(v string) *ListUniqueProblemsInpu
 }
 
 // Represents the result of a list unique problems request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListUniqueProblemsResult
 type ListUniqueProblemsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7344,6 +9306,7 @@ func (s *ListUniqueProblemsOutput) SetUniqueProblems(v map[string][]*UniqueProbl
 }
 
 // Represents a request to the list uploads operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListUploadsRequest
 type ListUploadsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7400,6 +9363,7 @@ func (s *ListUploadsInput) SetNextToken(v string) *ListUploadsInput {
 }
 
 // Represents the result of a list uploads request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListUploadsResult
 type ListUploadsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7438,6 +9402,7 @@ func (s *ListUploadsOutput) SetUploads(v []*Upload) *ListUploadsOutput {
 // system degrees (for example 47.6204, -122.3491).
 //
 // Elevation is currently not supported.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Location
 type Location struct {
 	_ struct{} `type:"structure"`
 
@@ -7491,6 +9456,7 @@ func (s *Location) SetLongitude(v float64) *Location {
 }
 
 // A number representing the monetary amount for an offering or transaction.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/MonetaryAmount
 type MonetaryAmount struct {
 	_ struct{} `type:"structure"`
 
@@ -7523,7 +9489,136 @@ func (s *MonetaryAmount) SetCurrencyCode(v string) *MonetaryAmount {
 	return s
 }
 
+// An array of settings that describes characteristics of a network profile.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/NetworkProfile
+type NetworkProfile struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the network profile.
+	Arn *string `locationName:"arn" min:"32" type:"string"`
+
+	// The description of the network profile.
+	Description *string `locationName:"description" type:"string"`
+
+	// The data throughput rate in bits per second, as an integer from 0 to 104857600.
+	DownlinkBandwidthBits *int64 `locationName:"downlinkBandwidthBits" type:"long"`
+
+	// Delay time for all packets to destination in milliseconds as an integer from
+	// 0 to 2000.
+	DownlinkDelayMs *int64 `locationName:"downlinkDelayMs" type:"long"`
+
+	// Time variation in the delay of received packets in milliseconds as an integer
+	// from 0 to 2000.
+	DownlinkJitterMs *int64 `locationName:"downlinkJitterMs" type:"long"`
+
+	// Proportion of received packets that fail to arrive from 0 to 100 percent.
+	DownlinkLossPercent *int64 `locationName:"downlinkLossPercent" type:"integer"`
+
+	// The name of the network profile.
+	Name *string `locationName:"name" type:"string"`
+
+	// The type of network profile. Valid values are listed below.
+	Type *string `locationName:"type" type:"string" enum:"NetworkProfileType"`
+
+	// The data throughput rate in bits per second, as an integer from 0 to 104857600.
+	UplinkBandwidthBits *int64 `locationName:"uplinkBandwidthBits" type:"long"`
+
+	// Delay time for all packets to destination in milliseconds as an integer from
+	// 0 to 2000.
+	UplinkDelayMs *int64 `locationName:"uplinkDelayMs" type:"long"`
+
+	// Time variation in the delay of received packets in milliseconds as an integer
+	// from 0 to 2000.
+	UplinkJitterMs *int64 `locationName:"uplinkJitterMs" type:"long"`
+
+	// Proportion of transmitted packets that fail to arrive from 0 to 100 percent.
+	UplinkLossPercent *int64 `locationName:"uplinkLossPercent" type:"integer"`
+}
+
+// String returns the string representation
+func (s NetworkProfile) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NetworkProfile) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *NetworkProfile) SetArn(v string) *NetworkProfile {
+	s.Arn = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *NetworkProfile) SetDescription(v string) *NetworkProfile {
+	s.Description = &v
+	return s
+}
+
+// SetDownlinkBandwidthBits sets the DownlinkBandwidthBits field's value.
+func (s *NetworkProfile) SetDownlinkBandwidthBits(v int64) *NetworkProfile {
+	s.DownlinkBandwidthBits = &v
+	return s
+}
+
+// SetDownlinkDelayMs sets the DownlinkDelayMs field's value.
+func (s *NetworkProfile) SetDownlinkDelayMs(v int64) *NetworkProfile {
+	s.DownlinkDelayMs = &v
+	return s
+}
+
+// SetDownlinkJitterMs sets the DownlinkJitterMs field's value.
+func (s *NetworkProfile) SetDownlinkJitterMs(v int64) *NetworkProfile {
+	s.DownlinkJitterMs = &v
+	return s
+}
+
+// SetDownlinkLossPercent sets the DownlinkLossPercent field's value.
+func (s *NetworkProfile) SetDownlinkLossPercent(v int64) *NetworkProfile {
+	s.DownlinkLossPercent = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *NetworkProfile) SetName(v string) *NetworkProfile {
+	s.Name = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *NetworkProfile) SetType(v string) *NetworkProfile {
+	s.Type = &v
+	return s
+}
+
+// SetUplinkBandwidthBits sets the UplinkBandwidthBits field's value.
+func (s *NetworkProfile) SetUplinkBandwidthBits(v int64) *NetworkProfile {
+	s.UplinkBandwidthBits = &v
+	return s
+}
+
+// SetUplinkDelayMs sets the UplinkDelayMs field's value.
+func (s *NetworkProfile) SetUplinkDelayMs(v int64) *NetworkProfile {
+	s.UplinkDelayMs = &v
+	return s
+}
+
+// SetUplinkJitterMs sets the UplinkJitterMs field's value.
+func (s *NetworkProfile) SetUplinkJitterMs(v int64) *NetworkProfile {
+	s.UplinkJitterMs = &v
+	return s
+}
+
+// SetUplinkLossPercent sets the UplinkLossPercent field's value.
+func (s *NetworkProfile) SetUplinkLossPercent(v int64) *NetworkProfile {
+	s.UplinkLossPercent = &v
+	return s
+}
+
 // Represents the metadata of a device offering.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Offering
 type Offering struct {
 	_ struct{} `type:"structure"`
 
@@ -7584,6 +9679,7 @@ func (s *Offering) SetType(v string) *Offering {
 }
 
 // The status of the offering.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/OfferingStatus
 type OfferingStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -7635,6 +9731,7 @@ func (s *OfferingStatus) SetType(v string) *OfferingStatus {
 }
 
 // Represents the metadata of an offering transaction.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/OfferingTransaction
 type OfferingTransaction struct {
 	_ struct{} `type:"structure"`
 
@@ -7686,6 +9783,7 @@ func (s *OfferingTransaction) SetTransactionId(v string) *OfferingTransaction {
 }
 
 // Represents a specific warning or failure.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Problem
 type Problem struct {
 	_ struct{} `type:"structure"`
 
@@ -7780,6 +9878,7 @@ func (s *Problem) SetTest(v *ProblemDetail) *Problem {
 }
 
 // Information about a problem detail.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ProblemDetail
 type ProblemDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -7814,6 +9913,7 @@ func (s *ProblemDetail) SetName(v string) *ProblemDetail {
 
 // Represents an operating-system neutral workspace for running and managing
 // tests.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Project
 type Project struct {
 	_ struct{} `type:"structure"`
 
@@ -7822,6 +9922,10 @@ type Project struct {
 
 	// When the project was created.
 	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
+
+	// The default number of minutes (at the project level) a test run will execute
+	// before it times out. Default value is 60 minutes.
+	DefaultJobTimeoutMinutes *int64 `locationName:"defaultJobTimeoutMinutes" type:"integer"`
 
 	// The project's name.
 	Name *string `locationName:"name" type:"string"`
@@ -7849,6 +9953,12 @@ func (s *Project) SetCreated(v time.Time) *Project {
 	return s
 }
 
+// SetDefaultJobTimeoutMinutes sets the DefaultJobTimeoutMinutes field's value.
+func (s *Project) SetDefaultJobTimeoutMinutes(v int64) *Project {
+	s.DefaultJobTimeoutMinutes = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *Project) SetName(v string) *Project {
 	s.Name = &v
@@ -7856,6 +9966,7 @@ func (s *Project) SetName(v string) *Project {
 }
 
 // Represents a request for a purchase offering.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/PurchaseOfferingRequest
 type PurchaseOfferingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7902,6 +10013,7 @@ func (s *PurchaseOfferingInput) SetQuantity(v int64) *PurchaseOfferingInput {
 }
 
 // The result of the purchase offering (e.g., success or failure).
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/PurchaseOfferingResult
 type PurchaseOfferingOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7927,6 +10039,7 @@ func (s *PurchaseOfferingOutput) SetOfferingTransaction(v *OfferingTransaction) 
 
 // Represents the set of radios and their states on a device. Examples of radios
 // include Wi-Fi, GPS, Bluetooth, and NFC.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Radios
 type Radios struct {
 	_ struct{} `type:"structure"`
 
@@ -7978,6 +10091,7 @@ func (s *Radios) SetWifi(v bool) *Radios {
 }
 
 // Specifies whether charges for devices will be recurring.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/RecurringCharge
 type RecurringCharge struct {
 	_ struct{} `type:"structure"`
 
@@ -8011,6 +10125,7 @@ func (s *RecurringCharge) SetFrequency(v string) *RecurringCharge {
 }
 
 // Represents information about the remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/RemoteAccessSession
 type RemoteAccessSession struct {
 	_ struct{} `type:"structure"`
 
@@ -8025,11 +10140,11 @@ type RemoteAccessSession struct {
 	// The date and time the remote access session was created.
 	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"unix"`
 
-	// Represents a device type that an app is tested against.
+	// The device (phone or tablet) used in the remote access session.
 	Device *Device `locationName:"device" type:"structure"`
 
-	// Represents the total (metered or unmetered) minutes used by the resource
-	// to run tests. Contains the sum of minutes consumed by all children.
+	// The number of minutes a device is used in a remote access sesssion (including
+	// setup and teardown minutes).
 	DeviceMinutes *DeviceMinutes `locationName:"deviceMinutes" type:"structure"`
 
 	// The endpoint for the remote access sesssion.
@@ -8169,6 +10284,7 @@ func (s *RemoteAccessSession) SetStopped(v time.Time) *RemoteAccessSession {
 }
 
 // A request representing an offering renewal.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/RenewOfferingRequest
 type RenewOfferingInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8215,6 +10331,7 @@ func (s *RenewOfferingInput) SetQuantity(v int64) *RenewOfferingInput {
 }
 
 // The result of a renewal offering.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/RenewOfferingResult
 type RenewOfferingOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8240,6 +10357,7 @@ func (s *RenewOfferingOutput) SetOfferingTransaction(v *OfferingTransaction) *Re
 
 // Represents the screen resolution of a device in height and width, expressed
 // in pixels.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Resolution
 type Resolution struct {
 	_ struct{} `type:"structure"`
 
@@ -8273,6 +10391,7 @@ func (s *Resolution) SetWidth(v int64) *Resolution {
 }
 
 // Represents a condition for a device pool.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Rule
 type Rule struct {
 	_ struct{} `type:"structure"`
 
@@ -8335,6 +10454,7 @@ func (s *Rule) SetValue(v string) *Rule {
 }
 
 // Represents an app on a set of devices with a specific test and configuration.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Run
 type Run struct {
 	_ struct{} `type:"structure"`
 
@@ -8362,6 +10482,9 @@ type Run struct {
 
 	// The run's name.
 	Name *string `locationName:"name" type:"string"`
+
+	// The network profile being used for a test run.
+	NetworkProfile *NetworkProfile `locationName:"networkProfile" type:"structure"`
 
 	// The run's platform.
 	//
@@ -8517,6 +10640,12 @@ func (s *Run) SetName(v string) *Run {
 	return s
 }
 
+// SetNetworkProfile sets the NetworkProfile field's value.
+func (s *Run) SetNetworkProfile(v *NetworkProfile) *Run {
+	s.NetworkProfile = v
+	return s
+}
+
 // SetPlatform sets the Platform field's value.
 func (s *Run) SetPlatform(v string) *Run {
 	s.Platform = &v
@@ -8560,6 +10689,7 @@ func (s *Run) SetType(v string) *Run {
 }
 
 // Represents a sample of performance data.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Sample
 type Sample struct {
 	_ struct{} `type:"structure"`
 
@@ -8645,6 +10775,7 @@ func (s *Sample) SetUrl(v string) *Sample {
 
 // Represents the settings for a run. Includes things like location, radio states,
 // auxiliary apps, and network profiles.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ScheduleRunConfiguration
 type ScheduleRunConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -8747,6 +10878,7 @@ func (s *ScheduleRunConfiguration) SetRadios(v *Radios) *ScheduleRunConfiguratio
 }
 
 // Represents a request to the schedule run operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ScheduleRunRequest
 type ScheduleRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8760,6 +10892,10 @@ type ScheduleRunInput struct {
 	//
 	// DevicePoolArn is a required field
 	DevicePoolArn *string `locationName:"devicePoolArn" min:"32" type:"string" required:"true"`
+
+	// Specifies configuration information about a test run, such as the execution
+	// timeout (in minutes).
+	ExecutionConfiguration *ExecutionConfiguration `locationName:"executionConfiguration" type:"structure"`
 
 	// The name for the run to be scheduled.
 	Name *string `locationName:"name" type:"string"`
@@ -8841,6 +10977,12 @@ func (s *ScheduleRunInput) SetDevicePoolArn(v string) *ScheduleRunInput {
 	return s
 }
 
+// SetExecutionConfiguration sets the ExecutionConfiguration field's value.
+func (s *ScheduleRunInput) SetExecutionConfiguration(v *ExecutionConfiguration) *ScheduleRunInput {
+	s.ExecutionConfiguration = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *ScheduleRunInput) SetName(v string) *ScheduleRunInput {
 	s.Name = &v
@@ -8860,6 +11002,7 @@ func (s *ScheduleRunInput) SetTest(v *ScheduleRunTest) *ScheduleRunInput {
 }
 
 // Represents the result of a schedule run request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ScheduleRunResult
 type ScheduleRunOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -8884,6 +11027,7 @@ func (s *ScheduleRunOutput) SetRun(v *Run) *ScheduleRunOutput {
 }
 
 // Represents additional test settings.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ScheduleRunTest
 type ScheduleRunTest struct {
 	_ struct{} `type:"structure"`
 
@@ -8985,6 +11129,7 @@ func (s *ScheduleRunTest) SetType(v string) *ScheduleRunTest {
 }
 
 // Represents the request to stop the remote access session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRemoteAccessSessionRequest
 type StopRemoteAccessSessionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9028,6 +11173,7 @@ func (s *StopRemoteAccessSessionInput) SetArn(v string) *StopRemoteAccessSession
 
 // Represents the response from the server that describes the remote access
 // session when AWS Device Farm stops the session.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRemoteAccessSessionResult
 type StopRemoteAccessSessionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9053,6 +11199,7 @@ func (s *StopRemoteAccessSessionOutput) SetRemoteAccessSession(v *RemoteAccessSe
 }
 
 // Represents the request to stop a specific run.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRunRequest
 type StopRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9096,10 +11243,11 @@ func (s *StopRunInput) SetArn(v string) *StopRunInput {
 }
 
 // Represents the results of your stop run attempt.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/StopRunResult
 type StopRunOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents an app on a set of devices with a specific test and configuration.
+	// The run that was stopped.
 	Run *Run `locationName:"run" type:"structure"`
 }
 
@@ -9120,6 +11268,7 @@ func (s *StopRunOutput) SetRun(v *Run) *StopRunOutput {
 }
 
 // Represents a collection of one or more tests.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Suite
 type Suite struct {
 	_ struct{} `type:"structure"`
 
@@ -9302,6 +11451,7 @@ func (s *Suite) SetType(v string) *Suite {
 }
 
 // Represents a condition that is evaluated.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Test
 type Test struct {
 	_ struct{} `type:"structure"`
 
@@ -9484,6 +11634,7 @@ func (s *Test) SetType(v string) *Test {
 }
 
 // A collection of one or more problems, grouped by their result.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UniqueProblem
 type UniqueProblem struct {
 	_ struct{} `type:"structure"`
 
@@ -9517,6 +11668,7 @@ func (s *UniqueProblem) SetProblems(v []*Problem) *UniqueProblem {
 }
 
 // Represents a request to the update device pool operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateDevicePoolRequest
 type UpdateDevicePoolInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9589,10 +11741,11 @@ func (s *UpdateDevicePoolInput) SetRules(v []*Rule) *UpdateDevicePoolInput {
 }
 
 // Represents the result of an update device pool request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateDevicePoolResult
 type UpdateDevicePoolOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents a collection of device types.
+	// The device pool you just updated.
 	DevicePool *DevicePool `locationName:"devicePool" type:"structure"`
 }
 
@@ -9612,7 +11765,179 @@ func (s *UpdateDevicePoolOutput) SetDevicePool(v *DevicePool) *UpdateDevicePoolO
 	return s
 }
 
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateNetworkProfileRequest
+type UpdateNetworkProfileInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the project that you wish to update network
+	// profile settings.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+
+	// The descriptoin of the network profile about which you are returning information.
+	Description *string `locationName:"description" type:"string"`
+
+	// The data throughput rate in bits per second, as an integer from 0 to 104857600.
+	DownlinkBandwidthBits *int64 `locationName:"downlinkBandwidthBits" type:"long"`
+
+	// Delay time for all packets to destination in milliseconds as an integer from
+	// 0 to 2000.
+	DownlinkDelayMs *int64 `locationName:"downlinkDelayMs" type:"long"`
+
+	// Time variation in the delay of received packets in milliseconds as an integer
+	// from 0 to 2000.
+	DownlinkJitterMs *int64 `locationName:"downlinkJitterMs" type:"long"`
+
+	// Proportion of received packets that fail to arrive from 0 to 100 percent.
+	DownlinkLossPercent *int64 `locationName:"downlinkLossPercent" type:"integer"`
+
+	// The name of the network profile about which you are returning information.
+	Name *string `locationName:"name" type:"string"`
+
+	// The type of network profile you wish to return information about. Valid values
+	// are listed below.
+	Type *string `locationName:"type" type:"string" enum:"NetworkProfileType"`
+
+	// The data throughput rate in bits per second, as an integer from 0 to 104857600.
+	UplinkBandwidthBits *int64 `locationName:"uplinkBandwidthBits" type:"long"`
+
+	// Delay time for all packets to destination in milliseconds as an integer from
+	// 0 to 2000.
+	UplinkDelayMs *int64 `locationName:"uplinkDelayMs" type:"long"`
+
+	// Time variation in the delay of received packets in milliseconds as an integer
+	// from 0 to 2000.
+	UplinkJitterMs *int64 `locationName:"uplinkJitterMs" type:"long"`
+
+	// Proportion of transmitted packets that fail to arrive from 0 to 100 percent.
+	UplinkLossPercent *int64 `locationName:"uplinkLossPercent" type:"integer"`
+}
+
+// String returns the string representation
+func (s UpdateNetworkProfileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateNetworkProfileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateNetworkProfileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateNetworkProfileInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateNetworkProfileInput) SetArn(v string) *UpdateNetworkProfileInput {
+	s.Arn = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateNetworkProfileInput) SetDescription(v string) *UpdateNetworkProfileInput {
+	s.Description = &v
+	return s
+}
+
+// SetDownlinkBandwidthBits sets the DownlinkBandwidthBits field's value.
+func (s *UpdateNetworkProfileInput) SetDownlinkBandwidthBits(v int64) *UpdateNetworkProfileInput {
+	s.DownlinkBandwidthBits = &v
+	return s
+}
+
+// SetDownlinkDelayMs sets the DownlinkDelayMs field's value.
+func (s *UpdateNetworkProfileInput) SetDownlinkDelayMs(v int64) *UpdateNetworkProfileInput {
+	s.DownlinkDelayMs = &v
+	return s
+}
+
+// SetDownlinkJitterMs sets the DownlinkJitterMs field's value.
+func (s *UpdateNetworkProfileInput) SetDownlinkJitterMs(v int64) *UpdateNetworkProfileInput {
+	s.DownlinkJitterMs = &v
+	return s
+}
+
+// SetDownlinkLossPercent sets the DownlinkLossPercent field's value.
+func (s *UpdateNetworkProfileInput) SetDownlinkLossPercent(v int64) *UpdateNetworkProfileInput {
+	s.DownlinkLossPercent = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateNetworkProfileInput) SetName(v string) *UpdateNetworkProfileInput {
+	s.Name = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *UpdateNetworkProfileInput) SetType(v string) *UpdateNetworkProfileInput {
+	s.Type = &v
+	return s
+}
+
+// SetUplinkBandwidthBits sets the UplinkBandwidthBits field's value.
+func (s *UpdateNetworkProfileInput) SetUplinkBandwidthBits(v int64) *UpdateNetworkProfileInput {
+	s.UplinkBandwidthBits = &v
+	return s
+}
+
+// SetUplinkDelayMs sets the UplinkDelayMs field's value.
+func (s *UpdateNetworkProfileInput) SetUplinkDelayMs(v int64) *UpdateNetworkProfileInput {
+	s.UplinkDelayMs = &v
+	return s
+}
+
+// SetUplinkJitterMs sets the UplinkJitterMs field's value.
+func (s *UpdateNetworkProfileInput) SetUplinkJitterMs(v int64) *UpdateNetworkProfileInput {
+	s.UplinkJitterMs = &v
+	return s
+}
+
+// SetUplinkLossPercent sets the UplinkLossPercent field's value.
+func (s *UpdateNetworkProfileInput) SetUplinkLossPercent(v int64) *UpdateNetworkProfileInput {
+	s.UplinkLossPercent = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateNetworkProfileResult
+type UpdateNetworkProfileOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of the available network profiles.
+	NetworkProfile *NetworkProfile `locationName:"networkProfile" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateNetworkProfileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateNetworkProfileOutput) GoString() string {
+	return s.String()
+}
+
+// SetNetworkProfile sets the NetworkProfile field's value.
+func (s *UpdateNetworkProfileOutput) SetNetworkProfile(v *NetworkProfile) *UpdateNetworkProfileOutput {
+	s.NetworkProfile = v
+	return s
+}
+
 // Represents a request to the update project operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateProjectRequest
 type UpdateProjectInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9620,6 +11945,10 @@ type UpdateProjectInput struct {
 	//
 	// Arn is a required field
 	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
+
+	// The number of minutes a test run in the project will execute before it times
+	// out.
+	DefaultJobTimeoutMinutes *int64 `locationName:"defaultJobTimeoutMinutes" type:"integer"`
 
 	// A string representing the new name of the project that you are updating.
 	Name *string `locationName:"name" type:"string"`
@@ -9657,6 +11986,12 @@ func (s *UpdateProjectInput) SetArn(v string) *UpdateProjectInput {
 	return s
 }
 
+// SetDefaultJobTimeoutMinutes sets the DefaultJobTimeoutMinutes field's value.
+func (s *UpdateProjectInput) SetDefaultJobTimeoutMinutes(v int64) *UpdateProjectInput {
+	s.DefaultJobTimeoutMinutes = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *UpdateProjectInput) SetName(v string) *UpdateProjectInput {
 	s.Name = &v
@@ -9664,11 +11999,11 @@ func (s *UpdateProjectInput) SetName(v string) *UpdateProjectInput {
 }
 
 // Represents the result of an update project request.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UpdateProjectResult
 type UpdateProjectOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Represents an operating-system neutral workspace for running and managing
-	// tests.
+	// The project you wish to update.
 	Project *Project `locationName:"project" type:"structure"`
 }
 
@@ -9689,6 +12024,7 @@ func (s *UpdateProjectOutput) SetProject(v *Project) *UpdateProjectOutput {
 }
 
 // An app or a set of one or more tests to upload or that have been uploaded.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/Upload
 type Upload struct {
 	_ struct{} `type:"structure"`
 
@@ -10026,6 +12362,14 @@ const (
 
 	// ExecutionStatusStopping is a ExecutionStatus enum value
 	ExecutionStatusStopping = "STOPPING"
+)
+
+const (
+	// NetworkProfileTypeCurated is a NetworkProfileType enum value
+	NetworkProfileTypeCurated = "CURATED"
+
+	// NetworkProfileTypePrivate is a NetworkProfileType enum value
+	NetworkProfileTypePrivate = "PRIVATE"
 )
 
 const (

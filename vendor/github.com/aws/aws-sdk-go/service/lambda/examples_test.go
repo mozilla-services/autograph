@@ -16,11 +16,7 @@ var _ time.Duration
 var _ bytes.Buffer
 
 func ExampleLambda_AddPermission() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -48,11 +44,7 @@ func ExampleLambda_AddPermission() {
 }
 
 func ExampleLambda_CreateAlias() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -76,20 +68,17 @@ func ExampleLambda_CreateAlias() {
 }
 
 func ExampleLambda_CreateEventSourceMapping() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
 	params := &lambda.CreateEventSourceMappingInput{
-		EventSourceArn:   aws.String("Arn"),                 // Required
-		FunctionName:     aws.String("FunctionName"),        // Required
-		StartingPosition: aws.String("EventSourcePosition"), // Required
-		BatchSize:        aws.Int64(1),
-		Enabled:          aws.Bool(true),
+		EventSourceArn:            aws.String("Arn"),                 // Required
+		FunctionName:              aws.String("FunctionName"),        // Required
+		StartingPosition:          aws.String("EventSourcePosition"), // Required
+		BatchSize:                 aws.Int64(1),
+		Enabled:                   aws.Bool(true),
+		StartingPositionTimestamp: aws.Time(time.Now()),
 	}
 	resp, err := svc.CreateEventSourceMapping(params)
 
@@ -105,11 +94,7 @@ func ExampleLambda_CreateEventSourceMapping() {
 }
 
 func ExampleLambda_CreateFunction() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -124,7 +109,10 @@ func ExampleLambda_CreateFunction() {
 		Handler:      aws.String("Handler"),      // Required
 		Role:         aws.String("RoleArn"),      // Required
 		Runtime:      aws.String("Runtime"),      // Required
-		Description:  aws.String("Description"),
+		DeadLetterConfig: &lambda.DeadLetterConfig{
+			TargetArn: aws.String("ResourceArn"),
+		},
+		Description: aws.String("Description"),
 		Environment: &lambda.Environment{
 			Variables: map[string]*string{
 				"Key": aws.String("EnvironmentVariableValue"), // Required
@@ -160,11 +148,7 @@ func ExampleLambda_CreateFunction() {
 }
 
 func ExampleLambda_DeleteAlias() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -186,11 +170,7 @@ func ExampleLambda_DeleteAlias() {
 }
 
 func ExampleLambda_DeleteEventSourceMapping() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -211,11 +191,7 @@ func ExampleLambda_DeleteEventSourceMapping() {
 }
 
 func ExampleLambda_DeleteFunction() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -236,12 +212,27 @@ func ExampleLambda_DeleteFunction() {
 	fmt.Println(resp)
 }
 
-func ExampleLambda_GetAlias() {
-	sess, err := session.NewSession()
+func ExampleLambda_GetAccountSettings() {
+	sess := session.Must(session.NewSession())
+
+	svc := lambda.New(sess)
+
+	var params *lambda.GetAccountSettingsInput
+	resp, err := svc.GetAccountSettings(params)
+
 	if err != nil {
-		fmt.Println("failed to create session,", err)
+		// Print the error, cast err to awserr.Error to get the Code and
+		// Message from an error.
+		fmt.Println(err.Error())
 		return
 	}
+
+	// Pretty-print the response data.
+	fmt.Println(resp)
+}
+
+func ExampleLambda_GetAlias() {
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -263,11 +254,7 @@ func ExampleLambda_GetAlias() {
 }
 
 func ExampleLambda_GetEventSourceMapping() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -288,11 +275,7 @@ func ExampleLambda_GetEventSourceMapping() {
 }
 
 func ExampleLambda_GetFunction() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -314,11 +297,7 @@ func ExampleLambda_GetFunction() {
 }
 
 func ExampleLambda_GetFunctionConfiguration() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -340,11 +319,7 @@ func ExampleLambda_GetFunctionConfiguration() {
 }
 
 func ExampleLambda_GetPolicy() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -366,11 +341,7 @@ func ExampleLambda_GetPolicy() {
 }
 
 func ExampleLambda_Invoke() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -396,11 +367,7 @@ func ExampleLambda_Invoke() {
 }
 
 func ExampleLambda_InvokeAsync() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -422,11 +389,7 @@ func ExampleLambda_InvokeAsync() {
 }
 
 func ExampleLambda_ListAliases() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -450,11 +413,7 @@ func ExampleLambda_ListAliases() {
 }
 
 func ExampleLambda_ListEventSourceMappings() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -478,11 +437,7 @@ func ExampleLambda_ListEventSourceMappings() {
 }
 
 func ExampleLambda_ListFunctions() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -504,11 +459,7 @@ func ExampleLambda_ListFunctions() {
 }
 
 func ExampleLambda_ListVersionsByFunction() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -531,11 +482,7 @@ func ExampleLambda_ListVersionsByFunction() {
 }
 
 func ExampleLambda_PublishVersion() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -558,11 +505,7 @@ func ExampleLambda_PublishVersion() {
 }
 
 func ExampleLambda_RemovePermission() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -585,11 +528,7 @@ func ExampleLambda_RemovePermission() {
 }
 
 func ExampleLambda_UpdateAlias() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -613,11 +552,7 @@ func ExampleLambda_UpdateAlias() {
 }
 
 func ExampleLambda_UpdateEventSourceMapping() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -641,11 +576,7 @@ func ExampleLambda_UpdateEventSourceMapping() {
 }
 
 func ExampleLambda_UpdateFunctionCode() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
@@ -671,17 +602,16 @@ func ExampleLambda_UpdateFunctionCode() {
 }
 
 func ExampleLambda_UpdateFunctionConfiguration() {
-	sess, err := session.NewSession()
-	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
-	}
+	sess := session.Must(session.NewSession())
 
 	svc := lambda.New(sess)
 
 	params := &lambda.UpdateFunctionConfigurationInput{
 		FunctionName: aws.String("FunctionName"), // Required
-		Description:  aws.String("Description"),
+		DeadLetterConfig: &lambda.DeadLetterConfig{
+			TargetArn: aws.String("ResourceArn"),
+		},
+		Description: aws.String("Description"),
 		Environment: &lambda.Environment{
 			Variables: map[string]*string{
 				"Key": aws.String("EnvironmentVariableValue"), // Required

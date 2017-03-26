@@ -6,6 +6,7 @@ package apigateway
 import (
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/private/protocol"
@@ -37,7 +38,6 @@ const opCreateApiKey = "CreateApiKey"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateApiKeyRequest(input *CreateApiKeyInput) (req *request.Request, output *ApiKey) {
 	op := &request.Operation{
 		Name:       opCreateApiKey,
@@ -49,9 +49,8 @@ func (c *APIGateway) CreateApiKeyRequest(input *CreateApiKeyInput) (req *request
 		input = &CreateApiKeyInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ApiKey{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -69,28 +68,37 @@ func (c *APIGateway) CreateApiKeyRequest(input *CreateApiKeyInput) (req *request
 // API operation CreateApiKey for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) CreateApiKey(input *CreateApiKeyInput) (*ApiKey, error) {
 	req, out := c.CreateApiKeyRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateApiKeyWithContext is the same as CreateApiKey with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateApiKey for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateApiKeyWithContext(ctx aws.Context, input *CreateApiKeyInput, opts ...request.Option) (*ApiKey, error) {
+	req, out := c.CreateApiKeyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateAuthorizer = "CreateAuthorizer"
@@ -118,7 +126,6 @@ const opCreateAuthorizer = "CreateAuthorizer"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateAuthorizerRequest(input *CreateAuthorizerInput) (req *request.Request, output *Authorizer) {
 	op := &request.Operation{
 		Name:       opCreateAuthorizer,
@@ -130,9 +137,8 @@ func (c *APIGateway) CreateAuthorizerRequest(input *CreateAuthorizerInput) (req 
 		input = &CreateAuthorizerInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Authorizer{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -150,25 +156,35 @@ func (c *APIGateway) CreateAuthorizerRequest(input *CreateAuthorizerInput) (req 
 // API operation CreateAuthorizer for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) CreateAuthorizer(input *CreateAuthorizerInput) (*Authorizer, error) {
 	req, out := c.CreateAuthorizerRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateAuthorizerWithContext is the same as CreateAuthorizer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateAuthorizer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateAuthorizerWithContext(ctx aws.Context, input *CreateAuthorizerInput, opts ...request.Option) (*Authorizer, error) {
+	req, out := c.CreateAuthorizerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateBasePathMapping = "CreateBasePathMapping"
@@ -196,7 +212,6 @@ const opCreateBasePathMapping = "CreateBasePathMapping"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateBasePathMappingRequest(input *CreateBasePathMappingInput) (req *request.Request, output *BasePathMapping) {
 	op := &request.Operation{
 		Name:       opCreateBasePathMapping,
@@ -208,9 +223,8 @@ func (c *APIGateway) CreateBasePathMappingRequest(input *CreateBasePathMappingIn
 		input = &CreateBasePathMappingInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &BasePathMapping{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -226,25 +240,35 @@ func (c *APIGateway) CreateBasePathMappingRequest(input *CreateBasePathMappingIn
 // API operation CreateBasePathMapping for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) CreateBasePathMapping(input *CreateBasePathMappingInput) (*BasePathMapping, error) {
 	req, out := c.CreateBasePathMappingRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateBasePathMappingWithContext is the same as CreateBasePathMapping with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateBasePathMapping for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateBasePathMappingWithContext(ctx aws.Context, input *CreateBasePathMappingInput, opts ...request.Option) (*BasePathMapping, error) {
+	req, out := c.CreateBasePathMappingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateDeployment = "CreateDeployment"
@@ -272,7 +296,6 @@ const opCreateDeployment = "CreateDeployment"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateDeploymentRequest(input *CreateDeploymentInput) (req *request.Request, output *Deployment) {
 	op := &request.Operation{
 		Name:       opCreateDeployment,
@@ -284,9 +307,8 @@ func (c *APIGateway) CreateDeploymentRequest(input *CreateDeploymentInput) (req 
 		input = &CreateDeploymentInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Deployment{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -303,31 +325,207 @@ func (c *APIGateway) CreateDeploymentRequest(input *CreateDeploymentInput) (req 
 // API operation CreateDeployment for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ServiceUnavailableException
-
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //
 func (c *APIGateway) CreateDeployment(input *CreateDeploymentInput) (*Deployment, error) {
 	req, out := c.CreateDeploymentRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateDeploymentWithContext is the same as CreateDeployment with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDeployment for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateDeploymentWithContext(ctx aws.Context, input *CreateDeploymentInput, opts ...request.Option) (*Deployment, error) {
+	req, out := c.CreateDeploymentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateDocumentationPart = "CreateDocumentationPart"
+
+// CreateDocumentationPartRequest generates a "aws/request.Request" representing the
+// client's request for the CreateDocumentationPart operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See CreateDocumentationPart for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateDocumentationPart method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateDocumentationPartRequest method.
+//    req, resp := client.CreateDocumentationPartRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) CreateDocumentationPartRequest(input *CreateDocumentationPartInput) (req *request.Request, output *DocumentationPart) {
+	op := &request.Operation{
+		Name:       opCreateDocumentationPart,
+		HTTPMethod: "POST",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/parts",
+	}
+
+	if input == nil {
+		input = &CreateDocumentationPartInput{}
+	}
+
+	output = &DocumentationPart{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateDocumentationPart API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation CreateDocumentationPart for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) CreateDocumentationPart(input *CreateDocumentationPartInput) (*DocumentationPart, error) {
+	req, out := c.CreateDocumentationPartRequest(input)
+	return out, req.Send()
+}
+
+// CreateDocumentationPartWithContext is the same as CreateDocumentationPart with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDocumentationPart for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateDocumentationPartWithContext(ctx aws.Context, input *CreateDocumentationPartInput, opts ...request.Option) (*DocumentationPart, error) {
+	req, out := c.CreateDocumentationPartRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateDocumentationVersion = "CreateDocumentationVersion"
+
+// CreateDocumentationVersionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateDocumentationVersion operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See CreateDocumentationVersion for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateDocumentationVersion method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateDocumentationVersionRequest method.
+//    req, resp := client.CreateDocumentationVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) CreateDocumentationVersionRequest(input *CreateDocumentationVersionInput) (req *request.Request, output *DocumentationVersion) {
+	op := &request.Operation{
+		Name:       opCreateDocumentationVersion,
+		HTTPMethod: "POST",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/versions",
+	}
+
+	if input == nil {
+		input = &CreateDocumentationVersionInput{}
+	}
+
+	output = &DocumentationVersion{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateDocumentationVersion API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation CreateDocumentationVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) CreateDocumentationVersion(input *CreateDocumentationVersionInput) (*DocumentationVersion, error) {
+	req, out := c.CreateDocumentationVersionRequest(input)
+	return out, req.Send()
+}
+
+// CreateDocumentationVersionWithContext is the same as CreateDocumentationVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDocumentationVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateDocumentationVersionWithContext(ctx aws.Context, input *CreateDocumentationVersionInput, opts ...request.Option) (*DocumentationVersion, error) {
+	req, out := c.CreateDocumentationVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateDomainName = "CreateDomainName"
@@ -355,7 +553,6 @@ const opCreateDomainName = "CreateDomainName"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateDomainNameRequest(input *CreateDomainNameInput) (req *request.Request, output *DomainName) {
 	op := &request.Operation{
 		Name:       opCreateDomainName,
@@ -367,9 +564,8 @@ func (c *APIGateway) CreateDomainNameRequest(input *CreateDomainNameInput) (req 
 		input = &CreateDomainNameInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DomainName{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -385,22 +581,33 @@ func (c *APIGateway) CreateDomainNameRequest(input *CreateDomainNameInput) (req 
 // API operation CreateDomainName for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) CreateDomainName(input *CreateDomainNameInput) (*DomainName, error) {
 	req, out := c.CreateDomainNameRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateDomainNameWithContext is the same as CreateDomainName with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDomainName for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateDomainNameWithContext(ctx aws.Context, input *CreateDomainNameInput, opts ...request.Option) (*DomainName, error) {
+	req, out := c.CreateDomainNameRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateModel = "CreateModel"
@@ -428,7 +635,6 @@ const opCreateModel = "CreateModel"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateModelRequest(input *CreateModelInput) (req *request.Request, output *Model) {
 	op := &request.Operation{
 		Name:       opCreateModel,
@@ -440,9 +646,8 @@ func (c *APIGateway) CreateModelRequest(input *CreateModelInput) (req *request.R
 		input = &CreateModelInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Model{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -458,28 +663,37 @@ func (c *APIGateway) CreateModelRequest(input *CreateModelInput) (req *request.R
 // API operation CreateModel for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) CreateModel(input *CreateModelInput) (*Model, error) {
 	req, out := c.CreateModelRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateModelWithContext is the same as CreateModel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateModel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateModelWithContext(ctx aws.Context, input *CreateModelInput, opts ...request.Option) (*Model, error) {
+	req, out := c.CreateModelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateResource = "CreateResource"
@@ -507,7 +721,6 @@ const opCreateResource = "CreateResource"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateResourceRequest(input *CreateResourceInput) (req *request.Request, output *Resource) {
 	op := &request.Operation{
 		Name:       opCreateResource,
@@ -519,9 +732,8 @@ func (c *APIGateway) CreateResourceRequest(input *CreateResourceInput) (req *req
 		input = &CreateResourceInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Resource{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -537,28 +749,37 @@ func (c *APIGateway) CreateResourceRequest(input *CreateResourceInput) (req *req
 // API operation CreateResource for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) CreateResource(input *CreateResourceInput) (*Resource, error) {
 	req, out := c.CreateResourceRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateResourceWithContext is the same as CreateResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateResourceWithContext(ctx aws.Context, input *CreateResourceInput, opts ...request.Option) (*Resource, error) {
+	req, out := c.CreateResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateRestApi = "CreateRestApi"
@@ -586,7 +807,6 @@ const opCreateRestApi = "CreateRestApi"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateRestApiRequest(input *CreateRestApiInput) (req *request.Request, output *RestApi) {
 	op := &request.Operation{
 		Name:       opCreateRestApi,
@@ -598,9 +818,8 @@ func (c *APIGateway) CreateRestApiRequest(input *CreateRestApiInput) (req *reque
 		input = &CreateRestApiInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &RestApi{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -616,22 +835,33 @@ func (c *APIGateway) CreateRestApiRequest(input *CreateRestApiInput) (req *reque
 // API operation CreateRestApi for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) CreateRestApi(input *CreateRestApiInput) (*RestApi, error) {
 	req, out := c.CreateRestApiRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateRestApiWithContext is the same as CreateRestApi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateRestApi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateRestApiWithContext(ctx aws.Context, input *CreateRestApiInput, opts ...request.Option) (*RestApi, error) {
+	req, out := c.CreateRestApiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateStage = "CreateStage"
@@ -659,7 +889,6 @@ const opCreateStage = "CreateStage"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateStageRequest(input *CreateStageInput) (req *request.Request, output *Stage) {
 	op := &request.Operation{
 		Name:       opCreateStage,
@@ -671,9 +900,8 @@ func (c *APIGateway) CreateStageRequest(input *CreateStageInput) (req *request.R
 		input = &CreateStageInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Stage{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -690,28 +918,37 @@ func (c *APIGateway) CreateStageRequest(input *CreateStageInput) (req *request.R
 // API operation CreateStage for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) CreateStage(input *CreateStageInput) (*Stage, error) {
 	req, out := c.CreateStageRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateStageWithContext is the same as CreateStage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateStage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateStageWithContext(ctx aws.Context, input *CreateStageInput, opts ...request.Option) (*Stage, error) {
+	req, out := c.CreateStageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateUsagePlan = "CreateUsagePlan"
@@ -739,7 +976,6 @@ const opCreateUsagePlan = "CreateUsagePlan"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateUsagePlanRequest(input *CreateUsagePlanInput) (req *request.Request, output *UsagePlan) {
 	op := &request.Operation{
 		Name:       opCreateUsagePlan,
@@ -751,9 +987,8 @@ func (c *APIGateway) CreateUsagePlanRequest(input *CreateUsagePlanInput) (req *r
 		input = &CreateUsagePlanInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &UsagePlan{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -770,28 +1005,37 @@ func (c *APIGateway) CreateUsagePlanRequest(input *CreateUsagePlanInput) (req *r
 // API operation CreateUsagePlan for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
 func (c *APIGateway) CreateUsagePlan(input *CreateUsagePlanInput) (*UsagePlan, error) {
 	req, out := c.CreateUsagePlanRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateUsagePlanWithContext is the same as CreateUsagePlan with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateUsagePlan for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateUsagePlanWithContext(ctx aws.Context, input *CreateUsagePlanInput, opts ...request.Option) (*UsagePlan, error) {
+	req, out := c.CreateUsagePlanRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opCreateUsagePlanKey = "CreateUsagePlanKey"
@@ -819,7 +1063,6 @@ const opCreateUsagePlanKey = "CreateUsagePlanKey"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) CreateUsagePlanKeyRequest(input *CreateUsagePlanKeyInput) (req *request.Request, output *UsagePlanKey) {
 	op := &request.Operation{
 		Name:       opCreateUsagePlanKey,
@@ -831,9 +1074,8 @@ func (c *APIGateway) CreateUsagePlanKeyRequest(input *CreateUsagePlanKeyInput) (
 		input = &CreateUsagePlanKeyInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &UsagePlanKey{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -849,25 +1091,35 @@ func (c *APIGateway) CreateUsagePlanKeyRequest(input *CreateUsagePlanKeyInput) (
 // API operation CreateUsagePlanKey for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) CreateUsagePlanKey(input *CreateUsagePlanKeyInput) (*UsagePlanKey, error) {
 	req, out := c.CreateUsagePlanKeyRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// CreateUsagePlanKeyWithContext is the same as CreateUsagePlanKey with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateUsagePlanKey for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) CreateUsagePlanKeyWithContext(ctx aws.Context, input *CreateUsagePlanKeyInput, opts ...request.Option) (*UsagePlanKey, error) {
+	req, out := c.CreateUsagePlanKeyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteApiKey = "DeleteApiKey"
@@ -895,7 +1147,6 @@ const opDeleteApiKey = "DeleteApiKey"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteApiKeyRequest(input *DeleteApiKeyInput) (req *request.Request, output *DeleteApiKeyOutput) {
 	op := &request.Operation{
 		Name:       opDeleteApiKey,
@@ -907,11 +1158,10 @@ func (c *APIGateway) DeleteApiKeyRequest(input *DeleteApiKeyInput) (req *request
 		input = &DeleteApiKeyInput{}
 	}
 
+	output = &DeleteApiKeyOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteApiKeyOutput{}
-	req.Data = output
 	return
 }
 
@@ -927,19 +1177,31 @@ func (c *APIGateway) DeleteApiKeyRequest(input *DeleteApiKeyInput) (req *request
 // API operation DeleteApiKey for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) DeleteApiKey(input *DeleteApiKeyInput) (*DeleteApiKeyOutput, error) {
 	req, out := c.DeleteApiKeyRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteApiKeyWithContext is the same as DeleteApiKey with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteApiKey for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteApiKeyWithContext(ctx aws.Context, input *DeleteApiKeyInput, opts ...request.Option) (*DeleteApiKeyOutput, error) {
+	req, out := c.DeleteApiKeyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteAuthorizer = "DeleteAuthorizer"
@@ -967,7 +1229,6 @@ const opDeleteAuthorizer = "DeleteAuthorizer"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteAuthorizerRequest(input *DeleteAuthorizerInput) (req *request.Request, output *DeleteAuthorizerOutput) {
 	op := &request.Operation{
 		Name:       opDeleteAuthorizer,
@@ -979,11 +1240,10 @@ func (c *APIGateway) DeleteAuthorizerRequest(input *DeleteAuthorizerInput) (req 
 		input = &DeleteAuthorizerInput{}
 	}
 
+	output = &DeleteAuthorizerOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteAuthorizerOutput{}
-	req.Data = output
 	return
 }
 
@@ -1001,25 +1261,35 @@ func (c *APIGateway) DeleteAuthorizerRequest(input *DeleteAuthorizerInput) (req 
 // API operation DeleteAuthorizer for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) DeleteAuthorizer(input *DeleteAuthorizerInput) (*DeleteAuthorizerOutput, error) {
 	req, out := c.DeleteAuthorizerRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteAuthorizerWithContext is the same as DeleteAuthorizer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteAuthorizer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteAuthorizerWithContext(ctx aws.Context, input *DeleteAuthorizerInput, opts ...request.Option) (*DeleteAuthorizerOutput, error) {
+	req, out := c.DeleteAuthorizerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteBasePathMapping = "DeleteBasePathMapping"
@@ -1047,7 +1317,6 @@ const opDeleteBasePathMapping = "DeleteBasePathMapping"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteBasePathMappingRequest(input *DeleteBasePathMappingInput) (req *request.Request, output *DeleteBasePathMappingOutput) {
 	op := &request.Operation{
 		Name:       opDeleteBasePathMapping,
@@ -1059,11 +1328,10 @@ func (c *APIGateway) DeleteBasePathMappingRequest(input *DeleteBasePathMappingIn
 		input = &DeleteBasePathMappingInput{}
 	}
 
+	output = &DeleteBasePathMappingOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteBasePathMappingOutput{}
-	req.Data = output
 	return
 }
 
@@ -1079,19 +1347,31 @@ func (c *APIGateway) DeleteBasePathMappingRequest(input *DeleteBasePathMappingIn
 // API operation DeleteBasePathMapping for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) DeleteBasePathMapping(input *DeleteBasePathMappingInput) (*DeleteBasePathMappingOutput, error) {
 	req, out := c.DeleteBasePathMappingRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteBasePathMappingWithContext is the same as DeleteBasePathMapping with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteBasePathMapping for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteBasePathMappingWithContext(ctx aws.Context, input *DeleteBasePathMappingInput, opts ...request.Option) (*DeleteBasePathMappingOutput, error) {
+	req, out := c.DeleteBasePathMappingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteClientCertificate = "DeleteClientCertificate"
@@ -1119,7 +1399,6 @@ const opDeleteClientCertificate = "DeleteClientCertificate"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteClientCertificateRequest(input *DeleteClientCertificateInput) (req *request.Request, output *DeleteClientCertificateOutput) {
 	op := &request.Operation{
 		Name:       opDeleteClientCertificate,
@@ -1131,11 +1410,10 @@ func (c *APIGateway) DeleteClientCertificateRequest(input *DeleteClientCertifica
 		input = &DeleteClientCertificateInput{}
 	}
 
+	output = &DeleteClientCertificateOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteClientCertificateOutput{}
-	req.Data = output
 	return
 }
 
@@ -1151,22 +1429,33 @@ func (c *APIGateway) DeleteClientCertificateRequest(input *DeleteClientCertifica
 // API operation DeleteClientCertificate for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
 func (c *APIGateway) DeleteClientCertificate(input *DeleteClientCertificateInput) (*DeleteClientCertificateOutput, error) {
 	req, out := c.DeleteClientCertificateRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteClientCertificateWithContext is the same as DeleteClientCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteClientCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteClientCertificateWithContext(ctx aws.Context, input *DeleteClientCertificateInput, opts ...request.Option) (*DeleteClientCertificateOutput, error) {
+	req, out := c.DeleteClientCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteDeployment = "DeleteDeployment"
@@ -1194,7 +1483,6 @@ const opDeleteDeployment = "DeleteDeployment"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteDeploymentRequest(input *DeleteDeploymentInput) (req *request.Request, output *DeleteDeploymentOutput) {
 	op := &request.Operation{
 		Name:       opDeleteDeployment,
@@ -1206,11 +1494,10 @@ func (c *APIGateway) DeleteDeploymentRequest(input *DeleteDeploymentInput) (req 
 		input = &DeleteDeploymentInput{}
 	}
 
+	output = &DeleteDeploymentOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteDeploymentOutput{}
-	req.Data = output
 	return
 }
 
@@ -1227,22 +1514,201 @@ func (c *APIGateway) DeleteDeploymentRequest(input *DeleteDeploymentInput) (req 
 // API operation DeleteDeployment for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) DeleteDeployment(input *DeleteDeploymentInput) (*DeleteDeploymentOutput, error) {
 	req, out := c.DeleteDeploymentRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteDeploymentWithContext is the same as DeleteDeployment with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDeployment for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteDeploymentWithContext(ctx aws.Context, input *DeleteDeploymentInput, opts ...request.Option) (*DeleteDeploymentOutput, error) {
+	req, out := c.DeleteDeploymentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteDocumentationPart = "DeleteDocumentationPart"
+
+// DeleteDocumentationPartRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteDocumentationPart operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DeleteDocumentationPart for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteDocumentationPart method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteDocumentationPartRequest method.
+//    req, resp := client.DeleteDocumentationPartRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) DeleteDocumentationPartRequest(input *DeleteDocumentationPartInput) (req *request.Request, output *DeleteDocumentationPartOutput) {
+	op := &request.Operation{
+		Name:       opDeleteDocumentationPart,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/parts/{part_id}",
+	}
+
+	if input == nil {
+		input = &DeleteDocumentationPartInput{}
+	}
+
+	output = &DeleteDocumentationPartOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteDocumentationPart API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation DeleteDocumentationPart for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+func (c *APIGateway) DeleteDocumentationPart(input *DeleteDocumentationPartInput) (*DeleteDocumentationPartOutput, error) {
+	req, out := c.DeleteDocumentationPartRequest(input)
+	return out, req.Send()
+}
+
+// DeleteDocumentationPartWithContext is the same as DeleteDocumentationPart with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDocumentationPart for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteDocumentationPartWithContext(ctx aws.Context, input *DeleteDocumentationPartInput, opts ...request.Option) (*DeleteDocumentationPartOutput, error) {
+	req, out := c.DeleteDocumentationPartRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteDocumentationVersion = "DeleteDocumentationVersion"
+
+// DeleteDocumentationVersionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteDocumentationVersion operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DeleteDocumentationVersion for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteDocumentationVersion method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteDocumentationVersionRequest method.
+//    req, resp := client.DeleteDocumentationVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) DeleteDocumentationVersionRequest(input *DeleteDocumentationVersionInput) (req *request.Request, output *DeleteDocumentationVersionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteDocumentationVersion,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/versions/{doc_version}",
+	}
+
+	if input == nil {
+		input = &DeleteDocumentationVersionInput{}
+	}
+
+	output = &DeleteDocumentationVersionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteDocumentationVersion API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation DeleteDocumentationVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) DeleteDocumentationVersion(input *DeleteDocumentationVersionInput) (*DeleteDocumentationVersionOutput, error) {
+	req, out := c.DeleteDocumentationVersionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteDocumentationVersionWithContext is the same as DeleteDocumentationVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDocumentationVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteDocumentationVersionWithContext(ctx aws.Context, input *DeleteDocumentationVersionInput, opts ...request.Option) (*DeleteDocumentationVersionOutput, error) {
+	req, out := c.DeleteDocumentationVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteDomainName = "DeleteDomainName"
@@ -1270,7 +1736,6 @@ const opDeleteDomainName = "DeleteDomainName"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteDomainNameRequest(input *DeleteDomainNameInput) (req *request.Request, output *DeleteDomainNameOutput) {
 	op := &request.Operation{
 		Name:       opDeleteDomainName,
@@ -1282,11 +1747,10 @@ func (c *APIGateway) DeleteDomainNameRequest(input *DeleteDomainNameInput) (req 
 		input = &DeleteDomainNameInput{}
 	}
 
+	output = &DeleteDomainNameOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteDomainNameOutput{}
-	req.Data = output
 	return
 }
 
@@ -1302,19 +1766,31 @@ func (c *APIGateway) DeleteDomainNameRequest(input *DeleteDomainNameInput) (req 
 // API operation DeleteDomainName for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) DeleteDomainName(input *DeleteDomainNameInput) (*DeleteDomainNameOutput, error) {
 	req, out := c.DeleteDomainNameRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteDomainNameWithContext is the same as DeleteDomainName with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDomainName for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteDomainNameWithContext(ctx aws.Context, input *DeleteDomainNameInput, opts ...request.Option) (*DeleteDomainNameOutput, error) {
+	req, out := c.DeleteDomainNameRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteIntegration = "DeleteIntegration"
@@ -1342,7 +1818,6 @@ const opDeleteIntegration = "DeleteIntegration"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteIntegrationRequest(input *DeleteIntegrationInput) (req *request.Request, output *DeleteIntegrationOutput) {
 	op := &request.Operation{
 		Name:       opDeleteIntegration,
@@ -1354,11 +1829,10 @@ func (c *APIGateway) DeleteIntegrationRequest(input *DeleteIntegrationInput) (re
 		input = &DeleteIntegrationInput{}
 	}
 
+	output = &DeleteIntegrationOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteIntegrationOutput{}
-	req.Data = output
 	return
 }
 
@@ -1374,22 +1848,33 @@ func (c *APIGateway) DeleteIntegrationRequest(input *DeleteIntegrationInput) (re
 // API operation DeleteIntegration for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) DeleteIntegration(input *DeleteIntegrationInput) (*DeleteIntegrationOutput, error) {
 	req, out := c.DeleteIntegrationRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteIntegrationWithContext is the same as DeleteIntegration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteIntegration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteIntegrationWithContext(ctx aws.Context, input *DeleteIntegrationInput, opts ...request.Option) (*DeleteIntegrationOutput, error) {
+	req, out := c.DeleteIntegrationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteIntegrationResponse = "DeleteIntegrationResponse"
@@ -1417,7 +1902,6 @@ const opDeleteIntegrationResponse = "DeleteIntegrationResponse"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteIntegrationResponseRequest(input *DeleteIntegrationResponseInput) (req *request.Request, output *DeleteIntegrationResponseOutput) {
 	op := &request.Operation{
 		Name:       opDeleteIntegrationResponse,
@@ -1429,11 +1913,10 @@ func (c *APIGateway) DeleteIntegrationResponseRequest(input *DeleteIntegrationRe
 		input = &DeleteIntegrationResponseInput{}
 	}
 
+	output = &DeleteIntegrationResponseOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteIntegrationResponseOutput{}
-	req.Data = output
 	return
 }
 
@@ -1449,25 +1932,35 @@ func (c *APIGateway) DeleteIntegrationResponseRequest(input *DeleteIntegrationRe
 // API operation DeleteIntegrationResponse for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) DeleteIntegrationResponse(input *DeleteIntegrationResponseInput) (*DeleteIntegrationResponseOutput, error) {
 	req, out := c.DeleteIntegrationResponseRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteIntegrationResponseWithContext is the same as DeleteIntegrationResponse with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteIntegrationResponse for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteIntegrationResponseWithContext(ctx aws.Context, input *DeleteIntegrationResponseInput, opts ...request.Option) (*DeleteIntegrationResponseOutput, error) {
+	req, out := c.DeleteIntegrationResponseRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteMethod = "DeleteMethod"
@@ -1495,7 +1988,6 @@ const opDeleteMethod = "DeleteMethod"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteMethodRequest(input *DeleteMethodInput) (req *request.Request, output *DeleteMethodOutput) {
 	op := &request.Operation{
 		Name:       opDeleteMethod,
@@ -1507,11 +1999,10 @@ func (c *APIGateway) DeleteMethodRequest(input *DeleteMethodInput) (req *request
 		input = &DeleteMethodInput{}
 	}
 
+	output = &DeleteMethodOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteMethodOutput{}
-	req.Data = output
 	return
 }
 
@@ -1527,22 +2018,33 @@ func (c *APIGateway) DeleteMethodRequest(input *DeleteMethodInput) (req *request
 // API operation DeleteMethod for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) DeleteMethod(input *DeleteMethodInput) (*DeleteMethodOutput, error) {
 	req, out := c.DeleteMethodRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteMethodWithContext is the same as DeleteMethod with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteMethod for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteMethodWithContext(ctx aws.Context, input *DeleteMethodInput, opts ...request.Option) (*DeleteMethodOutput, error) {
+	req, out := c.DeleteMethodRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteMethodResponse = "DeleteMethodResponse"
@@ -1570,7 +2072,6 @@ const opDeleteMethodResponse = "DeleteMethodResponse"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteMethodResponseRequest(input *DeleteMethodResponseInput) (req *request.Request, output *DeleteMethodResponseOutput) {
 	op := &request.Operation{
 		Name:       opDeleteMethodResponse,
@@ -1582,11 +2083,10 @@ func (c *APIGateway) DeleteMethodResponseRequest(input *DeleteMethodResponseInpu
 		input = &DeleteMethodResponseInput{}
 	}
 
+	output = &DeleteMethodResponseOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteMethodResponseOutput{}
-	req.Data = output
 	return
 }
 
@@ -1602,25 +2102,35 @@ func (c *APIGateway) DeleteMethodResponseRequest(input *DeleteMethodResponseInpu
 // API operation DeleteMethodResponse for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) DeleteMethodResponse(input *DeleteMethodResponseInput) (*DeleteMethodResponseOutput, error) {
 	req, out := c.DeleteMethodResponseRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteMethodResponseWithContext is the same as DeleteMethodResponse with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteMethodResponse for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteMethodResponseWithContext(ctx aws.Context, input *DeleteMethodResponseInput, opts ...request.Option) (*DeleteMethodResponseOutput, error) {
+	req, out := c.DeleteMethodResponseRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteModel = "DeleteModel"
@@ -1648,7 +2158,6 @@ const opDeleteModel = "DeleteModel"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteModelRequest(input *DeleteModelInput) (req *request.Request, output *DeleteModelOutput) {
 	op := &request.Operation{
 		Name:       opDeleteModel,
@@ -1660,11 +2169,10 @@ func (c *APIGateway) DeleteModelRequest(input *DeleteModelInput) (req *request.R
 		input = &DeleteModelInput{}
 	}
 
+	output = &DeleteModelOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteModelOutput{}
-	req.Data = output
 	return
 }
 
@@ -1680,25 +2188,35 @@ func (c *APIGateway) DeleteModelRequest(input *DeleteModelInput) (req *request.R
 // API operation DeleteModel for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) DeleteModel(input *DeleteModelInput) (*DeleteModelOutput, error) {
 	req, out := c.DeleteModelRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteModelWithContext is the same as DeleteModel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteModel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteModelWithContext(ctx aws.Context, input *DeleteModelInput, opts ...request.Option) (*DeleteModelOutput, error) {
+	req, out := c.DeleteModelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteResource = "DeleteResource"
@@ -1726,7 +2244,6 @@ const opDeleteResource = "DeleteResource"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteResourceRequest(input *DeleteResourceInput) (req *request.Request, output *DeleteResourceOutput) {
 	op := &request.Operation{
 		Name:       opDeleteResource,
@@ -1738,11 +2255,10 @@ func (c *APIGateway) DeleteResourceRequest(input *DeleteResourceInput) (req *req
 		input = &DeleteResourceInput{}
 	}
 
+	output = &DeleteResourceOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteResourceOutput{}
-	req.Data = output
 	return
 }
 
@@ -1758,25 +2274,35 @@ func (c *APIGateway) DeleteResourceRequest(input *DeleteResourceInput) (req *req
 // API operation DeleteResource for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) DeleteResource(input *DeleteResourceInput) (*DeleteResourceOutput, error) {
 	req, out := c.DeleteResourceRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteResourceWithContext is the same as DeleteResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteResourceWithContext(ctx aws.Context, input *DeleteResourceInput, opts ...request.Option) (*DeleteResourceOutput, error) {
+	req, out := c.DeleteResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteRestApi = "DeleteRestApi"
@@ -1804,7 +2330,6 @@ const opDeleteRestApi = "DeleteRestApi"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteRestApiRequest(input *DeleteRestApiInput) (req *request.Request, output *DeleteRestApiOutput) {
 	op := &request.Operation{
 		Name:       opDeleteRestApi,
@@ -1816,11 +2341,10 @@ func (c *APIGateway) DeleteRestApiRequest(input *DeleteRestApiInput) (req *reque
 		input = &DeleteRestApiInput{}
 	}
 
+	output = &DeleteRestApiOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteRestApiOutput{}
-	req.Data = output
 	return
 }
 
@@ -1836,22 +2360,33 @@ func (c *APIGateway) DeleteRestApiRequest(input *DeleteRestApiInput) (req *reque
 // API operation DeleteRestApi for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
 func (c *APIGateway) DeleteRestApi(input *DeleteRestApiInput) (*DeleteRestApiOutput, error) {
 	req, out := c.DeleteRestApiRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteRestApiWithContext is the same as DeleteRestApi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRestApi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteRestApiWithContext(ctx aws.Context, input *DeleteRestApiInput, opts ...request.Option) (*DeleteRestApiOutput, error) {
+	req, out := c.DeleteRestApiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteStage = "DeleteStage"
@@ -1879,7 +2414,6 @@ const opDeleteStage = "DeleteStage"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteStageRequest(input *DeleteStageInput) (req *request.Request, output *DeleteStageOutput) {
 	op := &request.Operation{
 		Name:       opDeleteStage,
@@ -1891,11 +2425,10 @@ func (c *APIGateway) DeleteStageRequest(input *DeleteStageInput) (req *request.R
 		input = &DeleteStageInput{}
 	}
 
+	output = &DeleteStageOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteStageOutput{}
-	req.Data = output
 	return
 }
 
@@ -1911,22 +2444,33 @@ func (c *APIGateway) DeleteStageRequest(input *DeleteStageInput) (req *request.R
 // API operation DeleteStage for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
 func (c *APIGateway) DeleteStage(input *DeleteStageInput) (*DeleteStageOutput, error) {
 	req, out := c.DeleteStageRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteStageWithContext is the same as DeleteStage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteStage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteStageWithContext(ctx aws.Context, input *DeleteStageInput, opts ...request.Option) (*DeleteStageOutput, error) {
+	req, out := c.DeleteStageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteUsagePlan = "DeleteUsagePlan"
@@ -1954,7 +2498,6 @@ const opDeleteUsagePlan = "DeleteUsagePlan"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteUsagePlanRequest(input *DeleteUsagePlanInput) (req *request.Request, output *DeleteUsagePlanOutput) {
 	op := &request.Operation{
 		Name:       opDeleteUsagePlan,
@@ -1966,11 +2509,10 @@ func (c *APIGateway) DeleteUsagePlanRequest(input *DeleteUsagePlanInput) (req *r
 		input = &DeleteUsagePlanInput{}
 	}
 
+	output = &DeleteUsagePlanOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteUsagePlanOutput{}
-	req.Data = output
 	return
 }
 
@@ -1986,22 +2528,33 @@ func (c *APIGateway) DeleteUsagePlanRequest(input *DeleteUsagePlanInput) (req *r
 // API operation DeleteUsagePlan for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
 func (c *APIGateway) DeleteUsagePlan(input *DeleteUsagePlanInput) (*DeleteUsagePlanOutput, error) {
 	req, out := c.DeleteUsagePlanRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteUsagePlanWithContext is the same as DeleteUsagePlan with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteUsagePlan for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteUsagePlanWithContext(ctx aws.Context, input *DeleteUsagePlanInput, opts ...request.Option) (*DeleteUsagePlanOutput, error) {
+	req, out := c.DeleteUsagePlanRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opDeleteUsagePlanKey = "DeleteUsagePlanKey"
@@ -2029,7 +2582,6 @@ const opDeleteUsagePlanKey = "DeleteUsagePlanKey"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) DeleteUsagePlanKeyRequest(input *DeleteUsagePlanKeyInput) (req *request.Request, output *DeleteUsagePlanKeyOutput) {
 	op := &request.Operation{
 		Name:       opDeleteUsagePlanKey,
@@ -2041,11 +2593,10 @@ func (c *APIGateway) DeleteUsagePlanKeyRequest(input *DeleteUsagePlanKeyInput) (
 		input = &DeleteUsagePlanKeyInput{}
 	}
 
+	output = &DeleteUsagePlanKeyOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &DeleteUsagePlanKeyOutput{}
-	req.Data = output
 	return
 }
 
@@ -2062,25 +2613,35 @@ func (c *APIGateway) DeleteUsagePlanKeyRequest(input *DeleteUsagePlanKeyInput) (
 // API operation DeleteUsagePlanKey for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) DeleteUsagePlanKey(input *DeleteUsagePlanKeyInput) (*DeleteUsagePlanKeyOutput, error) {
 	req, out := c.DeleteUsagePlanKeyRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// DeleteUsagePlanKeyWithContext is the same as DeleteUsagePlanKey with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteUsagePlanKey for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) DeleteUsagePlanKeyWithContext(ctx aws.Context, input *DeleteUsagePlanKeyInput, opts ...request.Option) (*DeleteUsagePlanKeyOutput, error) {
+	req, out := c.DeleteUsagePlanKeyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opFlushStageAuthorizersCache = "FlushStageAuthorizersCache"
@@ -2108,7 +2669,6 @@ const opFlushStageAuthorizersCache = "FlushStageAuthorizersCache"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) FlushStageAuthorizersCacheRequest(input *FlushStageAuthorizersCacheInput) (req *request.Request, output *FlushStageAuthorizersCacheOutput) {
 	op := &request.Operation{
 		Name:       opFlushStageAuthorizersCache,
@@ -2120,11 +2680,10 @@ func (c *APIGateway) FlushStageAuthorizersCacheRequest(input *FlushStageAuthoriz
 		input = &FlushStageAuthorizersCacheInput{}
 	}
 
+	output = &FlushStageAuthorizersCacheOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &FlushStageAuthorizersCacheOutput{}
-	req.Data = output
 	return
 }
 
@@ -2140,22 +2699,33 @@ func (c *APIGateway) FlushStageAuthorizersCacheRequest(input *FlushStageAuthoriz
 // API operation FlushStageAuthorizersCache for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) FlushStageAuthorizersCache(input *FlushStageAuthorizersCacheInput) (*FlushStageAuthorizersCacheOutput, error) {
 	req, out := c.FlushStageAuthorizersCacheRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// FlushStageAuthorizersCacheWithContext is the same as FlushStageAuthorizersCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See FlushStageAuthorizersCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) FlushStageAuthorizersCacheWithContext(ctx aws.Context, input *FlushStageAuthorizersCacheInput, opts ...request.Option) (*FlushStageAuthorizersCacheOutput, error) {
+	req, out := c.FlushStageAuthorizersCacheRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opFlushStageCache = "FlushStageCache"
@@ -2183,7 +2753,6 @@ const opFlushStageCache = "FlushStageCache"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) FlushStageCacheRequest(input *FlushStageCacheInput) (req *request.Request, output *FlushStageCacheOutput) {
 	op := &request.Operation{
 		Name:       opFlushStageCache,
@@ -2195,11 +2764,10 @@ func (c *APIGateway) FlushStageCacheRequest(input *FlushStageCacheInput) (req *r
 		input = &FlushStageCacheInput{}
 	}
 
+	output = &FlushStageCacheOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
-	output = &FlushStageCacheOutput{}
-	req.Data = output
 	return
 }
 
@@ -2215,22 +2783,33 @@ func (c *APIGateway) FlushStageCacheRequest(input *FlushStageCacheInput) (req *r
 // API operation FlushStageCache for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) FlushStageCache(input *FlushStageCacheInput) (*FlushStageCacheOutput, error) {
 	req, out := c.FlushStageCacheRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// FlushStageCacheWithContext is the same as FlushStageCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See FlushStageCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) FlushStageCacheWithContext(ctx aws.Context, input *FlushStageCacheInput, opts ...request.Option) (*FlushStageCacheOutput, error) {
+	req, out := c.FlushStageCacheRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGenerateClientCertificate = "GenerateClientCertificate"
@@ -2258,7 +2837,6 @@ const opGenerateClientCertificate = "GenerateClientCertificate"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GenerateClientCertificateRequest(input *GenerateClientCertificateInput) (req *request.Request, output *ClientCertificate) {
 	op := &request.Operation{
 		Name:       opGenerateClientCertificate,
@@ -2270,9 +2848,8 @@ func (c *APIGateway) GenerateClientCertificateRequest(input *GenerateClientCerti
 		input = &GenerateClientCertificateInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ClientCertificate{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2288,19 +2865,31 @@ func (c *APIGateway) GenerateClientCertificateRequest(input *GenerateClientCerti
 // API operation GenerateClientCertificate for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
 func (c *APIGateway) GenerateClientCertificate(input *GenerateClientCertificateInput) (*ClientCertificate, error) {
 	req, out := c.GenerateClientCertificateRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GenerateClientCertificateWithContext is the same as GenerateClientCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GenerateClientCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GenerateClientCertificateWithContext(ctx aws.Context, input *GenerateClientCertificateInput, opts ...request.Option) (*ClientCertificate, error) {
+	req, out := c.GenerateClientCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetAccount = "GetAccount"
@@ -2328,7 +2917,6 @@ const opGetAccount = "GetAccount"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetAccountRequest(input *GetAccountInput) (req *request.Request, output *Account) {
 	op := &request.Operation{
 		Name:       opGetAccount,
@@ -2340,9 +2928,8 @@ func (c *APIGateway) GetAccountRequest(input *GetAccountInput) (req *request.Req
 		input = &GetAccountInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Account{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2358,19 +2945,31 @@ func (c *APIGateway) GetAccountRequest(input *GetAccountInput) (req *request.Req
 // API operation GetAccount for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetAccount(input *GetAccountInput) (*Account, error) {
 	req, out := c.GetAccountRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetAccountWithContext is the same as GetAccount with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetAccount for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetAccountWithContext(ctx aws.Context, input *GetAccountInput, opts ...request.Option) (*Account, error) {
+	req, out := c.GetAccountRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetApiKey = "GetApiKey"
@@ -2398,7 +2997,6 @@ const opGetApiKey = "GetApiKey"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetApiKeyRequest(input *GetApiKeyInput) (req *request.Request, output *ApiKey) {
 	op := &request.Operation{
 		Name:       opGetApiKey,
@@ -2410,9 +3008,8 @@ func (c *APIGateway) GetApiKeyRequest(input *GetApiKeyInput) (req *request.Reque
 		input = &GetApiKeyInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ApiKey{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2428,19 +3025,31 @@ func (c *APIGateway) GetApiKeyRequest(input *GetApiKeyInput) (req *request.Reque
 // API operation GetApiKey for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetApiKey(input *GetApiKeyInput) (*ApiKey, error) {
 	req, out := c.GetApiKeyRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetApiKeyWithContext is the same as GetApiKey with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetApiKey for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetApiKeyWithContext(ctx aws.Context, input *GetApiKeyInput, opts ...request.Option) (*ApiKey, error) {
+	req, out := c.GetApiKeyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetApiKeys = "GetApiKeys"
@@ -2468,7 +3077,6 @@ const opGetApiKeys = "GetApiKeys"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetApiKeysRequest(input *GetApiKeysInput) (req *request.Request, output *GetApiKeysOutput) {
 	op := &request.Operation{
 		Name:       opGetApiKeys,
@@ -2486,9 +3094,8 @@ func (c *APIGateway) GetApiKeysRequest(input *GetApiKeysInput) (req *request.Req
 		input = &GetApiKeysInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetApiKeysOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2504,19 +3111,31 @@ func (c *APIGateway) GetApiKeysRequest(input *GetApiKeysInput) (req *request.Req
 // API operation GetApiKeys for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetApiKeys(input *GetApiKeysInput) (*GetApiKeysOutput, error) {
 	req, out := c.GetApiKeysRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetApiKeysWithContext is the same as GetApiKeys with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetApiKeys for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetApiKeysWithContext(ctx aws.Context, input *GetApiKeysInput, opts ...request.Option) (*GetApiKeysOutput, error) {
+	req, out := c.GetApiKeysRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetApiKeysPages iterates over the pages of a GetApiKeys operation,
@@ -2536,12 +3155,33 @@ func (c *APIGateway) GetApiKeys(input *GetApiKeysInput) (*GetApiKeysOutput, erro
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetApiKeysPages(input *GetApiKeysInput, fn func(p *GetApiKeysOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetApiKeysRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetApiKeysOutput), lastPage)
-	})
+func (c *APIGateway) GetApiKeysPages(input *GetApiKeysInput, fn func(*GetApiKeysOutput, bool) bool) error {
+	return c.GetApiKeysPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetApiKeysPagesWithContext same as GetApiKeysPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetApiKeysPagesWithContext(ctx aws.Context, input *GetApiKeysInput, fn func(*GetApiKeysOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetApiKeysRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetApiKeysOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetAuthorizer = "GetAuthorizer"
@@ -2569,7 +3209,6 @@ const opGetAuthorizer = "GetAuthorizer"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetAuthorizerRequest(input *GetAuthorizerInput) (req *request.Request, output *Authorizer) {
 	op := &request.Operation{
 		Name:       opGetAuthorizer,
@@ -2581,9 +3220,8 @@ func (c *APIGateway) GetAuthorizerRequest(input *GetAuthorizerInput) (req *reque
 		input = &GetAuthorizerInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Authorizer{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2601,19 +3239,31 @@ func (c *APIGateway) GetAuthorizerRequest(input *GetAuthorizerInput) (req *reque
 // API operation GetAuthorizer for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetAuthorizer(input *GetAuthorizerInput) (*Authorizer, error) {
 	req, out := c.GetAuthorizerRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetAuthorizerWithContext is the same as GetAuthorizer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetAuthorizer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetAuthorizerWithContext(ctx aws.Context, input *GetAuthorizerInput, opts ...request.Option) (*Authorizer, error) {
+	req, out := c.GetAuthorizerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetAuthorizers = "GetAuthorizers"
@@ -2641,7 +3291,6 @@ const opGetAuthorizers = "GetAuthorizers"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetAuthorizersRequest(input *GetAuthorizersInput) (req *request.Request, output *GetAuthorizersOutput) {
 	op := &request.Operation{
 		Name:       opGetAuthorizers,
@@ -2653,9 +3302,8 @@ func (c *APIGateway) GetAuthorizersRequest(input *GetAuthorizersInput) (req *req
 		input = &GetAuthorizersInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetAuthorizersOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2673,22 +3321,33 @@ func (c *APIGateway) GetAuthorizersRequest(input *GetAuthorizersInput) (req *req
 // API operation GetAuthorizers for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetAuthorizers(input *GetAuthorizersInput) (*GetAuthorizersOutput, error) {
 	req, out := c.GetAuthorizersRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetAuthorizersWithContext is the same as GetAuthorizers with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetAuthorizers for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetAuthorizersWithContext(ctx aws.Context, input *GetAuthorizersInput, opts ...request.Option) (*GetAuthorizersOutput, error) {
+	req, out := c.GetAuthorizersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetBasePathMapping = "GetBasePathMapping"
@@ -2716,7 +3375,6 @@ const opGetBasePathMapping = "GetBasePathMapping"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetBasePathMappingRequest(input *GetBasePathMappingInput) (req *request.Request, output *BasePathMapping) {
 	op := &request.Operation{
 		Name:       opGetBasePathMapping,
@@ -2728,9 +3386,8 @@ func (c *APIGateway) GetBasePathMappingRequest(input *GetBasePathMappingInput) (
 		input = &GetBasePathMappingInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &BasePathMapping{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2746,19 +3403,31 @@ func (c *APIGateway) GetBasePathMappingRequest(input *GetBasePathMappingInput) (
 // API operation GetBasePathMapping for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetBasePathMapping(input *GetBasePathMappingInput) (*BasePathMapping, error) {
 	req, out := c.GetBasePathMappingRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetBasePathMappingWithContext is the same as GetBasePathMapping with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetBasePathMapping for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetBasePathMappingWithContext(ctx aws.Context, input *GetBasePathMappingInput, opts ...request.Option) (*BasePathMapping, error) {
+	req, out := c.GetBasePathMappingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetBasePathMappings = "GetBasePathMappings"
@@ -2786,7 +3455,6 @@ const opGetBasePathMappings = "GetBasePathMappings"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetBasePathMappingsRequest(input *GetBasePathMappingsInput) (req *request.Request, output *GetBasePathMappingsOutput) {
 	op := &request.Operation{
 		Name:       opGetBasePathMappings,
@@ -2804,9 +3472,8 @@ func (c *APIGateway) GetBasePathMappingsRequest(input *GetBasePathMappingsInput)
 		input = &GetBasePathMappingsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetBasePathMappingsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2822,19 +3489,31 @@ func (c *APIGateway) GetBasePathMappingsRequest(input *GetBasePathMappingsInput)
 // API operation GetBasePathMappings for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetBasePathMappings(input *GetBasePathMappingsInput) (*GetBasePathMappingsOutput, error) {
 	req, out := c.GetBasePathMappingsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetBasePathMappingsWithContext is the same as GetBasePathMappings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetBasePathMappings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetBasePathMappingsWithContext(ctx aws.Context, input *GetBasePathMappingsInput, opts ...request.Option) (*GetBasePathMappingsOutput, error) {
+	req, out := c.GetBasePathMappingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetBasePathMappingsPages iterates over the pages of a GetBasePathMappings operation,
@@ -2854,12 +3533,33 @@ func (c *APIGateway) GetBasePathMappings(input *GetBasePathMappingsInput) (*GetB
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetBasePathMappingsPages(input *GetBasePathMappingsInput, fn func(p *GetBasePathMappingsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetBasePathMappingsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetBasePathMappingsOutput), lastPage)
-	})
+func (c *APIGateway) GetBasePathMappingsPages(input *GetBasePathMappingsInput, fn func(*GetBasePathMappingsOutput, bool) bool) error {
+	return c.GetBasePathMappingsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetBasePathMappingsPagesWithContext same as GetBasePathMappingsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetBasePathMappingsPagesWithContext(ctx aws.Context, input *GetBasePathMappingsInput, fn func(*GetBasePathMappingsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetBasePathMappingsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetBasePathMappingsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetClientCertificate = "GetClientCertificate"
@@ -2887,7 +3587,6 @@ const opGetClientCertificate = "GetClientCertificate"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetClientCertificateRequest(input *GetClientCertificateInput) (req *request.Request, output *ClientCertificate) {
 	op := &request.Operation{
 		Name:       opGetClientCertificate,
@@ -2899,9 +3598,8 @@ func (c *APIGateway) GetClientCertificateRequest(input *GetClientCertificateInpu
 		input = &GetClientCertificateInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ClientCertificate{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2917,19 +3615,31 @@ func (c *APIGateway) GetClientCertificateRequest(input *GetClientCertificateInpu
 // API operation GetClientCertificate for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetClientCertificate(input *GetClientCertificateInput) (*ClientCertificate, error) {
 	req, out := c.GetClientCertificateRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetClientCertificateWithContext is the same as GetClientCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetClientCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetClientCertificateWithContext(ctx aws.Context, input *GetClientCertificateInput, opts ...request.Option) (*ClientCertificate, error) {
+	req, out := c.GetClientCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetClientCertificates = "GetClientCertificates"
@@ -2957,7 +3667,6 @@ const opGetClientCertificates = "GetClientCertificates"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetClientCertificatesRequest(input *GetClientCertificatesInput) (req *request.Request, output *GetClientCertificatesOutput) {
 	op := &request.Operation{
 		Name:       opGetClientCertificates,
@@ -2975,9 +3684,8 @@ func (c *APIGateway) GetClientCertificatesRequest(input *GetClientCertificatesIn
 		input = &GetClientCertificatesInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetClientCertificatesOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -2993,19 +3701,31 @@ func (c *APIGateway) GetClientCertificatesRequest(input *GetClientCertificatesIn
 // API operation GetClientCertificates for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetClientCertificates(input *GetClientCertificatesInput) (*GetClientCertificatesOutput, error) {
 	req, out := c.GetClientCertificatesRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetClientCertificatesWithContext is the same as GetClientCertificates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetClientCertificates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetClientCertificatesWithContext(ctx aws.Context, input *GetClientCertificatesInput, opts ...request.Option) (*GetClientCertificatesOutput, error) {
+	req, out := c.GetClientCertificatesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetClientCertificatesPages iterates over the pages of a GetClientCertificates operation,
@@ -3025,12 +3745,33 @@ func (c *APIGateway) GetClientCertificates(input *GetClientCertificatesInput) (*
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetClientCertificatesPages(input *GetClientCertificatesInput, fn func(p *GetClientCertificatesOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetClientCertificatesRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetClientCertificatesOutput), lastPage)
-	})
+func (c *APIGateway) GetClientCertificatesPages(input *GetClientCertificatesInput, fn func(*GetClientCertificatesOutput, bool) bool) error {
+	return c.GetClientCertificatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetClientCertificatesPagesWithContext same as GetClientCertificatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetClientCertificatesPagesWithContext(ctx aws.Context, input *GetClientCertificatesInput, fn func(*GetClientCertificatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetClientCertificatesRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetClientCertificatesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetDeployment = "GetDeployment"
@@ -3058,7 +3799,6 @@ const opGetDeployment = "GetDeployment"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetDeploymentRequest(input *GetDeploymentInput) (req *request.Request, output *Deployment) {
 	op := &request.Operation{
 		Name:       opGetDeployment,
@@ -3070,9 +3810,8 @@ func (c *APIGateway) GetDeploymentRequest(input *GetDeploymentInput) (req *reque
 		input = &GetDeploymentInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Deployment{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3088,22 +3827,33 @@ func (c *APIGateway) GetDeploymentRequest(input *GetDeploymentInput) (req *reque
 // API operation GetDeployment for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ServiceUnavailableException
-
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //
 func (c *APIGateway) GetDeployment(input *GetDeploymentInput) (*Deployment, error) {
 	req, out := c.GetDeploymentRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetDeploymentWithContext is the same as GetDeployment with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDeployment for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDeploymentWithContext(ctx aws.Context, input *GetDeploymentInput, opts ...request.Option) (*Deployment, error) {
+	req, out := c.GetDeploymentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetDeployments = "GetDeployments"
@@ -3131,7 +3881,6 @@ const opGetDeployments = "GetDeployments"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetDeploymentsRequest(input *GetDeploymentsInput) (req *request.Request, output *GetDeploymentsOutput) {
 	op := &request.Operation{
 		Name:       opGetDeployments,
@@ -3149,9 +3898,8 @@ func (c *APIGateway) GetDeploymentsRequest(input *GetDeploymentsInput) (req *req
 		input = &GetDeploymentsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetDeploymentsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3167,22 +3915,33 @@ func (c *APIGateway) GetDeploymentsRequest(input *GetDeploymentsInput) (req *req
 // API operation GetDeployments for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ServiceUnavailableException
-
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //
 func (c *APIGateway) GetDeployments(input *GetDeploymentsInput) (*GetDeploymentsOutput, error) {
 	req, out := c.GetDeploymentsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetDeploymentsWithContext is the same as GetDeployments with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDeployments for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDeploymentsWithContext(ctx aws.Context, input *GetDeploymentsInput, opts ...request.Option) (*GetDeploymentsOutput, error) {
+	req, out := c.GetDeploymentsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetDeploymentsPages iterates over the pages of a GetDeployments operation,
@@ -3202,12 +3961,349 @@ func (c *APIGateway) GetDeployments(input *GetDeploymentsInput) (*GetDeployments
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetDeploymentsPages(input *GetDeploymentsInput, fn func(p *GetDeploymentsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetDeploymentsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetDeploymentsOutput), lastPage)
-	})
+func (c *APIGateway) GetDeploymentsPages(input *GetDeploymentsInput, fn func(*GetDeploymentsOutput, bool) bool) error {
+	return c.GetDeploymentsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetDeploymentsPagesWithContext same as GetDeploymentsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDeploymentsPagesWithContext(ctx aws.Context, input *GetDeploymentsInput, fn func(*GetDeploymentsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetDeploymentsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetDeploymentsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opGetDocumentationPart = "GetDocumentationPart"
+
+// GetDocumentationPartRequest generates a "aws/request.Request" representing the
+// client's request for the GetDocumentationPart operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetDocumentationPart for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetDocumentationPart method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetDocumentationPartRequest method.
+//    req, resp := client.GetDocumentationPartRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) GetDocumentationPartRequest(input *GetDocumentationPartInput) (req *request.Request, output *DocumentationPart) {
+	op := &request.Operation{
+		Name:       opGetDocumentationPart,
+		HTTPMethod: "GET",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/parts/{part_id}",
+	}
+
+	if input == nil {
+		input = &GetDocumentationPartInput{}
+	}
+
+	output = &DocumentationPart{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDocumentationPart API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation GetDocumentationPart for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) GetDocumentationPart(input *GetDocumentationPartInput) (*DocumentationPart, error) {
+	req, out := c.GetDocumentationPartRequest(input)
+	return out, req.Send()
+}
+
+// GetDocumentationPartWithContext is the same as GetDocumentationPart with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDocumentationPart for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDocumentationPartWithContext(ctx aws.Context, input *GetDocumentationPartInput, opts ...request.Option) (*DocumentationPart, error) {
+	req, out := c.GetDocumentationPartRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetDocumentationParts = "GetDocumentationParts"
+
+// GetDocumentationPartsRequest generates a "aws/request.Request" representing the
+// client's request for the GetDocumentationParts operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetDocumentationParts for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetDocumentationParts method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetDocumentationPartsRequest method.
+//    req, resp := client.GetDocumentationPartsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) GetDocumentationPartsRequest(input *GetDocumentationPartsInput) (req *request.Request, output *GetDocumentationPartsOutput) {
+	op := &request.Operation{
+		Name:       opGetDocumentationParts,
+		HTTPMethod: "GET",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/parts",
+	}
+
+	if input == nil {
+		input = &GetDocumentationPartsInput{}
+	}
+
+	output = &GetDocumentationPartsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDocumentationParts API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation GetDocumentationParts for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) GetDocumentationParts(input *GetDocumentationPartsInput) (*GetDocumentationPartsOutput, error) {
+	req, out := c.GetDocumentationPartsRequest(input)
+	return out, req.Send()
+}
+
+// GetDocumentationPartsWithContext is the same as GetDocumentationParts with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDocumentationParts for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDocumentationPartsWithContext(ctx aws.Context, input *GetDocumentationPartsInput, opts ...request.Option) (*GetDocumentationPartsOutput, error) {
+	req, out := c.GetDocumentationPartsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetDocumentationVersion = "GetDocumentationVersion"
+
+// GetDocumentationVersionRequest generates a "aws/request.Request" representing the
+// client's request for the GetDocumentationVersion operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetDocumentationVersion for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetDocumentationVersion method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetDocumentationVersionRequest method.
+//    req, resp := client.GetDocumentationVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) GetDocumentationVersionRequest(input *GetDocumentationVersionInput) (req *request.Request, output *DocumentationVersion) {
+	op := &request.Operation{
+		Name:       opGetDocumentationVersion,
+		HTTPMethod: "GET",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/versions/{doc_version}",
+	}
+
+	if input == nil {
+		input = &GetDocumentationVersionInput{}
+	}
+
+	output = &DocumentationVersion{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDocumentationVersion API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation GetDocumentationVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) GetDocumentationVersion(input *GetDocumentationVersionInput) (*DocumentationVersion, error) {
+	req, out := c.GetDocumentationVersionRequest(input)
+	return out, req.Send()
+}
+
+// GetDocumentationVersionWithContext is the same as GetDocumentationVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDocumentationVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDocumentationVersionWithContext(ctx aws.Context, input *GetDocumentationVersionInput, opts ...request.Option) (*DocumentationVersion, error) {
+	req, out := c.GetDocumentationVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetDocumentationVersions = "GetDocumentationVersions"
+
+// GetDocumentationVersionsRequest generates a "aws/request.Request" representing the
+// client's request for the GetDocumentationVersions operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetDocumentationVersions for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetDocumentationVersions method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetDocumentationVersionsRequest method.
+//    req, resp := client.GetDocumentationVersionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) GetDocumentationVersionsRequest(input *GetDocumentationVersionsInput) (req *request.Request, output *GetDocumentationVersionsOutput) {
+	op := &request.Operation{
+		Name:       opGetDocumentationVersions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/versions",
+	}
+
+	if input == nil {
+		input = &GetDocumentationVersionsInput{}
+	}
+
+	output = &GetDocumentationVersionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDocumentationVersions API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation GetDocumentationVersions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) GetDocumentationVersions(input *GetDocumentationVersionsInput) (*GetDocumentationVersionsOutput, error) {
+	req, out := c.GetDocumentationVersionsRequest(input)
+	return out, req.Send()
+}
+
+// GetDocumentationVersionsWithContext is the same as GetDocumentationVersions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDocumentationVersions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDocumentationVersionsWithContext(ctx aws.Context, input *GetDocumentationVersionsInput, opts ...request.Option) (*GetDocumentationVersionsOutput, error) {
+	req, out := c.GetDocumentationVersionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetDomainName = "GetDomainName"
@@ -3235,7 +4331,6 @@ const opGetDomainName = "GetDomainName"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetDomainNameRequest(input *GetDomainNameInput) (req *request.Request, output *DomainName) {
 	op := &request.Operation{
 		Name:       opGetDomainName,
@@ -3247,9 +4342,8 @@ func (c *APIGateway) GetDomainNameRequest(input *GetDomainNameInput) (req *reque
 		input = &GetDomainNameInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DomainName{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3266,22 +4360,33 @@ func (c *APIGateway) GetDomainNameRequest(input *GetDomainNameInput) (req *reque
 // API operation GetDomainName for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ServiceUnavailableException
-
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetDomainName(input *GetDomainNameInput) (*DomainName, error) {
 	req, out := c.GetDomainNameRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetDomainNameWithContext is the same as GetDomainName with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDomainName for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDomainNameWithContext(ctx aws.Context, input *GetDomainNameInput, opts ...request.Option) (*DomainName, error) {
+	req, out := c.GetDomainNameRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetDomainNames = "GetDomainNames"
@@ -3309,7 +4414,6 @@ const opGetDomainNames = "GetDomainNames"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetDomainNamesRequest(input *GetDomainNamesInput) (req *request.Request, output *GetDomainNamesOutput) {
 	op := &request.Operation{
 		Name:       opGetDomainNames,
@@ -3327,9 +4431,8 @@ func (c *APIGateway) GetDomainNamesRequest(input *GetDomainNamesInput) (req *req
 		input = &GetDomainNamesInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetDomainNamesOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3345,19 +4448,31 @@ func (c *APIGateway) GetDomainNamesRequest(input *GetDomainNamesInput) (req *req
 // API operation GetDomainNames for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetDomainNames(input *GetDomainNamesInput) (*GetDomainNamesOutput, error) {
 	req, out := c.GetDomainNamesRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetDomainNamesWithContext is the same as GetDomainNames with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDomainNames for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDomainNamesWithContext(ctx aws.Context, input *GetDomainNamesInput, opts ...request.Option) (*GetDomainNamesOutput, error) {
+	req, out := c.GetDomainNamesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetDomainNamesPages iterates over the pages of a GetDomainNames operation,
@@ -3377,12 +4492,33 @@ func (c *APIGateway) GetDomainNames(input *GetDomainNamesInput) (*GetDomainNames
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetDomainNamesPages(input *GetDomainNamesInput, fn func(p *GetDomainNamesOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetDomainNamesRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetDomainNamesOutput), lastPage)
-	})
+func (c *APIGateway) GetDomainNamesPages(input *GetDomainNamesInput, fn func(*GetDomainNamesOutput, bool) bool) error {
+	return c.GetDomainNamesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetDomainNamesPagesWithContext same as GetDomainNamesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetDomainNamesPagesWithContext(ctx aws.Context, input *GetDomainNamesInput, fn func(*GetDomainNamesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetDomainNamesRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetDomainNamesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetExport = "GetExport"
@@ -3410,7 +4546,6 @@ const opGetExport = "GetExport"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetExportRequest(input *GetExportInput) (req *request.Request, output *GetExportOutput) {
 	op := &request.Operation{
 		Name:       opGetExport,
@@ -3422,9 +4557,8 @@ func (c *APIGateway) GetExportRequest(input *GetExportInput) (req *request.Reque
 		input = &GetExportInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetExportOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3440,22 +4574,33 @@ func (c *APIGateway) GetExportRequest(input *GetExportInput) (req *request.Reque
 // API operation GetExport for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetExport(input *GetExportInput) (*GetExportOutput, error) {
 	req, out := c.GetExportRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetExportWithContext is the same as GetExport with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetExport for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetExportWithContext(ctx aws.Context, input *GetExportInput, opts ...request.Option) (*GetExportOutput, error) {
+	req, out := c.GetExportRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetIntegration = "GetIntegration"
@@ -3483,7 +4628,6 @@ const opGetIntegration = "GetIntegration"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetIntegrationRequest(input *GetIntegrationInput) (req *request.Request, output *Integration) {
 	op := &request.Operation{
 		Name:       opGetIntegration,
@@ -3495,9 +4639,8 @@ func (c *APIGateway) GetIntegrationRequest(input *GetIntegrationInput) (req *req
 		input = &GetIntegrationInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Integration{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3513,19 +4656,31 @@ func (c *APIGateway) GetIntegrationRequest(input *GetIntegrationInput) (req *req
 // API operation GetIntegration for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetIntegration(input *GetIntegrationInput) (*Integration, error) {
 	req, out := c.GetIntegrationRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetIntegrationWithContext is the same as GetIntegration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetIntegration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetIntegrationWithContext(ctx aws.Context, input *GetIntegrationInput, opts ...request.Option) (*Integration, error) {
+	req, out := c.GetIntegrationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetIntegrationResponse = "GetIntegrationResponse"
@@ -3553,7 +4708,6 @@ const opGetIntegrationResponse = "GetIntegrationResponse"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetIntegrationResponseRequest(input *GetIntegrationResponseInput) (req *request.Request, output *IntegrationResponse) {
 	op := &request.Operation{
 		Name:       opGetIntegrationResponse,
@@ -3565,9 +4719,8 @@ func (c *APIGateway) GetIntegrationResponseRequest(input *GetIntegrationResponse
 		input = &GetIntegrationResponseInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &IntegrationResponse{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3583,19 +4736,31 @@ func (c *APIGateway) GetIntegrationResponseRequest(input *GetIntegrationResponse
 // API operation GetIntegrationResponse for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetIntegrationResponse(input *GetIntegrationResponseInput) (*IntegrationResponse, error) {
 	req, out := c.GetIntegrationResponseRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetIntegrationResponseWithContext is the same as GetIntegrationResponse with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetIntegrationResponse for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetIntegrationResponseWithContext(ctx aws.Context, input *GetIntegrationResponseInput, opts ...request.Option) (*IntegrationResponse, error) {
+	req, out := c.GetIntegrationResponseRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetMethod = "GetMethod"
@@ -3623,7 +4788,6 @@ const opGetMethod = "GetMethod"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetMethodRequest(input *GetMethodInput) (req *request.Request, output *Method) {
 	op := &request.Operation{
 		Name:       opGetMethod,
@@ -3635,9 +4799,8 @@ func (c *APIGateway) GetMethodRequest(input *GetMethodInput) (req *request.Reque
 		input = &GetMethodInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Method{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3653,19 +4816,31 @@ func (c *APIGateway) GetMethodRequest(input *GetMethodInput) (req *request.Reque
 // API operation GetMethod for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetMethod(input *GetMethodInput) (*Method, error) {
 	req, out := c.GetMethodRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetMethodWithContext is the same as GetMethod with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetMethod for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetMethodWithContext(ctx aws.Context, input *GetMethodInput, opts ...request.Option) (*Method, error) {
+	req, out := c.GetMethodRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetMethodResponse = "GetMethodResponse"
@@ -3693,7 +4868,6 @@ const opGetMethodResponse = "GetMethodResponse"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetMethodResponseRequest(input *GetMethodResponseInput) (req *request.Request, output *MethodResponse) {
 	op := &request.Operation{
 		Name:       opGetMethodResponse,
@@ -3705,9 +4879,8 @@ func (c *APIGateway) GetMethodResponseRequest(input *GetMethodResponseInput) (re
 		input = &GetMethodResponseInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &MethodResponse{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3723,19 +4896,31 @@ func (c *APIGateway) GetMethodResponseRequest(input *GetMethodResponseInput) (re
 // API operation GetMethodResponse for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetMethodResponse(input *GetMethodResponseInput) (*MethodResponse, error) {
 	req, out := c.GetMethodResponseRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetMethodResponseWithContext is the same as GetMethodResponse with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetMethodResponse for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetMethodResponseWithContext(ctx aws.Context, input *GetMethodResponseInput, opts ...request.Option) (*MethodResponse, error) {
+	req, out := c.GetMethodResponseRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetModel = "GetModel"
@@ -3763,7 +4948,6 @@ const opGetModel = "GetModel"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetModelRequest(input *GetModelInput) (req *request.Request, output *Model) {
 	op := &request.Operation{
 		Name:       opGetModel,
@@ -3775,9 +4959,8 @@ func (c *APIGateway) GetModelRequest(input *GetModelInput) (req *request.Request
 		input = &GetModelInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Model{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3793,19 +4976,31 @@ func (c *APIGateway) GetModelRequest(input *GetModelInput) (req *request.Request
 // API operation GetModel for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetModel(input *GetModelInput) (*Model, error) {
 	req, out := c.GetModelRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetModelWithContext is the same as GetModel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetModel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetModelWithContext(ctx aws.Context, input *GetModelInput, opts ...request.Option) (*Model, error) {
+	req, out := c.GetModelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetModelTemplate = "GetModelTemplate"
@@ -3833,7 +5028,6 @@ const opGetModelTemplate = "GetModelTemplate"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetModelTemplateRequest(input *GetModelTemplateInput) (req *request.Request, output *GetModelTemplateOutput) {
 	op := &request.Operation{
 		Name:       opGetModelTemplate,
@@ -3845,9 +5039,8 @@ func (c *APIGateway) GetModelTemplateRequest(input *GetModelTemplateInput) (req 
 		input = &GetModelTemplateInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetModelTemplateOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3864,22 +5057,33 @@ func (c *APIGateway) GetModelTemplateRequest(input *GetModelTemplateInput) (req 
 // API operation GetModelTemplate for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetModelTemplate(input *GetModelTemplateInput) (*GetModelTemplateOutput, error) {
 	req, out := c.GetModelTemplateRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetModelTemplateWithContext is the same as GetModelTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetModelTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetModelTemplateWithContext(ctx aws.Context, input *GetModelTemplateInput, opts ...request.Option) (*GetModelTemplateOutput, error) {
+	req, out := c.GetModelTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetModels = "GetModels"
@@ -3907,7 +5111,6 @@ const opGetModels = "GetModels"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetModelsRequest(input *GetModelsInput) (req *request.Request, output *GetModelsOutput) {
 	op := &request.Operation{
 		Name:       opGetModels,
@@ -3925,9 +5128,8 @@ func (c *APIGateway) GetModelsRequest(input *GetModelsInput) (req *request.Reque
 		input = &GetModelsInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetModelsOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -3943,22 +5145,33 @@ func (c *APIGateway) GetModelsRequest(input *GetModelsInput) (req *request.Reque
 // API operation GetModels for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetModels(input *GetModelsInput) (*GetModelsOutput, error) {
 	req, out := c.GetModelsRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetModelsWithContext is the same as GetModels with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetModels for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetModelsWithContext(ctx aws.Context, input *GetModelsInput, opts ...request.Option) (*GetModelsOutput, error) {
+	req, out := c.GetModelsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetModelsPages iterates over the pages of a GetModels operation,
@@ -3978,12 +5191,33 @@ func (c *APIGateway) GetModels(input *GetModelsInput) (*GetModelsOutput, error) 
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetModelsPages(input *GetModelsInput, fn func(p *GetModelsOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetModelsRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetModelsOutput), lastPage)
-	})
+func (c *APIGateway) GetModelsPages(input *GetModelsInput, fn func(*GetModelsOutput, bool) bool) error {
+	return c.GetModelsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetModelsPagesWithContext same as GetModelsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetModelsPagesWithContext(ctx aws.Context, input *GetModelsInput, fn func(*GetModelsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetModelsRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetModelsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetResource = "GetResource"
@@ -4011,7 +5245,6 @@ const opGetResource = "GetResource"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetResourceRequest(input *GetResourceInput) (req *request.Request, output *Resource) {
 	op := &request.Operation{
 		Name:       opGetResource,
@@ -4023,9 +5256,8 @@ func (c *APIGateway) GetResourceRequest(input *GetResourceInput) (req *request.R
 		input = &GetResourceInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Resource{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4041,19 +5273,31 @@ func (c *APIGateway) GetResourceRequest(input *GetResourceInput) (req *request.R
 // API operation GetResource for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetResource(input *GetResourceInput) (*Resource, error) {
 	req, out := c.GetResourceRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetResourceWithContext is the same as GetResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetResourceWithContext(ctx aws.Context, input *GetResourceInput, opts ...request.Option) (*Resource, error) {
+	req, out := c.GetResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetResources = "GetResources"
@@ -4081,7 +5325,6 @@ const opGetResources = "GetResources"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetResourcesRequest(input *GetResourcesInput) (req *request.Request, output *GetResourcesOutput) {
 	op := &request.Operation{
 		Name:       opGetResources,
@@ -4099,9 +5342,8 @@ func (c *APIGateway) GetResourcesRequest(input *GetResourcesInput) (req *request
 		input = &GetResourcesInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetResourcesOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4117,22 +5359,33 @@ func (c *APIGateway) GetResourcesRequest(input *GetResourcesInput) (req *request
 // API operation GetResources for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetResources(input *GetResourcesInput) (*GetResourcesOutput, error) {
 	req, out := c.GetResourcesRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetResourcesWithContext is the same as GetResources with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetResources for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetResourcesWithContext(ctx aws.Context, input *GetResourcesInput, opts ...request.Option) (*GetResourcesOutput, error) {
+	req, out := c.GetResourcesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetResourcesPages iterates over the pages of a GetResources operation,
@@ -4152,12 +5405,33 @@ func (c *APIGateway) GetResources(input *GetResourcesInput) (*GetResourcesOutput
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetResourcesPages(input *GetResourcesInput, fn func(p *GetResourcesOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetResourcesRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetResourcesOutput), lastPage)
-	})
+func (c *APIGateway) GetResourcesPages(input *GetResourcesInput, fn func(*GetResourcesOutput, bool) bool) error {
+	return c.GetResourcesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetResourcesPagesWithContext same as GetResourcesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetResourcesPagesWithContext(ctx aws.Context, input *GetResourcesInput, fn func(*GetResourcesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetResourcesRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetResourcesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetRestApi = "GetRestApi"
@@ -4185,7 +5459,6 @@ const opGetRestApi = "GetRestApi"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetRestApiRequest(input *GetRestApiInput) (req *request.Request, output *RestApi) {
 	op := &request.Operation{
 		Name:       opGetRestApi,
@@ -4197,9 +5470,8 @@ func (c *APIGateway) GetRestApiRequest(input *GetRestApiInput) (req *request.Req
 		input = &GetRestApiInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &RestApi{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4215,19 +5487,31 @@ func (c *APIGateway) GetRestApiRequest(input *GetRestApiInput) (req *request.Req
 // API operation GetRestApi for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetRestApi(input *GetRestApiInput) (*RestApi, error) {
 	req, out := c.GetRestApiRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetRestApiWithContext is the same as GetRestApi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetRestApi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetRestApiWithContext(ctx aws.Context, input *GetRestApiInput, opts ...request.Option) (*RestApi, error) {
+	req, out := c.GetRestApiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetRestApis = "GetRestApis"
@@ -4255,7 +5539,6 @@ const opGetRestApis = "GetRestApis"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetRestApisRequest(input *GetRestApisInput) (req *request.Request, output *GetRestApisOutput) {
 	op := &request.Operation{
 		Name:       opGetRestApis,
@@ -4273,9 +5556,8 @@ func (c *APIGateway) GetRestApisRequest(input *GetRestApisInput) (req *request.R
 		input = &GetRestApisInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetRestApisOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4291,19 +5573,31 @@ func (c *APIGateway) GetRestApisRequest(input *GetRestApisInput) (req *request.R
 // API operation GetRestApis for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetRestApis(input *GetRestApisInput) (*GetRestApisOutput, error) {
 	req, out := c.GetRestApisRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetRestApisWithContext is the same as GetRestApis with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetRestApis for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetRestApisWithContext(ctx aws.Context, input *GetRestApisInput, opts ...request.Option) (*GetRestApisOutput, error) {
+	req, out := c.GetRestApisRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetRestApisPages iterates over the pages of a GetRestApis operation,
@@ -4323,12 +5617,33 @@ func (c *APIGateway) GetRestApis(input *GetRestApisInput) (*GetRestApisOutput, e
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetRestApisPages(input *GetRestApisInput, fn func(p *GetRestApisOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetRestApisRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetRestApisOutput), lastPage)
-	})
+func (c *APIGateway) GetRestApisPages(input *GetRestApisInput, fn func(*GetRestApisOutput, bool) bool) error {
+	return c.GetRestApisPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetRestApisPagesWithContext same as GetRestApisPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetRestApisPagesWithContext(ctx aws.Context, input *GetRestApisInput, fn func(*GetRestApisOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetRestApisRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetRestApisOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetSdk = "GetSdk"
@@ -4356,7 +5671,6 @@ const opGetSdk = "GetSdk"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetSdkRequest(input *GetSdkInput) (req *request.Request, output *GetSdkOutput) {
 	op := &request.Operation{
 		Name:       opGetSdk,
@@ -4368,9 +5682,8 @@ func (c *APIGateway) GetSdkRequest(input *GetSdkInput) (req *request.Request, ou
 		input = &GetSdkInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetSdkOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4386,22 +5699,187 @@ func (c *APIGateway) GetSdkRequest(input *GetSdkInput) (req *request.Request, ou
 // API operation GetSdk for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetSdk(input *GetSdkInput) (*GetSdkOutput, error) {
 	req, out := c.GetSdkRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetSdkWithContext is the same as GetSdk with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSdk for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetSdkWithContext(ctx aws.Context, input *GetSdkInput, opts ...request.Option) (*GetSdkOutput, error) {
+	req, out := c.GetSdkRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetSdkType = "GetSdkType"
+
+// GetSdkTypeRequest generates a "aws/request.Request" representing the
+// client's request for the GetSdkType operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetSdkType for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetSdkType method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetSdkTypeRequest method.
+//    req, resp := client.GetSdkTypeRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) GetSdkTypeRequest(input *GetSdkTypeInput) (req *request.Request, output *SdkType) {
+	op := &request.Operation{
+		Name:       opGetSdkType,
+		HTTPMethod: "GET",
+		HTTPPath:   "/sdktypes/{sdktype_id}",
+	}
+
+	if input == nil {
+		input = &GetSdkTypeInput{}
+	}
+
+	output = &SdkType{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetSdkType API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation GetSdkType for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) GetSdkType(input *GetSdkTypeInput) (*SdkType, error) {
+	req, out := c.GetSdkTypeRequest(input)
+	return out, req.Send()
+}
+
+// GetSdkTypeWithContext is the same as GetSdkType with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSdkType for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetSdkTypeWithContext(ctx aws.Context, input *GetSdkTypeInput, opts ...request.Option) (*SdkType, error) {
+	req, out := c.GetSdkTypeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetSdkTypes = "GetSdkTypes"
+
+// GetSdkTypesRequest generates a "aws/request.Request" representing the
+// client's request for the GetSdkTypes operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetSdkTypes for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetSdkTypes method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetSdkTypesRequest method.
+//    req, resp := client.GetSdkTypesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) GetSdkTypesRequest(input *GetSdkTypesInput) (req *request.Request, output *GetSdkTypesOutput) {
+	op := &request.Operation{
+		Name:       opGetSdkTypes,
+		HTTPMethod: "GET",
+		HTTPPath:   "/sdktypes",
+	}
+
+	if input == nil {
+		input = &GetSdkTypesInput{}
+	}
+
+	output = &GetSdkTypesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetSdkTypes API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation GetSdkTypes for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) GetSdkTypes(input *GetSdkTypesInput) (*GetSdkTypesOutput, error) {
+	req, out := c.GetSdkTypesRequest(input)
+	return out, req.Send()
+}
+
+// GetSdkTypesWithContext is the same as GetSdkTypes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSdkTypes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetSdkTypesWithContext(ctx aws.Context, input *GetSdkTypesInput, opts ...request.Option) (*GetSdkTypesOutput, error) {
+	req, out := c.GetSdkTypesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetStage = "GetStage"
@@ -4429,7 +5907,6 @@ const opGetStage = "GetStage"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetStageRequest(input *GetStageInput) (req *request.Request, output *Stage) {
 	op := &request.Operation{
 		Name:       opGetStage,
@@ -4441,9 +5918,8 @@ func (c *APIGateway) GetStageRequest(input *GetStageInput) (req *request.Request
 		input = &GetStageInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Stage{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4459,19 +5935,31 @@ func (c *APIGateway) GetStageRequest(input *GetStageInput) (req *request.Request
 // API operation GetStage for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetStage(input *GetStageInput) (*Stage, error) {
 	req, out := c.GetStageRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetStageWithContext is the same as GetStage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetStage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetStageWithContext(ctx aws.Context, input *GetStageInput, opts ...request.Option) (*Stage, error) {
+	req, out := c.GetStageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetStages = "GetStages"
@@ -4499,7 +5987,6 @@ const opGetStages = "GetStages"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetStagesRequest(input *GetStagesInput) (req *request.Request, output *GetStagesOutput) {
 	op := &request.Operation{
 		Name:       opGetStages,
@@ -4511,9 +5998,8 @@ func (c *APIGateway) GetStagesRequest(input *GetStagesInput) (req *request.Reque
 		input = &GetStagesInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetStagesOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4529,19 +6015,31 @@ func (c *APIGateway) GetStagesRequest(input *GetStagesInput) (req *request.Reque
 // API operation GetStages for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetStages(input *GetStagesInput) (*GetStagesOutput, error) {
 	req, out := c.GetStagesRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetStagesWithContext is the same as GetStages with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetStages for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetStagesWithContext(ctx aws.Context, input *GetStagesInput, opts ...request.Option) (*GetStagesOutput, error) {
+	req, out := c.GetStagesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetUsage = "GetUsage"
@@ -4569,7 +6067,6 @@ const opGetUsage = "GetUsage"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetUsageRequest(input *GetUsageInput) (req *request.Request, output *Usage) {
 	op := &request.Operation{
 		Name:       opGetUsage,
@@ -4587,9 +6084,8 @@ func (c *APIGateway) GetUsageRequest(input *GetUsageInput) (req *request.Request
 		input = &GetUsageInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Usage{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4605,22 +6101,33 @@ func (c *APIGateway) GetUsageRequest(input *GetUsageInput) (req *request.Request
 // API operation GetUsage for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetUsage(input *GetUsageInput) (*Usage, error) {
 	req, out := c.GetUsageRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetUsageWithContext is the same as GetUsage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetUsage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetUsageWithContext(ctx aws.Context, input *GetUsageInput, opts ...request.Option) (*Usage, error) {
+	req, out := c.GetUsageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetUsagePages iterates over the pages of a GetUsage operation,
@@ -4640,12 +6147,33 @@ func (c *APIGateway) GetUsage(input *GetUsageInput) (*Usage, error) {
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetUsagePages(input *GetUsageInput, fn func(p *Usage, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetUsageRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*Usage), lastPage)
-	})
+func (c *APIGateway) GetUsagePages(input *GetUsageInput, fn func(*Usage, bool) bool) error {
+	return c.GetUsagePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetUsagePagesWithContext same as GetUsagePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetUsagePagesWithContext(ctx aws.Context, input *GetUsageInput, fn func(*Usage, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetUsageRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*Usage), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetUsagePlan = "GetUsagePlan"
@@ -4673,7 +6201,6 @@ const opGetUsagePlan = "GetUsagePlan"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetUsagePlanRequest(input *GetUsagePlanInput) (req *request.Request, output *UsagePlan) {
 	op := &request.Operation{
 		Name:       opGetUsagePlan,
@@ -4685,9 +6212,8 @@ func (c *APIGateway) GetUsagePlanRequest(input *GetUsagePlanInput) (req *request
 		input = &GetUsagePlanInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &UsagePlan{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4703,22 +6229,33 @@ func (c *APIGateway) GetUsagePlanRequest(input *GetUsagePlanInput) (req *request
 // API operation GetUsagePlan for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetUsagePlan(input *GetUsagePlanInput) (*UsagePlan, error) {
 	req, out := c.GetUsagePlanRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetUsagePlanWithContext is the same as GetUsagePlan with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetUsagePlan for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetUsagePlanWithContext(ctx aws.Context, input *GetUsagePlanInput, opts ...request.Option) (*UsagePlan, error) {
+	req, out := c.GetUsagePlanRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetUsagePlanKey = "GetUsagePlanKey"
@@ -4746,7 +6283,6 @@ const opGetUsagePlanKey = "GetUsagePlanKey"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetUsagePlanKeyRequest(input *GetUsagePlanKeyInput) (req *request.Request, output *UsagePlanKey) {
 	op := &request.Operation{
 		Name:       opGetUsagePlanKey,
@@ -4758,9 +6294,8 @@ func (c *APIGateway) GetUsagePlanKeyRequest(input *GetUsagePlanKeyInput) (req *r
 		input = &GetUsagePlanKeyInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &UsagePlanKey{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4776,22 +6311,33 @@ func (c *APIGateway) GetUsagePlanKeyRequest(input *GetUsagePlanKeyInput) (req *r
 // API operation GetUsagePlanKey for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetUsagePlanKey(input *GetUsagePlanKeyInput) (*UsagePlanKey, error) {
 	req, out := c.GetUsagePlanKeyRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetUsagePlanKeyWithContext is the same as GetUsagePlanKey with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetUsagePlanKey for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetUsagePlanKeyWithContext(ctx aws.Context, input *GetUsagePlanKeyInput, opts ...request.Option) (*UsagePlanKey, error) {
+	req, out := c.GetUsagePlanKeyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetUsagePlanKeys = "GetUsagePlanKeys"
@@ -4819,7 +6365,6 @@ const opGetUsagePlanKeys = "GetUsagePlanKeys"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetUsagePlanKeysRequest(input *GetUsagePlanKeysInput) (req *request.Request, output *GetUsagePlanKeysOutput) {
 	op := &request.Operation{
 		Name:       opGetUsagePlanKeys,
@@ -4837,9 +6382,8 @@ func (c *APIGateway) GetUsagePlanKeysRequest(input *GetUsagePlanKeysInput) (req 
 		input = &GetUsagePlanKeysInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetUsagePlanKeysOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4856,22 +6400,33 @@ func (c *APIGateway) GetUsagePlanKeysRequest(input *GetUsagePlanKeysInput) (req 
 // API operation GetUsagePlanKeys for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) GetUsagePlanKeys(input *GetUsagePlanKeysInput) (*GetUsagePlanKeysOutput, error) {
 	req, out := c.GetUsagePlanKeysRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetUsagePlanKeysWithContext is the same as GetUsagePlanKeys with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetUsagePlanKeys for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetUsagePlanKeysWithContext(ctx aws.Context, input *GetUsagePlanKeysInput, opts ...request.Option) (*GetUsagePlanKeysOutput, error) {
+	req, out := c.GetUsagePlanKeysRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetUsagePlanKeysPages iterates over the pages of a GetUsagePlanKeys operation,
@@ -4891,12 +6446,33 @@ func (c *APIGateway) GetUsagePlanKeys(input *GetUsagePlanKeysInput) (*GetUsagePl
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetUsagePlanKeysPages(input *GetUsagePlanKeysInput, fn func(p *GetUsagePlanKeysOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetUsagePlanKeysRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetUsagePlanKeysOutput), lastPage)
-	})
+func (c *APIGateway) GetUsagePlanKeysPages(input *GetUsagePlanKeysInput, fn func(*GetUsagePlanKeysOutput, bool) bool) error {
+	return c.GetUsagePlanKeysPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetUsagePlanKeysPagesWithContext same as GetUsagePlanKeysPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetUsagePlanKeysPagesWithContext(ctx aws.Context, input *GetUsagePlanKeysInput, fn func(*GetUsagePlanKeysOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetUsagePlanKeysRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetUsagePlanKeysOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetUsagePlans = "GetUsagePlans"
@@ -4924,7 +6500,6 @@ const opGetUsagePlans = "GetUsagePlans"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) GetUsagePlansRequest(input *GetUsagePlansInput) (req *request.Request, output *GetUsagePlansOutput) {
 	op := &request.Operation{
 		Name:       opGetUsagePlans,
@@ -4942,9 +6517,8 @@ func (c *APIGateway) GetUsagePlansRequest(input *GetUsagePlansInput) (req *reque
 		input = &GetUsagePlansInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &GetUsagePlansOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -4960,25 +6534,35 @@ func (c *APIGateway) GetUsagePlansRequest(input *GetUsagePlansInput) (req *reque
 // API operation GetUsagePlans for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
 func (c *APIGateway) GetUsagePlans(input *GetUsagePlansInput) (*GetUsagePlansOutput, error) {
 	req, out := c.GetUsagePlansRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// GetUsagePlansWithContext is the same as GetUsagePlans with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetUsagePlans for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetUsagePlansWithContext(ctx aws.Context, input *GetUsagePlansInput, opts ...request.Option) (*GetUsagePlansOutput, error) {
+	req, out := c.GetUsagePlansRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // GetUsagePlansPages iterates over the pages of a GetUsagePlans operation,
@@ -4998,12 +6582,33 @@ func (c *APIGateway) GetUsagePlans(input *GetUsagePlansInput) (*GetUsagePlansOut
 //            return pageNum <= 3
 //        })
 //
-func (c *APIGateway) GetUsagePlansPages(input *GetUsagePlansInput, fn func(p *GetUsagePlansOutput, lastPage bool) (shouldContinue bool)) error {
-	page, _ := c.GetUsagePlansRequest(input)
-	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
-	return page.EachPage(func(p interface{}, lastPage bool) bool {
-		return fn(p.(*GetUsagePlansOutput), lastPage)
-	})
+func (c *APIGateway) GetUsagePlansPages(input *GetUsagePlansInput, fn func(*GetUsagePlansOutput, bool) bool) error {
+	return c.GetUsagePlansPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetUsagePlansPagesWithContext same as GetUsagePlansPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) GetUsagePlansPagesWithContext(ctx aws.Context, input *GetUsagePlansInput, fn func(*GetUsagePlansOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			inCpy := *input
+			req, _ := c.GetUsagePlansRequest(&inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetUsagePlansOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opImportApiKeys = "ImportApiKeys"
@@ -5031,7 +6636,6 @@ const opImportApiKeys = "ImportApiKeys"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) ImportApiKeysRequest(input *ImportApiKeysInput) (req *request.Request, output *ImportApiKeysOutput) {
 	op := &request.Operation{
 		Name:       opImportApiKeys,
@@ -5043,9 +6647,8 @@ func (c *APIGateway) ImportApiKeysRequest(input *ImportApiKeysInput) (req *reque
 		input = &ImportApiKeysInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ImportApiKeysOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5061,28 +6664,119 @@ func (c *APIGateway) ImportApiKeysRequest(input *ImportApiKeysInput) (req *reque
 // API operation ImportApiKeys for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) ImportApiKeys(input *ImportApiKeysInput) (*ImportApiKeysOutput, error) {
 	req, out := c.ImportApiKeysRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ImportApiKeysWithContext is the same as ImportApiKeys with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ImportApiKeys for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) ImportApiKeysWithContext(ctx aws.Context, input *ImportApiKeysInput, opts ...request.Option) (*ImportApiKeysOutput, error) {
+	req, out := c.ImportApiKeysRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opImportDocumentationParts = "ImportDocumentationParts"
+
+// ImportDocumentationPartsRequest generates a "aws/request.Request" representing the
+// client's request for the ImportDocumentationParts operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ImportDocumentationParts for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ImportDocumentationParts method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ImportDocumentationPartsRequest method.
+//    req, resp := client.ImportDocumentationPartsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) ImportDocumentationPartsRequest(input *ImportDocumentationPartsInput) (req *request.Request, output *ImportDocumentationPartsOutput) {
+	op := &request.Operation{
+		Name:       opImportDocumentationParts,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/parts",
+	}
+
+	if input == nil {
+		input = &ImportDocumentationPartsInput{}
+	}
+
+	output = &ImportDocumentationPartsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ImportDocumentationParts API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation ImportDocumentationParts for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) ImportDocumentationParts(input *ImportDocumentationPartsInput) (*ImportDocumentationPartsOutput, error) {
+	req, out := c.ImportDocumentationPartsRequest(input)
+	return out, req.Send()
+}
+
+// ImportDocumentationPartsWithContext is the same as ImportDocumentationParts with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ImportDocumentationParts for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) ImportDocumentationPartsWithContext(ctx aws.Context, input *ImportDocumentationPartsInput, opts ...request.Option) (*ImportDocumentationPartsOutput, error) {
+	req, out := c.ImportDocumentationPartsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opImportRestApi = "ImportRestApi"
@@ -5110,7 +6804,6 @@ const opImportRestApi = "ImportRestApi"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) ImportRestApiRequest(input *ImportRestApiInput) (req *request.Request, output *RestApi) {
 	op := &request.Operation{
 		Name:       opImportRestApi,
@@ -5122,9 +6815,8 @@ func (c *APIGateway) ImportRestApiRequest(input *ImportRestApiInput) (req *reque
 		input = &ImportRestApiInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &RestApi{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5141,25 +6833,35 @@ func (c *APIGateway) ImportRestApiRequest(input *ImportRestApiInput) (req *reque
 // API operation ImportRestApi for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) ImportRestApi(input *ImportRestApiInput) (*RestApi, error) {
 	req, out := c.ImportRestApiRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// ImportRestApiWithContext is the same as ImportRestApi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ImportRestApi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) ImportRestApiWithContext(ctx aws.Context, input *ImportRestApiInput, opts ...request.Option) (*RestApi, error) {
+	req, out := c.ImportRestApiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opPutIntegration = "PutIntegration"
@@ -5187,7 +6889,6 @@ const opPutIntegration = "PutIntegration"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) PutIntegrationRequest(input *PutIntegrationInput) (req *request.Request, output *Integration) {
 	op := &request.Operation{
 		Name:       opPutIntegration,
@@ -5199,9 +6900,8 @@ func (c *APIGateway) PutIntegrationRequest(input *PutIntegrationInput) (req *req
 		input = &PutIntegrationInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Integration{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5217,25 +6917,35 @@ func (c *APIGateway) PutIntegrationRequest(input *PutIntegrationInput) (req *req
 // API operation PutIntegration for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) PutIntegration(input *PutIntegrationInput) (*Integration, error) {
 	req, out := c.PutIntegrationRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// PutIntegrationWithContext is the same as PutIntegration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutIntegration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) PutIntegrationWithContext(ctx aws.Context, input *PutIntegrationInput, opts ...request.Option) (*Integration, error) {
+	req, out := c.PutIntegrationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opPutIntegrationResponse = "PutIntegrationResponse"
@@ -5263,7 +6973,6 @@ const opPutIntegrationResponse = "PutIntegrationResponse"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) PutIntegrationResponseRequest(input *PutIntegrationResponseInput) (req *request.Request, output *IntegrationResponse) {
 	op := &request.Operation{
 		Name:       opPutIntegrationResponse,
@@ -5275,9 +6984,8 @@ func (c *APIGateway) PutIntegrationResponseRequest(input *PutIntegrationResponse
 		input = &PutIntegrationResponseInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &IntegrationResponse{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5293,28 +7001,37 @@ func (c *APIGateway) PutIntegrationResponseRequest(input *PutIntegrationResponse
 // API operation PutIntegrationResponse for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) PutIntegrationResponse(input *PutIntegrationResponseInput) (*IntegrationResponse, error) {
 	req, out := c.PutIntegrationResponseRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// PutIntegrationResponseWithContext is the same as PutIntegrationResponse with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutIntegrationResponse for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) PutIntegrationResponseWithContext(ctx aws.Context, input *PutIntegrationResponseInput, opts ...request.Option) (*IntegrationResponse, error) {
+	req, out := c.PutIntegrationResponseRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opPutMethod = "PutMethod"
@@ -5342,7 +7059,6 @@ const opPutMethod = "PutMethod"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) PutMethodRequest(input *PutMethodInput) (req *request.Request, output *Method) {
 	op := &request.Operation{
 		Name:       opPutMethod,
@@ -5354,9 +7070,8 @@ func (c *APIGateway) PutMethodRequest(input *PutMethodInput) (req *request.Reque
 		input = &PutMethodInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Method{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5372,28 +7087,37 @@ func (c *APIGateway) PutMethodRequest(input *PutMethodInput) (req *request.Reque
 // API operation PutMethod for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) PutMethod(input *PutMethodInput) (*Method, error) {
 	req, out := c.PutMethodRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// PutMethodWithContext is the same as PutMethod with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutMethod for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) PutMethodWithContext(ctx aws.Context, input *PutMethodInput, opts ...request.Option) (*Method, error) {
+	req, out := c.PutMethodRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opPutMethodResponse = "PutMethodResponse"
@@ -5421,7 +7145,6 @@ const opPutMethodResponse = "PutMethodResponse"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) PutMethodResponseRequest(input *PutMethodResponseInput) (req *request.Request, output *MethodResponse) {
 	op := &request.Operation{
 		Name:       opPutMethodResponse,
@@ -5433,9 +7156,8 @@ func (c *APIGateway) PutMethodResponseRequest(input *PutMethodResponseInput) (re
 		input = &PutMethodResponseInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &MethodResponse{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5451,28 +7173,37 @@ func (c *APIGateway) PutMethodResponseRequest(input *PutMethodResponseInput) (re
 // API operation PutMethodResponse for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) PutMethodResponse(input *PutMethodResponseInput) (*MethodResponse, error) {
 	req, out := c.PutMethodResponseRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// PutMethodResponseWithContext is the same as PutMethodResponse with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutMethodResponse for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) PutMethodResponseWithContext(ctx aws.Context, input *PutMethodResponseInput, opts ...request.Option) (*MethodResponse, error) {
+	req, out := c.PutMethodResponseRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opPutRestApi = "PutRestApi"
@@ -5500,7 +7231,6 @@ const opPutRestApi = "PutRestApi"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) PutRestApiRequest(input *PutRestApiInput) (req *request.Request, output *RestApi) {
 	op := &request.Operation{
 		Name:       opPutRestApi,
@@ -5512,9 +7242,8 @@ func (c *APIGateway) PutRestApiRequest(input *PutRestApiInput) (req *request.Req
 		input = &PutRestApiInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &RestApi{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5533,28 +7262,37 @@ func (c *APIGateway) PutRestApiRequest(input *PutRestApiInput) (req *request.Req
 // API operation PutRestApi for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) PutRestApi(input *PutRestApiInput) (*RestApi, error) {
 	req, out := c.PutRestApiRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// PutRestApiWithContext is the same as PutRestApi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutRestApi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) PutRestApiWithContext(ctx aws.Context, input *PutRestApiInput, opts ...request.Option) (*RestApi, error) {
+	req, out := c.PutRestApiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opTestInvokeAuthorizer = "TestInvokeAuthorizer"
@@ -5582,7 +7320,6 @@ const opTestInvokeAuthorizer = "TestInvokeAuthorizer"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) TestInvokeAuthorizerRequest(input *TestInvokeAuthorizerInput) (req *request.Request, output *TestInvokeAuthorizerOutput) {
 	op := &request.Operation{
 		Name:       opTestInvokeAuthorizer,
@@ -5594,9 +7331,8 @@ func (c *APIGateway) TestInvokeAuthorizerRequest(input *TestInvokeAuthorizerInpu
 		input = &TestInvokeAuthorizerInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &TestInvokeAuthorizerOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5615,22 +7351,33 @@ func (c *APIGateway) TestInvokeAuthorizerRequest(input *TestInvokeAuthorizerInpu
 // API operation TestInvokeAuthorizer for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) TestInvokeAuthorizer(input *TestInvokeAuthorizerInput) (*TestInvokeAuthorizerOutput, error) {
 	req, out := c.TestInvokeAuthorizerRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// TestInvokeAuthorizerWithContext is the same as TestInvokeAuthorizer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TestInvokeAuthorizer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) TestInvokeAuthorizerWithContext(ctx aws.Context, input *TestInvokeAuthorizerInput, opts ...request.Option) (*TestInvokeAuthorizerOutput, error) {
+	req, out := c.TestInvokeAuthorizerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opTestInvokeMethod = "TestInvokeMethod"
@@ -5658,7 +7405,6 @@ const opTestInvokeMethod = "TestInvokeMethod"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) TestInvokeMethodRequest(input *TestInvokeMethodInput) (req *request.Request, output *TestInvokeMethodOutput) {
 	op := &request.Operation{
 		Name:       opTestInvokeMethod,
@@ -5670,9 +7416,8 @@ func (c *APIGateway) TestInvokeMethodRequest(input *TestInvokeMethodInput) (req 
 		input = &TestInvokeMethodInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &TestInvokeMethodOutput{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5689,22 +7434,33 @@ func (c *APIGateway) TestInvokeMethodRequest(input *TestInvokeMethodInput) (req 
 // API operation TestInvokeMethod for usage and error information.
 //
 // Returned Error Codes:
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) TestInvokeMethod(input *TestInvokeMethodInput) (*TestInvokeMethodOutput, error) {
 	req, out := c.TestInvokeMethodRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// TestInvokeMethodWithContext is the same as TestInvokeMethod with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TestInvokeMethod for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) TestInvokeMethodWithContext(ctx aws.Context, input *TestInvokeMethodInput, opts ...request.Option) (*TestInvokeMethodOutput, error) {
+	req, out := c.TestInvokeMethodRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateAccount = "UpdateAccount"
@@ -5732,7 +7488,6 @@ const opUpdateAccount = "UpdateAccount"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateAccountRequest(input *UpdateAccountInput) (req *request.Request, output *Account) {
 	op := &request.Operation{
 		Name:       opUpdateAccount,
@@ -5744,9 +7499,8 @@ func (c *APIGateway) UpdateAccountRequest(input *UpdateAccountInput) (req *reque
 		input = &UpdateAccountInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Account{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5762,22 +7516,33 @@ func (c *APIGateway) UpdateAccountRequest(input *UpdateAccountInput) (req *reque
 // API operation UpdateAccount for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateAccount(input *UpdateAccountInput) (*Account, error) {
 	req, out := c.UpdateAccountRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateAccountWithContext is the same as UpdateAccount with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAccount for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateAccountWithContext(ctx aws.Context, input *UpdateAccountInput, opts ...request.Option) (*Account, error) {
+	req, out := c.UpdateAccountRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateApiKey = "UpdateApiKey"
@@ -5805,7 +7570,6 @@ const opUpdateApiKey = "UpdateApiKey"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateApiKeyRequest(input *UpdateApiKeyInput) (req *request.Request, output *ApiKey) {
 	op := &request.Operation{
 		Name:       opUpdateApiKey,
@@ -5817,9 +7581,8 @@ func (c *APIGateway) UpdateApiKeyRequest(input *UpdateApiKeyInput) (req *request
 		input = &UpdateApiKeyInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ApiKey{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5835,25 +7598,35 @@ func (c *APIGateway) UpdateApiKeyRequest(input *UpdateApiKeyInput) (req *request
 // API operation UpdateApiKey for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) UpdateApiKey(input *UpdateApiKeyInput) (*ApiKey, error) {
 	req, out := c.UpdateApiKeyRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateApiKeyWithContext is the same as UpdateApiKey with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateApiKey for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateApiKeyWithContext(ctx aws.Context, input *UpdateApiKeyInput, opts ...request.Option) (*ApiKey, error) {
+	req, out := c.UpdateApiKeyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateAuthorizer = "UpdateAuthorizer"
@@ -5881,7 +7654,6 @@ const opUpdateAuthorizer = "UpdateAuthorizer"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateAuthorizerRequest(input *UpdateAuthorizerInput) (req *request.Request, output *Authorizer) {
 	op := &request.Operation{
 		Name:       opUpdateAuthorizer,
@@ -5893,9 +7665,8 @@ func (c *APIGateway) UpdateAuthorizerRequest(input *UpdateAuthorizerInput) (req 
 		input = &UpdateAuthorizerInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Authorizer{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5913,22 +7684,33 @@ func (c *APIGateway) UpdateAuthorizerRequest(input *UpdateAuthorizerInput) (req 
 // API operation UpdateAuthorizer for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateAuthorizer(input *UpdateAuthorizerInput) (*Authorizer, error) {
 	req, out := c.UpdateAuthorizerRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateAuthorizerWithContext is the same as UpdateAuthorizer with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAuthorizer for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateAuthorizerWithContext(ctx aws.Context, input *UpdateAuthorizerInput, opts ...request.Option) (*Authorizer, error) {
+	req, out := c.UpdateAuthorizerRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateBasePathMapping = "UpdateBasePathMapping"
@@ -5956,7 +7738,6 @@ const opUpdateBasePathMapping = "UpdateBasePathMapping"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateBasePathMappingRequest(input *UpdateBasePathMappingInput) (req *request.Request, output *BasePathMapping) {
 	op := &request.Operation{
 		Name:       opUpdateBasePathMapping,
@@ -5968,9 +7749,8 @@ func (c *APIGateway) UpdateBasePathMappingRequest(input *UpdateBasePathMappingIn
 		input = &UpdateBasePathMappingInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &BasePathMapping{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -5986,25 +7766,35 @@ func (c *APIGateway) UpdateBasePathMappingRequest(input *UpdateBasePathMappingIn
 // API operation UpdateBasePathMapping for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateBasePathMapping(input *UpdateBasePathMappingInput) (*BasePathMapping, error) {
 	req, out := c.UpdateBasePathMappingRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateBasePathMappingWithContext is the same as UpdateBasePathMapping with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateBasePathMapping for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateBasePathMappingWithContext(ctx aws.Context, input *UpdateBasePathMappingInput, opts ...request.Option) (*BasePathMapping, error) {
+	req, out := c.UpdateBasePathMappingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateClientCertificate = "UpdateClientCertificate"
@@ -6032,7 +7822,6 @@ const opUpdateClientCertificate = "UpdateClientCertificate"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateClientCertificateRequest(input *UpdateClientCertificateInput) (req *request.Request, output *ClientCertificate) {
 	op := &request.Operation{
 		Name:       opUpdateClientCertificate,
@@ -6044,9 +7833,8 @@ func (c *APIGateway) UpdateClientCertificateRequest(input *UpdateClientCertifica
 		input = &UpdateClientCertificateInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &ClientCertificate{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6062,22 +7850,33 @@ func (c *APIGateway) UpdateClientCertificateRequest(input *UpdateClientCertifica
 // API operation UpdateClientCertificate for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
 func (c *APIGateway) UpdateClientCertificate(input *UpdateClientCertificateInput) (*ClientCertificate, error) {
 	req, out := c.UpdateClientCertificateRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateClientCertificateWithContext is the same as UpdateClientCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateClientCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateClientCertificateWithContext(ctx aws.Context, input *UpdateClientCertificateInput, opts ...request.Option) (*ClientCertificate, error) {
+	req, out := c.UpdateClientCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateDeployment = "UpdateDeployment"
@@ -6105,7 +7904,6 @@ const opUpdateDeployment = "UpdateDeployment"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateDeploymentRequest(input *UpdateDeploymentInput) (req *request.Request, output *Deployment) {
 	op := &request.Operation{
 		Name:       opUpdateDeployment,
@@ -6117,9 +7915,8 @@ func (c *APIGateway) UpdateDeploymentRequest(input *UpdateDeploymentInput) (req 
 		input = &UpdateDeploymentInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Deployment{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6135,25 +7932,201 @@ func (c *APIGateway) UpdateDeploymentRequest(input *UpdateDeploymentInput) (req 
 // API operation UpdateDeployment for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ServiceUnavailableException
-
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //
 func (c *APIGateway) UpdateDeployment(input *UpdateDeploymentInput) (*Deployment, error) {
 	req, out := c.UpdateDeploymentRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateDeploymentWithContext is the same as UpdateDeployment with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDeployment for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateDeploymentWithContext(ctx aws.Context, input *UpdateDeploymentInput, opts ...request.Option) (*Deployment, error) {
+	req, out := c.UpdateDeploymentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateDocumentationPart = "UpdateDocumentationPart"
+
+// UpdateDocumentationPartRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateDocumentationPart operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See UpdateDocumentationPart for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateDocumentationPart method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateDocumentationPartRequest method.
+//    req, resp := client.UpdateDocumentationPartRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) UpdateDocumentationPartRequest(input *UpdateDocumentationPartInput) (req *request.Request, output *DocumentationPart) {
+	op := &request.Operation{
+		Name:       opUpdateDocumentationPart,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/parts/{part_id}",
+	}
+
+	if input == nil {
+		input = &UpdateDocumentationPartInput{}
+	}
+
+	output = &DocumentationPart{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateDocumentationPart API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation UpdateDocumentationPart for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) UpdateDocumentationPart(input *UpdateDocumentationPartInput) (*DocumentationPart, error) {
+	req, out := c.UpdateDocumentationPartRequest(input)
+	return out, req.Send()
+}
+
+// UpdateDocumentationPartWithContext is the same as UpdateDocumentationPart with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDocumentationPart for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateDocumentationPartWithContext(ctx aws.Context, input *UpdateDocumentationPartInput, opts ...request.Option) (*DocumentationPart, error) {
+	req, out := c.UpdateDocumentationPartRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateDocumentationVersion = "UpdateDocumentationVersion"
+
+// UpdateDocumentationVersionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateDocumentationVersion operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See UpdateDocumentationVersion for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateDocumentationVersion method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateDocumentationVersionRequest method.
+//    req, resp := client.UpdateDocumentationVersionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *APIGateway) UpdateDocumentationVersionRequest(input *UpdateDocumentationVersionInput) (req *request.Request, output *DocumentationVersion) {
+	op := &request.Operation{
+		Name:       opUpdateDocumentationVersion,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/restapis/{restapi_id}/documentation/versions/{doc_version}",
+	}
+
+	if input == nil {
+		input = &UpdateDocumentationVersionInput{}
+	}
+
+	output = &DocumentationVersion{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateDocumentationVersion API operation for Amazon API Gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon API Gateway's
+// API operation UpdateDocumentationVersion for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+func (c *APIGateway) UpdateDocumentationVersion(input *UpdateDocumentationVersionInput) (*DocumentationVersion, error) {
+	req, out := c.UpdateDocumentationVersionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateDocumentationVersionWithContext is the same as UpdateDocumentationVersion with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDocumentationVersion for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateDocumentationVersionWithContext(ctx aws.Context, input *UpdateDocumentationVersionInput, opts ...request.Option) (*DocumentationVersion, error) {
+	req, out := c.UpdateDocumentationVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateDomainName = "UpdateDomainName"
@@ -6181,7 +8154,6 @@ const opUpdateDomainName = "UpdateDomainName"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateDomainNameRequest(input *UpdateDomainNameInput) (req *request.Request, output *DomainName) {
 	op := &request.Operation{
 		Name:       opUpdateDomainName,
@@ -6193,9 +8165,8 @@ func (c *APIGateway) UpdateDomainNameRequest(input *UpdateDomainNameInput) (req 
 		input = &UpdateDomainNameInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &DomainName{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6211,25 +8182,35 @@ func (c *APIGateway) UpdateDomainNameRequest(input *UpdateDomainNameInput) (req 
 // API operation UpdateDomainName for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateDomainName(input *UpdateDomainNameInput) (*DomainName, error) {
 	req, out := c.UpdateDomainNameRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateDomainNameWithContext is the same as UpdateDomainName with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDomainName for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateDomainNameWithContext(ctx aws.Context, input *UpdateDomainNameInput, opts ...request.Option) (*DomainName, error) {
+	req, out := c.UpdateDomainNameRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateIntegration = "UpdateIntegration"
@@ -6257,7 +8238,6 @@ const opUpdateIntegration = "UpdateIntegration"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateIntegrationRequest(input *UpdateIntegrationInput) (req *request.Request, output *Integration) {
 	op := &request.Operation{
 		Name:       opUpdateIntegration,
@@ -6269,9 +8249,8 @@ func (c *APIGateway) UpdateIntegrationRequest(input *UpdateIntegrationInput) (re
 		input = &UpdateIntegrationInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Integration{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6287,25 +8266,35 @@ func (c *APIGateway) UpdateIntegrationRequest(input *UpdateIntegrationInput) (re
 // API operation UpdateIntegration for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) UpdateIntegration(input *UpdateIntegrationInput) (*Integration, error) {
 	req, out := c.UpdateIntegrationRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateIntegrationWithContext is the same as UpdateIntegration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateIntegration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateIntegrationWithContext(ctx aws.Context, input *UpdateIntegrationInput, opts ...request.Option) (*Integration, error) {
+	req, out := c.UpdateIntegrationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateIntegrationResponse = "UpdateIntegrationResponse"
@@ -6333,7 +8322,6 @@ const opUpdateIntegrationResponse = "UpdateIntegrationResponse"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateIntegrationResponseRequest(input *UpdateIntegrationResponseInput) (req *request.Request, output *IntegrationResponse) {
 	op := &request.Operation{
 		Name:       opUpdateIntegrationResponse,
@@ -6345,9 +8333,8 @@ func (c *APIGateway) UpdateIntegrationResponseRequest(input *UpdateIntegrationRe
 		input = &UpdateIntegrationResponseInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &IntegrationResponse{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6363,25 +8350,35 @@ func (c *APIGateway) UpdateIntegrationResponseRequest(input *UpdateIntegrationRe
 // API operation UpdateIntegrationResponse for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateIntegrationResponse(input *UpdateIntegrationResponseInput) (*IntegrationResponse, error) {
 	req, out := c.UpdateIntegrationResponseRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateIntegrationResponseWithContext is the same as UpdateIntegrationResponse with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateIntegrationResponse for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateIntegrationResponseWithContext(ctx aws.Context, input *UpdateIntegrationResponseInput, opts ...request.Option) (*IntegrationResponse, error) {
+	req, out := c.UpdateIntegrationResponseRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateMethod = "UpdateMethod"
@@ -6409,7 +8406,6 @@ const opUpdateMethod = "UpdateMethod"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateMethodRequest(input *UpdateMethodInput) (req *request.Request, output *Method) {
 	op := &request.Operation{
 		Name:       opUpdateMethod,
@@ -6421,9 +8417,8 @@ func (c *APIGateway) UpdateMethodRequest(input *UpdateMethodInput) (req *request
 		input = &UpdateMethodInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Method{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6439,25 +8434,35 @@ func (c *APIGateway) UpdateMethodRequest(input *UpdateMethodInput) (req *request
 // API operation UpdateMethod for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateMethod(input *UpdateMethodInput) (*Method, error) {
 	req, out := c.UpdateMethodRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateMethodWithContext is the same as UpdateMethod with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateMethod for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateMethodWithContext(ctx aws.Context, input *UpdateMethodInput, opts ...request.Option) (*Method, error) {
+	req, out := c.UpdateMethodRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateMethodResponse = "UpdateMethodResponse"
@@ -6485,7 +8490,6 @@ const opUpdateMethodResponse = "UpdateMethodResponse"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateMethodResponseRequest(input *UpdateMethodResponseInput) (req *request.Request, output *MethodResponse) {
 	op := &request.Operation{
 		Name:       opUpdateMethodResponse,
@@ -6497,9 +8501,8 @@ func (c *APIGateway) UpdateMethodResponseRequest(input *UpdateMethodResponseInpu
 		input = &UpdateMethodResponseInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &MethodResponse{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6515,28 +8518,37 @@ func (c *APIGateway) UpdateMethodResponseRequest(input *UpdateMethodResponseInpu
 // API operation UpdateMethodResponse for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * LimitExceededException
-
+//   * ErrCodeLimitExceededException "LimitExceededException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateMethodResponse(input *UpdateMethodResponseInput) (*MethodResponse, error) {
 	req, out := c.UpdateMethodResponseRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateMethodResponseWithContext is the same as UpdateMethodResponse with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateMethodResponse for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateMethodResponseWithContext(ctx aws.Context, input *UpdateMethodResponseInput, opts ...request.Option) (*MethodResponse, error) {
+	req, out := c.UpdateMethodResponseRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateModel = "UpdateModel"
@@ -6564,7 +8576,6 @@ const opUpdateModel = "UpdateModel"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateModelRequest(input *UpdateModelInput) (req *request.Request, output *Model) {
 	op := &request.Operation{
 		Name:       opUpdateModel,
@@ -6576,9 +8587,8 @@ func (c *APIGateway) UpdateModelRequest(input *UpdateModelInput) (req *request.R
 		input = &UpdateModelInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Model{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6594,25 +8604,35 @@ func (c *APIGateway) UpdateModelRequest(input *UpdateModelInput) (req *request.R
 // API operation UpdateModel for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateModel(input *UpdateModelInput) (*Model, error) {
 	req, out := c.UpdateModelRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateModelWithContext is the same as UpdateModel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateModel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateModelWithContext(ctx aws.Context, input *UpdateModelInput, opts ...request.Option) (*Model, error) {
+	req, out := c.UpdateModelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateResource = "UpdateResource"
@@ -6640,7 +8660,6 @@ const opUpdateResource = "UpdateResource"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateResourceRequest(input *UpdateResourceInput) (req *request.Request, output *Resource) {
 	op := &request.Operation{
 		Name:       opUpdateResource,
@@ -6652,9 +8671,8 @@ func (c *APIGateway) UpdateResourceRequest(input *UpdateResourceInput) (req *req
 		input = &UpdateResourceInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Resource{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6670,25 +8688,35 @@ func (c *APIGateway) UpdateResourceRequest(input *UpdateResourceInput) (req *req
 // API operation UpdateResource for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateResource(input *UpdateResourceInput) (*Resource, error) {
 	req, out := c.UpdateResourceRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateResourceWithContext is the same as UpdateResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateResourceWithContext(ctx aws.Context, input *UpdateResourceInput, opts ...request.Option) (*Resource, error) {
+	req, out := c.UpdateResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateRestApi = "UpdateRestApi"
@@ -6716,7 +8744,6 @@ const opUpdateRestApi = "UpdateRestApi"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateRestApiRequest(input *UpdateRestApiInput) (req *request.Request, output *RestApi) {
 	op := &request.Operation{
 		Name:       opUpdateRestApi,
@@ -6728,9 +8755,8 @@ func (c *APIGateway) UpdateRestApiRequest(input *UpdateRestApiInput) (req *reque
 		input = &UpdateRestApiInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &RestApi{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6746,25 +8772,35 @@ func (c *APIGateway) UpdateRestApiRequest(input *UpdateRestApiInput) (req *reque
 // API operation UpdateRestApi for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateRestApi(input *UpdateRestApiInput) (*RestApi, error) {
 	req, out := c.UpdateRestApiRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateRestApiWithContext is the same as UpdateRestApi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateRestApi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateRestApiWithContext(ctx aws.Context, input *UpdateRestApiInput, opts ...request.Option) (*RestApi, error) {
+	req, out := c.UpdateRestApiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateStage = "UpdateStage"
@@ -6792,7 +8828,6 @@ const opUpdateStage = "UpdateStage"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateStageRequest(input *UpdateStageInput) (req *request.Request, output *Stage) {
 	op := &request.Operation{
 		Name:       opUpdateStage,
@@ -6804,9 +8839,8 @@ func (c *APIGateway) UpdateStageRequest(input *UpdateStageInput) (req *request.R
 		input = &UpdateStageInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Stage{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6822,25 +8856,35 @@ func (c *APIGateway) UpdateStageRequest(input *UpdateStageInput) (req *request.R
 // API operation UpdateStage for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
 func (c *APIGateway) UpdateStage(input *UpdateStageInput) (*Stage, error) {
 	req, out := c.UpdateStageRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateStageWithContext is the same as UpdateStage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateStage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateStageWithContext(ctx aws.Context, input *UpdateStageInput, opts ...request.Option) (*Stage, error) {
+	req, out := c.UpdateStageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateUsage = "UpdateUsage"
@@ -6868,7 +8912,6 @@ const opUpdateUsage = "UpdateUsage"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateUsageRequest(input *UpdateUsageInput) (req *request.Request, output *Usage) {
 	op := &request.Operation{
 		Name:       opUpdateUsage,
@@ -6880,9 +8923,8 @@ func (c *APIGateway) UpdateUsageRequest(input *UpdateUsageInput) (req *request.R
 		input = &UpdateUsageInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &Usage{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6899,22 +8941,33 @@ func (c *APIGateway) UpdateUsageRequest(input *UpdateUsageInput) (req *request.R
 // API operation UpdateUsage for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
 func (c *APIGateway) UpdateUsage(input *UpdateUsageInput) (*Usage, error) {
 	req, out := c.UpdateUsageRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateUsageWithContext is the same as UpdateUsage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateUsage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateUsageWithContext(ctx aws.Context, input *UpdateUsageInput, opts ...request.Option) (*Usage, error) {
+	req, out := c.UpdateUsageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opUpdateUsagePlan = "UpdateUsagePlan"
@@ -6942,7 +8995,6 @@ const opUpdateUsagePlan = "UpdateUsagePlan"
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
-//
 func (c *APIGateway) UpdateUsagePlanRequest(input *UpdateUsagePlanInput) (req *request.Request, output *UsagePlan) {
 	op := &request.Operation{
 		Name:       opUpdateUsagePlan,
@@ -6954,9 +9006,8 @@ func (c *APIGateway) UpdateUsagePlanRequest(input *UpdateUsagePlanInput) (req *r
 		input = &UpdateUsagePlanInput{}
 	}
 
-	req = c.newRequest(op, input, output)
 	output = &UsagePlan{}
-	req.Data = output
+	req = c.newRequest(op, input, output)
 	return
 }
 
@@ -6972,25 +9023,35 @@ func (c *APIGateway) UpdateUsagePlanRequest(input *UpdateUsagePlanInput) (req *r
 // API operation UpdateUsagePlan for usage and error information.
 //
 // Returned Error Codes:
-//   * UnauthorizedException
-
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
 //
-//   * TooManyRequestsException
-
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //
-//   * BadRequestException
-
+//   * ErrCodeBadRequestException "BadRequestException"
 //
-//   * NotFoundException
-
+//   * ErrCodeNotFoundException "NotFoundException"
 //
-//   * ConflictException
-
+//   * ErrCodeConflictException "ConflictException"
 //
 func (c *APIGateway) UpdateUsagePlan(input *UpdateUsagePlanInput) (*UsagePlan, error) {
 	req, out := c.UpdateUsagePlanRequest(input)
-	err := req.Send()
-	return out, err
+	return out, req.Send()
+}
+
+// UpdateUsagePlanWithContext is the same as UpdateUsagePlan with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateUsagePlan for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *APIGateway) UpdateUsagePlanWithContext(ctx aws.Context, input *UpdateUsagePlanInput, opts ...request.Option) (*UsagePlan, error) {
+	req, out := c.UpdateUsagePlanRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 // Represents an AWS account that is associated with Amazon API Gateway.
@@ -7089,8 +9150,12 @@ func (s *Account) SetThrottleSettings(v *ThrottleSettings) *Account {
 type ApiKey struct {
 	_ struct{} `type:"structure"`
 
-	// The date when the API Key was created, in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm).
+	// The timestamp when the API Key was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+
+	// An AWS Marketplace customer identifier , when integrating with the AWS SaaS
+	// Marketplace.
+	CustomerId *string `locationName:"customerId" type:"string"`
 
 	// The description of the API Key.
 	Description *string `locationName:"description" type:"string"`
@@ -7101,7 +9166,7 @@ type ApiKey struct {
 	// The identifier of the API Key.
 	Id *string `locationName:"id" type:"string"`
 
-	// When the API Key was last updated, in ISO 8601 format.
+	// The timestamp when the API Key was last updated.
 	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The name of the API Key.
@@ -7127,6 +9192,12 @@ func (s ApiKey) GoString() string {
 // SetCreatedDate sets the CreatedDate field's value.
 func (s *ApiKey) SetCreatedDate(v time.Time) *ApiKey {
 	s.CreatedDate = &v
+	return s
+}
+
+// SetCustomerId sets the CustomerId field's value.
+func (s *ApiKey) SetCustomerId(v string) *ApiKey {
+	s.CustomerId = &v
 	return s
 }
 
@@ -7397,13 +9468,13 @@ type ClientCertificate struct {
 	// The identifier of the client certificate.
 	ClientCertificateId *string `locationName:"clientCertificateId" type:"string"`
 
-	// The date when the client certificate was created, in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm).
+	// The timestamp when the client certificate was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The description of the client certificate.
 	Description *string `locationName:"description" type:"string"`
 
-	// The date when the client certificate will expire, in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm).
+	// The timestamp when the client certificate will expire.
 	ExpirationDate *time.Time `locationName:"expirationDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The PEM-encoded public key of the client certificate, which can be used to
@@ -7455,6 +9526,10 @@ func (s *ClientCertificate) SetPemEncodedCertificate(v string) *ClientCertificat
 type CreateApiKeyInput struct {
 	_ struct{} `type:"structure"`
 
+	// An AWS Marketplace customer identifier , when integrating with the AWS SaaS
+	// Marketplace.
+	CustomerId *string `locationName:"customerId" type:"string"`
+
 	// The description of the ApiKey.
 	Description *string `locationName:"description" type:"string"`
 
@@ -7483,6 +9558,12 @@ func (s CreateApiKeyInput) String() string {
 // GoString returns the string representation
 func (s CreateApiKeyInput) GoString() string {
 	return s.String()
+}
+
+// SetCustomerId sets the CustomerId field's value.
+func (s *CreateApiKeyInput) SetCustomerId(v string) *CreateApiKeyInput {
+	s.CustomerId = &v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -7829,36 +9910,180 @@ func (s *CreateDeploymentInput) SetVariables(v map[string]*string) *CreateDeploy
 	return s
 }
 
+// Creates a new documentation part of a given API.
+type CreateDocumentationPartInput struct {
+	_ struct{} `type:"structure"`
+
+	// [Required] The location of the targeted API entity of the to-be-created documentation
+	// part.
+	//
+	// Location is a required field
+	Location *DocumentationPartLocation `locationName:"location" type:"structure" required:"true"`
+
+	// [Required] The new documentation content map of the targeted API entity.
+	// Enclosed key-value pairs are API-specific, but only Swagger-compliant key-value
+	// pairs can be exported and, hence, published.
+	//
+	// Properties is a required field
+	Properties *string `locationName:"properties" type:"string" required:"true"`
+
+	// [Required] The identifier of an API of the to-be-created documentation part.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateDocumentationPartInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDocumentationPartInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateDocumentationPartInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateDocumentationPartInput"}
+	if s.Location == nil {
+		invalidParams.Add(request.NewErrParamRequired("Location"))
+	}
+	if s.Properties == nil {
+		invalidParams.Add(request.NewErrParamRequired("Properties"))
+	}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+	if s.Location != nil {
+		if err := s.Location.Validate(); err != nil {
+			invalidParams.AddNested("Location", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLocation sets the Location field's value.
+func (s *CreateDocumentationPartInput) SetLocation(v *DocumentationPartLocation) *CreateDocumentationPartInput {
+	s.Location = v
+	return s
+}
+
+// SetProperties sets the Properties field's value.
+func (s *CreateDocumentationPartInput) SetProperties(v string) *CreateDocumentationPartInput {
+	s.Properties = &v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *CreateDocumentationPartInput) SetRestApiId(v string) *CreateDocumentationPartInput {
+	s.RestApiId = &v
+	return s
+}
+
+// Creates a new documentation version of a given API.
+type CreateDocumentationVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// A description about the new documentation snapshot.
+	Description *string `locationName:"description" type:"string"`
+
+	// [Required] The version identifier of the new snapshot.
+	//
+	// DocumentationVersion is a required field
+	DocumentationVersion *string `locationName:"documentationVersion" type:"string" required:"true"`
+
+	// [Required] Specifies the API identifier of the to-be-created documentation
+	// version.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+
+	// The stage name to be associated with the new documentation snapshot.
+	StageName *string `locationName:"stageName" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateDocumentationVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDocumentationVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateDocumentationVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateDocumentationVersionInput"}
+	if s.DocumentationVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("DocumentationVersion"))
+	}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateDocumentationVersionInput) SetDescription(v string) *CreateDocumentationVersionInput {
+	s.Description = &v
+	return s
+}
+
+// SetDocumentationVersion sets the DocumentationVersion field's value.
+func (s *CreateDocumentationVersionInput) SetDocumentationVersion(v string) *CreateDocumentationVersionInput {
+	s.DocumentationVersion = &v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *CreateDocumentationVersionInput) SetRestApiId(v string) *CreateDocumentationVersionInput {
+	s.RestApiId = &v
+	return s
+}
+
+// SetStageName sets the StageName field's value.
+func (s *CreateDocumentationVersionInput) SetStageName(v string) *CreateDocumentationVersionInput {
+	s.StageName = &v
+	return s
+}
+
 // A request to create a new domain name.
 type CreateDomainNameInput struct {
 	_ struct{} `type:"structure"`
 
-	// The body of the server certificate provided by your certificate authority.
-	//
-	// CertificateBody is a required field
-	CertificateBody *string `locationName:"certificateBody" type:"string" required:"true"`
+	// The reference to an AWS-managed certificate. AWS Certificate Manager is the
+	// only supported source.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
 
-	// The intermediate certificates and optionally the root certificate, one after
-	// the other without any blank lines. If you include the root certificate, your
-	// certificate chain must start with intermediate certificates and end with
-	// the root certificate. Use the intermediate certificates that were provided
+	// [Deprecated] The body of the server certificate provided by your certificate
+	// authority.
+	CertificateBody *string `locationName:"certificateBody" type:"string"`
+
+	// [Deprecated] The intermediate certificates and optionally the root certificate,
+	// one after the other without any blank lines. If you include the root certificate,
+	// your certificate chain must start with intermediate certificates and end
+	// with the root certificate. Use the intermediate certificates that were provided
 	// by your certificate authority. Do not include any intermediaries that are
 	// not in the chain of trust path.
-	//
-	// CertificateChain is a required field
-	CertificateChain *string `locationName:"certificateChain" type:"string" required:"true"`
+	CertificateChain *string `locationName:"certificateChain" type:"string"`
 
-	// The name of the certificate.
-	//
-	// CertificateName is a required field
-	CertificateName *string `locationName:"certificateName" type:"string" required:"true"`
+	// The user-friendly name of the certificate.
+	CertificateName *string `locationName:"certificateName" type:"string"`
 
-	// Your certificate's private key.
-	//
-	// CertificatePrivateKey is a required field
-	CertificatePrivateKey *string `locationName:"certificatePrivateKey" type:"string" required:"true"`
+	// [Deprecated] Your certificate's private key.
+	CertificatePrivateKey *string `locationName:"certificatePrivateKey" type:"string"`
 
-	// The name of the DomainName resource.
+	// (Required) The name of the DomainName resource.
 	//
 	// DomainName is a required field
 	DomainName *string `locationName:"domainName" type:"string" required:"true"`
@@ -7877,18 +10102,6 @@ func (s CreateDomainNameInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateDomainNameInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateDomainNameInput"}
-	if s.CertificateBody == nil {
-		invalidParams.Add(request.NewErrParamRequired("CertificateBody"))
-	}
-	if s.CertificateChain == nil {
-		invalidParams.Add(request.NewErrParamRequired("CertificateChain"))
-	}
-	if s.CertificateName == nil {
-		invalidParams.Add(request.NewErrParamRequired("CertificateName"))
-	}
-	if s.CertificatePrivateKey == nil {
-		invalidParams.Add(request.NewErrParamRequired("CertificatePrivateKey"))
-	}
 	if s.DomainName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DomainName"))
 	}
@@ -7897,6 +10110,12 @@ func (s *CreateDomainNameInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *CreateDomainNameInput) SetCertificateArn(v string) *CreateDomainNameInput {
+	s.CertificateArn = &v
+	return s
 }
 
 // SetCertificateBody sets the CertificateBody field's value.
@@ -8100,6 +10319,9 @@ type CreateRestApiInput struct {
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
+
+	// A version identifier for the API.
+	Version *string `locationName:"version" type:"string"`
 }
 
 // String returns the string representation
@@ -8149,6 +10371,12 @@ func (s *CreateRestApiInput) SetName(v string) *CreateRestApiInput {
 	return s
 }
 
+// SetVersion sets the Version field's value.
+func (s *CreateRestApiInput) SetVersion(v string) *CreateRestApiInput {
+	s.Version = &v
+	return s
+}
+
 // Requests Amazon API Gateway to create a Stage resource.
 type CreateStageInput struct {
 	_ struct{} `type:"structure"`
@@ -8166,6 +10394,9 @@ type CreateStageInput struct {
 
 	// The description of the Stage resource.
 	Description *string `locationName:"description" type:"string"`
+
+	// The version of the associated API documentation.
+	DocumentationVersion *string `locationName:"documentationVersion" type:"string"`
 
 	// The identifier of the RestApi resource for the Stage resource to create.
 	//
@@ -8233,6 +10464,12 @@ func (s *CreateStageInput) SetDeploymentId(v string) *CreateStageInput {
 // SetDescription sets the Description field's value.
 func (s *CreateStageInput) SetDescription(v string) *CreateStageInput {
 	s.Description = &v
+	return s
+}
+
+// SetDocumentationVersion sets the DocumentationVersion field's value.
+func (s *CreateStageInput) SetDocumentationVersion(v string) *CreateStageInput {
+	s.DocumentationVersion = &v
 	return s
 }
 
@@ -8704,6 +10941,141 @@ func (s DeleteDeploymentOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteDeploymentOutput) GoString() string {
+	return s.String()
+}
+
+// Deletes an existing documentation part of an API.
+type DeleteDocumentationPartInput struct {
+	_ struct{} `type:"structure"`
+
+	// [Required] The identifier of the to-be-deleted documentation part.
+	//
+	// DocumentationPartId is a required field
+	DocumentationPartId *string `location:"uri" locationName:"part_id" type:"string" required:"true"`
+
+	// [Required] Specifies the identifier of an API of the to-be-deleted documentation
+	// part.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteDocumentationPartInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDocumentationPartInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteDocumentationPartInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteDocumentationPartInput"}
+	if s.DocumentationPartId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DocumentationPartId"))
+	}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDocumentationPartId sets the DocumentationPartId field's value.
+func (s *DeleteDocumentationPartInput) SetDocumentationPartId(v string) *DeleteDocumentationPartInput {
+	s.DocumentationPartId = &v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *DeleteDocumentationPartInput) SetRestApiId(v string) *DeleteDocumentationPartInput {
+	s.RestApiId = &v
+	return s
+}
+
+type DeleteDocumentationPartOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteDocumentationPartOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDocumentationPartOutput) GoString() string {
+	return s.String()
+}
+
+// Deletes an existing documentation version of an API.
+type DeleteDocumentationVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// [Required] The version identifier of a to-be-deleted documentation snapshot.
+	//
+	// DocumentationVersion is a required field
+	DocumentationVersion *string `location:"uri" locationName:"doc_version" type:"string" required:"true"`
+
+	// [Required] The identifier of an API of a to-be-deleted documentation snapshot.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteDocumentationVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDocumentationVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteDocumentationVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteDocumentationVersionInput"}
+	if s.DocumentationVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("DocumentationVersion"))
+	}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDocumentationVersion sets the DocumentationVersion field's value.
+func (s *DeleteDocumentationVersionInput) SetDocumentationVersion(v string) *DeleteDocumentationVersionInput {
+	s.DocumentationVersion = &v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *DeleteDocumentationVersionInput) SetRestApiId(v string) *DeleteDocumentationVersionInput {
+	s.RestApiId = &v
+	return s
+}
+
+type DeleteDocumentationVersionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteDocumentationVersionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDocumentationVersionOutput) GoString() string {
 	return s.String()
 }
 
@@ -9549,6 +11921,222 @@ func (s *Deployment) SetId(v string) *Deployment {
 	return s
 }
 
+// A documentation part for a targeted API entity.
+//
+// A documentation part consists of a content map (properties) and a target
+// (location). The target specifies an API entity to which the documentation
+// content applies. The supported API entity types are API, AUTHORIZER, MODEL,
+// RESOURCE, METHOD, PATH_PARAMETER, QUERY_PARAMETER, REQUEST_HEADER, REQUEST_BODY,
+// RESPONSE, RESPONSE_HEADER, and RESPONSE_BODY. Valid location fields depend
+// on the API entity type. All valid fields are not required.
+//
+// The content map is a JSON string of API-specific key-value pairs. Although
+// an API can use any shape for the content map, only the Swagger-compliant
+// documentation fields will be injected into the associated API entity definition
+// in the exported Swagger definition file.
+//
+// Documenting an API (http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-documenting-api.html),
+// DocumentationParts
+type DocumentationPart struct {
+	_ struct{} `type:"structure"`
+
+	// The DocumentationPart identifier, generated by Amazon API Gateway when the
+	// DocumentationPart is created.
+	Id *string `locationName:"id" type:"string"`
+
+	// The location of the API entity to which the documentation applies. Valid
+	// fields depend on the targeted API entity type. All the valid location fields
+	// are not required. If not explicitly specified, a valid location field is
+	// treated as a wildcard and associated documentation content may be inherited
+	// by matching entities, unless overridden.
+	Location *DocumentationPartLocation `locationName:"location" type:"structure"`
+
+	// A content map of API-specific key-value pairs describing the targeted API
+	// entity. The map must be encoded as a JSON string, e.g., "{ \"description\":
+	// \"The API does ...\" }". Only Swagger-compliant documentation-related fields
+	// from the properties map are exported and, hence, published as part of the
+	// API entity definitions, while the original documentation parts are exported
+	// in a Swagger extension of x-amazon-apigateway-documentation.
+	Properties *string `locationName:"properties" type:"string"`
+}
+
+// String returns the string representation
+func (s DocumentationPart) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DocumentationPart) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *DocumentationPart) SetId(v string) *DocumentationPart {
+	s.Id = &v
+	return s
+}
+
+// SetLocation sets the Location field's value.
+func (s *DocumentationPart) SetLocation(v *DocumentationPartLocation) *DocumentationPart {
+	s.Location = v
+	return s
+}
+
+// SetProperties sets the Properties field's value.
+func (s *DocumentationPart) SetProperties(v string) *DocumentationPart {
+	s.Properties = &v
+	return s
+}
+
+// Specifies the target API entity to which the documentation applies.
+type DocumentationPartLocation struct {
+	_ struct{} `type:"structure"`
+
+	// The HTTP verb of a method. It is a valid field for the API entity types of
+	// METHOD, PATH_PARAMETER, QUERY_PARAMETER, REQUEST_HEADER, REQUEST_BODY, RESPONSE,
+	// RESPONSE_HEADER, and RESPONSE_BODY. The default value is * for any method.
+	// When an applicable child entity inherits the content of an entity of the
+	// same type with more general specifications of the other location attributes,
+	// the child entity's method attribute must match that of the parent entity
+	// exactly.
+	Method *string `locationName:"method" type:"string"`
+
+	// The name of the targeted API entity. It is a valid and required field for
+	// the API entity types of AUTHORIZER, MODEL, PATH_PARAMETER, QUERY_PARAMETER,
+	// REQUEST_HEADER, REQUEST_BODY and RESPONSE_HEADER. It is an invalid field
+	// for any other entity type.
+	Name *string `locationName:"name" type:"string"`
+
+	// The URL path of the target. It is a valid field for the API entity types
+	// of RESOURCE, METHOD, PATH_PARAMETER, QUERY_PARAMETER, REQUEST_HEADER, REQUEST_BODY,
+	// RESPONSE, RESPONSE_HEADER, and RESPONSE_BODY. The default value is / for
+	// the root resource. When an applicable child entity inherits the content of
+	// another entity of the same type with more general specifications of the other
+	// location attributes, the child entity's path attribute must match that of
+	// the parent entity as a prefix.
+	Path *string `locationName:"path" type:"string"`
+
+	// The HTTP status code of a response. It is a valid field for the API entity
+	// types of RESPONSE, RESPONSE_HEADER, and RESPONSE_BODY. The default value
+	// is * for any status code. When an applicable child entity inherits the content
+	// of an entity of the same type with more general specifications of the other
+	// location attributes, the child entity's statusCode attribute must match that
+	// of the parent entity exactly.
+	StatusCode *string `locationName:"statusCode" type:"string"`
+
+	// The type of API entity to which the documentation content applies. It is
+	// a valid and required field for API entity types of API, AUTHORIZER, MODEL,
+	// RESOURCE, METHOD, PATH_PARAMETER, QUERY_PARAMETER, REQUEST_HEADER, REQUEST_BODY,
+	// RESPONSE, RESPONSE_HEADER, and RESPONSE_BODY. Content inheritance does not
+	// apply to any entity of the API, AUTHROZER, METHOD, MODEL, REQUEST_BODY, or
+	// RESOURCE type.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"DocumentationPartType"`
+}
+
+// String returns the string representation
+func (s DocumentationPartLocation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DocumentationPartLocation) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DocumentationPartLocation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DocumentationPartLocation"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMethod sets the Method field's value.
+func (s *DocumentationPartLocation) SetMethod(v string) *DocumentationPartLocation {
+	s.Method = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DocumentationPartLocation) SetName(v string) *DocumentationPartLocation {
+	s.Name = &v
+	return s
+}
+
+// SetPath sets the Path field's value.
+func (s *DocumentationPartLocation) SetPath(v string) *DocumentationPartLocation {
+	s.Path = &v
+	return s
+}
+
+// SetStatusCode sets the StatusCode field's value.
+func (s *DocumentationPartLocation) SetStatusCode(v string) *DocumentationPartLocation {
+	s.StatusCode = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *DocumentationPartLocation) SetType(v string) *DocumentationPartLocation {
+	s.Type = &v
+	return s
+}
+
+// A snapshot of the documentation of an API.
+//
+// Publishing API documentation involves creating a documentation version associated
+// with an API stage and exporting the versioned documentation to an external
+// (e.g., Swagger) file.
+//
+// Documenting an API (http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-documenting-api.html),
+// DocumentationPart, DocumentationVersions
+type DocumentationVersion struct {
+	_ struct{} `type:"structure"`
+
+	// The date when the API documentation snapshot is created.
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+
+	// The description of the API documentation snapshot.
+	Description *string `locationName:"description" type:"string"`
+
+	// The version identifier of the API documentation snapshot.
+	Version *string `locationName:"version" type:"string"`
+}
+
+// String returns the string representation
+func (s DocumentationVersion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DocumentationVersion) GoString() string {
+	return s.String()
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *DocumentationVersion) SetCreatedDate(v time.Time) *DocumentationVersion {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *DocumentationVersion) SetDescription(v string) *DocumentationVersion {
+	s.Description = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *DocumentationVersion) SetVersion(v string) *DocumentationVersion {
+	s.Version = &v
+	return s
+}
+
 // Represents a domain name that is contained in a simpler, more intuitive URL
 // that can be called.
 //
@@ -9556,10 +12144,14 @@ func (s *Deployment) SetId(v string) *Deployment {
 type DomainName struct {
 	_ struct{} `type:"structure"`
 
+	// The reference to an AWS-managed certificate. AWS Certificate Manager is the
+	// only supported source.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
+
 	// The name of the certificate.
 	CertificateName *string `locationName:"certificateName" type:"string"`
 
-	// The date when the certificate was uploaded, in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm).
+	// The timestamp when the certificate was uploaded.
 	CertificateUploadDate *time.Time `locationName:"certificateUploadDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The domain name of the Amazon CloudFront distribution. For more information,
@@ -9578,6 +12170,12 @@ func (s DomainName) String() string {
 // GoString returns the string representation
 func (s DomainName) GoString() string {
 	return s.String()
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *DomainName) SetCertificateArn(v string) *DomainName {
+	s.CertificateArn = &v
+	return s
 }
 
 // SetCertificateName sets the CertificateName field's value.
@@ -9831,6 +12429,8 @@ func (s *GetApiKeyInput) SetIncludeValue(v bool) *GetApiKeyInput {
 type GetApiKeysInput struct {
 	_ struct{} `type:"structure"`
 
+	// The identifier of a customer in AWS Marketplace or an external system, such
+	// as a developer portal.
 	CustomerId *string `location:"querystring" locationName:"customerId" type:"string"`
 
 	// A boolean flag to specify whether (true) or not (false) the result contains
@@ -10491,6 +13091,334 @@ func (s *GetDeploymentsOutput) SetItems(v []*Deployment) *GetDeploymentsOutput {
 
 // SetPosition sets the Position field's value.
 func (s *GetDeploymentsOutput) SetPosition(v string) *GetDeploymentsOutput {
+	s.Position = &v
+	return s
+}
+
+// Gets a specified documentation part of a given API.
+type GetDocumentationPartInput struct {
+	_ struct{} `type:"structure"`
+
+	// [Required] The identifier of the to-be-retrieved documentation part.
+	//
+	// DocumentationPartId is a required field
+	DocumentationPartId *string `location:"uri" locationName:"part_id" type:"string" required:"true"`
+
+	// [Required] The identifier of an API of the to-be-retrieved documentation
+	// part.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetDocumentationPartInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDocumentationPartInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDocumentationPartInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDocumentationPartInput"}
+	if s.DocumentationPartId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DocumentationPartId"))
+	}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDocumentationPartId sets the DocumentationPartId field's value.
+func (s *GetDocumentationPartInput) SetDocumentationPartId(v string) *GetDocumentationPartInput {
+	s.DocumentationPartId = &v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *GetDocumentationPartInput) SetRestApiId(v string) *GetDocumentationPartInput {
+	s.RestApiId = &v
+	return s
+}
+
+// Gets the documentation parts of an API. The result may be filtered by the
+// type, name, or path of API entities (targets).
+type GetDocumentationPartsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The size of the paged results.
+	Limit *int64 `location:"querystring" locationName:"limit" type:"integer"`
+
+	// The name of API entities of the to-be-retrieved documentation parts.
+	NameQuery *string `location:"querystring" locationName:"name" type:"string"`
+
+	// The path of API entities of the to-be-retrieved documentation parts.
+	Path *string `location:"querystring" locationName:"path" type:"string"`
+
+	// The position of the to-be-retrieved documentation part in the DocumentationParts
+	// collection.
+	Position *string `location:"querystring" locationName:"position" type:"string"`
+
+	// [Required] The identifier of the API of the to-be-retrieved documentation
+	// parts.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+
+	// The type of API entities of the to-be-retrieved documentation parts.
+	Type *string `location:"querystring" locationName:"type" type:"string" enum:"DocumentationPartType"`
+}
+
+// String returns the string representation
+func (s GetDocumentationPartsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDocumentationPartsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDocumentationPartsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDocumentationPartsInput"}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetDocumentationPartsInput) SetLimit(v int64) *GetDocumentationPartsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNameQuery sets the NameQuery field's value.
+func (s *GetDocumentationPartsInput) SetNameQuery(v string) *GetDocumentationPartsInput {
+	s.NameQuery = &v
+	return s
+}
+
+// SetPath sets the Path field's value.
+func (s *GetDocumentationPartsInput) SetPath(v string) *GetDocumentationPartsInput {
+	s.Path = &v
+	return s
+}
+
+// SetPosition sets the Position field's value.
+func (s *GetDocumentationPartsInput) SetPosition(v string) *GetDocumentationPartsInput {
+	s.Position = &v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *GetDocumentationPartsInput) SetRestApiId(v string) *GetDocumentationPartsInput {
+	s.RestApiId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *GetDocumentationPartsInput) SetType(v string) *GetDocumentationPartsInput {
+	s.Type = &v
+	return s
+}
+
+// The collection of documentation parts of an API.
+//
+// Documenting an API (http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-documenting-api.html), DocumentationPart
+type GetDocumentationPartsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The current page of DocumentationPart resources in the DocumentationParts
+	// collection.
+	Items []*DocumentationPart `locationName:"item" type:"list"`
+
+	Position *string `locationName:"position" type:"string"`
+}
+
+// String returns the string representation
+func (s GetDocumentationPartsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDocumentationPartsOutput) GoString() string {
+	return s.String()
+}
+
+// SetItems sets the Items field's value.
+func (s *GetDocumentationPartsOutput) SetItems(v []*DocumentationPart) *GetDocumentationPartsOutput {
+	s.Items = v
+	return s
+}
+
+// SetPosition sets the Position field's value.
+func (s *GetDocumentationPartsOutput) SetPosition(v string) *GetDocumentationPartsOutput {
+	s.Position = &v
+	return s
+}
+
+// Gets a documentation snapshot of an API.
+type GetDocumentationVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// [Required] The version identifier of the to-be-retrieved documentation snapshot.
+	//
+	// DocumentationVersion is a required field
+	DocumentationVersion *string `location:"uri" locationName:"doc_version" type:"string" required:"true"`
+
+	// [Required] The identifier of the API of the to-be-retrieved documentation
+	// snapshot.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetDocumentationVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDocumentationVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDocumentationVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDocumentationVersionInput"}
+	if s.DocumentationVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("DocumentationVersion"))
+	}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDocumentationVersion sets the DocumentationVersion field's value.
+func (s *GetDocumentationVersionInput) SetDocumentationVersion(v string) *GetDocumentationVersionInput {
+	s.DocumentationVersion = &v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *GetDocumentationVersionInput) SetRestApiId(v string) *GetDocumentationVersionInput {
+	s.RestApiId = &v
+	return s
+}
+
+// Gets the documentation versions of an API.
+type GetDocumentationVersionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The page size of the returned documentation versions.
+	Limit *int64 `location:"querystring" locationName:"limit" type:"integer"`
+
+	// The position of the returned DocumentationVersion in the DocumentationVersions
+	// collection.
+	Position *string `location:"querystring" locationName:"position" type:"string"`
+
+	// [Required] The identifier of an API of the to-be-retrieved documentation
+	// versions.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetDocumentationVersionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDocumentationVersionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDocumentationVersionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDocumentationVersionsInput"}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetDocumentationVersionsInput) SetLimit(v int64) *GetDocumentationVersionsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetPosition sets the Position field's value.
+func (s *GetDocumentationVersionsInput) SetPosition(v string) *GetDocumentationVersionsInput {
+	s.Position = &v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *GetDocumentationVersionsInput) SetRestApiId(v string) *GetDocumentationVersionsInput {
+	s.RestApiId = &v
+	return s
+}
+
+// The collection of documentation snapshots of an API.
+//
+// Use the DocumentationVersions to manage documentation snapshots associated
+// with various API stages.
+//
+// Documenting an API (http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-documenting-api.html),
+// DocumentationPart, DocumentationVersion
+type GetDocumentationVersionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The current page of DocumentationVersion items from the DocumentationVersions
+	// collection of an API.
+	Items []*DocumentationVersion `locationName:"item" type:"list"`
+
+	Position *string `locationName:"position" type:"string"`
+}
+
+// String returns the string representation
+func (s GetDocumentationVersionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDocumentationVersionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetItems sets the Items field's value.
+func (s *GetDocumentationVersionsOutput) SetItems(v []*DocumentationVersion) *GetDocumentationVersionsOutput {
+	s.Items = v
+	return s
+}
+
+// SetPosition sets the Position field's value.
+func (s *GetDocumentationVersionsOutput) SetPosition(v string) *GetDocumentationVersionsOutput {
 	s.Position = &v
 	return s
 }
@@ -11649,6 +14577,110 @@ func (s *GetSdkOutput) SetContentType(v string) *GetSdkOutput {
 	return s
 }
 
+// Get an SdkType instance.
+type GetSdkTypeInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the queried SdkType instance.
+	//
+	// Id is a required field
+	Id *string `location:"uri" locationName:"sdktype_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetSdkTypeInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSdkTypeInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetSdkTypeInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetSdkTypeInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *GetSdkTypeInput) SetId(v string) *GetSdkTypeInput {
+	s.Id = &v
+	return s
+}
+
+// Get the SdkTypes collection.
+type GetSdkTypesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of SdkType instances to be returned.
+	Limit *int64 `location:"querystring" locationName:"limit" type:"integer"`
+
+	// The position of the last fetched element in the SdkTypes collection.
+	Position *string `location:"querystring" locationName:"position" type:"string"`
+}
+
+// String returns the string representation
+func (s GetSdkTypesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSdkTypesInput) GoString() string {
+	return s.String()
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetSdkTypesInput) SetLimit(v int64) *GetSdkTypesInput {
+	s.Limit = &v
+	return s
+}
+
+// SetPosition sets the Position field's value.
+func (s *GetSdkTypesInput) SetPosition(v string) *GetSdkTypesInput {
+	s.Position = &v
+	return s
+}
+
+// The collection of SdkType instances.
+type GetSdkTypesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The set of SdkType items that comprise this view of the SdkTypes collection.
+	Items []*SdkType `locationName:"item" type:"list"`
+
+	Position *string `locationName:"position" type:"string"`
+}
+
+// String returns the string representation
+func (s GetSdkTypesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSdkTypesOutput) GoString() string {
+	return s.String()
+}
+
+// SetItems sets the Items field's value.
+func (s *GetSdkTypesOutput) SetItems(v []*SdkType) *GetSdkTypesOutput {
+	s.Items = v
+	return s
+}
+
+// SetPosition sets the Position field's value.
+func (s *GetSdkTypesOutput) SetPosition(v string) *GetSdkTypesOutput {
+	s.Position = &v
+	return s
+}
+
 // Requests Amazon API Gateway to get information about a Stage resource.
 type GetStageInput struct {
 	_ struct{} `type:"structure"`
@@ -12214,7 +15246,7 @@ func (s *ImportApiKeysInput) SetFormat(v string) *ImportApiKeysInput {
 	return s
 }
 
-// The identifier of an API key used to reference an API key in a usage plan.
+// The identifier of an ApiKey used in a UsagePlan.
 type ImportApiKeysOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -12243,6 +15275,121 @@ func (s *ImportApiKeysOutput) SetIds(v []*string) *ImportApiKeysOutput {
 
 // SetWarnings sets the Warnings field's value.
 func (s *ImportApiKeysOutput) SetWarnings(v []*string) *ImportApiKeysOutput {
+	s.Warnings = v
+	return s
+}
+
+// Import documentation parts from an external (e.g., Swagger) definition file.
+type ImportDocumentationPartsInput struct {
+	_ struct{} `type:"structure" payload:"Body"`
+
+	// [Required] Raw byte array representing the to-be-imported documentation parts.
+	// To import from a Swagger file, this is a JSON object.
+	//
+	// Body is a required field
+	Body []byte `locationName:"body" type:"blob" required:"true"`
+
+	// A query parameter to specify whether to rollback the documentation importation
+	// (true) or not (false) when a warning is encountered. The default value is
+	// false.
+	FailOnWarnings *bool `location:"querystring" locationName:"failonwarnings" type:"boolean"`
+
+	// A query parameter to indicate whether to overwrite (OVERWRITE) any existing
+	// DocumentationParts definition or to merge (MERGE) the new definition into
+	// the existing one. The default value is MERGE.
+	Mode *string `location:"querystring" locationName:"mode" type:"string" enum:"PutMode"`
+
+	// [Required] The identifier of an API of the to-be-imported documentation parts.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ImportDocumentationPartsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImportDocumentationPartsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ImportDocumentationPartsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ImportDocumentationPartsInput"}
+	if s.Body == nil {
+		invalidParams.Add(request.NewErrParamRequired("Body"))
+	}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBody sets the Body field's value.
+func (s *ImportDocumentationPartsInput) SetBody(v []byte) *ImportDocumentationPartsInput {
+	s.Body = v
+	return s
+}
+
+// SetFailOnWarnings sets the FailOnWarnings field's value.
+func (s *ImportDocumentationPartsInput) SetFailOnWarnings(v bool) *ImportDocumentationPartsInput {
+	s.FailOnWarnings = &v
+	return s
+}
+
+// SetMode sets the Mode field's value.
+func (s *ImportDocumentationPartsInput) SetMode(v string) *ImportDocumentationPartsInput {
+	s.Mode = &v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *ImportDocumentationPartsInput) SetRestApiId(v string) *ImportDocumentationPartsInput {
+	s.RestApiId = &v
+	return s
+}
+
+// A collection of the imported DocumentationPart identifiers.
+//
+// This is used to return the result when documentation parts in an external
+// (e.g., Swagger) file are imported into Amazon API Gateway
+// Documenting an API (http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-documenting-api.html),
+// documentationpart:import (http://docs.aws.amazon.com/apigateway/api-reference/link-relation/documentationpart-import/),
+// DocumentationPart
+type ImportDocumentationPartsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of the returned documentation part identifiers.
+	Ids []*string `locationName:"ids" type:"list"`
+
+	// A list of warning messages reported during import of documentation parts.
+	Warnings []*string `locationName:"warnings" type:"list"`
+}
+
+// String returns the string representation
+func (s ImportDocumentationPartsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImportDocumentationPartsOutput) GoString() string {
+	return s.String()
+}
+
+// SetIds sets the Ids field's value.
+func (s *ImportDocumentationPartsOutput) SetIds(v []*string) *ImportDocumentationPartsOutput {
+	s.Ids = v
+	return s
+}
+
+// SetWarnings sets the Warnings field's value.
+func (s *ImportDocumentationPartsOutput) SetWarnings(v []*string) *ImportDocumentationPartsOutput {
 	s.Warnings = v
 	return s
 }
@@ -12311,7 +15458,7 @@ func (s *ImportRestApiInput) SetParameters(v map[string]*string) *ImportRestApiI
 //
 // In the API Gateway console, the built-in Lambda integration is an AWS integration.
 //
-// Creating an API (http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-create-api.html),
+// Creating an API (http://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-create-api.html)
 type Integration struct {
 	_ struct{} `type:"structure"`
 
@@ -12416,8 +15563,8 @@ type Integration struct {
 
 	// Specifies the integration's Uniform Resource Identifier (URI). For HTTP integrations,
 	// the URI must be a fully formed, encoded HTTP(S) URL according to the RFC-3986
-	// specification (https://www.ietf.org/rfc/rfc3986.txt). For AWS integrations,
-	// the URI should be of the form arn:aws:apigateway:{region}:{subdomain.service|service}:{path|action}/{service_api}.
+	// specification (https://en.wikipedia.org/wiki/Uniform_Resource_Identifier).
+	// For AWS integrations, the URI should be of the form arn:aws:apigateway:{region}:{subdomain.service|service}:{path|action}/{service_api}.
 	// Region, subdomain and service are used to determine the right endpoint. For
 	// AWS services that use the Action= query string parameter, service_api should
 	// be a valid action for the desired service. For RESTful AWS service APIs,
@@ -12755,6 +15902,11 @@ type Method struct {
 	//    }
 	MethodResponses map[string]*MethodResponse `locationName:"methodResponses" type:"map"`
 
+	// A human-friendly operation identifier for the method. For example, you can
+	// assign the operationName of ListPets for the GET /pets method in PetStore
+	// (http://petstore-demo-endpoint.execute-api.com/petstore/pets) example.
+	OperationName *string `locationName:"operationName" type:"string"`
+
 	// A key-value map specifying data schemas, represented by Model resources,
 	// (as the mapped value) of the request payloads of given content types (as
 	// the mapping key).
@@ -12814,6 +15966,12 @@ func (s *Method) SetMethodIntegration(v *Integration) *Method {
 // SetMethodResponses sets the MethodResponses field's value.
 func (s *Method) SetMethodResponses(v map[string]*MethodResponse) *Method {
 	s.MethodResponses = v
+	return s
+}
+
+// SetOperationName sets the OperationName field's value.
+func (s *Method) SetOperationName(v string) *Method {
+	s.OperationName = &v
 	return s
 }
 
@@ -13563,6 +16721,11 @@ type PutMethodInput struct {
 	// HttpMethod is a required field
 	HttpMethod *string `location:"uri" locationName:"http_method" type:"string" required:"true"`
 
+	// A human-friendly operation identifier for the method. For example, you can
+	// assign the operationName of ListPets for the GET /pets method in PetStore
+	// (http://petstore-demo-endpoint.execute-api.com/petstore/pets) example.
+	OperationName *string `locationName:"operationName" type:"string"`
+
 	// Specifies the Model resources used for the request's content type. Request
 	// models are represented as a key/value map, with a content type as the key
 	// and a Model name as the value.
@@ -13642,6 +16805,12 @@ func (s *PutMethodInput) SetAuthorizerId(v string) *PutMethodInput {
 // SetHttpMethod sets the HttpMethod field's value.
 func (s *PutMethodInput) SetHttpMethod(v string) *PutMethodInput {
 	s.HttpMethod = &v
+	return s
+}
+
+// SetOperationName sets the OperationName field's value.
+func (s *PutMethodInput) SetOperationName(v string) *PutMethodInput {
+	s.OperationName = &v
 	return s
 }
 
@@ -14036,7 +17205,7 @@ type RestApi struct {
 	// RestApi supports only UTF-8-encoded text payloads.
 	BinaryMediaTypes []*string `locationName:"binaryMediaTypes" type:"list"`
 
-	// The date when the API was created, in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm).
+	// The timestamp when the API was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The API's description.
@@ -14048,6 +17217,9 @@ type RestApi struct {
 
 	// The API's name.
 	Name *string `locationName:"name" type:"string"`
+
+	// A version identifier for the API.
+	Version *string `locationName:"version" type:"string"`
 
 	// The warning messages reported when failonwarnings is turned on during API
 	// import.
@@ -14094,9 +17266,127 @@ func (s *RestApi) SetName(v string) *RestApi {
 	return s
 }
 
+// SetVersion sets the Version field's value.
+func (s *RestApi) SetVersion(v string) *RestApi {
+	s.Version = &v
+	return s
+}
+
 // SetWarnings sets the Warnings field's value.
 func (s *RestApi) SetWarnings(v []*string) *RestApi {
 	s.Warnings = v
+	return s
+}
+
+// A configuration property of an SDK type.
+type SdkConfigurationProperty struct {
+	_ struct{} `type:"structure"`
+
+	// The default value of an SdkType configuration property.
+	DefaultValue *string `locationName:"defaultValue" type:"string"`
+
+	// The description of an SdkType configuration property.
+	Description *string `locationName:"description" type:"string"`
+
+	// The user-friendly name of an SdkType configuration property.
+	FriendlyName *string `locationName:"friendlyName" type:"string"`
+
+	// The name of a an SdkType configuration property.
+	Name *string `locationName:"name" type:"string"`
+
+	// A boolean flag of an SdkType configuration property to indicate if the associated
+	// SDK configuration property is required (true) or not (false).
+	Required *bool `locationName:"required" type:"boolean"`
+}
+
+// String returns the string representation
+func (s SdkConfigurationProperty) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SdkConfigurationProperty) GoString() string {
+	return s.String()
+}
+
+// SetDefaultValue sets the DefaultValue field's value.
+func (s *SdkConfigurationProperty) SetDefaultValue(v string) *SdkConfigurationProperty {
+	s.DefaultValue = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *SdkConfigurationProperty) SetDescription(v string) *SdkConfigurationProperty {
+	s.Description = &v
+	return s
+}
+
+// SetFriendlyName sets the FriendlyName field's value.
+func (s *SdkConfigurationProperty) SetFriendlyName(v string) *SdkConfigurationProperty {
+	s.FriendlyName = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *SdkConfigurationProperty) SetName(v string) *SdkConfigurationProperty {
+	s.Name = &v
+	return s
+}
+
+// SetRequired sets the Required field's value.
+func (s *SdkConfigurationProperty) SetRequired(v bool) *SdkConfigurationProperty {
+	s.Required = &v
+	return s
+}
+
+// A type of SDK that API Gateway can generate.
+type SdkType struct {
+	_ struct{} `type:"structure"`
+
+	// A list of configuration properties of an SdkType.
+	ConfigurationProperties []*SdkConfigurationProperty `locationName:"configurationProperties" type:"list"`
+
+	// The description of an SdkType.
+	Description *string `locationName:"description" type:"string"`
+
+	// The user-friendly name of an SdkType instance.
+	FriendlyName *string `locationName:"friendlyName" type:"string"`
+
+	// The identifier of an SdkType instance.
+	Id *string `locationName:"id" type:"string"`
+}
+
+// String returns the string representation
+func (s SdkType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SdkType) GoString() string {
+	return s.String()
+}
+
+// SetConfigurationProperties sets the ConfigurationProperties field's value.
+func (s *SdkType) SetConfigurationProperties(v []*SdkConfigurationProperty) *SdkType {
+	s.ConfigurationProperties = v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *SdkType) SetDescription(v string) *SdkType {
+	s.Description = &v
+	return s
+}
+
+// SetFriendlyName sets the FriendlyName field's value.
+func (s *SdkType) SetFriendlyName(v string) *SdkType {
+	s.FriendlyName = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *SdkType) SetId(v string) *SdkType {
+	s.Id = &v
 	return s
 }
 
@@ -14119,7 +17409,7 @@ type Stage struct {
 	// The identifier of a client certificate for an API stage.
 	ClientCertificateId *string `locationName:"clientCertificateId" type:"string"`
 
-	// The date and time that the stage was created, in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm).
+	// The timestamp when the stage was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
 
 	// The identifier of the Deployment that the stage points to.
@@ -14128,8 +17418,10 @@ type Stage struct {
 	// The stage's description.
 	Description *string `locationName:"description" type:"string"`
 
-	// The date and time that information about the stage was last updated, in ISO
-	// 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm).
+	// The version of the associated API documentation.
+	DocumentationVersion *string `locationName:"documentationVersion" type:"string"`
+
+	// The timestamp when the stage last updated.
 	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
 
 	// A map that defines the method settings for a Stage resource. Keys (designated
@@ -14197,6 +17489,12 @@ func (s *Stage) SetDeploymentId(v string) *Stage {
 // SetDescription sets the Description field's value.
 func (s *Stage) SetDescription(v string) *Stage {
 	s.Description = &v
+	return s
+}
+
+// SetDocumentationVersion sets the DocumentationVersion field's value.
+func (s *Stage) SetDocumentationVersion(v string) *Stage {
+	s.DocumentationVersion = &v
 	return s
 }
 
@@ -14963,6 +18261,132 @@ func (s *UpdateDeploymentInput) SetPatchOperations(v []*PatchOperation) *UpdateD
 
 // SetRestApiId sets the RestApiId field's value.
 func (s *UpdateDeploymentInput) SetRestApiId(v string) *UpdateDeploymentInput {
+	s.RestApiId = &v
+	return s
+}
+
+// Updates an existing documentation part of a given API.
+type UpdateDocumentationPartInput struct {
+	_ struct{} `type:"structure"`
+
+	// [Required] The identifier of the to-be-updated documentation part.
+	//
+	// DocumentationPartId is a required field
+	DocumentationPartId *string `location:"uri" locationName:"part_id" type:"string" required:"true"`
+
+	// A list of update operations to be applied to the specified resource and in
+	// the order specified in this list.
+	PatchOperations []*PatchOperation `locationName:"patchOperations" type:"list"`
+
+	// [Required] The identifier of an API of the to-be-updated documentation part.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateDocumentationPartInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDocumentationPartInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateDocumentationPartInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateDocumentationPartInput"}
+	if s.DocumentationPartId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DocumentationPartId"))
+	}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDocumentationPartId sets the DocumentationPartId field's value.
+func (s *UpdateDocumentationPartInput) SetDocumentationPartId(v string) *UpdateDocumentationPartInput {
+	s.DocumentationPartId = &v
+	return s
+}
+
+// SetPatchOperations sets the PatchOperations field's value.
+func (s *UpdateDocumentationPartInput) SetPatchOperations(v []*PatchOperation) *UpdateDocumentationPartInput {
+	s.PatchOperations = v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *UpdateDocumentationPartInput) SetRestApiId(v string) *UpdateDocumentationPartInput {
+	s.RestApiId = &v
+	return s
+}
+
+// Updates an existing documentation version of an API.
+type UpdateDocumentationVersionInput struct {
+	_ struct{} `type:"structure"`
+
+	// [Required] The version identifier of the to-be-updated documentation version.
+	//
+	// DocumentationVersion is a required field
+	DocumentationVersion *string `location:"uri" locationName:"doc_version" type:"string" required:"true"`
+
+	// A list of update operations to be applied to the specified resource and in
+	// the order specified in this list.
+	PatchOperations []*PatchOperation `locationName:"patchOperations" type:"list"`
+
+	// [Required] The identifier of an API of the to-be-updated documentation version.
+	//
+	// RestApiId is a required field
+	RestApiId *string `location:"uri" locationName:"restapi_id" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateDocumentationVersionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDocumentationVersionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateDocumentationVersionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateDocumentationVersionInput"}
+	if s.DocumentationVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("DocumentationVersion"))
+	}
+	if s.RestApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RestApiId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDocumentationVersion sets the DocumentationVersion field's value.
+func (s *UpdateDocumentationVersionInput) SetDocumentationVersion(v string) *UpdateDocumentationVersionInput {
+	s.DocumentationVersion = &v
+	return s
+}
+
+// SetPatchOperations sets the PatchOperations field's value.
+func (s *UpdateDocumentationVersionInput) SetPatchOperations(v []*PatchOperation) *UpdateDocumentationVersionInput {
+	s.PatchOperations = v
+	return s
+}
+
+// SetRestApiId sets the RestApiId field's value.
+func (s *UpdateDocumentationVersionInput) SetRestApiId(v string) *UpdateDocumentationVersionInput {
 	s.RestApiId = &v
 	return s
 }
@@ -15793,6 +19217,10 @@ type UsagePlan struct {
 	// The name of a usage plan.
 	Name *string `locationName:"name" type:"string"`
 
+	// The AWS Markeplace product identifier to associate with the usage plan as
+	// a SaaS product on AWS Marketplace.
+	ProductCode *string `locationName:"productCode" type:"string"`
+
 	// The maximum number of permitted requests per a given unit time interval.
 	Quota *QuotaSettings `locationName:"quota" type:"structure"`
 
@@ -15831,6 +19259,12 @@ func (s *UsagePlan) SetId(v string) *UsagePlan {
 // SetName sets the Name field's value.
 func (s *UsagePlan) SetName(v string) *UsagePlan {
 	s.Name = &v
+	return s
+}
+
+// SetProductCode sets the ProductCode field's value.
+func (s *UsagePlan) SetProductCode(v string) *UsagePlan {
+	s.ProductCode = &v
 	return s
 }
 
@@ -15968,6 +19402,44 @@ const (
 
 	// ContentHandlingStrategyConvertToText is a ContentHandlingStrategy enum value
 	ContentHandlingStrategyConvertToText = "CONVERT_TO_TEXT"
+)
+
+const (
+	// DocumentationPartTypeApi is a DocumentationPartType enum value
+	DocumentationPartTypeApi = "API"
+
+	// DocumentationPartTypeAuthorizer is a DocumentationPartType enum value
+	DocumentationPartTypeAuthorizer = "AUTHORIZER"
+
+	// DocumentationPartTypeModel is a DocumentationPartType enum value
+	DocumentationPartTypeModel = "MODEL"
+
+	// DocumentationPartTypeResource is a DocumentationPartType enum value
+	DocumentationPartTypeResource = "RESOURCE"
+
+	// DocumentationPartTypeMethod is a DocumentationPartType enum value
+	DocumentationPartTypeMethod = "METHOD"
+
+	// DocumentationPartTypePathParameter is a DocumentationPartType enum value
+	DocumentationPartTypePathParameter = "PATH_PARAMETER"
+
+	// DocumentationPartTypeQueryParameter is a DocumentationPartType enum value
+	DocumentationPartTypeQueryParameter = "QUERY_PARAMETER"
+
+	// DocumentationPartTypeRequestHeader is a DocumentationPartType enum value
+	DocumentationPartTypeRequestHeader = "REQUEST_HEADER"
+
+	// DocumentationPartTypeRequestBody is a DocumentationPartType enum value
+	DocumentationPartTypeRequestBody = "REQUEST_BODY"
+
+	// DocumentationPartTypeResponse is a DocumentationPartType enum value
+	DocumentationPartTypeResponse = "RESPONSE"
+
+	// DocumentationPartTypeResponseHeader is a DocumentationPartType enum value
+	DocumentationPartTypeResponseHeader = "RESPONSE_HEADER"
+
+	// DocumentationPartTypeResponseBody is a DocumentationPartType enum value
+	DocumentationPartTypeResponseBody = "RESPONSE_BODY"
 )
 
 // The integration type. The valid value is HTTP for integrating with an HTTP
