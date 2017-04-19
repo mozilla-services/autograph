@@ -11,8 +11,8 @@
         },
         {
             "name": "github.com/aws/aws-sdk-go",
-            "version": "v1.8.2",
-            "revision": "d122c9c0e1d875585918c85cf6eba7e5e43f221d",
+            "version": "v1.8.4",
+            "revision": "069aafcbf0db604407291f9acc76c6b69fc99e0e",
             "packages": [
                 "aws",
                 "aws/awserr",
@@ -44,8 +44,8 @@
         },
         {
             "name": "github.com/go-ini/ini",
-            "version": "v1.26.0",
-            "revision": "1730955e3146956d6a087861380f9b4667ed5071",
+            "version": "v1.27.0",
+            "revision": "e7fea39b01aea8d5671f6858f0532f56e8bff3a5",
             "packages": [
                 "."
             ]
@@ -179,7 +179,7 @@
         {
             "name": "golang.org/x/sys",
             "branch": "master",
-            "revision": "afadfcc7779c1f4db0f6f6438afcb108d9c9c7cd",
+            "revision": "9a7256cb28ed514b4e1e5f68959914c4c28a92e0",
             "packages": [
                 "unix"
             ]

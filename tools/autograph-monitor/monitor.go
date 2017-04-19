@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -23,20 +22,16 @@ import (
 
 	"go.mozilla.org/hawk"
 	"go.mozilla.org/sops"
-	"go.mozilla.org/sops/aes"
-	sopsyaml "go.mozilla.org/sops/yaml"
+	"go.mozilla.org/sops/decrypt"
 	yaml "gopkg.in/yaml.v2"
 )
 
 type signatureresponse struct {
-	Ref              string `json:"ref"`
-	SignerID         string `json:"signer_id"`
-	X5U              string `json:"x5u,omitempty"`
-	PublicKey        string `json:"public_key,omitempty"`
-	Hash             string `json:"hash_algorithm,omitempty"`
-	Encoding         string `json:"signature_encoding,omitempty"`
-	Signature        string `json:"signature"`
-	ContentSignature string `json:"content-signature,omitempty"`
+	Ref       string `json:"ref"`
+	Type      string `json:"type"`
+	SignerID  string `json:"signer_id"`
+	PublicKey string `json:"public_key,omitempty"`
+	Signature string `json:"signature"`
 }
 
 type configuration struct {
@@ -106,20 +101,24 @@ func main() {
 	}
 }
 
-// Verify the signature and certificate chain of a response.
+// validate the signature and certificate chain of a content signature response
 //
 // If an X5U value was provided, use the public key from the end entity certificate
 // to verify the sig. Otherwise, use the PublicKey contained in the response.
 //
 // If the signature passes, verify the chain of trust maps.
-func verify(sr signatureresponse) error {
+func validateContentSignature(cs string) error {
 	var (
 		pubkey *ecdsa.PublicKey
 		err    error
 		data   []byte
 		certs  []*x509.Certificate
 	)
-	if sr.X5U != "" {
+	sig, err := contentsignature.Unmarshal(cs)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sig.X5U != "" {
 		certs, err = getX5U(sr.X5U)
 		if err != nil {
 			return err
@@ -136,7 +135,7 @@ func verify(sr signatureresponse) error {
 		}
 	}
 
-	if sr.ContentSignature != "" {
+	switch != "" {
 		data = make([]byte, len("Content-Signature:\x00")+len(inputdata))
 		copy(data[:len("Content-Signature:\x00")], []byte("Content-Signature:\x00"))
 		copy(data[len("Content-Signature:\x00"):], inputdata)
@@ -279,24 +278,6 @@ func verifyRoot(cert *x509.Certificate) error {
 	return nil
 }
 
-func fromBase64URL(s string) ([]byte, error) {
-	b, err := base64.StdEncoding.DecodeString(b64urlTob64(s))
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-func b64urlTob64(s string) string {
-	// convert base64url characters back to regular base64 alphabet
-	s = strings.Replace(s, "-", "+", -1)
-	s = strings.Replace(s, "_", "/", -1)
-	if l := len(s) % 4; l > 0 {
-		s += strings.Repeat("=", 4-l)
-	}
-	return s
-}
-
 func digest(data []byte, alg string) (hashed []byte, err error) {
 	var md hash.Hash
 	switch alg {
@@ -321,53 +302,21 @@ func loadConf(path string) (cfg configuration, err error) {
 	if err != nil {
 		return
 	}
-	// try to decrypt the conf using sops or load it as plaintext
-	// if it's not encrypted
-	decryptedConf, err := decryptConf(data)
+	// Try to decrypt the conf using sops or load it as plaintext.
+	// If the configuration is not encrypted with sops, the error
+	// sops.MetadataNotFound will be returned, in which case we
+	// ignore it and continue loading the conf.
+	confData, err = decrypt.Data(data, "yaml")
 	if err != nil {
-		// decryption would have failed if the file is not encrypted,
-		// in which case simply continue loading as yaml. But if the
-		// file is encrypted and decryption failed, exit here.
-		if err != sops.MetadataNotFound {
+		if err == sops.MetadataNotFound {
+			// not an encrypted file
+			confData = data
+		} else {
 			return
 		}
-	} else {
-		data = decryptedConf
 	}
-	err = yaml.Unmarshal(data, &cfg)
+	err = yaml.Unmarshal(confData, &cfg)
 	return
-}
-
-func decryptConf(encryptedConf []byte) (decryptedConf []byte, err error) {
-	store := &sopsyaml.Store{}
-	metadata, err := store.UnmarshalMetadata(encryptedConf)
-	if err != nil {
-		return
-	}
-	key, err := metadata.GetDataKey()
-	if err != nil {
-		return
-	}
-	branch, err := store.Unmarshal(encryptedConf)
-	if err != nil {
-		return
-	}
-	tree := sops.Tree{Branch: branch, Metadata: metadata}
-	cipher := aes.Cipher{}
-	stash := make(map[string][]interface{})
-	mac, err := tree.Decrypt(key, cipher, stash)
-	if err != nil {
-		return
-	}
-	originalMac, _, err := cipher.Decrypt(
-		metadata.MessageAuthenticationCode,
-		key,
-		metadata.LastModified.Format(time.RFC3339),
-	)
-	if originalMac != mac {
-		return
-	}
-	return store.Marshal(tree.Branch)
 }
 
 func makeAuthHeader(req *http.Request, user, token string) string {

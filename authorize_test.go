@@ -9,11 +9,10 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	"log"
 	"net/http"
 	"testing"
 
-	"github.com/mozilla-services/hawk-go"
+	"go.mozilla.org/hawk"
 )
 
 func TestMissingAuthorization(t *testing.T) {
@@ -173,10 +172,7 @@ func TestAddDuplicateAuthorization(t *testing.T) {
 			}
 		}
 	}()
-	tmpag, err := newAutographer(1)
-	if err != nil {
-		log.Fatal(err)
-	}
+	tmpag := newAutographer(1)
 	tmpag.addSigners(conf.Signers)
 	tmpag.addAuthorizations(authorizations)
 }

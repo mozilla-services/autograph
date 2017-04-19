@@ -30,10 +30,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 	log.Printf("configuration: %+v\n", conf)
-	ag, err = newAutographer(1)
-	if err != nil {
-		log.Fatal(err)
-	}
+	ag = newAutographer(1)
 	ag.addSigners(conf.Signers)
 	ag.addAuthorizations(conf.Authorizations)
 	ag.addMonitoring(conf.Monitoring)
@@ -55,7 +52,13 @@ server:
 
 signers:
     - id: testsigner1
-      privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
+      privatekey: |
+        -----BEGIN EC PRIVATE KEY-----
+        MIGkAgEBBDBe7dXZ/epqVkrRWbStmwe2WyTcpWJ5cCbrqcM4tCG4vdX9b0Ri+VYo
+        LiHkmxenK0mgBwYFK4EEACKhZANiAASvggNRMynXOObY9QW4gJXCwgsNa/8vcjHK
+        wgzyqfXUzv3PbiZbDVYtYT7FMzd84CmX9BEtsE8bQS2Ci7q0Izp9aRUjCiTlUuAZ
+        XMhBcGTy1e65CRjbCNM4A8w0/K30x4k=
+        -----END EC PRIVATE KEY-----
 
 monitoring:
     key: qowidhqowidhqoihdqodwh
@@ -66,9 +69,26 @@ server:
 
 signers:
     - id: testsigner1
-      privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
+      privatekey: |
+        -----BEGIN EC PRIVATE KEY-----
+        MIGkAgEBBDBe7dXZ/epqVkrRWbStmwe2WyTcpWJ5cCbrqcM4tCG4vdX9b0Ri+VYo
+        LiHkmxenK0mgBwYFK4EEACKhZANiAASvggNRMynXOObY9QW4gJXCwgsNa/8vcjHK
+        wgzyqfXUzv3PbiZbDVYtYT7FMzd84CmX9BEtsE8bQS2Ci7q0Izp9aRUjCiTlUuAZ
+        XMhBcGTy1e65CRjbCNM4A8w0/K30x4k=
+        -----END EC PRIVATE KEY-----
+
     - id: testsigner2
-      privatekey: "MIGkAgEBBDs5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
+      privatekey: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIBOgIBAAJBALhlXvMK5hIgGGRgdUycR8FWAmZC5bOeUrLr9SWep2NnR9nmBDgS
+        AYYFTraBw2se+oagYyWjccDnbJR9GPHarWkCAwEAAQJAey1kbxCxvhvoj20MDoA7
+        QsB02+EGVqWFcvZCjb3c7X4XZS0Oe1y1TJSmyL7oEepuL3NTgXYib+RSLT8vph8u
+        zQIhANzuVRWzm7sSgTsPgg/P+q/5O2BXzoY/QpWdDb8DWEVjAiEA1apqeW9u38o3
+        xpjJBa7tTNzgmuZtupFvB7baO8So0cMCICjTxld3VI0Sk10ltYRUi+AfL7DTKTA3
+        2ocpedPVu2c/AiEAuCx0KQa3sKmTWFmcdYyqOeXuqTbVAMuZxDGGfZxv1JcCIA2v
+        84l6Qav0l4A3NDdT+cotbnDqQ5wjF+UZ8uwsBwSl
+        -----END RSA PRIVATE KEY-----
+
 authorizations:
     - id: tester
       key: oiqwhfoqihfoiqeheouqqouhfdq
@@ -83,7 +103,12 @@ server:
 	listen: "localhost:8000"
 
 signers:
-	- privatekey: "MIGkAgEBBDAzX2TrGOr0WE92AbAl+nqnpqh25pKCLYNMTV2hJHztrkVPWOp8w0mhscIodK8RMpagBwYFK4EEACKhZANiAATiTcWYbt0Wg63dO7OXvpptNG0ryxv+v+JsJJ5Upr3pFus5fZyKxzP9NPzB+oFhL/xw3jMx7X5/vBGaQ2sJSiNlHVkqZgzYF6JQ4yUyiqTY7v67CyfUPA1BJg/nxOS9m3o="
+      - privatekey: |
+        -----BEGIN EC PRIVATE KEY-----
+        MHcCAQEEII+Is30aP9wrB/H6AkKrJjMG8EVY2WseSFHTfWGCIk7voAoGCCqGSM49
+        AwEHoUQDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq
+        3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==
+        -----END EC PRIVATE KEY-----
 authorizations:
 	- tester
 `)},

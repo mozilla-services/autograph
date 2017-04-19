@@ -8,9 +8,13 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/xpi"
 )
 
 func TestMonitorPass(t *testing.T) {
+	delete(sr.entry, "-")
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
 	if err != nil {
@@ -32,25 +36,23 @@ func TestMonitorPass(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i, response := range responses {
-		// base64 of the string 'AUTOGRAPH MONITORING'
-		sigreq := signaturerequest{
-			Input: "QVVUT0dSQVBIIE1PTklUT1JJTkc=",
-			KeyID: response.SignerID,
-		}
-		if response.ContentSignature != "" {
-			sigreq.Template = "content-signature"
-		}
-		if !verify(t, sigreq, response, "alice", "/__monitor__") {
-			t.Fatalf("verification of monitoring response %d failed", i)
+		switch response.Type {
+		case contentsignature.Type:
+			if !verifyContentSignature(t, "QVVUT0dSQVBIIE1PTklUT1JJTkc=", response, "/__monitor__") {
+				t.Fatalf("verification of monitoring response %d failed", i)
+			}
+		case xpi.Type:
+			if !verifyXPI(t, "QVVUT0dSQVBIIE1PTklUT1JJTkc=", response) {
+				t.Fatalf("verification of monitoring response %d failed", i)
+			}
+		default:
+			t.Fatal("unsupported signature type", response.Type)
 		}
 	}
 }
 
 func TestMonitorNoConfig(t *testing.T) {
-	tmpag, err := newAutographer(1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpag := newAutographer(1)
 	var nomonitor configuration
 	tmpag.addMonitoring(nomonitor.Monitoring)
 	if _, ok := tmpag.auths["monitor"]; ok {
@@ -59,10 +61,7 @@ func TestMonitorNoConfig(t *testing.T) {
 }
 
 func TestMonitorAddDuplicate(t *testing.T) {
-	tmpag, err := newAutographer(1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpag := newAutographer(1)
 	var monitorconf configuration
 	monitorconf.Monitoring.Key = "xxxxxxx"
 
@@ -92,7 +91,7 @@ func TestMonitorBadRequest(t *testing.T) {
 		{``, ``, `/__monitor__`, `HEAD`, ``},
 		{``, ``, `/__monitor__`, `DELETE`, ``},
 		// shouldn't have a request body
-		{`monitor`, conf.Monitoring.Key, `/__monitor__`, `GET`, `[{"hashwith":"md5", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		{`monitor`, conf.Monitoring.Key, `/__monitor__`, `GET`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
 		// should use the monitor user
 		{conf.Authorizations[0].ID, conf.Authorizations[0].Key, `/__monitor__`, `GET`, ``},
 		// should use the monitoring key

@@ -26,7 +26,9 @@ vet:
 	$(GO) vet $(PROJECT)
 
 test:
-	$(GO) test -covermode=count -coverprofile=coverage.out $(PROJECT)
+	$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph
+	$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph/signer/...
+
 
 showcoverage: test
 	$(GO) tool cover -html=coverage.out
