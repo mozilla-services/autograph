@@ -36,11 +36,13 @@ type Signer interface {
 // HashSigner is an interface to a signer able to sign hashes
 type HashSigner interface {
 	SignHash(data []byte, options interface{}) (Signature, error)
+	GetDefaultOptions() interface{}
 }
 
 // DataSigner is an interface to a signer able to sign raw data
 type DataSigner interface {
 	SignData(data []byte, options interface{}) (Signature, error)
+	GetDefaultOptions() interface{}
 }
 
 // Signature is an interface to a digital signature

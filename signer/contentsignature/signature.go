@@ -67,6 +67,16 @@ func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	// parse the components of the string representation into their respective fields
 	sig = new(ContentSignature)
 	sig.CurveName = signature[sep+1 : sep+1+sepval]
+	switch sig.CurveName {
+	case P256ECDSA:
+		sig.HashName = "sha256"
+	case P384ECDSA:
+		sig.HashName = "sha384"
+	case P521ECDSA:
+		sig.HashName = "sha512"
+	default:
+		return nil, errors.Errorf("contentsignature: unknown curve name %q", sig.CurveName)
+	}
 	if strings.HasPrefix(signature, "x5u=") {
 		sig.X5U = signature[5 : sep-1]
 	}

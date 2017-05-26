@@ -26,6 +26,9 @@ const (
 
 	// P521ECDSA defines an ecdsa content signature on the P-521 curve
 	P521ECDSA = "p521ecdsa"
+
+	// SignaturePrefix is a string preprended to data prior to signing
+	SignaturePrefix = "Content-Signature:\x00"
 )
 
 // ContentSigner implements an issuer of content signatures
@@ -96,21 +99,24 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 // calculating the sha384.
 //
 // The name of the hash function is returned, followed by the hash bytes
-func (s *ContentSigner) makeTemplatedHash(data []byte) (string, []byte) {
-	templated := make([]byte, len("Content-Signature:\x00")+len(data))
-	copy(templated[:len("Content-Signature:\x00")], []byte("Content-Signature:\x00"))
-	copy(templated[len("Content-Signature:\x00"):], data)
+func (s *ContentSigner) makeTemplatedHash(data []byte) (alg string, out []byte) {
+	templated := make([]byte, len(SignaturePrefix)+len(data))
+	copy(templated[:len(SignaturePrefix)], []byte(SignaturePrefix))
+	copy(templated[len(SignaturePrefix):], data)
 	var md hash.Hash
 	switch s.CurveName() {
 	case P384ECDSA:
 		md = sha512.New384()
+		alg = "sha384"
 	case P521ECDSA:
 		md = sha512.New()
+		alg = "sha512"
 	default:
 		md = sha256.New()
+		alg = "sha256"
 	}
 	md.Write(templated)
-	return "sha384", md.Sum(nil)
+	return alg, md.Sum(nil)
 }
 
 // SignHash takes an input hash and returns a signature. It assumes the input data
@@ -161,4 +167,9 @@ func (s *ContentSigner) CurveName() string {
 	default:
 		return ""
 	}
+}
+
+// GetDefaultOptions returns nil because this signer has no option
+func (s *ContentSigner) GetDefaultOptions() interface{} {
+	return nil
 }

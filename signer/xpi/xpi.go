@@ -169,6 +169,11 @@ type Options struct {
 	ID string `json:"id"`
 }
 
+// GetDefaultOptions returns default options of the signer
+func (s *PKCS7Signer) GetDefaultOptions() interface{} {
+	return Options{ID: "test@example.net"}
+}
+
 // GetOptions takes a input interface and reflects it into a struct of options
 func GetOptions(input interface{}) (options Options, err error) {
 	buf, err := json.Marshal(input)

@@ -28,10 +28,10 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusUnauthorized, "user is not permitted to call this endpoint")
 		return
 	}
-	sigresps := make([]signatureresponse, len(a.signers)*2)
+	sigresps := make([]signatureresponse, len(a.signers))
 	for i, s := range a.signers {
 		// base64 of the string 'AUTOGRAPH MONITORING'
-		sig, err := s.(signer.DataSigner).SignData([]byte("AUTOGRAPH MONITORING"), nil)
+		sig, err := s.(signer.DataSigner).SignData([]byte("AUTOGRAPH MONITORING"), s.(signer.DataSigner).GetDefaultOptions())
 		if err != nil {
 			httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
 			return
