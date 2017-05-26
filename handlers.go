@@ -31,23 +31,17 @@ type signaturerequest struct {
 // a signatureresponse is returned by autograph to a client with
 // a signature computed on input data
 type signatureresponse struct {
-	Ref      string `json:"ref"`
-	Type     string `json:"type"`
-	SignerID string `json:"signer_id"`
-
-	// PublicKey and Signature are set to omitempty
-	// to be removed in the signing logs
-	PublicKey string `json:"public_key,omitempty"`
-	Signature string `json:"signature,omitempty"`
-
-	// InputHash is set to omitempty to be removed in
-	// HTTP responses and only written to the signing log
-	InputHash string `json:"input_hash,omitempty"`
+	Ref       string `json:"ref"`
+	Type      string `json:"type"`
+	SignerID  string `json:"signer_id"`
+	PublicKey string `json:"public_key"`
+	Signature string `json:"signature"`
 }
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
 // and calls the signers to generate signature responses.
 func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
+	rid := getRequestID(r)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
@@ -136,12 +130,15 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			SignerID:  a.signers[signerID].Config().ID,
 			PublicKey: a.signers[signerID].Config().PublicKey,
 			Signature: encodedsig,
-			InputHash: hashlog,
 		}
-	}
-	sigresps, err = buildSigningLog(userid, sigresps, r)
-	if err != nil {
-		httpError(w, r, http.StatusInternalServerError, "failed to build signing log: %v", err)
+		log.WithFields(log.Fields{
+			"rid":        rid,
+			"ref":        sigresps[i].Ref,
+			"type":       sigresps[i].Type,
+			"signer_id":  sigresps[i].SignerID,
+			"input_hash": hashlog,
+			"user_id":    userid,
+		}).Info("signing operation succeeded")
 	}
 	respdata, err := json.Marshal(sigresps)
 	if err != nil {
@@ -154,7 +151,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(respdata)
-	log.Printf("signing operation from %q succeeded", userid)
+	log.WithFields(log.Fields{"rid": rid}).Info("signing request completed successfully")
 }
 
 // handleHeartbeat returns a simple message indicating that the API is alive and well

@@ -3,36 +3,15 @@ package main
 import (
 	"math/rand"
 	"net/http"
-	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 
 	log "github.com/Sirupsen/logrus"
 	"go.mozilla.org/mozlogrus"
 )
 
-// sr is a global variable that holds a signing log
-var sr signingRegistry
-
-// signingRegistry is a simple structure used to pass details about
-// signed data from the request handler to the logging middleware
-type signingRegistry struct {
-	entry map[string]signingLog
-	sync.Mutex
-}
-
-// signingLog contains log details
-type signingLog struct {
-	log    []signatureresponse
-	userid string
-}
-
 func init() {
 	// initialize the logger
 	mozlogrus.Enable("autograph")
-	// make a map that holds signing logs
-	sr.entry = make(map[string]signingLog)
 }
 
 // logRequest is a middleware that writes details about each HTTP request processed
@@ -43,14 +22,7 @@ func logRequest() Middleware {
 			h.ServeHTTP(w, r)
 			// attempt to retrieve a signing registry entry for this request
 			// from the global sr.entry map, using mutexes
-			var sl signingLog
 			rid := getRequestID(r)
-			sr.Lock()
-			defer sr.Unlock()
-			if _, ok := sr.entry[rid]; ok {
-				sl = sr.entry[rid]
-				delete(sr.entry, rid)
-			}
 			// calculate the processing time
 			t1 := r.Context().Value(ctxReqStartTime).(time.Time)
 			procTs := time.Now().Sub(t1)
@@ -63,8 +35,6 @@ func logRequest() Middleware {
 				"ua":                 r.UserAgent(),
 				"rid":                rid,
 				"t":                  procTs / time.Millisecond,
-				"user":               sl.userid,
-				"signing_log":        sl.log,
 			}).Info("request")
 		})
 	}
@@ -102,37 +72,6 @@ func addRequestStartTime() Middleware {
 			h.ServeHTTP(w, addtoContext(r, ctxReqStartTime, time.Now()))
 		})
 	}
-}
-
-// buildSigningLog takes a slice of signature responses and creates a slice of signing log from it,
-// which is just signature responses with the public key and signature bits removed. It puts the
-// log into a signinglog.log map for the logging middleware to later capture it.
-func buildSigningLog(userid string, origsigresps []signatureresponse, r *http.Request) (sigresps []signatureresponse, err error) {
-	sigresps = origsigresps
-	logsigresp := make([]signatureresponse, len(sigresps))
-	for i := range sigresps {
-		logsigresp[i] = sigresps[i]
-		logsigresp[i].Signature = ""
-		logsigresp[i].PublicKey = ""
-	}
-	var sl signingLog
-	sl.log = logsigresp
-	sl.userid = userid
-	// take a lock to check if an entry with this rid already exists
-	sr.Lock()
-	defer sr.Unlock()
-	rid := getRequestID(r)
-	if _, ok := sr.entry[rid]; ok {
-		return sigresps, errors.Errorf("a conflicting signing log entry with rid '%s' already exists", rid)
-	}
-	sr.entry[rid] = sl
-
-	// do one last pass on the sigresps slice to remove the inputhash
-	// values that are no longer needed and shouldn't be returned to clients
-	for i := range sigresps {
-		sigresps[i].InputHash = ""
-	}
-	return
 }
 
 func getRequestID(r *http.Request) string {
