@@ -7,7 +7,7 @@ GO 			:= GO15VENDOREXPERIMENT=1 go
 GOGETTER	:= GOPATH=$(shell pwd)/.tmpdeps go get -d
 GOLINT 		:= golint
 
-all: test vet lint generate install
+all: generate test vet lint install
 
 install:
 	$(GO) install $(PROJECT)
