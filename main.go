@@ -88,8 +88,8 @@ func main() {
 		Addr: conf.Server.Listen,
 		Handler: handleMiddlewares(
 			router,
-			addRequestID(),
-			addRequestStartTime(),
+			setRequestID(),
+			setRequestStartTime(),
 			setResponseHeaders(),
 			logRequest(),
 		),

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math/rand"
 	"net/http"
 	"time"
 
@@ -24,7 +23,7 @@ func logRequest() Middleware {
 			// from the global sr.entry map, using mutexes
 			rid := getRequestID(r)
 			// calculate the processing time
-			t1 := r.Context().Value(ctxReqStartTime).(time.Time)
+			t1 := getRequestStartTime(r)
 			procTs := time.Now().Sub(t1)
 			log.WithFields(log.Fields{
 				"remoteAddress":      r.RemoteAddr,
@@ -38,46 +37,4 @@ func logRequest() Middleware {
 			}).Info("request")
 		})
 	}
-}
-
-// ctxReqID is the string identifier of a request ID in a context
-const ctxReqID = "reqID"
-
-// ctxReqStartTime is the string identifier of a timestamp that
-// marks the beginning of processing of a request in a context
-const ctxReqStartTime = "reqStartTime"
-
-// addRequestID is a middleware the generates a random ID for each request processed
-// by the HTTP server. The request ID is added to the request context and used to
-// track various information and correlate logs.
-func addRequestID() Middleware {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rid := make([]rune, 16)
-			letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-			for i := range rid {
-				rid[i] = letters[rand.Intn(len(letters))]
-			}
-
-			h.ServeHTTP(w, addtoContext(r, ctxReqID, string(rid)))
-		})
-	}
-}
-
-// addRequestStartTime is a middleware that stores a timestamp of the time a request entered
-// the middleware, to calculate processing time later on
-func addRequestStartTime() Middleware {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			h.ServeHTTP(w, addtoContext(r, ctxReqStartTime, time.Now()))
-		})
-	}
-}
-
-func getRequestID(r *http.Request) string {
-	val := r.Context().Value(ctxReqID)
-	if val != nil {
-		return val.(string)
-	}
-	return "-"
 }
