@@ -3,9 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PROJECT		:= go.mozilla.org/autograph
-GO 			:= GO15VENDOREXPERIMENT=1 go
-GOGETTER	:= GOPATH=$(shell pwd)/.tmpdeps go get -d
-GOLINT 		:= golint
+GO 			:= go
 
 all: generate test vet lint install
 
@@ -21,20 +19,30 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	$(GOLINT) $(PROJECT)
+	golint $(PROJECT)
 
 vet:
 	$(GO) vet $(PROJECT)
 
-test:
-	$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph
+testautograph:
+	$(GO) test -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
+
+testsigner:
+	$(GO) test -covermode=count -coverprofile=coverage_signer.out go.mozilla.org/autograph/signer
+
+test: testautograph testsigner
 	#$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph/signer/contentsignature
 	#$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph/signer/xpi
 
-showcoverage: test
-	$(GO) tool cover -html=coverage.out
+showcoverageautograph: testautograph
+	$(GO) tool cover -html=coverage_autograph.out
+
+showcoveragesigner: testsigner
+	$(GO) tool cover -html=coverage_signer.out
+
+showcoverage: showcoverageautograph showcoveragesigner
 
 generate:
 	$(GO) generate
 
-.PHONY: all test generate clean autograph vendor
+.PHONY: all test generate vendor

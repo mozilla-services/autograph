@@ -4,131 +4,144 @@
 //
 // Contributor: Julien Vehent jvehent@mozilla.com [:ulfr]
 
-package signer_test
+package signer
 
-import (
-	"crypto/ecdsa"
-	"crypto/x509"
-	"fmt"
-	"math/big"
-	"strings"
-	"testing"
-)
+import "testing"
 
-func TestInitFail(t *testing.T) {
-	TESTCASES := []struct {
-		expectFatal string
-		s           signer
-	}{
-		{expectFatal: "missing signer ID in signer configuration", s: signer{ID: ""}},
-		{expectFatal: "missing private key in signer configuration", s: signer{ID: "bob"}},
-		{expectFatal: "illegal base64 data at input byte 0", s: signer{ID: "bob", PrivateKey: "{{{{"}},
-		{expectFatal: "x509: failed to parse EC private key: asn1: structure error: tags don't match (16 vs {class:1 tag:2 length:111 isCompound:true}) {optional:false explicit:false application:false defaultValue:<nil> tag:<nil> stringType:0 timeType:0 set:false omitEmpty:false} ecPrivateKey @2", s: signer{ID: "bob", PrivateKey: "Ym9iCg=="}},
-	}
-	for _, testcase := range TESTCASES {
-		err := testcase.s.init()
-		if err.Error() != testcase.expectFatal {
-			t.Fatalf("expected to fail with '%v' but failed with '%v' instead", testcase.expectFatal, err)
-		}
-		if err == nil {
-			t.Fatalf("expected to fail with '%v' but succeeded", testcase.expectFatal)
-		}
+func TestParseRSAPrivateKey(t *testing.T) {
+	_, err := ParsePrivateKey([]byte(rsaPrivateKey))
+	if err != nil {
+		t.Fatalf("failed to parse RSA private key: %v", err)
 	}
 }
 
-func TestTemplateAndHash(t *testing.T) {
-	TESTCASES := []struct {
-		sigreq      signaturerequest
-		hash        string
-		expectFatal string
+var rsaPrivateKey = `
+-----BEGIN RSA PRIVATE KEY-----
+MIICXAIBAAKBgQCxoeCUW5KJxNPxMp+KmCxKLc1Zv9Ny+4CFqcUXVUYH69L3mQ7v
+IWrJ9GBfcaA7BPQqUlWxWM+OCEQZH1EZNIuqRMNQVuIGCbz5UQ8w6tS0gcgdeGX7
+J7jgCQ4RK3F/PuCM38QBLaHx988qG8NMc6VKErBjctCXFHQt14lerd5KpQIDAQAB
+AoGAYrf6Hbk+mT5AI33k2Jt1kcweodBP7UkExkPxeuQzRVe0KVJw0EkcFhywKpr1
+V5eLMrILWcJnpyHE5slWwtFHBG6a5fLaNtsBBtcAIfqTQ0Vfj5c6SzVaJv0Z5rOd
+7gQF6isy3t3w9IF3We9wXQKzT6q5ypPGdm6fciKQ8RnzREkCQQDZwppKATqQ41/R
+vhSj90fFifrGE6aVKC1hgSpxGQa4oIdsYYHwMzyhBmWW9Xv/R+fPyr8ZwPxp2c12
+33QwOLPLAkEA0NNUb+z4ebVVHyvSwF5jhfJxigim+s49KuzJ1+A2RaSApGyBZiwS
+rWvWkB471POAKUYt5ykIWVZ83zcceQiNTwJBAMJUFQZX5GDqWFc/zwGoKkeR49Yi
+MTXIvf7Wmv6E++eFcnT461FlGAUHRV+bQQXGsItR/opIG7mGogIkVXa3E1MCQARX
+AAA7eoZ9AEHflUeuLn9QJI/r0hyQQLEtrpwv6rDT1GCWaLII5HJ6NUFVf4TTcqxo
+6vdM4QGKTJoO+SaCyP0CQFdpcxSAuzpFcKv0IlJ8XzS/cy+mweCMwyJ1PFEc4FX6
+wg/HcAJWY60xZTJDFN+Qfx8ZQvBEin6c2/h+zZi5IVY=
+-----END RSA PRIVATE KEY-----
+`
+
+func TestParseRSAPKCS8PrivateKey(t *testing.T) {
+	_, err := ParsePrivateKey([]byte(rsaPKCS8PrivateKey))
+	if err != nil {
+		t.Fatalf("failed to parse RSA private key: %v", err)
+	}
+}
+
+var rsaPKCS8PrivateKey = `
+-----BEGIN PRIVATE KEY-----
+MIIBVQIBADANBgkqhkiG9w0BAQEFAASCAT8wggE7AgEAAkEA2mn/+rpgWJTtE0dR
+1hXNmoVJyXkZuq2VKQnjwjQix+EWd+Qd0QUJOlihRjQjhYss5IEpE4rH80Z+4lC/
+ZPlTrQIDAQABAkEAqEHWgBnKFRONWzerFKixPmOGB15ycrw8V2QWAErXrHAOJkw5
+EXtSkHmZFkB7nAvEF4yf+qvOTvc9qRWzP3aBJQIhAPv5ODWQUn2FBWvPN6CVpnTP
+41fsbfxVLxKzRFZPZnAHAiEA3ed+kGAc7AAQpi4hAWAMZA3HFDcXUGxQyc+c1xHx
+yasCIQC1XF1D2Hw3Uj5jqcONNwmXfGZTS56ih6GZISTnxsChkwIgCBenH/DBXUHr
+WYQZJAmyqftupSgVK5OnppRxrc4zuR0CIAwEykI9Y0WuMR7p+8VHPCMOj2dnOwq2
+lC+fVp5q9huB
+-----END PRIVATE KEY-----
+`
+
+func TestParseECDSAPrivateKey(t *testing.T) {
+	_, err := ParsePrivateKey([]byte(ecdsaPrivateKey))
+	if err != nil {
+		t.Fatalf("failed to parse ECDSA private key: %v", err)
+	}
+}
+
+var ecdsaPrivateKey = `
+-----BEGIN EC PARAMETERS-----
+BggqhkjOPQMBBw==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEII+Is30aP9wrB/H6AkKrJjMG8EVY2WseSFHTfWGCIk7voAoGCCqGSM49
+AwEHoUQDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq
+3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==
+-----END EC PRIVATE KEY-----
+`
+
+func TestParseECDSAPKCS8PrivateKey(t *testing.T) {
+	_, err := ParsePrivateKey([]byte(ecdsaPKCS8PrivateKey))
+	if err != nil {
+		t.Fatalf("failed to parse ECDSA private key: %v", err)
+	}
+}
+
+var ecdsaPKCS8PrivateKey = `
+-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgyptBhPFj+HwVUdqL
+oaVpy+m3JSqdFz+PGendvt87giOhRANCAATFbsFduWWidi3wZ2ZFXbLj3Rb3kLny
+Uk7hsSrmYvDod8D71KCWhZAV1otVxjDUwCvmRoozqSl4EtzKdTWvWeDY
+-----END PRIVATE KEY-----
+`
+
+func TestParseInvalidPrivateKey(t *testing.T) {
+	var TESTCASES = []struct {
+		name string
+		pkey []byte
 	}{
-		// hash a string with sha384
-		{sigreq: signaturerequest{Input: "Y2FyaWJvdW1hdXJpY2UK", HashWith: "sha384"}, hash: "7e0509bd09f58d97575f6fcf06358e90fa47dfceecfc93694933352685287f11656fd060f116225c2bfd1954f5a31748"},
-		// apply a template to the string then hash it with sha384
-		{sigreq: signaturerequest{Template: "content-signature", Input: "Y2FyaWJvdW1hdXJpY2UK", HashWith: "sha384"}, hash: "e8c5eecea3e754b7028438b1f61174a695369c3eef603b7ebbf50cf906ce65425855d1d3c7e4a7c5d5e63c765ddd0699"},
-		// unsupported hash method
-		{sigreq: signaturerequest{Input: "Y2FyaWJvdW1hdXJpY2UK", HashWith: "md5"}, expectFatal: `unsupported digest algorithm "md5"`},
-		// unsupported template
-		{sigreq: signaturerequest{Template: "caribou", Input: "Y2FyaWJvdW1hdXJpY2UK"}, expectFatal: `unknown template "caribou"`},
+		{"empty private key", []byte(``)},
+
+		{"certificate", []byte(`
+-----BEGIN CERTIFICATE-----
+MIICxTCCAmugAwIBAgIJAOVr07yMf6huMAoGCCqGSM49BAMCMEUxCzAJBgNVBAYT
+AkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBXaWRn
+aXRzIFB0eSBMdGQwHhcNMTcwNjEzMTQwMzQ0WhcNMTkwNjEzMTQwMzQ0WjBFMQsw
+CQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJu
+ZXQgV2lkZ2l0cyBQdHkgTHRkMIIBSzCCAQMGByqGSM49AgEwgfcCAQEwLAYHKoZI
+zj0BAQIhAP////8AAAABAAAAAAAAAAAAAAAA////////////////MFsEIP////8A
+AAABAAAAAAAAAAAAAAAA///////////////8BCBaxjXYqjqT57PrvVV2mIa8ZR0G
+sMxTsPY7zjw+J9JgSwMVAMSdNgiG5wSTamZ44ROdJreBn36QBEEEaxfR8uEsQkf4
+vOblY6RA8ncDfYEt6zOg9KE5RdiYwpZP40Li/hp/m47n60p8D54WK84zV2sxXs7L
+tkBoN79R9QIhAP////8AAAAA//////////+85vqtpxeehPO5ysL8YyVRAgEBA0IA
+BEyYkrzxDUJan7r2T6H+yOMmqbpNSFJAFQg66Xzknb4+rrx/e0j8cAecMQZfOq5s
+kswFPQ9u+YXoJr+SLRavTMKjUDBOMB0GA1UdDgQWBBQkKZzE8sgvxJPq5i9nh03G
+CcZjuTAfBgNVHSMEGDAWgBQkKZzE8sgvxJPq5i9nh03GCcZjuTAMBgNVHRMEBTAD
+AQH/MAoGCCqGSM49BAMCA0gAMEUCIQD6+Hys0Tu7U3HUzwO9NJ4ElU70D4rbyaPU
+TH3zjxA6+gIgM0uXspkAbNgyO0qYkOQeoIfIXTan0uqt7b5PbLcGlh8=
+-----END CERTIFICATE----`)},
+
+		{"dsa private key", []byte(`
+-----BEGIN DSA PRIVATE KEY-----
+MIH6AgEAAkEA5Kz55zU3Yk1rgLsZvBNrkFZs1++7JcuMFGSfH3gkwiAeHo+5ztHy
+WD8P45cvxOTR4ouLMeCdwrAohlnF9+D39QIVAJ7QMH/ewcC0UBkjEb/G03cx9drn
+AkEA2d97oKn6wdNrHJWRTlmZl0OOBmjWmNnGgONfGNdbycNNRmj++eB2/YBnmGX/
+iqP4h6Z58t45o4dVbUIvtcXxkQJBALP5X9dHxQeY53HTpkb3dDQdtjOadU6ik86l
+O1xhS+jXsaR+8bXu5ImcgivKkpDYGX048p4mR654t09GWkohT7ICFQCD0UuihlMV
+6XHJyV+/G2aUJJlCwA==
+-----END DSA PRIVATE KEY-----`)},
+
+		{"dsa pkcs8 private key", []byte(`
+-----BEGIN PRIVATE KEY-----
+MIHIAgEAMIGpBgcqhkjOOAQBMIGdAkEA5Kz55zU3Yk1rgLsZvBNrkFZs1++7JcuM
+FGSfH3gkwiAeHo+5ztHyWD8P45cvxOTR4ouLMeCdwrAohlnF9+D39QIVAJ7QMH/e
+wcC0UBkjEb/G03cx9drnAkEA2d97oKn6wdNrHJWRTlmZl0OOBmjWmNnGgONfGNdb
+ycNNRmj++eB2/YBnmGX/iqP4h6Z58t45o4dVbUIvtcXxkQQXAhUAg9FLooZTFelx
+yclfvxtmlCSZQsA=
+-----END PRIVATE KEY-----`)},
 	}
 	for i, testcase := range TESTCASES {
-		_, hash, err := templateAndHash(testcase.sigreq, "P-384")
-		if err != nil {
-			if testcase.expectFatal == "" {
-				t.Fatalf("test case %d expected to succeed but failed with error: %v", i, err)
-			} else if testcase.expectFatal != err.Error() {
-				t.Fatalf("test case %d expected to fail with %q but failed with %v", i, testcase.expectFatal, err)
-			}
-		}
-		if testcase.expectFatal == "" {
-			if testcase.hash != fmt.Sprintf("%x", hash) {
-				t.Fatalf("test case %d failed: expected hash %q, got %q",
-					i, testcase.hash, fmt.Sprintf("%x", hash))
-			}
+		_, err := ParsePrivateKey(testcase.pkey)
+		if err == nil {
+			t.Fatalf("testcase %d should have failed to parse %q but succeeded", i, testcase.name)
 		}
 	}
 }
 
-func TestGetPubKey(t *testing.T) {
-	kb, err := fromBase64URL(ag.signers[0].PublicKey)
-	if err != nil {
-		t.Fatal(err)
-	}
-	keyInterface, err := x509.ParsePKIXPublicKey(kb)
-	if err != nil {
-		t.Fatal(err)
-	}
-	pubKey := keyInterface.(*ecdsa.PublicKey)
-	if len(pubKey.X.String()) < 10 || len(pubKey.Y.String()) < 10 {
-		t.Fatalf("invalid X/Y values in public key: X=%s; Y=%s",
-			pubKey.X.String(), pubkey.Y.String())
-	}
-}
-
-func TestContentSignatureX5U(t *testing.T) {
-	sig := new(ecdsaSignature)
-	sig.R, sig.S = new(big.Int), new(big.Int)
-	sig.R.UnmarshalText([]byte("45933104068702215119207656331641464004108591709124158714346498322678291032657"))
-	sig.S.UnmarshalText([]byte("90009770794458046386862684372261044768681426946813328792272882608403522348029"))
-	cs, err := ag.signers[3].ContentSignature(sig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(cs) < 5 {
-		t.Fatalf("content signature has bad length %d", len(cs))
-	}
-	if !strings.HasPrefix(cs, `x5u="`) {
-		t.Fatalf("expected x5u prefix in content-signature but got %q", cs[0:5])
-	}
-}
-
-func TestContentSignatureKeyID(t *testing.T) {
-	sig := new(ecdsaSignature)
-	sig.R, sig.S = new(big.Int), new(big.Int)
-	sig.R.UnmarshalText([]byte("6259915849506081953195822778836906638312880422565351933025739850554626487283192654040697419197598947387738806787988"))
-	sig.S.UnmarshalText([]byte("5943508783332546705852262942555715397696959766757176458821265258714412617334569990327433520177942823437637818778521"))
-	cs, err := ag.signers[0].ContentSignature(sig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(cs) < 13 {
-		t.Fatalf("content signature has bad length %d", len(cs))
-	}
-	if !strings.HasPrefix(cs, "keyid=appkey1") {
-		t.Fatalf("expected keyid prefix in content-signature but got %q", cs[0:13])
-	}
-}
-
-func TestContentSignatureP384(t *testing.T) {
-	sig := new(ecdsaSignature)
-	sig.R, sig.S = new(big.Int), new(big.Int)
-	sig.R.UnmarshalText([]byte("6259915849506081953195822778836906638312880422565351933025739850554626487283192654040697419197598947387738806787988"))
-	sig.S.UnmarshalText([]byte("5943508783332546705852262942555715397696959766757176458821265258714412617334569990327433520177942823437637818778521"))
-	cs, err := ag.signers[0].ContentSignature(sig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(cs, "p384ecdsa") {
-		t.Fatalf("expected 'p384ecdsa' key in content-signature but did not find it")
+func TestParseEmptyPrivateKey(t *testing.T) {
+	_, err := ParsePrivateKey([]byte(``))
+	if err == nil {
+		t.Fatalf("should have failed to parse empty private key but succeeded")
 	}
 }
