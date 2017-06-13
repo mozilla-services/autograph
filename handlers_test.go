@@ -151,7 +151,7 @@ func TestSignaturePass(t *testing.T) {
 	}
 }
 
-func TestMissingBody(t *testing.T) {
+func TestBadRequest(t *testing.T) {
 	var TESTCASES = []struct {
 		endpoint string
 		method   string
@@ -160,6 +160,17 @@ func TestMissingBody(t *testing.T) {
 		// missing request body
 		{`/sign/data`, `POST`, ``},
 		{`/sign/hash`, `POST`, ``},
+		// invalid json body
+		{`/sign/data`, `POST`, `{|||...........`},
+		{`/sign/hash`, `POST`, `{|||...........`},
+		// missing input
+		{`/sign/data`, `POST`, `[{"input": "", "keyid": "abcd"}]`},
+		{`/sign/hash`, `POST`, `[{"input": "", "keyid": "abcd"}]`},
+		// input not in base64
+		{`/sign/data`, `POST`, `[{"input": "......."}]`},
+		{`/sign/hash`, `POST`, `[{"input": "......."}]`},
+		// asking for a xpi signature using a hash will fail
+		{`/sign/hash`, `POST`, `[{"input": "Y2FyaWJvdW1hdXJpY2UK", "keyid": "webextensions-rsa"}]`},
 	}
 	for i, testcase := range TESTCASES {
 		body := strings.NewReader(testcase.body)
@@ -168,12 +179,17 @@ func TestMissingBody(t *testing.T) {
 			t.Fatal(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
-		authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", []byte(testcase.body))
+		authheader := getAuthHeader(req,
+			ag.auths[conf.Authorizations[0].ID].ID,
+			ag.auths[conf.Authorizations[0].ID].Key,
+			sha256.New, id(),
+			"application/json",
+			[]byte(testcase.body))
 		req.Header.Set("Authorization", authheader)
 		w := httptest.NewRecorder()
 		ag.handleSignature(w, req)
 		if w.Code == http.StatusCreated {
-			t.Fatalf("test case %d failed with %d: %s", i, w.Code, w.Body.String())
+			t.Fatalf("test case %d should have failed, but succeeded with %d: %s", i, w.Code, w.Body.String())
 		}
 	}
 }

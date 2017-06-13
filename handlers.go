@@ -63,9 +63,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusBadRequest, "failed to parse request body: %v", err)
 		return
 	}
-	if len(sigreqs) < 1 {
-		httpError(w, r, http.StatusBadRequest, "empty or invalid request request body")
-		return
+	for i, sigreq := range sigreqs {
+		if sigreq.Input == "" {
+			httpError(w, r, http.StatusBadRequest, fmt.Sprintf("missing input in signature request %d", i))
+		}
 	}
 	if a.debug {
 		log.Printf("signature request: %s", body)
