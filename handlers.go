@@ -47,6 +47,11 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
 		return
 	}
+	if len(body) < 10 {
+		// it's impossible to have a valid request body smaller than 10 bytes
+		httpError(w, r, http.StatusBadRequest, "empty or invalid request request body")
+		return
+	}
 	userid, authorized, err := a.authorize(r, body)
 	if err != nil || !authorized {
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
@@ -56,6 +61,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &sigreqs)
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to parse request body: %v", err)
+		return
+	}
+	if len(sigreqs) < 1 {
+		httpError(w, r, http.StatusBadRequest, "empty or invalid request request body")
 		return
 	}
 	if a.debug {

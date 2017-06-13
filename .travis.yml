@@ -13,7 +13,7 @@ before_install:
 - go get github.com/mattn/goveralls
 
 script:
-- make vet lint generate test
+- make all
 - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
 - docker build -t "app:build" .
 

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -14,7 +15,6 @@ import (
 )
 
 func TestMonitorPass(t *testing.T) {
-	delete(sr.entry, "-")
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
 	if err != nil {
@@ -38,15 +38,20 @@ func TestMonitorPass(t *testing.T) {
 	for i, response := range responses {
 		switch response.Type {
 		case contentsignature.Type:
-			if !verifyContentSignature(t, "QVVUT0dSQVBIIE1PTklUT1JJTkc=", response, "/__monitor__") {
-				t.Fatalf("verification of monitoring response %d failed", i)
-			}
+			err = verifyContentSignature(
+				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+				"/__monitor__",
+				response.Signature,
+				response.PublicKey)
 		case xpi.Type:
-			if !verifyXPI(t, "QVVUT0dSQVBIIE1PTklUT1JJTkc=", response) {
-				t.Fatalf("verification of monitoring response %d failed", i)
-			}
+			err = verifyXPISignature(
+				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+				response.Signature)
 		default:
 			t.Fatal("unsupported signature type", response.Type)
+		}
+		if err != nil {
+			t.Fatalf("verification of monitoring response %d failed: %v", i, err)
 		}
 	}
 }

@@ -7,14 +7,15 @@ GO 			:= GO15VENDOREXPERIMENT=1 go
 GOGETTER	:= GOPATH=$(shell pwd)/.tmpdeps go get -d
 GOLINT 		:= golint
 
-all: test vet generate install
+all: test vet lint generate install
 
 install:
 	$(GO) install $(PROJECT)
 
 vendor:
-	go get -u github.com/golang/dep/...
-	dep ensure -update
+	govend -u
+	#go get -u github.com/golang/dep/...
+	#dep ensure -update
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
@@ -27,8 +28,8 @@ vet:
 
 test:
 	$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph
-	$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph/signer/...
-
+	#$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph/signer/contentsignature
+	#$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph/signer/xpi
 
 showcoverage: test
 	$(GO) tool cover -html=coverage.out
