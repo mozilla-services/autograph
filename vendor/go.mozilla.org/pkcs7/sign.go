@@ -111,10 +111,15 @@ func (sd *SignedData) AddSigner(ee *x509.Certificate, pkey crypto.PrivateKey, co
 // section of the SignedData.SignerInfo, alongside the serial number of
 // the end-entity.
 func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKey, chain []*x509.Certificate, config SignerInfoConfig) error {
-	oidDigestAlg, err := getDigestOIDForSignatureAlgorithm(ee.SignatureAlgorithm)
-	if err != nil {
-		return err
-	}
+	//oidDigestAlg, err := getDigestOIDForSignatureAlgorithm(ee.SignatureAlgorithm)
+	//if err != nil {
+	//	return err
+	//}
+	// FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=1357815
+	// We currently pin the digest algorithm to SHA1 because firefox
+	// doesn't support SHA2 yet.
+	oidDigestAlg := oidDigestAlgorithmSHA1
+
 	sd.sd.DigestAlgorithmIdentifiers = append(sd.sd.DigestAlgorithmIdentifiers, pkix.AlgorithmIdentifier{Algorithm: oidDigestAlg})
 	hash, err := getHashForOID(oidDigestAlg)
 	if err != nil {
@@ -178,7 +183,7 @@ func (sd *SignedData) AddCertificate(cert *x509.Certificate) {
 // Detach removes content from the signed data struct to make it a detached signature.
 // This must be called right before Finish()
 func (sd *SignedData) Detach() {
-	sd.sd.ContentInfo = contentInfo{ContentType: oidSignedData}
+	sd.sd.ContentInfo = contentInfo{ContentType: oidData}
 }
 
 // Finish marshals the content and its signers

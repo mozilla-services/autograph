@@ -42,6 +42,7 @@ var (
 	oidData                   = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 7, 1}
 	oidSignedData             = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 7, 2}
 	oidEnvelopedData          = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 7, 3}
+	oidEncryptedData          = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 7, 6}
 	oidAttributeContentType   = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 3}
 	oidAttributeMessageDigest = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 4}
 	oidAttributeSigningTime   = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 5}
@@ -53,7 +54,12 @@ var (
 	oidDigestAlgorithmSHA512 = asn1.ObjectIdentifier{2, 16, 840, 1, 101, 3, 4, 2, 3}
 
 	// Signature Algorithms
-	oidEncryptionAlgorithmRSA     = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
+	oidEncryptionAlgorithmRSA       = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 1}
+	oidEncryptionAlgorithmRSASHA1   = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 5}
+	oidEncryptionAlgorithmRSASHA256 = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 11}
+	oidEncryptionAlgorithmRSASHA384 = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 12}
+	oidEncryptionAlgorithmRSASHA512 = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 1, 13}
+
 	oidEncryptionAlgorithmDSA     = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 3}
 	oidDigestAlgorithmECDSASHA1   = asn1.ObjectIdentifier{1, 2, 840, 10045, 4, 1}
 	oidDigestAlgorithmECDSASHA256 = asn1.ObjectIdentifier{1, 2, 840, 10045, 4, 3, 2}
@@ -88,26 +94,40 @@ func getHashForOID(oid asn1.ObjectIdentifier) (crypto.Hash, error) {
 
 // getDigestOIDForSignatureAlgorithm takes an x509.SignatureAlgorithm
 // and returns the corresponding OID digest algorithm
-func getDigestOIDForSignatureAlgorithm(digestAlg x509.SignatureAlgorithm) (asn1.ObjectIdentifier, error) {
-	switch digestAlg {
-	case x509.SHA1WithRSA, x509.ECDSAWithSHA1:
-		return oidDigestAlgorithmSHA1, nil
-	case x509.SHA256WithRSA, x509.ECDSAWithSHA256:
-		return oidDigestAlgorithmSHA256, nil
-	case x509.SHA384WithRSA, x509.ECDSAWithSHA384:
-		return oidDigestAlgorithmSHA384, nil
-	case x509.SHA512WithRSA, x509.ECDSAWithSHA512:
-		return oidDigestAlgorithmSHA512, nil
-	}
-	return nil, fmt.Errorf("pkcs7: cannot convert hash to oid, unknown hash algorithm")
-}
+//
+// FIXME: disabled because of bug 1357815 in sign.go
+//
+//func getDigestOIDForSignatureAlgorithm(digestAlg x509.SignatureAlgorithm) (asn1.ObjectIdentifier, error) {
+//	switch digestAlg {
+//	case x509.SHA1WithRSA, x509.ECDSAWithSHA1:
+//		return oidDigestAlgorithmSHA1, nil
+//	case x509.SHA256WithRSA, x509.ECDSAWithSHA256:
+//		return oidDigestAlgorithmSHA256, nil
+//	case x509.SHA384WithRSA, x509.ECDSAWithSHA384:
+//		return oidDigestAlgorithmSHA384, nil
+//	case x509.SHA512WithRSA, x509.ECDSAWithSHA512:
+//		return oidDigestAlgorithmSHA512, nil
+//	}
+//	return nil, fmt.Errorf("pkcs7: cannot convert hash to oid, unknown hash algorithm")
+//}
 
 // getOIDForEncryptionAlgorithm takes the private key type of the signer and
 // the OID of a digest algorithm to return the appropriate signerInfo.DigestEncryptionAlgorithm
 func getOIDForEncryptionAlgorithm(key crypto.PrivateKey, oidDigestAlg asn1.ObjectIdentifier) (asn1.ObjectIdentifier, error) {
 	switch key.(type) {
 	case *rsa.PrivateKey:
-		return oidEncryptionAlgorithmRSA, nil
+		switch {
+		default:
+			return oidEncryptionAlgorithmRSA, nil
+		case oidDigestAlg.Equal(oidDigestAlgorithmSHA1):
+			return oidEncryptionAlgorithmRSASHA1, nil
+		case oidDigestAlg.Equal(oidDigestAlgorithmSHA256):
+			return oidEncryptionAlgorithmRSASHA256, nil
+		case oidDigestAlg.Equal(oidDigestAlgorithmSHA384):
+			return oidEncryptionAlgorithmRSASHA384, nil
+		case oidDigestAlg.Equal(oidDigestAlgorithmSHA512):
+			return oidEncryptionAlgorithmRSASHA512, nil
+		}
 	case *ecdsa.PrivateKey:
 		switch {
 		case oidDigestAlg.Equal(oidDigestAlgorithmSHA1):
@@ -149,12 +169,24 @@ func Parse(data []byte) (p7 *PKCS7, err error) {
 		return parseSignedData(info.Content.Bytes)
 	case info.ContentType.Equal(oidEnvelopedData):
 		return parseEnvelopedData(info.Content.Bytes)
+	case info.ContentType.Equal(oidEncryptedData):
+		return parseEncryptedData(info.Content.Bytes)
 	}
 	return nil, ErrUnsupportedContentType
 }
 
 func parseEnvelopedData(data []byte) (*PKCS7, error) {
 	var ed envelopedData
+	if _, err := asn1.Unmarshal(data, &ed); err != nil {
+		return nil, err
+	}
+	return &PKCS7{
+		raw: ed,
+	}, nil
+}
+
+func parseEncryptedData(data []byte) (*PKCS7, error) {
+	var ed encryptedData
 	if _, err := asn1.Unmarshal(data, &ed); err != nil {
 		return nil, err
 	}

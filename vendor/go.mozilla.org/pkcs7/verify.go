@@ -189,7 +189,11 @@ func getSignatureAlgorithm(digestEncryption, digest pkix.AlgorithmIdentifier) (x
 		return x509.ECDSAWithSHA384, nil
 	case digestEncryption.Algorithm.Equal(oidDigestAlgorithmECDSASHA512):
 		return x509.ECDSAWithSHA512, nil
-	case digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSA):
+	case digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSA),
+		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSASHA1),
+		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSASHA256),
+		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSASHA384),
+		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSASHA512):
 		switch {
 		case digest.Algorithm.Equal(oidDigestAlgorithmSHA1):
 			return x509.SHA1WithRSA, nil

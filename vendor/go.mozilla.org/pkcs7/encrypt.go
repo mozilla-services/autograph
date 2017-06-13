@@ -20,6 +20,11 @@ type envelopedData struct {
 	EncryptedContentInfo encryptedContentInfo
 }
 
+type encryptedData struct {
+	Version              int
+	EncryptedContentInfo encryptedContentInfo
+}
+
 type recipientInfo struct {
 	Version                int
 	IssuerAndSerialNumber  issuerAndSerial
@@ -50,6 +55,10 @@ var ContentEncryptionAlgorithm = EncryptionAlgorithmDESCBC
 // content with an unsupported algorithm.
 var ErrUnsupportedEncryptionAlgorithm = errors.New("pkcs7: cannot encrypt content: only DES-CBC and AES-128-GCM supported")
 
+// ErrPSKNotProvided is returned when attempting to encrypt
+// using a PSK without actually providing the PSK.
+var ErrPSKNotProvided = errors.New("pkcs7: cannot encrypt content: PSK not provided")
+
 const nonceSize = 12
 
 type aesGCMParameters struct {
@@ -57,17 +66,21 @@ type aesGCMParameters struct {
 	ICVLen int
 }
 
-func encryptAES128GCM(content []byte) ([]byte, *encryptedContentInfo, error) {
-	// Create AES key and nonce
-	key := make([]byte, 16)
-	nonce := make([]byte, nonceSize)
+func encryptAES128GCM(content []byte, key []byte) ([]byte, *encryptedContentInfo, error) {
+	if key == nil {
+		// Create AES key
+		key = make([]byte, 16)
 
-	_, err := rand.Read(key)
-	if err != nil {
-		return nil, nil, err
+		_, err := rand.Read(key)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
-	_, err = rand.Read(nonce)
+	// Create nonce
+	nonce := make([]byte, nonceSize)
+
+	_, err := rand.Read(nonce)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -111,15 +124,20 @@ func encryptAES128GCM(content []byte) ([]byte, *encryptedContentInfo, error) {
 	return key, &eci, nil
 }
 
-func encryptDESCBC(content []byte) ([]byte, *encryptedContentInfo, error) {
-	// Create DES key & CBC IV
-	key := make([]byte, 8)
-	iv := make([]byte, des.BlockSize)
-	_, err := rand.Read(key)
-	if err != nil {
-		return nil, nil, err
+func encryptDESCBC(content []byte, key []byte) ([]byte, *encryptedContentInfo, error) {
+	if key == nil {
+		// Create DES key
+		key = make([]byte, 8)
+
+		_, err := rand.Read(key)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
-	_, err = rand.Read(iv)
+
+	// Create CBC IV
+	iv := make([]byte, des.BlockSize)
+	_, err := rand.Read(iv)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -169,10 +187,10 @@ func Encrypt(content []byte, recipients []*x509.Certificate) ([]byte, error) {
 	// Apply chosen symmetric encryption method
 	switch ContentEncryptionAlgorithm {
 	case EncryptionAlgorithmDESCBC:
-		key, eci, err = encryptDESCBC(content)
+		key, eci, err = encryptDESCBC(content, nil)
 
 	case EncryptionAlgorithmAES128GCM:
-		key, eci, err = encryptAES128GCM(content)
+		key, eci, err = encryptAES128GCM(content, nil)
 
 	default:
 		return nil, ErrUnsupportedEncryptionAlgorithm
@@ -218,6 +236,51 @@ func Encrypt(content []byte, recipients []*x509.Certificate) ([]byte, error) {
 	// Prepare outer payload structure
 	wrapper := contentInfo{
 		ContentType: oidEnvelopedData,
+		Content:     asn1.RawValue{Class: 2, Tag: 0, IsCompound: true, Bytes: innerContent},
+	}
+
+	return asn1.Marshal(wrapper)
+}
+
+// EncryptUsingPSK creates and returns an encrypted data PKCS7 structure,
+// encrypted using caller provided pre-shared secret.
+func EncryptUsingPSK(content []byte, key []byte) ([]byte, error) {
+	var eci *encryptedContentInfo
+	var err error
+
+	if key == nil {
+		return nil, ErrPSKNotProvided
+	}
+
+	// Apply chosen symmetric encryption method
+	switch ContentEncryptionAlgorithm {
+	case EncryptionAlgorithmDESCBC:
+		_, eci, err = encryptDESCBC(content, key)
+
+	case EncryptionAlgorithmAES128GCM:
+		_, eci, err = encryptAES128GCM(content, key)
+
+	default:
+		return nil, ErrUnsupportedEncryptionAlgorithm
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Prepare encrypted-data content
+	ed := encryptedData{
+		Version:              0,
+		EncryptedContentInfo: *eci,
+	}
+	innerContent, err := asn1.Marshal(ed)
+	if err != nil {
+		return nil, err
+	}
+
+	// Prepare outer payload structure
+	wrapper := contentInfo{
+		ContentType: oidEncryptedData,
 		Content:     asn1.RawValue{Class: 2, Tag: 0, IsCompound: true, Bytes: innerContent},
 	}
 
