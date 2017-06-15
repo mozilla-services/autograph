@@ -1,6 +1,7 @@
 package contentsignature // import "go.mozilla.org/autograph/signer/contentsignature"
 import (
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"encoding/base64"
 	"fmt"
 	"math/big"
@@ -9,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ContentSignature contains the parsed representation of a signature
 type ContentSignature struct {
 	R, S      *big.Int // fields must be exported for ASN.1 marshalling
 	HashName  string
@@ -23,8 +25,15 @@ func (sig *ContentSignature) storeHashName(alg string) {
 	sig.HashName = alg
 }
 
-func (sig *ContentSignature) Verify(input []byte, pubKey *ecdsa.PublicKey) bool {
-	return ecdsa.Verify(pubKey, input, sig.R, sig.S)
+// VerifyData verifies a signatures on its raw, untemplated, input using a public key
+func (sig *ContentSignature) VerifyData(input []byte, pubKey *ecdsa.PublicKey) bool {
+	_, hash := makeTemplatedHash(input, sig.CurveName)
+	return sig.VerifyHash(hash, pubKey)
+}
+
+// VerifyHash verifies a signature on its templated hash using a public key
+func (sig *ContentSignature) VerifyHash(hash []byte, pubKey *ecdsa.PublicKey) bool {
+	return ecdsa.Verify(pubKey, hash, sig.R, sig.S)
 }
 
 // Marshal returns the R||S signature is encoded in base64 URL safe,
@@ -70,15 +79,21 @@ func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	switch sig.CurveName {
 	case P256ECDSA:
 		sig.HashName = "sha256"
+		sig.Len = getSignatureLen(elliptic.P256().Params().BitSize)
 	case P384ECDSA:
 		sig.HashName = "sha384"
+		sig.Len = getSignatureLen(elliptic.P384().Params().BitSize)
 	case P521ECDSA:
 		sig.HashName = "sha512"
+		sig.Len = getSignatureLen(elliptic.P521().Params().BitSize)
 	default:
 		return nil, errors.Errorf("contentsignature: unknown curve name %q", sig.CurveName)
 	}
 	if strings.HasPrefix(signature, "x5u=") {
 		sig.X5U = signature[5 : sep-1]
+	} else {
+		// if no x5u is present, grab the key id
+		sig.ID = signature[6:sep]
 	}
 	// decode the actual signature into its R and S values
 	sigdata := signature[sep+1+sepval+1:]
@@ -89,13 +104,6 @@ func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	sig.R, sig.S = new(big.Int), new(big.Int)
 	sig.R.SetBytes(data[:len(data)/2])
 	sig.S.SetBytes(data[len(data)/2:])
-
-	// calculate and store the length of the signature
-	sig.Len = (sig.R.BitLen() + sig.S.BitLen()) / 8
-	if sig.Len%8 != 0 {
-		sig.Len += 8 - (sig.Len % 8)
-	}
-
 	sig.Finished = true
 	return sig, nil
 }

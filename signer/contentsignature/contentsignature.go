@@ -45,7 +45,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.PrivateKey = conf.PrivateKey
 	s.X5U = conf.X5U
 	if conf.Type != Type {
-		return nil, errors.Errorf("contentsignature: invalid usage %q, must be %q", conf.Type, Type)
+		return nil, errors.Errorf("contentsignature: invalid type %q, must be %q", conf.Type, Type)
 	}
 	if conf.ID == "" {
 		return nil, errors.New("contentsignature: missing signer ID in signer configuration")
@@ -88,7 +88,7 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	if len(input) < 10 {
 		return nil, errors.Errorf("contentsignature: refusing to sign input data shorter than 10 bytes")
 	}
-	alg, hash := s.makeTemplatedHash(input)
+	alg, hash := makeTemplatedHash(input, s.CurveName())
 	sig, err := s.SignHash(hash, options)
 	sig.(*ContentSignature).storeHashName(alg)
 	return sig, err
@@ -99,12 +99,12 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 // calculating the sha384.
 //
 // The name of the hash function is returned, followed by the hash bytes
-func (s *ContentSigner) makeTemplatedHash(data []byte) (alg string, out []byte) {
+func makeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
 	templated := make([]byte, len(SignaturePrefix)+len(data))
 	copy(templated[:len(SignaturePrefix)], []byte(SignaturePrefix))
 	copy(templated[len(SignaturePrefix):], data)
 	var md hash.Hash
-	switch s.CurveName() {
+	switch curvename {
 	case P384ECDSA:
 		md = sha512.New384()
 		alg = "sha384"
@@ -127,7 +127,7 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 	}
 	var err error
 	csig := new(ContentSignature)
-	csig.Len = s.SignatureLen()
+	csig.Len = getSignatureLen(s.privKey.Params().BitSize)
 	csig.CurveName = s.CurveName()
 	csig.X5U = s.X5U
 	csig.ID = s.ID
@@ -139,16 +139,16 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 	return csig, nil
 }
 
-// SignatureLen returns the size of an ECDSA signature issued by the signer.
+// getSignatureLen returns the size of an ECDSA signature issued by the signer.
 // The signature length is double the size size of the curve field, in bytes
 // (each R and S value is equal to the size of the curve field).
 // If the curve field it not a multiple of 8, round to the upper multiple of 8.
-func (s *ContentSigner) SignatureLen() int {
+func getSignatureLen(bitsize int) int {
 	siglen := 0
-	if s.privKey.Params().BitSize%8 != 0 {
-		siglen = 8 - (s.privKey.Params().BitSize % 8)
+	if bitsize%8 != 0 {
+		siglen = 8 - (bitsize % 8)
 	}
-	siglen += s.privKey.Params().BitSize
+	siglen += bitsize
 	siglen /= 8
 	siglen *= 2
 	return siglen

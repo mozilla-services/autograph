@@ -25,22 +25,36 @@ vet:
 	$(GO) vet $(PROJECT)
 
 testautograph:
-	$(GO) test -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
-
-testsigner:
-	$(GO) test -covermode=count -coverprofile=coverage_signer.out go.mozilla.org/autograph/signer
-
-test: testautograph testsigner
-	#$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph/signer/contentsignature
-	#$(GO) test -covermode=count -coverprofile=coverage.out go.mozilla.org/autograph/signer/xpi
+	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
 
 showcoverageautograph: testautograph
 	$(GO) tool cover -html=coverage_autograph.out
 
+testsigner:
+	$(GO) test -v -covermode=count -coverprofile=coverage_signer.out go.mozilla.org/autograph/signer
+
 showcoveragesigner: testsigner
 	$(GO) tool cover -html=coverage_signer.out
 
-showcoverage: showcoverageautograph showcoveragesigner
+testcs:
+	$(GO) test -v -covermode=count -coverprofile=coverage_cs.out go.mozilla.org/autograph/signer/contentsignature
+
+showcoveragecs: testcs
+	$(GO) tool cover -html=coverage_cs.out
+
+testxpi:
+	$(GO) test -v -covermode=count -coverprofile=coverage_xpi.out go.mozilla.org/autograph/signer/xpi
+
+showcoveragexpi: testxpi
+	$(GO) tool cover -html=coverage_xpi.out
+
+test:
+	$(GO) test $(go list ./... | grep -v /vendor/)
+
+showcoverage: testautograph testsigner testcs
+	echo 'mode: count' > coverage.out
+	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
+	$(GO) tool cover -html=coverage.out
 
 generate:
 	$(GO) generate

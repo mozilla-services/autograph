@@ -30,7 +30,6 @@ func verifyContentSignature(cs, pubkey string) error {
 	var (
 		key   *ecdsa.PublicKey
 		err   error
-		data  []byte
 		certs []*x509.Certificate
 	)
 	sig, err := contentsignature.Unmarshal(cs)
@@ -54,14 +53,7 @@ func verifyContentSignature(cs, pubkey string) error {
 		}
 	}
 
-	data = make([]byte, len(contentsignature.SignaturePrefix)+len(inputdata))
-	copy(data[:len(contentsignature.SignaturePrefix)], []byte(contentsignature.SignaturePrefix))
-	copy(data[len(contentsignature.SignaturePrefix):], inputdata)
-	datahash, err := digest(data, sig.HashName)
-	if err != nil {
-		return err
-	}
-	if !sig.Verify(datahash, key) {
+	if !sig.VerifyData([]byte(inputdata), key) {
 		return fmt.Errorf("Signature verification failed")
 	}
 
