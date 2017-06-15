@@ -48,12 +48,11 @@ testxpi:
 showcoveragexpi: testxpi
 	$(GO) tool cover -html=coverage_xpi.out
 
-test:
-	$(GO) test $(go list ./... | grep -v /vendor/)
-
-showcoverage: testautograph testsigner testcs
+test: testautograph testsigner testcs
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
+
+showcoverage: test
 	$(GO) tool cover -html=coverage.out
 
 generate:
