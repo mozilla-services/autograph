@@ -27,7 +27,7 @@ _testmain.go
 
 docs/*.html
 *.html
-signers/*/*.html
+signer/*/*.html
 
 tools/autograph-lambda-python-healthcheck/*
 tools/sign-addon/venv/*

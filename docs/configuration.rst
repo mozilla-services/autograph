@@ -28,16 +28,16 @@ The configuration for each signer is described in their respective README.
 * `Content-Signature`_
 * `XPI`_
 
-.. _`Content-Signature`: https://github.com/mozilla-services/autograph/blob/master/signers/contentsignature/README.rst
+.. _`Content-Signature`: https://github.com/mozilla-services/autograph/blob/master/signer/contentsignature/README.rst
 
-.. _`XPI`: https://github.com/mozilla-services/autograph/blob/master/signers/xpi/README.rst
+.. _`XPI`: https://github.com/mozilla-services/autograph/blob/master/signer/xpi/README.rst
 
 Authorizations
 --------------
 
 Authorizations map an arbitrary username and key to a list of signers. The
-key does not need to be generated in any special way, but you can use the tool
-in `tools/maketoken/main.go` to obtain a random 256bits string:
+key does not need to be generated in any special way. You can use `openssl`
+or the tool in `tools/maketoken/main.go` to obtain a random 256bits string:
 
 .. code:: bash
 
@@ -49,11 +49,14 @@ Then add it to the configuration as follows:
 .. code:: yaml
 
 	authorizations:
+	    # username 'alice' is allowed to use signers 'appkey1' and 'appkey2'
 		- id: alice
 		  key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
 		  signers:
 			  - appkey1
 			  - appkey2
+
+		# username 'bob' is only allowed to use signer 'appkey2'
 		- id: bob
 		  key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d
 		  signers:
@@ -68,14 +71,14 @@ the first signer in the list. For example, if alice requests a signature without
 providing a key id, the private key from `appkey1` will be used to sign her
 request.
 
-Build and running
------------------
+Building and running
+--------------------
 
 Build the autograph binary using make:
 
 .. code:: bash
 
-	$ make
+	$ make install
 
 The binary is located in `$GOPATH/bin/autograph` and can be started with the
 configuration file:

@@ -18,6 +18,8 @@ A full description of how addon signing is implemented in Firefox can be found
 Configuration
 -------------
 
+The type of this signer is **xpi**.
+
 The XPI signer in Autograph supports four types of addons. A signer is
 configured to issue signature for a given type using the `category` parameter in
 the autograph configuration:
@@ -27,10 +29,14 @@ the autograph configuration:
 * Mozilla Components (aka. System Addons) `system add-on`
 * Hotfixes `hotfix`
 
-When configuring a signer, the private key and signed certificate must be
-provided. The certificate must be issued by either the production or staging
-roots of the Firefox AMO PKI (refer to internal documentation to issue those, as
-they require access to private HSMs).
+Each signer must have a type, a category and the certificate and private key of
+an intermediate CA issued by either the staging or root PKIs of AMO (refer to
+internal documentation to issue those, as they require access to private HSMs).
+
+When a signature is requested, autograph will generate a private key and issue
+an end-entity certificate specifically for the signature request. The certificate
+is signed by the configured intermediate CA. The private key is thrown away
+right after the signature is issued.
 
 .. code:: yaml
 
@@ -49,8 +55,8 @@ they require access to private HSMs).
 		  ...
           -----END PRIVATE KEY-----
 
-Signature requests
-------------------
+Signature Request
+-----------------
 
 This signer only supports the `/sign/data` endpoint. The `input` field of the
 JSON signing requests must contain the base64 of a `mozilla.sf` signature file,
@@ -77,3 +83,29 @@ string, and uses it as received when generating the end-entity signing cert.
 			"keyid": "some_xpi_signer"
 		}
 	]
+
+Signature Response
+------------------
+
+XPI signatures are binary files encoded using the PKCS7 format and stored in the
+file called **mozilla.rsa** in the META-INF folder of XPI archives.
+
+Autograph returns the base64 representation of the mozilla.rsa file in its
+signature responses. Clients must decode the base64 from the autograph response
+and write it to a mozilla.rsa file.
+
+.. code:: json
+
+	[
+	  {
+		"ref": "z4cfx4x6qymxsj9hiqbuqvn7",
+		"type": "xpi",
+		"signer_id": "webextensions-rsa",
+		"public_key": "",
+		"signature": "MIIRUQYJKoZIhvcNAQcCoIIRQjCCET4CAQExCTAHBgUr..."
+	  }
+	]
+
+Note that the **public_key** field is empty in signature responses because PKCS7
+files already contain the public certificate of the end-entity that issued the
+signature.

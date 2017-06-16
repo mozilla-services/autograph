@@ -9,24 +9,24 @@ Rationale
 
 As we rapidly increase the number of services that send configuration data to
 Firefox agents, we also increase the probability of a service being
-compromised to serve fraudulent data to our users. Autograph implements a way
-to sign the information sent from backend services to Firefox user-agents, and
-protect them from a service compromise.
+compromised to serve fraudulent data to our users. Content Signature implements
+signing protocol to protect the information sent from backend services to Firefox
+user-agents.
 
-Digital signature adds an extra layer to the ones already provided by TLS and
+Content signature adds an extra layer to the ones already provided by TLS and
 certificates pinning. As we grow our service infrastructure, the risk of a
 vulnerability on our public endpoints increases, and an attacker could exploit
 a vulnerability to serve bad data from trusted sites directly. TLS with
 certificate pinning prevents bad actors from creating fraudulent Firefox
 services, but does not reduce the impact a break-in would have on our users.
-Digital signature provides this extra layer.
+Content signature provides this extra layer.
 
-Finally, digital signature helps us use Content Delivery Network without
-worrying that a CDN compromise would end-up serving bad data to our users.
-Signing at the source reduces the pressure off of the infrastructure and
-allows us to rely on vendors without worrying about data integrity.
+Finally, content signature helps us use Content Delivery Network (CDN) without
+worrying that a compromise would end-up serving bad data to our users.
+Signing content at the source reduces the pressure off of the infrastructure
+and allows us to rely on vendors without worrying about data integrity.
 
-Algorithm
+Signature
 ---------
 
 Content signatures are computed on data and served to firefox either via a HTTP
@@ -37,7 +37,7 @@ signature::
 
 	x5u="https://content-signature.cdn.mozilla.net/chains/onecrl.content-signature.mozilla.org-20161125.prod.chain";p384ecdsa=DSXbotVqK4STYEb6vRiDJI4KrXZ9Rhs5l8iMZez8PomTgmaPQv5WeJM4jj6OAaK690SSkkCyB_z7b6Nmc8x20y3BAYX32EbSeHUr3Ad0z6-PW3qXoij12v0qQFUsRGWF
 
-* X5U contains the location of the chain of trust that issued the signature.
+* **x5u** contains the location of the chain of trust that issued the signature.
   This file contains at least two certificates encoded in PEM format, where the
   first certificate is the end-entity that issued the signature, and the last
   certificate is the root of the PKI. Firefox is configured to only accept
@@ -45,7 +45,7 @@ signature::
   `security.content.signature.root_hash` preference, where the value is the
   hexadecimal of the sha256 of the DER of the root certificate.
 
-* p384ecdsa contains the base64_url of the signature, computed on the P-384
+* **p384ecdsa** contains the base64_url of the signature, computed on the P-384
   elliptic curve using the private key of the end-entity cert referenced in the
   X5U. The signature uses the DL/ECSSA format spec from IEEE Std 1363-2000,
   meaning the base64 contains two values R and S concatenated into a single
@@ -65,6 +65,8 @@ have this subject alternate name can issue signatures for the OneCRL service.
 
 Configuration
 -------------
+
+The type of this signer is **contentsignature**.
 
 Configuring an Autograph signer to issue content signature requires providing
 the private ECDSA key and the X5U value to be used in signatures.

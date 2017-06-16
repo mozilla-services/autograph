@@ -51,14 +51,14 @@ Implementation
 Autograph is written in Go because it is a clean and safe language, its crypto
 standard library is top-notch, and we have in-house expertise.
 
-Autograph is a standard Go web application. It only exposes two routes (/sign/data
-and /sign/hash), plus a handful of technical ones. When a request arrives, it is
-processed by a gorilla/mux router and send to the appropriate endpoint.
+Autograph exposes two functional routes (**/sign/data** and **/sign/hash**),
+plus a handful of technical ones. When a request arrives, it is processed by a
+gorilla/mux router and sent to the signature handler.
 
 Due to the similarity of signing data and hashes, the same handler takes care of
-processing both requests. What the handler really does is verify the
-authentication, pass the signing request to the identified signer, and return
-the signature back to the client.
+processing both requests. The handler verifies the hawk authentication token,
+passes the signing request to the identified signer, and returns the encoded
+signature back to the client.
 
 The authentication/authorization model is probably the most complex part of the
 autograph core. Clients are required to provide a Hawk authorization with payload
@@ -67,8 +67,8 @@ the autograph.yaml configuration lists permitted users, along with the signers
 each is allowed to use.
 
 When processing a new request, autograph first verifies the validity of the
-authorization header against the users it known about, then it checks the nonce
-of the header against a local cache, and finally it verifies the authenticated
+authorization header against the users it knows about, then checks the nonce
+of the header against a local cache, and finally verifies the authenticated
 user is permitted to use the requested signer. Should all these steps succeed,
 the signing request is passed along to a signer.
 
@@ -77,7 +77,7 @@ Signers are separate Go packages defined under the
 type of signing:
 
 * **go.mozilla.org/autograph/signer/contentsignature** implements a signing
-  protocol inspired by `http-miser`_ and used to sign data send from backend
+  protocol inspired by `http-miser`_ and used to sign data sent from backend
   services to Firefox user agents. The protocol is described in details in
   `Firefox Content-Signature`_. The implementation in Autograph is described in
   the `content-signature signer's README`_.
@@ -92,13 +92,14 @@ type of signing:
 
 .. _`Firefox Content-Signature`: http://wiki.mozilla.org/Security/Content-Signature
 
-.. _`content-signature signer's README`: https://github.com/mozilla-services/autograph/blob/master/signers/contentsignature/README.rst
+.. _`content-signature signer's README`: https://github.com/mozilla-services/autograph/blob/master/signer/contentsignature/README.rst
 
 .. _`Add-ons/Extension Signing`: https://wiki.mozilla.org/Add-ons/Extension_Signing
 
-.. _`xpi signer's README`: https://github.com/mozilla-services/autograph/blob/master/signers/xpi/README.rst
+.. _`xpi signer's README`: https://github.com/mozilla-services/autograph/blob/master/signer/xpi/README.rst
 
-Signers can implement two interfaces: `DataSigner` and `HashSigner`. When a
+Signers can implement two interfaces: `DataSigner` and `HashSigner`, which
+correspond to the endpoints `/sign/data` and `/sign/hash` respectively. When a
 signing request is received, autograph checks if the requested signer implements
 the interface for the type of signature requested. If the requested signer
 doesn't support a given mode (eg. the xpi signer doesn't support the HashSigner
