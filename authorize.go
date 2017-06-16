@@ -96,7 +96,7 @@ func (a *autographer) getSignerID(userid, keyid string) (int, error) {
 		if keyid == "" {
 			return -1, fmt.Errorf("%q does not have a default signing key", userid)
 		}
-		return -1, fmt.Errorf("%q is not authorized to sign with key ID %q", userid, keyid)
+		return -1, fmt.Errorf("%s is not authorized to sign with key ID %s", userid, keyid)
 	}
 	return a.signerIndex[tag], nil
 }

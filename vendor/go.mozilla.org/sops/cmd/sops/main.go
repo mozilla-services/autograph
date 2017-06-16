@@ -18,6 +18,8 @@ import (
 	encodingjson "encoding/json"
 	"reflect"
 
+	"github.com/google/shlex"
+
 	"go.mozilla.org/sops/aes"
 	"go.mozilla.org/sops/json"
 	"go.mozilla.org/sops/kms"
@@ -295,7 +297,11 @@ func runEditor(path string) error {
 		}
 		cmd = exec.Command(strings.Split(string(out), "\n")[0], path)
 	} else {
-		cmd = exec.Command(editor, path)
+		parts, err := shlex.Split(editor)
+		if err != nil {
+			return fmt.Errorf("Invalid $EDITOR: %s", editor)
+		}
+		cmd = exec.Command(parts[0], parts...)
 	}
 
 	cmd.Stdin = os.Stdin
@@ -347,7 +353,11 @@ func decryptTree(tree sops.Tree, ignoreMac bool) (sops.Tree, map[string][]interf
 	}
 	fileMac, _, err := cipher.Decrypt(tree.Metadata.MessageAuthenticationCode, key, tree.Metadata.LastModified.Format(time.RFC3339))
 	if fileMac != computedMac && !ignoreMac {
-		return tree, nil, cli.NewExitError(fmt.Sprintf("MAC mismatch. File has %s, computed %s", fileMac, computedMac), exitMacMismatch)
+		outputMac := fileMac
+		if outputMac == "" {
+			outputMac = "no MAC"
+		}
+		return tree, nil, cli.NewExitError(fmt.Sprintf("MAC mismatch. File has %s, computed %s", outputMac, computedMac), exitMacMismatch)
 	}
 	return tree, stash, nil
 }

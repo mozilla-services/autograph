@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"crypto/ecdsa"
-	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
@@ -14,30 +13,25 @@ import (
 	"hash"
 	"io/ioutil"
 	"log"
-	"math/big"
 	"net/http"
-	"strings"
 	"time"
 
+	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
 
 type signaturerequest struct {
-	Template string `json:"template"`
-	HashWith string `json:"hashwith"`
-	Input    string `json:"input"`
-	KeyID    string `json:"keyid"`
+	Input string `json:"input"`
+	KeyID string `json:"keyid"`
 }
 
 type signatureresponse struct {
-	Ref              string `json:"ref"`
-	SignerID         string `json:"signer_id"`
-	X5u              string `json:"x5u,omitempty"`
-	PublicKey        string `json:"public_key,omitempty"`
-	Hash             string `json:"hash_algorithm,omitempty"`
-	Encoding         string `json:"signature_encoding,omitempty"`
-	Signature        string `json:"signature"`
-	ContentSignature string `json:"content-signature,omitempty"`
+	Ref       string `json:"ref"`
+	Type      string `json:"type"`
+	SignerID  string `json:"signer_id"`
+	PublicKey string `json:"public_key,omitempty"`
+	Signature string `json:"signature"`
 }
 
 func main() {
@@ -62,7 +56,7 @@ func main() {
 		log.Fatal(err)
 	}
 	if len(requests) == 0 {
-		log.Fatal("no signature request found in input: %s", sigreq)
+		log.Fatalf("no signature request found in input: %s", sigreq)
 	}
 	tr := &http.Transport{
 		DisableKeepAlives: false,
@@ -111,10 +105,23 @@ func main() {
 				log.Fatal(err)
 			}
 			if len(requests) != len(responses) {
-				log.Fatal("sent %d signature requests and got %d responses, something's wrong", len(requests), len(responses))
+				log.Fatalf("sent %d signature requests and got %d responses, something's wrong", len(requests), len(responses))
 			}
 			for i, response := range responses {
-				if verify(requests[i], response, req.URL.RequestURI()) {
+				input, err := base64.RawURLEncoding.DecodeString(requests[i].Input)
+				if err != nil {
+					log.Fatal(err)
+				}
+				var sigStatus bool
+				switch response.Type {
+				case contentsignature.Type:
+					sigStatus = verifyContentSignature(input, response, req.URL.RequestURI())
+				case xpi.Type:
+					sigStatus = verifyXPI(input, response)
+				default:
+					log.Fatal("unsupported signature type", response.Type)
+				}
+				if sigStatus {
 					log.Printf("signature %d from signer %q passes", i, response.SignerID)
 				} else {
 					log.Fatalf("response %d from signer %q does not pass!", i, response.SignerID)
@@ -146,8 +153,8 @@ func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash,
 }
 
 // verify an ecdsa signature
-func verify(req signaturerequest, resp signatureresponse, endpoint string) bool {
-	keyBytes, err := fromBase64URL(resp.PublicKey)
+func verifyContentSignature(input []byte, resp signatureresponse, endpoint string) bool {
+	keyBytes, err := base64.StdEncoding.DecodeString(resp.PublicKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -156,82 +163,41 @@ func verify(req signaturerequest, resp signatureresponse, endpoint string) bool 
 		log.Fatal(err)
 	}
 	pubKey := keyInterface.(*ecdsa.PublicKey)
-	data, err := fromBase64URL(req.Input)
-	if err != nil {
-		log.Fatal(err)
-	}
 	if endpoint == "/sign/data" {
 		var templated []byte
-		if req.Template == "content-signature" {
-			templated = make([]byte, len("Content-Signature:\x00")+len(data))
-			copy(templated[:len("Content-Signature:\x00")], []byte("Content-Signature:\x00"))
-			copy(templated[len("Content-Signature:\x00"):], data)
-		} else {
-			templated = make([]byte, len(data))
-			copy(templated, data)
+		templated = make([]byte, len("Content-Signature:\x00")+len(input))
+		copy(templated[:len("Content-Signature:\x00")], []byte("Content-Signature:\x00"))
+		copy(templated[len("Content-Signature:\x00"):], input)
+
+		var md hash.Hash
+		switch pubKey.Params().Name {
+		case "P-256":
+			md = sha256.New()
+		case "P-384":
+			md = sha512.New384()
+		case "P-521":
+			md = sha512.New()
+		default:
+			log.Fatalf("unsupported curve algorithm %q", pubKey.Params().Name)
 		}
-		if req.HashWith != "" {
-			data, err = digest(templated, req.HashWith)
-		} else {
-			switch pubKey.Params().Name {
-			case "P-256":
-				data, err = digest(templated, "sha256")
-			case "P-384":
-				data, err = digest(templated, "sha384")
-			default:
-				data, err = digest(templated, "sha512")
-			}
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
+		md.Write(templated)
+		input = md.Sum(nil)
 	}
-	sigBytes, err := fromBase64URL(resp.Signature)
+	sig, err := contentsignature.Unmarshal(resp.Signature)
 	if err != nil {
 		log.Fatal(err)
 	}
-	r, s := new(big.Int), new(big.Int)
-	r.SetBytes(sigBytes[:len(sigBytes)/2])
-	s.SetBytes(sigBytes[len(sigBytes)/2:])
-	if !ecdsa.Verify(pubKey, data, r, s) {
-		return false
+	return ecdsa.Verify(pubKey, input, sig.R, sig.S)
+}
+
+func verifyXPI(input []byte, resp signatureresponse) bool {
+	sig, err := xpi.Unmarshal(resp.Signature, input)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = sig.Verify()
+	if err != nil {
+		log.Fatal(err)
 	}
 	return true
-}
-
-func fromBase64URL(s string) ([]byte, error) {
-	b, err := base64.StdEncoding.DecodeString(b64urlTob64(s))
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-func b64urlTob64(s string) string {
-	// convert base64url characters back to regular base64 alphabet
-	s = strings.Replace(s, "-", "+", -1)
-	s = strings.Replace(s, "_", "/", -1)
-	if l := len(s) % 4; l > 0 {
-		s += strings.Repeat("=", 4-l)
-	}
-	return s
-}
-
-func digest(data []byte, alg string) (hashed []byte, err error) {
-	var md hash.Hash
-	switch alg {
-	case "sha1":
-		md = sha1.New()
-	case "sha256":
-		md = sha256.New()
-	case "sha384":
-		md = sha512.New384()
-	case "sha512":
-		md = sha512.New()
-	default:
-		return nil, fmt.Errorf("unsupported digest algorithm %q", alg)
-	}
-	md.Write(data)
-	hashed = md.Sum(nil)
-	return
 }

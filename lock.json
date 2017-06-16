@@ -1,0 +1,196 @@
+{
+    "memo": "bbe363a81453af88c8d2cc9735c8a0fe7b2213d4cbb0fa5716f03237d479876b",
+    "projects": [
+        {
+            "name": "github.com/Sirupsen/logrus",
+            "branch": "master",
+            "revision": "10f801ebc38b33738c9d17d50860f484a0988ff5",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/aws/aws-sdk-go",
+            "version": "v1.8.4",
+            "revision": "069aafcbf0db604407291f9acc76c6b69fc99e0e",
+            "packages": [
+                "aws",
+                "aws/awserr",
+                "aws/awsutil",
+                "aws/client",
+                "aws/client/metadata",
+                "aws/corehandlers",
+                "aws/credentials",
+                "aws/credentials/ec2rolecreds",
+                "aws/credentials/endpointcreds",
+                "aws/credentials/stscreds",
+                "aws/defaults",
+                "aws/ec2metadata",
+                "aws/endpoints",
+                "aws/request",
+                "aws/session",
+                "aws/signer/v4",
+                "private/protocol",
+                "private/protocol/json/jsonutil",
+                "private/protocol/jsonrpc",
+                "private/protocol/query",
+                "private/protocol/query/queryutil",
+                "private/protocol/rest",
+                "private/protocol/xml/xmlutil",
+                "service/kms",
+                "service/kms/kmsiface",
+                "service/sts"
+            ]
+        },
+        {
+            "name": "github.com/go-ini/ini",
+            "version": "v1.27.0",
+            "revision": "e7fea39b01aea8d5671f6858f0532f56e8bff3a5",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/gorilla/context",
+            "version": "v1.1",
+            "revision": "1ea25387ff6f684839d82767c1733ff4d4d15d0a",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/gorilla/mux",
+            "branch": "master",
+            "revision": "599cba5e7b6137d46ddf58fb1765f5d928e69604",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/hashicorp/golang-lru",
+            "branch": "master",
+            "revision": "0a025b7e63adc15a622f29b0b2c4c3848243bbf6",
+            "packages": [
+                ".",
+                "simplelru"
+            ]
+        },
+        {
+            "name": "github.com/howeyc/gopass",
+            "branch": "master",
+            "revision": "bf9dde6d0d2c004a008c27aaee91170c786f6db8",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/jmespath/go-jmespath",
+            "version": "0.2.2",
+            "revision": "3433f3ea46d9f8019119e7dd41274e112a2359a9",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/mozilla-services/yaml",
+            "branch": "comments",
+            "revision": "3e6e9c3419ffcdcef533fac7ea8574dddc8601e2",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/pkg/errors",
+            "branch": "master",
+            "revision": "ff09b135c25aae272398c51a07235b90a75aa4f0",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "go.mozilla.org/gopgagent",
+            "branch": "master",
+            "revision": "da4f24003cbec8ef26fdd0761e40eab273a02832",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "go.mozilla.org/hawk",
+            "branch": "master",
+            "revision": "b9704677ebefdeb77a3c0167e15b852d08d5ad98",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "go.mozilla.org/mozlog",
+            "branch": "master",
+            "revision": "4bb13139d40339f59bf140d0f5f28be83b07cc58",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "go.mozilla.org/mozlogrus",
+            "branch": "jvehent-patch-1",
+            "revision": "ac0801815c193fa59bf4983b5b82910ff5be6942",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "go.mozilla.org/pkcs7",
+            "branch": "master",
+            "revision": "876afa2cac7a989b074ac6a64e9a6087442875d3",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "go.mozilla.org/sops",
+            "branch": "master",
+            "revision": "d188726cf4b07b27623a8f2f5e560ba2fe277d60",
+            "packages": [
+                ".",
+                "aes",
+                "decrypt",
+                "json",
+                "kms",
+                "pgp",
+                "yaml"
+            ]
+        },
+        {
+            "name": "golang.org/x/crypto",
+            "branch": "master",
+            "revision": "459e26527287adbc2adcc5d0d49abff9a5f315a7",
+            "packages": [
+                "cast5",
+                "openpgp",
+                "openpgp/armor",
+                "openpgp/elgamal",
+                "openpgp/errors",
+                "openpgp/packet",
+                "openpgp/s2k",
+                "ssh/terminal"
+            ]
+        },
+        {
+            "name": "golang.org/x/sys",
+            "branch": "master",
+            "revision": "9a7256cb28ed514b4e1e5f68959914c4c28a92e0",
+            "packages": [
+                "unix"
+            ]
+        },
+        {
+            "name": "gopkg.in/yaml.v2",
+            "branch": "v2",
+            "revision": "a3f3340b5840cee44f372bddb5880fcbc419b46a",
+            "packages": [
+                "."
+            ]
+        }
+    ]
+}

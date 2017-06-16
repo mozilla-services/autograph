@@ -23,4 +23,11 @@ _testmain.go
 *.test
 *.prof
 
+*.out
+
+docs/*.html
+*.html
+signer/*/*.html
+
 tools/autograph-lambda-python-healthcheck/*
+tools/sign-addon/venv/*

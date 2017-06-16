@@ -3,11 +3,15 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/xpi"
 )
 
 func TestMonitorPass(t *testing.T) {
@@ -32,25 +36,28 @@ func TestMonitorPass(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i, response := range responses {
-		// base64 of the string 'AUTOGRAPH MONITORING'
-		sigreq := signaturerequest{
-			Input: "QVVUT0dSQVBIIE1PTklUT1JJTkc=",
-			KeyID: response.SignerID,
+		switch response.Type {
+		case contentsignature.Type:
+			err = verifyContentSignature(
+				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+				"/__monitor__",
+				response.Signature,
+				response.PublicKey)
+		case xpi.Type:
+			err = verifyXPISignature(
+				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+				response.Signature)
+		default:
+			t.Fatal("unsupported signature type", response.Type)
 		}
-		if response.ContentSignature != "" {
-			sigreq.Template = "content-signature"
-		}
-		if !verify(t, sigreq, response, "alice", "/__monitor__") {
-			t.Fatalf("verification of monitoring response %d failed", i)
+		if err != nil {
+			t.Fatalf("verification of monitoring response %d failed: %v", i, err)
 		}
 	}
 }
 
 func TestMonitorNoConfig(t *testing.T) {
-	tmpag, err := newAutographer(1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpag := newAutographer(1)
 	var nomonitor configuration
 	tmpag.addMonitoring(nomonitor.Monitoring)
 	if _, ok := tmpag.auths["monitor"]; ok {
@@ -59,10 +66,7 @@ func TestMonitorNoConfig(t *testing.T) {
 }
 
 func TestMonitorAddDuplicate(t *testing.T) {
-	tmpag, err := newAutographer(1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpag := newAutographer(1)
 	var monitorconf configuration
 	monitorconf.Monitoring.Key = "xxxxxxx"
 
@@ -92,7 +96,7 @@ func TestMonitorBadRequest(t *testing.T) {
 		{``, ``, `/__monitor__`, `HEAD`, ``},
 		{``, ``, `/__monitor__`, `DELETE`, ``},
 		// shouldn't have a request body
-		{`monitor`, conf.Monitoring.Key, `/__monitor__`, `GET`, `[{"hashwith":"md5", "input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		{`monitor`, conf.Monitoring.Key, `/__monitor__`, `GET`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
 		// should use the monitor user
 		{conf.Authorizations[0].ID, conf.Authorizations[0].Key, `/__monitor__`, `GET`, ``},
 		// should use the monitoring key

@@ -119,6 +119,25 @@
         {"shape":"InvalidImageFormatException"}
       ]
     },
+    "DetectModerationLabels":{
+      "name":"DetectModerationLabels",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"DetectModerationLabelsRequest"},
+      "output":{"shape":"DetectModerationLabelsResponse"},
+      "errors":[
+        {"shape":"InvalidS3ObjectException"},
+        {"shape":"InvalidParameterException"},
+        {"shape":"ImageTooLargeException"},
+        {"shape":"AccessDeniedException"},
+        {"shape":"InternalServerError"},
+        {"shape":"ThrottlingException"},
+        {"shape":"ProvisionedThroughputExceededException"},
+        {"shape":"InvalidImageFormatException"}
+      ]
+    },
     "IndexFaces":{
       "name":"IndexFaces",
       "http":{
@@ -219,6 +238,13 @@
       "members":{
       },
       "exception":true
+    },
+    "AgeRange":{
+      "type":"structure",
+      "members":{
+        "Low":{"shape":"UInteger"},
+        "High":{"shape":"UInteger"}
+      }
     },
     "Attribute":{
       "type":"string",
@@ -382,6 +408,20 @@
         "OrientationCorrection":{"shape":"OrientationCorrection"}
       }
     },
+    "DetectModerationLabelsRequest":{
+      "type":"structure",
+      "required":["Image"],
+      "members":{
+        "Image":{"shape":"Image"},
+        "MinConfidence":{"shape":"Percent"}
+      }
+    },
+    "DetectModerationLabelsResponse":{
+      "type":"structure",
+      "members":{
+        "ModerationLabels":{"shape":"ModerationLabels"}
+      }
+    },
     "Emotion":{
       "type":"structure",
       "members":{
@@ -440,6 +480,7 @@
       "type":"structure",
       "members":{
         "BoundingBox":{"shape":"BoundingBox"},
+        "AgeRange":{"shape":"AgeRange"},
         "Smile":{"shape":"Smile"},
         "Eyeglasses":{"shape":"Eyeglasses"},
         "Sunglasses":{"shape":"Sunglasses"},
@@ -677,6 +718,18 @@
       "type":"integer",
       "max":4096,
       "min":1
+    },
+    "ModerationLabel":{
+      "type":"structure",
+      "members":{
+        "Confidence":{"shape":"Percent"},
+        "Name":{"shape":"String"},
+        "ParentName":{"shape":"String"}
+      }
+    },
+    "ModerationLabels":{
+      "type":"list",
+      "member":{"shape":"ModerationLabel"}
     },
     "MouthOpen":{
       "type":"structure",

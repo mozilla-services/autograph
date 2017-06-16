@@ -13,17 +13,15 @@ before_install:
 - go get github.com/mattn/goveralls
 
 script:
-- make vet lint generate test
+- make all
 - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
 - docker build -t "app:build" .
 
 # Run a synthetic monitoring test against the container
+- $GOPATH/bin/autograph &
 - |
-    id=$(docker run -d "app:build")
-    [ -z "$id" ] && exit 1
     cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-monitor
-    go run monitor.go
-    docker kill $id
+    go run *.go
 
 # If a TRAVIS_TAG is set, this build follows a git tag --push and should trigger
 # a release of a tagged container to dockerhub. Otherwise, we tag as latest.
