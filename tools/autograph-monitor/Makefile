@@ -1,6 +1,6 @@
 build:
 	chmod +x monitor.py
-	go build -o autograph-monitor monitor.go
+	go build -o autograph-monitor *.go
 	zip -r autograph-monitor.zip monitor.py autograph-monitor monitor.autograph.yaml
 vendor:
 	govend -u

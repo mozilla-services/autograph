@@ -19,9 +19,7 @@ script:
 
 # Run a synthetic monitoring test against the container
 - $GOPATH/bin/autograph &
-- |
-    cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-monitor
-    go run *.go
+- cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-monitor && make && ./autograph-monitor
 
 # If a TRAVIS_TAG is set, this build follows a git tag --push and should trigger
 # a release of a tagged container to dockerhub. Otherwise, we tag as latest.

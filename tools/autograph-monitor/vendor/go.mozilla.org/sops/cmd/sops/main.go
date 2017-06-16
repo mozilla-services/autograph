@@ -18,6 +18,8 @@ import (
 	encodingjson "encoding/json"
 	"reflect"
 
+	"github.com/google/shlex"
+
 	"go.mozilla.org/sops/aes"
 	"go.mozilla.org/sops/json"
 	"go.mozilla.org/sops/kms"
@@ -288,14 +290,18 @@ func runEditor(path string) error {
 	editor := os.Getenv("EDITOR")
 	var cmd *exec.Cmd
 	if editor == "" {
-		cmd := exec.Command("which", "vim", "nano")
+		cmd = exec.Command("which", "vim", "nano")
 		out, err := cmd.Output()
 		if err != nil {
 			panic("Could not find any editors")
 		}
 		cmd = exec.Command(strings.Split(string(out), "\n")[0], path)
 	} else {
-		cmd = exec.Command(editor, path)
+		parts, err := shlex.Split(editor)
+		if err != nil {
+			return fmt.Errorf("Invalid $EDITOR: %s", editor)
+		}
+		cmd = exec.Command(parts[0], parts...)
 	}
 
 	cmd.Stdin = os.Stdin
@@ -326,7 +332,7 @@ func outputStore(context *cli.Context, path string) sops.Store {
 }
 
 func defaultStore(path string) sops.Store {
-	if strings.HasSuffix(path, ".yaml") {
+	if strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml") {
 		return &yaml.Store{}
 	} else if strings.HasSuffix(path, ".json") {
 		return &json.Store{}
@@ -347,13 +353,20 @@ func decryptTree(tree sops.Tree, ignoreMac bool) (sops.Tree, map[string][]interf
 	}
 	fileMac, _, err := cipher.Decrypt(tree.Metadata.MessageAuthenticationCode, key, tree.Metadata.LastModified.Format(time.RFC3339))
 	if fileMac != computedMac && !ignoreMac {
-		return tree, nil, cli.NewExitError(fmt.Sprintf("MAC mismatch. File has %s, computed %s", fileMac, computedMac), exitMacMismatch)
+		outputMac := fileMac
+		if outputMac == "" {
+			outputMac = "no MAC"
+		}
+		return tree, nil, cli.NewExitError(fmt.Sprintf("MAC mismatch. File has %s, computed %s", outputMac, computedMac), exitMacMismatch)
 	}
 	return tree, stash, nil
 }
 
 func decrypt(c *cli.Context, tree sops.Tree, outputStore sops.Store) ([]byte, error) {
 	tree, _, err := decryptTree(tree, c.Bool("ignore-mac"))
+	if err != nil {
+		return nil, err
+	}
 	if c.String("extract") != "" {
 		v, err := tree.Branch.Truncate(c.String("extract"))
 		if err != nil {
@@ -362,7 +375,7 @@ func decrypt(c *cli.Context, tree sops.Tree, outputStore sops.Store) ([]byte, er
 		if newBranch, ok := v.(sops.TreeBranch); ok {
 			tree.Branch = newBranch
 		} else {
-			bytes, err := sops.ToBytes(v)
+			bytes, err := outputStore.MarshalValue(v)
 			if err != nil {
 				return nil, cli.NewExitError(fmt.Sprintf("Error dumping tree: %s", err), exitErrorDumpingTree)
 			}
@@ -619,10 +632,7 @@ func edit(c *cli.Context, file string, fileBytes []byte) ([]byte, error) {
 			return nil, cli.NewExitError("Could not truncate tree to the provided path", exitErrorInvalidSetFormat)
 		}
 		branch := parent.(sops.TreeBranch)
-		err = branch.ReplaceValue(key, value)
-		if err != nil {
-			return nil, cli.NewExitError("Key not found in tree", exitErrorInvalidSetFormat)
-		}
+		tree.Branch = branch.InsertOrReplaceValue(key, value)
 	} else {
 		tmpdir, err := ioutil.TempDir("", "")
 		if err != nil {

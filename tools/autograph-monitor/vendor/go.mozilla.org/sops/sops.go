@@ -1,3 +1,37 @@
+/*
+Package Sops manages JSON, YAML and BINARY documents to be encrypted or decrypted.
+
+This package should not be used directly. Instead, Sops users should install the
+command line client via `go get -u go.mozilla.org/sops/cmd/sops`, or use the
+decryption helper provided at `go.mozilla.org/sops/decrypt`.
+
+A Sops document is a Tree composed of a data branch with arbitrary key/value pairs
+and a metadata branch with encryption and integrity information.
+
+In JSON and YAML formats, the structure of the cleartext tree is preserved, keys are
+stored in cleartext and only values are encrypted. Keeping the values in cleartext
+provides better readability when storing Sops documents in version controls, and allows
+for merging competing changes on documents. This is a major difference between Sops
+and other encryption tools that store documents as encrypted blobs.
+
+In BINARY format, the cleartext data is treated as a single blob and the encrypted
+document is in JSON format with a single `data` key and a single encrypted value.
+
+Sops allows operators to encrypt their documents with multiple master keys. Each of
+the master key defined in the document is able to decrypt it, allowing users to
+share documents amongst themselves without sharing keys, or using a PGP key as a
+backup for KMS.
+
+In practice, this is achieved by generating a data key for each document that is used
+to encrypt all values, and encrypting the data with each master key defined. Being
+able to decrypt the data key gives access to the document.
+
+The integrity of each document is guaranteed by calculating a Message Access Control
+that is stored encrypted by the data key. When decrypting a document, the MAC should
+be recalculated and compared with the MAC stored in the document to verify that no
+fraudulent changes have been applied. The MAC covers keys and values as well as their
+ordering.
+*/
 package sops //import "go.mozilla.org/sops"
 
 import (
@@ -46,9 +80,9 @@ type TreeItem struct {
 // TreeBranch is a branch inside sops's tree. It is a slice of TreeItems and is therefore ordered
 type TreeBranch []TreeItem
 
-// ReplaceValue replaces the value under the provided key with the newValue provided.
-// Returns an error if the key was not found.
-func (branch TreeBranch) ReplaceValue(key interface{}, newValue interface{}) error {
+// InsertOrReplaceValue replaces the value under the provided key with the newValue provided,
+// or inserts a new key-value if it didn't exist already.
+func (branch TreeBranch) InsertOrReplaceValue(key interface{}, newValue interface{}) TreeBranch {
 	replaced := false
 	for i, kv := range branch {
 		if kv.Key == key {
@@ -58,9 +92,9 @@ func (branch TreeBranch) ReplaceValue(key interface{}, newValue interface{}) err
 		}
 	}
 	if !replaced {
-		return fmt.Errorf("Key not found")
+		return append(branch, TreeItem{Key: key, Value: newValue})
 	}
-	return nil
+	return branch
 }
 
 // Tree is the data structure used by sops to represent documents internally
@@ -148,7 +182,12 @@ func (tree TreeBranch) walkBranch(in TreeBranch, path []string, onLeaves func(in
 		if _, ok := item.Key.(Comment); ok {
 			continue
 		}
-		newV, err := tree.walkValue(item.Value, append(path, item.Key.(string)), onLeaves)
+		key, ok := item.Key.(string)
+		if !ok {
+			return nil, fmt.Errorf("Tree contains a non-string key (type %T): %s. Only string keys are" +
+				"supported", item.Key, item.Key)
+		}
+		newV, err := tree.walkValue(item.Value, append(path, key), onLeaves)
 		if err != nil {
 			return nil, err
 		}
@@ -264,7 +303,7 @@ type MasterKey interface {
 	Decrypt() ([]byte, error)
 	NeedsRotation() bool
 	ToString() string
-	ToMap() map[string]string
+	ToMap() map[string]interface{}
 }
 
 // Store provides a way to load and save the sops tree along with metadata
@@ -273,6 +312,7 @@ type Store interface {
 	UnmarshalMetadata(in []byte) (Metadata, error)
 	Marshal(TreeBranch) ([]byte, error)
 	MarshalWithMetadata(TreeBranch, Metadata) ([]byte, error)
+	MarshalValue(interface{}) ([]byte, error)
 }
 
 // MasterKeyCount returns the number of master keys available
@@ -386,7 +426,7 @@ func (m *Metadata) ToMap() map[string]interface{} {
 	out["mac"] = m.MessageAuthenticationCode
 	out["version"] = m.Version
 	for _, ks := range m.KeySources {
-		var keys []map[string]string
+		var keys []map[string]interface{}
 		for _, k := range ks.Keys {
 			keys = append(keys, k.ToMap())
 		}
@@ -397,15 +437,23 @@ func (m *Metadata) ToMap() map[string]interface{} {
 
 // GetDataKey retrieves the data key from the first MasterKey in the Metadata's KeySources that's able to return it.
 func (m Metadata) GetDataKey() ([]byte, error) {
+	errMsg := "Could not decrypt the data key with any of the master keys:\n"
 	for _, ks := range m.KeySources {
 		for _, k := range ks.Keys {
 			key, err := k.Decrypt()
 			if err == nil {
 				return key, nil
 			}
+			keyType := "Unknown"
+			if _, ok := k.(*pgp.MasterKey); ok {
+				keyType = "GPG"
+			} else if _, ok := k.(*kms.MasterKey); ok {
+				keyType = "KMS"
+			}
+			errMsg += fmt.Sprintf("\t[%s]: %s:\t%s\n", keyType, k.ToString(), err)
 		}
 	}
-	return nil, fmt.Errorf("Could not get data key")
+	return nil, fmt.Errorf(errMsg)
 }
 
 // ToBytes converts a string, int, float or bool to a byte representation.
@@ -424,4 +472,115 @@ func ToBytes(in interface{}) ([]byte, error) {
 	default:
 		return nil, fmt.Errorf("Could not convert unknown type %T to bytes", in)
 	}
+}
+
+// MapToMetadata tries to convert a map[string]interface{} obtained from an encrypted file into a Metadata struct.
+func MapToMetadata(data map[string]interface{}) (Metadata, error) {
+	var metadata Metadata
+	mac, ok := data["mac"].(string)
+	if !ok {
+		fmt.Println("WARNING: no MAC was found on the input file. " +
+			"Verification will fail. You can use --ignore-mac to skip verification.")
+	}
+	metadata.MessageAuthenticationCode = mac
+	lastModified, err := time.Parse(time.RFC3339, data["lastmodified"].(string))
+	if err != nil {
+		return metadata, fmt.Errorf("Could not parse last modified date: %s", err)
+	}
+	metadata.LastModified = lastModified
+	unencryptedSuffix, ok := data["unencrypted_suffix"].(string)
+	if !ok {
+		unencryptedSuffix = DefaultUnencryptedSuffix
+	}
+	metadata.UnencryptedSuffix = unencryptedSuffix
+	if metadata.Version, ok = data["version"].(string); !ok {
+		metadata.Version = strconv.FormatFloat(data["version"].(float64), 'f', -1, 64)
+	}
+	if k, ok := data["kms"].([]interface{}); ok {
+		ks, err := mapKMSEntriesToKeySource(k)
+		if err == nil {
+			metadata.KeySources = append(metadata.KeySources, ks)
+		}
+	}
+
+	if pgp, ok := data["pgp"].([]interface{}); ok {
+		ks, err := mapPGPEntriesToKeySource(pgp)
+		if err == nil {
+			metadata.KeySources = append(metadata.KeySources, ks)
+		}
+	}
+	return metadata, nil
+}
+
+func convertToMapStringInterface(in map[interface{}]interface{}) (map[string]interface{}, error) {
+	m := make(map[string]interface{})
+	for k, v := range in {
+		key, ok := k.(string)
+		if !ok {
+			return nil, fmt.Errorf("Map contains non-string-key (Type %T): %s", k, k)
+		}
+		m[key] = v
+	}
+	return m, nil
+}
+
+func mapKMSEntriesToKeySource(in []interface{}) (KeySource, error) {
+	var keys []MasterKey
+	keysource := KeySource{Name: "kms", Keys: keys}
+	for _, v := range in {
+		entry, ok := v.(map[string]interface{})
+		if !ok {
+			m, ok := v.(map[interface{}]interface{})
+			var err error
+			entry, err = convertToMapStringInterface(m)
+			if !ok || err != nil {
+				fmt.Println("KMS entry has invalid format, skipping...")
+				continue
+			}
+		}
+		key := &kms.MasterKey{}
+		key.Arn = entry["arn"].(string)
+		key.EncryptedKey = entry["enc"].(string)
+		role, ok := entry["role"].(string)
+		if ok {
+			key.Role = role
+		}
+		creationDate, err := time.Parse(time.RFC3339, entry["created_at"].(string))
+		if err != nil {
+			return keysource, fmt.Errorf("Could not parse creation date: %s", err)
+		}
+		if _, ok := entry["context"]; ok {
+			key.EncryptionContext = kms.ParseKMSContext(entry["context"])
+		}
+		key.CreationDate = creationDate
+		keysource.Keys = append(keysource.Keys, key)
+	}
+	return keysource, nil
+}
+
+func mapPGPEntriesToKeySource(in []interface{}) (KeySource, error) {
+	var keys []MasterKey
+	keysource := KeySource{Name: "pgp", Keys: keys}
+	for _, v := range in {
+		entry, ok := v.(map[string]interface{})
+		if !ok {
+			m, ok := v.(map[interface{}]interface{})
+			var err error
+			entry, err = convertToMapStringInterface(m)
+			if !ok || err != nil {
+				fmt.Println("PGP entry has invalid format, skipping...")
+				continue
+			}
+		}
+		key := &pgp.MasterKey{}
+		key.Fingerprint = entry["fp"].(string)
+		key.EncryptedKey = entry["enc"].(string)
+		creationDate, err := time.Parse(time.RFC3339, entry["created_at"].(string))
+		if err != nil {
+			return keysource, fmt.Errorf("Could not parse creation date: %s", err)
+		}
+		key.CreationDate = creationDate
+		keysource.Keys = append(keysource.Keys, key)
+	}
+	return keysource, nil
 }

@@ -596,3 +596,30 @@ func TestSliceOfString(t *testing.T) {
 	str := "foo"
 	print(str[0:10])
 }
+
+type R struct{ v int }
+
+func (r R) Val() int {
+	return r.v
+}
+
+func TestReceiverCapture(t *testing.T) {
+	r := R{1}
+	f1 := r.Val
+	r = R{2}
+	f2 := r.Val
+	if f1() != 1 || f2() != 2 {
+		t.Fail()
+	}
+}
+
+func TestTypeConversion(t *testing.T) {
+	i1, i2, i3 := 4, 2, 2
+	if (i1-i2)/i3 != int(i1-i2)/int(i3) {
+		t.Fail()
+	}
+	f1, f2, f3 := 4.0, 2.0, 2.0
+	if (f1-f2)/f3 != float64(f1-f2)/float64(f3) {
+		t.Fail()
+	}
+}
