@@ -69,7 +69,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if a.debug {
-		log.Printf("signature request: %s", body)
+		fmt.Printf("signature request\n-----------------\n%s\n", body)
 	}
 	sigresps := make([]signatureresponse, len(sigreqs))
 	// Each signature requested in the http request body is processed individually.
@@ -156,7 +156,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if a.debug {
-		log.Printf("signature response: %s", respdata)
+		fmt.Printf("signature response\n------------------\n%s\n", respdata)
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
