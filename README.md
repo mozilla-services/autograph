@@ -47,8 +47,8 @@ $ $GOPATH/bin/autograph-client -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9
 * [Architecture](docs/architecture.rst)
 * [Configuration](docs/configuration.rst)
 * [Endpoints](docs/endpoints.rst)
-* [Content-Signature protocol](signers/contentsignature/README.rst)
-* [XPI Signing protocol](signers/xpi/README.rst)
+* [Content-Signature protocol](signer/contentsignature/README.rst)
+* [XPI Signing protocol](signer/xpi/README.rst)
 
 ## Signing
 
