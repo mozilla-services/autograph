@@ -1,14 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-PROJECT		:= go.mozilla.org/autograph
-GO 			:= go
+GO := go
 
 all: generate test vet lint install
 
 install:
-	$(GO) install $(PROJECT)
+	$(GO) install go.mozilla.org/autograph
 
 vendor:
 	govend -u
@@ -19,10 +17,16 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	golint $(PROJECT)
+	golint go.mozilla.org/autograph
+	golint go.mozilla.org/autograph/signer
+	golint go.mozilla.org/autograph/signer/contentsignature
+	golint go.mozilla.org/autograph/signer/xpi
 
 vet:
-	$(GO) vet $(PROJECT)
+	$(GO) vet go.mozilla.org/autograph
+	$(GO) vet go.mozilla.org/autograph/signer
+	$(GO) vet go.mozilla.org/autograph/signer/contentsignature
+	$(GO) vet go.mozilla.org/autograph/signer/xpi
 
 testautograph:
 	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
@@ -48,7 +52,7 @@ testxpi:
 showcoveragexpi: testxpi
 	$(GO) tool cover -html=coverage_xpi.out
 
-test: testautograph testsigner testcs
+test: testautograph testsigner testcs testxpi
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 

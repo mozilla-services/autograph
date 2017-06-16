@@ -8,9 +8,9 @@ import (
 )
 
 func verifyXPISignature(sig string, truststore *x509.CertPool) error {
-	pkcs7Sig, err := xpi.Unmarshal(sig, []byte(inputdata))
+	xpiSig, err := xpi.Unmarshal(sig, []byte(inputdata))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return pkcs7Sig.VerifyWithChain(truststore)
+	return xpiSig.VerifyWithChain(truststore)
 }

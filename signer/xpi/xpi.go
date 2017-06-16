@@ -57,7 +57,7 @@ type PKCS7Signer struct {
 func New(conf signer.Configuration) (s *PKCS7Signer, err error) {
 	s = new(PKCS7Signer)
 	if conf.Type != Type {
-		return nil, errors.Errorf("xpi: invalid usage %q, must be 'xpi'", conf.Type)
+		return nil, errors.Errorf("xpi: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 	if conf.ID == "" {
@@ -84,7 +84,7 @@ func New(conf signer.Configuration) (s *PKCS7Signer, err error) {
 	if !s.issuerCert.IsCA {
 		return nil, errors.New("xpi: signer certificate must have CA constraint set to true")
 	}
-	if s.issuerCert.NotBefore.After(time.Now()) || s.issuerCert.NotAfter.Before(time.Now()) {
+	if time.Now().Before(s.issuerCert.NotBefore) || time.Now().After(s.issuerCert.NotAfter) {
 		return nil, errors.New("xpi: signer certificate is not currently valid")
 	}
 	if s.issuerCert.KeyUsage&x509.KeyUsageCertSign == 0 {
@@ -114,6 +114,7 @@ func New(conf signer.Configuration) (s *PKCS7Signer, err error) {
 	default:
 		return nil, errors.Errorf("xpi: unknown signer category %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Category)
 	}
+	s.Category = conf.Category
 	return
 }
 
@@ -145,7 +146,7 @@ func (s *PKCS7Signer) SignData(input []byte, options interface{}) (signer.Signat
 	if err != nil {
 		return nil, err
 	}
-	p7sig := new(PKCS7Signature)
+	p7sig := new(Signature)
 	toBeSigned, err := pkcs7.NewSignedData(input)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
@@ -184,14 +185,15 @@ func GetOptions(input interface{}) (options Options, err error) {
 	return
 }
 
-// PKCS7Signature is a PKCS7 detached signature
-type PKCS7Signature struct {
+// Signature is a PKCS7 detached signature
+type Signature struct {
+	p7       *pkcs7.PKCS7
 	Data     []byte
 	Finished bool
 }
 
 // Marshal returns the base64 representation of a PKCS7 detached signature
-func (sig *PKCS7Signature) Marshal() (string, error) {
+func (sig *Signature) Marshal() (string, error) {
 	if !sig.Finished {
 		return "", errors.New("xpi: cannot marshal unfinished signature")
 	}
@@ -203,22 +205,31 @@ func (sig *PKCS7Signature) Marshal() (string, error) {
 
 // Unmarshal takes the base64 representation of a PKCS7 detached signature
 // and the content of the signed data, and returns a PKCS7 struct
-func Unmarshal(signature string, content []byte) (sig *pkcs7.PKCS7, err error) {
-	sig = new(pkcs7.PKCS7)
-	data, err := base64.StdEncoding.DecodeString(signature)
+func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
+	sig = new(Signature)
+	sig.Data, err = base64.StdEncoding.DecodeString(signature)
 	if err != nil {
 		return sig, errors.Wrap(err, "xpi.Unmarshal: failed to decode base64 signature")
 	}
-	sig, err = pkcs7.Parse(data)
+	sig.p7, err = pkcs7.Parse(sig.Data)
 	if err != nil {
 		return sig, errors.Wrap(err, "xpi.Unmarshal: failed to parse pkcs7 signature")
 	}
-	sig.Content = content
+	sig.p7.Content = content
+	sig.Finished = true
 	return
 }
 
+// VerifyWithChain verifies an xpi signature using the provided truststore
+func (sig *Signature) VerifyWithChain(truststore *x509.CertPool) error {
+	if !sig.Finished {
+		return errors.New("xpi.VerifyWithChain: cannot verify unfinished signature")
+	}
+	return sig.p7.VerifyWithChain(truststore)
+}
+
 // String returns a PEM encoded PKCS7 block
-func (sig *PKCS7Signature) String() string {
+func (sig *Signature) String() string {
 	var buf bytes.Buffer
 	pem.Encode(&buf, &pem.Block{Type: "PKCS7", Bytes: sig.Data})
 	return string(buf.Bytes())
