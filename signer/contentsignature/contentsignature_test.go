@@ -10,6 +10,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -35,6 +36,19 @@ func TestSign(t *testing.T) {
 		}
 		if s.Mode != testcase.cfg.ID {
 			t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.Mode, testcase.cfg.ID)
+		}
+
+		// compare configs
+		c1, err := json.Marshal(s)
+		if err != nil {
+			t.Fatalf("testcase %d failed to json marshal signer: %v", i, err)
+		}
+		c2, err := json.Marshal(s.Config())
+		if err != nil {
+			t.Fatalf("testcase %d failed to json marshal signer config: %v", i, err)
+		}
+		if string(c1) != string(c2) {
+			t.Fatalf("testcase %d configurations don't match:\nc1=%s\nc2=%s", i, c1, c2)
 		}
 
 		// sign input data
@@ -170,5 +184,40 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 		if err == nil {
 			t.Fatalf("expected to fail with '%v' but succeeded", testcase.err)
 		}
+	}
+}
+
+func TestMarshalUnfinished(t *testing.T) {
+	var cs = &ContentSignature{
+		Finished: false,
+	}
+	_, err := cs.Marshal()
+	if err.Error() != "contentsignature.Marshal: unfinished cannot be encoded" {
+		t.Fatalf("expected to fail with 'unfinished cannot be encoded' but got %v", err)
+	}
+}
+
+func TestMarshalBadSigLen(t *testing.T) {
+	var cs = &ContentSignature{
+		Finished: true,
+		Len:      1,
+	}
+	_, err := cs.Marshal()
+	if err.Error() != "contentsignature.Marshal: invalid signature length 1" {
+		t.Fatalf("expected to fail with 'invalid signature length' but got %v", err)
+	}
+}
+
+func TestUnmarshalShortLen(t *testing.T) {
+	_, err := Unmarshal("")
+	if err.Error() != "contentsignature: signature cannot be shorter than 30 characters, got 0" {
+		t.Fatalf("expected to fail with 'signature cannot be shorter than 30 characters', but got %v", err)
+	}
+}
+
+func TestUnmarshalBadBase64(t *testing.T) {
+	_, err := Unmarshal("gZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaIgZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaI")
+	if err.Error() != "contentsignature: unknown signature length 192" {
+		t.Fatalf("expected to fail with 'unknown signature length', but got %v", err)
 	}
 }

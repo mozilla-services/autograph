@@ -27,13 +27,13 @@ const (
 	// P384ECDSA defines an ecdsa content signature on the P-384 curve
 	P384ECDSA = "p384ecdsa"
 
-	// P384ECDSABYTESIZE defines the bytes length of a P256ECDSA signature
+	// P384ECDSABYTESIZE defines the bytes length of a P384ECDSA signature
 	P384ECDSABYTESIZE = 96
 
 	// P521ECDSA defines an ecdsa content signature on the P-521 curve
 	P521ECDSA = "p521ecdsa"
 
-	// P521ECDSABYTESIZE defines the bytes length of a P256ECDSA signature
+	// P521ECDSABYTESIZE defines the bytes length of a P521ECDSA signature
 	P521ECDSABYTESIZE = 132
 
 	// SignaturePrefix is a string preprended to data prior to signing
