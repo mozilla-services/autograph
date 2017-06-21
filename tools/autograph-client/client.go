@@ -195,7 +195,7 @@ func verifyXPI(input []byte, resp signatureresponse) bool {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = sig.Verify()
+	err = sig.VerifyWithChain(nil)
 	if err != nil {
 		log.Fatal(err)
 	}

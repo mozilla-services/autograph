@@ -28,8 +28,8 @@ func TestSign(t *testing.T) {
 		if s.Config().PrivateKey != testcase.PrivateKey {
 			t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.PrivateKey)
 		}
-		if s.Config().Category != testcase.Category {
-			t.Fatalf("testcase %d signer category %q does not match configuration %q", i, s.Config().Category, testcase.Category)
+		if s.Config().Mode != testcase.Mode {
+			t.Fatalf("testcase %d signer category %q does not match configuration %q", i, s.Config().Mode, testcase.Mode)
 		}
 
 		// sign input data
@@ -222,9 +222,9 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 
 var PASSINGTESTCASES = []signer.Configuration{
 	signer.Configuration{
-		ID:       "rsa addon",
-		Type:     Type,
-		Category: CategoryAddOn,
+		ID:   "rsa addon",
+		Type: Type,
+		Mode: ModeAddOn,
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -325,9 +325,9 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 -----END PRIVATE KEY-----`,
 	},
 	{
-		ID:       "rsa system addon",
-		Type:     Type,
-		Category: CategorySystemAddOn,
+		ID:   "rsa system addon",
+		Type: Type,
+		Mode: ModeSystemAddOn,
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -428,9 +428,9 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 -----END PRIVATE KEY-----`,
 	},
 	{
-		Type:     Type,
-		ID:       "rsa extension",
-		Category: CategoryExtension,
+		Type: Type,
+		ID:   "rsa extension",
+		Mode: ModeExtension,
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -531,9 +531,9 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 -----END PRIVATE KEY-----`,
 	},
 	{
-		Type:     Type,
-		ID:       "ecdsa addon",
-		Category: CategoryAddOn,
+		Type: Type,
+		ID:   "ecdsa addon",
+		Mode: ModeAddOn,
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
@@ -573,9 +573,9 @@ IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
 -----END EC PRIVATE KEY-----`,
 	},
 	{
-		Type:     Type,
-		ID:       "ecdsa system addon",
-		Category: CategorySystemAddOn,
+		Type: Type,
+		ID:   "ecdsa system addon",
+		Mode: ModeSystemAddOn,
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
@@ -615,9 +615,9 @@ IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
 -----END EC PRIVATE KEY-----`,
 	},
 	{
-		Type:     Type,
-		ID:       "ecdsa extension",
-		Category: CategoryExtension,
+		Type: Type,
+		ID:   "ecdsa extension",
+		Mode: ModeExtension,
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
@@ -657,9 +657,9 @@ IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
 -----END EC PRIVATE KEY-----`,
 	},
 	{
-		Type:     Type,
-		ID:       "ecdsa hotfix",
-		Category: CategoryHotFix,
+		Type: Type,
+		ID:   "ecdsa hotfix",
+		Mode: ModeHotFix,
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
@@ -795,16 +795,16 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 		ID:   "abcd",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
-MIIB0zCCAX2gAwIBAgIJANQvRMoD9KzrMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+MIIB0zCCAX2gAwIBAgIJALIibhYzEpg4MA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
 BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
-aWRnaXRzIFB0eSBMdGQwHhcNMTcwNjE1MjEzMjEwWhcNMTcwNjE2MjEzMjEwWjBF
+aWRnaXRzIFB0eSBMdGQwHhcNMTcwNjIwMTM0MTEwWhcNNDQxMTA1MTM0MTEwWjBF
 MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
-ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANDX
-f003RkB8Zqv4aeeai4n3Uq5YySU1ldBjZi7doZcEwSMyCwVpRlpYR2qlwFacZ3JN
-u44RWzqUkBlFlbl1uYkCAwEAAaNQME4wHQYDVR0OBBYEFFLVjAI//IV/qtnFMEzS
-uIxBYU+yMB8GA1UdIwQYMBaAFFLVjAI//IV/qtnFMEzSuIxBYU+yMAwGA1UdEwQF
-MAMBAf8wDQYJKoZIhvcNAQELBQADQQC/xsbh3lHS/p7tBbZX83cIExQFQyxxmoY2
-v3Vw6bF7WKZ+aNvuuhqX0lf7q+uolY2fJ55GTOutFhqDJKnJISrK
+ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANlh
+v6lCpK8vadOxM1/Mdlxki/Aqxtt8cditzwuj+YhMS8OxBVL+YzUqxz35ecfkioyD
+u1LL95YjRrNG94rnWpMCAwEAAaNQME4wHQYDVR0OBBYEFKpvay/D28LrITvofh8Z
+zfBUTpCUMB8GA1UdIwQYMBaAFKpvay/D28LrITvofh8ZzfBUTpCUMAwGA1UdEwQF
+MAMBAf8wDQYJKoZIhvcNAQELBQADQQDTUlPHTR2X2Kq/18E7Ms5i+94/cDQU51m8
+YsfMwvTeMTl21zQb6cfvwtZNiHkeXxAtLLcF5/eO3M3s0zSy5y40
 -----END CERTIFICATE-----`,
 		PrivateKey: `
 -----BEGIN RSA PRIVATE KEY-----

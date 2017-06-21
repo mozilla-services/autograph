@@ -8,6 +8,7 @@ signers:
     # a p384 key, the standard
     - id: appkey1
       type: contentsignature
+      x5u: https://foo.example.com/chains/certificates.pem
       privatekey: |
           -----BEGIN EC PARAMETERS-----
           BgUrgQQAIg==
@@ -22,6 +23,7 @@ signers:
     # a p256 key
     - id: appkey2
       type: contentsignature
+      x5u: https://foo.example.com/chains/certificates.pem
       privatekey: |
           -----BEGIN EC PARAMETERS-----
           BggqhkjOPQMBBw==
@@ -69,7 +71,7 @@ signers:
       # 'extension' are signed with the OU 'Mozilla Extensions' and the provided ID
       # 'system add-on' are signed with the OU 'Mozilla Components' and the provided ID
       # 'hotfix' are signed with the OU 'Production' and the ID 'firefox-hotfix@mozilla.org'
-      category: add-on
+      mode: add-on
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -171,7 +173,7 @@ signers:
 
     - id: extensions-ecdsa
       type: xpi
-      category: extension
+      mode: extension
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ

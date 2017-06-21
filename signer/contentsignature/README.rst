@@ -32,10 +32,36 @@ Signature
 Content signatures are computed on data and served to firefox either via a HTTP
 response header or through a separate signature field in the data being transported.
 
-A content signature string, shown below, has two components: a X5U and a
-signature::
+Content signature have three main components: a signature mode (**mode**), an
+ecdsa signature encoded with Base64 URL (**signature**) and the URL to a chain
+of certificates that link to a trusted root (**x5u**). The example below shows
+the JSON representation of a content signature:
 
-	x5u="https://content-signature.cdn.mozilla.net/chains/onecrl.content-signature.mozilla.org-20161125.prod.chain";p384ecdsa=DSXbotVqK4STYEb6vRiDJI4KrXZ9Rhs5l8iMZez8PomTgmaPQv5WeJM4jj6OAaK690SSkkCyB_z7b6Nmc8x20y3BAYX32EbSeHUr3Ad0z6-PW3qXoij12v0qQFUsRGWF
+.. code:: json
+
+	{
+	  "mode": "p384ecdsa",
+	  "signature": "gZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaI",
+      "x5u": "https://foo.example.com/chains/certificates.pem"
+	}
+
+* **mode** is a suite of algorithms used to issue the signature. Autograph uses three
+  modes:
+
+  * **p384ecdsa** is the default used by firefox. I calculates signatures on the P-384
+    NIST curve and uses SHA2-384 for hashes.
+
+  * **p256ecdsa** uses the P-256 NIST curve and SHA256 for hashes
+
+  * **p521ecdsa** uses the P-521 NIST curve and SHA512 for hashes
+
+* **signature** contains the base64_url of the signature, computed using an elliptic
+  curve and a hash algorithm that depends on the mode. The signature is issued by
+  the private key of the end-entity cert referenced in the X5U. The decoded base64
+  contains a binary string that is a DL/ECSSA representation of the R and S values
+  (IEEE Std 1363-2000). This format concatenates R and S into a single value. To
+  retrieve R and S, split the decoded base64 in the middle, and take R on the left
+  and S on the right.
 
 * **x5u** contains the location of the chain of trust that issued the signature.
   This file contains at least two certificates encoded in PEM format, where the
@@ -45,18 +71,11 @@ signature::
   `security.content.signature.root_hash` preference, where the value is the
   hexadecimal of the sha256 of the DER of the root certificate.
 
-* **p384ecdsa** contains the base64_url of the signature, computed on the P-384
-  elliptic curve using the private key of the end-entity cert referenced in the
-  X5U. The signature uses the DL/ECSSA format spec from IEEE Std 1363-2000,
-  meaning the base64 contains two values R and S concatenated into a single
-  integer. To retrieve R and S, split the decoded base64 in the middle.
-
 When Firefox verifies a content signature, it first retrieves the X5U and checks
 the signature validity using the end-entity certificate, the signature, and the
 content being protected. Firefox then verifies the chain of trust of the
 end-entity links to a root cert with a hash matching the one in Firefox.
 Finally, to prevent application A from signing content for application B,
-
 Firefox verifies the subject alternate name of the end-entity certificate
 matches the one it expects. This is hardcoded for each component that uses
 content signature. Onecrl, for example, uses the namespace

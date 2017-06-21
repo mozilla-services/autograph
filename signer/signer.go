@@ -19,13 +19,13 @@ import (
 
 // Configuration defines the parameters of a signer
 type Configuration struct {
-	ID          string
-	Type        string
-	PrivateKey  string
-	PublicKey   string
-	Certificate string
-	X5U         string
-	Category    string
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Mode        string `json:"mode"`
+	PrivateKey  string `json:"privatekey,omitempty"`
+	PublicKey   string `json:"publickey,omitempty"`
+	Certificate string `json:"certificate,omitempty"`
+	X5U         string `json:"x5u,omitempty"`
 }
 
 // Signer is an interface to a configurable issuer of digital signatures

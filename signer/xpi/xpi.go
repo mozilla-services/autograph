@@ -18,21 +18,21 @@ const (
 	// Type of this signer is "xpi"
 	Type = "xpi"
 
-	// CategoryAddOn represents a signer that issues signatures for
+	// ModeAddOn represents a signer that issues signatures for
 	// regular firefox add-ons and web extensions developed by anyone
-	CategoryAddOn = "add-on"
+	ModeAddOn = "add-on"
 
-	// CategoryExtension represents a signer that issues signatures for
+	// ModeExtension represents a signer that issues signatures for
 	// internal extensions developed by Mozilla
-	CategoryExtension = "extension"
+	ModeExtension = "extension"
 
-	// CategorySystemAddOn represents a signer that issues signatures for
+	// ModeSystemAddOn represents a signer that issues signatures for
 	// System Add-Ons developed by Mozilla
-	CategorySystemAddOn = "system add-on"
+	ModeSystemAddOn = "system add-on"
 
-	// CategoryHotFix represents a signer that issues signatures for
+	// ModeHotFix represents a signer that issues signatures for
 	// Firefox HotFixes
-	CategoryHotFix = "hotfix"
+	ModeHotFix = "hotfix"
 )
 
 // A PKCS7Signer is configured to issue PKCS7 detached signatures
@@ -100,21 +100,21 @@ func New(conf signer.Configuration) (s *PKCS7Signer, err error) {
 	if !hasCodeSigning {
 		return nil, errors.New("xpi: signer certificate does not have code signing EKU")
 	}
-	switch conf.Category {
-	case CategoryAddOn:
+	switch conf.Mode {
+	case ModeAddOn:
 		s.OU = "Production"
-	case CategoryExtension:
+	case ModeExtension:
 		s.OU = "Mozilla Extensions"
-	case CategorySystemAddOn:
+	case ModeSystemAddOn:
 		s.OU = "Mozilla Components"
-	case CategoryHotFix:
+	case ModeHotFix:
 		// FIXME: this also needs to pin the signing key somehow
 		s.OU = "Production"
 		s.EndEntityCN = "firefox-hotfix@mozilla.org"
 	default:
-		return nil, errors.Errorf("xpi: unknown signer category %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Category)
+		return nil, errors.Errorf("xpi: unknown signer mode %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Mode)
 	}
-	s.Category = conf.Category
+	s.Mode = conf.Mode
 	return
 }
 
@@ -123,9 +123,9 @@ func (s *PKCS7Signer) Config() signer.Configuration {
 	return signer.Configuration{
 		ID:          s.ID,
 		Type:        s.Type,
+		Mode:        s.Mode,
 		PrivateKey:  s.PrivateKey,
 		Certificate: s.Certificate,
-		Category:    s.Category,
 	}
 }
 

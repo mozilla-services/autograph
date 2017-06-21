@@ -10,6 +10,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -24,17 +25,30 @@ func TestSign(t *testing.T) {
 		if err != nil {
 			t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
 		}
-		if s.Config().Type != testcase.cfg.Type {
-			t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Config().Type, testcase.cfg.Type)
+		if s.Type != testcase.cfg.Type {
+			t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Type, testcase.cfg.Type)
 		}
-		if s.Config().ID != testcase.cfg.ID {
-			t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.Config().ID, testcase.cfg.ID)
+		if s.ID != testcase.cfg.ID {
+			t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.ID, testcase.cfg.ID)
 		}
-		if s.Config().PrivateKey != testcase.cfg.PrivateKey {
-			t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.cfg.PrivateKey)
+		if s.PrivateKey != testcase.cfg.PrivateKey {
+			t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.PrivateKey, testcase.cfg.PrivateKey)
 		}
-		if s.CurveName() != testcase.cfg.ID {
-			t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.CurveName(), testcase.cfg.ID)
+		if s.Mode != testcase.cfg.ID {
+			t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.Mode, testcase.cfg.ID)
+		}
+
+		// compare configs
+		c1, err := json.Marshal(s)
+		if err != nil {
+			t.Fatalf("testcase %d failed to json marshal signer: %v", i, err)
+		}
+		c2, err := json.Marshal(s.Config())
+		if err != nil {
+			t.Fatalf("testcase %d failed to json marshal signer config: %v", i, err)
+		}
+		if string(c1) != string(c2) {
+			t.Fatalf("testcase %d configurations don't match:\nc1=%s\nc2=%s", i, c1, c2)
 		}
 
 		// sign input data
@@ -64,15 +78,12 @@ func TestSign(t *testing.T) {
 				i, sigstr, sigstr2)
 		}
 
-		if cs.X5U != s.Config().X5U {
-			t.Fatalf("testcase %d expected x5u value %q, got %q", i, s.Config().X5U, cs.X5U)
-		}
-		if cs.Len != getSignatureLen(s.privKey.Params().BitSize) {
+		if cs.Len != getSignatureLen(s.Mode) {
 			t.Fatalf("testcase %d expected signature len of %d, got %d",
-				i, getSignatureLen(s.privKey.Params().BitSize), cs.Len)
+				i, getSignatureLen(s.Mode), cs.Len)
 		}
-		if cs.CurveName != s.CurveName() {
-			t.Fatalf("testcase %d expected curve name %q, got %q", i, s.CurveName(), cs.CurveName)
+		if cs.Mode != s.Mode {
+			t.Fatalf("testcase %d expected curve name %q, got %q", i, s.Mode, cs.Mode)
 		}
 
 		// decode public key
@@ -173,5 +184,40 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 		if err == nil {
 			t.Fatalf("expected to fail with '%v' but succeeded", testcase.err)
 		}
+	}
+}
+
+func TestMarshalUnfinished(t *testing.T) {
+	var cs = &ContentSignature{
+		Finished: false,
+	}
+	_, err := cs.Marshal()
+	if err.Error() != "contentsignature.Marshal: unfinished cannot be encoded" {
+		t.Fatalf("expected to fail with 'unfinished cannot be encoded' but got %v", err)
+	}
+}
+
+func TestMarshalBadSigLen(t *testing.T) {
+	var cs = &ContentSignature{
+		Finished: true,
+		Len:      1,
+	}
+	_, err := cs.Marshal()
+	if err.Error() != "contentsignature.Marshal: invalid signature length 1" {
+		t.Fatalf("expected to fail with 'invalid signature length' but got %v", err)
+	}
+}
+
+func TestUnmarshalShortLen(t *testing.T) {
+	_, err := Unmarshal("")
+	if err.Error() != "contentsignature: signature cannot be shorter than 30 characters, got 0" {
+		t.Fatalf("expected to fail with 'signature cannot be shorter than 30 characters', but got %v", err)
+	}
+}
+
+func TestUnmarshalBadBase64(t *testing.T) {
+	_, err := Unmarshal("gZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaIgZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaI")
+	if err.Error() != "contentsignature: unknown signature length 192" {
+		t.Fatalf("expected to fail with 'unknown signature length', but got %v", err)
 	}
 }
