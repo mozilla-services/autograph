@@ -24,17 +24,17 @@ func TestSign(t *testing.T) {
 		if err != nil {
 			t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
 		}
-		if s.Config().Type != testcase.cfg.Type {
-			t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Config().Type, testcase.cfg.Type)
+		if s.Type != testcase.cfg.Type {
+			t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Type, testcase.cfg.Type)
 		}
-		if s.Config().ID != testcase.cfg.ID {
-			t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.Config().ID, testcase.cfg.ID)
+		if s.ID != testcase.cfg.ID {
+			t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.ID, testcase.cfg.ID)
 		}
-		if s.Config().PrivateKey != testcase.cfg.PrivateKey {
-			t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.cfg.PrivateKey)
+		if s.PrivateKey != testcase.cfg.PrivateKey {
+			t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.PrivateKey, testcase.cfg.PrivateKey)
 		}
-		if s.CurveName() != testcase.cfg.ID {
-			t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.CurveName(), testcase.cfg.ID)
+		if s.Mode != testcase.cfg.ID {
+			t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.Mode, testcase.cfg.ID)
 		}
 
 		// sign input data
@@ -64,15 +64,12 @@ func TestSign(t *testing.T) {
 				i, sigstr, sigstr2)
 		}
 
-		if cs.X5U != s.Config().X5U {
-			t.Fatalf("testcase %d expected x5u value %q, got %q", i, s.Config().X5U, cs.X5U)
-		}
-		if cs.Len != getSignatureLen(s.privKey.Params().BitSize) {
+		if cs.Len != getSignatureLen(s.Mode) {
 			t.Fatalf("testcase %d expected signature len of %d, got %d",
-				i, getSignatureLen(s.privKey.Params().BitSize), cs.Len)
+				i, getSignatureLen(s.Mode), cs.Len)
 		}
-		if cs.CurveName != s.CurveName() {
-			t.Fatalf("testcase %d expected curve name %q, got %q", i, s.CurveName(), cs.CurveName)
+		if cs.Mode != s.Mode {
+			t.Fatalf("testcase %d expected curve name %q, got %q", i, s.Mode, cs.Mode)
 		}
 
 		// decode public key

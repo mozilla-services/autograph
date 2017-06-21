@@ -21,11 +21,11 @@ import (
 type Configuration struct {
 	ID          string
 	Type        string
+	Mode        string
 	PrivateKey  string
 	PublicKey   string
 	Certificate string
 	X5U         string
-	Category    string
 }
 
 // Signer is an interface to a configurable issuer of digital signatures

@@ -33,9 +33,11 @@ type signaturerequest struct {
 type signatureresponse struct {
 	Ref       string `json:"ref"`
 	Type      string `json:"type"`
+	Mode      string `json:"mode"`
 	SignerID  string `json:"signer_id"`
 	PublicKey string `json:"public_key"`
 	Signature string `json:"signature"`
+	X5U       string `json:"x5u,omitempty"`
 }
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
@@ -137,9 +139,11 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		sigresps[i] = signatureresponse{
 			Ref:       id(),
 			Type:      a.signers[signerID].Config().Type,
+			Mode:      a.signers[signerID].Config().Mode,
 			SignerID:  a.signers[signerID].Config().ID,
 			PublicKey: a.signers[signerID].Config().PublicKey,
 			Signature: encodedsig,
+			X5U:       a.signers[signerID].Config().X5U,
 		}
 		log.WithFields(log.Fields{
 			"rid":        rid,

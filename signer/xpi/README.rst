@@ -21,15 +21,15 @@ Configuration
 The type of this signer is **xpi**.
 
 The XPI signer in Autograph supports four types of addons. A signer is
-configured to issue signature for a given type using the `category` parameter in
+configured to issue signature for a given type using the `mode` parameter in
 the autograph configuration:
 
-* Regular addons use category `add-on` 
-* Mozilla Extensions use category `extension`
+* Regular addons use mode `add-on` 
+* Mozilla Extensions use mode `extension`
 * Mozilla Components (aka. System Addons) `system add-on`
 * Hotfixes `hotfix`
 
-Each signer must have a type, a category and the certificate and private key of
+Each signer must have a type, a mode and the certificate and private key of
 an intermediate CA issued by either the staging or root PKIs of AMO (refer to
 internal documentation to issue those, as they require access to private HSMs).
 
@@ -43,7 +43,7 @@ right after the signature is issued.
 	signers:
     - id: webextensions-rsa
       type: xpi
-      category: add-on
+      mode: add-on
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx

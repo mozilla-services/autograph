@@ -21,11 +21,20 @@ const (
 	// P256ECDSA defines an ecdsa content signature on the P-256 curve
 	P256ECDSA = "p256ecdsa"
 
+	// P256ECDSABYTESIZE defines the bytes length of a P256ECDSA signature
+	P256ECDSABYTESIZE = 64
+
 	// P384ECDSA defines an ecdsa content signature on the P-384 curve
 	P384ECDSA = "p384ecdsa"
 
+	// P384ECDSABYTESIZE defines the bytes length of a P256ECDSA signature
+	P384ECDSABYTESIZE = 96
+
 	// P521ECDSA defines an ecdsa content signature on the P-521 curve
 	P521ECDSA = "p521ecdsa"
+
+	// P521ECDSABYTESIZE defines the bytes length of a P256ECDSA signature
+	P521ECDSABYTESIZE = 132
 
 	// SignaturePrefix is a string preprended to data prior to signing
 	SignaturePrefix = "Content-Signature:\x00"
@@ -68,6 +77,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 		return nil, errors.Wrap(err, "contentsignature: failed to unmarshal public key")
 	}
 	s.PublicKey = base64.StdEncoding.EncodeToString(pubkeybytes)
+	s.Mode = s.getModeFromCurve()
 	return
 }
 
@@ -76,6 +86,7 @@ func (s *ContentSigner) Config() signer.Configuration {
 	return signer.Configuration{
 		ID:         s.ID,
 		Type:       s.Type,
+		Mode:       s.Mode,
 		PrivateKey: s.PrivateKey,
 		PublicKey:  s.PublicKey,
 		X5U:        s.X5U,
@@ -88,7 +99,7 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	if len(input) < 10 {
 		return nil, errors.Errorf("contentsignature: refusing to sign input data shorter than 10 bytes")
 	}
-	alg, hash := makeTemplatedHash(input, s.CurveName())
+	alg, hash := makeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
 	sig.(*ContentSignature).storeHashName(alg)
 	return sig, err
@@ -127,10 +138,12 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 	}
 	var err error
 	csig := new(ContentSignature)
-	csig.Len = getSignatureLen(s.privKey.Params().BitSize)
-	csig.CurveName = s.CurveName()
-	csig.X5U = s.X5U
-	csig.ID = s.ID
+	csig = &ContentSignature{
+		Len:  getSignatureLen(s.Mode),
+		Mode: s.Mode,
+		X5U:  s.X5U,
+		ID:   s.ID,
+	}
 	csig.R, csig.S, err = ecdsa.Sign(rand.Reader, s.privKey, input)
 	if err != nil {
 		return nil, errors.Wrap(err, "contentsignature: failed to sign hash")
@@ -139,24 +152,40 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 	return csig, nil
 }
 
-// getSignatureLen returns the size of an ECDSA signature issued by the signer.
+// getSignatureLen returns the size of an ECDSA signature issued by the signer,
+// or -1 if the mode is unknown
+//
 // The signature length is double the size size of the curve field, in bytes
 // (each R and S value is equal to the size of the curve field).
 // If the curve field it not a multiple of 8, round to the upper multiple of 8.
-func getSignatureLen(bitsize int) int {
-	siglen := 0
-	if bitsize%8 != 0 {
-		siglen = 8 - (bitsize % 8)
+func getSignatureLen(mode string) int {
+	switch mode {
+	case P256ECDSA:
+		return P256ECDSABYTESIZE
+	case P384ECDSA:
+		return P384ECDSABYTESIZE
+	case P521ECDSA:
+		return P521ECDSABYTESIZE
 	}
-	siglen += bitsize
-	siglen /= 8
-	siglen *= 2
-	return siglen
+	return -1
 }
 
-// CurveName returns an elliptic curve string identifier, or an empty string
-// if the curve is unknown
-func (s *ContentSigner) CurveName() string {
+// getSignatureHash returns the name of the hash function used by a given mode,
+// or an empty string if the mode is unknown
+func getSignatureHash(mode string) string {
+	switch mode {
+	case P256ECDSA:
+		return "sha256"
+	case P384ECDSA:
+		return "sha384"
+	case P521ECDSA:
+		return "sha512"
+	}
+	return ""
+}
+
+// getModeFromCurve returns a content signature algorithm name, or an empty string if the mode is unknown
+func (s *ContentSigner) getModeFromCurve() string {
 	switch s.privKey.Curve.Params().Name {
 	case "P-256":
 		return P256ECDSA
