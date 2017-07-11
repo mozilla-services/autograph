@@ -65,15 +65,17 @@ Below is an example signing response for a content-signature request:
 
 .. code:: json
 
-	[
-		{
-			"ref": "357z4qyjgg3zt2h2twp959q8jm",
-			"type": "contentsignature",
-			"signer_id": "appkey1",
-			"public_key": "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE7oM/ewOhz6qtHyQhqJvT3SiefGPWqGwEUAZGVkuSIwvteVKrd8jnAjHYyCaYpIg9Vo10WnhXvm96L3KAbOE6Cyu3fMtKhZZIMf+Qqes9+66ae/NTeIWlDiGrjNeD+ClM",
-			"signature": "keyid=appkey1;p384ecdsa=ALr27Ve_LRsmMeiSVJCqXubVoc81bcldGRmuOiJh3BxbDHrXWyKZQP2KxWdOFYIzUW62e2gb2P-Fdgt4JOWMu9TWjH2ysRHbGiqNp-Xkul5OtHdw-ir5lgzourqNnGCn"
-		}
-	]
+    [
+      {
+        "ref": "1p21kj11od4no13o1xepn22mkc",
+        "type": "contentsignature",
+        "mode": "p384ecdsa",
+        "signer_id": "appkey1",
+        "public_key": "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE7oM/ewOhz6qtHyQhqJvT3SiefGPWqGwEUAZGVkuSIwvteVKrd8jnAjHYyCaYpIg9Vo10WnhXvm96L3KAbOE6Cyu3fMtKhZZIMf+Qqes9+66ae/NTeIWlDiGrjNeD+ClM",
+        "signature": "Niffk674SNKzQaq23z2sv7xkU_IEgrPc8_tEFGw0bYXlNJDpAPe7hEaipyg-wY10_XUzkoRphtYVIAa70Hw22EkWfSGAdzosEYyxsDai52PG088KqasP_nd_byiiqIAz",
+        "x5u": "https://foo.example.com/chains/certificates.pem"
+      }
+    ]
 
 Each signature response contains the following fields:
 
