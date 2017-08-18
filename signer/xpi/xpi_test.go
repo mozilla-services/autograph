@@ -68,7 +68,7 @@ func TestSign(t *testing.T) {
 func TestSignAndVerifyWithOpenSSL(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 
-	// init a signer, don't care which one, taking this one because p256 is fast
+	// init a signer
 	s, err := New(PASSINGTESTCASES[3])
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
@@ -105,7 +105,7 @@ func TestSignAndVerifyWithOpenSSL(t *testing.T) {
 	fd.Close()
 
 	// call openssl to verify the signature on the content using the root
-	opensslCMD := exec.Command("openssl", "smime", "-verify",
+	opensslCMD := exec.Command("openssl", "cms", "-verify", "-purpose", "any",
 		"-in", tmpSignatureFile.Name(), "-inform", "PEM",
 		"-content", tmpContentFile.Name(),
 		"-CAfile", tmpIssuerCertFile.Name())
