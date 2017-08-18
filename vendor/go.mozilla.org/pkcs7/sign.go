@@ -3,12 +3,11 @@ package pkcs7
 import (
 	"bytes"
 	"crypto"
-	"crypto/ecdsa"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -229,12 +228,13 @@ func cert2issuerAndSerial(cert *x509.Certificate) (issuerAndSerial, error) {
 	return ias, nil
 }
 
-type ecdsaSignature struct {
-	R, S *big.Int // fields must be exported for ASN.1 marshalling
-}
-
 // signs the DER encoded form of the attributes with the private key
 func signAttributes(attrs []attribute, pkey crypto.PrivateKey, digestAlg crypto.Hash) ([]byte, error) {
+	key, ok := pkey.(crypto.Signer)
+	if !ok {
+		return nil, errors.New("pkcs7: private key does not implement crypto.Signer")
+	}
+
 	attrBytes, err := marshalAttributes(attrs)
 	if err != nil {
 		return nil, err
@@ -242,17 +242,8 @@ func signAttributes(attrs []attribute, pkey crypto.PrivateKey, digestAlg crypto.
 	h := digestAlg.New()
 	h.Write(attrBytes)
 	hash := h.Sum(nil)
-	switch pkey.(type) {
-	case *rsa.PrivateKey:
-		return rsa.SignPKCS1v15(rand.Reader, pkey.(*rsa.PrivateKey), digestAlg, hash)
-	case *ecdsa.PrivateKey:
-		r, s, err := ecdsa.Sign(rand.Reader, pkey.(*ecdsa.PrivateKey), hash)
-		if err != nil {
-			return nil, fmt.Errorf("pkcs7: failed to sign attributes: %v", err)
-		}
-		return asn1.Marshal(ecdsaSignature{R: r, S: s})
-	}
-	return nil, fmt.Errorf("pkcs7: unsupported signing key type %T", pkey)
+
+	return key.Sign(rand.Reader, hash, digestAlg)
 }
 
 // concats and wraps the certificates in the RawValue structure
