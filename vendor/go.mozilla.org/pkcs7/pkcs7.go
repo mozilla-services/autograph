@@ -113,9 +113,16 @@ func getHashForOID(oid asn1.ObjectIdentifier) (crypto.Hash, error) {
 
 // getOIDForEncryptionAlgorithm takes the private key type of the signer and
 // the OID of a digest algorithm to return the appropriate signerInfo.DigestEncryptionAlgorithm
-func getOIDForEncryptionAlgorithm(key crypto.PrivateKey, oidDigestAlg asn1.ObjectIdentifier) (asn1.ObjectIdentifier, error) {
-	switch key.(type) {
-	case *rsa.PrivateKey:
+func getOIDForEncryptionAlgorithm(pkey interface{}, oidDigestAlg asn1.ObjectIdentifier) (asn1.ObjectIdentifier, error) {
+	key, ok := pkey.(crypto.Signer)
+	if !ok {
+		return nil, errors.New("pkcs7: private key does not implement crypto.Signer")
+	}
+
+	pub := key.Public()
+
+	switch pub.(type) {
+	case *rsa.PublicKey:
 		switch {
 		default:
 			return oidEncryptionAlgorithmRSA, nil
@@ -128,7 +135,7 @@ func getOIDForEncryptionAlgorithm(key crypto.PrivateKey, oidDigestAlg asn1.Objec
 		case oidDigestAlg.Equal(oidDigestAlgorithmSHA512):
 			return oidEncryptionAlgorithmRSASHA512, nil
 		}
-	case *ecdsa.PrivateKey:
+	case *ecdsa.PublicKey:
 		switch {
 		case oidDigestAlg.Equal(oidDigestAlgorithmSHA1):
 			return oidDigestAlgorithmECDSASHA1, nil
@@ -140,7 +147,7 @@ func getOIDForEncryptionAlgorithm(key crypto.PrivateKey, oidDigestAlg asn1.Objec
 			return oidDigestAlgorithmECDSASHA512, nil
 		}
 	}
-	return nil, fmt.Errorf("pkcs7: cannot convert encryption algorithm to oid, unknown private key type %T", key)
+	return nil, fmt.Errorf("pkcs7: cannot convert encryption algorithm to oid, unknown public key type %T", pub)
 
 }
 

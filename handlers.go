@@ -16,7 +16,7 @@ import (
 	"os"
 	"path"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/autograph/signer"
 )
 

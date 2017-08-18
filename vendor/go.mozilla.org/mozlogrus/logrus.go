@@ -8,7 +8,7 @@ import (
 
 	"go.mozilla.org/mozlog"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // Enable enables mozlogrus
