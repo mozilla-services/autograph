@@ -21,13 +21,13 @@ Configuration
 The type of this signer is **xpi**.
 
 The XPI signer in Autograph supports four types of addons. A signer is
-configured to issue signature for a given type using the `mode` parameter in
+configured to issue signatures for a given type using the `mode` parameter in
 the autograph configuration:
 
 * Regular addons use mode `add-on` 
 * Mozilla Extensions use mode `extension`
-* Mozilla Components (aka. System Addons) `system add-on`
-* Hotfixes `hotfix`
+* Mozilla Components (aka. System Addons) use mode `system add-on`
+* Hotfixes use mode `hotfix`
 
 Each signer must have a type, a mode and the certificate and private key of
 an intermediate CA issued by either the staging or root PKIs of AMO (refer to
