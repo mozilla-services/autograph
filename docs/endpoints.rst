@@ -7,7 +7,7 @@ API Endpoints
 
 Authorization: All API calls require a
 `hawk <https://github.com/hueniverse/hawk>`_ Authorization header with payload
-signature enabled. Example code for can be found in the `tools` directory.
+signature enabled. Example code can be found in the `tools` directory.
 
 /sign/data
 ----------
