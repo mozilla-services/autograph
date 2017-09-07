@@ -10,26 +10,25 @@ Rationale
 As we rapidly increase the number of services that send configuration data to
 Firefox agents, we also increase the probability of a service being
 compromised to serve fraudulent data to our users. Content Signature implements
-signing protocol to protect the information sent from backend services to Firefox
+a signing protocol to protect the information sent from backend services to Firefox
 user-agents.
 
-Content signature adds an extra layer to the ones already provided by TLS and
-certificates pinning. As we grow our service infrastructure, the risk of a
-vulnerability on our public endpoints increases, and an attacker could exploit
-a vulnerability to serve bad data from trusted sites directly. TLS with
-certificate pinning prevents bad actors from creating fraudulent Firefox
-services, but does not reduce the impact a break-in would have on our users.
-Content signature provides this extra layer.
+Content signature adds a layer to TLS and certificate pinning. 
+As we grow our service infrastructure, the risk of a vulnerability on our public 
+endpoints increases, and an attacker could exploit a vulnerability to serve bad 
+data from trusted sites directly. TLS with certificate pinning prevents bad actors
+from creating fraudulent Firefox services, but does not reduce the impact a break-in
+would have on our users. Content signature provides this extra layer.
 
-Finally, content signature helps us use Content Delivery Network (CDN) without
+Finally, content signature helps us use Content Delivery Networks (CDN) without
 worrying that a compromise would end-up serving bad data to our users.
-Signing content at the source reduces the pressure off of the infrastructure
+Signing content at the source reduces pressure on the infrastructure
 and allows us to rely on vendors without worrying about data integrity.
 
 Signature
 ---------
 
-Content signatures are computed on data and served to firefox either via a HTTP
+Content signatures are computed on data and served to Firefox either via a HTTP
 response header or through a separate signature field in the data being transported.
 
 Content signature have three main components: a signature mode (**mode**), an
@@ -48,7 +47,7 @@ the JSON representation of a content signature:
 * **mode** is a suite of algorithms used to issue the signature. Autograph uses three
   modes:
 
-  * **p384ecdsa** is the default used by firefox. I calculates signatures on the P-384
+  * **p384ecdsa** is the default used by firefox. It calculates signatures on the P-384
     NIST curve and uses SHA2-384 for hashes.
 
   * **p256ecdsa** uses the P-256 NIST curve and SHA256 for hashes
