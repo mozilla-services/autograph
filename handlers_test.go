@@ -194,6 +194,28 @@ func TestBadRequest(t *testing.T) {
 	}
 }
 
+func TestRequestTooLarge(t *testing.T) {
+	blob := strings.Repeat("foobar", 200)
+	body := strings.NewReader(blob)
+	req, err := http.NewRequest("GET", "http://foo.bar/sign/data", body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	authheader := getAuthHeader(req,
+		ag.auths[conf.Authorizations[0].ID].ID,
+		ag.auths[conf.Authorizations[0].ID].Key,
+		sha256.New, id(),
+		"application/json",
+		[]byte(blob))
+	req.Header.Set("Authorization", authheader)
+	w := httptest.NewRecorder()
+	ag.handleSignature(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("large request should have failed, but succeeded with %d: %s", w.Code, w.Body.String())
+	}
+}
+
 func TestAuthFail(t *testing.T) {
 	var TESTCASES = []struct {
 		user        string
