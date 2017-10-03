@@ -49,7 +49,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
 		return
 	}
-
+	if r.Header.Get("Content-Type") != "application/json" {
+		httpError(w, r, http.StatusBadRequest, "invalid content type, expected application/json")
+		return
+	}
 	if len(body) < 10 {
 		// it's impossible to have a valid request body smaller than 10 bytes
 		httpError(w, r, http.StatusBadRequest, "empty or invalid request request body")
