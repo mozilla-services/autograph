@@ -1,3 +1,7 @@
+/*
+Package kms contains an implementation of the go.mozilla.org/sops.MasterKey interface that encrypts and decrypts the
+data key using AWS KMS with the AWS Go SDK.
+*/
 package kms //import "go.mozilla.org/sops/kms"
 
 import (
@@ -8,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"go.mozilla.org/sops/logging"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
@@ -15,7 +21,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/sirupsen/logrus"
 )
+
+var log *logrus.Logger
+
+func init() {
+	log = logging.NewLogger("AWSKMS")
+}
 
 // this needs to be a global var for unit tests to work (mockKMS redefines
 // it in keysource_test.go)
@@ -31,6 +44,16 @@ type MasterKey struct {
 	EncryptionContext map[string]*string
 }
 
+// EncryptedDataKey returns the encrypted data key this master key holds
+func (key *MasterKey) EncryptedDataKey() []byte {
+	return []byte(key.EncryptedKey)
+}
+
+// SetEncryptedDataKey sets the encrypted data key for this master key
+func (key *MasterKey) SetEncryptedDataKey(enc []byte) {
+	key.EncryptedKey = string(enc)
+}
+
 // Encrypt takes a sops data key, encrypts it with KMS and stores the result in the EncryptedKey field
 func (key *MasterKey) Encrypt(dataKey []byte) error {
 	// isMocked is set by unit test to indicate that the KMS service
@@ -38,15 +61,18 @@ func (key *MasterKey) Encrypt(dataKey []byte) error {
 	if kmsSvc == nil || !isMocked {
 		sess, err := key.createSession()
 		if err != nil {
+			log.WithField("arn", key.Arn).Warn("Encryption failed")
 			return fmt.Errorf("Failed to create session: %v", err)
 		}
 		kmsSvc = kms.New(sess)
 	}
 	out, err := kmsSvc.Encrypt(&kms.EncryptInput{Plaintext: dataKey, KeyId: &key.Arn, EncryptionContext: key.EncryptionContext})
 	if err != nil {
+		log.WithField("arn", key.Arn).Warn("Encryption failed")
 		return fmt.Errorf("Failed to call KMS encryption service: %v", err)
 	}
 	key.EncryptedKey = base64.StdEncoding.EncodeToString(out.CiphertextBlob)
+	log.WithField("arn", key.Arn).Info("Encryption succeeded")
 	return nil
 }
 
@@ -62,6 +88,7 @@ func (key *MasterKey) EncryptIfNeeded(dataKey []byte) error {
 func (key *MasterKey) Decrypt() ([]byte, error) {
 	k, err := base64.StdEncoding.DecodeString(key.EncryptedKey)
 	if err != nil {
+		log.WithField("arn", key.Arn).Warn("Decryption failed")
 		return nil, fmt.Errorf("Error base64-decoding encrypted data key: %s", err)
 	}
 	// isMocked is set by unit test to indicate that the KMS service
@@ -69,14 +96,17 @@ func (key *MasterKey) Decrypt() ([]byte, error) {
 	if kmsSvc == nil || !isMocked {
 		sess, err := key.createSession()
 		if err != nil {
+			log.WithField("arn", key.Arn).Warn("Decryption failed")
 			return nil, fmt.Errorf("Error creating AWS session: %v", err)
 		}
 		kmsSvc = kms.New(sess)
 	}
 	decrypted, err := kmsSvc.Decrypt(&kms.DecryptInput{CiphertextBlob: k, EncryptionContext: key.EncryptionContext})
 	if err != nil {
+		log.WithField("arn", key.Arn).Warn("Decryption failed")
 		return nil, fmt.Errorf("Error decrypting key: %v", err)
 	}
+	log.WithField("arn", key.Arn).Info("Decryption succeeded")
 	return decrypted.Plaintext, nil
 }
 
@@ -88,6 +118,16 @@ func (key *MasterKey) NeedsRotation() bool {
 // ToString converts the key to a string representation
 func (key *MasterKey) ToString() string {
 	return key.Arn
+}
+
+// NewMasterKey creates a new MasterKey from an ARN, role and context, setting the creation date to the current date
+func NewMasterKey(arn string, role string, context map[string]*string) *MasterKey {
+	return &MasterKey{
+		Arn:               arn,
+		Role:              role,
+		EncryptionContext: context,
+		CreationDate:      time.Now().UTC(),
+	}
 }
 
 // NewMasterKeyFromArn takes an ARN string and returns a new MasterKey for that ARN
@@ -191,7 +231,7 @@ func ParseKMSContext(in interface{}) map[string]*string {
 		for k, v := range in {
 			value, ok := v.(string)
 			if !ok {
-				fmt.Println("[WARNING]: KMS Encryption Context contains a non-string value, context will not be used")
+				log.Warn("Encryption context contains a non-string value, context will not be used")
 				return nil
 			}
 			out[k] = &value
@@ -203,12 +243,12 @@ func ParseKMSContext(in interface{}) map[string]*string {
 		for k, v := range in {
 			key, ok := k.(string)
 			if !ok {
-				fmt.Println("[WARNING]: KMS Encryption Context contains a non-string key, context will not be used")
+				log.Warn("Encryption context contains a non-string value, context will not be used")
 				return nil
 			}
 			value, ok := v.(string)
 			if !ok {
-				fmt.Println("[WARNING]: KMS Encryption Context contains a non-string value, context will not be used")
+				log.Warn("Encryption context contains a non-string value, context will not be used")
 				return nil
 			}
 			out[key] = &value
@@ -220,7 +260,7 @@ func ParseKMSContext(in interface{}) map[string]*string {
 		for _, kv := range strings.Split(in, ",") {
 			kv := strings.Split(kv, ":")
 			if len(kv) != 2 {
-				fmt.Printf("[WARNING]: KMS Encryption Context could not be parsed, context will not be used")
+				log.Warn("Encryption context contains a non-string value, context will not be used")
 				return nil
 			}
 			out[kv[0]] = &kv[1]

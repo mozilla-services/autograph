@@ -10,11 +10,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 	lru "github.com/hashicorp/golang-lru"
@@ -68,9 +69,18 @@ func main() {
 	// initialize signers from the configuration
 	// and store them into the autographer handler
 	ag = newAutographer(conf.Server.NonceCacheSize)
-	ag.addSigners(conf.Signers)
-	ag.addAuthorizations(conf.Authorizations)
-	ag.addMonitoring(conf.Monitoring)
+	err = ag.addSigners(conf.Signers)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ag.addAuthorizations(conf.Authorizations)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ag.addMonitoring(conf.Monitoring)
+	if err != nil {
+		log.Fatal(err)
+	}
 	ag.makeSignerIndex()
 	if debug {
 		ag.enableDebug()
@@ -156,8 +166,14 @@ func (a *autographer) disableDebug() {
 // addSigners initializes each signer specified in the configuration by parsing
 // and loading their private keys. The signers are then copied over to the
 // autographer handler.
-func (a *autographer) addSigners(signerConfs []signer.Configuration) {
+func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
+	sids := make(map[string]bool)
 	for _, signerConf := range signerConfs {
+		// forbid signers with the same ID
+		if _, exists := sids[signerConf.ID]; exists {
+			return fmt.Errorf("duplicate signer ID %q is not permitted", signerConf.ID)
+		}
+		sids[signerConf.ID] = true
 		var (
 			s   signer.Signer
 			err error
@@ -166,29 +182,31 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) {
 		case contentsignature.Type:
 			s, err = contentsignature.New(signerConf)
 			if err != nil {
-				log.Fatal(err)
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
 		case xpi.Type:
 			s, err = xpi.New(signerConf)
 			if err != nil {
-				log.Fatal(err)
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
 		default:
-			log.Fatalf("unknown signer type %q", signerConf.Type)
+			return fmt.Errorf("unknown signer type %q", signerConf.Type)
 		}
 		a.signers = append(a.signers, s)
 	}
+	return nil
 }
 
 // addAuthorizations reads a list of authorizations from the configuration and
 // stores them into the autographer handler as a map indexed by user id, for fast lookup.
-func (a *autographer) addAuthorizations(auths []authorization) {
+func (a *autographer) addAuthorizations(auths []authorization) error {
 	for _, auth := range auths {
 		if _, ok := a.auths[auth.ID]; ok {
-			panic("authorization id '" + auth.ID + "' already defined, duplicates are not permitted")
+			return fmt.Errorf("authorization id '" + auth.ID + "' already defined, duplicates are not permitted")
 		}
 		a.auths[auth.ID] = auth
 	}
+	return nil
 }
 
 // makeSignerIndex creates a map of authorization IDs and signer IDs to
