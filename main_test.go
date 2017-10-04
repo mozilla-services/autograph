@@ -31,9 +31,18 @@ func TestMain(m *testing.M) {
 	}
 	log.Printf("configuration: %+v\n", conf)
 	ag = newAutographer(1)
-	ag.addSigners(conf.Signers)
-	ag.addAuthorizations(conf.Authorizations)
-	ag.addMonitoring(conf.Monitoring)
+	err = ag.addSigners(conf.Signers)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ag.addAuthorizations(conf.Authorizations)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = ag.addMonitoring(conf.Monitoring)
+	if err != nil {
+		log.Fatal(err)
+	}
 	ag.makeSignerIndex()
 	log.Printf("autographer: %+v\n", ag)
 	// run the tests and exit
@@ -49,6 +58,7 @@ func TestConfigLoad(t *testing.T) {
 		{true, []byte(`
 server:
     listen: "localhost:8000"
+    noncecachesize: 64
 
 signers:
     - id: testsigner1
@@ -66,6 +76,7 @@ monitoring:
 		{true, []byte(`
 server:
     listen: "localhost:8000"
+    noncecachesize: 64
 
 signers:
     - id: testsigner1
@@ -101,6 +112,7 @@ authorizations:
 		{false, []byte(`
 server:
 	listen: "localhost:8000"
+	noncecachesize: 64
 
 signers:
       - privatekey: |
@@ -142,6 +154,118 @@ authorizations:
 	}
 }
 
+func TestDuplicateSigners(t *testing.T) {
+	var conf configuration
+	// write conf file to /tmp and read it back
+	fd, err := ioutil.TempFile("", "autographtestconf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fi, err := fd.Stat()
+	if err != nil {
+		t.Fatal(err)
+	}
+	filename := fmt.Sprintf("%s/%s", os.TempDir(), fi.Name())
+	_, err = fd.Write([]byte(`
+server:
+    listen: "localhost:8000"
+    noncecachesize: 64
+
+signers:
+    - id: testsigner1
+      privatekey: |
+        -----BEGIN EC PRIVATE KEY-----
+        XMhBcGTy1e65CRjbCNM4A8w0/K30x4k=
+        -----END EC PRIVATE KEY-----
+
+    - id: testsigner1
+      privatekey: |
+        -----BEGIN RSA PRIVATE KEY-----
+        84l6Qav0l4A3NDdT+cotbnDqQ5wjF+UZ8uwsBwSl
+        -----END RSA PRIVATE KEY-----
+`))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	fd.Close()
+	err = conf.loadFromFile(filename)
+	if err != nil {
+		t.Fatalf("config parsing failed and should have passed: %v", err)
+	}
+	// initialize signers from the configuration
+	// and store them into the autographer handler
+	dupag := newAutographer(conf.Server.NonceCacheSize)
+	err = dupag.addSigners(conf.Signers)
+	if err == nil {
+		t.Fatalf("should have failed with duplicate signers but didn't")
+	}
+	os.Remove(filename)
+}
+
+func TestDuplicateAuthorization(t *testing.T) {
+	var conf configuration
+	// write conf file to /tmp and read it back
+	fd, err := ioutil.TempFile("", "autographtestconf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fi, err := fd.Stat()
+	if err != nil {
+		t.Fatal(err)
+	}
+	filename := fmt.Sprintf("%s/%s", os.TempDir(), fi.Name())
+	_, err = fd.Write([]byte(`
+server:
+    listen: "localhost:8000"
+    noncecachesize: 64
+
+signers:
+    - id: testsigner1
+      type: contentsignature
+      x5u: https://foo.example.com/chains/certificates.pem
+      privatekey: |
+          -----BEGIN EC PARAMETERS-----
+          BggqhkjOPQMBBw==
+          -----END EC PARAMETERS-----
+          -----BEGIN EC PRIVATE KEY-----
+          MHcCAQEEII+Is30aP9wrB/H6AkKrJjMG8EVY2WseSFHTfWGCIk7voAoGCCqGSM49
+          AwEHoUQDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq
+          3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==
+          -----END EC PRIVATE KEY-----
+
+authorizations:
+    - id: tester
+      key: oiqwhfoqihfoiqeheouqqouhfdq
+      signers:
+          - testsigner1
+    - id: tester
+      key: oiqwhfoqihfoiqeheouqqouhfdq
+      signers:
+          - testsigner1
+`))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	fd.Close()
+	err = conf.loadFromFile(filename)
+	if err != nil {
+		t.Fatalf("config parsing failed and should have passed: %v", err)
+	}
+	// initialize signers from the configuration
+	// and store them into the autographer handler
+	dupag := newAutographer(conf.Server.NonceCacheSize)
+	err = dupag.addSigners(conf.Signers)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dupag.addAuthorizations(conf.Authorizations)
+	if err == nil {
+		t.Fatalf("should have failed with duplicate authorizations but succeeded")
+	}
+	os.Remove(filename)
+}
 func TestConfigLoadFileNotExist(t *testing.T) {
 	var conf configuration
 	err := conf.loadFromFile("/tmp/a/b/c/d/e/f/e/d/c/b/a/oned97fy2qoelfahd018oehfa9we8ohf219")

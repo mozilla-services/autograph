@@ -2,20 +2,22 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
 	"go.mozilla.org/autograph/signer"
 )
 
-func (a *autographer) addMonitoring(monitoring authorization) {
+func (a *autographer) addMonitoring(monitoring authorization) error {
 	if monitoring.Key == "" {
-		return
+		return nil
 	}
 	if _, ok := a.auths["monitor"]; ok {
-		panic("user 'monitor' is reserved for monitoring, duplication is not permitted")
+		return fmt.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
 	}
 	a.auths["monitor"] = monitoring
+	return nil
 }
 
 func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
