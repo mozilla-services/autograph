@@ -56,7 +56,7 @@ func TestMonitorPass(t *testing.T) {
 	}
 }
 
-func TestMonitorHasX5U(t *testing.T) {
+func TestMonitorHasSignerParameters(t *testing.T) {
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
 	if err != nil {
@@ -85,6 +85,18 @@ func TestMonitorHasX5U(t *testing.T) {
 					if response.X5U != s.Config().X5U {
 						t.Fatalf("X5U in signature response %d does not match its signer: expected %q got %q",
 							i, s.Config().X5U, response.X5U)
+					}
+					if response.Type != s.Config().Type {
+						t.Fatalf("Type of signature response %d does not match its signer: expected %q got %q",
+							i, s.Config().Type, response.Type)
+					}
+					if response.Mode != s.Config().Mode {
+						t.Fatalf("Mode of signature response %d does not match its signer: expected %q got %q",
+							i, s.Config().Mode, response.Mode)
+					}
+					if response.PublicKey != s.Config().PublicKey {
+						t.Fatalf("Public Key of signature response %d does not match its signer: expected %q got %q",
+							i, s.Config().PublicKey, response.PublicKey)
 					}
 				}
 			}

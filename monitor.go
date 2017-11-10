@@ -46,6 +46,7 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 		sigresps[i] = signatureresponse{
 			Ref:       id(),
 			Type:      s.Config().Type,
+			Mode:      s.Config().Mode,
 			SignerID:  s.Config().ID,
 			PublicKey: s.Config().PublicKey,
 			Signature: encodedsig,
