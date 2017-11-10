@@ -4,14 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/ecdsa"
-	"crypto/sha1"
 	"crypto/sha256"
-	"crypto/sha512"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"hash"
 	"log"
 	"net/http"
 	"strings"
@@ -26,16 +23,17 @@ import (
 // to verify the sig. Otherwise, use the PublicKey contained in the response.
 //
 // If the signature passes, verify the chain of trust maps.
-func verifyContentSignature(cs, pubkey string) error {
+func verifyContentSignature(response signatureresponse) error {
 	var (
 		key   *ecdsa.PublicKey
 		err   error
 		certs []*x509.Certificate
 	)
-	sig, err := contentsignature.Unmarshal(cs)
+	sig, err := contentsignature.Unmarshal(response.Signature)
 	if err != nil {
 		log.Fatal(err)
 	}
+	sig.X5U = response.X5U
 	if sig.X5U != "" {
 		certs, err = getX5U(sig.X5U)
 		if err != nil {
@@ -47,24 +45,22 @@ func verifyContentSignature(cs, pubkey string) error {
 		// certs[0] is the end entity
 		key = certs[0].PublicKey.(*ecdsa.PublicKey)
 	} else {
-		key, err = parsePublicKeyFromB64(pubkey)
+		key, err = parsePublicKeyFromB64(response.PublicKey)
 		if err != nil {
 			return err
 		}
 	}
-
 	if !sig.VerifyData([]byte(inputdata), key) {
 		return fmt.Errorf("Signature verification failed")
 	}
-
 	if certs != nil {
 		return verifyCertChain(certs)
 	}
-
 	return nil
 }
 
 func getX5U(x5u string) (certs []*x509.Certificate, err error) {
+	log.Printf("Retrieving X5U %q", x5u)
 	resp, err := http.Get(x5u)
 	if err != nil {
 		return certs, fmt.Errorf("Failed to retrieve X5U %s: %v", x5u, err)
@@ -92,8 +88,8 @@ func getX5U(x5u string) (certs []*x509.Certificate, err error) {
 			certX509, err := x509.ParseCertificate(block.Bytes)
 			if err != nil {
 				return certs, fmt.Errorf("Could not parse X.509 certificate: %v", err)
-
 			}
+			log.Printf("Retrieved certificate CN=%q", certX509.Subject.CommonName)
 			certs = append(certs, certX509)
 			certPEM = nil
 		}
@@ -175,23 +171,4 @@ func verifyRoot(cert *x509.Certificate) error {
 		return fmt.Errorf("missing codeSigning key usage extension")
 	}
 	return nil
-}
-
-func digest(data []byte, alg string) (hashed []byte, err error) {
-	var md hash.Hash
-	switch alg {
-	case "sha1":
-		md = sha1.New()
-	case "sha256":
-		md = sha256.New()
-	case "sha384":
-		md = sha512.New384()
-	case "sha512":
-		md = sha512.New()
-	default:
-		return nil, fmt.Errorf("unsupported digest algorithm %q", alg)
-	}
-	md.Write(data)
-	hashed = md.Sum(nil)
-	return
 }

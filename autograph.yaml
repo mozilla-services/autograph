@@ -8,7 +8,6 @@ signers:
     # a p384 key, the standard
     - id: appkey1
       type: contentsignature
-      x5u: https://foo.example.com/chains/certificates.pem
       privatekey: |
           -----BEGIN EC PARAMETERS-----
           BgUrgQQAIg==
@@ -23,7 +22,6 @@ signers:
     # a p256 key
     - id: appkey2
       type: contentsignature
-      x5u: https://foo.example.com/chains/certificates.pem
       privatekey: |
           -----BEGIN EC PARAMETERS-----
           BggqhkjOPQMBBw==
@@ -52,6 +50,7 @@ signers:
     # Normandy dev chain with x5u on github
     - id: normankey
       type: contentsignature
+      x5u: "https://raw.githubusercontent.com/mozilla-services/autograph/master/docs/statics/normandy.content-signature.mozilla.org-20210705.dev.chain"
       privatekey: |
         -----BEGIN EC PARAMETERS-----
         BgUrgQQAIg==
@@ -62,7 +61,6 @@ signers:
         Qr15O4tusHpCLGjOxwpHiJYnxk45fpE8JGAV19UOhmqMUEU0k31C1EGTSZW0ducS
         vHrh3a8wXShZ6dxLWHItbbCGA6A7Puk=
         -----END EC PRIVATE KEY-----
-      x5u: "https://raw.githubusercontent.com/mozilla-services/autograph/master/docs/statics/normandy.content-signature.mozilla.org-20210705.dev.chain"
 
     - id: webextensions-rsa
       type: xpi

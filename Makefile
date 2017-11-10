@@ -43,6 +43,9 @@ showcoveragesigner: testsigner
 testcs:
 	$(GO) test -v -covermode=count -coverprofile=coverage_cs.out go.mozilla.org/autograph/signer/contentsignature
 
+testmonitor:
+	$(GO) test -v -covermode=count -coverprofile=coverage_monitor.out go.mozilla.org/autograph/tools/autograph-monitor
+
 showcoveragecs: testcs
 	$(GO) tool cover -html=coverage_cs.out
 
