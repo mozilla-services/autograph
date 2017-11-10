@@ -49,6 +49,7 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 			SignerID:  s.Config().ID,
 			PublicKey: s.Config().PublicKey,
 			Signature: encodedsig,
+			X5U:       s.Config().X5U,
 		}
 	}
 	respdata, err := json.Marshal(sigresps)

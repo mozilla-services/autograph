@@ -56,6 +56,42 @@ func TestMonitorPass(t *testing.T) {
 	}
 }
 
+func TestMonitorHasX5U(t *testing.T) {
+	var empty []byte
+	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	authheader := getAuthHeader(req, "monitor", conf.Monitoring.Key,
+		sha256.New, id(), "application/json", empty)
+	req.Header.Set("Authorization", authheader)
+	w := httptest.NewRecorder()
+	ag.handleMonitor(w, req)
+	if w.Code != http.StatusCreated || w.Body.String() == "" {
+		t.Fatalf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
+	}
+	// verify that we got a proper signature response, with a valid signature
+	var responses []signatureresponse
+	err = json.Unmarshal(w.Body.Bytes(), &responses)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, response := range responses {
+		switch response.Type {
+		case contentsignature.Type:
+			for _, s := range ag.signers {
+				if response.SignerID == s.Config().ID {
+					if response.X5U != s.Config().X5U {
+						t.Fatalf("X5U in signature response %d does not match its signer: expected %q got %q",
+							i, s.Config().X5U, response.X5U)
+					}
+				}
+			}
+		}
+	}
+}
+
 func TestMonitorNoConfig(t *testing.T) {
 	tmpag := newAutographer(1)
 	var nomonitor configuration
