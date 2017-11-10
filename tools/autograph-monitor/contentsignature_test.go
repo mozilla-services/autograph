@@ -4,13 +4,25 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 )
 
 func TestVerifyContentSignature(t *testing.T) {
+	go func() {
+		http.HandleFunc("/normandychain", func(w http.ResponseWriter, r *http.Request) {
+			chain, err := ioutil.ReadFile(os.Getenv("GOPATH") + `/src/go.mozilla.org/autograph/docs/statics/normandy.content-signature.mozilla.org-20210705.dev.chain`)
+			if err != nil {
+				t.Fatal(err)
+			}
+			fmt.Fprintf(w, "%s", chain)
+		})
+		log.Fatal(http.ListenAndServe(":64320", nil))
+	}()
 	err := verifyContentSignature(ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
@@ -119,7 +131,7 @@ var ValidMonitoringContentSignature = signatureresponse{
 	SignerID:  "normankey",
 	PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
 	Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
-	X5U:       "https://raw.githubusercontent.com/mozilla-services/autograph/master/docs/statics/normandy.content-signature.mozilla.org-20210705.dev.chain",
+	X5U:       "http://127.0.0.1:64320/normandychain",
 }
 
 // this is the trusted root ca for the firefox pki
