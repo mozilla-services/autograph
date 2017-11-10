@@ -19,12 +19,16 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+// a signatureresponse is returned by autograph to a client with
+// a signature computed on input data
 type signatureresponse struct {
 	Ref       string `json:"ref"`
 	Type      string `json:"type"`
+	Mode      string `json:"mode"`
 	SignerID  string `json:"signer_id"`
-	PublicKey string `json:"public_key,omitempty"`
+	PublicKey string `json:"public_key"`
 	Signature string `json:"signature"`
+	X5U       string `json:"x5u,omitempty"`
 }
 
 type configuration struct {
@@ -84,16 +88,17 @@ func main() {
 	for i, response := range responses {
 		switch response.Type {
 		case contentsignature.Type:
-			err = verifyContentSignature(response.Signature, response.PublicKey)
+			log.Printf("Verifying content signature from signer %q", response.SignerID)
+			err = verifyContentSignature(response)
 		case xpi.Type:
+			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature, conf.truststore)
 		default:
-			failed = true
-			log.Printf("unknown signature type %q", response.Type)
+			err = fmt.Errorf("unknown signature type %q", response.Type)
 		}
 		if err != nil {
 			failed = true
-			log.Printf("Response %d from signer %q does not pass: %v", i, err, response.SignerID)
+			log.Printf("Response %d from signer %q does not pass: %v", i, response.SignerID, err)
 			log.Printf("Response was: %+v", response)
 		} else {
 			log.Printf("Response %d from signer %q passes verification", i, response.SignerID)
@@ -102,6 +107,7 @@ func main() {
 	if failed {
 		log.Fatal("Errors found during monitoring")
 	}
+	log.Println("All signature responses passed, monitoring OK")
 }
 
 func loadConf(path string) (cfg configuration, err error) {

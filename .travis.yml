@@ -1,6 +1,6 @@
 language: go
 go:
-- 1.8
+- 1.9
 services:
 - docker
 go_import_path: go.mozilla.org/autograph
@@ -24,13 +24,12 @@ script:
 # If a TRAVIS_TAG is set, this build follows a git tag --push and should trigger
 # a release of a tagged container to dockerhub. Otherwise, we tag as latest.
 - |
-    docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+    docker login -u $DOCKER_USER -p $DOCKER_PASS
+    docker tag app:build mozilla/autograph:latest
+    docker push mozilla/autograph:latest
     if [ ! -z "$TRAVIS_TAG" ]; then
         docker tag app:build mozilla/autograph:${TRAVIS_TAG}
         docker push mozilla/autograph:${TRAVIS_TAG}
-    else
-        docker tag app:build mozilla/autograph:latest
-        docker push mozilla/autograph:latest
     fi
     docker logout
 
