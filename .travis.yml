@@ -11,6 +11,8 @@ before_install:
 - go get golang.org/x/tools/cmd/cover
 - go get github.com/golang/lint/golint
 - go get github.com/mattn/goveralls
+- sudo apt-get update
+- sudo apt-get install python3 python3-pip python3-virtualenv
 
 script:
 - make all
@@ -22,11 +24,10 @@ script:
 - cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-monitor && make && ./autograph-monitor
 # Sign an add-on
 - |
-    pip install --user virtualenv && \
     cd $GOPATH/src/go.mozilla.org/autograph/tools/sign-addon && \
-    virtualenv venv && source venv/bin/activate && \
-    pip install -r requirements.txt && \
-    python sign.py -t http://localhost:8000/sign/data -s webextensions_rsa -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu test-addon.xpi
+    python3 -m virtualenv venv && source venv/bin/activate && \
+    python3 -m pip install -r requirements.txt && \
+    python3 sign.py -t http://localhost:8000/sign/data -s webextensions_rsa -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu test-addon.xpi
 
 # If a TRAVIS_TAG is set, this build follows a git tag --push and should trigger
 # a release of a tagged container to dockerhub. Otherwise, we tag as latest.
