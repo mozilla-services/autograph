@@ -1,6 +1,6 @@
 language: go
-go:
-- 1.9
+go: 1.9
+python: 3.6
 services:
 - docker
 go_import_path: go.mozilla.org/autograph
@@ -20,6 +20,13 @@ script:
 # Run a synthetic monitoring test against the container
 - $GOPATH/bin/autograph &
 - cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-monitor && make && ./autograph-monitor
+# Sign an add-on
+- |
+    pip install --user virtualenv && \
+    cd $GOPATH/src/go.mozilla.org/autograph/tools/sign-addon && \
+    virtualenv venv && source venv/bin/activate && \
+    pip install -r requirements.txt && \
+    python sign.py -t http://localhost:8000/sign/data -s webextensions_rsa -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu test-addon.xpi
 
 # If a TRAVIS_TAG is set, this build follows a git tag --push and should trigger
 # a release of a tagged container to dockerhub. Otherwise, we tag as latest.
