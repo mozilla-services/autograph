@@ -292,6 +292,15 @@
       "input":{"shape":"CreateCustomerGatewayRequest"},
       "output":{"shape":"CreateCustomerGatewayResult"}
     },
+    "CreateDefaultSubnet":{
+      "name":"CreateDefaultSubnet",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"CreateDefaultSubnetRequest"},
+      "output":{"shape":"CreateDefaultSubnetResult"}
+    },
     "CreateDefaultVpc":{
       "name":"CreateDefaultVpc",
       "http":{
@@ -1806,6 +1815,15 @@
       },
       "input":{"shape":"ModifyVpcPeeringConnectionOptionsRequest"},
       "output":{"shape":"ModifyVpcPeeringConnectionOptionsResult"}
+    },
+    "ModifyVpcTenancy":{
+      "name":"ModifyVpcTenancy",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"ModifyVpcTenancyRequest"},
+      "output":{"shape":"ModifyVpcTenancyResult"}
     },
     "MonitorInstances":{
       "name":"MonitorInstances",
@@ -3409,6 +3427,35 @@
         "locationName":"item"
       }
     },
+    "ClassicLoadBalancer":{
+      "type":"structure",
+      "required":["Name"],
+      "members":{
+        "Name":{
+          "shape":"String",
+          "locationName":"name"
+        }
+      }
+    },
+    "ClassicLoadBalancers":{
+      "type":"list",
+      "member":{
+        "shape":"ClassicLoadBalancer",
+        "locationName":"item"
+      },
+      "max":5,
+      "min":1
+    },
+    "ClassicLoadBalancersConfig":{
+      "type":"structure",
+      "required":["ClassicLoadBalancers"],
+      "members":{
+        "ClassicLoadBalancers":{
+          "shape":"ClassicLoadBalancers",
+          "locationName":"classicLoadBalancers"
+        }
+      }
+    },
     "ClientData":{
       "type":"structure",
       "members":{
@@ -3630,6 +3677,23 @@
         "CustomerGateway":{
           "shape":"CustomerGateway",
           "locationName":"customerGateway"
+        }
+      }
+    },
+    "CreateDefaultSubnetRequest":{
+      "type":"structure",
+      "required":["AvailabilityZone"],
+      "members":{
+        "AvailabilityZone":{"shape":"String"},
+        "DryRun":{"shape":"Boolean"}
+      }
+    },
+    "CreateDefaultSubnetResult":{
+      "type":"structure",
+      "members":{
+        "Subnet":{
+          "shape":"Subnet",
+          "locationName":"subnet"
         }
       }
     },
@@ -4335,31 +4399,41 @@
     "CreateVpcEndpointRequest":{
       "type":"structure",
       "required":[
-        "ServiceName",
-        "VpcId"
+        "VpcId",
+        "ServiceName"
       ],
       "members":{
-        "ClientToken":{"shape":"String"},
         "DryRun":{"shape":"Boolean"},
+        "VpcEndpointType":{"shape":"VpcEndpointType"},
+        "VpcId":{"shape":"String"},
+        "ServiceName":{"shape":"String"},
         "PolicyDocument":{"shape":"String"},
         "RouteTableIds":{
           "shape":"ValueStringList",
           "locationName":"RouteTableId"
         },
-        "ServiceName":{"shape":"String"},
-        "VpcId":{"shape":"String"}
+        "SubnetIds":{
+          "shape":"ValueStringList",
+          "locationName":"SubnetId"
+        },
+        "SecurityGroupIds":{
+          "shape":"ValueStringList",
+          "locationName":"SecurityGroupId"
+        },
+        "ClientToken":{"shape":"String"},
+        "PrivateDnsEnabled":{"shape":"Boolean"}
       }
     },
     "CreateVpcEndpointResult":{
       "type":"structure",
       "members":{
-        "ClientToken":{
-          "shape":"String",
-          "locationName":"clientToken"
-        },
         "VpcEndpoint":{
           "shape":"VpcEndpoint",
           "locationName":"vpcEndpoint"
+        },
+        "ClientToken":{
+          "shape":"String",
+          "locationName":"clientToken"
         }
       }
     },
@@ -4468,6 +4542,7 @@
       "members":{
         "AvailabilityZone":{"shape":"String"},
         "Type":{"shape":"GatewayType"},
+        "AmazonSideAsn":{"shape":"Long"},
         "DryRun":{
           "shape":"Boolean",
           "locationName":"dryRun"
@@ -6249,7 +6324,9 @@
         "DryRun":{
           "shape":"Boolean",
           "locationName":"dryRun"
-        }
+        },
+        "NextToken":{"shape":"String"},
+        "MaxResults":{"shape":"Integer"}
       }
     },
     "DescribeSecurityGroupsResult":{
@@ -6258,6 +6335,10 @@
         "SecurityGroups":{
           "shape":"SecurityGroupList",
           "locationName":"securityGroupInfo"
+        },
+        "NextToken":{
+          "shape":"String",
+          "locationName":"nextToken"
         }
       }
     },
@@ -6873,6 +6954,14 @@
       "type":"structure",
       "members":{
         "DryRun":{"shape":"Boolean"},
+        "ServiceNames":{
+          "shape":"ValueStringList",
+          "locationName":"ServiceName"
+        },
+        "Filters":{
+          "shape":"FilterList",
+          "locationName":"Filter"
+        },
         "MaxResults":{"shape":"Integer"},
         "NextToken":{"shape":"String"}
       }
@@ -6880,13 +6969,17 @@
     "DescribeVpcEndpointServicesResult":{
       "type":"structure",
       "members":{
-        "NextToken":{
-          "shape":"String",
-          "locationName":"nextToken"
-        },
         "ServiceNames":{
           "shape":"ValueStringList",
           "locationName":"serviceNameSet"
+        },
+        "ServiceDetails":{
+          "shape":"ServiceDetailSet",
+          "locationName":"serviceDetailSet"
+        },
+        "NextToken":{
+          "shape":"String",
+          "locationName":"nextToken"
         }
       }
     },
@@ -6894,28 +6987,28 @@
       "type":"structure",
       "members":{
         "DryRun":{"shape":"Boolean"},
+        "VpcEndpointIds":{
+          "shape":"ValueStringList",
+          "locationName":"VpcEndpointId"
+        },
         "Filters":{
           "shape":"FilterList",
           "locationName":"Filter"
         },
         "MaxResults":{"shape":"Integer"},
-        "NextToken":{"shape":"String"},
-        "VpcEndpointIds":{
-          "shape":"ValueStringList",
-          "locationName":"VpcEndpointId"
-        }
+        "NextToken":{"shape":"String"}
       }
     },
     "DescribeVpcEndpointsResult":{
       "type":"structure",
       "members":{
-        "NextToken":{
-          "shape":"String",
-          "locationName":"nextToken"
-        },
         "VpcEndpoints":{
           "shape":"VpcEndpointSet",
           "locationName":"vpcEndpointSet"
+        },
+        "NextToken":{
+          "shape":"String",
+          "locationName":"nextToken"
         }
       }
     },
@@ -7406,6 +7499,26 @@
           "shape":"Long",
           "locationName":"size"
         }
+      }
+    },
+    "DnsEntry":{
+      "type":"structure",
+      "members":{
+        "DnsName":{
+          "shape":"String",
+          "locationName":"dnsName"
+        },
+        "HostedZoneId":{
+          "shape":"String",
+          "locationName":"hostedZoneId"
+        }
+      }
+    },
+    "DnsEntrySet":{
+      "type":"list",
+      "member":{
+        "shape":"DnsEntry",
+        "locationName":"item"
       }
     },
     "DomainType":{
@@ -8232,6 +8345,13 @@
       "type":"list",
       "member":{
         "shape":"GroupIdentifier",
+        "locationName":"item"
+      }
+    },
+    "GroupIdentifierSet":{
+      "type":"list",
+      "member":{
+        "shape":"SecurityGroupIdentifier",
         "locationName":"item"
       }
     },
@@ -10078,6 +10198,12 @@
         "c4.2xlarge",
         "c4.4xlarge",
         "c4.8xlarge",
+        "c5.large",
+        "c5.xlarge",
+        "c5.2xlarge",
+        "c5.4xlarge",
+        "c5.9xlarge",
+        "c5.18xlarge",
         "cc1.4xlarge",
         "cc2.8xlarge",
         "g2.2xlarge",
@@ -10089,6 +10215,9 @@
         "p2.xlarge",
         "p2.8xlarge",
         "p2.16xlarge",
+        "p3.2xlarge",
+        "p3.8xlarge",
+        "p3.16xlarge",
         "d2.xlarge",
         "d2.2xlarge",
         "d2.4xlarge",
@@ -10425,6 +10554,19 @@
         "cancelled",
         "closed"
       ]
+    },
+    "LoadBalancersConfig":{
+      "type":"structure",
+      "members":{
+        "ClassicLoadBalancersConfig":{
+          "shape":"ClassicLoadBalancersConfig",
+          "locationName":"classicLoadBalancersConfig"
+        },
+        "TargetGroupsConfig":{
+          "shape":"TargetGroupsConfig",
+          "locationName":"targetGroupsConfig"
+        }
+      }
     },
     "LoadPermission":{
       "type":"structure",
@@ -10865,18 +11007,35 @@
       "type":"structure",
       "required":["VpcEndpointId"],
       "members":{
+        "DryRun":{"shape":"Boolean"},
+        "VpcEndpointId":{"shape":"String"},
+        "ResetPolicy":{"shape":"Boolean"},
+        "PolicyDocument":{"shape":"String"},
         "AddRouteTableIds":{
           "shape":"ValueStringList",
           "locationName":"AddRouteTableId"
         },
-        "DryRun":{"shape":"Boolean"},
-        "PolicyDocument":{"shape":"String"},
         "RemoveRouteTableIds":{
           "shape":"ValueStringList",
           "locationName":"RemoveRouteTableId"
         },
-        "ResetPolicy":{"shape":"Boolean"},
-        "VpcEndpointId":{"shape":"String"}
+        "AddSubnetIds":{
+          "shape":"ValueStringList",
+          "locationName":"AddSubnetId"
+        },
+        "RemoveSubnetIds":{
+          "shape":"ValueStringList",
+          "locationName":"RemoveSubnetId"
+        },
+        "AddSecurityGroupIds":{
+          "shape":"ValueStringList",
+          "locationName":"AddSecurityGroupId"
+        },
+        "RemoveSecurityGroupIds":{
+          "shape":"ValueStringList",
+          "locationName":"RemoveSecurityGroupId"
+        },
+        "PrivateDnsEnabled":{"shape":"Boolean"}
       }
     },
     "ModifyVpcEndpointResult":{
@@ -10908,6 +11067,27 @@
         "RequesterPeeringConnectionOptions":{
           "shape":"PeeringConnectionOptions",
           "locationName":"requesterPeeringConnectionOptions"
+        }
+      }
+    },
+    "ModifyVpcTenancyRequest":{
+      "type":"structure",
+      "required":[
+        "VpcId",
+        "InstanceTenancy"
+      ],
+      "members":{
+        "VpcId":{"shape":"String"},
+        "InstanceTenancy":{"shape":"VpcTenancy"},
+        "DryRun":{"shape":"Boolean"}
+      }
+    },
+    "ModifyVpcTenancyResult":{
+      "type":"structure",
+      "members":{
+        "ReturnValue":{
+          "shape":"Boolean",
+          "locationName":"return"
         }
       }
     },
@@ -14036,6 +14216,19 @@
         "locationName":"SecurityGroupId"
       }
     },
+    "SecurityGroupIdentifier":{
+      "type":"structure",
+      "members":{
+        "GroupId":{
+          "shape":"String",
+          "locationName":"groupId"
+        },
+        "GroupName":{
+          "shape":"String",
+          "locationName":"groupName"
+        }
+      }
+    },
     "SecurityGroupList":{
       "type":"list",
       "member":{
@@ -14076,6 +14269,73 @@
       "member":{
         "shape":"String",
         "locationName":"SecurityGroup"
+      }
+    },
+    "ServiceDetail":{
+      "type":"structure",
+      "members":{
+        "ServiceName":{
+          "shape":"String",
+          "locationName":"serviceName"
+        },
+        "ServiceType":{
+          "shape":"ServiceTypeDetailSet",
+          "locationName":"serviceType"
+        },
+        "AvailabilityZones":{
+          "shape":"ValueStringList",
+          "locationName":"availabilityZoneSet"
+        },
+        "Owner":{
+          "shape":"String",
+          "locationName":"owner"
+        },
+        "BaseEndpointDnsNames":{
+          "shape":"ValueStringList",
+          "locationName":"baseEndpointDnsNameSet"
+        },
+        "PrivateDnsName":{
+          "shape":"String",
+          "locationName":"privateDnsName"
+        },
+        "VpcEndpointPolicySupported":{
+          "shape":"Boolean",
+          "locationName":"vpcEndpointPolicySupported"
+        },
+        "AcceptanceRequired":{
+          "shape":"Boolean",
+          "locationName":"acceptanceRequired"
+        }
+      }
+    },
+    "ServiceDetailSet":{
+      "type":"list",
+      "member":{
+        "shape":"ServiceDetail",
+        "locationName":"item"
+      }
+    },
+    "ServiceType":{
+      "type":"string",
+      "enum":[
+        "Interface",
+        "Gateway"
+      ]
+    },
+    "ServiceTypeDetail":{
+      "type":"structure",
+      "members":{
+        "ServiceType":{
+          "shape":"ServiceType",
+          "locationName":"serviceType"
+        }
+      }
+    },
+    "ServiceTypeDetailSet":{
+      "type":"list",
+      "member":{
+        "shape":"ServiceTypeDetail",
+        "locationName":"item"
       }
     },
     "ShutdownBehavior":{
@@ -14501,6 +14761,10 @@
         "InstanceInterruptionBehavior":{
           "shape":"InstanceInterruptionBehavior",
           "locationName":"instanceInterruptionBehavior"
+        },
+        "LoadBalancersConfig":{
+          "shape":"LoadBalancersConfig",
+          "locationName":"loadBalancersConfig"
         }
       }
     },
@@ -14825,10 +15089,14 @@
     "State":{
       "type":"string",
       "enum":[
+        "PendingAcceptance",
         "Pending",
         "Available",
         "Deleting",
-        "Deleted"
+        "Deleted",
+        "Rejected",
+        "Failed",
+        "Expired"
       ]
     },
     "StateReason":{
@@ -15128,6 +15396,35 @@
       "member":{
         "shape":"TargetConfigurationRequest",
         "locationName":"TargetConfigurationRequest"
+      }
+    },
+    "TargetGroup":{
+      "type":"structure",
+      "required":["Arn"],
+      "members":{
+        "Arn":{
+          "shape":"String",
+          "locationName":"arn"
+        }
+      }
+    },
+    "TargetGroups":{
+      "type":"list",
+      "member":{
+        "shape":"TargetGroup",
+        "locationName":"item"
+      },
+      "max":5,
+      "min":1
+    },
+    "TargetGroupsConfig":{
+      "type":"structure",
+      "required":["TargetGroups"],
+      "members":{
+        "TargetGroups":{
+          "shape":"TargetGroups",
+          "locationName":"targetGroups"
+        }
       }
     },
     "TargetReservationValue":{
@@ -16001,17 +16298,17 @@
     "VpcEndpoint":{
       "type":"structure",
       "members":{
-        "CreationTimestamp":{
-          "shape":"DateTime",
-          "locationName":"creationTimestamp"
-        },
-        "PolicyDocument":{
+        "VpcEndpointId":{
           "shape":"String",
-          "locationName":"policyDocument"
+          "locationName":"vpcEndpointId"
         },
-        "RouteTableIds":{
-          "shape":"ValueStringList",
-          "locationName":"routeTableIdSet"
+        "VpcEndpointType":{
+          "shape":"VpcEndpointType",
+          "locationName":"vpcEndpointType"
+        },
+        "VpcId":{
+          "shape":"String",
+          "locationName":"vpcId"
         },
         "ServiceName":{
           "shape":"String",
@@ -16021,13 +16318,37 @@
           "shape":"State",
           "locationName":"state"
         },
-        "VpcEndpointId":{
+        "PolicyDocument":{
           "shape":"String",
-          "locationName":"vpcEndpointId"
+          "locationName":"policyDocument"
         },
-        "VpcId":{
-          "shape":"String",
-          "locationName":"vpcId"
+        "RouteTableIds":{
+          "shape":"ValueStringList",
+          "locationName":"routeTableIdSet"
+        },
+        "SubnetIds":{
+          "shape":"ValueStringList",
+          "locationName":"subnetIdSet"
+        },
+        "Groups":{
+          "shape":"GroupIdentifierSet",
+          "locationName":"groupSet"
+        },
+        "PrivateDnsEnabled":{
+          "shape":"Boolean",
+          "locationName":"privateDnsEnabled"
+        },
+        "NetworkInterfaceIds":{
+          "shape":"ValueStringList",
+          "locationName":"networkInterfaceIdSet"
+        },
+        "DnsEntries":{
+          "shape":"DnsEntrySet",
+          "locationName":"dnsEntrySet"
+        },
+        "CreationTimestamp":{
+          "shape":"DateTime",
+          "locationName":"creationTimestamp"
         }
       }
     },
@@ -16037,6 +16358,13 @@
         "shape":"VpcEndpoint",
         "locationName":"item"
       }
+    },
+    "VpcEndpointType":{
+      "type":"string",
+      "enum":[
+        "Interface",
+        "Gateway"
+      ]
     },
     "VpcIdStringList":{
       "type":"list",
@@ -16192,6 +16520,10 @@
         "available"
       ]
     },
+    "VpcTenancy":{
+      "type":"string",
+      "enum":["default"]
+    },
     "VpnConnection":{
       "type":"structure",
       "members":{
@@ -16296,6 +16628,10 @@
         "VpnGatewayId":{
           "shape":"String",
           "locationName":"vpnGatewayId"
+        },
+        "AmazonSideAsn":{
+          "shape":"Long",
+          "locationName":"amazonSideAsn"
         },
         "Tags":{
           "shape":"TagList",

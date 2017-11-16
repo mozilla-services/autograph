@@ -1,3 +1,5 @@
+// +build !race
+
 /*
  *
  * Copyright 2017 gRPC authors.
@@ -43,29 +45,6 @@ func overwrite(hpfe func(req *http.Request) (*url.URL, error)) func() {
 	httpProxyFromEnvironment = hpfe
 	return func() {
 		httpProxyFromEnvironment = backHPFE
-	}
-}
-
-func TestMapAddressEnv(t *testing.T) {
-	// Overwrite the function in the test and restore them in defer.
-	hpfe := func(req *http.Request) (*url.URL, error) {
-		if req.URL.Host == envTestAddr {
-			return &url.URL{
-				Scheme: "https",
-				Host:   envProxyAddr,
-			}, nil
-		}
-		return nil, nil
-	}
-	defer overwrite(hpfe)()
-
-	// envTestAddr should be handled by ProxyFromEnvironment.
-	got, err := mapAddress(context.Background(), envTestAddr)
-	if err != nil {
-		t.Error(err)
-	}
-	if got != envProxyAddr {
-		t.Errorf("want %v, got %v", envProxyAddr, got)
 	}
 }
 
@@ -175,5 +154,29 @@ func TestHTTPConnect(t *testing.T) {
 	// Check received msg.
 	if string(recvBuf) != string(msg) {
 		t.Fatalf("received msg: %v, want %v", recvBuf, msg)
+	}
+}
+
+func TestMapAddressEnv(t *testing.T) {
+	defer leakcheck.Check(t)
+	// Overwrite the function in the test and restore them in defer.
+	hpfe := func(req *http.Request) (*url.URL, error) {
+		if req.URL.Host == envTestAddr {
+			return &url.URL{
+				Scheme: "https",
+				Host:   envProxyAddr,
+			}, nil
+		}
+		return nil, nil
+	}
+	defer overwrite(hpfe)()
+
+	// envTestAddr should be handled by ProxyFromEnvironment.
+	got, err := mapAddress(context.Background(), envTestAddr)
+	if err != nil {
+		t.Error(err)
+	}
+	if got != envProxyAddr {
+		t.Errorf("want %v, got %v", envProxyAddr, got)
 	}
 }
