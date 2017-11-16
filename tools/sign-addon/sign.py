@@ -25,7 +25,7 @@ def call_signing(file_path, guid, endpoint, signer, user, key):
 
     # create the signing request
     sigreq = [{
-        "input": b64encode(bytes(jar.signatures.__str__(), "utf-8")).decode("utf-8"),
+        "input": bytes(b64encode(str(jar.signatures).encode("utf-8"))).decode("utf-8"),
         "keyid": signer,
         "options": {
             "id": guid,
