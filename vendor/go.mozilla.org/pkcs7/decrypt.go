@@ -58,7 +58,8 @@ func (eci encryptedContentInfo) decrypt(key []byte) ([]byte, error) {
 		!alg.Equal(oidEncryptionAlgorithmDESEDE3CBC) &&
 		!alg.Equal(oidEncryptionAlgorithmAES256CBC) &&
 		!alg.Equal(oidEncryptionAlgorithmAES128CBC) &&
-		!alg.Equal(oidEncryptionAlgorithmAES128GCM) {
+		!alg.Equal(oidEncryptionAlgorithmAES128GCM) &&
+		!alg.Equal(oidEncryptionAlgorithmAES256GCM) {
 		fmt.Printf("Unsupported Content Encryption Algorithm: %s\n", alg)
 		return nil, ErrUnsupportedAlgorithm
 	}
@@ -92,7 +93,7 @@ func (eci encryptedContentInfo) decrypt(key []byte) ([]byte, error) {
 		block, err = des.NewCipher(key)
 	case alg.Equal(oidEncryptionAlgorithmDESEDE3CBC):
 		block, err = des.NewTripleDESCipher(key)
-	case alg.Equal(oidEncryptionAlgorithmAES256CBC):
+	case alg.Equal(oidEncryptionAlgorithmAES256CBC), alg.Equal(oidEncryptionAlgorithmAES256GCM):
 		fallthrough
 	case alg.Equal(oidEncryptionAlgorithmAES128GCM), alg.Equal(oidEncryptionAlgorithmAES128CBC):
 		block, err = aes.NewCipher(key)
@@ -102,7 +103,7 @@ func (eci encryptedContentInfo) decrypt(key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if alg.Equal(oidEncryptionAlgorithmAES128GCM) {
+	if alg.Equal(oidEncryptionAlgorithmAES128GCM) || alg.Equal(oidEncryptionAlgorithmAES256GCM) {
 		params := aesGCMParameters{}
 		paramBytes := eci.ContentEncryptionAlgorithm.Parameters.Bytes
 

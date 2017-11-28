@@ -1,6 +1,7 @@
+dist: trusty
 language: go
-go:
-- 1.9
+go: '1.9'
+python: '3.6'
 services:
 - docker
 go_import_path: go.mozilla.org/autograph
@@ -11,6 +12,8 @@ before_install:
 - go get golang.org/x/tools/cmd/cover
 - go get github.com/golang/lint/golint
 - go get github.com/mattn/goveralls
+- sudo apt-get update
+- sudo apt-get install python3 python3-pip
 
 script:
 - make all
@@ -20,6 +23,14 @@ script:
 # Run a synthetic monitoring test against the container
 - $GOPATH/bin/autograph &
 - cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-monitor && make && ./autograph-monitor
+# Sign an add-on using the python3 sign-addon tool
+- |
+    python3 -V && \
+    python3 -m pip install --user virtualenv && \
+    cd $GOPATH/src/go.mozilla.org/autograph/tools/sign-addon && \
+    python3 -m virtualenv venv && source venv/bin/activate && \
+    python3 -m pip install -r requirements.txt && \
+    python3 sign.py -t http://localhost:8000/sign/data -s webextensions-rsa -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu test-addon.xpi
 
 # If a TRAVIS_TAG is set, this build follows a git tag --push and should trigger
 # a release of a tagged container to dockerhub. Otherwise, we tag as latest.

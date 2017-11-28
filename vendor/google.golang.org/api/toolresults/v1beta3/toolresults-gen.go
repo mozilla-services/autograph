@@ -238,11 +238,7 @@ type AndroidInstrumentationTest struct {
 	TestTargets []string `json:"testTargets,omitempty"`
 
 	// UseOrchestrator: The flag indicates whether Android Test Orchestrator
-	// will be used to run test or not. Test orchestrator is used if either:
-	// - orchestrator_option field is USE_ORCHESTRATOR, and test runner is
-	// compatible with orchestrator. Or - orchestrator_option field is
-	// unspecified or ORCHESTRATOR_OPTION_UNSPECIFIED, and test runner is
-	// compatible with orchestrator.
+	// will be used to run test or not.
 	UseOrchestrator bool `json:"useOrchestrator,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "TestPackageId") to
@@ -409,22 +405,29 @@ func (s *AndroidTest) MarshalJSON() ([]byte, error) {
 // { "@type": "type.googleapis.com/google.protobuf.Duration", "value":
 // "1.212s" }
 type Any struct {
-	// TypeUrl: A URL/resource name whose content describes the type of the
-	// serialized protocol buffer message.
+	// TypeUrl: A URL/resource name that uniquely identifies the type of the
+	// serialized protocol buffer message. The last segment of the URL's
+	// path must represent the fully qualified name of the type (as in
+	// `path/google.protobuf.Duration`). The name should be in a canonical
+	// form (e.g., leading "." is not accepted).
 	//
-	// For URLs which use the scheme `http`, `https`, or no scheme, the
-	// following restrictions and interpretations apply:
+	// In practice, teams usually precompile into the binary all types that
+	// they expect it to use in the context of Any. However, for URLs which
+	// use the scheme `http`, `https`, or no scheme, one can optionally set
+	// up a type server that maps type URLs to message definitions as
+	// follows:
 	//
-	// * If no scheme is provided, `https` is assumed. * The last segment of
-	// the URL's path must represent the fully qualified name of the type
-	// (as in `path/google.protobuf.Duration`). The name should be in a
-	// canonical form (e.g., leading "." is not accepted). * An HTTP GET on
-	// the URL must yield a [google.protobuf.Type][] value in binary format,
-	// or produce an error. * Applications are allowed to cache lookup
-	// results based on the URL, or have them precompiled into a binary to
-	// avoid any lookup. Therefore, binary compatibility needs to be
-	// preserved on changes to types. (Use versioned type names to manage
-	// breaking changes.)
+	// * If no scheme is provided, `https` is assumed. * An HTTP GET on the
+	// URL must yield a [google.protobuf.Type][] value in binary format, or
+	// produce an error. * Applications are allowed to cache lookup results
+	// based on the URL, or have them precompiled into a binary to avoid any
+	// lookup. Therefore, binary compatibility needs to be preserved on
+	// changes to types. (Use versioned type names to manage breaking
+	// changes.)
+	//
+	// Note: this functionality is not currently available in the official
+	// protobuf release, and it is not used for type URLs beginning with
+	// type.googleapis.com.
 	//
 	// Schemes other than `http`, `https` (or the empty scheme) might be
 	// used with implementation specific semantics.
@@ -936,6 +939,102 @@ type FileReference struct {
 
 func (s *FileReference) MarshalJSON() ([]byte, error) {
 	type noMethod FileReference
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// GraphicsStats: Graphics statistics for the App. The information is
+// collected from 'adb shell dumpsys graphicsstats'. For more info see:
+// https://developer.android.com/training/testing/performance.html
+// Statistics will only be present for API 23+.
+type GraphicsStats struct {
+	// Buckets: Histogram of frame render times. There should be 154 buckets
+	// ranging from [5ms, 6ms) to [4950ms, infinity)
+	Buckets []*GraphicsStatsBucket `json:"buckets,omitempty"`
+
+	// HighInputLatencyCount: Total "high input latency" events.
+	HighInputLatencyCount int64 `json:"highInputLatencyCount,omitempty,string"`
+
+	// JankyFrames: Total frames with slow render time. Should be <=
+	// total_frames.
+	JankyFrames int64 `json:"jankyFrames,omitempty,string"`
+
+	// MissedVsyncCount: Total "missed vsync" events.
+	MissedVsyncCount int64 `json:"missedVsyncCount,omitempty,string"`
+
+	// P50Millis: 50th percentile frame render time in milliseconds.
+	P50Millis int64 `json:"p50Millis,omitempty,string"`
+
+	// P90Millis: 90th percentile frame render time in milliseconds.
+	P90Millis int64 `json:"p90Millis,omitempty,string"`
+
+	// P95Millis: 95th percentile frame render time in milliseconds.
+	P95Millis int64 `json:"p95Millis,omitempty,string"`
+
+	// P99Millis: 99th percentile frame render time in milliseconds.
+	P99Millis int64 `json:"p99Millis,omitempty,string"`
+
+	// SlowBitmapUploadCount: Total "slow bitmap upload" events.
+	SlowBitmapUploadCount int64 `json:"slowBitmapUploadCount,omitempty,string"`
+
+	// SlowDrawCount: Total "slow draw" events.
+	SlowDrawCount int64 `json:"slowDrawCount,omitempty,string"`
+
+	// SlowUiThreadCount: Total "slow UI thread" events.
+	SlowUiThreadCount int64 `json:"slowUiThreadCount,omitempty,string"`
+
+	// TotalFrames: Total frames rendered by package.
+	TotalFrames int64 `json:"totalFrames,omitempty,string"`
+
+	// ForceSendFields is a list of field names (e.g. "Buckets") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Buckets") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GraphicsStats) MarshalJSON() ([]byte, error) {
+	type noMethod GraphicsStats
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type GraphicsStatsBucket struct {
+	// FrameCount: Number of frames in the bucket.
+	FrameCount int64 `json:"frameCount,omitempty,string"`
+
+	// RenderMillis: Lower bound of render time in milliseconds.
+	RenderMillis int64 `json:"renderMillis,omitempty,string"`
+
+	// ForceSendFields is a list of field names (e.g. "FrameCount") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "FrameCount") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GraphicsStatsBucket) MarshalJSON() ([]byte, error) {
+	type noMethod GraphicsStatsBucket
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -1488,6 +1587,11 @@ type PerfMetricsSummary struct {
 
 	// ExecutionId: A tool results execution ID.
 	ExecutionId string `json:"executionId,omitempty"`
+
+	// GraphicsStats: Graphics statistics for the entire run. Statistics are
+	// reset at the beginning of the run and collected at the end of the
+	// run.
+	GraphicsStats *GraphicsStats `json:"graphicsStats,omitempty"`
 
 	// HistoryId: A tool results history ID.
 	HistoryId string `json:"historyId,omitempty"`
@@ -2422,14 +2526,15 @@ type TestIssue struct {
 	//
 	// Possible values:
 	//   "anr"
+	//   "compatibleWithOrchestrator"
 	//   "fatalException"
 	//   "nativeCrash"
 	//   "unspecifiedType"
+	//   "unusedRoboDirective"
 	Type string `json:"type,omitempty"`
 
 	// Warning: Warning message with additional details of the issue. Should
 	// always be a message from com.google.devtools.toolresults.v1.warnings
-	// Required.
 	Warning *Any `json:"warning,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ErrorMessage") to

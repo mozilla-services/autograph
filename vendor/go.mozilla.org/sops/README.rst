@@ -15,9 +15,16 @@ formats and encrypts with AWS KMS and PGP.
 .. image:: https://travis-ci.org/mozilla/sops.svg?branch=master
 	:target: https://travis-ci.org/mozilla/sops
 
-Download binaries and packages of the latest release from `https://github.com/mozilla/sops/releases <https://github.com/mozilla/sops/releases>`_.
+Download
+--------
 
-Or, install the **sops** command line with:
+Stable release
+~~~~~~~~~~~~~~
+Binaries and packages of the latest stable release are available at `https://github.com/mozilla/sops/releases <https://github.com/mozilla/sops/releases>`_.
+
+Development branch
+~~~~~~~~~~~~~~~~~~
+For the adventurous, unstable features are available in the master branch, which you can install with:
 
 .. code:: bash
 
@@ -168,7 +175,7 @@ Encrypting using GCP KMS
 ~~~~~~~~~~~~~~~~~~~~~~~~
 GCP KMS uses `Application Default Credentials
 <https://developers.google.com/identity/protocols/application-default-credentials>`_.
-If you aleady logged-ing using :bash:`gcloud auth login` you can enable appication
+If you already logged in using :bash:`gcloud auth login` you can enable application
 default credentials using the sdk::
 
 	$ gcloud auth application-default login

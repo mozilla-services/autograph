@@ -1344,6 +1344,9 @@ const (
 	// LanguageCodeItIt is a LanguageCode enum value
 	LanguageCodeItIt = "it-IT"
 
+	// LanguageCodeKoKr is a LanguageCode enum value
+	LanguageCodeKoKr = "ko-KR"
+
 	// LanguageCodeJaJp is a LanguageCode enum value
 	LanguageCodeJaJp = "ja-JP"
 
@@ -1466,6 +1469,9 @@ const (
 	// VoiceIdKimberly is a VoiceId enum value
 	VoiceIdKimberly = "Kimberly"
 
+	// VoiceIdMatthew is a VoiceId enum value
+	VoiceIdMatthew = "Matthew"
+
 	// VoiceIdSalli is a VoiceId enum value
 	VoiceIdSalli = "Salli"
 
@@ -1555,4 +1561,13 @@ const (
 
 	// VoiceIdVicki is a VoiceId enum value
 	VoiceIdVicki = "Vicki"
+
+	// VoiceIdTakumi is a VoiceId enum value
+	VoiceIdTakumi = "Takumi"
+
+	// VoiceIdSeoyeon is a VoiceId enum value
+	VoiceIdSeoyeon = "Seoyeon"
+
+	// VoiceIdAditi is a VoiceId enum value
+	VoiceIdAditi = "Aditi"
 )

@@ -6,51 +6,58 @@ import (
 	"os"
 	"time"
 
-	"go.mozilla.org/mozlog"
-
 	"github.com/sirupsen/logrus"
 )
 
-// Enable enables mozlogrus
-func Enable(loggerName string) {
-	logrus.SetFormatter(&MozLogFormatter{
-		LoggerName: loggerName,
-	})
+var hostname string
+var pid int
 
-	logrus.SetOutput(os.Stdout)
-}
-
-// SetFormatterName the LoggerName for the logrus formatter
-func SetFormatterName(name string) {
-	logrus.SetFormatter(&MozLogFormatter{
-		LoggerName: name,
-	})
-}
-
-// prefixFieldClashes is from logrus package
-func prefixFieldClashes(data logrus.Fields) {
-	_, ok := data["msg"]
-	if ok {
-		data["fields.msg"] = data["msg"]
+func init() {
+	var err error
+	hostname, err = os.Hostname()
+	if err != nil {
+		hostname = "unknown"
 	}
+
+	pid = os.Getpid()
+}
+
+// Enable sets stdout with idiotmatic mozlog formatting
+func Enable(loggerName string) {
+	EnableFormatter(&MozLogFormatter{LoggerName: loggerName, Type: "app.log"})
+}
+
+// EnableFormatter sets stdout logging with a custom MozLogFormatter
+func EnableFormatter(m *MozLogFormatter) {
+	logrus.SetFormatter(m)
+	logrus.SetOutput(os.Stdout)
 }
 
 type MozLogFormatter struct {
 	LoggerName string
+	Type       string
 }
 
 func (m *MozLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	appLog := &mozlog.AppLog{
-		Timestamp:  entry.Time.UTC().UnixNano(),
-		Time:       entry.Time.UTC().Format(time.RFC3339),
-		Type:       "app.log",
+	t := entry.Time.UTC()
+	appLog := &appLog{
+		Timestamp:  t.UnixNano(),
+		Time:       t.Format(time.RFC3339),
+		Type:       m.Type,
 		Logger:     m.LoggerName,
-		Hostname:   mozlog.Hostname(),
+		Hostname:   hostname,
 		EnvVersion: "2.0",
-		Pid:        os.Getpid(),
-		Severity:   int(entry.Level),
+		Pid:        pid,
+		Severity:   toSyslogSeverity(entry.Level),
 	}
 
+	// set a default type when it is empty
+	if appLog.Type == "" {
+		appLog.Type = "app.log"
+	}
+
+	// make a copy of entry.Data to prevent side effects
+	// when altering "msg" and error types
 	data := make(logrus.Fields, len(entry.Data)+1)
 	for k, v := range entry.Data {
 		switch v := v.(type) {
@@ -61,14 +68,37 @@ func (m *MozLogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		}
 	}
 
-	prefixFieldClashes(data)
-	data["msg"] = entry.Message
+	// prevent losing "msg" when we overwrite it with entry.Message
+	if _, ok := data["msg"]; ok {
+		data["fields.msg"] = data["msg"]
+	}
 
+	data["msg"] = entry.Message
 	appLog.Fields = data
 
 	serialized, err := json.Marshal(appLog)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to mashal fields to JSON, %v", err)
+		return nil, fmt.Errorf("Failed to marshal appLog to JSON, %v", err)
 	}
 	return append(serialized, '\n'), nil
+}
+
+// toSyslogSeverity converts logrus log levels to syslog ones
+func toSyslogSeverity(l logrus.Level) int {
+	switch l {
+	case logrus.PanicLevel:
+		return 1
+	case logrus.FatalLevel:
+		return 2
+	case logrus.ErrorLevel:
+		return 3
+	case logrus.WarnLevel:
+		return 4
+	case logrus.InfoLevel:
+		return 6
+	case logrus.DebugLevel:
+		return 7
+	default:
+		return 0
+	}
 }

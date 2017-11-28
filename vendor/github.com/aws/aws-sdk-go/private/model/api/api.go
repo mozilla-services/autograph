@@ -307,6 +307,12 @@ var noCrossLinkServices = map[string]struct{}{
 	"swf":               {},
 }
 
+// HasCrosslinks will return whether or not a service has crosslinking .
+func HasCrosslinks(service string) bool {
+	_, ok := noCrossLinkServices[service]
+	return !ok
+}
+
 // GetCrosslinkURL returns the crosslinking URL for the shape based on the name and
 // uid provided. Empty string is returned if no crosslink link could be determined.
 func GetCrosslinkURL(baseURL, uid string, params ...string) string {
@@ -314,14 +320,16 @@ func GetCrosslinkURL(baseURL, uid string, params ...string) string {
 		return ""
 	}
 
-	if _, ok := noCrossLinkServices[strings.ToLower(serviceIDFromUID(uid))]; ok {
+	if !HasCrosslinks(strings.ToLower(ServiceIDFromUID(uid))) {
 		return ""
 	}
 
 	return strings.Join(append([]string{baseURL, "goto", "WebAPI", uid}, params...), "/")
 }
 
-func serviceIDFromUID(uid string) string {
+// ServiceIDFromUID will parse the service id from the uid and return
+// the service id that was found.
+func ServiceIDFromUID(uid string) string {
 	found := 0
 	i := len(uid) - 1
 	for ; i >= 0; i-- {
@@ -363,7 +371,7 @@ var tplServiceDoc = template.Must(template.New("service docs").Funcs(template.Fu
 //
 // Using the Client
 //
-// To {{ .Metadata.ServiceFullName }} with the SDK use the New function to create
+// To contact {{ .Metadata.ServiceFullName }} with the SDK use the New function to create
 // a new service client. With that client you can make API requests to the service.
 // These clients are safe to use concurrently.
 //

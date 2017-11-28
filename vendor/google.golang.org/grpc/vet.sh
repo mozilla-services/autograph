@@ -8,12 +8,6 @@ die() {
   exit 1
 }
 
-# TODO: Remove this check and the mangling below once "context" is imported
-# directly.
-if git status --porcelain | read; then
-  die "Uncommitted or untracked files found; commit changes first"
-fi
-
 PATH="$GOPATH/bin:$GOROOT/bin:$PATH"
 
 # Check proto in manual runs or cron runs.
@@ -28,6 +22,7 @@ if [ "$1" = "-install" ]; then
     github.com/golang/lint/golint \
     golang.org/x/tools/cmd/goimports \
     honnef.co/go/tools/cmd/staticcheck \
+    github.com/client9/misspell/cmd/misspell \
     github.com/golang/protobuf/protoc-gen-go \
     golang.org/x/tools/cmd/stringer
   if [[ "$check_proto" = "true" ]]; then
@@ -48,6 +43,12 @@ elif [[ "$#" -ne 0 ]]; then
   die "Unknown argument(s): $*"
 fi
 
+# TODO: Remove this check and the mangling below once "context" is imported
+# directly.
+if git status --porcelain | read; then
+  die "Uncommitted or untracked files found; commit changes first"
+fi
+
 git ls-files "*.go" | xargs grep -L "\(Copyright [0-9]\{4,\} gRPC authors\)\|DO NOT EDIT" 2>&1 | tee /dev/stderr | (! read)
 gofmt -s -d -l . 2>&1 | tee /dev/stderr | (! read)
 goimports -l . 2>&1 | tee /dev/stderr | (! read)
@@ -64,7 +65,6 @@ trap cleanup EXIT
 git ls-files "*.go" | xargs sed -i 's:"golang.org/x/net/context":"context":'
 set +o pipefail
 # TODO: Stop filtering pb.go files once golang/protobuf#214 is fixed.
-# TODO: Remove clientconn exception once go1.6 support is removed.
 go tool vet -all . 2>&1 | grep -vF '.pb.go:' | tee /dev/stderr | (! read)
 set -o pipefail
 git reset --hard HEAD
@@ -77,3 +77,4 @@ fi
 
 # TODO(menghanl): fix errors in transport_test.
 staticcheck -ignore google.golang.org/grpc/transport/transport_test.go:SA2002 ./...
+misspell -error .

@@ -1,7 +1,13 @@
 # mozlogrus [![GoDoc](https://godoc.org/go.mozilla.org/mozlogrus?status.svg)](https://godoc.org/go.mozilla.org/mozlogrus)
 A logging library which conforms to [Mozilla's logging standard](https://wiki.mozilla.org/Firefox/Services/Logging) for [logrus](https://github.com/Sirupsen/logrus).
 
-## Example Usage
+## Installation
+
+`go get go.mozilla.org/mozlogrus`
+
+## Example
+
+### Basic Usage
 ```go
 package main
 
@@ -38,5 +44,16 @@ $ go run mozlogrus.go | jq
     "msg": "A group of walrus emerges from the ocean",
     "size": 10
   }
+}
+```
+
+### Custom Log Types
+
+```go
+func init() {
+    mozlogrus.EnableFormatter(&mozlogrus.MozLogFormatter{
+        LoggerName: "ApplicationName",
+        Type: "udp datagram",
+    })
 }
 ```

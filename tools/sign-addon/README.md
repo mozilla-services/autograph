@@ -1,8 +1,9 @@
 Add-on Signer
 ===================
 
-This script takes an unsigned XPI, submits it to the specified autograph
-service, and overwrites the unsigned XPI with a signed one.
+**Warning: Python 3 only!**
+
+This script takes an XPI, submits it to the specified autograph service for signature, and overwrites the original XPI with a signed one.
 
 ## Requirements ##
 
@@ -10,8 +11,7 @@ The following system packages need to be install before you begin:
 ```
 git
 pip
-python
-swig (for M2Crypto)
+python3
 virtualenv
 ```
 
@@ -26,15 +26,12 @@ $ pip install -r requirements.txt
 ```bash
 $ source ./venv/bin/activate
 
-$ python sign.py -t https://some.autograph.endpoint.com/sign/data -s extension_rsa -u addon_shipper -p **** some_extension.xpi
+$ python sign.py \
+    -t http://localhost:8000/sign/data \
+    -s webextensions-rsa \
+    -u alice \
+    -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu \
+    test-addon.xpi
 
 some_extension.xpi signed!
-```
-
-### Swig + M2Crypto on OSX ###
-I ran into issues getting M2Crypto to build on OSX. Use the following brew formula to get it working:
-```
-brew uninstall swig --force
-brew install homebrew/versions/swig304
-brew link homebrew/versions/swig304
 ```

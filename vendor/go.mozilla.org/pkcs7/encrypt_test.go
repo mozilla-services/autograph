@@ -10,6 +10,7 @@ func TestEncrypt(t *testing.T) {
 	modes := []int{
 		EncryptionAlgorithmDESCBC,
 		EncryptionAlgorithmAES128GCM,
+		EncryptionAlgorithmAES256GCM,
 	}
 	sigalgs := []x509.SignatureAlgorithm{
 		x509.SHA1WithRSA,

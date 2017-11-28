@@ -601,6 +601,10 @@ func (s *AppUpdateEvent) MarshalJSON() ([]byte, error) {
 
 // AppVersion: This represents a single version of the app.
 type AppVersion struct {
+	// Track: The track that this app was published in. For example if track
+	// is "alpha", this is an alpha version of the app.
+	Track string `json:"track,omitempty"`
+
 	// VersionCode: Unique increasing identifier for the app version.
 	VersionCode int64 `json:"versionCode,omitempty"`
 
@@ -609,7 +613,7 @@ type AppVersion struct {
 	// localized (for example, the string could be "1.4").
 	VersionString string `json:"versionString,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "VersionCode") to
+	// ForceSendFields is a list of field names (e.g. "Track") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -617,10 +621,10 @@ type AppVersion struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "VersionCode") to include
-	// in API requests with the JSON null value. By default, fields with
-	// empty values are omitted from API requests. However, any field with
-	// an empty value appearing in NullFields will be sent to the server as
+	// NullFields is a list of field names (e.g. "Track") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
 	// null. It is an error if a field in this list has a non-empty value.
 	// This may be used to include null fields in Patch requests.
 	NullFields []string `json:"-"`
@@ -1123,7 +1127,7 @@ func (s *EntitlementsListResponse) MarshalJSON() ([]byte, error) {
 //
 // Use the API to query group licenses. A Grouplicenses resource
 // includes the total number of licenses purchased (paid apps only) and
-// the total number of licenses currently in use. Iyn other words, the
+// the total number of licenses currently in use. In other words, the
 // total number of Entitlements that exist for the product.
 //
 // Only one group license object is created per product and group
@@ -1962,6 +1966,9 @@ type Product struct {
 	// app developer).
 	AuthorName string `json:"authorName,omitempty"`
 
+	// AvailableTracks: The tracks that are visible to the enterprise.
+	AvailableTracks []string `json:"availableTracks,omitempty"`
+
 	// DetailsUrl: A link to the (consumer) Google Play details page for the
 	// product.
 	DetailsUrl string `json:"detailsUrl,omitempty"`
@@ -2210,6 +2217,14 @@ type ProductSet struct {
 	// per user.
 	ProductSetBehavior string `json:"productSetBehavior,omitempty"`
 
+	// ProductVisibility: Additional list of product IDs making up the
+	// product set. Unlike the productID array, in this list It's possible
+	// to specify which tracks (alpha, beta, production) of a product are
+	// visible to the user. See ProductVisibility and its fields for more
+	// information. Specifying the same product ID both here and in the
+	// productId array is not allowed and it will result in an error.
+	ProductVisibility []*ProductVisibility `json:"productVisibility,omitempty"`
+
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
 	googleapi.ServerResponse `json:"-"`
@@ -2267,6 +2282,53 @@ type ProductSigningCertificate struct {
 
 func (s *ProductSigningCertificate) MarshalJSON() ([]byte, error) {
 	type noMethod ProductSigningCertificate
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ProductVisibility: A product to be made visible to a user.
+type ProductVisibility struct {
+	// ProductId: The product ID to make visible to the user. Required for
+	// each item in the productVisibility list.
+	ProductId string `json:"productId,omitempty"`
+
+	// Tracks: Grants visibility to the specified track(s) of the product to
+	// the user. The track available to the user is based on the following
+	// order of preference: alpha, beta, production. For example, if an app
+	// has a prod version, a beta version and an alpha version and the
+	// enterprise has been granted visibility to both the alpha and beta
+	// tracks, if tracks is {"beta", "production"} the user will be able to
+	// install the app and they will get the beta version of the app. If
+	// there are no app versions in the specified track adding the "alpha"
+	// and "beta" values to the list of tracks will have no effect. Note
+	// that the enterprise requires access to alpha and/or beta tracks
+	// before users can be granted visibility to apps in those tracks.
+	//
+	// The allowed sets are: {} (considered equivalent to {"production"})
+	// {"production"} {"beta", "production"} {"alpha", "beta", "production"}
+	// The order of elements is not relevant. Any other set of tracks will
+	// be rejected with an error.
+	Tracks []string `json:"tracks,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ProductId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ProductId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ProductVisibility) MarshalJSON() ([]byte, error) {
+	type noMethod ProductVisibility
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -13853,6 +13915,115 @@ func (c *UsersPatchCall) Do(opts ...googleapi.CallOption) (*User, error) {
 	//   "response": {
 	//     "$ref": "User"
 	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidenterprise"
+	//   ]
+	// }
+
+}
+
+// method id "androidenterprise.users.revokeDeviceAccess":
+
+type UsersRevokeDeviceAccessCall struct {
+	s            *Service
+	enterpriseId string
+	userId       string
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// RevokeDeviceAccess: Revokes access to all devices currently
+// provisioned to the user. The user will no longer be able to use the
+// managed Play store on any of their managed devices.
+//
+// This call only works with EMM-managed accounts.
+func (r *UsersService) RevokeDeviceAccess(enterpriseId string, userId string) *UsersRevokeDeviceAccessCall {
+	c := &UsersRevokeDeviceAccessCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.enterpriseId = enterpriseId
+	c.userId = userId
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *UsersRevokeDeviceAccessCall) Fields(s ...googleapi.Field) *UsersRevokeDeviceAccessCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *UsersRevokeDeviceAccessCall) Context(ctx context.Context) *UsersRevokeDeviceAccessCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *UsersRevokeDeviceAccessCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *UsersRevokeDeviceAccessCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "enterprises/{enterpriseId}/users/{userId}/deviceAccess")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("DELETE", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"enterpriseId": c.enterpriseId,
+		"userId":       c.userId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidenterprise.users.revokeDeviceAccess" call.
+func (c *UsersRevokeDeviceAccessCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return err
+	}
+	return nil
+	// {
+	//   "description": "Revokes access to all devices currently provisioned to the user. The user will no longer be able to use the managed Play store on any of their managed devices.\n\nThis call only works with EMM-managed accounts.",
+	//   "httpMethod": "DELETE",
+	//   "id": "androidenterprise.users.revokeDeviceAccess",
+	//   "parameterOrder": [
+	//     "enterpriseId",
+	//     "userId"
+	//   ],
+	//   "parameters": {
+	//     "enterpriseId": {
+	//       "description": "The ID of the enterprise.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "userId": {
+	//       "description": "The ID of the user.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "enterprises/{enterpriseId}/users/{userId}/deviceAccess",
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/androidenterprise"
 	//   ]

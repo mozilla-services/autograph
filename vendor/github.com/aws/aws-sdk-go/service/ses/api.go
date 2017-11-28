@@ -357,9 +357,8 @@ func (c *SES) CreateConfigurationSetTrackingOptionsRequest(input *CreateConfigur
 //
 // By default, images and links used for tracking open and click events are
 // hosted on domains operated by Amazon SES. You can configure a subdomain of
-// your own to handle these events by redirecting them to the Amazon SES-operated
-// domain. For information about using configuration sets, see Configuring Custom
-// Domains to Handle Open and Click Tracking (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/configure-custom-open-click-domains.html)
+// your own to handle these events. For information about using configuration
+// sets, see Configuring Custom Domains to Handle Open and Click Tracking (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/configure-custom-open-click-domains.html)
 // in the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/Welcome.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -694,6 +693,97 @@ func (c *SES) CreateReceiptRuleSetWithContext(ctx aws.Context, input *CreateRece
 	return out, req.Send()
 }
 
+const opCreateTemplate = "CreateTemplate"
+
+// CreateTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTemplate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTemplate for more information on using the CreateTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateTemplateRequest method.
+//    req, resp := client.CreateTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateTemplate
+func (c *SES) CreateTemplateRequest(input *CreateTemplateInput) (req *request.Request, output *CreateTemplateOutput) {
+	op := &request.Operation{
+		Name:       opCreateTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateTemplateInput{}
+	}
+
+	output = &CreateTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateTemplate API operation for Amazon Simple Email Service.
+//
+// Creates an email template. Email templates enable you to send personalized
+// email to one or more destinations in a single API operation. For more information,
+// see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation CreateTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAlreadyExistsException "AlreadyExists"
+//   Indicates that a resource could not be created because of a naming conflict.
+//
+//   * ErrCodeInvalidTemplateException "InvalidTemplate"
+//   Indicates that a template could not be created because it contained invalid
+//   JSON.
+//
+//   * ErrCodeLimitExceededException "LimitExceeded"
+//   Indicates that a resource could not be created because of service limits.
+//   For a list of Amazon SES limits, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/limits.html).
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateTemplate
+func (c *SES) CreateTemplate(input *CreateTemplateInput) (*CreateTemplateOutput, error) {
+	req, out := c.CreateTemplateRequest(input)
+	return out, req.Send()
+}
+
+// CreateTemplateWithContext is the same as CreateTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) CreateTemplateWithContext(ctx aws.Context, input *CreateTemplateInput, opts ...request.Option) (*CreateTemplateOutput, error) {
+	req, out := c.CreateTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteConfigurationSet = "DeleteConfigurationSet"
 
 // DeleteConfigurationSetRequest generates a "aws/request.Request" representing the
@@ -913,9 +1003,8 @@ func (c *SES) DeleteConfigurationSetTrackingOptionsRequest(input *DeleteConfigur
 //
 // By default, images and links used for tracking open and click events are
 // hosted on domains operated by Amazon SES. You can configure a subdomain of
-// your own to handle these events by redirecting them to the Amazon SES-operated
-// domain. For information about using configuration sets, see Configuring Custom
-// Domains to Handle Open and Click Tracking (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/configure-custom-open-click-domains.html)
+// your own to handle these events. For information about using configuration
+// sets, see Configuring Custom Domains to Handle Open and Click Tracking (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/configure-custom-open-click-domains.html)
 // in the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/Welcome.html).
 //
 // Deleting this kind of association will result in emails sent using the specified
@@ -1369,6 +1458,82 @@ func (c *SES) DeleteReceiptRuleSetWithContext(ctx aws.Context, input *DeleteRece
 	return out, req.Send()
 }
 
+const opDeleteTemplate = "DeleteTemplate"
+
+// DeleteTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTemplate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTemplate for more information on using the DeleteTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTemplateRequest method.
+//    req, resp := client.DeleteTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteTemplate
+func (c *SES) DeleteTemplateRequest(input *DeleteTemplateInput) (req *request.Request, output *DeleteTemplateOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteTemplateInput{}
+	}
+
+	output = &DeleteTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteTemplate API operation for Amazon Simple Email Service.
+//
+// Deletes an email template.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation DeleteTemplate for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteTemplate
+func (c *SES) DeleteTemplate(input *DeleteTemplateInput) (*DeleteTemplateOutput, error) {
+	req, out := c.DeleteTemplateRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTemplateWithContext is the same as DeleteTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) DeleteTemplateWithContext(ctx aws.Context, input *DeleteTemplateInput, opts ...request.Option) (*DeleteTemplateOutput, error) {
+	req, out := c.DeleteTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteVerifiedEmailAddress = "DeleteVerifiedEmailAddress"
 
 // DeleteVerifiedEmailAddressRequest generates a "aws/request.Request" representing the
@@ -1774,6 +1939,82 @@ func (c *SES) DescribeReceiptRuleSet(input *DescribeReceiptRuleSetInput) (*Descr
 // for more information on using Contexts.
 func (c *SES) DescribeReceiptRuleSetWithContext(ctx aws.Context, input *DescribeReceiptRuleSetInput, opts ...request.Option) (*DescribeReceiptRuleSetOutput, error) {
 	req, out := c.DescribeReceiptRuleSetRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetAccountSendingEnabled = "GetAccountSendingEnabled"
+
+// GetAccountSendingEnabledRequest generates a "aws/request.Request" representing the
+// client's request for the GetAccountSendingEnabled operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetAccountSendingEnabled for more information on using the GetAccountSendingEnabled
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetAccountSendingEnabledRequest method.
+//    req, resp := client.GetAccountSendingEnabledRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabled
+func (c *SES) GetAccountSendingEnabledRequest(input *GetAccountSendingEnabledInput) (req *request.Request, output *GetAccountSendingEnabledOutput) {
+	op := &request.Operation{
+		Name:       opGetAccountSendingEnabled,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetAccountSendingEnabledInput{}
+	}
+
+	output = &GetAccountSendingEnabledOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetAccountSendingEnabled API operation for Amazon Simple Email Service.
+//
+// Returns the email sending status of the Amazon SES account.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation GetAccountSendingEnabled for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabled
+func (c *SES) GetAccountSendingEnabled(input *GetAccountSendingEnabledInput) (*GetAccountSendingEnabledOutput, error) {
+	req, out := c.GetAccountSendingEnabledRequest(input)
+	return out, req.Send()
+}
+
+// GetAccountSendingEnabledWithContext is the same as GetAccountSendingEnabled with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetAccountSendingEnabled for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) GetAccountSendingEnabledWithContext(ctx aws.Context, input *GetAccountSendingEnabledInput, opts ...request.Option) (*GetAccountSendingEnabledOutput, error) {
+	req, out := c.GetAccountSendingEnabledRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2368,6 +2609,89 @@ func (c *SES) GetSendStatisticsWithContext(ctx aws.Context, input *GetSendStatis
 	return out, req.Send()
 }
 
+const opGetTemplate = "GetTemplate"
+
+// GetTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the GetTemplate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetTemplate for more information on using the GetTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetTemplateRequest method.
+//    req, resp := client.GetTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetTemplate
+func (c *SES) GetTemplateRequest(input *GetTemplateInput) (req *request.Request, output *GetTemplateOutput) {
+	op := &request.Operation{
+		Name:       opGetTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetTemplateInput{}
+	}
+
+	output = &GetTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetTemplate API operation for Amazon Simple Email Service.
+//
+// Displays the template object (which includes the Subject line, HTML part
+// and text part) for the template you specify.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation GetTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeTemplateDoesNotExistException "TemplateDoesNotExist"
+//   Indicates that the Template object you specified does not exist in your Amazon
+//   SES account.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetTemplate
+func (c *SES) GetTemplate(input *GetTemplateInput) (*GetTemplateOutput, error) {
+	req, out := c.GetTemplateRequest(input)
+	return out, req.Send()
+}
+
+// GetTemplateWithContext is the same as GetTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) GetTemplateWithContext(ctx aws.Context, input *GetTemplateInput, opts ...request.Option) (*GetTemplateOutput, error) {
+	req, out := c.GetTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListConfigurationSets = "ListConfigurationSets"
 
 // ListConfigurationSetsRequest generates a "aws/request.Request" representing the
@@ -2418,8 +2742,8 @@ func (c *SES) ListConfigurationSetsRequest(input *ListConfigurationSetsInput) (r
 // in the Amazon SES Developer Guide.
 //
 // You can execute this operation no more than once per second. This operation
-// will return up to 50 configuration sets each time it is run. If your Amazon
-// SES account has more than 50 configuration sets, this operation will also
+// will return up to 1,000 configuration sets each time it is run. If your Amazon
+// SES account has more than 1,000 configuration sets, this operation will also
 // return a NextToken element. You can then execute the ListConfigurationSets
 // operation again, passing the NextToken parameter and the value of the NextToken
 // element to retrieve additional results.
@@ -2831,6 +3155,82 @@ func (c *SES) ListReceiptRuleSetsWithContext(ctx aws.Context, input *ListReceipt
 	return out, req.Send()
 }
 
+const opListTemplates = "ListTemplates"
+
+// ListTemplatesRequest generates a "aws/request.Request" representing the
+// client's request for the ListTemplates operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTemplates for more information on using the ListTemplates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTemplatesRequest method.
+//    req, resp := client.ListTemplatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListTemplates
+func (c *SES) ListTemplatesRequest(input *ListTemplatesInput) (req *request.Request, output *ListTemplatesOutput) {
+	op := &request.Operation{
+		Name:       opListTemplates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListTemplatesInput{}
+	}
+
+	output = &ListTemplatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTemplates API operation for Amazon Simple Email Service.
+//
+// Lists the email templates present in your Amazon SES account.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation ListTemplates for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListTemplates
+func (c *SES) ListTemplates(input *ListTemplatesInput) (*ListTemplatesOutput, error) {
+	req, out := c.ListTemplatesRequest(input)
+	return out, req.Send()
+}
+
+// ListTemplatesWithContext is the same as ListTemplates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTemplates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) ListTemplatesWithContext(ctx aws.Context, input *ListTemplatesInput, opts ...request.Option) (*ListTemplatesOutput, error) {
+	req, out := c.ListTemplatesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListVerifiedEmailAddresses = "ListVerifiedEmailAddresses"
 
 // ListVerifiedEmailAddressesRequest generates a "aws/request.Request" representing the
@@ -3177,6 +3577,135 @@ func (c *SES) SendBounceWithContext(ctx aws.Context, input *SendBounceInput, opt
 	return out, req.Send()
 }
 
+const opSendBulkTemplatedEmail = "SendBulkTemplatedEmail"
+
+// SendBulkTemplatedEmailRequest generates a "aws/request.Request" representing the
+// client's request for the SendBulkTemplatedEmail operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See SendBulkTemplatedEmail for more information on using the SendBulkTemplatedEmail
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the SendBulkTemplatedEmailRequest method.
+//    req, resp := client.SendBulkTemplatedEmailRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendBulkTemplatedEmail
+func (c *SES) SendBulkTemplatedEmailRequest(input *SendBulkTemplatedEmailInput) (req *request.Request, output *SendBulkTemplatedEmailOutput) {
+	op := &request.Operation{
+		Name:       opSendBulkTemplatedEmail,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &SendBulkTemplatedEmailInput{}
+	}
+
+	output = &SendBulkTemplatedEmailOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// SendBulkTemplatedEmail API operation for Amazon Simple Email Service.
+//
+// Composes an email message to multiple destinations. The message body is created
+// using an email template.
+//
+// In order to send email using the SendBulkTemplatedEmail operation, your call
+// to the API must meet the following requirements:
+//
+//    * The call must refer to an existing email template. You can create email
+//    templates using the CreateTemplate operation.
+//
+//    * The message must be sent from a verified email address or domain.
+//
+//    * If your account is still in the Amazon SES sandbox, you may only send
+//    to verified addresses or domains, or to email addresses associated with
+//    the Amazon SES Mailbox Simulator. For more information, see Verifying
+//    Email Addresses and Domains (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html)
+//    in the Amazon SES Developer Guide.
+//
+//    * The total size of the message, including attachments, must be less than
+//    10 MB.
+//
+//    * Each Destination parameter must include at least one recipient email
+//    address. The recipient address can be a To: address, a CC: address, or
+//    a BCC: address. If a recipient email address is invalid (that is, it is
+//    not in the format UserName@[SubDomain.]Domain.TopLevelDomain), the entire
+//    message will be rejected, even if the message contains other recipients
+//    that are valid.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation SendBulkTemplatedEmail for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeMessageRejected "MessageRejected"
+//   Indicates that the action failed, and the message could not be sent. Check
+//   the error stack for more information about what caused the error.
+//
+//   * ErrCodeMailFromDomainNotVerifiedException "MailFromDomainNotVerifiedException"
+//   Indicates that the message could not be sent because Amazon SES could not
+//   read the MX record required to use the specified MAIL FROM domain. For information
+//   about editing the custom MAIL FROM domain settings for an identity, see the
+//   Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/mail-from-edit.html).
+//
+//   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
+//   Indicates that the configuration set does not exist.
+//
+//   * ErrCodeTemplateDoesNotExistException "TemplateDoesNotExist"
+//   Indicates that the Template object you specified does not exist in your Amazon
+//   SES account.
+//
+//   * ErrCodeConfigurationSetSendingPausedException "ConfigurationSetSendingPausedException"
+//   Indicates that email sending is disabled for the configuration set.
+//
+//   You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
+//
+//   * ErrCodeAccountSendingPausedException "AccountSendingPausedException"
+//   Indicates that email sending is disabled for your entire Amazon SES account.
+//
+//   You can enable or disable email sending for your Amazon SES account using
+//   UpdateAccountSendingEnabled.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendBulkTemplatedEmail
+func (c *SES) SendBulkTemplatedEmail(input *SendBulkTemplatedEmailInput) (*SendBulkTemplatedEmailOutput, error) {
+	req, out := c.SendBulkTemplatedEmailRequest(input)
+	return out, req.Send()
+}
+
+// SendBulkTemplatedEmailWithContext is the same as SendBulkTemplatedEmail with the addition of
+// the ability to pass a context and additional request options.
+//
+// See SendBulkTemplatedEmail for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) SendBulkTemplatedEmailWithContext(ctx aws.Context, input *SendBulkTemplatedEmailInput, opts ...request.Option) (*SendBulkTemplatedEmailOutput, error) {
+	req, out := c.SendBulkTemplatedEmailRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opSendEmail = "SendEmail"
 
 // SendEmailRequest generates a "aws/request.Request" representing the
@@ -3277,6 +3806,17 @@ func (c *SES) SendEmailRequest(input *SendEmailInput) (req *request.Request, out
 //
 //   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
 //   Indicates that the configuration set does not exist.
+//
+//   * ErrCodeConfigurationSetSendingPausedException "ConfigurationSetSendingPausedException"
+//   Indicates that email sending is disabled for the configuration set.
+//
+//   You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
+//
+//   * ErrCodeAccountSendingPausedException "AccountSendingPausedException"
+//   Indicates that email sending is disabled for your entire Amazon SES account.
+//
+//   You can enable or disable email sending for your Amazon SES account using
+//   UpdateAccountSendingEnabled.
 //
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendEmail
 func (c *SES) SendEmail(input *SendEmailInput) (*SendEmailOutput, error) {
@@ -3437,6 +3977,17 @@ func (c *SES) SendRawEmailRequest(input *SendRawEmailInput) (req *request.Reques
 //   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
 //   Indicates that the configuration set does not exist.
 //
+//   * ErrCodeConfigurationSetSendingPausedException "ConfigurationSetSendingPausedException"
+//   Indicates that email sending is disabled for the configuration set.
+//
+//   You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
+//
+//   * ErrCodeAccountSendingPausedException "AccountSendingPausedException"
+//   Indicates that email sending is disabled for your entire Amazon SES account.
+//
+//   You can enable or disable email sending for your Amazon SES account using
+//   UpdateAccountSendingEnabled.
+//
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendRawEmail
 func (c *SES) SendRawEmail(input *SendRawEmailInput) (*SendRawEmailOutput, error) {
 	req, out := c.SendRawEmailRequest(input)
@@ -3454,6 +4005,140 @@ func (c *SES) SendRawEmail(input *SendRawEmailInput) (*SendRawEmailOutput, error
 // for more information on using Contexts.
 func (c *SES) SendRawEmailWithContext(ctx aws.Context, input *SendRawEmailInput, opts ...request.Option) (*SendRawEmailOutput, error) {
 	req, out := c.SendRawEmailRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opSendTemplatedEmail = "SendTemplatedEmail"
+
+// SendTemplatedEmailRequest generates a "aws/request.Request" representing the
+// client's request for the SendTemplatedEmail operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See SendTemplatedEmail for more information on using the SendTemplatedEmail
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the SendTemplatedEmailRequest method.
+//    req, resp := client.SendTemplatedEmailRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendTemplatedEmail
+func (c *SES) SendTemplatedEmailRequest(input *SendTemplatedEmailInput) (req *request.Request, output *SendTemplatedEmailOutput) {
+	op := &request.Operation{
+		Name:       opSendTemplatedEmail,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &SendTemplatedEmailInput{}
+	}
+
+	output = &SendTemplatedEmailOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// SendTemplatedEmail API operation for Amazon Simple Email Service.
+//
+// Composes an email message using an email template and immediately queues
+// it for sending.
+//
+// In order to send email using the SendTemplatedEmail operation, your call
+// to the API must meet the following requirements:
+//
+//    * The call must refer to an existing email template. You can create email
+//    templates using the CreateTemplate operation.
+//
+//    * The message must be sent from a verified email address or domain.
+//
+//    * If your account is still in the Amazon SES sandbox, you may only send
+//    to verified addresses or domains, or to email addresses associated with
+//    the Amazon SES Mailbox Simulator. For more information, see Verifying
+//    Email Addresses and Domains (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html)
+//    in the Amazon SES Developer Guide.
+//
+//    * The total size of the message, including attachments, must be less than
+//    10 MB.
+//
+//    * Calls to the SendTemplatedEmail operation may only include one Destination
+//    parameter. A destination is a set of recipients who will receive the same
+//    version of the email. The Destination parameter can include up to 50 recipients,
+//    across the To:, CC: and BCC: fields.
+//
+//    * The Destination parameter must include at least one recipient email
+//    address. The recipient address can be a To: address, a CC: address, or
+//    a BCC: address. If a recipient email address is invalid (that is, it is
+//    not in the format UserName@[SubDomain.]Domain.TopLevelDomain), the entire
+//    message will be rejected, even if the message contains other recipients
+//    that are valid.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation SendTemplatedEmail for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeMessageRejected "MessageRejected"
+//   Indicates that the action failed, and the message could not be sent. Check
+//   the error stack for more information about what caused the error.
+//
+//   * ErrCodeMailFromDomainNotVerifiedException "MailFromDomainNotVerifiedException"
+//   Indicates that the message could not be sent because Amazon SES could not
+//   read the MX record required to use the specified MAIL FROM domain. For information
+//   about editing the custom MAIL FROM domain settings for an identity, see the
+//   Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/mail-from-edit.html).
+//
+//   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
+//   Indicates that the configuration set does not exist.
+//
+//   * ErrCodeTemplateDoesNotExistException "TemplateDoesNotExist"
+//   Indicates that the Template object you specified does not exist in your Amazon
+//   SES account.
+//
+//   * ErrCodeConfigurationSetSendingPausedException "ConfigurationSetSendingPausedException"
+//   Indicates that email sending is disabled for the configuration set.
+//
+//   You can enable or disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled.
+//
+//   * ErrCodeAccountSendingPausedException "AccountSendingPausedException"
+//   Indicates that email sending is disabled for your entire Amazon SES account.
+//
+//   You can enable or disable email sending for your Amazon SES account using
+//   UpdateAccountSendingEnabled.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendTemplatedEmail
+func (c *SES) SendTemplatedEmail(input *SendTemplatedEmailInput) (*SendTemplatedEmailOutput, error) {
+	req, out := c.SendTemplatedEmailRequest(input)
+	return out, req.Send()
+}
+
+// SendTemplatedEmailWithContext is the same as SendTemplatedEmail with the addition of
+// the ability to pass a context and additional request options.
+//
+// See SendTemplatedEmail for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) SendTemplatedEmailWithContext(ctx aws.Context, input *SendTemplatedEmailInput, opts ...request.Option) (*SendTemplatedEmailOutput, error) {
+	req, out := c.SendTemplatedEmailRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4057,6 +4742,179 @@ func (c *SES) SetReceiptRulePositionWithContext(ctx aws.Context, input *SetRecei
 	return out, req.Send()
 }
 
+const opTestRenderTemplate = "TestRenderTemplate"
+
+// TestRenderTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the TestRenderTemplate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TestRenderTemplate for more information on using the TestRenderTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TestRenderTemplateRequest method.
+//    req, resp := client.TestRenderTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TestRenderTemplate
+func (c *SES) TestRenderTemplateRequest(input *TestRenderTemplateInput) (req *request.Request, output *TestRenderTemplateOutput) {
+	op := &request.Operation{
+		Name:       opTestRenderTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TestRenderTemplateInput{}
+	}
+
+	output = &TestRenderTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// TestRenderTemplate API operation for Amazon Simple Email Service.
+//
+// Creates a preview of the MIME content of an email when provided with a template
+// and a set of replacement data.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation TestRenderTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeTemplateDoesNotExistException "TemplateDoesNotExist"
+//   Indicates that the Template object you specified does not exist in your Amazon
+//   SES account.
+//
+//   * ErrCodeInvalidRenderingParameterException "InvalidRenderingParameter"
+//   Indicates that one or more of the replacement values you provided is invalid.
+//   This error may occur when the TemplateData object contains invalid JSON.
+//
+//   * ErrCodeMissingRenderingAttributeException "MissingRenderingAttribute"
+//   Indicates that one or more of the replacement values for the specified template
+//   was not specified. Ensure that the TemplateData object contains references
+//   to all of the replacement tags in the specified template.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TestRenderTemplate
+func (c *SES) TestRenderTemplate(input *TestRenderTemplateInput) (*TestRenderTemplateOutput, error) {
+	req, out := c.TestRenderTemplateRequest(input)
+	return out, req.Send()
+}
+
+// TestRenderTemplateWithContext is the same as TestRenderTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TestRenderTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) TestRenderTemplateWithContext(ctx aws.Context, input *TestRenderTemplateInput, opts ...request.Option) (*TestRenderTemplateOutput, error) {
+	req, out := c.TestRenderTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateAccountSendingEnabled = "UpdateAccountSendingEnabled"
+
+// UpdateAccountSendingEnabledRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAccountSendingEnabled operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateAccountSendingEnabled for more information on using the UpdateAccountSendingEnabled
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateAccountSendingEnabledRequest method.
+//    req, resp := client.UpdateAccountSendingEnabledRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabled
+func (c *SES) UpdateAccountSendingEnabledRequest(input *UpdateAccountSendingEnabledInput) (req *request.Request, output *UpdateAccountSendingEnabledOutput) {
+	op := &request.Operation{
+		Name:       opUpdateAccountSendingEnabled,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateAccountSendingEnabledInput{}
+	}
+
+	output = &UpdateAccountSendingEnabledOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateAccountSendingEnabled API operation for Amazon Simple Email Service.
+//
+// Enables or disables email sending across your entire Amazon SES account.
+// You can use this operation in conjunction with Amazon CloudWatch alarms to
+// temporarily pause email sending across your Amazon SES account when reputation
+// metrics (such as your bounce on complaint rate) reach certain thresholds.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation UpdateAccountSendingEnabled for usage and error information.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabled
+func (c *SES) UpdateAccountSendingEnabled(input *UpdateAccountSendingEnabledInput) (*UpdateAccountSendingEnabledOutput, error) {
+	req, out := c.UpdateAccountSendingEnabledRequest(input)
+	return out, req.Send()
+}
+
+// UpdateAccountSendingEnabledWithContext is the same as UpdateAccountSendingEnabled with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAccountSendingEnabled for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) UpdateAccountSendingEnabledWithContext(ctx aws.Context, input *UpdateAccountSendingEnabledInput, opts ...request.Option) (*UpdateAccountSendingEnabledOutput, error) {
+	req, out := c.UpdateAccountSendingEnabledRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateConfigurationSetEventDestination = "UpdateConfigurationSetEventDestination"
 
 // UpdateConfigurationSetEventDestinationRequest generates a "aws/request.Request" representing the
@@ -4162,6 +5020,180 @@ func (c *SES) UpdateConfigurationSetEventDestinationWithContext(ctx aws.Context,
 	return out, req.Send()
 }
 
+const opUpdateConfigurationSetReputationMetricsEnabled = "UpdateConfigurationSetReputationMetricsEnabled"
+
+// UpdateConfigurationSetReputationMetricsEnabledRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateConfigurationSetReputationMetricsEnabled operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateConfigurationSetReputationMetricsEnabled for more information on using the UpdateConfigurationSetReputationMetricsEnabled
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateConfigurationSetReputationMetricsEnabledRequest method.
+//    req, resp := client.UpdateConfigurationSetReputationMetricsEnabledRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabled
+func (c *SES) UpdateConfigurationSetReputationMetricsEnabledRequest(input *UpdateConfigurationSetReputationMetricsEnabledInput) (req *request.Request, output *UpdateConfigurationSetReputationMetricsEnabledOutput) {
+	op := &request.Operation{
+		Name:       opUpdateConfigurationSetReputationMetricsEnabled,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateConfigurationSetReputationMetricsEnabledInput{}
+	}
+
+	output = &UpdateConfigurationSetReputationMetricsEnabledOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateConfigurationSetReputationMetricsEnabled API operation for Amazon Simple Email Service.
+//
+// Enables or disables the publishing of reputation metrics for emails sent
+// using a specific configuration set. Reputation metrics include bounce and
+// complaint rates. These metrics are published to Amazon CloudWatch. By using
+// Amazon CloudWatch, you can create alarms when bounce or complaint rates exceed
+// a certain threshold.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation UpdateConfigurationSetReputationMetricsEnabled for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
+//   Indicates that the configuration set does not exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabled
+func (c *SES) UpdateConfigurationSetReputationMetricsEnabled(input *UpdateConfigurationSetReputationMetricsEnabledInput) (*UpdateConfigurationSetReputationMetricsEnabledOutput, error) {
+	req, out := c.UpdateConfigurationSetReputationMetricsEnabledRequest(input)
+	return out, req.Send()
+}
+
+// UpdateConfigurationSetReputationMetricsEnabledWithContext is the same as UpdateConfigurationSetReputationMetricsEnabled with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateConfigurationSetReputationMetricsEnabled for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) UpdateConfigurationSetReputationMetricsEnabledWithContext(ctx aws.Context, input *UpdateConfigurationSetReputationMetricsEnabledInput, opts ...request.Option) (*UpdateConfigurationSetReputationMetricsEnabledOutput, error) {
+	req, out := c.UpdateConfigurationSetReputationMetricsEnabledRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateConfigurationSetSendingEnabled = "UpdateConfigurationSetSendingEnabled"
+
+// UpdateConfigurationSetSendingEnabledRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateConfigurationSetSendingEnabled operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateConfigurationSetSendingEnabled for more information on using the UpdateConfigurationSetSendingEnabled
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateConfigurationSetSendingEnabledRequest method.
+//    req, resp := client.UpdateConfigurationSetSendingEnabledRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabled
+func (c *SES) UpdateConfigurationSetSendingEnabledRequest(input *UpdateConfigurationSetSendingEnabledInput) (req *request.Request, output *UpdateConfigurationSetSendingEnabledOutput) {
+	op := &request.Operation{
+		Name:       opUpdateConfigurationSetSendingEnabled,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateConfigurationSetSendingEnabledInput{}
+	}
+
+	output = &UpdateConfigurationSetSendingEnabledOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(query.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateConfigurationSetSendingEnabled API operation for Amazon Simple Email Service.
+//
+// Enables or disables email sending for messages sent using a specific configuration
+// set. You can use this operation in conjunction with Amazon CloudWatch alarms
+// to temporarily pause email sending for a configuration set when the reputation
+// metrics for that configuration set (such as your bounce on complaint rate)
+// reach certain thresholds.
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation UpdateConfigurationSetSendingEnabled for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeConfigurationSetDoesNotExistException "ConfigurationSetDoesNotExist"
+//   Indicates that the configuration set does not exist.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabled
+func (c *SES) UpdateConfigurationSetSendingEnabled(input *UpdateConfigurationSetSendingEnabledInput) (*UpdateConfigurationSetSendingEnabledOutput, error) {
+	req, out := c.UpdateConfigurationSetSendingEnabledRequest(input)
+	return out, req.Send()
+}
+
+// UpdateConfigurationSetSendingEnabledWithContext is the same as UpdateConfigurationSetSendingEnabled with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateConfigurationSetSendingEnabled for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) UpdateConfigurationSetSendingEnabledWithContext(ctx aws.Context, input *UpdateConfigurationSetSendingEnabledInput, opts ...request.Option) (*UpdateConfigurationSetSendingEnabledOutput, error) {
+	req, out := c.UpdateConfigurationSetSendingEnabledRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateConfigurationSetTrackingOptions = "UpdateConfigurationSetTrackingOptions"
 
 // UpdateConfigurationSetTrackingOptionsRequest generates a "aws/request.Request" representing the
@@ -4211,9 +5243,8 @@ func (c *SES) UpdateConfigurationSetTrackingOptionsRequest(input *UpdateConfigur
 //
 // By default, images and links used for tracking open and click events are
 // hosted on domains operated by Amazon SES. You can configure a subdomain of
-// your own to handle these events by redirecting them to the Amazon SES-operated
-// domain. For information about using configuration sets, see Configuring Custom
-// Domains to Handle Open and Click Tracking (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/configure-custom-open-click-domains.html)
+// your own to handle these events. For information about using configuration
+// sets, see Configuring Custom Domains to Handle Open and Click Tracking (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/configure-custom-open-click-domains.html)
 // in the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/Welcome.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4363,6 +5394,94 @@ func (c *SES) UpdateReceiptRule(input *UpdateReceiptRuleInput) (*UpdateReceiptRu
 // for more information on using Contexts.
 func (c *SES) UpdateReceiptRuleWithContext(ctx aws.Context, input *UpdateReceiptRuleInput, opts ...request.Option) (*UpdateReceiptRuleOutput, error) {
 	req, out := c.UpdateReceiptRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateTemplate = "UpdateTemplate"
+
+// UpdateTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateTemplate operation. The "output" return
+// value will be populated with the request's response once the request complets
+// successfuly.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateTemplate for more information on using the UpdateTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateTemplateRequest method.
+//    req, resp := client.UpdateTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateTemplate
+func (c *SES) UpdateTemplateRequest(input *UpdateTemplateInput) (req *request.Request, output *UpdateTemplateOutput) {
+	op := &request.Operation{
+		Name:       opUpdateTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateTemplateInput{}
+	}
+
+	output = &UpdateTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateTemplate API operation for Amazon Simple Email Service.
+//
+// Updates an email template. Email templates enable you to send personalized
+// email to one or more destinations in a single API operation. For more information,
+// see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
+//
+// You can execute this operation no more than once per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Email Service's
+// API operation UpdateTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeTemplateDoesNotExistException "TemplateDoesNotExist"
+//   Indicates that the Template object you specified does not exist in your Amazon
+//   SES account.
+//
+//   * ErrCodeInvalidTemplateException "InvalidTemplate"
+//   Indicates that a template could not be created because it contained invalid
+//   JSON.
+//
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateTemplate
+func (c *SES) UpdateTemplate(input *UpdateTemplateInput) (*UpdateTemplateOutput, error) {
+	req, out := c.UpdateTemplateRequest(input)
+	return out, req.Send()
+}
+
+// UpdateTemplateWithContext is the same as UpdateTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SES) UpdateTemplateWithContext(ctx aws.Context, input *UpdateTemplateInput, opts ...request.Option) (*UpdateTemplateOutput, error) {
+	req, out := c.UpdateTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4981,6 +6100,172 @@ func (s *BouncedRecipientInfo) SetRecipientArn(v string) *BouncedRecipientInfo {
 // SetRecipientDsnFields sets the RecipientDsnFields field's value.
 func (s *BouncedRecipientInfo) SetRecipientDsnFields(v *RecipientDsnFields) *BouncedRecipientInfo {
 	s.RecipientDsnFields = v
+	return s
+}
+
+// An array that contains one or more Destinations, as well as the tags and
+// replacement data associated with each of those Destinations.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/BulkEmailDestination
+type BulkEmailDestination struct {
+	_ struct{} `type:"structure"`
+
+	// Represents the destination of the message, consisting of To:, CC:, and BCC:
+	// fields.
+	//
+	// By default, the string must be 7-bit ASCII. If the text must contain any
+	// other characters, then you must use MIME encoded-word syntax (RFC 2047) instead
+	// of a literal string. MIME encoded-word syntax uses the following form: =?charset?encoding?encoded-text?=.
+	// For more information, see RFC 2047 (https://tools.ietf.org/html/rfc2047).
+	//
+	// Destination is a required field
+	Destination *Destination `type:"structure" required:"true"`
+
+	// A list of tags, in the form of name/value pairs, to apply to an email that
+	// you send using SendBulkTemplatedEmail. Tags correspond to characteristics
+	// of the email that you define, so that you can publish email sending events.
+	ReplacementTags []*MessageTag `type:"list"`
+
+	// A list of replacement values to apply to the template. This parameter is
+	// a JSON object, typically consisting of key-value pairs in which the keys
+	// correspond to replacement tags in the email template.
+	ReplacementTemplateData *string `type:"string"`
+}
+
+// String returns the string representation
+func (s BulkEmailDestination) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BulkEmailDestination) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BulkEmailDestination) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BulkEmailDestination"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+	if s.ReplacementTags != nil {
+		for i, v := range s.ReplacementTags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ReplacementTags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestination sets the Destination field's value.
+func (s *BulkEmailDestination) SetDestination(v *Destination) *BulkEmailDestination {
+	s.Destination = v
+	return s
+}
+
+// SetReplacementTags sets the ReplacementTags field's value.
+func (s *BulkEmailDestination) SetReplacementTags(v []*MessageTag) *BulkEmailDestination {
+	s.ReplacementTags = v
+	return s
+}
+
+// SetReplacementTemplateData sets the ReplacementTemplateData field's value.
+func (s *BulkEmailDestination) SetReplacementTemplateData(v string) *BulkEmailDestination {
+	s.ReplacementTemplateData = &v
+	return s
+}
+
+// An object that contains the response from the SendBulkTemplatedEmail operation.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/BulkEmailDestinationStatus
+type BulkEmailDestinationStatus struct {
+	_ struct{} `type:"structure"`
+
+	// A description of an error that prevented a message being sent using the SendBulkTemplatedEmail
+	// operation.
+	Error *string `type:"string"`
+
+	// The unique message identifier returned from the SendBulkTemplatedEmail operation.
+	MessageId *string `type:"string"`
+
+	// The status of a message sent using the SendBulkTemplatedEmail operation.
+	//
+	// Possible values for this parameter include:
+	//
+	//    * Success: Amazon SES accepted the message, and will attempt to deliver
+	//    it to the recipients.
+	//
+	//    * MessageRejected: The message was rejected because it contained a virus.
+	//
+	//    * MailFromDomainNotVerified: The sender's email address or domain was
+	//    not verified.
+	//
+	//    * ConfigurationSetDoesNotExist: The configuration set you specified does
+	//    not exist.
+	//
+	//    * TemplateDoesNotExist: The template you specified does not exist.
+	//
+	//    * AccountSuspended: Your account has been shut down because of issues
+	//    related to your email sending practices.
+	//
+	//    * AccountThrottled: The number of emails you can send has been reduced
+	//    because your account has exceeded its allocated sending limit.
+	//
+	//    * AccountDailyQuotaExceeded: You have reached or exceeded the maximum
+	//    number of emails you can send from your account in a 24-hour period.
+	//
+	//    * InvalidSendingPoolName: The configuration set you specified refers to
+	//    an IP pool that does not exist.
+	//
+	//    * AccountSendingPaused: Email sending for the Amazon SES account was disabled
+	//    using the UpdateAccountSendingEnabled operation.
+	//
+	//    * ConfigurationSetSendingPaused: Email sending for this configuration
+	//    set was disabled using the UpdateConfigurationSetSendingEnabled operation.
+	//
+	//    * InvalidParameterValue: One or more of the parameters you specified when
+	//    calling this operation was invalid. See the error message for additional
+	//    information.
+	//
+	//    * TransientFailure: Amazon SES was unable to process your request because
+	//    of a temporary issue.
+	//
+	//    * Failed: Amazon SES was unable to process your request. See the error
+	//    message for additional information.
+	Status *string `type:"string" enum:"BulkEmailStatus"`
+}
+
+// String returns the string representation
+func (s BulkEmailDestinationStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BulkEmailDestinationStatus) GoString() string {
+	return s.String()
+}
+
+// SetError sets the Error field's value.
+func (s *BulkEmailDestinationStatus) SetError(v string) *BulkEmailDestinationStatus {
+	s.Error = &v
+	return s
+}
+
+// SetMessageId sets the MessageId field's value.
+func (s *BulkEmailDestinationStatus) SetMessageId(v string) *BulkEmailDestinationStatus {
+	s.MessageId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *BulkEmailDestinationStatus) SetStatus(v string) *BulkEmailDestinationStatus {
+	s.Status = &v
 	return s
 }
 
@@ -5751,6 +7036,68 @@ func (s CreateReceiptRuleSetOutput) GoString() string {
 	return s.String()
 }
 
+// Represents a request to create an email template. For more information, see
+// the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateTemplateRequest
+type CreateTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the email, composed of a subject line, an HTML part, and a
+	// text-only part.
+	//
+	// Template is a required field
+	Template *Template `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateTemplateInput"}
+	if s.Template == nil {
+		invalidParams.Add(request.NewErrParamRequired("Template"))
+	}
+	if s.Template != nil {
+		if err := s.Template.Validate(); err != nil {
+			invalidParams.AddNested("Template", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplate sets the Template field's value.
+func (s *CreateTemplateInput) SetTemplate(v *Template) *CreateTemplateInput {
+	s.Template = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/CreateTemplateResponse
+type CreateTemplateOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTemplateOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a request to delete a configuration set event destination. Configuration
 // set event destinations are associated with configuration sets, which enable
 // you to publish email sending events. For information about using configuration
@@ -6265,6 +7612,62 @@ func (s DeleteReceiptRuleSetOutput) GoString() string {
 	return s.String()
 }
 
+// Represents a request to delete an email template. For more information, see
+// the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteTemplateRequest
+type DeleteTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the template to be deleted.
+	//
+	// TemplateName is a required field
+	TemplateName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DeleteTemplateInput) SetTemplateName(v string) *DeleteTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteTemplateResponse
+type DeleteTemplateOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTemplateOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a request to delete an email address from the list of email addresses
 // you have attempted to verify under your AWS account.
 // Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/DeleteVerifiedEmailAddressRequest
@@ -6441,6 +7844,9 @@ type DescribeConfigurationSetOutput struct {
 	// A list of event destinations associated with the configuration set.
 	EventDestinations []*EventDestination `type:"list"`
 
+	// An object that represents the reputation settings for the configuration set.
+	ReputationOptions *ReputationOptions `type:"structure"`
+
 	// The name of the custom open and click tracking domain associated with the
 	// configuration set.
 	TrackingOptions *TrackingOptions `type:"structure"`
@@ -6465,6 +7871,12 @@ func (s *DescribeConfigurationSetOutput) SetConfigurationSet(v *ConfigurationSet
 // SetEventDestinations sets the EventDestinations field's value.
 func (s *DescribeConfigurationSetOutput) SetEventDestinations(v []*EventDestination) *DescribeConfigurationSetOutput {
 	s.EventDestinations = v
+	return s
+}
+
+// SetReputationOptions sets the ReputationOptions field's value.
+func (s *DescribeConfigurationSetOutput) SetReputationOptions(v *ReputationOptions) *DescribeConfigurationSetOutput {
+	s.ReputationOptions = v
 	return s
 }
 
@@ -6866,6 +8278,48 @@ func (s *ExtensionField) SetName(v string) *ExtensionField {
 // SetValue sets the Value field's value.
 func (s *ExtensionField) SetValue(v string) *ExtensionField {
 	s.Value = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabledInput
+type GetAccountSendingEnabledInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetAccountSendingEnabledInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAccountSendingEnabledInput) GoString() string {
+	return s.String()
+}
+
+// Represents a request to return the email sending status for your Amazon SES
+// account.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetAccountSendingEnabledResponse
+type GetAccountSendingEnabledOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes whether email sending is enabled or disabled for your Amazon SES
+	// account.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s GetAccountSendingEnabledOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetAccountSendingEnabledOutput) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *GetAccountSendingEnabledOutput) SetEnabled(v bool) *GetAccountSendingEnabledOutput {
+	s.Enabled = &v
 	return s
 }
 
@@ -7347,6 +8801,70 @@ func (s GetSendStatisticsOutput) GoString() string {
 // SetSendDataPoints sets the SendDataPoints field's value.
 func (s *GetSendStatisticsOutput) SetSendDataPoints(v []*SendDataPoint) *GetSendStatisticsOutput {
 	s.SendDataPoints = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetTemplateRequest
+type GetTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the template you want to retrieve.
+	//
+	// TemplateName is a required field
+	TemplateName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *GetTemplateInput) SetTemplateName(v string) *GetTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/GetTemplateResponse
+type GetTemplateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the email, composed of a subject line, an HTML part, and a
+	// text-only part.
+	Template *Template `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetTemplate sets the Template field's value.
+func (s *GetTemplateOutput) SetTemplate(v *Template) *GetTemplateOutput {
+	s.Template = v
 	return s
 }
 
@@ -8096,6 +9614,76 @@ func (s *ListReceiptRuleSetsOutput) SetNextToken(v string) *ListReceiptRuleSetsO
 // SetRuleSets sets the RuleSets field's value.
 func (s *ListReceiptRuleSetsOutput) SetRuleSets(v []*ReceiptRuleSetMetadata) *ListReceiptRuleSetsOutput {
 	s.RuleSets = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListTemplatesRequest
+type ListTemplatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of templates to return. This value must be at least 1
+	// and less than or equal to 10. If you do not specify a value, or if you specify
+	// a value less than 1 or greater than 10, the operation will return up to 10
+	// results.
+	MaxItems *int64 `type:"integer"`
+
+	// The token to use for pagination.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListTemplatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTemplatesInput) GoString() string {
+	return s.String()
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListTemplatesInput) SetMaxItems(v int64) *ListTemplatesInput {
+	s.MaxItems = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTemplatesInput) SetNextToken(v string) *ListTemplatesInput {
+	s.NextToken = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ListTemplatesResponse
+type ListTemplatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use for pagination.
+	NextToken *string `type:"string"`
+
+	// An array the contains the name of creation time stamp for each template in
+	// your Amazon SES account.
+	TemplatesMetadata []*TemplateMetadata `type:"list"`
+}
+
+// String returns the string representation
+func (s ListTemplatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTemplatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTemplatesOutput) SetNextToken(v string) *ListTemplatesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTemplatesMetadata sets the TemplatesMetadata field's value.
+func (s *ListTemplatesOutput) SetTemplatesMetadata(v []*TemplateMetadata) *ListTemplatesOutput {
+	s.TemplatesMetadata = v
 	return s
 }
 
@@ -9145,6 +10733,65 @@ func (s ReorderReceiptRuleSetOutput) GoString() string {
 	return s.String()
 }
 
+// Contains information about the reputation settings for a configuration set.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/ReputationOptions
+type ReputationOptions struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time at which the reputation metrics for the configuration set
+	// were last reset. Resetting these metrics is known as a fresh start.
+	//
+	// When you disable email sending for a configuration set using UpdateConfigurationSetSendingEnabled
+	// and later re-enable it, the reputation metrics for the configuration set
+	// (but not for the entire Amazon SES account) are reset.
+	//
+	// If email sending for the configuration set has never been disabled and later
+	// re-enabled, the value of this attribute is null.
+	LastFreshStart *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+
+	// Describes whether or not Amazon SES publishes reputation metrics for the
+	// configuration set, such as bounce and complaint rates, to Amazon CloudWatch.
+	//
+	// If the value is true, reputation metrics are published. If the value is false,
+	// reputation metrics are not published. The default value is false.
+	ReputationMetricsEnabled *bool `type:"boolean"`
+
+	// Describes whether email sending is enabled or disabled for the configuration
+	// set. If the value is true, then Amazon SES will send emails that use the
+	// configuration set. If the value is false, Amazon SES will not send emails
+	// that use the configuration set. The default value is true. You can change
+	// this setting using UpdateConfigurationSetSendingEnabled.
+	SendingEnabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s ReputationOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReputationOptions) GoString() string {
+	return s.String()
+}
+
+// SetLastFreshStart sets the LastFreshStart field's value.
+func (s *ReputationOptions) SetLastFreshStart(v time.Time) *ReputationOptions {
+	s.LastFreshStart = &v
+	return s
+}
+
+// SetReputationMetricsEnabled sets the ReputationMetricsEnabled field's value.
+func (s *ReputationOptions) SetReputationMetricsEnabled(v bool) *ReputationOptions {
+	s.ReputationMetricsEnabled = &v
+	return s
+}
+
+// SetSendingEnabled sets the SendingEnabled field's value.
+func (s *ReputationOptions) SetSendingEnabled(v bool) *ReputationOptions {
+	s.SendingEnabled = &v
+	return s
+}
+
 // When included in a receipt rule, this action saves the received message to
 // an Amazon Simple Storage Service (Amazon S3) bucket and, optionally, publishes
 // a notification to Amazon Simple Notification Service (Amazon SNS).
@@ -9520,6 +11167,242 @@ func (s SendBounceOutput) GoString() string {
 // SetMessageId sets the MessageId field's value.
 func (s *SendBounceOutput) SetMessageId(v string) *SendBounceOutput {
 	s.MessageId = &v
+	return s
+}
+
+// Represents a request to send a templated email to multiple destinations using
+// Amazon SES. For more information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendBulkTemplatedEmailRequest
+type SendBulkTemplatedEmailInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the configuration set to use when you send an email using SendBulkTemplatedEmail.
+	ConfigurationSetName *string `type:"string"`
+
+	// A list of tags, in the form of name/value pairs, to apply to an email that
+	// you send to a destination using SendBulkTemplatedEmail.
+	DefaultTags []*MessageTag `type:"list"`
+
+	// A list of replacement values to apply to the template when replacement data
+	// is not specified in a Destination object. These values act as a default or
+	// fallback option when no other data is available.
+	//
+	// The template data is a JSON object, typically consisting of key-value pairs
+	// in which the keys correspond to replacement tags in the email template.
+	DefaultTemplateData *string `type:"string"`
+
+	// One or more Destination objects. All of the recipients in a Destination will
+	// receive the same version of the email. You can specify up to 50 Destination
+	// objects within a Destinations array.
+	//
+	// Destinations is a required field
+	Destinations []*BulkEmailDestination `type:"list" required:"true"`
+
+	// The reply-to email address(es) for the message. If the recipient replies
+	// to the message, each reply-to address will receive the reply.
+	ReplyToAddresses []*string `type:"list"`
+
+	// The email address that bounces and complaints will be forwarded to when feedback
+	// forwarding is enabled. If the message cannot be delivered to the recipient,
+	// then an error message will be returned from the recipient's ISP; this message
+	// will then be forwarded to the email address specified by the ReturnPath parameter.
+	// The ReturnPath parameter is never overwritten. This email address must be
+	// either individually verified with Amazon SES, or from a domain that has been
+	// verified with Amazon SES.
+	ReturnPath *string `type:"string"`
+
+	// This parameter is used only for sending authorization. It is the ARN of the
+	// identity that is associated with the sending authorization policy that permits
+	// you to use the email address specified in the ReturnPath parameter.
+	//
+	// For example, if the owner of example.com (which has ARN arn:aws:ses:us-east-1:123456789012:identity/example.com)
+	// attaches a policy to it that authorizes you to use feedback@example.com,
+	// then you would specify the ReturnPathArn to be arn:aws:ses:us-east-1:123456789012:identity/example.com,
+	// and the ReturnPath to be feedback@example.com.
+	//
+	// For more information about sending authorization, see the Amazon SES Developer
+	// Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
+	ReturnPathArn *string `type:"string"`
+
+	// The email address that is sending the email. This email address must be either
+	// individually verified with Amazon SES, or from a domain that has been verified
+	// with Amazon SES. For information about verifying identities, see the Amazon
+	// SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html).
+	//
+	// If you are sending on behalf of another user and have been permitted to do
+	// so by a sending authorization policy, then you must also specify the SourceArn
+	// parameter. For more information about sending authorization, see the Amazon
+	// SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
+	//
+	// In all cases, the email address must be 7-bit ASCII. If the text must contain
+	// any other characters, then you must use MIME encoded-word syntax (RFC 2047)
+	// instead of a literal string. MIME encoded-word syntax uses the following
+	// form: =?charset?encoding?encoded-text?=. For more information, see RFC 2047
+	// (https://tools.ietf.org/html/rfc2047).
+	//
+	// Source is a required field
+	Source *string `type:"string" required:"true"`
+
+	// This parameter is used only for sending authorization. It is the ARN of the
+	// identity that is associated with the sending authorization policy that permits
+	// you to send for the email address specified in the Source parameter.
+	//
+	// For example, if the owner of example.com (which has ARN arn:aws:ses:us-east-1:123456789012:identity/example.com)
+	// attaches a policy to it that authorizes you to send from user@example.com,
+	// then you would specify the SourceArn to be arn:aws:ses:us-east-1:123456789012:identity/example.com,
+	// and the Source to be user@example.com.
+	//
+	// For more information about sending authorization, see the Amazon SES Developer
+	// Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
+	SourceArn *string `type:"string"`
+
+	// The template to use when sending this email.
+	//
+	// Template is a required field
+	Template *string `type:"string" required:"true"`
+
+	// The ARN of the template to use when sending this email.
+	TemplateArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SendBulkTemplatedEmailInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SendBulkTemplatedEmailInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SendBulkTemplatedEmailInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SendBulkTemplatedEmailInput"}
+	if s.Destinations == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destinations"))
+	}
+	if s.Source == nil {
+		invalidParams.Add(request.NewErrParamRequired("Source"))
+	}
+	if s.Template == nil {
+		invalidParams.Add(request.NewErrParamRequired("Template"))
+	}
+	if s.DefaultTags != nil {
+		for i, v := range s.DefaultTags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "DefaultTags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Destinations != nil {
+		for i, v := range s.Destinations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Destinations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigurationSetName sets the ConfigurationSetName field's value.
+func (s *SendBulkTemplatedEmailInput) SetConfigurationSetName(v string) *SendBulkTemplatedEmailInput {
+	s.ConfigurationSetName = &v
+	return s
+}
+
+// SetDefaultTags sets the DefaultTags field's value.
+func (s *SendBulkTemplatedEmailInput) SetDefaultTags(v []*MessageTag) *SendBulkTemplatedEmailInput {
+	s.DefaultTags = v
+	return s
+}
+
+// SetDefaultTemplateData sets the DefaultTemplateData field's value.
+func (s *SendBulkTemplatedEmailInput) SetDefaultTemplateData(v string) *SendBulkTemplatedEmailInput {
+	s.DefaultTemplateData = &v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *SendBulkTemplatedEmailInput) SetDestinations(v []*BulkEmailDestination) *SendBulkTemplatedEmailInput {
+	s.Destinations = v
+	return s
+}
+
+// SetReplyToAddresses sets the ReplyToAddresses field's value.
+func (s *SendBulkTemplatedEmailInput) SetReplyToAddresses(v []*string) *SendBulkTemplatedEmailInput {
+	s.ReplyToAddresses = v
+	return s
+}
+
+// SetReturnPath sets the ReturnPath field's value.
+func (s *SendBulkTemplatedEmailInput) SetReturnPath(v string) *SendBulkTemplatedEmailInput {
+	s.ReturnPath = &v
+	return s
+}
+
+// SetReturnPathArn sets the ReturnPathArn field's value.
+func (s *SendBulkTemplatedEmailInput) SetReturnPathArn(v string) *SendBulkTemplatedEmailInput {
+	s.ReturnPathArn = &v
+	return s
+}
+
+// SetSource sets the Source field's value.
+func (s *SendBulkTemplatedEmailInput) SetSource(v string) *SendBulkTemplatedEmailInput {
+	s.Source = &v
+	return s
+}
+
+// SetSourceArn sets the SourceArn field's value.
+func (s *SendBulkTemplatedEmailInput) SetSourceArn(v string) *SendBulkTemplatedEmailInput {
+	s.SourceArn = &v
+	return s
+}
+
+// SetTemplate sets the Template field's value.
+func (s *SendBulkTemplatedEmailInput) SetTemplate(v string) *SendBulkTemplatedEmailInput {
+	s.Template = &v
+	return s
+}
+
+// SetTemplateArn sets the TemplateArn field's value.
+func (s *SendBulkTemplatedEmailInput) SetTemplateArn(v string) *SendBulkTemplatedEmailInput {
+	s.TemplateArn = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendBulkTemplatedEmailResponse
+type SendBulkTemplatedEmailOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique message identifier returned from the SendBulkTemplatedEmail action.
+	//
+	// Status is a required field
+	Status []*BulkEmailDestinationStatus `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s SendBulkTemplatedEmailOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SendBulkTemplatedEmailOutput) GoString() string {
+	return s.String()
+}
+
+// SetStatus sets the Status field's value.
+func (s *SendBulkTemplatedEmailOutput) SetStatus(v []*BulkEmailDestinationStatus) *SendBulkTemplatedEmailOutput {
+	s.Status = v
 	return s
 }
 
@@ -10004,6 +11887,234 @@ func (s SendRawEmailOutput) GoString() string {
 
 // SetMessageId sets the MessageId field's value.
 func (s *SendRawEmailOutput) SetMessageId(v string) *SendRawEmailOutput {
+	s.MessageId = &v
+	return s
+}
+
+// Represents a request to send a templated email using Amazon SES. For more
+// information, see the Amazon SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-personalized-email-api.html).
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendTemplatedEmailRequest
+type SendTemplatedEmailInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the configuration set to use when you send an email using SendTemplatedEmail.
+	ConfigurationSetName *string `type:"string"`
+
+	// The destination for this email, composed of To:, CC:, and BCC: fields. A
+	// Destination can include up to 50 recipients across these three fields.
+	//
+	// Destination is a required field
+	Destination *Destination `type:"structure" required:"true"`
+
+	// The reply-to email address(es) for the message. If the recipient replies
+	// to the message, each reply-to address will receive the reply.
+	ReplyToAddresses []*string `type:"list"`
+
+	// The email address that bounces and complaints will be forwarded to when feedback
+	// forwarding is enabled. If the message cannot be delivered to the recipient,
+	// then an error message will be returned from the recipient's ISP; this message
+	// will then be forwarded to the email address specified by the ReturnPath parameter.
+	// The ReturnPath parameter is never overwritten. This email address must be
+	// either individually verified with Amazon SES, or from a domain that has been
+	// verified with Amazon SES.
+	ReturnPath *string `type:"string"`
+
+	// This parameter is used only for sending authorization. It is the ARN of the
+	// identity that is associated with the sending authorization policy that permits
+	// you to use the email address specified in the ReturnPath parameter.
+	//
+	// For example, if the owner of example.com (which has ARN arn:aws:ses:us-east-1:123456789012:identity/example.com)
+	// attaches a policy to it that authorizes you to use feedback@example.com,
+	// then you would specify the ReturnPathArn to be arn:aws:ses:us-east-1:123456789012:identity/example.com,
+	// and the ReturnPath to be feedback@example.com.
+	//
+	// For more information about sending authorization, see the Amazon SES Developer
+	// Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
+	ReturnPathArn *string `type:"string"`
+
+	// The email address that is sending the email. This email address must be either
+	// individually verified with Amazon SES, or from a domain that has been verified
+	// with Amazon SES. For information about verifying identities, see the Amazon
+	// SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html).
+	//
+	// If you are sending on behalf of another user and have been permitted to do
+	// so by a sending authorization policy, then you must also specify the SourceArn
+	// parameter. For more information about sending authorization, see the Amazon
+	// SES Developer Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
+	//
+	// In all cases, the email address must be 7-bit ASCII. If the text must contain
+	// any other characters, then you must use MIME encoded-word syntax (RFC 2047)
+	// instead of a literal string. MIME encoded-word syntax uses the following
+	// form: =?charset?encoding?encoded-text?=. For more information, see RFC 2047
+	// (https://tools.ietf.org/html/rfc2047).
+	//
+	// Source is a required field
+	Source *string `type:"string" required:"true"`
+
+	// This parameter is used only for sending authorization. It is the ARN of the
+	// identity that is associated with the sending authorization policy that permits
+	// you to send for the email address specified in the Source parameter.
+	//
+	// For example, if the owner of example.com (which has ARN arn:aws:ses:us-east-1:123456789012:identity/example.com)
+	// attaches a policy to it that authorizes you to send from user@example.com,
+	// then you would specify the SourceArn to be arn:aws:ses:us-east-1:123456789012:identity/example.com,
+	// and the Source to be user@example.com.
+	//
+	// For more information about sending authorization, see the Amazon SES Developer
+	// Guide (http://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html).
+	SourceArn *string `type:"string"`
+
+	// A list of tags, in the form of name/value pairs, to apply to an email that
+	// you send using SendTemplatedEmail. Tags correspond to characteristics of
+	// the email that you define, so that you can publish email sending events.
+	Tags []*MessageTag `type:"list"`
+
+	// The template to use when sending this email.
+	//
+	// Template is a required field
+	Template *string `type:"string" required:"true"`
+
+	// The ARN of the template to use when sending this email.
+	TemplateArn *string `type:"string"`
+
+	// A list of replacement values to apply to the template. This parameter is
+	// a JSON object, typically consisting of key-value pairs in which the keys
+	// correspond to replacement tags in the email template.
+	//
+	// TemplateData is a required field
+	TemplateData *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SendTemplatedEmailInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SendTemplatedEmailInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SendTemplatedEmailInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SendTemplatedEmailInput"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+	if s.Source == nil {
+		invalidParams.Add(request.NewErrParamRequired("Source"))
+	}
+	if s.Template == nil {
+		invalidParams.Add(request.NewErrParamRequired("Template"))
+	}
+	if s.TemplateData == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateData"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigurationSetName sets the ConfigurationSetName field's value.
+func (s *SendTemplatedEmailInput) SetConfigurationSetName(v string) *SendTemplatedEmailInput {
+	s.ConfigurationSetName = &v
+	return s
+}
+
+// SetDestination sets the Destination field's value.
+func (s *SendTemplatedEmailInput) SetDestination(v *Destination) *SendTemplatedEmailInput {
+	s.Destination = v
+	return s
+}
+
+// SetReplyToAddresses sets the ReplyToAddresses field's value.
+func (s *SendTemplatedEmailInput) SetReplyToAddresses(v []*string) *SendTemplatedEmailInput {
+	s.ReplyToAddresses = v
+	return s
+}
+
+// SetReturnPath sets the ReturnPath field's value.
+func (s *SendTemplatedEmailInput) SetReturnPath(v string) *SendTemplatedEmailInput {
+	s.ReturnPath = &v
+	return s
+}
+
+// SetReturnPathArn sets the ReturnPathArn field's value.
+func (s *SendTemplatedEmailInput) SetReturnPathArn(v string) *SendTemplatedEmailInput {
+	s.ReturnPathArn = &v
+	return s
+}
+
+// SetSource sets the Source field's value.
+func (s *SendTemplatedEmailInput) SetSource(v string) *SendTemplatedEmailInput {
+	s.Source = &v
+	return s
+}
+
+// SetSourceArn sets the SourceArn field's value.
+func (s *SendTemplatedEmailInput) SetSourceArn(v string) *SendTemplatedEmailInput {
+	s.SourceArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *SendTemplatedEmailInput) SetTags(v []*MessageTag) *SendTemplatedEmailInput {
+	s.Tags = v
+	return s
+}
+
+// SetTemplate sets the Template field's value.
+func (s *SendTemplatedEmailInput) SetTemplate(v string) *SendTemplatedEmailInput {
+	s.Template = &v
+	return s
+}
+
+// SetTemplateArn sets the TemplateArn field's value.
+func (s *SendTemplatedEmailInput) SetTemplateArn(v string) *SendTemplatedEmailInput {
+	s.TemplateArn = &v
+	return s
+}
+
+// SetTemplateData sets the TemplateData field's value.
+func (s *SendTemplatedEmailInput) SetTemplateData(v string) *SendTemplatedEmailInput {
+	s.TemplateData = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/SendTemplatedEmailResponse
+type SendTemplatedEmailOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique message identifier returned from the SendTemplatedEmail action.
+	//
+	// MessageId is a required field
+	MessageId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SendTemplatedEmailOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SendTemplatedEmailOutput) GoString() string {
+	return s.String()
+}
+
+// SetMessageId sets the MessageId field's value.
+func (s *SendTemplatedEmailOutput) SetMessageId(v string) *SendTemplatedEmailOutput {
 	s.MessageId = &v
 	return s
 }
@@ -10611,6 +12722,190 @@ func (s *StopAction) SetTopicArn(v string) *StopAction {
 	return s
 }
 
+// The content of the email, composed of a subject line, an HTML part, and a
+// text-only part.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/Template
+type Template struct {
+	_ struct{} `type:"structure"`
+
+	// The HTML body of the email.
+	HtmlPart *string `type:"string"`
+
+	// The subject line of the email.
+	SubjectPart *string `type:"string"`
+
+	// The name of the template. You will refer to this name when you send email
+	// using the SendTemplatedEmail or SendBulkTemplatedEmail operations.
+	//
+	// TemplateName is a required field
+	TemplateName *string `type:"string" required:"true"`
+
+	// The email body that will be visible to recipients whose email clients do
+	// not display HTML.
+	TextPart *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Template) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Template) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Template) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Template"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHtmlPart sets the HtmlPart field's value.
+func (s *Template) SetHtmlPart(v string) *Template {
+	s.HtmlPart = &v
+	return s
+}
+
+// SetSubjectPart sets the SubjectPart field's value.
+func (s *Template) SetSubjectPart(v string) *Template {
+	s.SubjectPart = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *Template) SetTemplateName(v string) *Template {
+	s.TemplateName = &v
+	return s
+}
+
+// SetTextPart sets the TextPart field's value.
+func (s *Template) SetTextPart(v string) *Template {
+	s.TextPart = &v
+	return s
+}
+
+// Information about an email template.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TemplateMetadata
+type TemplateMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The time and date the template was created.
+	CreatedTimestamp *time.Time `type:"timestamp" timestampFormat:"iso8601"`
+
+	// The name of the template.
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s TemplateMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TemplateMetadata) GoString() string {
+	return s.String()
+}
+
+// SetCreatedTimestamp sets the CreatedTimestamp field's value.
+func (s *TemplateMetadata) SetCreatedTimestamp(v time.Time) *TemplateMetadata {
+	s.CreatedTimestamp = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *TemplateMetadata) SetName(v string) *TemplateMetadata {
+	s.Name = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TestRenderTemplateRequest
+type TestRenderTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of replacement values to apply to the template. This parameter is
+	// a JSON object, typically consisting of key-value pairs in which the keys
+	// correspond to replacement tags in the email template.
+	//
+	// TemplateData is a required field
+	TemplateData *string `type:"string" required:"true"`
+
+	// The name of the template that you want to render.
+	//
+	// TemplateName is a required field
+	TemplateName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TestRenderTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TestRenderTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TestRenderTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TestRenderTemplateInput"}
+	if s.TemplateData == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateData"))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateData sets the TemplateData field's value.
+func (s *TestRenderTemplateInput) SetTemplateData(v string) *TestRenderTemplateInput {
+	s.TemplateData = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *TestRenderTemplateInput) SetTemplateName(v string) *TestRenderTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/TestRenderTemplateResponse
+type TestRenderTemplateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The complete MIME message rendered by applying the data in the TemplateData
+	// parameter to the template specified in the TemplateName parameter.
+	RenderedTemplate *string `type:"string"`
+}
+
+// String returns the string representation
+func (s TestRenderTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TestRenderTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetRenderedTemplate sets the RenderedTemplate field's value.
+func (s *TestRenderTemplateOutput) SetRenderedTemplate(v string) *TestRenderTemplateOutput {
+	s.RenderedTemplate = &v
+	return s
+}
+
 // A domain that is used to redirect email recipients to an Amazon SES-operated
 // domain. This domain captures open and click events generated by Amazon SES
 // emails.
@@ -10641,6 +12936,48 @@ func (s TrackingOptions) GoString() string {
 func (s *TrackingOptions) SetCustomRedirectDomain(v string) *TrackingOptions {
 	s.CustomRedirectDomain = &v
 	return s
+}
+
+// Represents a request to enable or disable the email sending capabilities
+// for your entire Amazon SES account.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabledRequest
+type UpdateAccountSendingEnabledInput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes whether email sending is enabled or disabled for your Amazon SES
+	// account.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s UpdateAccountSendingEnabledInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAccountSendingEnabledInput) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *UpdateAccountSendingEnabledInput) SetEnabled(v bool) *UpdateAccountSendingEnabledInput {
+	s.Enabled = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateAccountSendingEnabledOutput
+type UpdateAccountSendingEnabledOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateAccountSendingEnabledOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAccountSendingEnabledOutput) GoString() string {
+	return s.String()
 }
 
 // Represents a request to update the event destination of a configuration set.
@@ -10719,6 +13056,148 @@ func (s UpdateConfigurationSetEventDestinationOutput) String() string {
 
 // GoString returns the string representation
 func (s UpdateConfigurationSetEventDestinationOutput) GoString() string {
+	return s.String()
+}
+
+// Represents a request to modify the reputation metric publishing settings
+// for a configuration set.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabledRequest
+type UpdateConfigurationSetReputationMetricsEnabledInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the configuration set that you want to update.
+	//
+	// ConfigurationSetName is a required field
+	ConfigurationSetName *string `type:"string" required:"true"`
+
+	// Describes whether or not Amazon SES will publish reputation metrics for the
+	// configuration set, such as bounce and complaint rates, to Amazon CloudWatch.
+	//
+	// Enabled is a required field
+	Enabled *bool `type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationSetReputationMetricsEnabledInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationSetReputationMetricsEnabledInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateConfigurationSetReputationMetricsEnabledInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateConfigurationSetReputationMetricsEnabledInput"}
+	if s.ConfigurationSetName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfigurationSetName"))
+	}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigurationSetName sets the ConfigurationSetName field's value.
+func (s *UpdateConfigurationSetReputationMetricsEnabledInput) SetConfigurationSetName(v string) *UpdateConfigurationSetReputationMetricsEnabledInput {
+	s.ConfigurationSetName = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *UpdateConfigurationSetReputationMetricsEnabledInput) SetEnabled(v bool) *UpdateConfigurationSetReputationMetricsEnabledInput {
+	s.Enabled = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetReputationMetricsEnabledOutput
+type UpdateConfigurationSetReputationMetricsEnabledOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationSetReputationMetricsEnabledOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationSetReputationMetricsEnabledOutput) GoString() string {
+	return s.String()
+}
+
+// Represents a request to enable or disable the email sending capabilities
+// for a specific configuration set.
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabledRequest
+type UpdateConfigurationSetSendingEnabledInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the configuration set that you want to update.
+	//
+	// ConfigurationSetName is a required field
+	ConfigurationSetName *string `type:"string" required:"true"`
+
+	// Describes whether email sending is enabled or disabled for the configuration
+	// set.
+	//
+	// Enabled is a required field
+	Enabled *bool `type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationSetSendingEnabledInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationSetSendingEnabledInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateConfigurationSetSendingEnabledInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateConfigurationSetSendingEnabledInput"}
+	if s.ConfigurationSetName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfigurationSetName"))
+	}
+	if s.Enabled == nil {
+		invalidParams.Add(request.NewErrParamRequired("Enabled"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigurationSetName sets the ConfigurationSetName field's value.
+func (s *UpdateConfigurationSetSendingEnabledInput) SetConfigurationSetName(v string) *UpdateConfigurationSetSendingEnabledInput {
+	s.ConfigurationSetName = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *UpdateConfigurationSetSendingEnabledInput) SetEnabled(v bool) *UpdateConfigurationSetSendingEnabledInput {
+	s.Enabled = &v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateConfigurationSetSendingEnabledOutput
+type UpdateConfigurationSetSendingEnabledOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationSetSendingEnabledOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationSetSendingEnabledOutput) GoString() string {
 	return s.String()
 }
 
@@ -10873,6 +13352,66 @@ func (s UpdateReceiptRuleOutput) String() string {
 
 // GoString returns the string representation
 func (s UpdateReceiptRuleOutput) GoString() string {
+	return s.String()
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateTemplateRequest
+type UpdateTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the email, composed of a subject line, an HTML part, and a
+	// text-only part.
+	//
+	// Template is a required field
+	Template *Template `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateTemplateInput"}
+	if s.Template == nil {
+		invalidParams.Add(request.NewErrParamRequired("Template"))
+	}
+	if s.Template != nil {
+		if err := s.Template.Validate(); err != nil {
+			invalidParams.AddNested("Template", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplate sets the Template field's value.
+func (s *UpdateTemplateInput) SetTemplate(v *Template) *UpdateTemplateInput {
+	s.Template = v
+	return s
+}
+
+// Please also see https://docs.aws.amazon.com/goto/WebAPI/email-2010-12-01/UpdateTemplateResponse
+type UpdateTemplateOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateTemplateOutput) GoString() string {
 	return s.String()
 }
 
@@ -11240,11 +13779,58 @@ const (
 )
 
 const (
+	// BulkEmailStatusSuccess is a BulkEmailStatus enum value
+	BulkEmailStatusSuccess = "Success"
+
+	// BulkEmailStatusMessageRejected is a BulkEmailStatus enum value
+	BulkEmailStatusMessageRejected = "MessageRejected"
+
+	// BulkEmailStatusMailFromDomainNotVerified is a BulkEmailStatus enum value
+	BulkEmailStatusMailFromDomainNotVerified = "MailFromDomainNotVerified"
+
+	// BulkEmailStatusConfigurationSetDoesNotExist is a BulkEmailStatus enum value
+	BulkEmailStatusConfigurationSetDoesNotExist = "ConfigurationSetDoesNotExist"
+
+	// BulkEmailStatusTemplateDoesNotExist is a BulkEmailStatus enum value
+	BulkEmailStatusTemplateDoesNotExist = "TemplateDoesNotExist"
+
+	// BulkEmailStatusAccountSuspended is a BulkEmailStatus enum value
+	BulkEmailStatusAccountSuspended = "AccountSuspended"
+
+	// BulkEmailStatusAccountThrottled is a BulkEmailStatus enum value
+	BulkEmailStatusAccountThrottled = "AccountThrottled"
+
+	// BulkEmailStatusAccountDailyQuotaExceeded is a BulkEmailStatus enum value
+	BulkEmailStatusAccountDailyQuotaExceeded = "AccountDailyQuotaExceeded"
+
+	// BulkEmailStatusInvalidSendingPoolName is a BulkEmailStatus enum value
+	BulkEmailStatusInvalidSendingPoolName = "InvalidSendingPoolName"
+
+	// BulkEmailStatusAccountSendingPaused is a BulkEmailStatus enum value
+	BulkEmailStatusAccountSendingPaused = "AccountSendingPaused"
+
+	// BulkEmailStatusConfigurationSetSendingPaused is a BulkEmailStatus enum value
+	BulkEmailStatusConfigurationSetSendingPaused = "ConfigurationSetSendingPaused"
+
+	// BulkEmailStatusInvalidParameterValue is a BulkEmailStatus enum value
+	BulkEmailStatusInvalidParameterValue = "InvalidParameterValue"
+
+	// BulkEmailStatusTransientFailure is a BulkEmailStatus enum value
+	BulkEmailStatusTransientFailure = "TransientFailure"
+
+	// BulkEmailStatusFailed is a BulkEmailStatus enum value
+	BulkEmailStatusFailed = "Failed"
+)
+
+const (
 	// ConfigurationSetAttributeEventDestinations is a ConfigurationSetAttribute enum value
 	ConfigurationSetAttributeEventDestinations = "eventDestinations"
 
 	// ConfigurationSetAttributeTrackingOptions is a ConfigurationSetAttribute enum value
 	ConfigurationSetAttributeTrackingOptions = "trackingOptions"
+
+	// ConfigurationSetAttributeReputationOptions is a ConfigurationSetAttribute enum value
+	ConfigurationSetAttributeReputationOptions = "reputationOptions"
 )
 
 const (
@@ -11310,6 +13896,9 @@ const (
 
 	// EventTypeClick is a EventType enum value
 	EventTypeClick = "click"
+
+	// EventTypeRenderingFailure is a EventType enum value
+	EventTypeRenderingFailure = "renderingFailure"
 )
 
 const (
