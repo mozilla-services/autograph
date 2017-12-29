@@ -22,6 +22,7 @@ import (
 
 	"github.com/mozilla-services/yaml"
 	"go.mozilla.org/autograph/signer"
+	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/sops"
@@ -186,6 +187,11 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			}
 		case xpi.Type:
 			s, err = xpi.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case apk.Type:
+			s, err = apk.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
