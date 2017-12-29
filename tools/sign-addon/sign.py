@@ -45,11 +45,7 @@ def call_signing(file_path, guid, endpoint, signer, user, key):
     sigresp = json.loads(response.text)
     pkcs7 = b64decode(sigresp[0]["signature"])
     jar.make_signed(
-<<<<<<< HEAD
         signed_manifest=str(signed_manifest).encode("utf-8"),
-=======
-        signed_manifest=signed_manifest.__str__(),
->>>>>>> 0072b243... Rewrite sign-addon tool for python 3
         signature=pkcs7,
         sigpath=u'mozilla',
         outpath=temp_filename)
