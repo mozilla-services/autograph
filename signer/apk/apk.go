@@ -78,6 +78,10 @@ func (s *APKSigner) SignData(input []byte, options interface{}) (signer.Signatur
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: cannot initialize signed data")
 	}
+
+	// APKs are signed with SHA256
+	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA256)
+
 	err = toBeSigned.AddSigner(s.signingCert, s.signingKey, pkcs7.SignerInfoConfig{})
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: cannot sign")
