@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"time"
 
+	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
@@ -118,6 +119,8 @@ func main() {
 					sigStatus = verifyContentSignature(input, response, req.URL.RequestURI())
 				case xpi.Type:
 					sigStatus = verifyXPI(input, response)
+				case apk.Type:
+					sigStatus = verifyAPK(input, response)
 				default:
 					log.Fatal("unsupported signature type", response.Type)
 				}
@@ -196,6 +199,19 @@ func verifyXPI(input []byte, resp signatureresponse) bool {
 		log.Fatal(err)
 	}
 	err = sig.VerifyWithChain(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return true
+}
+
+func verifyAPK(input []byte, resp signatureresponse) bool {
+	log.Println(resp)
+	sig, err := apk.Unmarshal(resp.Signature, input)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = sig.Verify()
 	if err != nil {
 		log.Fatal(err)
 	}
