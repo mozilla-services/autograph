@@ -130,9 +130,25 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 	return
 }
 
+// Verify verifies an apk signature
+func (sig *Signature) Verify() error {
+	if !sig.Finished {
+		return errors.New("apk.Verify: cannot verify unfinished signature")
+	}
+	return sig.p7.Verify()
+}
+
 // String returns a PEM encoded PKCS7 block
 func (sig *Signature) String() string {
 	var buf bytes.Buffer
 	pem.Encode(&buf, &pem.Block{Type: "PKCS7", Bytes: sig.Data})
 	return string(buf.Bytes())
+}
+
+// Options is empty for this signer type
+type Options struct{}
+
+// GetDefaultOptions returns default options of the signer
+func (s *APKSigner) GetDefaultOptions() interface{} {
+	return Options{}
 }
