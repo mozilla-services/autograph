@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/autograph/signer"
@@ -44,6 +45,7 @@ type signatureresponse struct {
 // and calls the signers to generate signature responses.
 func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	rid := getRequestID(r)
+	starttime := time.Now()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
@@ -161,6 +163,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"signer_id":  sigresps[i].SignerID,
 			"input_hash": hashlog,
 			"user_id":    userid,
+			"t":          int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("signing operation succeeded")
 	}
 	respdata, err := json.Marshal(sigresps)
