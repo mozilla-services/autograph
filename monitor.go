@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"go.mozilla.org/autograph/signer"
 )
@@ -21,6 +23,8 @@ func (a *autographer) addMonitoring(monitoring authorization) error {
 }
 
 func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
+	rid := getRequestID(r)
+	starttime := time.Now()
 	userid, authorized, err := a.authorize(r, []byte(""))
 	if err != nil || !authorized {
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
@@ -64,5 +68,9 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(respdata)
-	log.Printf("monitoring operation succeeded")
+	log.WithFields(log.Fields{
+		"rid":     rid,
+		"user_id": userid,
+		"t":       int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
+	}).Info("monitoring operation succeeded")
 }
