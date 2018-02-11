@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"time"
 
@@ -71,10 +70,20 @@ func (s *APKSigner) Config() signer.Configuration {
 	}
 }
 
-// SignData takes input data and returns a PKCS7 detached signature
-func (s *APKSigner) SignData(input []byte, options interface{}) (signer.Signature, error) {
+// SignData takes an unsigned, unaligned APK in base64 form, generates the JAR manifests
+// and signs the signature file using the configured private key. The PKCS7 detached signature
+// and the manifests are then stored inside the ZIP file under META-INF, and the whole
+// archived is aligned. The returned data is the signed aligned APK.
+//
+// This implements apksigning v1, aka jarsigner. apksigning v2 is not supported.
+func (s *APKSigner) SignFile(input []byte, options interface{}) (signer.SignedFile, error) {
+	var signedFile []byte
+	manifest, sigfile, err := makeJARManifests(input)
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: cannot make JAR manifests from APK")
+	}
 	p7sig := new(Signature)
-	toBeSigned, err := pkcs7.NewSignedData(input)
+	toBeSigned, err := pkcs7.NewSignedData(sigfile)
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: cannot initialize signed data")
 	}
@@ -92,7 +101,13 @@ func (s *APKSigner) SignData(input []byte, options interface{}) (signer.Signatur
 		return nil, errors.Wrap(err, "apk: cannot finish signing data")
 	}
 	p7sig.Finished = true
-	return p7sig, nil
+
+	signedFile, err = repackAndAlignJAR(input, manifest, sigfile, p7sig.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: failed to repack and align APK")
+	}
+
+	return signedFile, nil
 }
 
 // Signature is a PKCS7 detached signature
@@ -100,34 +115,6 @@ type Signature struct {
 	p7       *pkcs7.PKCS7
 	Data     []byte
 	Finished bool
-}
-
-// Marshal returns the base64 representation of a PKCS7 detached signature
-func (sig *Signature) Marshal() (string, error) {
-	if !sig.Finished {
-		return "", errors.New("apk: cannot marshal unfinished signature")
-	}
-	if len(sig.Data) == 0 {
-		return "", errors.New("apk: cannot marshal empty signature data")
-	}
-	return base64.StdEncoding.EncodeToString(sig.Data), nil
-}
-
-// Unmarshal takes the base64 representation of a PKCS7 detached signature
-// and the content of the signed data, and returns a PKCS7 struct
-func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
-	sig = new(Signature)
-	sig.Data, err = base64.StdEncoding.DecodeString(signature)
-	if err != nil {
-		return sig, errors.Wrap(err, "apk.Unmarshal: failed to decode base64 signature")
-	}
-	sig.p7, err = pkcs7.Parse(sig.Data)
-	if err != nil {
-		return sig, errors.Wrap(err, "apk.Unmarshal: failed to parse pkcs7 signature")
-	}
-	sig.p7.Content = content
-	sig.Finished = true
-	return
 }
 
 // Verify verifies an apk signature
