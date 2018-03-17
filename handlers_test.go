@@ -22,6 +22,7 @@ import (
 	"strings"
 	"testing"
 
+	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
@@ -565,6 +566,19 @@ func verifyContentSignature(input, endpoint, signature, pubkey string) error {
 	}
 	return nil
 }
+
+func verifyAPKSignature(input, sig string) error {
+	rawInput, err := base64.StdEncoding.DecodeString(input)
+	if err != nil {
+		return err
+	}
+	pkcs7Sig, err := apk.Unmarshal(sig, []byte(rawInput))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return pkcs7Sig.Verify()
+}
+
 func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error) {
 	keyBytes, err := base64.StdEncoding.DecodeString(b64PubKey)
 	if err != nil {

@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"go.mozilla.org/autograph/signer/apk"
@@ -28,36 +29,52 @@ type signaturerequest struct {
 }
 
 type signatureresponse struct {
-	Ref       string `json:"ref"`
-	Type      string `json:"type"`
-	SignerID  string `json:"signer_id"`
-	PublicKey string `json:"public_key,omitempty"`
-	Signature string `json:"signature"`
+	Ref        string `json:"ref"`
+	Type       string `json:"type"`
+	SignerID   string `json:"signer_id"`
+	PublicKey  string `json:"public_key,omitempty"`
+	Signature  string `json:"signature"`
+	SignedFile string `json:"signed_file"`
 }
 
 func main() {
 	var (
-		userid, pass, sigreq, url string
-		iter, maxworkers          int
-		debug                     bool
+		userid, pass, data, url, infile, outfile, keyid string
+		iter, maxworkers                                int
+		debug                                           bool
+		err                                             error
+		requests                                        []signaturerequest
 	)
 	flag.StringVar(&userid, "u", "alice", "User ID")
 	flag.StringVar(&pass, "p", "fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu", "Secret passphrase")
-	flag.StringVar(&sigreq, "r", `[{"input": "Y2FyaWJvdW1hdXJpY2UK"}]`, "JSON signing request")
+	flag.StringVar(&data, "d", "Y2FyaWJvdW1hdXJpY2UK", "Base64 data to sign")
+	flag.StringVar(&infile, "f", ``, "Input file. Will decide on signing mode based on extension (apk or xpi). Overrides -r.")
+	flag.StringVar(&outfile, "o", ``, "Output file. If set, writes the signature to this file")
+	flag.StringVar(&keyid, "k", ``, "Key ID to request a signature from a specific signer.")
 	flag.StringVar(&url, "t", `http://localhost:8000/sign/data`, "signing api URL")
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
 	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
 
-	// verify format of signature request
-	var requests []signaturerequest
-	err := json.Unmarshal([]byte(sigreq), &requests)
+	switch {
+	case strings.HasSuffix(infile, ".xpi"):
+		// go parse an xpi
+	case strings.HasSuffix(infile, ".apk"):
+		apkbytes, err := ioutil.ReadFile(infile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data = base64.StdEncoding.EncodeToString(apkbytes)
+	}
+	request := signaturerequest{
+		Input: data,
+		KeyID: keyid,
+	}
+	requests = append(requests, request)
+	reqBody, err := json.Marshal(requests)
 	if err != nil {
 		log.Fatal(err)
-	}
-	if len(requests) == 0 {
-		log.Fatalf("no signature request found in input: %s", sigreq)
 	}
 	tr := &http.Transport{
 		DisableKeepAlives: false,
@@ -75,16 +92,16 @@ func main() {
 		workers++
 		go func() {
 			// prepare the http request, with hawk token
-			rdr := bytes.NewReader([]byte(sigreq))
+			rdr := bytes.NewReader(reqBody)
 			req, err := http.NewRequest("POST", url, rdr)
 			if err != nil {
 				log.Fatal(err)
 			}
 			req.Header.Set("Content-Type", "application/json")
-			authheader := getAuthHeader(req, userid, pass, sha256.New, fmt.Sprintf("%d", time.Now().Nanosecond()), "application/json", []byte(sigreq))
+			authheader := getAuthHeader(req, userid, pass, sha256.New, fmt.Sprintf("%d", time.Now().Nanosecond()), "application/json", reqBody)
 			req.Header.Set("Authorization", authheader)
 			if debug {
-				fmt.Printf("DEBUG: sending request\nDEBUG: %+v\nDEBUG: %s\n", req, sigreq)
+				fmt.Printf("DEBUG: sending request\nDEBUG: %+v\nDEBUG: %s\n", req, reqBody)
 			}
 			resp, err := cli.Do(req)
 			if err != nil || resp == nil {
@@ -109,7 +126,7 @@ func main() {
 				log.Fatalf("sent %d signature requests and got %d responses, something's wrong", len(requests), len(responses))
 			}
 			for i, response := range responses {
-				input, err := base64.RawURLEncoding.DecodeString(requests[i].Input)
+				input, err := base64.StdEncoding.DecodeString(requests[i].Input)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -128,6 +145,17 @@ func main() {
 					log.Printf("signature %d from signer %q passes", i, response.SignerID)
 				} else {
 					log.Fatalf("response %d from signer %q does not pass!", i, response.SignerID)
+				}
+				if outfile != "" {
+					sigData, err := base64.StdEncoding.DecodeString(response.SignedFile)
+					if err != nil {
+						log.Fatal(err)
+					}
+					err = ioutil.WriteFile(outfile, sigData, 0644)
+					if err != nil {
+						log.Fatal(err)
+					}
+					log.Println("response written to", outfile)
 				}
 			}
 			workers--
@@ -206,14 +234,5 @@ func verifyXPI(input []byte, resp signatureresponse) bool {
 }
 
 func verifyAPK(input []byte, resp signatureresponse) bool {
-	log.Println(resp)
-	sig, err := apk.Unmarshal(resp.Signature, input)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = sig.Verify()
-	if err != nil {
-		log.Fatal(err)
-	}
 	return true
 }

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
 )
@@ -45,6 +46,10 @@ func TestMonitorPass(t *testing.T) {
 				response.PublicKey)
 		case xpi.Type:
 			err = verifyXPISignature(
+				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+				response.Signature)
+		case apk.Type:
+			err = verifyAPKSignature(
 				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
 				response.Signature)
 		default:

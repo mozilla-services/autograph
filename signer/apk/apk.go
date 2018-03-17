@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"time"
 
@@ -70,44 +71,63 @@ func (s *APKSigner) Config() signer.Configuration {
 	}
 }
 
-// SignData takes an unsigned, unaligned APK in base64 form, generates the JAR manifests
-// and signs the signature file using the configured private key. The PKCS7 detached signature
-// and the manifests are then stored inside the ZIP file under META-INF, and the whole
-// archived is aligned. The returned data is the signed aligned APK.
+// SignFile takes an unsigned, unaligned APK in base64 form, generates the JAR manifests
+// and calls SignData to sign the signature file using the configured private key.
+//
+// The PKCS7 detached signature and the manifests are then stored inside the
+// ZIP file under META-INF, and the whole archived is aligned. The returned
+// data is the signed aligned APK.
 //
 // This implements apksigning v1, aka jarsigner. apksigning v2 is not supported.
 func (s *APKSigner) SignFile(input []byte, options interface{}) (signer.SignedFile, error) {
-	var signedFile []byte
+	var (
+		signedFile []byte
+	)
 	manifest, sigfile, err := makeJARManifests(input)
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: cannot make JAR manifests from APK")
 	}
-	p7sig := new(Signature)
-	toBeSigned, err := pkcs7.NewSignedData(sigfile)
+	p7sig, err := s.signData(sigfile)
 	if err != nil {
-		return nil, errors.Wrap(err, "apk: cannot initialize signed data")
+		return nil, errors.Wrap(err, "apk: failed to sign APK")
 	}
-
-	// APKs are signed with SHA256
-	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA256)
-
-	err = toBeSigned.AddSigner(s.signingCert, s.signingKey, pkcs7.SignerInfoConfig{})
-	if err != nil {
-		return nil, errors.Wrap(err, "apk: cannot sign")
-	}
-	toBeSigned.Detach()
-	p7sig.Data, err = toBeSigned.Finish()
-	if err != nil {
-		return nil, errors.Wrap(err, "apk: cannot finish signing data")
-	}
-	p7sig.Finished = true
-
-	signedFile, err = repackAndAlignJAR(input, manifest, sigfile, p7sig.Data)
+	signedFile, err = repackAndAlignJAR(input, manifest, sigfile, p7sig)
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: failed to repack and align APK")
 	}
 
 	return signedFile, nil
+}
+
+// SignData takes a JAR signature file and returns a pkcs7 signature
+func (s *APKSigner) SignData(sigfile []byte, options interface{}) (signer.Signature, error) {
+	p7sig, err := s.signData(sigfile)
+	if err != nil {
+		return nil, err
+	}
+	sig := new(Signature)
+	sig.Data = p7sig
+	sig.Finished = true
+	return sig, nil
+}
+
+func (s *APKSigner) signData(sigfile []byte) ([]byte, error) {
+	toBeSigned, err := pkcs7.NewSignedData(sigfile)
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: cannot initialize signed data")
+	}
+	// APKs are signed with SHA256
+	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA256)
+	err = toBeSigned.AddSigner(s.signingCert, s.signingKey, pkcs7.SignerInfoConfig{})
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: cannot sign")
+	}
+	toBeSigned.Detach()
+	p7sig, err := toBeSigned.Finish()
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: cannot finish signing data")
+	}
+	return p7sig, nil
 }
 
 // Signature is a PKCS7 detached signature
@@ -117,12 +137,41 @@ type Signature struct {
 	Finished bool
 }
 
-// Verify verifies an apk signature
+// Verify verifies an apk pkcs7 signature
+// WARNING: this function does not verify the JAR manifests
 func (sig *Signature) Verify() error {
 	if !sig.Finished {
 		return errors.New("apk.Verify: cannot verify unfinished signature")
 	}
 	return sig.p7.Verify()
+}
+
+// Marshal returns the base64 representation of a PKCS7 detached signature
+func (sig *Signature) Marshal() (string, error) {
+	if !sig.Finished {
+		return "", errors.New("xpi: cannot marshal unfinished signature")
+	}
+	if len(sig.Data) == 0 {
+		return "", errors.New("xpi: cannot marshal empty signature data")
+	}
+	return base64.StdEncoding.EncodeToString(sig.Data), nil
+}
+
+// Unmarshal takes the base64 representation of a PKCS7 detached signature
+// and the content of the signed data, and returns a PKCS7 struct
+func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
+	sig = new(Signature)
+	sig.Data, err = base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		return sig, errors.Wrap(err, "apk.Unmarshal: failed to decode base64 signature")
+	}
+	sig.p7, err = pkcs7.Parse(sig.Data)
+	if err != nil {
+		return sig, errors.Wrap(err, "apk.Unmarshal: failed to parse pkcs7 signature")
+	}
+	sig.p7.Content = content
+	sig.Finished = true
+	return
 }
 
 // String returns a PEM encoded PKCS7 block
