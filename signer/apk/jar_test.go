@@ -81,6 +81,36 @@ func TestRepackAndAlign(t *testing.T) {
 	}
 }
 
+func TestIsSignatureFile(t *testing.T) {
+	var testcases = []struct {
+		expect   bool
+		filename string
+	}{
+		{true, "META-INF/SIGNATURE.RSA"},
+		{true, "META-INF/signature.rsa"},
+		{true, "META-INF/SiGnAtUre.RSA"},
+		{true, "META-INF/SIGNATURE.DSA"},
+		{true, "META-INF/signature.dsa"},
+		{true, "META-INF/SiGnAtUre.DSA"},
+		{true, "META-INF/MANIFEST.MF"},
+		{true, "META-INF/manifest.mf"},
+		{true, "META-INF/signature.sf"},
+		{true, "META-INF/signature.SF"},
+		{true, "META-INF/SIG-foo"},
+		{true, "META-INF/sig-bar"},
+		{false, "META-INF/foo.bar"},
+		{false, "META-INF/foo.rsa.bar"},
+		{false, "META-INF/foo.RSA.bar"},
+		{false, "META-INF/.mf.foo"},
+	}
+	for i, testcase := range testcases {
+		if isSignatureFile(testcase.filename) != testcase.expect {
+			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
+				i, testcase.filename, isSignatureFile(testcase.filename), testcase.expect)
+		}
+	}
+}
+
 // Fixtures can be added by converting APKs to string literals using hexdump, eg:
 // hexdump -v -e '16/1 "_x%02X" "\n"' /tmp/fakeapk/fakeapk.zip | sed 's/_/\\/g; s/\\x  //g; s/.*/    "&"/'
 

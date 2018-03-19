@@ -149,10 +149,10 @@ func (sig *Signature) Verify() error {
 // Marshal returns the base64 representation of a PKCS7 detached signature
 func (sig *Signature) Marshal() (string, error) {
 	if !sig.Finished {
-		return "", errors.New("xpi: cannot marshal unfinished signature")
+		return "", errors.New("apk: cannot marshal unfinished signature")
 	}
 	if len(sig.Data) == 0 {
-		return "", errors.New("xpi: cannot marshal empty signature data")
+		return "", errors.New("apk: cannot marshal empty signature data")
 	}
 	return base64.StdEncoding.EncodeToString(sig.Data), nil
 }
