@@ -1,4 +1,4 @@
-all: vet lint unused gosimple staticcheck test
+all: vet unused gosimple staticcheck test
 
 test:
 	go test -covermode=count -coverprofile=coverage.out .

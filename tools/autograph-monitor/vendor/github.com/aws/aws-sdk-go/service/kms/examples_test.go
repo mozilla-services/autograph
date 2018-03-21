@@ -3,8 +3,8 @@
 package kms_test
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,7 +14,7 @@ import (
 )
 
 var _ time.Duration
-var _ bytes.Buffer
+var _ strings.Reader
 var _ aws.Config
 
 func parseTime(layout, value string) *time.Time {
@@ -1167,6 +1167,8 @@ func ExampleKMS_RetireGrant_shared00() {
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
+			case kms.ErrCodeInvalidArnException:
+				fmt.Println(kms.ErrCodeInvalidArnException, aerr.Error())
 			case kms.ErrCodeInvalidGrantTokenException:
 				fmt.Println(kms.ErrCodeInvalidGrantTokenException, aerr.Error())
 			case kms.ErrCodeInvalidGrantIdException:

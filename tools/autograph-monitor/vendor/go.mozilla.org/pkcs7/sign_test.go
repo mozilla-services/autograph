@@ -49,6 +49,11 @@ func TestSign(t *testing.T) {
 					if err != nil {
 						t.Fatalf("test %s/%s/%s: cannot initialize signed data: %s", sigalgroot, sigalginter, sigalgsigner, err)
 					}
+
+					// Set the digest to match the end entity cert
+					signerDigest, _ := getDigestOIDForSignatureAlgorithm(signerCert.Certificate.SignatureAlgorithm)
+					toBeSigned.SetDigestAlgorithm(signerDigest)
+
 					if err := toBeSigned.AddSignerChain(signerCert.Certificate, *signerCert.PrivateKey, parents, SignerInfoConfig{}); err != nil {
 						t.Fatalf("test %s/%s/%s: cannot add signer: %s", sigalgroot, sigalginter, sigalgsigner, err)
 					}
@@ -72,6 +77,10 @@ func TestSign(t *testing.T) {
 					}
 					if err := p7.VerifyWithChain(truststore); err != nil {
 						t.Errorf("test %s/%s/%s: cannot verify signed data: %s", sigalgroot, sigalginter, sigalgsigner, err)
+					}
+					if !signerDigest.Equal(p7.Signers[0].DigestAlgorithm.Algorithm) {
+						t.Errorf("test %s/%s/%s: expected digest algorithm %q but got %q",
+							sigalgroot, sigalginter, sigalgsigner, signerDigest, p7.Signers[0].DigestAlgorithm.Algorithm)
 					}
 				}
 			}

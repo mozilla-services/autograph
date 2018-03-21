@@ -54,12 +54,12 @@ func (p7 *PKCS7) DecryptUsingPSK(key []byte) ([]byte, error) {
 
 func (eci encryptedContentInfo) decrypt(key []byte) ([]byte, error) {
 	alg := eci.ContentEncryptionAlgorithm.Algorithm
-	if !alg.Equal(oidEncryptionAlgorithmDESCBC) &&
-		!alg.Equal(oidEncryptionAlgorithmDESEDE3CBC) &&
-		!alg.Equal(oidEncryptionAlgorithmAES256CBC) &&
-		!alg.Equal(oidEncryptionAlgorithmAES128CBC) &&
-		!alg.Equal(oidEncryptionAlgorithmAES128GCM) &&
-		!alg.Equal(oidEncryptionAlgorithmAES256GCM) {
+	if !alg.Equal(OIDEncryptionAlgorithmDESCBC) &&
+		!alg.Equal(OIDEncryptionAlgorithmDESEDE3CBC) &&
+		!alg.Equal(OIDEncryptionAlgorithmAES256CBC) &&
+		!alg.Equal(OIDEncryptionAlgorithmAES128CBC) &&
+		!alg.Equal(OIDEncryptionAlgorithmAES128GCM) &&
+		!alg.Equal(OIDEncryptionAlgorithmAES256GCM) {
 		fmt.Printf("Unsupported Content Encryption Algorithm: %s\n", alg)
 		return nil, ErrUnsupportedAlgorithm
 	}
@@ -89,13 +89,13 @@ func (eci encryptedContentInfo) decrypt(key []byte) ([]byte, error) {
 	var err error
 
 	switch {
-	case alg.Equal(oidEncryptionAlgorithmDESCBC):
+	case alg.Equal(OIDEncryptionAlgorithmDESCBC):
 		block, err = des.NewCipher(key)
-	case alg.Equal(oidEncryptionAlgorithmDESEDE3CBC):
+	case alg.Equal(OIDEncryptionAlgorithmDESEDE3CBC):
 		block, err = des.NewTripleDESCipher(key)
-	case alg.Equal(oidEncryptionAlgorithmAES256CBC), alg.Equal(oidEncryptionAlgorithmAES256GCM):
+	case alg.Equal(OIDEncryptionAlgorithmAES256CBC), alg.Equal(OIDEncryptionAlgorithmAES256GCM):
 		fallthrough
-	case alg.Equal(oidEncryptionAlgorithmAES128GCM), alg.Equal(oidEncryptionAlgorithmAES128CBC):
+	case alg.Equal(OIDEncryptionAlgorithmAES128GCM), alg.Equal(OIDEncryptionAlgorithmAES128CBC):
 		block, err = aes.NewCipher(key)
 	}
 
@@ -103,7 +103,7 @@ func (eci encryptedContentInfo) decrypt(key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if alg.Equal(oidEncryptionAlgorithmAES128GCM) || alg.Equal(oidEncryptionAlgorithmAES256GCM) {
+	if alg.Equal(OIDEncryptionAlgorithmAES128GCM) || alg.Equal(OIDEncryptionAlgorithmAES256GCM) {
 		params := aesGCMParameters{}
 		paramBytes := eci.ContentEncryptionAlgorithm.Parameters.Bytes
 

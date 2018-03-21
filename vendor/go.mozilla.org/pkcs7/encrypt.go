@@ -74,10 +74,10 @@ func encryptAESGCM(content []byte, key []byte) ([]byte, *encryptedContentInfo, e
 	var algID asn1.ObjectIdentifier
 	if ContentEncryptionAlgorithm == EncryptionAlgorithmAES128GCM {
 		keyLen = 16
-		algID = oidEncryptionAlgorithmAES128GCM
+		algID = OIDEncryptionAlgorithmAES128GCM
 	} else {
 		keyLen = 32
-		algID = oidEncryptionAlgorithmAES256GCM
+		algID = OIDEncryptionAlgorithmAES256GCM
 	}
 	if key == nil {
 		// Create AES key
@@ -122,7 +122,7 @@ func encryptAESGCM(content []byte, key []byte) ([]byte, *encryptedContentInfo, e
 	}
 
 	eci := encryptedContentInfo{
-		ContentType: oidData,
+		ContentType: OIDData,
 		ContentEncryptionAlgorithm: pkix.AlgorithmIdentifier{
 			Algorithm: algID,
 			Parameters: asn1.RawValue{
@@ -169,9 +169,9 @@ func encryptDESCBC(content []byte, key []byte) ([]byte, *encryptedContentInfo, e
 
 	// Prepare ASN.1 Encrypted Content Info
 	eci := encryptedContentInfo{
-		ContentType: oidData,
+		ContentType: OIDData,
 		ContentEncryptionAlgorithm: pkix.AlgorithmIdentifier{
-			Algorithm:  oidEncryptionAlgorithmDESCBC,
+			Algorithm:  OIDEncryptionAlgorithmDESCBC,
 			Parameters: asn1.RawValue{Tag: 4, Bytes: iv},
 		},
 		EncryptedContent: marshalEncryptedContent(cyphertext),
@@ -229,7 +229,7 @@ func Encrypt(content []byte, recipients []*x509.Certificate) ([]byte, error) {
 			Version:               0,
 			IssuerAndSerialNumber: ias,
 			KeyEncryptionAlgorithm: pkix.AlgorithmIdentifier{
-				Algorithm: oidEncryptionAlgorithmRSA,
+				Algorithm: OIDEncryptionAlgorithmRSA,
 			},
 			EncryptedKey: encrypted,
 		}
@@ -249,7 +249,7 @@ func Encrypt(content []byte, recipients []*x509.Certificate) ([]byte, error) {
 
 	// Prepare outer payload structure
 	wrapper := contentInfo{
-		ContentType: oidEnvelopedData,
+		ContentType: OIDEnvelopedData,
 		Content:     asn1.RawValue{Class: 2, Tag: 0, IsCompound: true, Bytes: innerContent},
 	}
 
@@ -296,7 +296,7 @@ func EncryptUsingPSK(content []byte, key []byte) ([]byte, error) {
 
 	// Prepare outer payload structure
 	wrapper := contentInfo{
-		ContentType: oidEncryptedData,
+		ContentType: OIDEncryptedData,
 		Content:     asn1.RawValue{Class: 2, Tag: 0, IsCompound: true, Bytes: innerContent},
 	}
 

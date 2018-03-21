@@ -100,6 +100,7 @@ log                | ✅ yes       |
 -- syslog          | ❌ no        |
 math               | ✅ yes       |
 -- big             | ✅ yes       |
+-- bits            | ✅ yes       |
 -- cmplx           | ✅ yes       |
 -- rand            | ✅ yes       |
 mime               | ✅ yes       |
@@ -125,10 +126,11 @@ os                 | ☑️ partially | node.js only
 -- user            | ☑️ partially | node.js only
 path               | ✅ yes       |
 -- filepath        | ✅ yes       |
+plugin             | ❌ no        |
 reflect            | ✅ yes       | except StructOf (pending)
 regexp             | ✅ yes       |
 -- syntax          | ✅ yes       |
-runtime            | ☑️ partially | SetMutexProfileFraction, SetFinalizer unsupported
+runtime            | ☑️ partially | SetMutexProfileFraction, SetFinalizer, ReadMemStats, Callers, CallersFrames unsupported
 -- cgo             | ❌ no        |
 -- debug           | ❌ no        |
 -- pprof           | ❌ no        |
@@ -140,7 +142,7 @@ strings            | ✅ yes       |
 sync               | ✅ yes       |
 -- atomic          | ✅ yes       |
 syscall            | ☑️ partially | node.js only
-testing            | ✅ yes       |
+testing            | ☑️ partially | AllocsPerRun unsupported
 -- iotest          | ✅ yes       |
 -- quick           | ✅ yes       |
 text               |              |

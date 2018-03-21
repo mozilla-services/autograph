@@ -85,7 +85,7 @@ func TestAssertPasses(t *testing.T) {
 func TestAssertFailsAndLogs(t *testing.T) {
 	test := Setup(false)
 
-	test.fixture.Assert(false)
+	returned := test.fixture.Assert(false)
 	test.fixture.finalize()
 
 	if output := test.out.String(); !strings.Contains(output, "Expected condition to be true, was false instead.") {
@@ -93,6 +93,9 @@ func TestAssertFailsAndLogs(t *testing.T) {
 	}
 	if !test.fakeT.failed {
 		t.Error("Test should have been marked as failed.")
+	}
+	if returned != false {
+		t.Error("The same condition should be returned form Assert.")
 	}
 }
 
@@ -127,7 +130,7 @@ func TestAssertEqualPasses(t *testing.T) {
 func TestAssertEqualFails(t *testing.T) {
 	test := Setup(false)
 
-	test.fixture.AssertEqual(1, 2)
+	returned := test.fixture.AssertEqual(1, 2)
 	test.fixture.finalize()
 
 	if output := test.out.String(); !strings.Contains(output, "Expected: [1]\nActual:   [2]") {
@@ -136,12 +139,15 @@ func TestAssertEqualFails(t *testing.T) {
 	if !test.fakeT.failed {
 		t.Error("Test should have been marked as failed.")
 	}
+	if returned != false {
+		t.Error("Should have returned the result of the assertion (false in this case).")
+	}
 }
 
 func TestAssertSprintEqualPasses(t *testing.T) {
 	test := Setup(false)
 
-	test.fixture.AssertSprintEqual(1, 1.0)
+	returned := test.fixture.AssertSprintEqual(1, 1.0)
 	test.fixture.finalize()
 
 	if test.out.Len() > 0 {
@@ -149,6 +155,9 @@ func TestAssertSprintEqualPasses(t *testing.T) {
 	}
 	if test.fakeT.failed {
 		t.Error("Test was erroneously marked as failed.")
+	}
+	if returned != true {
+		t.Error("Should have returned the result of the assertion (true in the case).")
 	}
 }
 
@@ -287,11 +296,8 @@ func TestPanicIsRecoveredAndPrintedByFinalize(t *testing.T) {
 	if !strings.Contains(output, "PANIC: GOPHERS!") {
 		t.Errorf("Expected string containing: 'PANIC: GOPHERS!' Got: '%s'", output)
 	}
-	if !strings.Contains(output, "github.com/smartystreets/gunit.(*Fixture).finalize") {
+	if !strings.Contains(output, "gunit.(*Fixture).finalize") {
 		t.Error("Expected string containing stack trace information...")
-	}
-	if !strings.Contains(output, "* (Additional tests may have been skipped as a result of the panic shown above.)") {
-		t.Error("Expected string containing warning about additional tests not being run.")
 	}
 }
 
@@ -333,6 +339,7 @@ type FakeTestingT struct {
 	failed bool
 }
 
+func (self *FakeTestingT) Name() string            { return "FakeTestingT" }
 func (self *FakeTestingT) Log(args ...interface{}) { fmt.Fprint(self.log, args...) }
 func (self *FakeTestingT) Fail()                   { self.failed = true }
 func (self *FakeTestingT) Failed() bool            { return self.failed }

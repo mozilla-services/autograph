@@ -3,8 +3,8 @@
 package snowball_test
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,7 +14,7 @@ import (
 )
 
 var _ time.Duration
-var _ bytes.Buffer
+var _ strings.Reader
 var _ aws.Config
 
 func parseTime(layout, value string) *time.Time {
@@ -154,6 +154,7 @@ func ExampleSnowball_CreateCluster_shared00() {
 			S3Resources: []*snowball.S3Resource{
 				{
 					BucketArn: aws.String("arn:aws:s3:::MyBucket"),
+					KeyRange:  &snowball.KeyRange{},
 				},
 			},
 		},
@@ -207,6 +208,7 @@ func ExampleSnowball_CreateJob_shared00() {
 			S3Resources: []*snowball.S3Resource{
 				{
 					BucketArn: aws.String("arn:aws:s3:::MyBucket"),
+					KeyRange:  &snowball.KeyRange{},
 				},
 			},
 		},

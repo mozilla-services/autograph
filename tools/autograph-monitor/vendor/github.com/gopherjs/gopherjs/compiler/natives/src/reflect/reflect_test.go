@@ -59,6 +59,10 @@ func TestSelectOnInvalid(t *testing.T) {
 	})
 }
 
+func TestStructOfFieldName(t *testing.T) {
+	t.Skip("StructOf")
+}
+
 func TestStructOf(t *testing.T) {
 	t.Skip("StructOf")
 }
@@ -151,4 +155,26 @@ var deepEqualTests = []DeepEqualTest{
 	//{&loop1, &loop2, true}, // TODO: Fix.
 	{&loopy1, &loopy1, true},
 	//{&loopy1, &loopy2, true}, // TODO: Fix.
+}
+
+// TODO: Fix this. See https://github.com/gopherjs/gopherjs/issues/763.
+func TestIssue22073(t *testing.T) {
+	m := reflect.ValueOf(NonExportedFirst(0)).Method(0)
+
+	if got := m.Type().NumOut(); got != 0 {
+		t.Errorf("NumOut: got %v, want 0", got)
+	}
+
+	// TODO: Fix this. The call below fails with:
+	//
+	// 	var $call = function(fn, rcvr, args) { return fn.apply(rcvr, args); };
+	// 	                                                 ^
+	// 	TypeError: Cannot read property 'apply' of undefined
+
+	// Shouldn't panic.
+	//m.Call(nil)
+}
+
+func TestCallReturnsEmpty(t *testing.T) {
+	t.Skip("test uses runtime.SetFinalizer, which is not supported by GopherJS")
 }

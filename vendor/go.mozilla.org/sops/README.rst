@@ -2,7 +2,7 @@ SOPS: Secrets OPerationS
 ========================
 
 **sops** is an editor of encrypted files that supports YAML, JSON and BINARY
-formats and encrypts with AWS KMS and PGP.
+formats and encrypts with AWS KMS, GCP KMS and PGP.
 (`demo <https://www.youtube.com/watch?v=YTEVyLXFiq0>`_)
 
 .. image:: https://i.imgur.com/X0TM5NI.gif
@@ -165,7 +165,7 @@ the example files and pgp key provided with the repository::
 
 	$ git clone https://github.com/mozilla/sops.git
 	$ cd sops
-	$ gpg --import tests/sops_functional_tests_key.asc
+	$ gpg --import pgp/sops_functional_tests_key.asc
 	$ sops example.yaml
 
 This last step will decrypt `example.yaml` using the test private key.
@@ -175,8 +175,13 @@ Encrypting using GCP KMS
 ~~~~~~~~~~~~~~~~~~~~~~~~
 GCP KMS uses `Application Default Credentials
 <https://developers.google.com/identity/protocols/application-default-credentials>`_.
-If you already logged in using :bash:`gcloud auth login` you can enable application
-default credentials using the sdk::
+If you already logged in using 
+
+.. code:: bash
+
+	$ gcloud auth login
+
+you can enable application default credentials using the sdk::
 
 	$ gcloud auth application-default login
 
@@ -196,8 +201,11 @@ sdk:
 
 Now you can encrypt a file using::
 
-	$ sops --gcp-kms projects/my-project/locations/global/keyRings/sops/cryptoKeys/sops-key test.yaml
+	$ sops --encrypt --gcp-kms projects/my-project/locations/global/keyRings/sops/cryptoKeys/sops-key test.yaml > test.enc.yaml
 
+And decrypt it using::
+
+	 $ sops --decrypt test.enc.yaml
 
 
 Adding and removing keys
@@ -367,7 +375,7 @@ KMS and PGP master keys defined in the file.
 Using .sops.yaml conf to select KMS/PGP for new files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is often tedious to specify the `--kms` and `--pgp` parameters for creation
+It is often tedious to specify the `--kms` `--gcp-kms` and `--pgp` parameters for creation
 of all new files. If your secrets are stored under a specific directory, like a
 `git` repository, you can create a `.sops.yaml` configuration file at the root
 directory to define which keys are used for which filename.
@@ -396,6 +404,10 @@ can manage the three sets of configurations for the three types of files:
 		- filename_regex: \.prod\.yaml$
 		  kms: 'arn:aws:kms:us-west-2:361527076523:key/5052f06a-5d3f-489e-b86c-57201e06f31e+arn:aws:iam::361527076523:role/hiera-sops-prod,arn:aws:kms:eu-central-1:361527076523:key/cb1fab90-8d17-42a1-a9d8-334968904f94+arn:aws:iam::361527076523:role/hiera-sops-prod'
 		  pgp: '1022470DE3F0BC54BC6AB62DE05550BC07FB1A0A'
+
+		# gcp files using GCP KMS
+		- filename_regex: \.gcp\.yaml$
+		  gcp_kms: projects/mygcproject/locations/global/keyRings/mykeyring/cryptoKeys/thekey
 
 		# Finally, if the rules above have not matched, this one is a
 		# catchall that will encrypt the file using KMS set C
@@ -775,7 +787,7 @@ values, like keys, without needing an extra parser.
 
 .. code:: bash
 
-	$ sops -d ~/git/svc/sops/example.yaml --extract '["app2"]["key"]'
+	$ sops -d --extract '["app2"]["key"]' ~/git/svc/sops/example.yaml
 	-----BEGIN RSA PRIVATE KEY-----
 	MIIBPAIBAAJBAPTMNIyHuZtpLYc7VsHQtwOkWYobkUblmHWRmbXzlAX6K8tMf3Wf
 	ImcbNkqAKnELzFAPSBeEMhrBN0PyOC9lYlMCAwEAAQJBALXD4sjuBn1E7Y9aGiMz
@@ -792,7 +804,7 @@ them.
 
 .. code:: bash
 
-	$ sops -d ~/git/svc/sops/example.yaml --extract '["an_array"][1]'
+	$ sops -d --extract '["an_array"][1]' ~/git/svc/sops/example.yaml
 	secretuser2
 
 Set a sub-part in a document tree
@@ -804,7 +816,7 @@ set specific values, like keys, without needing an editor.
 
 .. code:: bash
 
-	$ sops ~/git/svc/sops/example.yaml --set '["app2"]["key"]' '"app2keystringvalue"'
+	$ sops --set '["app2"]["key"] "app2keystringvalue"'  ~/git/svc/sops/example.yaml
 
 The tree path syntax uses regular python dictionary syntax, without the
 variable name. Set to keys by naming them, and array elements by
@@ -812,13 +824,13 @@ numbering them.
 
 .. code:: bash
 
-	$ sops ~/git/svc/sops/example.yaml --set '["an_array"][1]' '"secretuser2"'
+	$ sops --set '["an_array"][1] "secretuser2"' ~/git/svc/sops/example.yaml 
 
 The value must be formatted as json.
 
 .. code:: bash
 
-	$ sops ~/git/svc/sops/example.yaml --set '["an_array"][1]' '{"uid1":null,"uid2":1000,"uid3":["bob"]}'
+	$ sops --set '["an_array"][1] {"uid1":null,"uid2":1000,"uid3":["bob"]}' ~/git/svc/sops/example.yaml
 
 Using sops as a library in a python script
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
