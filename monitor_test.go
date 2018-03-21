@@ -49,7 +49,7 @@ func TestMonitorPass(t *testing.T) {
 				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
 				response.Signature)
 		case apk.Type:
-			err = verifyAPKSignature(
+			err = verifyAPKManifestSignature(
 				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
 				response.Signature)
 		default:
