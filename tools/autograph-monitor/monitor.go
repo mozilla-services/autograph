@@ -97,7 +97,7 @@ func main() {
 			err = verifyXPISignature(response.Signature, conf.truststore)
 		case apk.Type:
 			log.Printf("Verifying APK signature from signer %q", response.SignerID)
-			err = verifyAPKSignature(response.Signature, conf.truststore)
+			err = verifyAPKSignature(response.Signature)
 		default:
 			err = fmt.Errorf("unknown signature type %q", response.Type)
 		}
