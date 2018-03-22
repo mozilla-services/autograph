@@ -55,7 +55,13 @@ testxpi:
 showcoveragexpi: testxpi
 	$(GO) tool cover -html=coverage_xpi.out
 
-test: testautograph testsigner testcs testxpi
+testapk:
+	$(GO) test -v -covermode=count -coverprofile=coverage_apk.out go.mozilla.org/autograph/signer/apk
+
+showcoverageapk: testapk
+	$(GO) tool cover -html=coverage_apk.out
+
+test: testautograph testsigner testcs testxpi testapk
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 

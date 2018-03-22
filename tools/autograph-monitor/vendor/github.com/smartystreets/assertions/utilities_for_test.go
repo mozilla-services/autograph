@@ -76,3 +76,11 @@ type StringSliceAlias []string
 type StringStringMapAlias map[string]string
 
 /**************************************************************************/
+
+type ThingWithEqualMethod struct {
+	a string
+}
+
+func (this ThingWithEqualMethod) Equal(that ThingWithEqualMethod) bool {
+	return this.a == that.a
+}

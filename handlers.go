@@ -32,13 +32,14 @@ type signaturerequest struct {
 // a signatureresponse is returned by autograph to a client with
 // a signature computed on input data
 type signatureresponse struct {
-	Ref       string `json:"ref"`
-	Type      string `json:"type"`
-	Mode      string `json:"mode"`
-	SignerID  string `json:"signer_id"`
-	PublicKey string `json:"public_key"`
-	Signature string `json:"signature"`
-	X5U       string `json:"x5u,omitempty"`
+	Ref        string `json:"ref"`
+	Type       string `json:"type"`
+	Mode       string `json:"mode"`
+	SignerID   string `json:"signer_id"`
+	PublicKey  string `json:"public_key"`
+	Signature  string `json:"signature,omitempty"`
+	SignedFile string `json:"signed_file,omitempty"`
+	X5U        string `json:"x5u,omitempty"`
 }
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
@@ -60,8 +61,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusBadRequest, "empty or invalid request request body")
 		return
 	}
-	if len(body) > 104857600 {
-		// the max body size is hardcoded to 100MB. Seriously, what are you trying to sign?
+	if len(body) > 1048576000 {
+		// the max body size is hardcoded to 1GB. Seriously, what are you trying to sign?
 		httpError(w, r, http.StatusBadRequest, "request exceeds max size of 100MB")
 		return
 	}
@@ -92,7 +93,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		var (
 			input      []byte
 			sig        signer.Signature
-			encodedsig string
+			signedfile []byte
 			hashlog    string
 		)
 
@@ -111,7 +112,15 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, r, http.StatusUnauthorized, "%v", err)
 			return
 		}
-
+		sigresps[i] = signatureresponse{
+			Ref:        id(),
+			Type:       a.signers[signerID].Config().Type,
+			Mode:       a.signers[signerID].Config().Mode,
+			SignerID:   a.signers[signerID].Config().ID,
+			PublicKey:  a.signers[signerID].Config().PublicKey,
+			SignedFile: base64.StdEncoding.EncodeToString(signedfile),
+			X5U:        a.signers[signerID].Config().X5U,
+		}
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {
 		case "/sign/hash":
@@ -121,6 +130,15 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			sig, err = hashSigner.SignHash(input, sigreq.Options)
+			if err != nil {
+				httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
+				return
+			}
+			sigresps[i].Signature, err = sig.(signer.Signature).Marshal()
+			if err != nil {
+				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
+				return
+			}
 			// convert the input hash to hexadecimal for logging
 			hashlog = fmt.Sprintf("%X", input)
 
@@ -131,30 +149,36 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			sig, err = dataSigner.SignData(input, sigreq.Options)
+			if err != nil {
+				httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
+				return
+			}
+			sigresps[i].Signature, err = sig.(signer.Signature).Marshal()
+			if err != nil {
+				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
+				return
+			}
 			// calculate a hash of the input to store in the signing logs
 			md := sha256.New()
 			md.Write(input)
 			hashlog = fmt.Sprintf("%X", md.Sum(nil))
-		}
-		if err != nil {
-			httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
-			return
-		}
 
-		csig := sig.(signer.Signature)
-		encodedsig, err = csig.Marshal()
-		if err != nil {
-			httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
-			return
-		}
-		sigresps[i] = signatureresponse{
-			Ref:       id(),
-			Type:      a.signers[signerID].Config().Type,
-			Mode:      a.signers[signerID].Config().Mode,
-			SignerID:  a.signers[signerID].Config().ID,
-			PublicKey: a.signers[signerID].Config().PublicKey,
-			Signature: encodedsig,
-			X5U:       a.signers[signerID].Config().X5U,
+		case "/sign/file":
+			fileSigner, ok := a.signers[signerID].(signer.FileSigner)
+			if !ok {
+				httpError(w, r, http.StatusBadRequest, "requested signer does not implement file signing")
+				return
+			}
+			signedfile, err = fileSigner.SignFile(input, sigreq.Options)
+			if err != nil {
+				httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
+				return
+			}
+			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
+			// calculate a hash of the input to store in the signing logs
+			md := sha256.New()
+			md.Write(input)
+			hashlog = fmt.Sprintf("%X", md.Sum(nil))
 		}
 		log.WithFields(log.Fields{
 			"rid":        rid,

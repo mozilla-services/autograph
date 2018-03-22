@@ -3,8 +3,8 @@
 package elb_test
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,7 +14,7 @@ import (
 )
 
 var _ time.Duration
-var _ bytes.Buffer
+var _ strings.Reader
 var _ aws.Config
 
 func parseTime(layout, value string) *time.Time {
@@ -307,6 +307,8 @@ func ExampleELB_CreateLoadBalancer_shared00() {
 				fmt.Println(elb.ErrCodeDuplicateTagKeysException, aerr.Error())
 			case elb.ErrCodeUnsupportedProtocolException:
 				fmt.Println(elb.ErrCodeUnsupportedProtocolException, aerr.Error())
+			case elb.ErrCodeOperationNotPermittedException:
+				fmt.Println(elb.ErrCodeOperationNotPermittedException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -367,6 +369,8 @@ func ExampleELB_CreateLoadBalancer_shared01() {
 				fmt.Println(elb.ErrCodeDuplicateTagKeysException, aerr.Error())
 			case elb.ErrCodeUnsupportedProtocolException:
 				fmt.Println(elb.ErrCodeUnsupportedProtocolException, aerr.Error())
+			case elb.ErrCodeOperationNotPermittedException:
+				fmt.Println(elb.ErrCodeOperationNotPermittedException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -437,6 +441,8 @@ func ExampleELB_CreateLoadBalancer_shared02() {
 				fmt.Println(elb.ErrCodeDuplicateTagKeysException, aerr.Error())
 			case elb.ErrCodeUnsupportedProtocolException:
 				fmt.Println(elb.ErrCodeUnsupportedProtocolException, aerr.Error())
+			case elb.ErrCodeOperationNotPermittedException:
+				fmt.Println(elb.ErrCodeOperationNotPermittedException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -504,6 +510,8 @@ func ExampleELB_CreateLoadBalancer_shared03() {
 				fmt.Println(elb.ErrCodeDuplicateTagKeysException, aerr.Error())
 			case elb.ErrCodeUnsupportedProtocolException:
 				fmt.Println(elb.ErrCodeUnsupportedProtocolException, aerr.Error())
+			case elb.ErrCodeOperationNotPermittedException:
+				fmt.Println(elb.ErrCodeOperationNotPermittedException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}
@@ -568,6 +576,8 @@ func ExampleELB_CreateLoadBalancer_shared04() {
 				fmt.Println(elb.ErrCodeDuplicateTagKeysException, aerr.Error())
 			case elb.ErrCodeUnsupportedProtocolException:
 				fmt.Println(elb.ErrCodeUnsupportedProtocolException, aerr.Error())
+			case elb.ErrCodeOperationNotPermittedException:
+				fmt.Println(elb.ErrCodeOperationNotPermittedException, aerr.Error())
 			default:
 				fmt.Println(aerr.Error())
 			}

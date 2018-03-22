@@ -3,12 +3,11 @@ package pkcs7
 import (
 	"bytes"
 	"crypto"
-	"crypto/ecdsa"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -19,24 +18,26 @@ type SignedData struct {
 	sd                  signedData
 	certs               []*x509.Certificate
 	data, messageDigest []byte
+	digestOid           asn1.ObjectIdentifier
 }
 
 // NewSignedData takes data and initializes a PKCS7 SignedData struct that is
-// ready to be signed via AddSigner.
+// ready to be signed via AddSigner. The digest algorithm is set to SHA1 by default
+// and can be changed by calling SetDigestAlgorithm.
 func NewSignedData(data []byte) (*SignedData, error) {
 	content, err := asn1.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
 	ci := contentInfo{
-		ContentType: oidData,
+		ContentType: OIDData,
 		Content:     asn1.RawValue{Class: 2, Tag: 0, Bytes: content, IsCompound: true},
 	}
 	sd := signedData{
 		ContentInfo: ci,
 		Version:     1,
 	}
-	return &SignedData{sd: sd, data: data}, nil
+	return &SignedData{sd: sd, data: data, digestOid: OIDDigestAlgorithmSHA1}, nil
 }
 
 // SignerInfoConfig are optional values to include when adding a signer
@@ -91,6 +92,11 @@ type issuerAndSerial struct {
 	SerialNumber *big.Int
 }
 
+// SetDigestAlgorithm sets the digest algorithm to be used in the signing process
+func (sd *SignedData) SetDigestAlgorithm(d asn1.ObjectIdentifier) {
+	sd.digestOid = d
+}
+
 // AddSigner is a wrapper around AddSignerChain() that adds a signer without any parent.
 func (sd *SignedData) AddSigner(ee *x509.Certificate, pkey crypto.PrivateKey, config SignerInfoConfig) error {
 	var parents []*x509.Certificate
@@ -111,31 +117,22 @@ func (sd *SignedData) AddSigner(ee *x509.Certificate, pkey crypto.PrivateKey, co
 // section of the SignedData.SignerInfo, alongside the serial number of
 // the end-entity.
 func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKey, chain []*x509.Certificate, config SignerInfoConfig) error {
-	//oidDigestAlg, err := getDigestOIDForSignatureAlgorithm(ee.SignatureAlgorithm)
-	//if err != nil {
-	//	return err
-	//}
-	// FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=1357815
-	// We currently pin the digest algorithm to SHA1 because firefox
-	// doesn't support SHA2 yet.
-	oidDigestAlg := oidDigestAlgorithmSHA1
-
-	sd.sd.DigestAlgorithmIdentifiers = append(sd.sd.DigestAlgorithmIdentifiers, pkix.AlgorithmIdentifier{Algorithm: oidDigestAlg})
-	hash, err := getHashForOID(oidDigestAlg)
+	sd.sd.DigestAlgorithmIdentifiers = append(sd.sd.DigestAlgorithmIdentifiers, pkix.AlgorithmIdentifier{Algorithm: sd.digestOid})
+	hash, err := getHashForOID(sd.digestOid)
 	if err != nil {
 		return err
 	}
 	h := hash.New()
 	h.Write(sd.data)
 	sd.messageDigest = h.Sum(nil)
-	oidEncryptionAlg, err := getOIDForEncryptionAlgorithm(pkey, oidDigestAlg)
+	encryptionOid, err := getOIDForEncryptionAlgorithm(pkey, sd.digestOid)
 	if err != nil {
 		return err
 	}
 	attrs := &attributes{}
-	attrs.Add(oidAttributeContentType, sd.sd.ContentInfo.ContentType)
-	attrs.Add(oidAttributeMessageDigest, sd.messageDigest)
-	attrs.Add(oidAttributeSigningTime, time.Now())
+	attrs.Add(OIDAttributeContentType, sd.sd.ContentInfo.ContentType)
+	attrs.Add(OIDAttributeMessageDigest, sd.messageDigest)
+	attrs.Add(OIDAttributeSigningTime, time.Now())
 	for _, attr := range config.ExtraSignedAttributes {
 		attrs.Add(attr.Type, attr.Value)
 	}
@@ -162,8 +159,8 @@ func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKe
 	}
 	signer := signerInfo{
 		AuthenticatedAttributes:   finalAttrs,
-		DigestAlgorithm:           pkix.AlgorithmIdentifier{Algorithm: oidDigestAlg},
-		DigestEncryptionAlgorithm: pkix.AlgorithmIdentifier{Algorithm: oidEncryptionAlg},
+		DigestAlgorithm:           pkix.AlgorithmIdentifier{Algorithm: sd.digestOid},
+		DigestEncryptionAlgorithm: pkix.AlgorithmIdentifier{Algorithm: encryptionOid},
 		IssuerAndSerialNumber:     ias,
 		EncryptedDigest:           signature,
 		Version:                   1,
@@ -183,7 +180,7 @@ func (sd *SignedData) AddCertificate(cert *x509.Certificate) {
 // Detach removes content from the signed data struct to make it a detached signature.
 // This must be called right before Finish()
 func (sd *SignedData) Detach() {
-	sd.sd.ContentInfo = contentInfo{ContentType: oidData}
+	sd.sd.ContentInfo = contentInfo{ContentType: OIDData}
 }
 
 // Finish marshals the content and its signers
@@ -194,7 +191,7 @@ func (sd *SignedData) Finish() ([]byte, error) {
 		return nil, err
 	}
 	outer := contentInfo{
-		ContentType: oidSignedData,
+		ContentType: OIDSignedData,
 		Content:     asn1.RawValue{Class: 2, Tag: 0, Bytes: inner, IsCompound: true},
 	}
 	return asn1.Marshal(outer)
@@ -229,12 +226,13 @@ func cert2issuerAndSerial(cert *x509.Certificate) (issuerAndSerial, error) {
 	return ias, nil
 }
 
-type ecdsaSignature struct {
-	R, S *big.Int // fields must be exported for ASN.1 marshalling
-}
-
 // signs the DER encoded form of the attributes with the private key
 func signAttributes(attrs []attribute, pkey crypto.PrivateKey, digestAlg crypto.Hash) ([]byte, error) {
+	key, ok := pkey.(crypto.Signer)
+	if !ok {
+		return nil, errors.New("pkcs7: private key does not implement crypto.Signer")
+	}
+
 	attrBytes, err := marshalAttributes(attrs)
 	if err != nil {
 		return nil, err
@@ -242,17 +240,8 @@ func signAttributes(attrs []attribute, pkey crypto.PrivateKey, digestAlg crypto.
 	h := digestAlg.New()
 	h.Write(attrBytes)
 	hash := h.Sum(nil)
-	switch pkey.(type) {
-	case *rsa.PrivateKey:
-		return rsa.SignPKCS1v15(rand.Reader, pkey.(*rsa.PrivateKey), digestAlg, hash)
-	case *ecdsa.PrivateKey:
-		r, s, err := ecdsa.Sign(rand.Reader, pkey.(*ecdsa.PrivateKey), hash)
-		if err != nil {
-			return nil, fmt.Errorf("pkcs7: failed to sign attributes: %v", err)
-		}
-		return asn1.Marshal(ecdsaSignature{R: r, S: s})
-	}
-	return nil, fmt.Errorf("pkcs7: unsupported signing key type %T", pkey)
+
+	return key.Sign(rand.Reader, hash, digestAlg)
 }
 
 // concats and wraps the certificates in the RawValue structure
@@ -284,7 +273,7 @@ func DegenerateCertificate(cert []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	emptyContent := contentInfo{ContentType: oidData}
+	emptyContent := contentInfo{ContentType: OIDData}
 	sd := signedData{
 		Version:      1,
 		ContentInfo:  emptyContent,
@@ -296,7 +285,7 @@ func DegenerateCertificate(cert []byte) ([]byte, error) {
 		return nil, err
 	}
 	signedContent := contentInfo{
-		ContentType: oidSignedData,
+		ContentType: OIDSignedData,
 		Content:     asn1.RawValue{Class: 2, Tag: 0, Bytes: content, IsCompound: true},
 	}
 	return asn1.Marshal(signedContent)

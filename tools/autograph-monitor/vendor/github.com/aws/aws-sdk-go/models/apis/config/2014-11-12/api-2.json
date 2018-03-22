@@ -12,6 +12,19 @@
     "uid":"config-2014-11-12"
   },
   "operations":{
+    "BatchGetResourceConfig":{
+      "name":"BatchGetResourceConfig",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"BatchGetResourceConfigRequest"},
+      "output":{"shape":"BatchGetResourceConfigResponse"},
+      "errors":[
+        {"shape":"ValidationException"},
+        {"shape":"NoAvailableConfigurationRecorderException"}
+      ]
+    },
     "DeleteConfigRule":{
       "name":"DeleteConfigRule",
       "http":{
@@ -222,6 +235,20 @@
         {"shape":"InvalidParameterValueException"}
       ]
     },
+    "GetDiscoveredResourceCounts":{
+      "name":"GetDiscoveredResourceCounts",
+      "http":{
+        "method":"POST",
+        "requestUri":"/"
+      },
+      "input":{"shape":"GetDiscoveredResourceCountsRequest"},
+      "output":{"shape":"GetDiscoveredResourceCountsResponse"},
+      "errors":[
+        {"shape":"ValidationException"},
+        {"shape":"InvalidLimitException"},
+        {"shape":"InvalidNextTokenException"}
+      ]
+    },
     "GetResourceConfigHistory":{
       "name":"GetResourceConfigHistory",
       "http":{
@@ -359,6 +386,48 @@
     "AllSupported":{"type":"boolean"},
     "AvailabilityZone":{"type":"string"},
     "AwsRegion":{"type":"string"},
+    "BaseConfigurationItem":{
+      "type":"structure",
+      "members":{
+        "version":{"shape":"Version"},
+        "accountId":{"shape":"AccountId"},
+        "configurationItemCaptureTime":{"shape":"ConfigurationItemCaptureTime"},
+        "configurationItemStatus":{"shape":"ConfigurationItemStatus"},
+        "configurationStateId":{"shape":"ConfigurationStateId"},
+        "arn":{"shape":"ARN"},
+        "resourceType":{"shape":"ResourceType"},
+        "resourceId":{"shape":"ResourceId"},
+        "resourceName":{"shape":"ResourceName"},
+        "awsRegion":{"shape":"AwsRegion"},
+        "availabilityZone":{"shape":"AvailabilityZone"},
+        "resourceCreationTime":{"shape":"ResourceCreationTime"},
+        "configuration":{"shape":"Configuration"},
+        "supplementaryConfiguration":{"shape":"SupplementaryConfiguration"}
+      }
+    },
+    "BaseConfigurationItems":{
+      "type":"list",
+      "member":{"shape":"BaseConfigurationItem"}
+    },
+    "BaseResourceId":{
+      "type":"string",
+      "max":768,
+      "min":1
+    },
+    "BatchGetResourceConfigRequest":{
+      "type":"structure",
+      "required":["resourceKeys"],
+      "members":{
+        "resourceKeys":{"shape":"ResourceKeys"}
+      }
+    },
+    "BatchGetResourceConfigResponse":{
+      "type":"structure",
+      "members":{
+        "baseConfigurationItems":{"shape":"BaseConfigurationItems"},
+        "unprocessedResourceKeys":{"shape":"ResourceKeys"}
+      }
+    },
     "Boolean":{"type":"boolean"},
     "ChannelName":{
       "type":"string",
@@ -394,7 +463,7 @@
       "type":"structure",
       "members":{
         "ResourceType":{"shape":"StringWithCharLimit256"},
-        "ResourceId":{"shape":"StringWithCharLimit256"},
+        "ResourceId":{"shape":"BaseResourceId"},
         "Compliance":{"shape":"Compliance"}
       }
     },
@@ -562,10 +631,11 @@
     "ConfigurationItemStatus":{
       "type":"string",
       "enum":[
-        "Ok",
-        "Failed",
-        "Discovered",
-        "Deleted"
+        "OK",
+        "ResourceDiscovered",
+        "ResourceNotRecorded",
+        "ResourceDeleted",
+        "ResourceDeletedNotRecorded"
       ]
     },
     "ConfigurationRecorder":{
@@ -707,7 +777,7 @@
       "type":"structure",
       "members":{
         "ResourceType":{"shape":"StringWithCharLimit256"},
-        "ResourceId":{"shape":"StringWithCharLimit256"},
+        "ResourceId":{"shape":"BaseResourceId"},
         "ComplianceTypes":{"shape":"ComplianceTypes"},
         "Limit":{"shape":"Limit"},
         "NextToken":{"shape":"NextToken"}
@@ -813,7 +883,7 @@
       ],
       "members":{
         "ComplianceResourceType":{"shape":"StringWithCharLimit256"},
-        "ComplianceResourceId":{"shape":"StringWithCharLimit256"},
+        "ComplianceResourceId":{"shape":"BaseResourceId"},
         "ComplianceType":{"shape":"ComplianceType"},
         "Annotation":{"shape":"StringWithCharLimit256"},
         "OrderingTimestamp":{"shape":"OrderingTimestamp"}
@@ -842,7 +912,7 @@
       "members":{
         "ConfigRuleName":{"shape":"StringWithCharLimit64"},
         "ResourceType":{"shape":"StringWithCharLimit256"},
-        "ResourceId":{"shape":"StringWithCharLimit256"}
+        "ResourceId":{"shape":"BaseResourceId"}
       }
     },
     "EvaluationResults":{
@@ -884,7 +954,7 @@
       ],
       "members":{
         "ResourceType":{"shape":"StringWithCharLimit256"},
-        "ResourceId":{"shape":"StringWithCharLimit256"},
+        "ResourceId":{"shape":"BaseResourceId"},
         "ComplianceTypes":{"shape":"ComplianceTypes"},
         "NextToken":{"shape":"String"}
       }
@@ -912,6 +982,22 @@
       "type":"structure",
       "members":{
         "ComplianceSummariesByResourceType":{"shape":"ComplianceSummariesByResourceType"}
+      }
+    },
+    "GetDiscoveredResourceCountsRequest":{
+      "type":"structure",
+      "members":{
+        "resourceTypes":{"shape":"ResourceTypes"},
+        "limit":{"shape":"Limit"},
+        "nextToken":{"shape":"NextToken"}
+      }
+    },
+    "GetDiscoveredResourceCountsResponse":{
+      "type":"structure",
+      "members":{
+        "totalDiscoveredResources":{"shape":"Long"},
+        "resourceCounts":{"shape":"ResourceCounts"},
+        "nextToken":{"shape":"NextToken"}
       }
     },
     "GetResourceConfigHistoryRequest":{
@@ -1054,6 +1140,7 @@
         "nextToken":{"shape":"NextToken"}
       }
     },
+    "Long":{"type":"long"},
     "MaxNumberOfConfigRulesExceededException":{
       "type":"structure",
       "members":{
@@ -1225,6 +1312,17 @@
       "member":{"shape":"Relationship"}
     },
     "RelationshipName":{"type":"string"},
+    "ResourceCount":{
+      "type":"structure",
+      "members":{
+        "resourceType":{"shape":"ResourceType"},
+        "count":{"shape":"Long"}
+      }
+    },
+    "ResourceCounts":{
+      "type":"list",
+      "member":{"shape":"ResourceCount"}
+    },
     "ResourceCreationTime":{"type":"timestamp"},
     "ResourceDeletionTime":{"type":"timestamp"},
     "ResourceId":{"type":"string"},
@@ -1250,6 +1348,23 @@
       "members":{
       },
       "exception":true
+    },
+    "ResourceKey":{
+      "type":"structure",
+      "required":[
+        "resourceType",
+        "resourceId"
+      ],
+      "members":{
+        "resourceType":{"shape":"ResourceType"},
+        "resourceId":{"shape":"ResourceId"}
+      }
+    },
+    "ResourceKeys":{
+      "type":"list",
+      "member":{"shape":"ResourceKey"},
+      "max":100,
+      "min":1
     },
     "ResourceName":{"type":"string"},
     "ResourceNotDiscoveredException":{
@@ -1295,7 +1410,22 @@
         "AWS::Redshift::ClusterSecurityGroup",
         "AWS::Redshift::ClusterSubnetGroup",
         "AWS::Redshift::EventSubscription",
-        "AWS::CloudWatch::Alarm"
+        "AWS::CloudWatch::Alarm",
+        "AWS::CloudFormation::Stack",
+        "AWS::DynamoDB::Table",
+        "AWS::AutoScaling::AutoScalingGroup",
+        "AWS::AutoScaling::LaunchConfiguration",
+        "AWS::AutoScaling::ScalingPolicy",
+        "AWS::AutoScaling::ScheduledAction",
+        "AWS::CodeBuild::Project",
+        "AWS::WAF::RateBasedRule",
+        "AWS::WAF::Rule",
+        "AWS::WAF::WebACL",
+        "AWS::WAFRegional::RateBasedRule",
+        "AWS::WAFRegional::Rule",
+        "AWS::WAFRegional::WebACL",
+        "AWS::CloudFront::Distribution",
+        "AWS::CloudFront::StreamingDistribution"
       ]
     },
     "ResourceTypeList":{
@@ -1319,7 +1449,7 @@
         "ComplianceResourceTypes":{"shape":"ComplianceResourceTypes"},
         "TagKey":{"shape":"StringWithCharLimit128"},
         "TagValue":{"shape":"StringWithCharLimit256"},
-        "ComplianceResourceId":{"shape":"StringWithCharLimit256"}
+        "ComplianceResourceId":{"shape":"BaseResourceId"}
       }
     },
     "Source":{

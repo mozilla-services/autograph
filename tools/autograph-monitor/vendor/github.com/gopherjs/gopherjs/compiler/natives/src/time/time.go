@@ -42,9 +42,9 @@ func runtimeNano() int64 {
 	return js.Global.Get("Date").New().Call("getTime").Int64() * int64(Millisecond)
 }
 
-func now() (sec int64, nsec int32) {
+func now() (sec int64, nsec int32, mono int64) {
 	n := runtimeNano()
-	return n / int64(Second), int32(n % int64(Second))
+	return n / int64(Second), int32(n % int64(Second)), n
 }
 
 func Sleep(d Duration) {
@@ -79,20 +79,11 @@ func stopTimer(t *runtimeTimer) bool {
 	return wasActive
 }
 
-func loadLocation(name string) (*Location, error) {
-	return loadZoneFile(runtime.GOROOT()+"/lib/time/zoneinfo.zip", name)
-}
-
 func forceZipFileForTesting(zipOnly bool) {
 }
 
-func initTestingZone() {
-	z, err := loadLocation("America/Los_Angeles")
-	if err != nil {
-		panic("cannot load America/Los_Angeles for testing: " + err.Error())
-	}
-	z.name = "Local"
-	localLoc = *z
+var zoneSources = []string{
+	runtime.GOROOT() + "/lib/time/zoneinfo.zip",
 }
 
 // indexByte is copied from strings package to avoid importing it (since the real time package doesn't).

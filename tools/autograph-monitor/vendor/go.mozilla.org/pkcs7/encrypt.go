@@ -44,6 +44,9 @@ const (
 
 	// EncryptionAlgorithmAES128GCM is the AES 128 bits with GCM encryption algorithm
 	EncryptionAlgorithmAES128GCM
+
+	// EncryptionAlgorithmAES256GCM is the AES 256 bits with GCM encryption algorithm
+	EncryptionAlgorithmAES256GCM
 )
 
 // ContentEncryptionAlgorithm determines the algorithm used to encrypt the
@@ -53,7 +56,7 @@ var ContentEncryptionAlgorithm = EncryptionAlgorithmDESCBC
 
 // ErrUnsupportedEncryptionAlgorithm is returned when attempting to encrypt
 // content with an unsupported algorithm.
-var ErrUnsupportedEncryptionAlgorithm = errors.New("pkcs7: cannot encrypt content: only DES-CBC and AES-128-GCM supported")
+var ErrUnsupportedEncryptionAlgorithm = errors.New("pkcs7: cannot encrypt content: only DES-CBC and AES-GCM supported")
 
 // ErrPSKNotProvided is returned when attempting to encrypt
 // using a PSK without actually providing the PSK.
@@ -66,10 +69,19 @@ type aesGCMParameters struct {
 	ICVLen int
 }
 
-func encryptAES128GCM(content []byte, key []byte) ([]byte, *encryptedContentInfo, error) {
+func encryptAESGCM(content []byte, key []byte) ([]byte, *encryptedContentInfo, error) {
+	var keyLen int
+	var algID asn1.ObjectIdentifier
+	if ContentEncryptionAlgorithm == EncryptionAlgorithmAES128GCM {
+		keyLen = 16
+		algID = OIDEncryptionAlgorithmAES128GCM
+	} else {
+		keyLen = 32
+		algID = OIDEncryptionAlgorithmAES256GCM
+	}
 	if key == nil {
 		// Create AES key
-		key = make([]byte, 16)
+		key = make([]byte, keyLen)
 
 		_, err := rand.Read(key)
 		if err != nil {
@@ -110,9 +122,9 @@ func encryptAES128GCM(content []byte, key []byte) ([]byte, *encryptedContentInfo
 	}
 
 	eci := encryptedContentInfo{
-		ContentType: oidData,
+		ContentType: OIDData,
 		ContentEncryptionAlgorithm: pkix.AlgorithmIdentifier{
-			Algorithm: oidEncryptionAlgorithmAES128GCM,
+			Algorithm: algID,
 			Parameters: asn1.RawValue{
 				Tag:   asn1.TagSequence,
 				Bytes: paramBytes,
@@ -157,9 +169,9 @@ func encryptDESCBC(content []byte, key []byte) ([]byte, *encryptedContentInfo, e
 
 	// Prepare ASN.1 Encrypted Content Info
 	eci := encryptedContentInfo{
-		ContentType: oidData,
+		ContentType: OIDData,
 		ContentEncryptionAlgorithm: pkix.AlgorithmIdentifier{
-			Algorithm:  oidEncryptionAlgorithmDESCBC,
+			Algorithm:  OIDEncryptionAlgorithmDESCBC,
 			Parameters: asn1.RawValue{Tag: 4, Bytes: iv},
 		},
 		EncryptedContent: marshalEncryptedContent(cyphertext),
@@ -190,7 +202,9 @@ func Encrypt(content []byte, recipients []*x509.Certificate) ([]byte, error) {
 		key, eci, err = encryptDESCBC(content, nil)
 
 	case EncryptionAlgorithmAES128GCM:
-		key, eci, err = encryptAES128GCM(content, nil)
+		fallthrough
+	case EncryptionAlgorithmAES256GCM:
+		key, eci, err = encryptAESGCM(content, nil)
 
 	default:
 		return nil, ErrUnsupportedEncryptionAlgorithm
@@ -215,7 +229,7 @@ func Encrypt(content []byte, recipients []*x509.Certificate) ([]byte, error) {
 			Version:               0,
 			IssuerAndSerialNumber: ias,
 			KeyEncryptionAlgorithm: pkix.AlgorithmIdentifier{
-				Algorithm: oidEncryptionAlgorithmRSA,
+				Algorithm: OIDEncryptionAlgorithmRSA,
 			},
 			EncryptedKey: encrypted,
 		}
@@ -235,7 +249,7 @@ func Encrypt(content []byte, recipients []*x509.Certificate) ([]byte, error) {
 
 	// Prepare outer payload structure
 	wrapper := contentInfo{
-		ContentType: oidEnvelopedData,
+		ContentType: OIDEnvelopedData,
 		Content:     asn1.RawValue{Class: 2, Tag: 0, IsCompound: true, Bytes: innerContent},
 	}
 
@@ -258,7 +272,9 @@ func EncryptUsingPSK(content []byte, key []byte) ([]byte, error) {
 		_, eci, err = encryptDESCBC(content, key)
 
 	case EncryptionAlgorithmAES128GCM:
-		_, eci, err = encryptAES128GCM(content, key)
+		fallthrough
+	case EncryptionAlgorithmAES256GCM:
+		_, eci, err = encryptAESGCM(content, key)
 
 	default:
 		return nil, ErrUnsupportedEncryptionAlgorithm
@@ -280,7 +296,7 @@ func EncryptUsingPSK(content []byte, key []byte) ([]byte, error) {
 
 	// Prepare outer payload structure
 	wrapper := contentInfo{
-		ContentType: oidEncryptedData,
+		ContentType: OIDEncryptedData,
 		Content:     asn1.RawValue{Class: 2, Tag: 0, IsCompound: true, Bytes: innerContent},
 	}
 

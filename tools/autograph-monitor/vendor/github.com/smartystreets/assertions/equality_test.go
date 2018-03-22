@@ -3,6 +3,7 @@ package assertions
 import (
 	"fmt"
 	"reflect"
+	"time"
 )
 
 func (this *AssertionsFixture) TestShouldEqual() {
@@ -13,6 +14,8 @@ func (this *AssertionsFixture) TestShouldEqual() {
 	this.pass(so(1, ShouldEqual, 1))
 	this.fail(so(1, ShouldEqual, 2), "2|1|Expected: '2' Actual: '1' (Should be equal)")
 	this.fail(so(1, ShouldEqual, "1"), "1|1|Expected: '1' (string) Actual: '1' (int) (Should be equal, type mismatch)")
+
+	this.pass(so(nil, ShouldEqual, nil))
 
 	this.pass(so(true, ShouldEqual, true))
 	this.fail(so(true, ShouldEqual, false), "false|true|Expected: 'false' Actual: 'true' (Should be equal)")
@@ -27,6 +30,25 @@ func (this *AssertionsFixture) TestShouldEqual() {
 	this.fail(so(&Thing1{"hi"}, ShouldEqual, &Thing1{"hi"}), "&{hi}|&{hi}|Expected: '&{hi}' Actual: '&{hi}' (Should be equal)")
 
 	this.fail(so(Thing1{}, ShouldEqual, Thing2{}), "{}|{}|Expected: '{}' Actual: '{}' (Should be equal)")
+
+	this.pass(so(ThingWithEqualMethod{"hi"}, ShouldEqual, ThingWithEqualMethod{"hi"}))
+	this.fail(so(ThingWithEqualMethod{"hi"}, ShouldEqual, ThingWithEqualMethod{"bye"}),
+		"{bye}|{hi}|Expected: '{bye}' Actual: '{hi}' (Should be equal)")
+}
+
+func (this *AssertionsFixture) TestTimeEqual() {
+	var (
+		gopherCon, _ = time.LoadLocation("America/Denver")
+		elsewhere, _ = time.LoadLocation("America/New_York")
+
+		timeNow          = time.Now().In(gopherCon)
+		timeNowElsewhere = timeNow.In(elsewhere)
+		timeLater        = timeNow.Add(time.Nanosecond)
+	)
+
+	this.pass(so(timeNow, ShouldNotResemble, timeNowElsewhere)) // Differing *Location field prevents ShouldResemble!
+	this.pass(so(timeNow, ShouldEqual, timeNowElsewhere))       // Time.Equal method used to determine exact instant.
+	this.pass(so(timeNow, ShouldNotEqual, timeLater))
 }
 
 func (this *AssertionsFixture) TestShouldNotEqual() {
@@ -58,8 +80,8 @@ func (this *AssertionsFixture) TestShouldAlmostEqual() {
 	this.fail(so("1", ShouldAlmostEqual, 1), "The actual value must be a numerical type, but was: string")
 
 	// with the default delta
-	this.pass(so(.99999999999999, ShouldAlmostEqual, uint(1)))
-	this.pass(so(1, ShouldAlmostEqual, .99999999999999))
+	this.pass(so(0.99999999999999, ShouldAlmostEqual, uint(1)))
+	this.pass(so(1, ShouldAlmostEqual, 0.99999999999999))
 	this.pass(so(1.3612499999999996, ShouldAlmostEqual, 1.36125))
 	this.pass(so(0.7285312499999999, ShouldAlmostEqual, 0.72853125))
 	this.fail(so(1, ShouldAlmostEqual, .99), "Expected '1' to almost equal '0.99' (but it didn't)!")

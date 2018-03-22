@@ -140,9 +140,14 @@ func (f *File) Section(name string) *Section {
 
 // Section returns list of Section.
 func (f *File) Sections() []*Section {
+	if f.BlockMode {
+		f.lock.RLock()
+		defer f.lock.RUnlock()
+	}
+
 	sections := make([]*Section, len(f.sectionList))
-	for i := range f.sectionList {
-		sections[i] = f.Section(f.sectionList[i])
+	for i, name := range f.sectionList {
+		sections[i] = f.sections[name]
 	}
 	return sections
 }
@@ -342,6 +347,12 @@ func (f *File) writeToBuffer(indent string) (*bytes.Buffer, error) {
 					val = "`" + val + "`"
 				}
 				if _, err := buf.WriteString(equalSign + val + LineBreak); err != nil {
+					return nil, err
+				}
+			}
+
+			for _, val := range key.nestedValues {
+				if _, err := buf.WriteString(indent + "  " + val + LineBreak); err != nil {
 					return nil, err
 				}
 			}

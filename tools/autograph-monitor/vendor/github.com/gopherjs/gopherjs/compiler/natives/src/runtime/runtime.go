@@ -27,9 +27,7 @@ func init() {
 	jsPkg := js.Global.Get("$packages").Get("github.com/gopherjs/gopherjs/js")
 	js.Global.Set("$jsObjectPtr", jsPkg.Get("Object").Get("ptr"))
 	js.Global.Set("$jsErrorPtr", jsPkg.Get("Error").Get("ptr"))
-	js.Global.Set("$throwRuntimeError", js.InternalObject(func(msg string) {
-		panic(errorString(msg))
-	}))
+	js.Global.Set("$throwRuntimeError", js.InternalObject(throw))
 	// avoid dead code elimination
 	var e error
 	e = &TypeAssertionError{}
@@ -45,7 +43,9 @@ func GOROOT() string {
 	if goroot != js.Undefined {
 		return goroot.String()
 	}
-	return sys.DefaultGoroot
+	// sys.DefaultGoroot is now gone, can't use it as fallback anymore.
+	// TODO: See if a better solution is needed.
+	return "/usr/local/go"
 }
 
 func Breakpoint() {
@@ -63,6 +63,23 @@ func Caller(skip int) (pc uintptr, file string, line int, ok bool) {
 
 func Callers(skip int, pc []uintptr) int {
 	return 0
+}
+
+// CallersFrames is not implemented for GOARCH=js.
+// TODO: Implement if possible.
+func CallersFrames(callers []uintptr) *Frames { return &Frames{} }
+
+type Frames struct{}
+
+func (ci *Frames) Next() (frame Frame, more bool) { return }
+
+type Frame struct {
+	PC       uintptr
+	Func     *Func
+	Function string
+	File     string
+	Line     int
+	Entry    uintptr
 }
 
 func GC() {
@@ -199,3 +216,15 @@ func efaceOf(ep *interface{}) *eface {
 }
 
 func KeepAlive(interface{}) {}
+
+func throw(s string) {
+	panic(errorString(s))
+}
+
+// These are used by panicwrap. Not implemented for GOARCH=js.
+// TODO: Implement if possible.
+func getcallerpc() uintptr         { return 0 }
+func findfunc(pc uintptr) funcInfo { return funcInfo{} }
+func funcname(f funcInfo) string   { return "" }
+
+type funcInfo struct{}

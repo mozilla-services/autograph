@@ -42,7 +42,7 @@ func verifySignature(p7 *PKCS7, signer signerInfo, truststore *x509.CertPool) (e
 	if len(signer.AuthenticatedAttributes) > 0 {
 		// TODO(fullsailor): First check the content type match
 		var digest []byte
-		err := unmarshalAttribute(signer.AuthenticatedAttributes, oidAttributeMessageDigest, &digest)
+		err := unmarshalAttribute(signer.AuthenticatedAttributes, OIDAttributeMessageDigest, &digest)
 		if err != nil {
 			return err
 		}
@@ -63,7 +63,7 @@ func verifySignature(p7 *PKCS7, signer signerInfo, truststore *x509.CertPool) (e
 		if err != nil {
 			return err
 		}
-		err = unmarshalAttribute(signer.AuthenticatedAttributes, oidAttributeSigningTime, &signingTime)
+		err = unmarshalAttribute(signer.AuthenticatedAttributes, OIDAttributeSigningTime, &signingTime)
 		if err == nil {
 			// signing time found, performing validity check
 			if signingTime.After(ee.NotAfter) || signingTime.Before(ee.NotBefore) {
@@ -181,53 +181,53 @@ func (err *MessageDigestMismatchError) Error() string {
 
 func getSignatureAlgorithm(digestEncryption, digest pkix.AlgorithmIdentifier) (x509.SignatureAlgorithm, error) {
 	switch {
-	case digestEncryption.Algorithm.Equal(oidDigestAlgorithmECDSASHA1):
+	case digestEncryption.Algorithm.Equal(OIDDigestAlgorithmECDSASHA1):
 		return x509.ECDSAWithSHA1, nil
-	case digestEncryption.Algorithm.Equal(oidDigestAlgorithmECDSASHA256):
+	case digestEncryption.Algorithm.Equal(OIDDigestAlgorithmECDSASHA256):
 		return x509.ECDSAWithSHA256, nil
-	case digestEncryption.Algorithm.Equal(oidDigestAlgorithmECDSASHA384):
+	case digestEncryption.Algorithm.Equal(OIDDigestAlgorithmECDSASHA384):
 		return x509.ECDSAWithSHA384, nil
-	case digestEncryption.Algorithm.Equal(oidDigestAlgorithmECDSASHA512):
+	case digestEncryption.Algorithm.Equal(OIDDigestAlgorithmECDSASHA512):
 		return x509.ECDSAWithSHA512, nil
-	case digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSA),
-		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSASHA1),
-		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSASHA256),
-		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSASHA384),
-		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmRSASHA512):
+	case digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmRSA),
+		digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmRSASHA1),
+		digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmRSASHA256),
+		digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmRSASHA384),
+		digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmRSASHA512):
 		switch {
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA1):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA1):
 			return x509.SHA1WithRSA, nil
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA256):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA256):
 			return x509.SHA256WithRSA, nil
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA384):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA384):
 			return x509.SHA384WithRSA, nil
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA512):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA512):
 			return x509.SHA512WithRSA, nil
 		default:
 			return -1, fmt.Errorf("pkcs7: unsupported digest %q for encryption algorithm %q",
 				digest.Algorithm.String(), digestEncryption.Algorithm.String())
 		}
-	case digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmDSA):
+	case digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmDSA):
 		switch {
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA1):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA1):
 			return x509.DSAWithSHA1, nil
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA256):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA256):
 			return x509.DSAWithSHA256, nil
 		default:
 			return -1, fmt.Errorf("pkcs7: unsupported digest %q for encryption algorithm %q",
 				digest.Algorithm.String(), digestEncryption.Algorithm.String())
 		}
-	case digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmECDSAP256),
-		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmECDSAP384),
-		digestEncryption.Algorithm.Equal(oidEncryptionAlgorithmECDSAP521):
+	case digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmECDSAP256),
+		digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmECDSAP384),
+		digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmECDSAP521):
 		switch {
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA1):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA1):
 			return x509.ECDSAWithSHA1, nil
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA256):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA256):
 			return x509.ECDSAWithSHA256, nil
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA384):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA384):
 			return x509.ECDSAWithSHA384, nil
-		case digest.Algorithm.Equal(oidDigestAlgorithmSHA512):
+		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA512):
 			return x509.ECDSAWithSHA512, nil
 		default:
 			return -1, fmt.Errorf("pkcs7: unsupported digest %q for encryption algorithm %q",

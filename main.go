@@ -22,6 +22,7 @@ import (
 
 	"github.com/mozilla-services/yaml"
 	"go.mozilla.org/autograph/signer"
+	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/sops"
@@ -91,6 +92,7 @@ func main() {
 	router.HandleFunc("/__lbheartbeat__", handleHeartbeat).Methods("GET")
 	router.HandleFunc("/__version__", handleVersion).Methods("GET")
 	router.HandleFunc("/__monitor__", ag.handleMonitor).Methods("GET")
+	router.HandleFunc("/sign/file", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/data", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
 
@@ -186,6 +188,11 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			}
 		case xpi.Type:
 			s, err = xpi.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case apk.Type:
+			s, err = apk.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}

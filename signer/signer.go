@@ -45,10 +45,19 @@ type DataSigner interface {
 	GetDefaultOptions() interface{}
 }
 
+// FileSigner is an interface to a signer able to sign files
+type FileSigner interface {
+	SignFile(file []byte, options interface{}) (SignedFile, error)
+	GetDefaultOptions() interface{}
+}
+
 // Signature is an interface to a digital signature
 type Signature interface {
 	Marshal() (signature string, err error)
 }
+
+// SignedFile is an []bytes that contains file data
+type SignedFile []byte
 
 // ParsePrivateKey takes a PEM blocks are returns a crypto.PrivateKey
 func ParsePrivateKey(keyPEMBlock []byte) (crypto.PrivateKey, error) {

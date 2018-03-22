@@ -3,8 +3,8 @@
 package iam_test
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,7 +14,7 @@ import (
 )
 
 var _ time.Duration
-var _ bytes.Buffer
+var _ strings.Reader
 var _ aws.Config
 
 func parseTime(layout, value string) *time.Time {
@@ -156,6 +156,8 @@ func ExampleIAM_AttachGroupPolicy_shared00() {
 				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
 			case iam.ErrCodeInvalidInputException:
 				fmt.Println(iam.ErrCodeInvalidInputException, aerr.Error())
+			case iam.ErrCodePolicyNotAttachableException:
+				fmt.Println(iam.ErrCodePolicyNotAttachableException, aerr.Error())
 			case iam.ErrCodeServiceFailureException:
 				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
 			default:
@@ -195,6 +197,8 @@ func ExampleIAM_AttachRolePolicy_shared00() {
 				fmt.Println(iam.ErrCodeInvalidInputException, aerr.Error())
 			case iam.ErrCodeUnmodifiableEntityException:
 				fmt.Println(iam.ErrCodeUnmodifiableEntityException, aerr.Error())
+			case iam.ErrCodePolicyNotAttachableException:
+				fmt.Println(iam.ErrCodePolicyNotAttachableException, aerr.Error())
 			case iam.ErrCodeServiceFailureException:
 				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
 			default:
@@ -232,6 +236,8 @@ func ExampleIAM_AttachUserPolicy_shared00() {
 				fmt.Println(iam.ErrCodeLimitExceededException, aerr.Error())
 			case iam.ErrCodeInvalidInputException:
 				fmt.Println(iam.ErrCodeInvalidInputException, aerr.Error())
+			case iam.ErrCodePolicyNotAttachableException:
+				fmt.Println(iam.ErrCodePolicyNotAttachableException, aerr.Error())
 			case iam.ErrCodeServiceFailureException:
 				fmt.Println(iam.ErrCodeServiceFailureException, aerr.Error())
 			default:

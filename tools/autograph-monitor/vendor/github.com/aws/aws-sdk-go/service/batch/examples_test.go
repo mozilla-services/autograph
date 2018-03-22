@@ -3,8 +3,8 @@
 package batch_test
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,7 +14,7 @@ import (
 )
 
 var _ time.Duration
-var _ bytes.Buffer
+var _ strings.Reader
 var _ aws.Config
 
 func parseTime(layout, value string) *time.Time {
@@ -192,7 +192,7 @@ func ExampleBatch_CreateJobQueue_shared00() {
 			},
 		},
 		JobQueueName: aws.String("LowPriority"),
-		Priority:     aws.Int64(10),
+		Priority:     aws.Int64(1),
 		State:        aws.String("ENABLED"),
 	}
 
@@ -237,7 +237,7 @@ func ExampleBatch_CreateJobQueue_shared01() {
 			},
 		},
 		JobQueueName: aws.String("HighPriority"),
-		Priority:     aws.Int64(1),
+		Priority:     aws.Int64(10),
 		State:        aws.String("ENABLED"),
 	}
 

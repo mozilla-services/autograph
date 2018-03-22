@@ -140,6 +140,9 @@ func readObject(ber []byte, offset int) (asn1Object, int, error) {
 	tagStart := offset
 	b := ber[offset]
 	offset++
+	if offset >= berLen {
+		return nil, 0, errors.New("ber2der: cannot move offset forward, end of ber data reached")
+	}
 	tag := b & 0x1F // last 5 bits
 	if tag == 0x1F {
 		tag = 0

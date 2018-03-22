@@ -127,7 +127,7 @@ func (key *MasterKey) encryptWithCryptoOpenPGP(dataKey []byte) error {
 	if err != nil {
 		return err
 	}
-	plaintextbuf, err := openpgp.Encrypt(armorbuf, []*openpgp.Entity{&entity}, nil, nil, nil)
+	plaintextbuf, err := openpgp.Encrypt(armorbuf, []*openpgp.Entity{&entity}, nil, &openpgp.FileHints{IsBinary: true}, nil)
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func (key *MasterKey) Encrypt(dataKey []byte) error {
 		log.WithField("fingerprint", key.Fingerprint).Info("Encryption succeeded")
 		return nil
 	}
-	log.WithField("fingerprint", key.Fingerprint).Warn("Encryption failed")
+	log.WithField("fingerprint", key.Fingerprint).Info("Encryption failed")
 	return fmt.Errorf(
 		`could not encrypt data key with PGP key: golang.org/x/crypto/openpgp error: %v; GPG binary error: %v`,
 		openpgpErr, binaryErr)
@@ -225,7 +225,7 @@ func (key *MasterKey) Decrypt() ([]byte, error) {
 		log.WithField("fingerprint", key.Fingerprint).Info("Decryption succeeded")
 		return dataKey, nil
 	}
-	log.WithField("fingerprint", key.Fingerprint).Warn("Decryption failed")
+	log.WithField("fingerprint", key.Fingerprint).Info("Decryption failed")
 	return nil, fmt.Errorf(
 		`could not decrypt data key with PGP key: golang.org/x/crypto/openpgp error: %v; GPG binary error: %v`,
 		openpgpErr, binaryErr)

@@ -6,6 +6,7 @@
     "jsonVersion":"1.1",
     "protocol":"json",
     "serviceFullName":"Application Auto Scaling",
+    "serviceId":"Application Auto Scaling",
     "signatureVersion":"v4",
     "signingName":"application-autoscaling",
     "targetPrefix":"AnyScaleFrontendService",
@@ -418,7 +419,16 @@
       "type":"string",
       "enum":[
         "DynamoDBReadCapacityUtilization",
-        "DynamoDBWriteCapacityUtilization"
+        "DynamoDBWriteCapacityUtilization",
+        "ALBRequestCountPerTarget",
+        "RDSReaderAverageCPUUtilization",
+        "RDSReaderAverageDatabaseConnections",
+        "EC2SpotFleetRequestAverageCPUUtilization",
+        "EC2SpotFleetRequestAverageNetworkIn",
+        "EC2SpotFleetRequestAverageNetworkOut",
+        "SageMakerVariantInvocationsPerInstance",
+        "ECSServiceAverageCPUUtilization",
+        "ECSServiceAverageMemoryUtilization"
       ]
     },
     "MetricUnit":{"type":"string"},
@@ -551,7 +561,9 @@
         "dynamodb:table:ReadCapacityUnits",
         "dynamodb:table:WriteCapacityUnits",
         "dynamodb:index:ReadCapacityUnits",
-        "dynamodb:index:WriteCapacityUnits"
+        "dynamodb:index:WriteCapacityUnits",
+        "rds:cluster:ReadReplicaCount",
+        "sagemaker:variant:DesiredInstanceCount"
       ]
     },
     "ScalableTarget":{
@@ -696,7 +708,9 @@
         "elasticmapreduce",
         "ec2",
         "appstream",
-        "dynamodb"
+        "dynamodb",
+        "rds",
+        "sagemaker"
       ]
     },
     "StepAdjustment":{

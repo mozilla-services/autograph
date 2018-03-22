@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
@@ -22,13 +23,14 @@ import (
 // a signatureresponse is returned by autograph to a client with
 // a signature computed on input data
 type signatureresponse struct {
-	Ref       string `json:"ref"`
-	Type      string `json:"type"`
-	Mode      string `json:"mode"`
-	SignerID  string `json:"signer_id"`
-	PublicKey string `json:"public_key"`
-	Signature string `json:"signature"`
-	X5U       string `json:"x5u,omitempty"`
+	Ref        string `json:"ref"`
+	Type       string `json:"type"`
+	Mode       string `json:"mode"`
+	SignerID   string `json:"signer_id"`
+	PublicKey  string `json:"public_key"`
+	Signature  string `json:"signature"`
+	SignedFile string `json:"signed_file,omitempty"`
+	X5U        string `json:"x5u,omitempty"`
 }
 
 type configuration struct {
@@ -93,6 +95,9 @@ func main() {
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature, conf.truststore)
+		case apk.Type:
+			log.Printf("Verifying APK signature from signer %q", response.SignerID)
+			err = verifyAPKSignature(response.Signature)
 		default:
 			err = fmt.Errorf("unknown signature type %q", response.Type)
 		}

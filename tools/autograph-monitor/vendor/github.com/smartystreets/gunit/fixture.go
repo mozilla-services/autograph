@@ -37,15 +37,10 @@ func newFixture(t testingT, verbose bool) *Fixture {
 // So is a convenience method for reporting assertion failure messages,
 // from the many assertion functions found in github.com/smartystreets/assertions/should.
 // Example: this.So(actual, should.Equal, expected)
-func (this *Fixture) So(
-	actual interface{},
-	assert func(actual interface{}, expected ...interface{}) string,
-	expected ...interface{}) bool {
-
+func (this *Fixture) So(actual interface{}, assert assertion, expected ...interface{}) bool {
 	failure := assert(actual, expected...)
 	failed := len(failure) > 0
 	if failed {
-		this.t.Fail()
 		this.fail(failure)
 	}
 	return !failed
@@ -53,25 +48,26 @@ func (this *Fixture) So(
 
 // Assert tests a boolean which, if not true, marks the current test case as failed and
 // prints the provided message.
-func (this *Fixture) Assert(condition bool, messages ...string) {
+func (this *Fixture) Assert(condition bool, messages ...string) bool {
 	if !condition {
 		if len(messages) == 0 {
 			messages = append(messages, "Expected condition to be true, was false instead.")
 		}
 		this.fail(strings.Join(messages, ", "))
 	}
+	return condition
 }
-func (this *Fixture) AssertEqual(expected, actual interface{}) {
-	this.Assert(expected == actual, fmt.Sprintf(comparisonFormat, fmt.Sprint(expected), fmt.Sprint(actual)))
+func (this *Fixture) AssertEqual(expected, actual interface{}) bool {
+	return this.Assert(expected == actual, fmt.Sprintf(comparisonFormat, fmt.Sprint(expected), fmt.Sprint(actual)))
 }
-func (this *Fixture) AssertSprintEqual(expected, actual interface{}) {
-	this.AssertEqual(fmt.Sprint(expected), fmt.Sprint(actual))
+func (this *Fixture) AssertSprintEqual(expected, actual interface{}) bool {
+	return this.AssertEqual(fmt.Sprint(expected), fmt.Sprint(actual))
 }
-func (this *Fixture) AssertSprintfEqual(expected, actual interface{}, format string) {
-	this.AssertEqual(fmt.Sprintf(format, expected), fmt.Sprintf(format, actual))
+func (this *Fixture) AssertSprintfEqual(expected, actual interface{}, format string) bool {
+	return this.AssertEqual(fmt.Sprintf(format, expected), fmt.Sprintf(format, actual))
 }
-func (this *Fixture) AssertDeepEqual(expected, actual interface{}) {
-	this.Assert(reflect.DeepEqual(expected, actual),
+func (this *Fixture) AssertDeepEqual(expected, actual interface{}) bool {
+	return this.Assert(reflect.DeepEqual(expected, actual),
 		fmt.Sprintf(comparisonFormat, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual)))
 }
 
@@ -82,7 +78,10 @@ func (this *Fixture) Print(a ...interface{})                 { fmt.Fprint(this.l
 func (this *Fixture) Printf(format string, a ...interface{}) { fmt.Fprintf(this.log, format, a...) }
 func (this *Fixture) Println(a ...interface{})               { fmt.Fprintln(this.log, a...) }
 
-func (this *Fixture) Failed() bool { return this.t.Failed() }
+// Write implements io.Writer. There are rare times when this is convenient (debugging via `log.SetOutput(fixture)`).
+func (this *Fixture) Write(p []byte) (int, error) { return this.log.Write(p) }
+func (this *Fixture) Failed() bool                { return this.t.Failed() }
+func (this *Fixture) Name() string                { return this.t.Name() }
 
 func (this *Fixture) fail(failure string) {
 	this.t.Fail()
@@ -103,8 +102,10 @@ func (this *Fixture) recoverPanic(r interface{}) {
 	buffer := make([]byte, 1024*16)
 	runtime.Stack(buffer, false)
 	this.Println(strings.TrimSpace(string(buffer)))
-	this.Println("* (Additional tests may have been skipped as a result of the panic shown above.)")
 	this.t.Fail()
 }
 
 const comparisonFormat = "Expected: [%s]\nActual:   [%s]"
+
+// assertion is a copy of github.com/smartystreets/assertions.assertion.
+type assertion func(actual interface{}, expected ...interface{}) string
