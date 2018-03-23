@@ -57,4 +57,4 @@ their data. Autograph knows which key should be used to sign the data of a
 service based on the service's authentication token. Access control and rate
 limiting are performed at that layer as well.
 
-![signing.png](docs/statics/Autograph signing.png)
+![signing.png](docs/statics/Autograph%20signing.png)
