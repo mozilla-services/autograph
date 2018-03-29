@@ -42,7 +42,8 @@ func NewSignedData(data []byte) (*SignedData, error) {
 
 // SignerInfoConfig are optional values to include when adding a signer
 type SignerInfoConfig struct {
-	ExtraSignedAttributes []Attribute
+	ExtraSignedAttributes   []Attribute
+	ExtraUnsignedAttributes []Attribute
 }
 
 type signedData struct {
@@ -140,6 +141,14 @@ func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKe
 	if err != nil {
 		return err
 	}
+	unsigned_attrs := &attributes{}
+	for _, attr := range config.ExtraUnsignedAttributes {
+		unsigned_attrs.Add(attr.Type, attr.Value)
+	}
+	finalUnsignedAttrs, err := unsigned_attrs.ForMarshalling()
+	if err != nil {
+		return err
+	}
 	signature, err := signAttributes(finalAttrs, pkey, hash)
 	if err != nil {
 		return err
@@ -159,6 +168,7 @@ func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKe
 	}
 	signer := signerInfo{
 		AuthenticatedAttributes:   finalAttrs,
+		UnauthenticatedAttributes: finalUnsignedAttrs,
 		DigestAlgorithm:           pkix.AlgorithmIdentifier{Algorithm: sd.digestOid},
 		DigestEncryptionAlgorithm: pkix.AlgorithmIdentifier{Algorithm: encryptionOid},
 		IssuerAndSerialNumber:     ias,
@@ -172,6 +182,21 @@ func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKe
 	return nil
 }
 
+func (si *signerInfo) SetUnauthenticatedAttributes(extra_unsigned_attrs []Attribute) error {
+	unsigned_attrs := &attributes{}
+	for _, attr := range extra_unsigned_attrs {
+		unsigned_attrs.Add(attr.Type, attr.Value)
+	}
+	finalUnsignedAttrs, err := unsigned_attrs.ForMarshalling()
+	if err != nil {
+		return err
+	}
+
+	si.UnauthenticatedAttributes = finalUnsignedAttrs
+
+	return nil
+}
+
 // AddCertificate adds the certificate to the payload. Useful for parent certificates
 func (sd *SignedData) AddCertificate(cert *x509.Certificate) {
 	sd.certs = append(sd.certs, cert)
@@ -181,6 +206,10 @@ func (sd *SignedData) AddCertificate(cert *x509.Certificate) {
 // This must be called right before Finish()
 func (sd *SignedData) Detach() {
 	sd.sd.ContentInfo = contentInfo{ContentType: OIDData}
+}
+
+func (sd *SignedData) GetSignedData() *signedData {
+	return &sd.sd
 }
 
 // Finish marshals the content and its signers

@@ -17,6 +17,7 @@ package bigquery
 import (
 	"errors"
 
+	"cloud.google.com/go/internal/trace"
 	"golang.org/x/net/context"
 	bq "google.golang.org/api/bigquery/v2"
 )
@@ -260,12 +261,15 @@ func (c *Client) Query(q string) *Query {
 }
 
 // Run initiates a query job.
-func (q *Query) Run(ctx context.Context) (*Job, error) {
+func (q *Query) Run(ctx context.Context) (j *Job, err error) {
+	ctx = trace.StartSpan(ctx, "cloud.google.com/go/bigquery.Query.Run")
+	defer func() { trace.EndSpan(ctx, err) }()
+
 	job, err := q.newJob()
 	if err != nil {
 		return nil, err
 	}
-	j, err := q.client.insertJob(ctx, job, nil)
+	j, err = q.client.insertJob(ctx, job, nil)
 	if err != nil {
 		return nil, err
 	}
