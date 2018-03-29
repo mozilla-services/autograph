@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-lambda-go/lambda"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
@@ -46,6 +47,14 @@ var conf configuration
 const inputdata string = "AUTOGRAPH MONITORING"
 
 func main() {
+	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
+		// we are inside a lambda environment so run as lambda
+		lambda.Start(Handler)
+	}
+	Handler()
+}
+
+func Handler() {
 	var err error
 	confdir := "."
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
