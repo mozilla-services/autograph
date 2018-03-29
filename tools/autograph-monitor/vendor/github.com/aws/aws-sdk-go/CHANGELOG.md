@@ -1,3 +1,58 @@
+Release v1.13.23 (2018-03-28)
+===
+
+### Service Client Updates
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/iam`: Updates service API and documentation
+  * Add support for Longer Role Sessions. Four APIs manage max session duration: GetRole, ListRoles, CreateRole, and the new API UpdateRole. The max session duration integer attribute is measured in seconds.
+* `service/mturk-requester`: Updates service API and documentation
+* `service/sts`: Updates service API and documentation
+  * Change utilizes the Max Session Duration attribute introduced for IAM Roles and allows STS customers to request session duration up to the Max Session Duration of 12 hours from AssumeRole based APIs.
+
+Release v1.13.22 (2018-03-27)
+===
+
+### Service Client Updates
+* `service/acm`: Updates service API and documentation
+  * AWS Certificate Manager has added support for customers to disable Certificate Transparency logging on a per-certificate basis.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
+Release v1.13.21 (2018-03-26)
+===
+
+### Service Client Updates
+* `service/dynamodb`: Updates service API and documentation
+  * Point-in-time recovery (PITR) provides continuous backups of your DynamoDB table data. With PITR, you do not have to worry about creating, maintaining, or scheduling backups. You enable PITR on your table and your backup is available for restore at any point in time from the moment you enable it, up to a maximum of the 35 preceding days. PITR provides continuous backups until you explicitly disable it. For more information, see the Amazon DynamoDB Developer Guide.
+
+Release v1.13.20 (2018-03-23)
+===
+
+### Service Client Updates
+* `service/rds`: Updates service documentation
+  * Documentation updates for RDS
+
+Release v1.13.19 (2018-03-22)
+===
+
+### Service Client Updates
+* `service/appstream`: Updates service API and documentation
+  * Feedback URL allows admins to provide a feedback link or a survey link for collecting user feedback while streaming sessions. When a feedback link is provided, streaming users will see a "Send Feedback" choice in their streaming session toolbar. On selecting this choice, user will be redirected to the link provided in a new browser tab. If a feedback link is not provided, users will not see the "Send Feedback" option.
+* `service/codebuild`: Updates service API and documentation
+  * Adding support for branch filtering when using webhooks with AWS CodeBuild.
+* `service/ecs`: Updates service API and documentation
+  * Amazon Elastic Container Service (ECS) now includes integrated Service Discovery using Route 53 Auto Naming. Customers can now specify a Route 53 Auto Naming service as part of an ECS service. ECS will register task IPs with Route 53, making them available via DNS in your VPC.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
+### SDK Bugs
+* `aws/endpoints`: Use service metadata for fallback signing name ([#1854](https://github.com/aws/aws-sdk-go/pull/1854))
+  * Updates the SDK's endpoint resolution to fallback deriving the service's signing name from the service's modeled metadata in addition the the endpoints modeled data.
+  * Fixes [#1850](https://github.com/aws/aws-sdk-go/issues/1850)
+Release v1.13.18 (2018-03-21)
+===
+
+### Service Client Updates
+* `service/serverlessrepo`: Updates service documentation
+
 Release v1.13.17 (2018-03-20)
 ===
 
