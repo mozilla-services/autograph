@@ -1,6 +1,6 @@
 dist: trusty
 language: go
-go: '1.9'
+go: '1.10'
 python: '3.6'
 services:
 - docker
@@ -31,6 +31,8 @@ script:
     python3 -m virtualenv venv && source venv/bin/activate && \
     python3 -m pip install -r requirements.txt && \
     python3 sign.py -t http://localhost:8000/sign/data -s webextensions-rsa -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu test-addon.xpi
+# sign an apk through the autograph-edge lambda
+- cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-edge && make && ./autograph-edge -f test.apk
 
 # If a TRAVIS_TAG is set, this build follows a git tag --push and should trigger
 # a release of a tagged container to dockerhub. Otherwise, we tag as latest.

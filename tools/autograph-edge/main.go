@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -45,11 +46,13 @@ func init() {
 	// initialize the logger
 	mozlogrus.Enable("autograph-edge")
 
-	// load the config
-	log.Info("loading configuration from " + os.Getenv("LAMBDA_TASK_ROOT") + "/autograph-edge.yaml")
-	err := conf.loadFromFile(os.Getenv("LAMBDA_TASK_ROOT") + "/autograph-edge.yaml")
-	if err != nil {
-		log.Fatal(err)
+	// in lambda, load the config here to keep it in the runtime
+	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
+		log.Info("loading configuration from " + os.Getenv("LAMBDA_TASK_ROOT") + "/autograph-edge.yaml")
+		err := conf.loadFromFile(os.Getenv("LAMBDA_TASK_ROOT") + "/autograph-edge.yaml")
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -57,11 +60,41 @@ func main() {
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		lambda.Start(Handler)
 	} else {
-		resp, err := Handler(events.APIGatewayProxyRequest{Body: os.Args[1]})
+		var cfgFile, token, filePath string
+		flag.StringVar(&cfgFile, "c", "autograph-edge.yaml", "Path to configuration file")
+		flag.StringVar(&token, "a", "dd095f88adbf7bdfa18b06e23e83896107d7e0f969f7415830028fa2c1ccf9fd", "auth token")
+		flag.StringVar(&filePath, "f", "/path/to/file", "path to file to sign")
+		flag.Parse()
+
+		body, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = conf.loadFromFile(cfgFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		headers := make(map[string]string)
+		headers["Authorization"] = token
+		resp, err := Handler(events.APIGatewayProxyRequest{
+			HTTPMethod: http.MethodPost,
+			Body:       base64.StdEncoding.EncodeToString(body),
+			Headers:    headers,
+		})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
+		if resp.StatusCode != http.StatusOK {
+			log.Fatal("signing failed")
+		}
+		signedBody, err := base64.StdEncoding.DecodeString(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ioutil.WriteFile(filePath, signedBody, 06400)
 		log.Printf("%+v", resp)
 	}
 }
