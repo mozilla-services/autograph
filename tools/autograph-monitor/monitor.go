@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/aws/aws-lambda-go/lambda"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
@@ -46,7 +47,19 @@ var conf configuration
 const inputdata string = "AUTOGRAPH MONITORING"
 
 func main() {
-	var err error
+	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
+		// we are inside a lambda environment so run as lambda
+		lambda.Start(Handler)
+	} else {
+		err := Handler()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+	}
+}
+
+func Handler() (err error) {
 	confdir := "."
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		confdir = os.Getenv("LAMBDA_TASK_ROOT")
@@ -54,37 +67,37 @@ func main() {
 	// load the local configuration file
 	conf, err = loadConf(confdir + "/monitor.autograph.yaml")
 	if err != nil {
-		log.Fatalf("failed to load configuration: %v", err)
+		return fmt.Errorf("failed to load configuration: %v", err)
 	}
 
 	log.Println("Retrieving monitoring data from", conf.URL)
 	req, err := http.NewRequest("GET", conf.URL+"__monitor__", nil)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", makeAuthHeader(req, "monitor", conf.MonitoringKey))
 	cli := &http.Client{}
 	resp, err := cli.Do(req)
 	if err != nil || resp == nil {
-		log.Fatal(err)
+		return
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		log.Fatalf("Request failed with %s: %s", resp.Status, body)
+		return fmt.Errorf("Request failed with %s: %s", resp.Status, body)
 	}
 
 	// verify that we got a proper signature response, with valid signatures
 	var responses []signatureresponse
 	err = json.Unmarshal(body, &responses)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 	failed := false
 	for i, response := range responses {
@@ -110,9 +123,10 @@ func main() {
 		}
 	}
 	if failed {
-		log.Fatal("Errors found during monitoring")
+		return fmt.Errorf("Errors found during monitoring")
 	}
 	log.Println("All signature responses passed, monitoring OK")
+	return
 }
 
 func loadConf(path string) (cfg configuration, err error) {

@@ -24,6 +24,7 @@ import (
 	"cloud.google.com/go/internal/pretty"
 	pb "google.golang.org/genproto/googleapis/firestore/v1beta1"
 
+	tspb "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
@@ -141,16 +142,6 @@ func TestQueryToProto(t *testing.T) {
 			desc: `q.Where("a", ">", 5)`,
 			in:   q.Where("a", ">", 5),
 			want: &pb.StructuredQuery{Where: filtr([]string{"a"}, ">", 5)},
-		},
-		{
-			desc: `q.Where("a", "==", nil)`,
-			in:   q.Where("a", "==", nil),
-			want: &pb.StructuredQuery{Where: filtr([]string{"a"}, "==", nil)},
-		},
-		{
-			desc: `q.Where("a", "==", NaN)`,
-			in:   q.Where("a", "==", math.NaN()),
-			want: &pb.StructuredQuery{Where: filtr([]string{"a"}, "==", math.NaN())},
 		},
 		{
 			desc: `q.Where("a", "==", NaN)`,
@@ -589,10 +580,10 @@ func TestQueryGetAll(t *testing.T) {
 			Fields:     map[string]*pb.Value{"f": intval(1)},
 		},
 	}
-
+	wantReadTimes := []*tspb.Timestamp{aTimestamp, aTimestamp2}
 	srv.addRPC(nil, []interface{}{
-		&pb.RunQueryResponse{Document: wantPBDocs[0]},
-		&pb.RunQueryResponse{Document: wantPBDocs[1]},
+		&pb.RunQueryResponse{Document: wantPBDocs[0], ReadTime: aTimestamp},
+		&pb.RunQueryResponse{Document: wantPBDocs[1], ReadTime: aTimestamp2},
 	})
 	gotDocs, err := c.Collection("C").Documents(ctx).GetAll()
 	if err != nil {
@@ -602,7 +593,7 @@ func TestQueryGetAll(t *testing.T) {
 		t.Errorf("got %d docs, wanted %d", got, want)
 	}
 	for i, got := range gotDocs {
-		want, err := newDocumentSnapshot(c.Doc(docNames[i]), wantPBDocs[i], c)
+		want, err := newDocumentSnapshot(c.Doc(docNames[i]), wantPBDocs[i], c, wantReadTimes[i])
 		if err != nil {
 			t.Fatal(err)
 		}
