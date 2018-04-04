@@ -19,12 +19,12 @@ import (
 )
 
 var (
-	ErrInvalidToken              = errors.New("invalid authorization token")
-	ErrInvalidMethod             = errors.New("only POST requests are supported")
-	ErrMissingBody               = errors.New("missing request body")
-	ErrAutographBadStatusCode    = errors.New("failed to retrieve signature from autograph")
-	ErrAutographBadResponseCount = errors.New("received an invalid number of responses from autograph")
-	ErrAutographEmptyResponse    = errors.New("autograph returned an invalid empty response")
+	errInvalidToken              = errors.New("invalid authorization token")
+	errInvalidMethod             = errors.New("only POST requests are supported")
+	errMissingBody               = errors.New("missing request body")
+	errAutographBadStatusCode    = errors.New("failed to retrieve signature from autograph")
+	errAutographBadResponseCount = errors.New("received an invalid number of responses from autograph")
+	errAutographEmptyResponse    = errors.New("autograph returned an invalid empty response")
 
 	conf configuration
 )
@@ -99,6 +99,9 @@ func main() {
 	}
 }
 
+// Handler receives requests from AWS API Gateway and processes them. The input body must
+// contain a base64 encoded file to sign, and the response body contains a base64 encoded
+// signed file. The Authorization header of the http request must contain a valid token.
 func Handler(r events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.WithFields(log.Fields{
 		"remoteAddressChain": "[" + r.Headers["X-Forwarded-For"] + "]",
@@ -111,15 +114,15 @@ func Handler(r events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, e
 	// some sanity checking on the request
 	if r.HTTPMethod != http.MethodPost {
 		log.WithFields(log.Fields{"rid": r.RequestContext.RequestID}).Error("invalid method")
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusMethodNotAllowed, Body: ErrInvalidMethod.Error()}, ErrInvalidMethod
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusMethodNotAllowed, Body: errInvalidMethod.Error()}, errInvalidMethod
 	}
 	if len(r.Headers["Authorization"]) < 60 {
 		log.WithFields(log.Fields{"rid": r.RequestContext.RequestID}).Error("missing authorization header")
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized, Body: ErrInvalidToken.Error()}, ErrInvalidToken
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusUnauthorized, Body: errInvalidToken.Error()}, errInvalidToken
 	}
 	if len(r.Body) < 1 {
 		log.WithFields(log.Fields{"rid": r.RequestContext.RequestID}).Error("missing request body")
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: ErrMissingBody.Error()}, ErrMissingBody
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: errMissingBody.Error()}, errMissingBody
 	}
 
 	decodedBody, err := base64.StdEncoding.DecodeString(r.Body)
@@ -187,5 +190,5 @@ func authorize(authHeader string) (auth authorization, err error) {
 			return auth, nil
 		}
 	}
-	return authorization{}, ErrInvalidToken
+	return authorization{}, errInvalidToken
 }

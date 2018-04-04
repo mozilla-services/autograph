@@ -71,7 +71,7 @@ func callAutograph(auth authorization, body []byte) (signedBody []byte, err erro
 		return
 	}
 	if resp == nil {
-		err = ErrAutographEmptyResponse
+		err = errAutographEmptyResponse
 		return
 	}
 	defer resp.Body.Close()
@@ -80,7 +80,7 @@ func callAutograph(auth authorization, body []byte) (signedBody []byte, err erro
 		return
 	}
 	if resp.StatusCode != http.StatusCreated {
-		err = ErrAutographBadStatusCode
+		err = errAutographBadStatusCode
 		return
 	}
 	var responses []signatureresponse
@@ -89,7 +89,7 @@ func callAutograph(auth authorization, body []byte) (signedBody []byte, err erro
 		return
 	}
 	if len(responses) != 1 {
-		err = ErrAutographBadResponseCount
+		err = errAutographBadResponseCount
 		return
 	}
 	return base64.StdEncoding.DecodeString(responses[0].SignedFile)
