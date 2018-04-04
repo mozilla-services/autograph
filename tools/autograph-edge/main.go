@@ -95,7 +95,7 @@ func main() {
 			log.Fatal(err)
 		}
 		ioutil.WriteFile(filePath, signedBody, 06400)
-		log.Printf("%+v", resp)
+		log.Println("signed file written to", filePath)
 	}
 }
 
