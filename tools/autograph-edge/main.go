@@ -125,12 +125,7 @@ func Handler(r events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, e
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: errMissingBody.Error()}, errMissingBody
 	}
 
-	decodedBody, err := base64.StdEncoding.DecodeString(r.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"rid": r.RequestContext.RequestID}).Error(err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: err.Error()}, err
-	}
-
+	// verify auth token
 	log.WithFields(log.Fields{"rid": r.RequestContext.RequestID}).Info("checking authorization token")
 	auth, err := authorize(r.Headers["Authorization"])
 	if err != nil {
@@ -142,6 +137,14 @@ func Handler(r events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, e
 		"user": auth.User,
 	}).Info("authorization succeeded")
 
+	// decode the base64 body of the file
+	decodedBody, err := base64.StdEncoding.DecodeString(r.Body)
+	if err != nil {
+		log.WithFields(log.Fields{"rid": r.RequestContext.RequestID}).Error(err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: err.Error()}, err
+	}
+
+	// let's get this file signed!
 	log.WithFields(log.Fields{"rid": r.RequestContext.RequestID}).Info("calling autograph")
 	signedBody, err := callAutograph(auth, decodedBody)
 	if err != nil {
