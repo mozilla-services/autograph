@@ -66,7 +66,7 @@ func TestRepack(t *testing.T) {
 		}
 	}
 	if fileCount != 3 {
-		t.Fatal("found %d data files in zip archive, expected 3", fileCount)
+		t.Fatalf("found %d data files in zip archive, expected 3", fileCount)
 	}
 	if !hasManifest {
 		t.Fatal("manifest file not found in zip archive")
