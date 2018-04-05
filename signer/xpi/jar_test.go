@@ -45,7 +45,7 @@ func TestRepack(t *testing.T) {
 		}
 		switch f.Name {
 		case "test.txt", "bootstrap.js", "install.rdf":
-			fileCount += 1
+			fileCount++
 		case "META-INF/manifest.mf":
 			if !bytes.Equal(data, unsignedBootstrapManifest) {
 				t.Fatalf("manifest mismatch. Expect:\n%s\nGot:\n%s", unsignedBootstrapManifest, data)
