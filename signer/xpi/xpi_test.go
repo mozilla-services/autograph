@@ -3,6 +3,7 @@ package xpi
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/rsa"
 	"encoding/base64"
 	"encoding/pem"
 	"io/ioutil"
@@ -10,11 +11,14 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"go.mozilla.org/autograph/signer"
 )
 
 func TestSignFile(t *testing.T) {
+	t.Parallel()
+
 	input := unsignedBootstrap
 	// initialize a signer
 	testcase := PASSINGTESTCASES[0]
@@ -96,6 +100,8 @@ func TestSignFile(t *testing.T) {
 }
 
 func TestSignData(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	for i, testcase := range PASSINGTESTCASES {
 		// initialize a signer
@@ -150,6 +156,8 @@ func TestSignData(t *testing.T) {
 }
 
 func TestSignAndVerifyWithOpenSSL(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 
 	// init a signer
@@ -205,6 +213,8 @@ func TestSignAndVerifyWithOpenSSL(t *testing.T) {
 }
 
 func TestNewFailure(t *testing.T) {
+	t.Parallel()
+
 	for i, testcase := range FAILINGTESTCASES {
 		_, err := New(testcase.cfg)
 		if !strings.Contains(err.Error(), testcase.err) {
@@ -217,6 +227,8 @@ func TestNewFailure(t *testing.T) {
 }
 
 func TestNoID(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(PASSINGTESTCASES[3])
@@ -233,6 +245,8 @@ func TestNoID(t *testing.T) {
 }
 
 func TestMarshalUnfinishedSignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(PASSINGTESTCASES[3])
@@ -251,6 +265,8 @@ func TestMarshalUnfinishedSignature(t *testing.T) {
 }
 
 func TestMarshalEmptySignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(PASSINGTESTCASES[3])
@@ -269,6 +285,8 @@ func TestMarshalEmptySignature(t *testing.T) {
 }
 
 func TestUnmarshalBadSignatureBase64(t *testing.T) {
+	t.Parallel()
+
 	_, err := Unmarshal(`{{{{{`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
@@ -278,6 +296,8 @@ func TestUnmarshalBadSignatureBase64(t *testing.T) {
 }
 
 func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
+	t.Parallel()
+
 	_, err := Unmarshal(`Y2FyaWJvdW1hdXJpY2UK`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
@@ -287,6 +307,8 @@ func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
 }
 
 func TestVerifyUnfinishedSignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(PASSINGTESTCASES[3])
@@ -301,6 +323,33 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 		t.Fatal("should have errored by didn't")
 	} else if err.Error() != "xpi.VerifyWithChain: cannot verify unfinished signature" {
 		t.Fatalf("expected to fail verify unfinished signature but got error '%v'", err)
+	}
+}
+
+func TestRsaCaching(t *testing.T) {
+	t.Parallel()
+
+	// initialize a rsa signer
+	testcase := PASSINGTESTCASES[0]
+	s, err := New(testcase)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	go s.populateRsaCache(s.issuerKey.(*rsa.PrivateKey).N.BitLen())
+	time.Sleep(10 * time.Second)
+	// retrieving a rsa key should be really fast now
+	start := time.Now()
+	key, err := s.getRsaKey(s.issuerKey.(*rsa.PrivateKey).N.BitLen())
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	elapsed := time.Since(start)
+	if elapsed > time.Duration(10*time.Millisecond) {
+		t.Fatal("key retrieval from cache took more than 10ms")
+	}
+	t.Logf("retrieved rsa key from cache in %s", elapsed)
+	if key.N.BitLen() != s.issuerKey.(*rsa.PrivateKey).N.BitLen() {
+		t.Fatalf("key bitlen does not match. expected %d, got %d", s.issuerKey.(*rsa.PrivateKey).N.BitLen(), key.N.BitLen())
 	}
 }
 

@@ -3,6 +3,7 @@ package xpi // import "go.mozilla.org/autograph/signer/xpi"
 import (
 	"bytes"
 	"crypto"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -51,6 +52,10 @@ type PKCS7Signer struct {
 	// the ID will be left blank and provided by the requester of the
 	// signature, but for hotfix signers, it is set to a specific value.
 	EndEntityCN string
+
+	// rsa cache is used to pre-generate RSA private keys and speed up
+	// the signing process
+	rsaCache chan *rsa.PrivateKey
 }
 
 // New initializes an XPI signer using a configuration
@@ -115,6 +120,14 @@ func New(conf signer.Configuration) (s *PKCS7Signer, err error) {
 		return nil, errors.Errorf("xpi: unknown signer mode %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Mode)
 	}
 	s.Mode = conf.Mode
+
+	// If the private key is rsa, launch a go routine that populates
+	// the rsa cache with private keys of the same length
+	if _, ok := s.issuerKey.(*rsa.PrivateKey); ok {
+		s.rsaCache = make(chan *rsa.PrivateKey, 100)
+		go s.populateRsaCache(s.issuerKey.(*rsa.PrivateKey).N.BitLen())
+	}
+
 	return
 }
 
