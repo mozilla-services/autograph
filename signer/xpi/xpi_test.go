@@ -1,6 +1,9 @@
 package xpi
 
 import (
+	"archive/zip"
+	"bytes"
+	"encoding/base64"
 	"encoding/pem"
 	"io/ioutil"
 	"os"
@@ -11,7 +14,88 @@ import (
 	"go.mozilla.org/autograph/signer"
 )
 
-func TestSign(t *testing.T) {
+func TestSignFile(t *testing.T) {
+	input := unsignedBootstrap
+	// initialize a signer
+	testcase := PASSINGTESTCASES[0]
+	s, err := New(testcase)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	if s.Config().Type != testcase.Type {
+		t.Fatalf("signer type %q does not match configuration %q", s.Config().Type, testcase.Type)
+	}
+	if s.Config().ID != testcase.ID {
+		t.Fatalf("signer id %q does not match configuration %q", s.Config().ID, testcase.ID)
+	}
+	if s.Config().PrivateKey != testcase.PrivateKey {
+		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, testcase.PrivateKey)
+	}
+	if s.Config().Mode != testcase.Mode {
+		t.Fatalf("signer category %q does not match configuration %q", s.Config().Mode, testcase.Mode)
+	}
+
+	// sign input data
+	signedXPI, err := s.SignFile(input, s.GetDefaultOptions())
+	if err != nil {
+		t.Fatalf("failed to sign file: %v", err)
+	}
+	zipReader := bytes.NewReader(signedXPI)
+	r, err := zip.NewReader(zipReader, int64(len(signedXPI)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var (
+		sigstr  string
+		sigdata []byte
+	)
+	for _, f := range r.File {
+		switch f.Name {
+		case "META-INF/mozilla.sf":
+			rc, err := f.Open()
+			defer rc.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			sigdata, err = ioutil.ReadAll(rc)
+			if err != nil {
+				t.Fatal(err)
+			}
+		case "META-INF/mozilla.rsa":
+			rc, err := f.Open()
+			defer rc.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			rawsig, err := ioutil.ReadAll(rc)
+			if err != nil {
+				t.Fatal(err)
+			}
+			sigstr = base64.StdEncoding.EncodeToString(rawsig)
+		}
+	}
+	// convert string format back to signature
+	sig2, err := Unmarshal(sigstr, sigdata)
+	if err != nil {
+		t.Fatalf("failed to unmarshal signature: %v", err)
+	}
+
+	// make sure we still have the same string representation
+	sigstr2, err := sig2.Marshal()
+	if err != nil {
+		t.Fatalf("failed to re-marshal signature: %v", err)
+	}
+	if sigstr != sigstr2 {
+		t.Fatalf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
+			sigstr, sigstr2)
+	}
+	// verify signature on input data
+	if sig2.VerifyWithChain(nil) != nil {
+		t.Fatalf("failed to verify xpi signature: %v", sig2.VerifyWithChain(nil))
+	}
+}
+
+func TestSignData(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 	for i, testcase := range PASSINGTESTCASES {
 		// initialize a signer
