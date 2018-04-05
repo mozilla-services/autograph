@@ -19,8 +19,9 @@ func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
 		return
 	}
 
-	// first generate the manifest file by calculated a sha256 in each zip entry
+	// first generate the manifest file by calculating a sha1 and sha256 hash for each zip entry
 	mw := bytes.NewBuffer(manifest)
+	manifest = []byte(fmt.Sprintf("Manifest-Version: 1.0\n\n"))
 
 	for _, f := range r.File {
 		if isSignatureFile(f.Name) {
@@ -48,12 +49,9 @@ func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
 		fmt.Fprintf(mw, "SHA256-Digest: %s\n\n", base64.StdEncoding.EncodeToString(h2.Sum(nil)))
 	}
 	manifestBody := mw.Bytes()
-	manifest = []byte(`Manifest-Version: 1.0
-
-`)
 	manifest = append(manifest, manifestBody...)
 
-	// then calculate a signature file by hashing the manifest and adding some metadata
+	// then calculate a signature file by hashing the manifest with sha1 and sha256
 	sw := bytes.NewBuffer(sigfile)
 	fmt.Fprint(sw, "Signature-Version: 1.0\n")
 	h1 := sha1.New()
