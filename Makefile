@@ -9,7 +9,7 @@ install:
 	$(GO) install go.mozilla.org/autograph
 
 vendor:
-	govend -u
+	govend -u --prune
 	#go get -u github.com/golang/dep/...
 	#dep ensure -update
 

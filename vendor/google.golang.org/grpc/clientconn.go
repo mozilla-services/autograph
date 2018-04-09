@@ -487,7 +487,25 @@ func DialContext(ctx context.Context, target string, opts ...DialOption) (conn *
 	if cc.dopts.bs == nil {
 		cc.dopts.bs = DefaultBackoffConfig
 	}
-	cc.parsedTarget = parseTarget(cc.target)
+	if cc.dopts.resolverBuilder == nil {
+		// Only try to parse target when resolver builder is not already set.
+		cc.parsedTarget = parseTarget(cc.target)
+		grpclog.Infof("parsed scheme: %q", cc.parsedTarget.Scheme)
+		cc.dopts.resolverBuilder = resolver.Get(cc.parsedTarget.Scheme)
+		if cc.dopts.resolverBuilder == nil {
+			// If resolver builder is still nil, the parse target's scheme is
+			// not registered. Fallback to default resolver and set Endpoint to
+			// the original unparsed target.
+			grpclog.Infof("scheme %q not registered, fallback to default scheme", cc.parsedTarget.Scheme)
+			cc.parsedTarget = resolver.Target{
+				Scheme:   resolver.GetDefaultScheme(),
+				Endpoint: target,
+			}
+			cc.dopts.resolverBuilder = resolver.Get(cc.parsedTarget.Scheme)
+		}
+	} else {
+		cc.parsedTarget = resolver.Target{Endpoint: target}
+	}
 	creds := cc.dopts.copts.TransportCredentials
 	if creds != nil && creds.Info().ServerName != "" {
 		cc.authority = creds.Info().ServerName
@@ -1223,7 +1241,20 @@ func (ac *addrConn) transportMonitor() {
 		// Block until we receive a goaway or an error occurs.
 		select {
 		case <-t.GoAway():
+			done := t.Error()
+			cleanup := t.Close
+			// Since this transport will be orphaned (won't have a transportMonitor)
+			// we need to launch a goroutine to keep track of clientConn.Close()
+			// happening since it might not be noticed by any other goroutine for a while.
+			go func() {
+				<-done
+				cleanup()
+			}()
 		case <-t.Error():
+			// In case this is triggered because clientConn.Close()
+			// was called, we want to immeditately close the transport
+			// since no other goroutine might notice it for a while.
+			t.Close()
 		case <-cdeadline:
 			ac.mu.Lock()
 			// This implies that client received server preface.
