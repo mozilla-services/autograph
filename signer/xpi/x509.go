@@ -7,11 +7,44 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"log"
 	"math/big"
 	"time"
 
 	"github.com/pkg/errors"
 )
+
+// every minute, add an rsa key to the cache. This will block if
+// the cache channel is already full, which is what we want anyway
+func (s *PKCS7Signer) populateRsaCache(size int) {
+	for {
+		key, err := rsa.GenerateKey(rand.Reader, size)
+		if err != nil {
+			log.Fatalf("xpi.populateRsaCache: %v", err)
+		}
+		s.rsaCache <- key
+		time.Sleep(time.Minute)
+	}
+}
+
+// retrieve a key from the cache or generate one if it takes too long
+// or if the size is wrong
+func (s *PKCS7Signer) getRsaKey(size int) (*rsa.PrivateKey, error) {
+	select {
+	case key := <-s.rsaCache:
+		if key.N.BitLen() != size {
+			// it's theoritically impossible for this to happen
+			// because the end entity has the same key size has
+			// the signer, but we're paranoid so handling it
+			log.Printf("WARNING: xpi rsa cache returned a key of size %d when %d was requested", key.N.BitLen(), size)
+			return rsa.GenerateKey(rand.Reader, size)
+		}
+		return key, nil
+	case <-time.After(100 * time.Millisecond):
+		// generate a key if none available
+		return rsa.GenerateKey(rand.Reader, size)
+	}
+}
 
 // MakeEndEntity generates a private key and certificate ready to sign a given XPI.
 // The subject CN of the certificate is taken from the `cn` string passed as argument.
@@ -42,7 +75,7 @@ func (s *PKCS7Signer) MakeEndEntity(cn string) (eeCert *x509.Certificate, eeKey 
 	switch s.issuerKey.(type) {
 	case *rsa.PrivateKey:
 		size := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
-		eeKey, err = rsa.GenerateKey(rand.Reader, size)
+		eeKey, err = s.getRsaKey(size)
 		if err != nil {
 			err = errors.Wrapf(err, "xpi.MakeEndEntity: failed to generate rsa private key of size %d", size)
 			return
