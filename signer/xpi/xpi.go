@@ -129,8 +129,39 @@ func (s *PKCS7Signer) Config() signer.Configuration {
 	}
 }
 
-// SignData takes input data and returns a PKCS7 detached signature
-func (s *PKCS7Signer) SignData(input []byte, options interface{}) (signer.Signature, error) {
+// SignFile takes an unsigned zipped XPI file and returned a signed XPI file
+func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signer.SignedFile, error) {
+	var (
+		signedFile []byte
+	)
+	manifest, sigfile, err := makeJARManifests(input)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: cannot make JAR manifests from XPI")
+	}
+	p7sig, err := s.signData(sigfile, options)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: failed to sign XPI")
+	}
+	signedFile, err = repackJAR(input, manifest, sigfile, p7sig)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: failed to repack XPI")
+	}
+	return signedFile, nil
+}
+
+// SignData takes an input signature file and returns a PKCS7 detached signature
+func (s *PKCS7Signer) SignData(sigfile []byte, options interface{}) (signer.Signature, error) {
+	p7sig, err := s.signData(sigfile, options)
+	if err != nil {
+		return nil, err
+	}
+	sig := new(Signature)
+	sig.Data = p7sig
+	sig.Finished = true
+	return sig, nil
+}
+
+func (s *PKCS7Signer) signData(sigfile []byte, options interface{}) ([]byte, error) {
 	opt, err := GetOptions(options)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot get options")
@@ -146,21 +177,21 @@ func (s *PKCS7Signer) SignData(input []byte, options interface{}) (signer.Signat
 	if err != nil {
 		return nil, err
 	}
-	p7sig := new(Signature)
-	toBeSigned, err := pkcs7.NewSignedData(input)
+	toBeSigned, err := pkcs7.NewSignedData(sigfile)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
 	}
+	// XPIs are signed with SHA1
+	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA1)
 	err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot sign")
 	}
 	toBeSigned.Detach()
-	p7sig.Data, err = toBeSigned.Finish()
+	p7sig, err := toBeSigned.Finish()
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot finish signing data")
 	}
-	p7sig.Finished = true
 	return p7sig, nil
 }
 
