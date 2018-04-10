@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.mozilla.org/cose"
 )
 
 // every minute, add an rsa key to the cache. This will block if
@@ -48,17 +49,11 @@ func (s *PKCS7Signer) getRsaKey(size int) (*rsa.PrivateKey, error) {
 	}
 }
 
-// MakeEndEntity generates a private key and certificate ready to sign a given XPI.
-// The subject CN of the certificate is taken from the `cn` string passed as argument.
-// The type of key is identical to the key of the signer that issues the certificate,
-// if the signer uses an RSA 2048 key, so will the end-entity. The signature algorithm
-// and expiration date are also copied over from the issuer.
-//
-// The signed certificate and private key are returned.
-func (s *PKCS7Signer) MakeEndEntity(cn string) (eeCert *x509.Certificate, eeKey crypto.PrivateKey, err error) {
+// makeTemplate returns a pointer to a template for an x509.Certificate EE
+func (s *PKCS7Signer) makeTemplate(cn string) (*x509.Certificate) {
 	var derCert []byte
 	cndigest := sha256.Sum256([]byte(cn))
-	template := x509.Certificate{
+	return &x509.Certificate{
 		// The maximum length of a serial number per rfc 5280 is 20 bytes / 160 bits
 		// https://tools.ietf.org/html/rfc5280#section-4.1.2.2
 		// Setting it to nanoseconds guarantees we'll never have two conflicting serials
@@ -77,26 +72,70 @@ func (s *PKCS7Signer) MakeEndEntity(cn string) (eeCert *x509.Certificate, eeKey 
 		NotBefore:          time.Now(),
 		NotAfter:           time.Now().Add(8760 * time.Hour), // one year
 		SignatureAlgorithm: s.issuerCert.SignatureAlgorithm,
+		KeyUsage:           x509.KeyUsageDigitalSignature,
 	}
+}
 
+// generateIssuerEEKeyPair returns a public and private key pair
+// matching the issuer PKCS7Signer issuerKey size and type
+func (s *PKCS7Signer) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
 	switch s.issuerKey.(type) {
 	case *rsa.PrivateKey:
 		size := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {
-			err = errors.Wrapf(err, "xpi.MakeEndEntity: failed to generate rsa private key of size %d", size)
+			err = errors.Wrapf(err, "failed to generate rsa private key of size %d", size)
 			return
 		}
-		derCert, err = x509.CreateCertificate(rand.Reader, &template, s.issuerCert, eeKey.(*rsa.PrivateKey).Public(), s.issuerKey.(*rsa.PrivateKey))
+		eePublicKey = eeKey.(*rsa.PrivateKey).Public()
 	case *ecdsa.PrivateKey:
 		curve := s.issuerKey.(*ecdsa.PrivateKey).Curve
 		eeKey, err = ecdsa.GenerateKey(curve, rand.Reader)
 		if err != nil {
-			err = errors.Wrapf(err, "xpi.MakeEndEntity: failed to generate ecdsa private key on curve %s", curve.Params().Name)
+			err = errors.Wrapf(err, "failed to generate ecdsa private key on curve %s", curve.Params().Name)
 			return
 		}
-		derCert, err = x509.CreateCertificate(rand.Reader, &template, s.issuerCert, eeKey.(*ecdsa.PrivateKey).Public(), s.issuerKey.(*ecdsa.PrivateKey))
+		eePublicKey = eeKey.(*ecdsa.PrivateKey).Public()
 	}
+	return
+}
+
+// MakeEndEntity generates a private key and certificate ready to sign a given XPI.
+//
+// The subject CN of the certificate is taken from the `cn` string argument.
+//
+// The key type is identical to the key type of the signer that issues
+// the certificate when the optional `coseAlg` argument is nil. For
+// example, if the signer uses an RSA 2048 key, so will the
+// end-entity. When `coseAlg` is not nil, a key type of the COSE
+// algorithm is generated.
+//
+// The signature expiration date is copied over from the issuer.
+//
+// The signed x509 certificate and private key are returned.
+func (s *PKCS7Signer) MakeEndEntity(cn string, coseAlg *cose.Algorithm) (eeCert *x509.Certificate, eeKey crypto.PrivateKey, err error) {
+	var (
+		eePublicKey crypto.PublicKey
+		derCert []byte
+	)
+
+	template := s.makeTemplate(cn)
+
+	if coseAlg == nil {
+		eeKey, eePublicKey, err = s.generateIssuerEEKeyPair()
+		if err != nil {
+			err = errors.Wrapf(err, "xpi.MakeEndEntity: error generating key matching issuer")
+			return
+		}
+	} else {
+		eeKey, eePublicKey, err = s.generateCOSEKeyPair(coseAlg)
+		if err != nil {
+			err = errors.Wrapf(err, "xpi.MakeEndEntity: error generating key matching COSE Algorithm type %s", coseAlg.Name)
+			return
+		}
+	}
+
+	derCert, err = x509.CreateCertificate(rand.Reader, template, s.issuerCert, eePublicKey, s.issuerKey)
 	if err != nil {
 		err = errors.Wrapf(err, "xpi.MakeEndEntity: failed to create certificate")
 		return

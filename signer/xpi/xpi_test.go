@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
 	"io/ioutil"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"go.mozilla.org/autograph/signer"
+	"go.mozilla.org/cose"
 )
 
 func TestSignFile(t *testing.T) {
@@ -366,6 +368,89 @@ func TestRsaCaching(t *testing.T) {
 		t.Fatalf("key bitlen does not match. expected %d, got %d", keySize, key.N.BitLen())
 	}
 }
+
+func TestSignFileWithCOSESignatures(t *testing.T) {
+	t.Parallel()
+
+	input := unsignedBootstrap
+	// initialize a signer
+	testcase := PASSINGTESTCASES[0]
+	s, err := New(testcase)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+
+	// sign input data
+	signOptions := Options{
+		ID: "test@example.net",
+		COSEAlgorithms: []string{"ES256", "PS256"},
+	}
+	signedXPI, err := s.SignFile(input, signOptions)
+	if err != nil {
+		t.Fatalf("failed to sign file: %v", err)
+	}
+
+	coseManifestBytes, err := readFileFromZIP(signedXPI, "META-INF/cose.manifest")
+	if err != nil {
+		t.Fatalf("failed to read META-INF/cose.manifest from signed zip: %v", err)
+	}
+	coseMsgBytes, err := readFileFromZIP(signedXPI, "META-INF/cose.sig")
+	if err != nil {
+		t.Fatalf("failed to read META-INF/cose.sig from signed zip: %v", err)
+	}
+	pkcs7ManifestBytes, err := readFileFromZIP(signedXPI, "META-INF/manifest.mf")
+	if err != nil {
+		t.Fatalf("failed to read META-INF/manifest.mf from signed zip: %v", err)
+	}
+	coseManifest := string(coseManifestBytes)
+	pkcs7Manifest := string(pkcs7ManifestBytes)
+
+	if !strings.Contains(pkcs7Manifest, "cose") {
+		t.Fatalf("pkcs7 manifest does not contain cose files: %s", pkcs7Manifest)
+	}
+	if strings.Contains(coseManifest, "cose") {
+		t.Fatalf("cose manifest contains cose files: %s", coseManifest)
+	}
+
+	coseObj, err := cose.Unmarshal(coseMsgBytes)
+	if err != nil {
+		t.Fatalf("error unmarshaling cose.sig: %s", err)
+	}
+	coseMsg, ok := coseObj.(cose.SignMessage)
+	if !ok {
+		t.Fatal("cose.sig not a SignMessage")
+	}
+
+	if len(coseMsg.Signatures) != len(signOptions.COSEAlgorithms) {
+		t.Fatalf("cose.sig contains %d signatures, but expected %d", len(coseMsg.Signatures), len(signOptions.COSEAlgorithms))
+	}
+
+	intermediateCerts, eeCerts, err := isValidCOSEMessage(coseMsg)
+	if err != nil {
+		t.Fatalf("cose.sig is invalid %s", err)
+	}
+
+	// check that we can verify EE certs with the provided intermediates
+	roots, intermediates := x509.NewCertPool(), x509.NewCertPool()
+	ok = roots.AppendCertsFromPEM([]byte(testcase.Certificate))
+	if !ok {
+		t.Fatalf("failed to add root cert to pool")
+	}
+	for _, intermediateCert := range intermediateCerts {
+		intermediates.AddCert(intermediateCert)
+	}
+	for i, eeCert := range eeCerts {
+		opts := x509.VerifyOptions{
+			DNSName:       signOptions.ID,
+			Roots:         roots,
+			Intermediates: intermediates,
+		}
+		if _, err := eeCert.Verify(opts); err != nil {
+			t.Fatalf("failed to verify EECert %d %s", i, err)
+		}
+	}
+}
+
 
 var PASSINGTESTCASES = []signer.Configuration{
 	signer.Configuration{

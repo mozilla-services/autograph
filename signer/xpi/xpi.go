@@ -3,7 +3,10 @@ package xpi // import "go.mozilla.org/autograph/signer/xpi"
 import (
 	"bytes"
 	"crypto"
+	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -14,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/pkcs7"
+	"go.mozilla.org/cose"
 )
 
 const (
@@ -124,9 +128,13 @@ func New(conf signer.Configuration) (s *PKCS7Signer, err error) {
 
 	// If the private key is rsa, launch a go routine that populates
 	// the rsa cache with private keys of the same length
-	if _, ok := s.issuerKey.(*rsa.PrivateKey); ok {
+	if issuerPrivateKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {
 		s.rsaCache = make(chan *rsa.PrivateKey, 100)
 		go s.populateRsaCache(s.issuerKey.(*rsa.PrivateKey).N.BitLen())
+
+		if issuerPrivateKey.N.BitLen() < 2048 {
+			return nil, errors.Errorf("xpi: issuer RSA key must be at least 2048 bits")
+		}
 	}
 
 	return
@@ -143,20 +151,123 @@ func (s *PKCS7Signer) Config() signer.Configuration {
 	}
 }
 
-// SignFile takes an unsigned zipped XPI file and returned a signed XPI file
-func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signer.SignedFile, error) {
+// SignFile takes an unsigned zipped XPI file and returns a signed XPI file
+func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile signer.SignedFile, err error) {
 	var (
-		signedFile []byte
+		pkcs7Manifest []byte
+		manifest []byte
+		metas = []Metafile{}
+		opt Options
+		coseSigAlgs []*cose.Algorithm // COSE algorithms to sign with
 	)
-	manifest, sigfile, err := makeJARManifests(input)
+
+	opt, err = GetOptions(options)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot make JAR manifests from XPI")
+		return nil, errors.Wrap(err, "xpi: cannot get options")
 	}
+	for _, algStr := range opt.COSEAlgorithms {
+		alg := stringToCOSEAlg(algStr)
+		if alg == nil {
+			return nil, errors.Wrapf(err, "xpi: invalid or unsupported COSE algorithm %s", algStr)
+		}
+		coseSigAlgs = append(coseSigAlgs, alg)
+	}
+
+	manifest, err = makeJARManifest(input)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest from XPI")
+	}
+
+	if len(coseSigAlgs) > 0 {
+		cn := opt.ID
+		if s.EndEntityCN != "" {
+			cn = s.EndEntityCN
+		}
+		if cn == "" {
+			return nil, errors.New("xpi: missing common name")
+		}
+		tmp := cose.NewSignMessage()
+		msg := &tmp
+		msg.Payload = manifest
+
+		var coseSigners []cose.Signer
+
+		// Add list of DER encoded intermediate certificates as message key id
+		msg.Headers.Protected["kid"] = [][]byte{s.issuerCert.Raw[:]}
+
+		for _, alg := range coseSigAlgs {
+			// create a cert and key
+			eeCert, eeKey, err := s.MakeEndEntity(cn, alg)
+			if err != nil {
+				return nil, err
+			}
+
+			// create a COSE.Signer
+			signer, err := cose.NewSignerFromKey(alg, eeKey)
+			if err != nil {
+				return nil, errors.Wrap(err, "xpi: COSE signer creation failed")
+			}
+			coseSigners = append(coseSigners, *signer)
+
+			// create a COSE Signature holder
+			sig := cose.NewSignature()
+			sig.Headers.Protected["alg"] = alg.Name
+			sig.Headers.Protected["kid"] = eeCert.Raw[:]
+			msg.AddSignature(sig)
+		}
+
+		err = msg.Sign(rand.Reader, nil, coseSigners)
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: COSE signing failed")
+		}
+		// for addons the signature is detached and the payload is always nil / null
+		msg.Payload = nil
+
+		coseSig, err := cose.Marshal(msg)
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: error serializing COSE signatures to CBOR")
+		}
+
+		// add the cose files to the metafiles we'll add to the zipfile
+		coseMetaFiles := []Metafile{
+			{"META-INF/cose.manifest", manifest},
+			{"META-INF/cose.sig", coseSig},
+		}
+		metas = append(metas, coseMetaFiles...)
+
+		// add entries for the cose files to the manifest as cose.manifest and cose.sig
+		mw := bytes.NewBuffer(manifest)
+		for _, f := range coseMetaFiles {
+			fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
+			h1 := sha1.New()
+			h1.Write(f.Body)
+			fmt.Fprintf(mw, "SHA1-Digest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
+			h2 := sha256.New()
+			h2.Write(f.Body)
+			fmt.Fprintf(mw, "SHA256-Digest: %s\n\n", base64.StdEncoding.EncodeToString(h2.Sum(nil)))
+		}
+		pkcs7Manifest = mw.Bytes()
+	} else {
+		pkcs7Manifest = manifest
+	}
+
+	sigfile, err := makeJARSignature(pkcs7Manifest)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest signature from XPI")
+	}
+
 	p7sig, err := s.signData(sigfile, options)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: failed to sign XPI")
 	}
-	signedFile, err = repackJAR(input, manifest, sigfile, p7sig)
+
+	metas = append(metas, []Metafile{
+		{"META-INF/manifest.mf", pkcs7Manifest},
+		{"META-INF/mozilla.sf", sigfile},
+		{"META-INF/mozilla.rsa", p7sig},
+	}...)
+
+	signedFile, err = repackJARWithMetafiles(input, metas)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: failed to repack XPI")
 	}
@@ -187,10 +298,11 @@ func (s *PKCS7Signer) signData(sigfile []byte, options interface{}) ([]byte, err
 	if cn == "" {
 		return nil, errors.New("xpi: missing common name")
 	}
-	eeCert, eeKey, err := s.MakeEndEntity(cn)
+	eeCert, eeKey, err := s.MakeEndEntity(cn, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	toBeSigned, err := pkcs7.NewSignedData(sigfile)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
@@ -213,6 +325,9 @@ func (s *PKCS7Signer) signData(sigfile []byte, options interface{}) ([]byte, err
 type Options struct {
 	// ID is the add-on ID which is stored in the end-entity subject CN
 	ID string `json:"id"`
+
+	// COSEAlgorithms is a list of strings referring to IANA algorithms to use for COSE signatures
+	COSEAlgorithms []string `json:"cose_algorithms"`
 }
 
 // GetDefaultOptions returns default options of the signer
@@ -320,11 +435,18 @@ func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x50
 	return nil
 }
 
-// VerifySignedFile checks the XPI's PKCS7 signature
-func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool) error {
+// VerifySignedFile checks the XPI's PKCS7 signature and COSE
+// signatures if present
+func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, opts Options) error {
 	err := verifyPKCS7SignatureRoundTrip(signedFile, truststore)
 	if err != nil {
 		return errors.Wrap(err, "xpi: error verifying PKCS7 signature for signed file")
 	}
+
+	if len(opts.COSEAlgorithms) > 0 {
+		err = verifyCOSESignatures(signedFile, opts)
+		return errors.Wrap(err, "xpi: error verifying COSE signatures for signed file")
+	}
+
 	return nil
 }
