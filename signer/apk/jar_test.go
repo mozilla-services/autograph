@@ -130,6 +130,7 @@ var smallZip = []byte("\x50\x4B\x03\x04\x0A\x00\x00\x00\x00\x00\x0D\x8E\x70\x4C\
 var smallZipManifest = []byte(`Manifest-Version: 1.0
 Built-By: Generated-by-Autograph
 Created-By: go.mozilla.org/autograph
+
 Name: foo.txt
 SHA-256-Digest: aE/i11OBml60LVIdT0GjCqhQdvwtRRY+sL8ySX8+1EY=
 
@@ -137,7 +138,7 @@ SHA-256-Digest: aE/i11OBml60LVIdT0GjCqhQdvwtRRY+sL8ySX8+1EY=
 
 var smallZipSignatureFile = []byte(`Signature-Version: 1.0
 Created-By: 1.0.0 autograph-client (go.mozilla.org/autograph)
-SHA-256-Digest-Manifest: zHiK7LfuggdT9gdh42avcamjUnuLHjaHtnvquuWFbKs=
+SHA-256-Digest-Manifest: LpKUd4ScoPSLipDW2FHd6XJqnxx3pgCBEXygZPGQFCw=
 
 Name: foo.txt
 SHA-256-Digest: aE/i11OBml60LVIdT0GjCqhQdvwtRRY+sL8ySX8+1EY=

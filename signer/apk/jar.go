@@ -22,8 +22,12 @@ func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
 	mw := bytes.NewBuffer(manifest)
 
 	for _, f := range r.File {
-		// reserved signature files do not get included in the manifest
 		if isSignatureFile(f.Name) {
+			// reserved signature files do not get included in the manifest
+			continue
+		}
+		if f.FileInfo().IsDir() {
+			// directories do not get included
 			continue
 		}
 		rc, err := f.Open()
@@ -44,6 +48,7 @@ func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
 	manifest = []byte(`Manifest-Version: 1.0
 Built-By: Generated-by-Autograph
 Created-By: go.mozilla.org/autograph
+
 `)
 	manifest = append(manifest, manifestBody...)
 

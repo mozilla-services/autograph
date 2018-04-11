@@ -63,7 +63,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body) > 1048576000 {
 		// the max body size is hardcoded to 1GB. Seriously, what are you trying to sign?
-		httpError(w, r, http.StatusBadRequest, "request exceeds max size of 100MB")
+		httpError(w, r, http.StatusBadRequest, "request exceeds max size of 1GB")
 		return
 	}
 	userid, authorized, err := a.authorize(r, body)
