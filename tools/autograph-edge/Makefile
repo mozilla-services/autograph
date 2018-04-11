@@ -3,8 +3,6 @@ build: lint vet test
 	zip -r autograph-edge.zip autograph-edge autograph-edge.yaml
 test:
 	go test go.mozilla.org/autograph/tools/autograph-edge
-vendor:
-	govend -u
 lint:
 	golint *.go
 vet:
