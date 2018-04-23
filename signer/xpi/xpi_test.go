@@ -344,8 +344,8 @@ func TestRsaCaching(t *testing.T) {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
 	elapsed := time.Since(start)
-	if elapsed > time.Duration(10*time.Millisecond) {
-		t.Fatal("key retrieval from cache took more than 10ms")
+	if elapsed > time.Duration(20*time.Millisecond) {
+		t.Fatal("key retrieval from cache took more than 20ms")
 	}
 	t.Logf("retrieved rsa key from cache in %s", elapsed)
 	if key.N.BitLen() != s.issuerKey.(*rsa.PrivateKey).N.BitLen() {
