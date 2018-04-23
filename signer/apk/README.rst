@@ -61,7 +61,7 @@ You can then place the certificate and private key in `autograph.yaml`:
 Signature request
 -----------------
 
-This signer supports both a `/sign/data/` and `/sign/file` endpoints. Both use
+This signer supports both `/sign/data/` and `/sign/file` endpoints. Both use
 the same request format:
 
 .. code:: json
