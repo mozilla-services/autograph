@@ -93,6 +93,64 @@ Each signature response contains the following fields:
 * `signature` is the signature encoded in the proper format. Each signer uses
   a different format, so refer to their documentation for more information.
 
+/sign/file
+----------
+
+Request
+~~~~~~~
+
+Request for a signature on signed files. This can be useful to add
+hash manifests to files and reduce the number of round trips for file
+formats requiring multiple signatures. The files to sign are passed in
+the request body using the JSON format described below.
+
+The request body is an array of signature requests, to allow for batching
+signatures into a single API request. The parameters are:
+
+* **input**: a base64 encoded file to sign
+
+* **keyid**: allows the caller to specify a key to sign the data with. This
+  parameter is optional, and Autograph will pick a key based on the caller's
+  permission if omitted.
+
+* **options**: a JSON object used to pass signer-specific options in the request.
+  Refer to the documentation of each signer to find out which options they accept.
+
+example:
+
+.. code:: bash
+
+	POST /sign/file
+	Host: autograph.example.net
+	Content-type: application/json
+	Authorization: Hawk id="alice", mac="756lSgQEYLoc6V0Uv2wS8pRg/h+4WFUVKWQynCFvY8Y=", ts="1524487134", nonce="MrpGL35q", hash="9m3WhtGQDuHermi5fDYBGJlOqNeK5B3nk0lKreZ+YSw=", ext="933126753"
+
+	[
+	    {
+	      "input":"UEsDBBQACAAIAAAAAAAAAAAAAAAAAAAAAAATAAAAQW5kcm9pZE1hbmlmZXN0LnhtbKSYS2ybx7XHf0PqbVmW4...BwAACigAAAAA",
+	    },
+	    {
+	      "input":"UEsDBBQACAAIAAAAAAAAAAAAAAAAAAAAAAATAAAAQW5kcm9pZE1hbmlmZXN0LnhtbKSYS2ybx7XHf0PqbVmW4...BwAACigAAAAA",
+	      "keyid":"testapp-android",
+	      "options":null
+	    }
+	]
+
+Response
+~~~~~~~~
+
+A successful request return a `201 Created` with a response body
+containing all signed files encoded in JSON. The ordering of the
+response array is identical to the request array, such that signing
+request 0 maps to signing response 0, etc.
+
+The response format is the same as `/sign/data` except instead of
+the `signature` field autograph returns the field:
+
+* `signed_file` is the base64 encoded signed file data. Each signer
+  uses a different format, so refer to their documentation for more
+  information.
+
 /sign/hash
 ----------
 
