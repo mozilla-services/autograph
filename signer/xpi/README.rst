@@ -24,7 +24,7 @@ The XPI signer in Autograph supports four types of addons. A signer is
 configured to issue signatures for a given type using the `mode` parameter in
 the autograph configuration:
 
-* Regular addons use mode `add-on` 
+* Regular addons use mode `add-on`
 * Mozilla Extensions use mode `extension`
 * Mozilla Components (aka. System Addons) use mode `system add-on`
 * Hotfixes use mode `hotfix`
@@ -58,19 +58,7 @@ right after the signature is issued.
 Signature Request
 -----------------
 
-This signer only supports the `/sign/data` endpoint. The `input` field of the
-JSON signing requests must contain the base64 of a `mozilla.sf` signature file,
-as described in `Extension Signing Algorithm`_. The signer issues a PKCS7
-signature on the `mozilla.sf` file and returns it in the JSON response.
-
-.. _`Extension Signing Algorithm`: https://wiki.mozilla.org/Add-ons/Extension_Signing#Algorithm
-
-In addition to the input data, this signer also needs to receive the ID of the
-addon being signed in the options of the signing request. This ID must be
-decided client side, and is generally a string that looks like an email address,
-but can also be the hexadecimal of a sha256 hash if said string is longer than
-64 characters. The Autograph XPI signer doesn't care about the content of the
-string, and uses it as received when generating the end-entity signing cert.
+Supports the `/sign/data` and `/sign/file` endpoints for data and file signing respectively. Both use the same request format:
 
 .. code:: json
 
@@ -84,15 +72,47 @@ string, and uses it as received when generating the end-entity signing cert.
 		}
 	]
 
+Where options includes the following fields:
+
+* `id` is the **required** ID of the addon to sign for both data and
+  file signing. It must be decided client side, and is generally a
+  string that looks like an email address, but when longer than 64
+  characters can be the hexadecimal encoding of a sha256 hash. This
+  signer doesn't care about the content of the string, and uses it as
+  received when generating the end-entity signing cert.
+
+
+The `/sign/file` endpoint takes a whole XPI encoded in base64. As
+described in `Extension Signing Algorithm`_, it:
+
+* unzips the XPI
+* hashes each file to generate the manifest file `manifest.mf`
+* hashes the manifest to generate the signature file `mozilla.sf`
+* generates an RSA end entity cert from the signer's intermediate
+* uses the generated cert to sign the signature file and create a PKCS7 detached signature `mozilla.rsa`
+* adds the generated manifest, signature, and detached signature files to the XPI `META-INF/`
+* repacks and returns the ZIP/XPI
+
+The `/sign/data` endpoint only generates the end entity cert and signs
+the signature file. It must contain the base64 encoding of a
+`mozilla.sf` signature file in the `input` field and returns the PKCS7
+detached signature `mozilla.sf`. The caller is then responsible for
+repacking the ZIP.
+
+.. _`Extension Signing Algorithm`: https://wiki.mozilla.org/Add-ons/Extension_Signing#Algorithm
+
 Signature Response
 ------------------
+
+Data Signing
+~~~~~~~~~~~~
 
 XPI signatures are binary files encoded using the PKCS7 format and stored in the
 file called **mozilla.rsa** in the META-INF folder of XPI archives.
 
 Autograph returns the base64 representation of the mozilla.rsa file in its
 signature responses. Clients must decode the base64 from the autograph response
-and write it to a mozilla.rsa file.
+and write it to a `mozilla.rsa` file.
 
 .. code:: json
 
@@ -109,3 +129,22 @@ and write it to a mozilla.rsa file.
 Note that the **public_key** field is empty in signature responses because PKCS7
 files already contain the public certificate of the end-entity that issued the
 signature.
+
+File Signing
+~~~~~~~~~~~~
+
+Like the data signing except the signed XPI is returned in the
+`signed_file` field. Clients must decode the base64 from the autograph
+response and write it to a `signed_addon.xpi` file.
+
+.. code:: json
+
+	[
+	  {
+		"ref": "z4cfx4x6qymxsj9hiqbuqvn7",
+		"type": "xpi",
+		"signer_id": "webextensions-rsa",
+		"public_key": "",
+		"signed_file": "MIIRUQYJKoZIhvcNAQcCoIIRQjCCET4CAQExCTAHBgUr..."
+	  }
+	]
