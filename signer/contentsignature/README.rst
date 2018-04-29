@@ -25,6 +25,11 @@ worrying that a compromise would end-up serving bad data to our users.
 Signing content at the source reduces pressure on the infrastructure
 and allows us to rely on vendors without worrying about data integrity.
 
+For more information, refer to Julien Vehent's presentation linked below:
+
+.. image:: https://img.youtube.com/vi/b2kPo8YdLTw/0.jpg
+   :target: https://www.youtube.com/watch?v=b2kPo8YdLTw
+
 Signature
 ---------
 
