@@ -37,14 +37,24 @@ import (
 // Where "TIn" and "TOut" are types compatible with the "encoding/json" standard library.
 // See https://golang.org/pkg/encoding/json/#Unmarshal for how deserialization behaves
 func Start(handler interface{}) {
+	wrappedHandler := newHandler(handler)
+	StartHandler(wrappedHandler)
+}
+
+// StartHandler takes in a Handler wrapper interface which can be implemented either by a
+// custom function or a struct.
+//
+// Handler implementation requires a single "Invoke()" function:
+//
+//  func Invoke(context.Context, []byte) ([]byte, error)
+func StartHandler(handler Handler) {
 	port := os.Getenv("_LAMBDA_SERVER_PORT")
 	lis, err := net.Listen("tcp", "localhost:"+port)
 	if err != nil {
 		log.Fatal(err)
 	}
-	wrappedHandler := newHandler(handler)
 	function := new(Function)
-	function.handler = wrappedHandler
+	function.handler = handler
 	err = rpc.Register(function)
 	if err != nil {
 		log.Fatal("failed to register handler function")
