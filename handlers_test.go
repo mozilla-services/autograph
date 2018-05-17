@@ -28,6 +28,8 @@ import (
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
+
+	margo "go.mozilla.org/mar"
 )
 
 func TestSignaturePass(t *testing.T) {
@@ -655,6 +657,26 @@ func verifyAPKSignature(signedAPK []byte) error {
 		return fmt.Errorf("failed to verify apk signature: %v", sig.Verify())
 	}
 	return nil
+}
+
+func verifyMARSignature(b64Input, b64Sig, b64Key string, sigalg uint32) error {
+	input, err := base64.StdEncoding.DecodeString(b64Input)
+	if err != nil {
+		return err
+	}
+	sig, err := base64.StdEncoding.DecodeString(b64Sig)
+	if err != nil {
+		return err
+	}
+	rawKey, err := base64.StdEncoding.DecodeString(b64Key)
+	if err != nil {
+		return err
+	}
+	key, err := x509.ParsePKIXPublicKey(rawKey)
+	if err != nil {
+		return err
+	}
+	return margo.VerifySignature(input, sig, sigalg, key)
 }
 
 func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error) {

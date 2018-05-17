@@ -22,12 +22,17 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 
 	"github.com/mozilla-services/yaml"
+
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/xpi"
+
 	"go.mozilla.org/sops"
 	"go.mozilla.org/sops/decrypt"
+
+	"github.com/ThalesIgnite/crypto11"
 )
 
 // configuration loads a yaml file that contains the configuration of Autograph
@@ -36,6 +41,7 @@ type configuration struct {
 		Listen         string
 		NonceCacheSize int
 	}
+	HSM            crypto11.PKCS11Config
 	Signers        []signer.Configuration
 	Authorizations []authorization
 	Monitoring     authorization
@@ -73,6 +79,22 @@ func main() {
 	// initialize signers from the configuration
 	// and store them into the autographer handler
 	ag = newAutographer(conf.Server.NonceCacheSize)
+
+	// initialize the hsm if a configuration is defined
+	if conf.HSM.Path != "" {
+		tmpCtx, err := crypto11.Configure(&conf.HSM)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if tmpCtx != nil {
+			// if we successfully initialized the crypto11 context,
+			// tell the signers they can try using the HSM
+			for i := range conf.Signers {
+				conf.Signers[i].HSMIsAvailable()
+			}
+		}
+	}
+
 	err = ag.addSigners(conf.Signers)
 	if err != nil {
 		log.Fatal(err)
@@ -201,6 +223,11 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			}
 		case apk.Type:
 			s, err = apk.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case mar.Type:
+			s, err = mar.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}

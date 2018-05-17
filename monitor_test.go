@@ -12,7 +12,9 @@ import (
 
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/xpi"
+	margo "go.mozilla.org/mar"
 )
 
 func TestMonitorPass(t *testing.T) {
@@ -52,10 +54,14 @@ func TestMonitorPass(t *testing.T) {
 			err = verifyAPKManifestSignature(
 				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
 				response.Signature)
+		case mar.Type:
+			err = verifyMARSignature(base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+				response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
 		default:
-			t.Fatal("unsupported signature type", response.Type)
+			t.Fatalf("unsupported signature type %q", response.Type)
 		}
 		if err != nil {
+			t.Logf("%+v", response)
 			t.Fatalf("verification of monitoring response %d failed: %v", i, err)
 		}
 	}

@@ -15,6 +15,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/ThalesIgnite/crypto11"
 )
 
 // Configuration defines the parameters of a signer
@@ -26,6 +28,13 @@ type Configuration struct {
 	PublicKey   string `json:"publickey,omitempty"`
 	Certificate string `json:"certificate,omitempty"`
 	X5U         string `json:"x5u,omitempty"`
+
+	isHsmAvailable bool
+}
+
+// HSMIsAvailable indicates that an HSM has been initialized
+func (cfg *Configuration) HSMIsAvailable() {
+	cfg.isHsmAvailable = true
 }
 
 // Signer is an interface to a configurable issuer of digital signatures
@@ -58,6 +67,31 @@ type Signature interface {
 
 // SignedFile is an []bytes that contains file data
 type SignedFile []byte
+
+// GetPrivateKey uses a signer configuration to determine where a private
+// key should be accessed from. If it is in local configuration, it will
+// be parsed and loaded in the signer. If it is in an HSM, it will be
+// used via a PKCS11 interface. This is completely transparent to the
+// caller, who should simply assume that the privatekey implements a
+// crypto.Sign interface
+//
+// Note that we assume the PKCS11 library has been previously initialized
+func (cfg *Configuration) GetPrivateKey() (crypto.PrivateKey, error) {
+	// if a private key in the config starts with a PEM header, it is
+	// defined locally and is parsed and returned
+	if strings.HasPrefix(cfg.PrivateKey, "-----BEGIN") {
+		return ParsePrivateKey([]byte(cfg.PrivateKey))
+	}
+	// otherwise, we assume the privatekey represents a label in the HSM
+	if cfg.isHsmAvailable {
+		key, err := crypto11.FindKeyPair(nil, []byte(cfg.PrivateKey))
+		if err != nil {
+			return nil, err
+		}
+		return key, nil
+	}
+	return nil, fmt.Errorf("no suitable key found")
+}
 
 // ParsePrivateKey takes a PEM blocks are returns a crypto.PrivateKey
 func ParsePrivateKey(keyPEMBlock []byte) (crypto.PrivateKey, error) {

@@ -6,6 +6,45 @@
 #
 version: 2
 jobs:
+  test:
+    docker:
+      - image: golang:latest
+    working_directory: /root/go/src/go.mozilla.org/autograph
+    environment:
+        GOPATH: "/root/go"
+    steps:
+      - run:
+          name: Install packages
+          command: |
+              apt-get update
+              apt-get install -y git ssh softhsm2 libltdl-dev netcat
+      - run:
+          name: Setup SoftHSM
+          command: |
+              mkdir /var/lib/softhsm/tokens
+              softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
+      - checkout
+      - run:
+          name: Generate keys in softhsm
+          command: |
+              go run tools/softhsm/genkeys.go
+      - run:
+          name: Run Autograph with SoftHSM configuration
+          command: |
+              make install
+              $GOPATH/bin/autograph -c autograph.softhsm.yaml
+          background: true
+      - run:
+          name: Test HSM signers
+          command: |
+              cd tools/autograph-monitor
+              go build -o autograph-monitor *.go
+              while ! nc -z localhost 8000; do
+                echo -n "."
+                sleep 1 # wait for a sec before checking again
+              done
+              ./autograph-monitor
+
   build:
     docker:
       - image: docker:18.02.0-ce
@@ -75,8 +114,13 @@ jobs:
 
 workflows:
   version: 2
-  build-deploy:
+  test-build-deploy:
     jobs:
+      - test:
+          filters:
+            tags:
+              only: /.*/
+
       - build:
           filters:
             tags:
