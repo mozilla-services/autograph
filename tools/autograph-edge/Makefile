@@ -1,4 +1,6 @@
-build: lint vet test
+all: lint vet test build
+
+build:
 	go build -o autograph-edge *.go
 	zip -r autograph-edge.zip autograph-edge autograph-edge.yaml
 test:
