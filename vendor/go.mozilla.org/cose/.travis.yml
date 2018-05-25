@@ -1,0 +1,18 @@
+env:
+  secure: "oRN/RDJnLd8L7AMjI76rqUEEXYI7KrspkJkPsM1JQzoZQjKW40RhehuXY0Mo6GRjCKtb6cOBKRCDq/NpVbaUPY485hOYcevra0QhdEGIpkj2g7XR798Olvf7ljubQWmV0dHM9SwcmWPEvWrOXW0Bu7R853X4q8FjhG/IvqBgapjRmPb2Ai/roD77t6Qba55JczQwdS0s5j17xS2xAAl1SbETI/gBJ2wRNdKwWnLnE0oLLflkgLsRaMyrNcTCunr8VO3eELfabhBV2xtTq9Rp/i4wvrJb38jSO1e1lLcTMnbcfZLNDNp0YRxVxcV0Xdrp8M/vjlB9udtinAMfMd4AQRe8cwlImDI01xTbMbpU51Uv/FFr2Amp/Sh4/QfRSiivIVkKdwlkUvxiyETXpZHzIae1a3p1EISar8toNpTIskewtG1T/W5l/31NWiQhJEoVpN78nd7156OaE1SIPMop1AIcxoHmw/PlH440+vWlpMWx/A3VfHAPfLAzuziR9/j1lu8gFmQnXk/cNeTFgS0eSPMQ8JwsXED4XMTYJHy+V2ETnYmmx0s8GoivfGSKMkY6XnElqN9IZkEDqzVH1D9LK9WCkKplAJXX19su8t+7LUrd4QATP4NtBUrfkDyCgUG9qN3mfR5/xtCc5zqRj7OjXhm40PBCnB2/3F7bKScA8mw="
+language: go
+go:
+  - "1.10"
+addons:
+  apt:
+    packages:
+    - curl
+before_install:
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
+  - export PATH=$PATH:~/.cargo/bin/
+  - rustc --version
+  - cargo --version
+script:
+  make ci
+notifications:
+  email: false
