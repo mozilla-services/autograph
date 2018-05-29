@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
+	"github.com/pkg/errors"
 )
 
 func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
@@ -168,4 +169,29 @@ func isSignatureFile(name string) bool {
 		}
 	}
 	return false
+}
+
+// readFileFromZIP reads a given filename out of a ZIP and returns it or an error
+func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
+	zipReader := bytes.NewReader(signedXPI)
+	r, err := zip.NewReader(zipReader, int64(len(signedXPI)))
+	if err != nil {
+		return nil, errors.Wrap(err, "Error reading ZIP")
+	}
+
+	for _, f := range r.File {
+		if f.Name == filename {
+			rc, err := f.Open()
+			defer rc.Close()
+			if err != nil {
+				return nil, errors.Wrapf(err, "Error opening file %s in ZIP", filename)
+			}
+			data, err := ioutil.ReadAll(rc)
+			if err != nil {
+				return nil, errors.Wrapf(err, "Error reading file %s in ZIP", filename)
+			}
+			return data, nil
+		}
+	}
+	return nil, errors.New(fmt.Sprintf("failed to find %s in ZIP", filename))
 }

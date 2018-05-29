@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -277,4 +278,53 @@ func (sig *Signature) String() string {
 	var buf bytes.Buffer
 	pem.Encode(&buf, &pem.Block{Type: "PKCS7", Bytes: sig.Data})
 	return string(buf.Bytes())
+}
+
+// verifyPKCS7SignatureRoundTrip checks that
+//
+// 1) the signed XPI includes a PKCS7 signature and signature data
+// 2) the signature serializes and deserializes properly
+// 3) the PKCS7 signatures
+// 4) the signature cert chain verifies when an optional non-nil truststore is provided
+//
+func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x509.CertPool) error {
+	sigStrBytes, err := readFileFromZIP(signedFile, "META-INF/mozilla.rsa")
+	if err != nil {
+		return errors.Wrapf(err, "failed to read PKCS7 signature META-INF/mozilla.rsa")
+	}
+	sigStr := base64.StdEncoding.EncodeToString(sigStrBytes)
+	sigData, err := readFileFromZIP(signedFile, "META-INF/mozilla.sf")
+	if err != nil {
+		return errors.Wrapf(err, "failed to read META-INF/mozilla.sf")
+	}
+
+	// convert string format back to signature
+	sig, err := Unmarshal(sigStr, sigData)
+	if err != nil {
+		return errors.Wrapf(err, "failed to unmarshal PKCS7 signature")
+	}
+	// verify signature on input data
+	if sig.VerifyWithChain(truststore) != nil {
+		return fmt.Errorf("failed to verify xpi signature: %v", sig.VerifyWithChain(truststore))
+	}
+
+	// make sure we still have the same string representation
+	sigStr2, err := sig.Marshal()
+	if err != nil {
+		return fmt.Errorf("failed to re-marshal signature: %v", err)
+	}
+	if sigStr != sigStr2 {
+		return fmt.Errorf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
+			sigStr, sigStr2)
+	}
+	return nil
+}
+
+// VerifySignedFile checks the XPI's PKCS7 signature
+func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool) error {
+	err := verifyPKCS7SignatureRoundTrip(signedFile, truststore)
+	if err != nil {
+		return errors.Wrap(err, "xpi: error verifying PKCS7 signature for signed file")
+	}
+	return nil
 }
