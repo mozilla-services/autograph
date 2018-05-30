@@ -3,6 +3,7 @@ package xpi
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/pem"
@@ -335,21 +336,34 @@ func TestRsaCaching(t *testing.T) {
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
-	go s.populateRsaCache(s.issuerKey.(*rsa.PrivateKey).N.BitLen())
-	time.Sleep(10 * time.Second)
+	keySize := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
+
+	go s.populateRsaCache(keySize)
+	if os.Getenv("CI") == "true" {
+		// sleep longer when running in continuous integration
+		time.Sleep(30 * time.Second)
+	} else {
+		time.Sleep(10 * time.Second)
+	}
 	// retrieving a rsa key should be really fast now
 	start := time.Now()
-	key, err := s.getRsaKey(s.issuerKey.(*rsa.PrivateKey).N.BitLen())
+	key, err := s.getRsaKey(keySize)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
-	elapsed := time.Since(start)
-	if elapsed > time.Duration(20*time.Millisecond) {
-		t.Fatal("key retrieval from cache took more than 20ms")
+	cachedElapsed := time.Since(start)
+	t.Logf("retrieved rsa key from cache in %s", cachedElapsed)
+
+	start = time.Now()
+	rsa.GenerateKey(rand.Reader, keySize)
+	generatedElapsed := time.Since(start)
+	t.Logf("generated rsa key without cache in %s", generatedElapsed)
+
+	if cachedElapsed > generatedElapsed {
+		t.Fatal("key retrieval from populated cache took longer than generating directly")
 	}
-	t.Logf("retrieved rsa key from cache in %s", elapsed)
-	if key.N.BitLen() != s.issuerKey.(*rsa.PrivateKey).N.BitLen() {
-		t.Fatalf("key bitlen does not match. expected %d, got %d", s.issuerKey.(*rsa.PrivateKey).N.BitLen(), key.N.BitLen())
+	if key.N.BitLen() != keySize {
+		t.Fatalf("key bitlen does not match. expected %d, got %d", keySize, key.N.BitLen())
 	}
 }
 
