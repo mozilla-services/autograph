@@ -78,7 +78,6 @@ def get_guid(file_path):
     else:
         print("Could not find guid, check add-on")
         exit(1)
-    print("bar")
 
 
 def main():
