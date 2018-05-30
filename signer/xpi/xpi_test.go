@@ -339,7 +339,12 @@ func TestRsaCaching(t *testing.T) {
 	keySize := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
 
 	go s.populateRsaCache(keySize)
-	time.Sleep(10 * time.Second)
+	if os.Getenv("CI") == "true" {
+		// sleep longer when running in continuous integration
+		time.Sleep(30 * time.Second)
+	} else {
+		time.Sleep(10 * time.Second)
+	}
 	// retrieving a rsa key should be really fast now
 	start := time.Now()
 	key, err := s.getRsaKey(keySize)
