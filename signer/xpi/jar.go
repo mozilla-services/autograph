@@ -186,18 +186,22 @@ func (m *Metafile) IsNameValid() bool {
 
 // repackJARWithMetafiles inserts metafiles in the input JAR file and returns a JAR ZIP archive
 func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, err error) {
-	for _, f := range metafiles {
-		if !f.IsNameValid() {
-			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
-			return
-		}
-	}
 	var (
 		rc     io.ReadCloser
 		fwhead *zip.FileHeader
 		fw     io.Writer
 		data   []byte
+		pkcs7SigFile *Metafile
 	)
+	for _, f := range metafiles {
+		if !f.IsNameValid() {
+			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
+			return
+		}
+		if f.Name == pkcs7SigPath {
+			pkcs7SigFile = &f
+		}
+	}
 	inputReader := bytes.NewReader(input)
 	r, err := zip.NewReader(inputReader, int64(len(input)))
 	if err != nil {
@@ -212,17 +216,19 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 	// The PKCS7 file("foo.rsa") *MUST* be the first file in the
 	// archive to take advantage of Firefox's optimized downloading
 	// of XPIs
-	fwhead = &zip.FileHeader{
-		Name:   "META-INF/mozilla.rsa",
-		Method: zip.Deflate,
-	}
-	fw, err = w.CreateHeader(fwhead)
-	if err != nil {
-		return
-	}
-	_, err = fw.Write(signature)
-	if err != nil {
-		return
+	if pkcs7SigFile != nil {
+		fwhead = &zip.FileHeader{
+			Name:   pkcs7SigPath,
+			Method: zip.Deflate,
+		}
+		fw, err = w.CreateHeader(fwhead)
+		if err != nil {
+			return
+		}
+		_, err = fw.Write(pkcs7SigFile.Body)
+		if err != nil {
+			return
+		}
 	}
 
 	// Iterate through the files in the archive,
