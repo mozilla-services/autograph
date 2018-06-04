@@ -145,10 +145,6 @@ func verifyCertChain(certs []*x509.Certificate) error {
 			log.Printf("Certificate %d %q has a valid signature from parent certificate %d %q",
 				i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName)
 		}
-		if time.Now().Add(15 * 24 * time.Hour).After(cert.NotAfter) {
-			return fmt.Errorf("Certificate %d %q expires in less than 15 days: notAfter=%s",
-				i, cert.Subject.CommonName, cert.NotAfter)
-		}
 		if time.Now().Add(30 * 24 * time.Hour).After(cert.NotAfter) {
 			// cert expires in less than 30 days, this is a soft error. send an email.
 			err := sendSoftNotification(
@@ -158,6 +154,10 @@ func verifyCertChain(certs []*x509.Certificate) error {
 			if err != nil {
 				log.Printf("failed to send soft notification: %v", err)
 			}
+		}
+		if time.Now().Add(15 * 24 * time.Hour).After(cert.NotAfter) {
+			return fmt.Errorf("Certificate %d %q expires in less than 15 days: notAfter=%s",
+				i, cert.Subject.CommonName, cert.NotAfter)
 		}
 		if time.Now().Before(cert.NotBefore) {
 			return fmt.Errorf("Certificate %d %q is not yet valid: notBefore=%s",
