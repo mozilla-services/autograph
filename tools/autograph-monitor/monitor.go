@@ -188,17 +188,17 @@ func makeAuthHeader(req *http.Request, user, token string) string {
 
 // send a message to a predefined sns topic
 func sendSoftNotification(id string, format string, a ...interface{}) error {
-	if os.Getenv("LAMBDA_TASK_ROOT") == "" {
-		// We're not running in lambda so don't try to publish to SQS
-		log.Printf("soft notification ID %s: %s", id, fmt.Sprintf(format, a...))
-		return nil
-	}
 	if ts, ok := softNotifCache[id]; ok {
 		// don't send dup notifications for 24 hours
 		if ts.Add(24 * time.Hour).After(time.Now()) {
 			log.Printf("silencing soft notification ID %s", id)
 			return nil
 		}
+	}
+	if os.Getenv("LAMBDA_TASK_ROOT") == "" || os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS") == "" {
+		// We're not running in lambda or the conf isnt ready so don't try to publish to SQS
+		log.Printf("soft notification ID %s: %s", id, fmt.Sprintf(format, a...))
+		return nil
 	}
 
 	svc := sns.New(session.New())
