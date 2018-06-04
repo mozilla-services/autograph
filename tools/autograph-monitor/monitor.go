@@ -12,6 +12,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/xpi"
@@ -174,4 +177,19 @@ func makeAuthHeader(req *http.Request, user, token string) string {
 	payloadhash.Write([]byte(""))
 	auth.SetHash(payloadhash)
 	return auth.RequestHeader()
+}
+
+// send a message to a predefined sns topic
+func sendSoftNotification(format string, a ...interface{}) error {
+	svc := sns.New(session.New())
+	params := &sns.PublishInput{
+		Message:  aws.String(fmt.Sprintf(format, a...)),
+		TopicArn: aws.String(os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS")),
+	}
+	_, err := svc.Publish(params)
+	if err != nil {
+		return err
+	}
+	log.Printf("Soft notification send to %q with body: %s", os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS"), params.Message)
+	return nil
 }
