@@ -17,6 +17,15 @@ import (
 	"go.mozilla.org/autograph/signer/contentsignature"
 )
 
+// Certificates no longer in use but not yet removed from the autograph config.
+// we don't want to alert on those.
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1466523
+var ignoredCerts = map[string]bool{
+	"fingerprinting-defenses.content-signature.mozilla.org": true,
+	"fennec-dlc.content-signature.mozilla.org":              true,
+	"focus-experiments.content-signature.mozilla.org":       true,
+}
+
 // validate the signature and certificate chain of a content signature response
 //
 // If an X5U value was provided, use the public key from the end entity certificate
@@ -54,6 +63,10 @@ func verifyContentSignature(response signatureresponse) error {
 		return fmt.Errorf("Signature verification failed")
 	}
 	if certs != nil {
+		// check if we should ignore this cert
+		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
+			return nil
+		}
 		return verifyCertChain(certs)
 	}
 	return nil
