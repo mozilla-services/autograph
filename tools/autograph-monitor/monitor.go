@@ -100,6 +100,7 @@ func Handler() (err error) {
 		return
 	}
 	failed := false
+	var failures []error
 	for i, response := range responses {
 		switch response.Type {
 		case contentsignature.Type:
@@ -118,12 +119,17 @@ func Handler() (err error) {
 			failed = true
 			log.Printf("Response %d from signer %q does not pass: %v", i, response.SignerID, err)
 			log.Printf("Response was: %+v", response)
+			failures = append(failures, err)
 		} else {
 			log.Printf("Response %d from signer %q passes verification", i, response.SignerID)
 		}
 	}
 	if failed {
-		return fmt.Errorf("Errors found during monitoring")
+		failure := "Errors found during monitoring:"
+		for i, fail := range failures {
+			failure += fmt.Sprintf("\n%d. %s", i+1, fail.Error())
+		}
+		return fmt.Errorf(failure)
 	}
 	log.Println("All signature responses passed, monitoring OK")
 	return
