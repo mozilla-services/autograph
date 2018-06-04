@@ -63,11 +63,14 @@ func verifyContentSignature(response signatureresponse) error {
 		return fmt.Errorf("Signature verification failed")
 	}
 	if certs != nil {
-		// check if we should ignore this cert
-		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
-			return nil
+		err = verifyCertChain(certs)
+		if err != nil {
+			// check if we should ignore this cert
+			if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
+				return nil
+			}
+			return err
 		}
-		return verifyCertChain(certs)
 	}
 	return nil
 }
