@@ -148,7 +148,9 @@ func verifyCertChain(certs []*x509.Certificate) error {
 		}
 		if time.Now().Add(30 * 24 * time.Hour).After(cert.NotAfter) {
 			// cert expires in less than 30 days, this is a soft error. send an email.
-			sendSoftNotification("Certificate %d %q expires in less than 30 days: notAfter=%s",
+			sendSoftNotification(
+				fmt.Sprintf("%x", sha256.Sum256(cert.Raw)),
+				"Certificate %d %q expires in less than 30 days: notAfter=%s",
 				i, cert.Subject.CommonName, cert.NotAfter)
 		}
 		if time.Now().Before(cert.NotBefore) {
