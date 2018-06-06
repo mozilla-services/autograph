@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -52,13 +53,15 @@ type autographer struct {
 
 func main() {
 	var (
-		ag      *autographer
-		conf    configuration
-		cfgFile string
-		debug   bool
-		err     error
+		ag        *autographer
+		conf      configuration
+		cfgFile   string
+		debug     bool
+		authPrint bool
+		err       error
 	)
 	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
+	flag.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
 	flag.BoolVar(&debug, "D", false, "Print debug logs")
 	flag.Parse()
 
@@ -85,6 +88,11 @@ func main() {
 	ag.makeSignerIndex()
 	if debug {
 		ag.enableDebug()
+	}
+
+	if authPrint {
+		ag.PrintAuthorizations()
+		os.Exit(0)
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
