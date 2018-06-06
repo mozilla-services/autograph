@@ -11,6 +11,12 @@ jobs:
       - image: docker:18.02.0-ce
     working_directory: /dockerflow
     steps:
+      - run:
+          name: Install git
+          command: |
+              apk update
+              apk add git openssh
+
       - checkout
       - setup_remote_docker
 
@@ -38,35 +44,6 @@ jobs:
           key: v1-{{ .Branch }}-{{epoch}}
           paths:
             - /cache/docker.tar
-
-  test:
-    docker:
-      - image: docker:18.02.0-ce
-    steps:
-      - setup_remote_docker
-      - restore_cache:
-          key: v1-{{.Branch}}
-      - run:
-          name: Restore Docker image cache
-          command: docker load -i /cache/docker.tar
-
-      - run:
-          name: Test Container
-          command: docker run app:build
-          background: true
-
-      - run:
-          name: ZAP baseline test
-          # Only fail on error code 1, which indicates at least one FAIL was found.
-          # error codes 2 & 3 indicate WARN or other, and should not break the run
-          command: |
-            (
-            docker pull owasp/zap2docker-weekly && \
-            docker run -t owasp/zap2docker-weekly zap-baseline.py \
-                -u https://raw.githubusercontent.com/${DOCKER_REPO}/${CIRCLE_PROJECT_REPONAME}/master/zap-baseline.conf \
-                -t http://172.17.0.2:8000/ || \
-            if [ $? -ne 1 ]; then exit 0; else exit 1; fi;
-            )
 
   deploy:
     docker:
@@ -98,16 +75,9 @@ jobs:
 
 workflows:
   version: 2
-  build-test-deploy:
+  build-deploy:
     jobs:
       - build:
-          filters:
-            tags:
-              only: /.*/
-
-      - test:
-          requires:
-            - build
           filters:
             tags:
               only: /.*/
@@ -118,6 +88,7 @@ workflows:
             - test
           filters:
             tags:
-              only: /.*/
+              # only upload the docker container on semver tags
+              only: /[0-9]\.[0-9]\.[0-9]/
             branches:
               only: master
