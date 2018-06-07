@@ -8,7 +8,7 @@ Go packages for [Google Cloud Platform](https://cloud.google.com) services.
 import "cloud.google.com/go"
 ```
 
-To install the packages on your system,
+To install the packages on your system, *do not clone the repo*. Instead use
 
 ```
 $ go get -u cloud.google.com/go/...
@@ -32,6 +32,17 @@ make backwards-incompatible changes.
 
 
 ## News
+
+_May 18, 2018_
+
+*v0.23.0*
+
+- bigquery: Add DDL stats to query statistics.
+- bigtable:
+  - cbt: Add cells-per-column limit for row lookup.
+  - cbt: Make it possible to combine read filters.
+- dlp: v2beta2 client removed. Use the v2 client instead.
+- firestore, spanner: Fix compilation errors due to protobuf changes.
 
 _May 8, 2018_
 
@@ -257,7 +268,7 @@ Google API                       | Status       | Package
 [Logging][cloud-logging]         | stable       | [`cloud.google.com/go/logging`][cloud-logging-ref]
 [Monitoring][cloud-monitoring]   | beta         | [`cloud.google.com/go/monitoring/apiv3`][cloud-monitoring-ref]
 [OS Login][cloud-oslogin]        | alpha        | [`cloud.google.com/compute/docs/oslogin/rest`][cloud-oslogin-ref]
-[Pub/Sub][cloud-pubsub]          | beta         | [`cloud.google.com/go/pubsub`][cloud-pubsub-ref]
+[Pub/Sub][cloud-pubsub]          | stable       | [`cloud.google.com/go/pubsub`][cloud-pubsub-ref]
 [Spanner][cloud-spanner]         | stable       | [`cloud.google.com/go/spanner`][cloud-spanner-ref]
 [Speech][cloud-speech]           | stable       | [`cloud.google.com/go/speech/apiv1`][cloud-speech-ref]
 [Storage][cloud-storage]         | stable       | [`cloud.google.com/go/storage`][cloud-storage-ref]
