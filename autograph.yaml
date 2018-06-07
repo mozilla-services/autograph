@@ -266,6 +266,37 @@ signers:
           1KDtwVd+U8cK/z6UQxo8YQ==
           -----END PRIVATE KEY-----
 
+    - id: testmar
+      type: mar
+      privatekey: |
+          -----BEGIN RSA PRIVATE KEY-----
+          MIIEpAIBAAKCAQEA6uAAc7D08SSumI7xVox74X0GEwcNP0lq2Z1qf4CmDaQ+82fb
+          KokuZBqyAdSJ559xPM7XBwL3CkawNolluAAPbArkpTZc0gtufpbzWbyoaw2Af7wm
+          h5UueixDGh6ugcfMf6itsBVh1nFszOVCHi37KYPuE4Gfzisy/5yg2mAys7CEgsOn
+          S97lE36V9y2JvL9LLQEw3D8wm8kXjEddI73+gJqMaycKfLAuCCyiHb/xYUciW3fJ
+          7msDyjaOkV2h73Qo2SKedpjIGTWFZZ2mCKQTAyx1KINu/F+dP9u1rbZGGedBT3RU
+          V5xjDJeCIEJlvSYGb79rCY+Y1mSWBOHYP+FuPQIDAQABAoIBAQDlJePq+1MNzU72
+          EkeMvATEqph5ieC3xOYVJ8pWWOoo1vx/tuyRZEM5cP4IYRamPt1YiSgqdA8XHH4g
+          xw3RZWWmcD5AnXgTiQmlQZpsC254+zRJ6wPgNYChu3tACX0Rqx9t0OCbsVDByelv
+          QaCvFwc6qrdkmouRtn3L+kDIrR/qQ8eZUYbjdkTUsH+EG01ET76/Ol3iYPsgIAN9
+          KN8/kJWVTgdwrCspDj2mSND5DUUjtK088Jj/g97Z6+n7nwMg8uVXVg/TnmWdji/0
+          NHcoD/pEn/p42lyh+j8Wbj8Kp6FeqQe628TWlfJPismOXbkhhE067l7B5Bvg7IBX
+          +bjramFBAoGBAPbhoRkREp8PsoJHoum6Fmfv4SMfzOAyxuE+2PTklMeqV5FWe4H1
+          kCM1UzNRNfEUpWQy4Jv27/MKPRJYWvXqKRT+hWD9IxRq2Qf07oSjGkH85SX13Zvq
+          6LJUgD9RNpdgXvny709wKfxs9dk631WPQgxko3r6z6bNiJazq3QjmyJRAoGBAPOM
+          2N5Xkp8SZtsIheYnoHzG99fHF92qFgtorQFXx/gLqX7Z/d9ZhSTRfHaSJ4ne3Snm
+          Fnsr/swqVTaKydSt+VSaTaXKiUFtqx1qQqM57Jr3corMoI65yRJar6DxOtY4ocLw
+          i/R5mmEf1lh3fjwwMOUicONP+wG0leS407OPxoYtAoGAW6jxsujPzRZ65DvMlJJu
+          dzBsminYWvT/Oemni2TCiE8KK/+740hUt3244jiomlVcApORKNbJx6ZpfkIno13I
+          2u6Ufqn9ODtjULzzQXN88DsAqNNb7+OLeYo+A0QXzKQPHyW/C/NM41dg/8IH4TBL
+          CWbj+2jbZ8avi6QxZ/FAS8ECgYEAi8CYeQ07Pzgp+Sms2+KFPtRVR2YhFbsRpz5L
+          d+fNAVJ/0iB4gv81XWkvyEIZmg1eTzqOT+Nw8+qetwtwwS+LULayM55CoF6zv89H
+          qa4FTO8MtQSyZPPKo1OSUAHcRyx79gZd6M0WfwDr2BvJPfRROkpHCMjOOa5MDNDZ
+          +cFYo4kCgYBldHSXZzbklZb4qGCTMkeNDZdiPYclbHPtvbCznNaQsfS9LtvmDBq/
+          M8tCRd5OisHBM5ni+jHVc34NNi/Smf84z2wKHaG2EU+rfuGGCO/cFgIWEq9lSn5/
+          kpHTd4MQs87o8Gt2OP/JMi+2R5v7s8LrLKC5wau50DHIpM/8rPv8zw==
+          -----END RSA PRIVATE KEY-----
+
 authorizations:
     - id: alice
       key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
@@ -277,6 +308,7 @@ authorizations:
           - webextensions-rsa
           - extensions-ecdsa
           - testapp-android
+          - testmar
 
     - id: bob
       key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d

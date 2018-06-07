@@ -20,6 +20,7 @@ import (
 
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
@@ -41,12 +42,14 @@ type signatureresponse struct {
 }
 
 type requestType int
+
 const (
 	requestTypeNone = iota
 	requestTypeData
 	requestTypeHash
 	requestTypeFile
 )
+
 func urlToRequestType(url string) requestType {
 	if strings.HasSuffix(url, "/sign/data") {
 		return requestTypeData
@@ -234,6 +237,12 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
+				case mar.Type:
+					sigStatus = verifyMAR(input)
+					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
+					if err != nil {
+						log.Fatal(err)
+					}
 				default:
 					log.Fatal("unsupported signature type", response.Type)
 				}
@@ -384,5 +393,9 @@ func verifyAPK(signedAPK []byte) bool {
 	if sig.Verify() != nil {
 		log.Fatalf("failed to verify apk signature: %v", sig.Verify())
 	}
+	return true
+}
+
+func verifyMAR(signedMAR []byte) bool {
 	return true
 }
