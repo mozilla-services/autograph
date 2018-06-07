@@ -85,7 +85,6 @@ workflows:
       - deploy:
           requires:
             - build
-            - test
           filters:
             tags:
               # only upload the docker container on semver tags
