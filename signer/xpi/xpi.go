@@ -177,8 +177,9 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest from XPI")
 	}
 
-	if len(coseSigAlgs) > 0 {
+	if len(coseSigAlgs) < 1 {
 		pkcs7Manifest = manifest
+	} else {
 		cn, err = getCN(&opt, s)
 		if err != nil {
 			return nil, err
@@ -201,7 +202,6 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 		if err != nil {
 			return nil, errors.Wrap(err, "xpi: error making PKCS7 manifest")
 		}
-	} else {
 	}
 
 	sigfile, err := makeJARSignature(pkcs7Manifest)
