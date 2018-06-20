@@ -180,7 +180,7 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 	if len(coseSigAlgs) < 1 {
 		pkcs7Manifest = manifest
 	} else {
-		cn, err = getCN(&opt, s)
+		cn, err = opt.CN(s)
 		if err != nil {
 			return nil, err
 		}
@@ -244,7 +244,7 @@ func (s *PKCS7Signer) signData(sigfile []byte, options interface{}) ([]byte, err
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot get options")
 	}
-	cn, err := getCN(&opt, s)
+	cn, err := opt.CN(s)
 	if err != nil {
 		return nil, err
 	}
@@ -281,9 +281,13 @@ type Options struct {
 	COSEAlgorithms []string `json:"cose_algorithms"`
 }
 
+// CN returns the common name
+func (o *Options) CN(s *PKCS7Signer) (cn string, err error) {
+	if o == nil {
+		err = errors.New("xpi: cannot get common name from nil Options")
+	}
 
-func getCN(opt *Options, s *PKCS7Signer) (cn string, err error) {
-	cn = opt.ID
+	cn = o.ID
 	if s.EndEntityCN != "" {
 		cn = s.EndEntityCN
 	}
