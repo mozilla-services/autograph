@@ -157,19 +157,16 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 		opt Options
 		cn string
 		coseSig []byte
-		coseSigAlgs []*cose.Algorithm // COSE algorithms to sign with
+		coseSigAlgs []*cose.Algorithm
 	)
 
 	opt, err = GetOptions(options)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot get options")
 	}
-	for _, algStr := range opt.COSEAlgorithms {
-		alg := stringToCOSEAlg(algStr)
-		if alg == nil {
-			return nil, errors.Wrapf(err, "xpi: invalid or unsupported COSE algorithm %s", algStr)
-		}
-		coseSigAlgs = append(coseSigAlgs, alg)
+	coseSigAlgs, err = opt.Algorithms()
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest from XPI")
 	}
 
 	manifest, err = makeJARManifest(input)
@@ -294,6 +291,22 @@ func (o *Options) CN(s *PKCS7Signer) (cn string, err error) {
 
 	if cn == "" {
 		err = errors.New("xpi: missing common name")
+	}
+	return
+}
+
+// Algorithms validates and returns COSE algorithms
+func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
+	if o == nil {
+		err = errors.New("xpi: cannot get COSE Algorithms from nil Options")
+	}
+
+	for _, algStr := range o.COSEAlgorithms {
+		alg := stringToCOSEAlg(algStr)
+		if alg == nil {
+			return nil, errors.Wrapf(err, "xpi: invalid or unsupported COSE algorithm %s", algStr)
+		}
+		algs = append(algs, alg)
 	}
 	return
 }
