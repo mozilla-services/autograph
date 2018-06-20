@@ -158,6 +158,7 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 		manifest []byte
 		metas = []Metafile{}
 		opt Options
+		cn string
 		coseSigAlgs []*cose.Algorithm // COSE algorithms to sign with
 	)
 
@@ -179,13 +180,6 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 	}
 
 	if len(coseSigAlgs) > 0 {
-		cn := opt.ID
-		if s.EndEntityCN != "" {
-			cn = s.EndEntityCN
-		}
-		if cn == "" {
-			return nil, errors.New("xpi: missing common name")
-		}
 		tmp := cose.NewSignMessage()
 		msg := &tmp
 		msg.Payload = manifest
@@ -217,8 +211,9 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 		}
 
 		err = msg.Sign(rand.Reader, nil, coseSigners)
+		cn, err = getCN(&opt, s)
 		if err != nil {
-			return nil, errors.Wrap(err, "xpi: COSE signing failed")
+			return nil, err
 		}
 		// for addons the signature is detached and the payload is always nil / null
 		msg.Payload = nil
@@ -291,13 +286,11 @@ func (s *PKCS7Signer) signData(sigfile []byte, options interface{}) ([]byte, err
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot get options")
 	}
-	cn := opt.ID
-	if s.EndEntityCN != "" {
-		cn = s.EndEntityCN
+	cn, err := getCN(&opt, s)
+	if err != nil {
+		return nil, err
 	}
-	if cn == "" {
-		return nil, errors.New("xpi: missing common name")
-	}
+
 	eeCert, eeKey, err := s.MakeEndEntity(cn, nil)
 	if err != nil {
 		return nil, err
@@ -328,6 +321,19 @@ type Options struct {
 
 	// COSEAlgorithms is a list of strings referring to IANA algorithms to use for COSE signatures
 	COSEAlgorithms []string `json:"cose_algorithms"`
+}
+
+
+func getCN(opt *Options, s *PKCS7Signer) (cn string, err error) {
+	cn = opt.ID
+	if s.EndEntityCN != "" {
+		cn = s.EndEntityCN
+	}
+
+	if cn == "" {
+		err = errors.New("xpi: missing common name")
+	}
+	return
 }
 
 // GetDefaultOptions returns default options of the signer
