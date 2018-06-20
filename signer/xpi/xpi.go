@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/rsa"
-	"crypto/sha1"
-	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -180,6 +178,7 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 	}
 
 	if len(coseSigAlgs) > 0 {
+		pkcs7Manifest = manifest
 		cn, err = getCN(&opt, s)
 		if err != nil {
 			return nil, err
@@ -198,19 +197,11 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 		metas = append(metas, coseMetaFiles...)
 
 		// add entries for the cose files to the manifest as cose.manifest and cose.sig
-		mw := bytes.NewBuffer(manifest)
-		for _, f := range coseMetaFiles {
-			fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
-			h1 := sha1.New()
-			h1.Write(f.Body)
-			fmt.Fprintf(mw, "SHA1-Digest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
-			h2 := sha256.New()
-			h2.Write(f.Body)
-			fmt.Fprintf(mw, "SHA256-Digest: %s\n\n", base64.StdEncoding.EncodeToString(h2.Sum(nil)))
+		pkcs7Manifest, err = makePKCS7Manifest(input, metas)
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: error making PKCS7 manifest")
 		}
-		pkcs7Manifest = mw.Bytes()
 	} else {
-		pkcs7Manifest = manifest
 	}
 
 	sigfile, err := makeJARSignature(pkcs7Manifest)

@@ -14,6 +14,26 @@ import (
 )
 
 
+func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err error) {
+	manifest, err = makeJARManifest(input)
+	if err != nil {
+		return
+	}
+
+	mw := bytes.NewBuffer(manifest)
+	for _, f := range metafiles {
+		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
+		h1 := sha1.New()
+		h1.Write(f.Body)
+		fmt.Fprintf(mw, "SHA1-Digest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
+		h2 := sha256.New()
+		h2.Write(f.Body)
+		fmt.Fprintf(mw, "SHA256-Digest: %s\n\n", base64.StdEncoding.EncodeToString(h2.Sum(nil)))
+	}
+
+	return mw.Bytes(), err
+}
+
 // makeJARManifestAndSignature writes hashes for all entries in a zip to a
 // manifest file then hashes the manifest file to write a signature
 // file and returns both
