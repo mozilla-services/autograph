@@ -3,6 +3,7 @@ package xpi // import "go.mozilla.org/autograph/signer/xpi"
 import (
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
@@ -229,4 +230,54 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 	// 	}
 	// }
 	return nil
+}
+
+// coseSignature returns a CBOR-marshalled COSE SignMessage
+// after generating EE certs and signatures for the COSE algorithms
+func coseSignature(cn string, manifest []byte, algs []*cose.Algorithm, s *PKCS7Signer) (coseSig []byte, err error) {
+	var (
+		coseSigners []cose.Signer
+		tmp = cose.NewSignMessage()
+		msg = &tmp
+	)
+	msg.Payload = manifest
+
+	// Add list of DER encoded intermediate certificates as message key id
+	msg.Headers.Protected["kid"] = [][]byte{s.issuerCert.Raw[:]}
+
+	for _, alg := range algs {
+		// create a cert and key
+		eeCert, eeKey, err := s.MakeEndEntity(cn, alg)
+		if err != nil {
+			return nil, err
+		}
+
+		// create a COSE.Signer
+		signer, err := cose.NewSignerFromKey(alg, eeKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: COSE signer creation failed")
+		}
+		coseSigners = append(coseSigners, *signer)
+
+		// create a COSE Signature holder
+		sig := cose.NewSignature()
+		sig.Headers.Protected["alg"] = alg.Name
+		sig.Headers.Protected["kid"] = eeCert.Raw[:]
+		msg.AddSignature(sig)
+	}
+
+	// external_aad data must be nil and not byte("")
+	err = msg.Sign(rand.Reader, nil, coseSigners)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: COSE signing failed")
+	}
+	// for addons the signature is detached and the payload is always nil / null
+	msg.Payload = nil
+
+	coseSig, err = cose.Marshal(msg)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: error serializing COSE signatures to CBOR")
+	}
+
+	return
 }

@@ -3,7 +3,6 @@ package xpi // import "go.mozilla.org/autograph/signer/xpi"
 import (
 	"bytes"
 	"crypto"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -159,6 +158,7 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 		metas = []Metafile{}
 		opt Options
 		cn string
+		coseSig []byte
 		coseSigAlgs []*cose.Algorithm // COSE algorithms to sign with
 	)
 
@@ -180,50 +180,17 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 	}
 
 	if len(coseSigAlgs) > 0 {
-		tmp := cose.NewSignMessage()
-		msg := &tmp
-		msg.Payload = manifest
-
-		var coseSigners []cose.Signer
-
-		// Add list of DER encoded intermediate certificates as message key id
-		msg.Headers.Protected["kid"] = [][]byte{s.issuerCert.Raw[:]}
-
-		for _, alg := range coseSigAlgs {
-			// create a cert and key
-			eeCert, eeKey, err := s.MakeEndEntity(cn, alg)
-			if err != nil {
-				return nil, err
-			}
-
-			// create a COSE.Signer
-			signer, err := cose.NewSignerFromKey(alg, eeKey)
-			if err != nil {
-				return nil, errors.Wrap(err, "xpi: COSE signer creation failed")
-			}
-			coseSigners = append(coseSigners, *signer)
-
-			// create a COSE Signature holder
-			sig := cose.NewSignature()
-			sig.Headers.Protected["alg"] = alg.Name
-			sig.Headers.Protected["kid"] = eeCert.Raw[:]
-			msg.AddSignature(sig)
-		}
-
-		err = msg.Sign(rand.Reader, nil, coseSigners)
 		cn, err = getCN(&opt, s)
 		if err != nil {
 			return nil, err
 		}
-		// for addons the signature is detached and the payload is always nil / null
-		msg.Payload = nil
 
-		coseSig, err := cose.Marshal(msg)
+		coseSig, err = coseSignature(cn, manifest, coseSigAlgs, s)
 		if err != nil {
-			return nil, errors.Wrap(err, "xpi: error serializing COSE signatures to CBOR")
+			return nil, errors.Wrap(err, "xpi: error signing cose message")
 		}
 
-		// add the cose files to the metafiles we'll add to the zipfile
+		// add the cose files to the metafiles we'll add to the XPI
 		coseMetaFiles := []Metafile{
 			{"META-INF/cose.manifest", manifest},
 			{"META-INF/cose.sig", coseSig},
