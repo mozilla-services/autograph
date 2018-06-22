@@ -155,7 +155,6 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 		manifest []byte
 		metas = []Metafile{}
 		opt Options
-		cn string
 		coseSig []byte
 		coseSigAlgs []*cose.Algorithm
 	)
@@ -177,12 +176,7 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 	if len(coseSigAlgs) < 1 {
 		pkcs7Manifest = manifest
 	} else {
-		cn, err = opt.CN(s)
-		if err != nil {
-			return nil, err
-		}
-
-		coseSig, err = coseSignature(cn, manifest, coseSigAlgs, s)
+		coseSig, err = s.signData(manifest, opt)
 		if err != nil {
 			return nil, errors.Wrap(err, "xpi: error signing cose message")
 		}
