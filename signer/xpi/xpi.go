@@ -206,7 +206,8 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest signature from XPI")
 	}
 
-	p7sig, err := s.signData(sigfile, options)
+	opt.COSEAlgorithms = []string{}
+	p7sig, err := s.signData(sigfile, opt)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: failed to sign XPI")
 	}
@@ -224,49 +225,61 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 	return signedFile, nil
 }
 
-// SignData takes an input signature file and returns a PKCS7 detached signature
+// SignData takes an input signature file and returns a PKCS7 or COSE detached signature
 func (s *PKCS7Signer) SignData(sigfile []byte, options interface{}) (signer.Signature, error) {
-	p7sig, err := s.signData(sigfile, options)
-	if err != nil {
-		return nil, err
-	}
-	sig := new(Signature)
-	sig.Data = p7sig
-	sig.Finished = true
-	return sig, nil
-}
-
-func (s *PKCS7Signer) signData(sigfile []byte, options interface{}) ([]byte, error) {
 	opt, err := GetOptions(options)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot get options")
 	}
+	sigBytes, err := s.signData(sigfile, opt)
+	if err != nil {
+		return nil, err
+	}
+	sig := new(Signature)
+	sig.Data = sigBytes
+	sig.Finished = true
+	return sig, nil
+}
+
+func (s *PKCS7Signer) signData(sigfile []byte, opt Options) ([]byte, error) {
 	cn, err := opt.CN(s)
 	if err != nil {
 		return nil, err
 	}
-
-	eeCert, eeKey, err := s.MakeEndEntity(cn, nil)
+	coseSigAlgs, err := opt.Algorithms()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest from XPI")
 	}
 
-	toBeSigned, err := pkcs7.NewSignedData(sigfile)
-	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
+	if len(coseSigAlgs) < 1 {
+		eeCert, eeKey, err := s.MakeEndEntity(cn, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		toBeSigned, err := pkcs7.NewSignedData(sigfile)
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
+		}
+		// XPIs are signed with SHA1
+		toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA1)
+		err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: cannot sign")
+		}
+		toBeSigned.Detach()
+		p7sig, err := toBeSigned.Finish()
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: cannot finish signing data")
+		}
+		return p7sig, nil
+	} else {
+		coseSig, err := coseSignature(cn, sigfile, coseSigAlgs, s)
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: error signing cose message")
+		}
+		return coseSig, nil
 	}
-	// XPIs are signed with SHA1
-	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA1)
-	err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
-	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot sign")
-	}
-	toBeSigned.Detach()
-	p7sig, err := toBeSigned.Finish()
-	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot finish signing data")
-	}
-	return p7sig, nil
 }
 
 // Options contains specific parameters used to sign XPIs
@@ -326,11 +339,12 @@ func GetOptions(input interface{}) (options Options, err error) {
 	return
 }
 
-// Signature is a PKCS7 detached signature
+// Signature is a detached PKCS7 signature or COSE SignMessage
 type Signature struct {
-	p7       *pkcs7.PKCS7
-	Data     []byte
-	Finished bool
+	p7          *pkcs7.PKCS7
+	signMessage *cose.SignMessage
+	Data        []byte
+	Finished    bool
 }
 
 // Marshal returns the base64 representation of a PKCS7 detached signature
