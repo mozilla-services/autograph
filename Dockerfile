@@ -10,6 +10,7 @@ RUN addgroup --gid 10001 app && \
 
     apt update && \
     apt -y upgrade && \
+    apt -y install libltdl-dev && \
     apt-get clean
 
 ADD . /go/src/go.mozilla.org/autograph
