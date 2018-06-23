@@ -50,6 +50,9 @@ $ $GOPATH/bin/autograph-client -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9
 * [Endpoints](docs/endpoints.rst)
 * [Content-Signature protocol](signer/contentsignature/README.rst)
 * [XPI Signing protocol](signer/xpi/README.rst)
+* [MAR protocol](signer/mar/README.rst)
+* [APK protocol](signer/apk/README.rst)
+* [HSM Support](docs/hsm.rst)
 
 ## Signing
 
