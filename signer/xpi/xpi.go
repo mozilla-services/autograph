@@ -341,7 +341,8 @@ type Signature struct {
 	Finished    bool
 }
 
-// Marshal returns the base64 representation of a PKCS7 detached signature
+// Marshal returns the base64 representation of a detached PKCS7
+// signature or COSE Sign Message
 func (sig *Signature) Marshal() (string, error) {
 	if !sig.Finished {
 		return "", errors.New("xpi: cannot marshal unfinished signature")
@@ -352,19 +353,37 @@ func (sig *Signature) Marshal() (string, error) {
 	return base64.StdEncoding.EncodeToString(sig.Data), nil
 }
 
-// Unmarshal takes the base64 representation of a PKCS7 detached signature
-// and the content of the signed data, and returns a PKCS7 struct
+// Unmarshal parses a PKCS7 struct from the base64 representation of a
+// PKCS7 detached and content of the signed data or it parses a COSE
+// Sign Message struct from the base64 representation of a CBOR
+// encoded Sign Message
 func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
+	// signMessagePrefix is the prefix CBOR Encoded COSE SignMessages
+	signMessagePrefix := []byte{'\xd8', '\x62'}
+
 	sig = new(Signature)
 	sig.Data, err = base64.StdEncoding.DecodeString(signature)
 	if err != nil {
 		return sig, errors.Wrap(err, "xpi.Unmarshal: failed to decode base64 signature")
 	}
-	sig.p7, err = pkcs7.Parse(sig.Data)
-	if err != nil {
-		return sig, errors.Wrap(err, "xpi.Unmarshal: failed to parse pkcs7 signature")
+
+	if bytes.HasPrefix(sig.Data, signMessagePrefix) {
+		tmp, err := cose.Unmarshal(sig.Data)
+		if err != nil {
+			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to parse COSE Sign Message")
+		}
+		if msg, ok := tmp.(cose.SignMessage); !ok {
+			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to cast COSE Sign Message")
+		} else {
+			sig.signMessage = &msg
+		}
+	} else {
+		sig.p7, err = pkcs7.Parse(sig.Data)
+		if err != nil {
+			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to parse pkcs7 signature")
+		}
+		sig.p7.Content = content
 	}
-	sig.p7.Content = content
 	sig.Finished = true
 	return
 }
