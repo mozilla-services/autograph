@@ -30,7 +30,7 @@ ECDSA P256/P384.
 Signature request
 -----------------
 
-This signer supports `/sign/hash`, `/sign/data/` and `/sign/file` endpoints.
+This signer supports `/sign/hash`, `/sign/data` and `/sign/file` endpoints.
 They all use the same request format:
 
 .. code:: json
