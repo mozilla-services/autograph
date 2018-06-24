@@ -102,6 +102,21 @@ func TestSignHash(t *testing.T) {
 	}
 }
 
+func TestSignDataWithBadSigAlg(t *testing.T) {
+	s, err := New(marsignerconfs[0])
+	if err != nil {
+		t.Fatalf("failed to initialize signer: %v", err)
+	}
+	t.Logf("testing signer %q", s.ID)
+	_, err = s.SignData([]byte("foo"), Options{SigAlg: uint32(1664)})
+	if err == nil {
+		t.Fatal("expected to fail signing but succeeded")
+	}
+	if err.Error() != "mar: failed to hash input: unsupported signature algorithm" {
+		t.Fatalf("expected to fail with unsupported signature algorithm but failed with: %v", err)
+	}
+}
+
 var marsignerconfs = []signer.Configuration{
 	signer.Configuration{
 		ID:   "unittestmar",
