@@ -117,6 +117,29 @@ func TestSignDataWithBadSigAlg(t *testing.T) {
 	}
 }
 
+func TestUnsupportedP521Curve(t *testing.T) {
+	_, err := New(signer.Configuration{
+		ID:   "p521marsigner",
+		Type: Type,
+		PrivateKey: `-----BEGIN EC PARAMETERS-----
+BgUrgQQAIw==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MIHcAgEBBEIBZYN6p/oHPEv1djQfqzZ6qwV3X1jbz256j/73izSIbXBpto0A6nA0
+y/uf/azlVzDq8df1X56WIbT/h3pUmuSMZTqgBwYFK4EEACOhgYkDgYYABAHccwld
+FA3YMUqp/m1QRzI+OcevOEwPl1TlD7ruUeWsZecnhe+zy33m0QTJye5+buxcmPfw
+MbkCddTlCYkwqFQluQBKkxkFJ+XVV5ookRJWr8yy0p4zv6Yenz5aWVZN9fzXTSYK
+BLzIeIhb7Kx//dd/6o+W7wd/X9kpA1nQpNy+uAZEbg==
+-----END EC PRIVATE KEY-----`,
+	})
+	if err == nil {
+		t.Fatal("expected to fail on unknown curve but succeeded")
+	}
+	if err.Error() != `mar: elliptic curve "P-521" is not supported` {
+		t.Fatalf("expected to fail on unsupported P-521 curve but failed with: %v", err)
+	}
+}
+
 var marsignerconfs = []signer.Configuration{
 	signer.Configuration{
 		ID:   "unittestmar",

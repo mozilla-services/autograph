@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/pkg/errors"
@@ -90,6 +91,8 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 			s.defaultSigAlg = margo.SigAlgEcdsaP256Sha256
 		case elliptic.P384().Params().Name:
 			s.defaultSigAlg = margo.SigAlgEcdsaP384Sha384
+		default:
+			return nil, fmt.Errorf("mar: elliptic curve %q is not supported", s.publicKey.(*ecdsa.PublicKey).Params().Name)
 		}
 		s.rand = rand.Reader
 
@@ -105,6 +108,8 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 			s.defaultSigAlg = margo.SigAlgEcdsaP256Sha256
 		case elliptic.P384().Params().Name:
 			s.defaultSigAlg = margo.SigAlgEcdsaP384Sha384
+		default:
+			return nil, fmt.Errorf("mar: elliptic curve %q is not supported", s.publicKey.(*ecdsa.PublicKey).Params().Name)
 		}
 		s.rand = new(crypto11.PKCS11RandReader)
 
