@@ -5,8 +5,12 @@ PKCS11 HSM Support
 .. sectnum::
 .. contents:: Table of Contents
 
-Autograph uses Thales' Crypto11 package to support PKCS11 operations. Crypto11 wraps
-Miekg' PKCS11 package, which itself wraps the C library that talks to the HSM.
+Autograph uses `Thales' Crypto11`_ package to support PKCS11 operations. Crypto11 wraps
+`Miekg's PKCS11`_ package, which itself wraps the C library that talks to the HSM.
+
+.. _`Thales' Crypto11`: https://github.com/ThalesIgnite/crypto11
+
+.. _`Miekg's PKCS11`: https://github.com/miekg/pkcs11/
 
 PKCS11 depends on `ltdl`. On Ubuntu, that's installed from `libltdl-dev`. On
 Archlinux, use `libtool-ltdl-devel`.
