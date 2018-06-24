@@ -49,7 +49,11 @@ The `/sign/data` and `/sign/hash` endpoint only does the signing step. They
 takes a MAR block already prepared for signature, calculate its digest (if
 `/sign/data`) and return the signature bytes to be inserted in the signature
 field. Because the signer needs to know which algorithm to use for signature,
-the signature algorithm can be specified in the signing request options.
+the signature algorithm can be specified in the signing request options. The
+acceptable value of the `sigalg` field can be found in `the constants of the MAR
+package`_.
+
+.. _`the constants of the MAR package`: https://godoc.org/go.mozilla.org/mar#pkg-constants
 
 .. code:: json
 
