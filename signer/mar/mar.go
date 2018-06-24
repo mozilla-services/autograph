@@ -168,6 +168,10 @@ func (s *MARSigner) SignData(data []byte, options interface{}) (signer.Signature
 	if err != nil {
 		return nil, errors.Wrap(err, "mar: failed to get options")
 	}
+	// if no options were defined, use the default value from the signer
+	if opt.SigAlg == 0 {
+		opt.SigAlg = s.defaultSigAlg
+	}
 	hashed, _, err := margo.Hash(data, opt.SigAlg)
 	if err != nil {
 		return nil, errors.Wrap(err, "mar: failed to hash input")
@@ -180,6 +184,10 @@ func (s *MARSigner) SignHash(hashed []byte, options interface{}) (signer.Signatu
 	opt, err := GetOptions(options)
 	if err != nil {
 		return nil, errors.Wrap(err, "mar: failed to get options")
+	}
+	// if no options were defined, use the default value from the signer
+	if opt.SigAlg == 0 {
+		opt.SigAlg = s.defaultSigAlg
 	}
 	sig := new(Signature)
 	sig.Data, err = margo.Sign(s.signingKey, s.rand, hashed, opt.SigAlg)
