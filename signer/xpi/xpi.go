@@ -371,10 +371,11 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 		if err != nil {
 			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to parse COSE Sign Message")
 		}
-		if msg, ok := tmp.(cose.SignMessage); !ok {
+		if msg, ok := tmp.(cose.SignMessage); ok {
+			sig.signMessage = &msg
+		} else {
 			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to cast COSE Sign Message")
 		}
-		sig.signMessage = &msg
 	} else {
 		sig.p7, err = pkcs7.Parse(sig.Data)
 		if err != nil {
