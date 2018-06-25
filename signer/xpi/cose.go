@@ -200,31 +200,11 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 		return fmt.Errorf("cose.sig contains %d signatures, but expected %d", len(coseMsg.Signatures), len(signOptions.COSEAlgorithms))
 	}
 
-	// intermediateCerts, eeCerts, err := isValidCOSEMessage(coseMsg)
 	_, _, err = isValidCOSEMessage(coseMsg)
 	if err != nil {
 		return errors.Wrap(err, "cose.sig is not a valid COSE SignMessage")
 	}
 
-	// check that we can verify EE certs with the provided intermediates
-	// roots, intermediates := x509.NewCertPool(), x509.NewCertPool()
-	// ok = roots.AppendCertsFromPEM([]byte(testcase.Certificate))
-	// if !ok {
-	// 	return fmt.Errorf("failed to add root cert to pool")
-	// }
-	// for _, intermediateCert := range intermediateCerts {
-	// 	intermediates.AddCert(intermediateCert)
-	// }
-	// for i, eeCert := range eeCerts {
-	// 	opts := x509.VerifyOptions{
-	// 		DNSName:       signOptions.ID,
-	// 		Roots:         roots,
-	// 		Intermediates: intermediates,
-	// 	}
-	// 	if _, err := eeCert.Verify(opts); err != nil {
-	// 		return fmt.Errorf("failed to verify EECert %d %s", i, err)
-	// 	}
-	// }
 	return nil
 }
 
