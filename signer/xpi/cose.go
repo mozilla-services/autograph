@@ -190,14 +190,11 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 		return fmt.Errorf("cose manifest contains cose files: %s", coseManifest)
 	}
 
-	coseObj, err := cose.Unmarshal(coseMsgBytes)
+	xpiSig, err := Unmarshal(string(coseMsgBytes), nil)
 	if err != nil {
 		return errors.Wrap(err, "error unmarshaling cose.sig")
 	}
-	coseMsg, ok := coseObj.(cose.SignMessage)
-	if !ok {
-		return fmt.Errorf("cose.sig not a SignMessage")
-	}
+	coseMsg := *xpiSig.signMessage
 
 	if len(coseMsg.Signatures) != len(signOptions.COSEAlgorithms) {
 		return fmt.Errorf("cose.sig contains %d signatures, but expected %d", len(coseMsg.Signatures), len(signOptions.COSEAlgorithms))
