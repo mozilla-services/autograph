@@ -14,6 +14,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/ThalesIgnite/crypto11"
@@ -77,6 +78,9 @@ type SignedFile []byte
 //
 // Note that we assume the PKCS11 library has been previously initialized
 func (cfg *Configuration) GetPrivateKey() (crypto.PrivateKey, error) {
+	// make sure heading newlines are removed
+	removeNewlines := regexp.MustCompile(`^(\r?\n)`)
+	cfg.PrivateKey = removeNewlines.ReplaceAllString(cfg.PrivateKey, "")
 	// if a private key in the config starts with a PEM header, it is
 	// defined locally and is parsed and returned
 	if strings.HasPrefix(cfg.PrivateKey, "-----BEGIN") {
