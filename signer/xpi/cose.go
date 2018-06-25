@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.mozilla.org/cose"
 	"go.mozilla.org/autograph/signer"
+	"go.mozilla.org/cose"
 )
 
 // stringToCOSEAlg returns the cose.Algorithm for a string or nil if
@@ -59,7 +59,6 @@ func (s *PKCS7Signer) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto
 	}
 	return
 }
-
 
 // isSupportedCOSEAlgValue returns whether the COSE alg value is supported or not
 func isSupportedCOSEAlgValue(algValue interface{}) bool {
@@ -237,8 +236,8 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 func coseSignature(cn string, manifest []byte, algs []*cose.Algorithm, s *PKCS7Signer) (coseSig []byte, err error) {
 	var (
 		coseSigners []cose.Signer
-		tmp = cose.NewSignMessage()
-		msg = &tmp
+		tmp         = cose.NewSignMessage()
+		msg         = &tmp
 	)
 	msg.Payload = manifest
 

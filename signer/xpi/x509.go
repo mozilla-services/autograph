@@ -116,7 +116,7 @@ func (s *PKCS7Signer) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePubl
 func (s *PKCS7Signer) MakeEndEntity(cn string, coseAlg *cose.Algorithm) (eeCert *x509.Certificate, eeKey crypto.PrivateKey, err error) {
 	var (
 		eePublicKey crypto.PublicKey
-		derCert []byte
+		derCert     []byte
 	)
 
 	template := s.makeTemplate(cn)

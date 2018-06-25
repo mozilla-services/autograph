@@ -7,12 +7,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"strings"
-	"github.com/pkg/errors"
 )
-
 
 func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err error) {
 	manifest, err = makeJARManifest(input)

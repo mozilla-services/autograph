@@ -382,7 +382,7 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 
 	// sign input data
 	signOptions := Options{
-		ID: "test@example.net",
+		ID:             "test@example.net",
 		COSEAlgorithms: []string{"ES256", "PS256"},
 	}
 	signedXPI, err := s.SignFile(input, signOptions)
@@ -450,7 +450,6 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 		}
 	}
 }
-
 
 var PASSINGTESTCASES = []signer.Configuration{
 	signer.Configuration{

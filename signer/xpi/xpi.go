@@ -13,8 +13,8 @@ import (
 
 	"github.com/pkg/errors"
 	"go.mozilla.org/autograph/signer"
-	"go.mozilla.org/pkcs7"
 	"go.mozilla.org/cose"
+	"go.mozilla.org/pkcs7"
 )
 
 const (
@@ -152,11 +152,11 @@ func (s *PKCS7Signer) Config() signer.Configuration {
 func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile signer.SignedFile, err error) {
 	var (
 		pkcs7Manifest []byte
-		manifest []byte
-		metas = []Metafile{}
-		opt Options
-		coseSig []byte
-		coseSigAlgs []*cose.Algorithm
+		manifest      []byte
+		metas         = []Metafile{}
+		opt           Options
+		coseSig       []byte
+		coseSigAlgs   []*cose.Algorithm
 	)
 
 	opt, err = GetOptions(options)
