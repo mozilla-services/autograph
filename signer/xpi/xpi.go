@@ -267,13 +267,12 @@ func (s *PKCS7Signer) signData(sigfile []byte, opt Options) ([]byte, error) {
 			return nil, errors.Wrap(err, "xpi: cannot finish signing data")
 		}
 		return p7sig, nil
-	} else {
-		coseSig, err := coseSignature(cn, sigfile, coseSigAlgs, s)
-		if err != nil {
-			return nil, errors.Wrap(err, "xpi: error signing cose message")
-		}
-		return coseSig, nil
 	}
+	coseSig, err := coseSignature(cn, sigfile, coseSigAlgs, s)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: error signing cose message")
+	}
+	return coseSig, nil
 }
 
 // Options contains specific parameters used to sign XPIs
@@ -374,9 +373,8 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 		}
 		if msg, ok := tmp.(cose.SignMessage); !ok {
 			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to cast COSE Sign Message")
-		} else {
-			sig.signMessage = &msg
 		}
+		sig.signMessage = &msg
 	} else {
 		sig.p7, err = pkcs7.Parse(sig.Data)
 		if err != nil {
