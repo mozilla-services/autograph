@@ -1,12 +1,9 @@
 package xpi
 
 import (
-	"archive/zip"
-	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"io/ioutil"
 	"os"
@@ -43,62 +40,15 @@ func TestSignFile(t *testing.T) {
 	}
 
 	// sign input data
-	signedXPI, err := s.SignFile(input, s.GetDefaultOptions())
+	opts := s.GetDefaultOptions().(Options)
+	signedXPI, err := s.SignFile(input, opts)
 	if err != nil {
-		t.Fatalf("failed to sign file: %v", err)
-	}
-	zipReader := bytes.NewReader(signedXPI)
-	r, err := zip.NewReader(zipReader, int64(len(signedXPI)))
-	if err != nil {
-		t.Fatal(err)
-	}
-	var (
-		sigstr  string
-		sigdata []byte
-	)
-	for _, f := range r.File {
-		switch f.Name {
-		case "META-INF/mozilla.sf":
-			rc, err := f.Open()
-			defer rc.Close()
-			if err != nil {
-				t.Fatal(err)
-			}
-			sigdata, err = ioutil.ReadAll(rc)
-			if err != nil {
-				t.Fatal(err)
-			}
-		case "META-INF/mozilla.rsa":
-			rc, err := f.Open()
-			defer rc.Close()
-			if err != nil {
-				t.Fatal(err)
-			}
-			rawsig, err := ioutil.ReadAll(rc)
-			if err != nil {
-				t.Fatal(err)
-			}
-			sigstr = base64.StdEncoding.EncodeToString(rawsig)
-		}
-	}
-	// convert string format back to signature
-	sig2, err := Unmarshal(sigstr, sigdata)
-	if err != nil {
-		t.Fatalf("failed to unmarshal signature: %v", err)
+		t.Fatalf("failed to sign file with detached  PKCS7 sig: %v", err)
 	}
 
-	// make sure we still have the same string representation
-	sigstr2, err := sig2.Marshal()
+	err = VerifySignedFile(signedXPI, nil, opts)
 	if err != nil {
-		t.Fatalf("failed to re-marshal signature: %v", err)
-	}
-	if sigstr != sigstr2 {
-		t.Fatalf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
-			sigstr, sigstr2)
-	}
-	// verify signature on input data
-	if sig2.VerifyWithChain(nil) != nil {
-		t.Fatalf("failed to verify xpi signature: %v", sig2.VerifyWithChain(nil))
+		t.Fatalf("failed to verify PKCS7 signed file: %v", err)
 	}
 }
 

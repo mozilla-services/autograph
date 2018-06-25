@@ -440,6 +440,7 @@ func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x50
 		return fmt.Errorf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
 			sigStr, sigStr2)
 	}
+
 	return nil
 }
 
