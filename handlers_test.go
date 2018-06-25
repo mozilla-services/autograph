@@ -26,8 +26,11 @@ import (
 
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
+
+	margo "go.mozilla.org/mar"
 )
 
 func TestSignaturePass(t *testing.T) {
@@ -106,6 +109,27 @@ func TestSignaturePass(t *testing.T) {
 				},
 			},
 		},
+		{
+			// Sign MAR data
+			"/sign/data",
+			[]signaturerequest{
+				signaturerequest{
+					Input: "Y2FyaWJvdW1hdXJpY2U=",
+					KeyID: "testmar",
+				},
+			},
+		},
+		{
+			// Sign a MAR file
+			"/sign/file",
+			[]signaturerequest{
+				signaturerequest{
+					// Input is the base64 of miniMarB from the mar signer unit tests
+					Input: "TUFSMQAAAX0AAAAAAAABlgAAAAIAAAACAAABACDExrLgT1Lc1TbLUiKbIVxQl60L6ATvYe6L6JwewAbVSjhEUCGMQ0OK1TmKi18GGijNxaf/uU7Lm/RTyvm0VL7gcODm/pogDmRttf+rc2UfX7nthPxCgB/oOj7fXqDwYpiBPNSSHMIATUb7fnRRHqVTdqhkQZ2RqQsyKL7O6D/bN62EHmVTnn5LbYqYnDLhp+bEVGPo9ETsUpSk7XlFq3v96blLi4Iazm4LyPUXtQmixNwe6OOGpS+ZqobGAtooe7nPPC0Q/kqqKKQmcwCyTP/+lD1Vk7JXbDyGzYj9f9Cloq8PH7gyxOmNvwfHxMU95Jw/ExdFUDdK6QW7UPRTx7AAAAADAAAAQMSHgnYz95K8msSv6YA6IWRfT99ig0W74KDl0QvM0Ti+BRvI7FSmjjt4QOfVHRDko31NuVa2sUCo/PibauLI7GwAAAAAYWFhYWFhYWFhYWFhYWFhYWFhYWFhAAAAFQAAAWgAAAAVAAACWC9mb28vYmFyAA==",
+					KeyID: "testmar",
+				},
+			},
+		},
 	}
 	for i, testcase := range TESTCASES {
 		userid := conf.Authorizations[0].ID
@@ -172,12 +196,34 @@ func TestSignaturePass(t *testing.T) {
 					signedAPK, _ := base64.StdEncoding.DecodeString(response.SignedFile)
 					err = verifyAPKSignature(signedAPK)
 				}
+			case mar.Type:
+				switch req.URL.RequestURI() {
+				case "/sign/file":
+					// use the margo pkg to calculate the signable block of the mar file
+					// as input for the signature verification
+					rawInput, _ := base64.StdEncoding.DecodeString(testcase.signaturerequests[j].Input)
+					var marFile margo.File
+					margo.Unmarshal(rawInput, &marFile)
+					rawKey, err := base64.StdEncoding.DecodeString(response.PublicKey)
+					if err != nil {
+						t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v",
+							i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
+					}
+					key, err := x509.ParsePKIXPublicKey(rawKey)
+					if err != nil {
+						t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v",
+							i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
+					}
+					err = marFile.VerifySignature(key)
+				default:
+					err = verifyMARSignature(testcase.signaturerequests[j].Input, response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
+				}
 			default:
 				err = fmt.Errorf("unknown signature type %q", response.Type)
 			}
 			if err != nil {
-				t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d; request was: %+v",
-					i, testcase.endpoint, err, j, testcase.signaturerequests[j])
+				t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v",
+					i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
 			}
 		}
 	}
@@ -655,6 +701,26 @@ func verifyAPKSignature(signedAPK []byte) error {
 		return fmt.Errorf("failed to verify apk signature: %v", sig.Verify())
 	}
 	return nil
+}
+
+func verifyMARSignature(b64Input, b64Sig, b64Key string, sigalg uint32) error {
+	input, err := base64.StdEncoding.DecodeString(b64Input)
+	if err != nil {
+		return err
+	}
+	sig, err := base64.StdEncoding.DecodeString(b64Sig)
+	if err != nil {
+		return err
+	}
+	rawKey, err := base64.StdEncoding.DecodeString(b64Key)
+	if err != nil {
+		return err
+	}
+	key, err := x509.ParsePKIXPublicKey(rawKey)
+	if err != nil {
+		return err
+	}
+	return margo.VerifySignature(input, sig, sigalg, key)
 }
 
 func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error) {

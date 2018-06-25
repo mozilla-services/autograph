@@ -1,3 +1,116 @@
+Release v1.14.12 (2018-06-21)
+===
+
+### Service Client Updates
+* `service/clouddirectory`: Adds new service
+  * SDK release to support Flexible Schema initiative being carried out by Amazon Cloud Directory. This feature lets customers using new capabilities like: variant typed attributes, dynamic facets and AWS managed Cloud Directory schemas.
+
+Release v1.14.11 (2018-06-21)
+===
+
+### Service Client Updates
+* `service/macie`: Adds new service
+  * Amazon Macie is a security service that uses machine learning to automatically discover, classify, and protect sensitive data in AWS. With this release, we are launching the following Macie HTTPS API operations: AssociateMemberAccount, AssociateS3Resources, DisassociateMemberAccount, DisassociateS3Resources, ListMemberAccounts, ListS3Resources, and UpdateS3Resources. With these API operations you can issue HTTPS requests directly to the service.
+* `service/neptune`: Updates service API, documentation, and examples
+  * Deprecates the PubliclyAccessible parameter that is not supported by Amazon Neptune.
+* `service/ssm`: Updates service API, documentation, and examples
+  * Adds Amazon Linux 2 support to Patch Manager
+
+Release v1.14.10 (2018-06-20)
+===
+
+### Service Client Updates
+* `service/acm-pca`: Updates service API, documentation, paginators, and examples
+* `service/medialive`: Updates service API, documentation, and paginators
+  * AWS Elemental MediaLive now makes Reserved Outputs and Inputs available through the AWS Management Console and API. You can reserve outputs and inputs with a 12 month commitment in exchange for discounted hourly rates. Pricing is available at https://aws.amazon.com/medialive/pricing/
+* `service/rds`: Updates service API, documentation, and examples
+  * This release adds a new parameter to specify the retention period for Performance Insights data for RDS instances. You can either choose 7 days (default) or 731 days. For more information, see Amazon RDS Documentation.
+
+### SDK Enhancements
+* `service/s3`: Update SelectObjectContent doc example to be on the API not nested type. ([#1991](https://github.com/aws/aws-sdk-go/pull/1991))
+
+### SDK Bugs
+* `aws/client`: Fix HTTP debug log EventStream payloads ([#2000](https://github.com/aws/aws-sdk-go/pull/2000))
+  * Fixes the SDK's HTTP client debug logging to not log the HTTP response body for EventStreams. This prevents the SDK from buffering a very large amount of data to be logged at once. The aws.LogDebugWithEventStreamBody should be used to log the event stream events.
+  * Fixes a bug in the SDK's response logger which will buffer the response body's content if LogDebug is enabled but LogDebugWithHTTPBody is not.
+Release v1.14.9 (2018-06-19)
+===
+
+### Service Client Updates
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/rekognition`: Updates service documentation and examples
+  * Documentation updates for rekognition
+
+### SDK Bugs
+* `private/model/api`: Update client ServiceName to be based on name of service for new services. ([#1997](https://github.com/aws/aws-sdk-go/pull/1997))
+    * Fixes the SDK's `ServiceName` AWS service client package value to be unique based on the service name for new AWS services. Does not change exiting client packages.
+Release v1.14.8 (2018-06-15)
+===
+
+### Service Client Updates
+* `service/mediaconvert`: Updates service API and documentation
+  * This release adds language code support according to the ISO-639-3 standard. Custom 3-character language codes are now supported on input and output for both audio and captions.
+
+Release v1.14.7 (2018-06-14)
+===
+
+### Service Client Updates
+* `service/apigateway`: Updates service API and documentation
+  * Support for PRIVATE endpoint configuration type
+* `service/dynamodb`: Updates service API and documentation
+  * Added two new fields SSEType and KMSMasterKeyArn to SSEDescription block in describe-table output.
+* `service/iotanalytics`: Updates service API and documentation
+
+Release v1.14.6 (2018-06-13)
+===
+
+### Service Client Updates
+* `service/servicecatalog`: Updates service API
+  * Introduced new length limitations for few of the product fields.
+* `service/ssm`: Updates service API and documentation
+  * Added support for new parameter, CloudWatchOutputConfig, for SendCommand API. Users can now have RunCommand output sent to CloudWatchLogs.
+
+Release v1.14.5 (2018-06-12)
+===
+
+### Service Client Updates
+* `service/devicefarm`: Updates service API and documentation
+  * Adding VPCEndpoint support for Remote access. Allows customers to be able to access their private endpoints/services running in their VPC during remote access.
+* `service/ecs`: Updates service API and documentation
+  * Introduces daemon scheduling capability to deploy one task per instance on selected instances in a cluster.  Adds a "force" flag to the DeleteService API to delete a service without requiring to scale down the number of tasks to zero.
+
+### SDK Enhancements
+* `service/rds/rdsutils`: Clean up the rdsutils package and adds a new builder to construct connection strings ([#1985](https://github.com/aws/aws-sdk-go/pull/1985))
+    * Rewords documentation to be more useful and provides links to prior setup needed to support authentication tokens. Introduces a builder that allows for building connection strings
+
+### SDK Bugs
+* `aws/signer/v4`: Fix X-Amz-Content-Sha256 being in to query for presign ([#1976](https://github.com/aws/aws-sdk-go/pull/1976))
+    * Fixes the bug which would allow the X-Amz-Content-Sha256 header to be promoted to the query string when presigning a S3 request. This bug also was preventing users from setting their own sha256 value for a presigned URL. Presigned requests generated with the custom sha256 would of always failed with invalid signature.
+    * Fixes [#1974](https://github.com/aws/aws-sdk-go/pull/1974)
+Release v1.14.4 (2018-06-11)
+===
+
+### Service Client Updates
+* `service/clouddirectory`: Updates service API and documentation
+  * Amazon Cloud Directory now supports optional attributes on Typed Links, giving users the ability to associate and manage data on Typed Links.
+* `service/rds`: Updates service documentation
+  * Changed lists of valid EngineVersion values to links to the RDS User Guide.
+* `service/storagegateway`: Updates service API and documentation
+  * AWS Storage Gateway now enables you to create cached volumes and tapes with AWS KMS support.
+
+Release v1.14.3 (2018-06-08)
+===
+
+### Service Client Updates
+* `service/mediatailor`: Updates service API
+
+Release v1.14.2 (2018-06-07)
+===
+
+### Service Client Updates
+* `service/medialive`: Updates service API, documentation, and paginators
+  * AWS Elemental MediaLive now makes channel log information available through Amazon CloudWatch Logs. You can set up each MediaLive channel with a logging level; when the channel is run, logs will automatically be published to your account on Amazon CloudWatch Logs
+
 Release v1.14.1 (2018-06-05)
 ===
 

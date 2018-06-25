@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 	"go.mozilla.org/sops"
@@ -122,6 +123,9 @@ func Handler() (err error) {
 		case apk.Type:
 			log.Printf("Verifying APK signature from signer %q", response.SignerID)
 			err = verifyAPKSignature(response.Signature)
+		case mar.Type:
+			log.Printf("Verifying MAR signature from signer %q", response.SignerID)
+			err = verifyMARSignature(response.Signature, response.PublicKey)
 		default:
 			err = fmt.Errorf("unknown signature type %q", response.Type)
 		}

@@ -3,6 +3,14 @@ server:
     # cache 500k nonces to protect from authorization replay attacks
     noncecachesize: 524288
 
+# When using an HSM, place the path to the pkcs11 client library,
+# token label and pin of the crypto user in the configuration below
+# hsm:
+#     # sample config for cloudhsm
+#     path:       /opt/cloudhsm/lib/libcloudhsm_pkcs11.so 
+#     tokenlabel: cavium
+#     pin:        ulfr:e2deea623796eecd
+
 # The keys below are testing keys that do not grant any power
 signers:
     # a p384 key, the standard
@@ -266,6 +274,58 @@ signers:
           1KDtwVd+U8cK/z6UQxo8YQ==
           -----END PRIVATE KEY-----
 
+    - id: testmar
+      type: mar
+      # label of the private key in the hsm, it isn't stored locally
+      privatekey: |
+          -----BEGIN PRIVATE KEY-----
+          MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCAUrUDTS86CuqV
+          ctCo8jG8SSd4W/m/A4UF0J8T+la/pnJsZt2HhQ+Ma/+HmXF8QSeVax0LfrOaRmLy
+          OnfwOakP7QIGYtFsBQoLV5TWJzOr2ieonQS3h9xF865lNv+i9YPRGQT+ijjtKc49
+          mnb1vek+6/o8vfCMe7/5CE+fq2c/+yRjCJIstimDPfCTo5YHqXr2GaebQ006Vak2
+          sXhmp1sScGC/HYOuyris/AgmYHXGpNR4PLNWftoljp8m+PKwe8fy4zN83RqEEYnj
+          LzR0zOPad9Z4gD+89E/3tOsvxsRSjR2v6UTD+fVNeHs03fNsw8TeMcJfeMlKbO9a
+          72ZCZcdNAgMBAAECggEAN3iJOxYgdizF3zi0rnOTwFq3LzZDLakt1aerPI2Y9lvT
+          VrzYwn5ojEEbQti30AiyPcsB0ThCF0yZ9TAFLNkgFfxURcJt2Q4Mm36Onkxv77fs
+          MN0/br7SH4MJPkOaGi2bf8Ya/JVvqkXKG6MsDWq86zBDCgLpezD7eYF4OgN0LJmc
+          5aCmqipDWpmQ+EFRiQBrKIAalZLMPvdEFzD6U5jMch+gNiA09tUuJnI60sYvrbul
+          eJOwr8yv+CPSo8FA40Hwooy5Ab4kkkXxb3ypzVDas5QU7QVoaSrQYaQ6oKaCeKaH
+          YCKsPD3RIUilMHDhOOn4S/R5DlkYJNoXNHFq0hE3wQKBgQC+7KZVoalALOiZ5vNa
+          EUrWAUIGug2xIxtHIhGBz1oHjIOqowYaZSpa9jbFe0LbWiEveGn2j54MWUsQVtPy
+          MhHuI/1zsbFs29d44s1xP7tuggqcBGUwMMf5w36MavmnbTdxv5T29DNALz3xg/ax
+          IaiZiI4fswciDMXpFXfsL8SO+QKBgQCsD7LbMjbz9Mleia3QeyZ9sbV2EYFaps1X
+          RNntQqOow4itBXqMYBuKcoGoMR2eAMVT9ZDCtZaU00KJ608NI9yYb0xxPtNaqdlF
+          hqSn9C5khAwQmvDiV63QUTIMYqf2m3sCdwZaXSiYUXwjNXvyO63opZqgR9TwuZfO
+          h8B2DBZL9QKBgHAvhAl7JYWFHeQY9dNtp8iaEp77QkJcu5GPrjPVkDQxV8izZEms
+          OjgaxtJBfGaBzlAjdDgh6Z+d9GKUcpO04h5JXYtW1Ud+4lyxAEDUTyE/HlbQqlin
+          wUm8mqaN0UaVAWhAR5rYoSjM2ZwJi7JHcddNix2LR9y1HrG4ILBS3S+ZAoGAfVme
+          gsRtdoNSJNaG04i0fQP3YEHWjDVTCY32ejx/QJbbPrnsEtJ9nfpX7TGDEzYajFUt
+          ljx2rIvQQOw2FiuXLVKATUxo6/cre9Rgpp9lIQN2Sq6maS9ZSJeur4k8NpQFJMGT
+          1kdiKL3Mg1YWq13BD+l94eETCCEdsHADzbx2jfUCgYAjJk016W+hugkU7rtAHIaP
+          Q9+gIrgtjJrWCw6SHF3pIB749A1J4NMlQ+0XjPhcwSMrxxkMTwmLhgSEHZcVl3C6
+          zw097oFSo1ZF/8Qpe3cb3252I9MOWKSXWTJ1BP2iVlCp0jRteFCJj8SB2CAnay9F
+          1KDtwVd+U8cK/z6UQxo8YQ==
+          -----END PRIVATE KEY-----
+
+    - id: testmarecdsa
+      type: mar
+      privatekey: |
+          -----BEGIN EC PARAMETERS-----
+          BgUrgQQAIg==
+          -----END EC PARAMETERS-----
+          -----BEGIN EC PRIVATE KEY-----
+          MIGkAgEBBDART/nn3fKlhyENdc2u3klbvRJ5+odP0kWzt9p+v5hDyggbtVA4M1Mb
+          fL9KoaiAAv2gBwYFK4EEACKhZANiAATugz97A6HPqq0fJCGom9PdKJ58Y9aobARQ
+          BkZWS5IjC+15Uqt3yOcCMdjIJpikiD1WjXRaeFe+b3ovcoBs4ToLK7d8y0qFlkgx
+          /5Cp6z37rpp781N4haUOIauM14P4KUw=
+          -----END EC PRIVATE KEY-----
+
+#    # A MAR signing key stored in an HSM under the label marrsa2048
+#    - id: testmar-hsm
+#      type: mar
+#      # label of the private key in the hsm, it isn't stored locally
+#      privatekey: marrsa2048
+
 authorizations:
     - id: alice
       key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
@@ -277,6 +337,8 @@ authorizations:
           - webextensions-rsa
           - extensions-ecdsa
           - testapp-android
+          - testmar
+          - testmarecdsa
 
     - id: bob
       key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d

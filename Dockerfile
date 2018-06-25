@@ -1,4 +1,4 @@
-FROM golang:1.9
+FROM golang:1.10
 MAINTAINER Mozilla
 EXPOSE 8000
 
@@ -10,6 +10,7 @@ RUN addgroup --gid 10001 app && \
 
     apt update && \
     apt -y upgrade && \
+    apt -y install libltdl-dev && \
     apt-get clean
 
 ADD . /go/src/go.mozilla.org/autograph

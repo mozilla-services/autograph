@@ -6,7 +6,10 @@
 
 package signer
 
-import "testing"
+import (
+	"crypto/rsa"
+	"testing"
+)
 
 func TestParseRSAPrivateKey(t *testing.T) {
 	_, err := ParsePrivateKey([]byte(rsaPrivateKey))
@@ -143,5 +146,53 @@ func TestParseEmptyPrivateKey(t *testing.T) {
 	_, err := ParsePrivateKey([]byte(``))
 	if err == nil {
 		t.Fatalf("should have failed to parse empty private key but succeeded")
+	}
+}
+
+func TestEnableHSM(t *testing.T) {
+	tcfg := new(Configuration)
+	tcfg.HSMIsAvailable()
+	if !tcfg.isHsmAvailable {
+		t.Fatal("expected isHsmAvailable to be set to true but still false")
+	}
+}
+
+func TestGetPrivateKey(t *testing.T) {
+	tcfg := new(Configuration)
+	tcfg.PrivateKey = rsaPrivateKey
+	key, err := tcfg.GetPrivateKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if key == nil {
+		t.Fatal("expected private key but got nil")
+	}
+	switch key.(type) {
+	case *rsa.PrivateKey:
+		break
+	default:
+		t.Fatalf("expected rsa private key but got %T", key)
+	}
+}
+
+func TestHSMNotAvailable(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("HSM search did not panic but should have")
+		}
+	}()
+	tcfg := new(Configuration)
+	tcfg.HSMIsAvailable()
+	tcfg.GetPrivateKey()
+}
+
+func TestNoSuitableKeyFound(t *testing.T) {
+	tcfg := new(Configuration)
+	_, err := tcfg.GetPrivateKey()
+	if err == nil {
+		t.Fatal("expected to fail with no suitable key found but succeeded")
+	}
+	if err.Error() != "no suitable key found" {
+		t.Fatalf("expected to fail with no suitable key found but failed with: %v", err)
 	}
 }

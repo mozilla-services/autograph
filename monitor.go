@@ -36,6 +36,10 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	}
 	sigresps := make([]signatureresponse, len(a.signers))
 	for i, s := range a.signers {
+		if _, ok := s.(signer.DataSigner); !ok {
+			httpError(w, r, http.StatusInternalServerError, "signer %q does not implement the DataSigner interface", s.Config().ID)
+			return
+		}
 		// base64 of the string 'AUTOGRAPH MONITORING'
 		sig, err := s.(signer.DataSigner).SignData([]byte("AUTOGRAPH MONITORING"), s.(signer.DataSigner).GetDefaultOptions())
 		if err != nil {

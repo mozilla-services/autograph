@@ -36,7 +36,7 @@ help:
 	@echo "  get-deps-tests          to get the SDK's test dependencies"
 	@echo "  get-deps-verify         to get the SDK's verification dependencies"
 
-generate: gen-test gen-endpoints gen-services
+generate: cleanup-models gen-test gen-endpoints gen-services
 
 gen-test: gen-protocol-test
 
@@ -48,6 +48,10 @@ gen-protocol-test:
 
 gen-endpoints:
 	go generate ./models/endpoints/
+
+cleanup-models:
+	@echo "Cleaning up stale model versions"
+	@./cleanup_models.sh
 
 build:
 	@echo "go build SDK and vendor packages"
@@ -130,6 +134,13 @@ sandbox-go19: sandbox-build-go19
 	docker run -i -t aws-sdk-go-1.9 bash
 sandbox-test-go19: sandbox-build-go19
 	docker run -t aws-sdk-go-1.9
+
+sandbox-build-go110:
+	docker build -f ./awstesting/sandbox/Dockerfile.test.go1.8 -t "aws-sdk-go-1.10" .
+sandbox-go110: sandbox-build-go110
+	docker run -i -t aws-sdk-go-1.10 bash
+sandbox-test-go110: sandbox-build-go110
+	docker run -t aws-sdk-go-1.10
 
 sandbox-build-gotip:
 	@echo "Run make update-aws-golang-tip, if this test fails because missing aws-golang:tip container"
