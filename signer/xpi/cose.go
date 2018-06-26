@@ -79,7 +79,7 @@ func isSupportedCOSEAlgValue(algValue interface{}) bool {
 	algValue == cose.ES512.Value
 }
 
-// isValidCOSESignature checks whether a COSE signature is a valid for XPIs
+// isValidCOSESignature checks whether a COSE signature is valid for XPIs
 func isValidCOSESignature(sig cose.Signature) (eeCert *x509.Certificate, resultErr error) {
 	if len(sig.Headers.Unprotected) != 0 {
 		resultErr = fmt.Errorf("XPI COSE Signature must have an empty Unprotected Header")
