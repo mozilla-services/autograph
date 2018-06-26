@@ -215,9 +215,9 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 	return nil
 }
 
-// coseSignature returns a CBOR-marshalled COSE SignMessage
+// issueCOSESignature returns a CBOR-marshalled COSE SignMessage
 // after generating EE certs and signatures for the COSE algorithms
-func coseSignature(cn string, manifest []byte, algs []*cose.Algorithm, s *PKCS7Signer) (coseSig []byte, err error) {
+func issueCOSESignature(cn string, manifest []byte, algs []*cose.Algorithm, s *PKCS7Signer) (coseSig []byte, err error) {
 	var (
 		coseSigners []cose.Signer
 		tmp         = cose.NewSignMessage()

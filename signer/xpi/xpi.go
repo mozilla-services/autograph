@@ -268,7 +268,7 @@ func (s *PKCS7Signer) signData(sigfile []byte, opt Options) ([]byte, error) {
 		}
 		return p7sig, nil
 	}
-	coseSig, err := coseSignature(cn, sigfile, coseSigAlgs, s)
+	coseSig, err := issueCOSESignature(cn, sigfile, coseSigAlgs, s)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: error signing cose message")
 	}
