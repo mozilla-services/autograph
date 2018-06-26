@@ -82,32 +82,32 @@ func isSupportedCOSEAlgValue(algValue interface{}) bool {
 // isValidCOSESignature checks whether a COSE signature is valid for XPIs
 func isValidCOSESignature(sig cose.Signature) (eeCert *x509.Certificate, resultErr error) {
 	if len(sig.Headers.Unprotected) != 0 {
-		resultErr = fmt.Errorf("XPI COSE Signature must have an empty Unprotected Header")
+		resultErr = fmt.Errorf("xpi: COSE Signature must have an empty Unprotected Header")
 		return
 	}
 
 	if len(sig.Headers.Protected) != 2 {
-		resultErr = fmt.Errorf("XPI COSE Signature must have exactly two Protected Headers")
+		resultErr = fmt.Errorf("xpi: COSE Signature must have exactly two Protected Headers")
 		return
 	}
 	algValue, ok := sig.Headers.Protected[algHeaderValue]
 	if !ok {
-		resultErr = fmt.Errorf("XPI COSE Signature must have alg in Protected Headers")
+		resultErr = fmt.Errorf("xpi: COSE Signature must have alg in Protected Headers")
 		return
 	}
 	if !isSupportedCOSEAlgValue(algValue) {
-		resultErr = fmt.Errorf("XPI COSE Signature alg %v is not supported", algValue)
+		resultErr = fmt.Errorf("xpi: COSE Signature alg %v is not supported", algValue)
 		return
 	}
 
 	kidValue, ok := sig.Headers.Protected[kidHeaderValue]
 	if !ok {
-		resultErr = fmt.Errorf("XPI COSE Signature must have kid in Protected Headers")
+		resultErr = fmt.Errorf("xpi: COSE Signature must have kid in Protected Headers")
 		return
 	}
 	kidBytes, ok := kidValue.([]byte)
 	if !ok {
-		resultErr = fmt.Errorf("XPI COSE Signature kid value is not bytes")
+		resultErr = fmt.Errorf("xpi: COSE Signature kid value is not bytes")
 		return
 	}
 
