@@ -113,7 +113,7 @@ func isValidCOSESignature(sig cose.Signature) (eeCert *x509.Certificate, resultE
 
 	eeCert, err := x509.ParseCertificate(kidBytes) // eeCert
 	if err != nil {
-		resultErr = errors.Wrapf(err, "XPI COSE Signature kid must decode to a parseable X509 cert")
+		resultErr = errors.Wrapf(err, "xpi: failed to parse X509 EE certificate from COSE Signature")
 		return
 	}
 	return
