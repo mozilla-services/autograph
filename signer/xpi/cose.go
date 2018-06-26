@@ -96,7 +96,7 @@ func isValidCOSESignature(sig cose.Signature) (eeCert *x509.Certificate, resultE
 		return
 	}
 	if !isSupportedCOSEAlgValue(algValue) {
-		resultErr = fmt.Errorf("XPI COSE Signature must have alg %v is not supported", algValue)
+		resultErr = fmt.Errorf("XPI COSE Signature alg %v is not supported", algValue)
 		return
 	}
 
