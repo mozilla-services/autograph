@@ -19,7 +19,7 @@ import (
 
 // every minute, add an rsa key to the cache. This will block if
 // the cache channel is already full, which is what we want anyway
-func (s *PKCS7Signer) populateRsaCache(size int) {
+func (s *XPISigner) populateRsaCache(size int) {
 	for {
 		key, err := rsa.GenerateKey(rand.Reader, size)
 		if err != nil {
@@ -32,7 +32,7 @@ func (s *PKCS7Signer) populateRsaCache(size int) {
 
 // retrieve a key from the cache or generate one if it takes too long
 // or if the size is wrong
-func (s *PKCS7Signer) getRsaKey(size int) (*rsa.PrivateKey, error) {
+func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 	select {
 	case key := <-s.rsaCache:
 		if key.N.BitLen() != size {
@@ -50,7 +50,7 @@ func (s *PKCS7Signer) getRsaKey(size int) (*rsa.PrivateKey, error) {
 }
 
 // makeTemplate returns a pointer to a template for an x509.Certificate EE
-func (s *PKCS7Signer) makeTemplate(cn string) (*x509.Certificate) {
+func (s *XPISigner) makeTemplate(cn string) *x509.Certificate {
 	var derCert []byte
 	cndigest := sha256.Sum256([]byte(cn))
 	return &x509.Certificate{
@@ -77,8 +77,8 @@ func (s *PKCS7Signer) makeTemplate(cn string) (*x509.Certificate) {
 }
 
 // generateIssuerEEKeyPair returns a public and private key pair
-// matching the issuer PKCS7Signer issuerKey size and type
-func (s *PKCS7Signer) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
+// matching the issuer XPISigner issuerKey size and type
+func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
 	switch s.issuerKey.(type) {
 	case *rsa.PrivateKey:
 		size := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
@@ -113,7 +113,7 @@ func (s *PKCS7Signer) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePubl
 // The signature expiration date is copied over from the issuer.
 //
 // The signed x509 certificate and private key are returned.
-func (s *PKCS7Signer) MakeEndEntity(cn string, coseAlg *cose.Algorithm) (eeCert *x509.Certificate, eeKey crypto.PrivateKey, err error) {
+func (s *XPISigner) MakeEndEntity(cn string, coseAlg *cose.Algorithm) (eeCert *x509.Certificate, eeKey crypto.PrivateKey, err error) {
 	var (
 		eePublicKey crypto.PublicKey
 		derCert     []byte

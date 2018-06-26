@@ -41,7 +41,7 @@ func stringToCOSEAlg(s string) (v *cose.Algorithm) {
 
 // generateIssuerEEKeyPair returns a public and private key pair for
 // the provided COSEAlgorithm
-func (s *PKCS7Signer) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
+func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
 	var signer *cose.Signer
 
 	if coseAlg == nil {
@@ -217,7 +217,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 
 // issueCOSESignature returns a CBOR-marshalled COSE SignMessage
 // after generating EE certs and signatures for the COSE algorithms
-func issueCOSESignature(cn string, manifest []byte, algs []*cose.Algorithm, s *PKCS7Signer) (coseSig []byte, err error) {
+func issueCOSESignature(cn string, manifest []byte, algs []*cose.Algorithm, s *XPISigner) (coseSig []byte, err error) {
 	var (
 		coseSigners []cose.Signer
 		tmp         = cose.NewSignMessage()

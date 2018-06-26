@@ -38,9 +38,9 @@ const (
 	ModeHotFix = "hotfix"
 )
 
-// A PKCS7Signer is configured to issue PKCS7 detached signatures
-// for Firefox Add-ons of various types.
-type PKCS7Signer struct {
+// An XPISigner is configured to issue detached PKCS7 and COSE
+// signatures for Firefox Add-ons of various types.
+type XPISigner struct {
 	signer.Configuration
 	issuerKey  crypto.PrivateKey
 	issuerCert *x509.Certificate
@@ -61,8 +61,8 @@ type PKCS7Signer struct {
 }
 
 // New initializes an XPI signer using a configuration
-func New(conf signer.Configuration) (s *PKCS7Signer, err error) {
-	s = new(PKCS7Signer)
+func New(conf signer.Configuration) (s *XPISigner, err error) {
+	s = new(XPISigner)
 	if conf.Type != Type {
 		return nil, errors.Errorf("xpi: invalid type %q, must be %q", conf.Type, Type)
 	}
@@ -138,7 +138,7 @@ func New(conf signer.Configuration) (s *PKCS7Signer, err error) {
 }
 
 // Config returns the configuration of the current signer
-func (s *PKCS7Signer) Config() signer.Configuration {
+func (s *XPISigner) Config() signer.Configuration {
 	return signer.Configuration{
 		ID:          s.ID,
 		Type:        s.Type,
@@ -149,7 +149,7 @@ func (s *PKCS7Signer) Config() signer.Configuration {
 }
 
 // SignFile takes an unsigned zipped XPI file and returns a signed XPI file
-func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile signer.SignedFile, err error) {
+func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile signer.SignedFile, err error) {
 	var (
 		pkcs7Manifest []byte
 		manifest      []byte
@@ -220,7 +220,7 @@ func (s *PKCS7Signer) SignFile(input []byte, options interface{}) (signedFile si
 }
 
 // SignData takes an input signature file and returns a PKCS7 or COSE detached signature
-func (s *PKCS7Signer) SignData(sigfile []byte, options interface{}) (signer.Signature, error) {
+func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signature, error) {
 	opt, err := GetOptions(options)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot get options")
@@ -235,7 +235,7 @@ func (s *PKCS7Signer) SignData(sigfile []byte, options interface{}) (signer.Sign
 	return sig, nil
 }
 
-func (s *PKCS7Signer) signData(sigfile []byte, opt Options) ([]byte, error) {
+func (s *XPISigner) signData(sigfile []byte, opt Options) ([]byte, error) {
 	cn, err := opt.CN(s)
 	if err != nil {
 		return nil, err
@@ -285,7 +285,7 @@ type Options struct {
 }
 
 // CN returns the common name
-func (o *Options) CN(s *PKCS7Signer) (cn string, err error) {
+func (o *Options) CN(s *XPISigner) (cn string, err error) {
 	if o == nil {
 		err = errors.New("xpi: cannot get common name from nil Options")
 	}
@@ -318,7 +318,7 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 }
 
 // GetDefaultOptions returns default options of the signer
-func (s *PKCS7Signer) GetDefaultOptions() interface{} {
+func (s *XPISigner) GetDefaultOptions() interface{} {
 	return Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"}
 }
 
