@@ -89,7 +89,7 @@ func isValidCOSESignature(sig cose.Signature) (eeCert *x509.Certificate, resultE
 		return
 	}
 	if !isSupportedCOSEAlgValue(algValue) {
-		resultErr = fmt.Errorf("XPI COSE Signature must have alg %+v is not supported", algValue)
+		resultErr = fmt.Errorf("XPI COSE Signature must have alg %v is not supported", algValue)
 		return
 	}
 
@@ -116,11 +116,11 @@ func isValidCOSESignature(sig cose.Signature) (eeCert *x509.Certificate, resultE
 // XPIs and returns parsed intermediate and end entity certs
 func isValidCOSEMessage(msg cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, resultErr error) {
 	if msg.Payload != nil {
-		resultErr = fmt.Errorf("Expected SignMessage payload to be nil, but got %+v", msg.Payload)
+		resultErr = fmt.Errorf("Expected SignMessage payload to be nil, but got %v", msg.Payload)
 		return
 	}
 	if len(msg.Headers.Unprotected) != 0 {
-		resultErr = fmt.Errorf("Expected SignMessage Unprotected headers to be empty, but got %+v", msg.Headers.Unprotected)
+		resultErr = fmt.Errorf("Expected SignMessage Unprotected headers to be empty, but got %v", msg.Headers.Unprotected)
 		return
 	}
 
@@ -136,13 +136,13 @@ func isValidCOSEMessage(msg cose.SignMessage) (intermediateCerts, eeCerts []*x50
 	// check that all kid values are bytes and decode into certs
 	kidArray, ok := kidValue.([]interface{})
 	if !ok {
-		resultErr = fmt.Errorf("Expected SignMessage Protected Headers kid value to be an array got %+v with type %T", kidValue, kidValue)
+		resultErr = fmt.Errorf("Expected SignMessage Protected Headers kid value to be an array got %v with type %T", kidValue, kidValue)
 		return
 	}
 	for i, cert := range kidArray {
 		certBytes, ok := cert.([]byte)
 		if !ok {
-			resultErr = fmt.Errorf("Expected SignMessage Protected Headers kid value %d to be a byte slice got %+v with type %T", i, cert, cert)
+			resultErr = fmt.Errorf("Expected SignMessage Protected Headers kid value %d to be a byte slice got %v with type %T", i, cert, cert)
 			return
 		}
 		intermediateCert, err := x509.ParseCertificate(certBytes)
