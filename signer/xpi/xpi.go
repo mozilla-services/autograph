@@ -217,7 +217,7 @@ type Options struct {
 
 // GetDefaultOptions returns default options of the signer
 func (s *PKCS7Signer) GetDefaultOptions() interface{} {
-	return Options{ID: "test@example.net"}
+	return Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"}
 }
 
 // GetOptions takes a input interface and reflects it into a struct of options

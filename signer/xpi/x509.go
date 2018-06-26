@@ -60,6 +60,12 @@ func (s *PKCS7Signer) MakeEndEntity(cn string) (eeCert *x509.Certificate, eeKey 
 		// https://tools.ietf.org/html/rfc5280#section-4.1.2.2
 		// Setting it to nanoseconds guarantees we'll never have two conflicting serials
 		SerialNumber: big.NewInt(time.Now().UnixNano()),
+
+		// having a dnsname or an email address field is required to comply with webpki
+		// requirement due to the intermediates having constraints
+		// see https://github.com/golang/go/issues/24151
+		DNSNames: []string{cn},
+
 		Subject: pkix.Name{
 			CommonName:         cn,
 			Organization:       []string{"Addons"},
