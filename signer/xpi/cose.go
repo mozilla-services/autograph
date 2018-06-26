@@ -44,10 +44,10 @@ func stringToCOSEAlg(s string) (v *cose.Algorithm) {
 func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
 	var signer *cose.Signer
 
-	if coseAlg == nil {
+	switch coseAlg {
+	case nil:
 		err = fmt.Errorf("Cannot generate private key for nil cose Algorithm")
-		return
-	} else if coseAlg == cose.PS256 {
+	case cose.PS256:
 		const size = 2048
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {
@@ -55,7 +55,11 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 			return
 		}
 		eePublicKey = eeKey.(*rsa.PrivateKey).Public()
-	} else {
+	case cose.ES256:
+		fallthrough
+	case cose.ES384:
+		fallthrough
+	case cose.ES512:
 		signer, err = cose.NewSigner(coseAlg, nil)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to generate private key")
