@@ -178,6 +178,9 @@ examples:
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
 			if debug {
 				fmt.Printf("DEBUG: %s\n", body)
 			}

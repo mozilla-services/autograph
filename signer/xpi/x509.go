@@ -5,8 +5,10 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"fmt"
 	"log"
 	"math/big"
 	"time"
@@ -55,17 +57,15 @@ func (s *PKCS7Signer) getRsaKey(size int) (*rsa.PrivateKey, error) {
 // The signed certificate and private key are returned.
 func (s *PKCS7Signer) MakeEndEntity(cn string) (eeCert *x509.Certificate, eeKey crypto.PrivateKey, err error) {
 	var derCert []byte
+	cndigest := sha256.Sum256([]byte(cn))
 	template := x509.Certificate{
 		// The maximum length of a serial number per rfc 5280 is 20 bytes / 160 bits
 		// https://tools.ietf.org/html/rfc5280#section-4.1.2.2
 		// Setting it to nanoseconds guarantees we'll never have two conflicting serials
 		SerialNumber: big.NewInt(time.Now().UnixNano()),
-
-		// having a dnsname or an email address field is required to comply with webpki
-		// requirement due to the intermediates having constraints
-		// see https://github.com/golang/go/issues/24151
-		DNSNames: []string{cn},
-
+		// PKIX requires EE's to have a valid DNS Names when the intermediate has
+		// a constraint, so we hash the CN into an fqdn to get something unique enough
+		DNSNames: []string{fmt.Sprintf("%x.%x.addons.mozilla.org", cndigest[:16], cndigest[16:])},
 		Subject: pkix.Name{
 			CommonName:         cn,
 			Organization:       []string{"Addons"},
@@ -78,6 +78,7 @@ func (s *PKCS7Signer) MakeEndEntity(cn string) (eeCert *x509.Certificate, eeKey 
 		NotAfter:           time.Now().Add(8760 * time.Hour), // one year
 		SignatureAlgorithm: s.issuerCert.SignatureAlgorithm,
 	}
+
 	switch s.issuerKey.(type) {
 	case *rsa.PrivateKey:
 		size := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
