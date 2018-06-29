@@ -17,9 +17,11 @@ import (
 
 // an authorization
 type authorization struct {
-	ID      string
-	Key     string
-	Signers []string
+	ID                    string
+	Key                   string
+	Signers               []string
+	HawkTimestampValidity string
+	hawkMaxTimestampSkew  time.Duration
 }
 
 // authorize validates the hawk authorization header on a request
@@ -40,6 +42,7 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 	if err != nil {
 		return "", false, err
 	}
+	hawk.MaxTimestampSkew = a.auths[userid].hawkMaxTimestampSkew
 	err = auth.Valid()
 	if err != nil {
 		return "", false, err

@@ -342,6 +342,7 @@ authorizations:
 
     - id: bob
       key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d
+      hawktimestampvalidity: 10m
       signers:
           - appkey2
 

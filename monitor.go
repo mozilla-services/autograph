@@ -18,6 +18,7 @@ func (a *autographer) addMonitoring(monitoring authorization) error {
 	if _, ok := a.auths["monitor"]; ok {
 		return fmt.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
 	}
+	monitoring.hawkMaxTimestampSkew = time.Minute
 	a.auths["monitor"] = monitoring
 	return nil
 }
