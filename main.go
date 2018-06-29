@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -241,14 +242,22 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 
 // addAuthorizations reads a list of authorizations from the configuration and
 // stores them into the autographer handler as a map indexed by user id, for fast lookup.
-func (a *autographer) addAuthorizations(auths []authorization) error {
+func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 	for _, auth := range auths {
 		if _, ok := a.auths[auth.ID]; ok {
 			return fmt.Errorf("authorization id '" + auth.ID + "' already defined, duplicates are not permitted")
 		}
+		if auth.HawkTimestampValidity != "" {
+			auth.hawkMaxTimestampSkew, err = time.ParseDuration(auth.HawkTimestampValidity)
+			if err != nil {
+				return err
+			}
+		} else {
+			auth.hawkMaxTimestampSkew = time.Minute
+		}
 		a.auths[auth.ID] = auth
 	}
-	return nil
+	return
 }
 
 // makeSignerIndex creates a map of authorization IDs and signer IDs to
