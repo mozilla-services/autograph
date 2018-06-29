@@ -73,10 +73,10 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 
 // isSupportedCOSEAlgValue returns whether the COSE alg value is supported or not
 func isSupportedCOSEAlgValue(algValue interface{}) bool {
-	return algValue == cose.PS256.Value || \
-	algValue == cose.ES256.Value || \
-	algValue == cose.ES384.Value || \
-	algValue == cose.ES512.Value
+	return (algValue == cose.PS256.Value ||
+		algValue == cose.ES256.Value ||
+		algValue == cose.ES384.Value ||
+		algValue == cose.ES512.Value)
 }
 
 // isValidCOSESignature checks whether a COSE signature is valid for XPIs
