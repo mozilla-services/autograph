@@ -11,6 +11,7 @@ import (
 	"crypto/sha256"
 	"net/http"
 	"testing"
+	"time"
 
 	"go.mozilla.org/hawk"
 )
@@ -175,4 +176,35 @@ func TestAddDuplicateAuthorization(t *testing.T) {
 	tmpag := newAutographer(1)
 	tmpag.addSigners(conf.Signers)
 	tmpag.addAuthorizations(authorizations)
+}
+
+// set an authorization with a ts validity of 2 seconds, then sleep 5 seconds
+// to trigger the hawk skew error
+func TestHawkTimestampSkewFail(t *testing.T) {
+	t.Parallel()
+	tmpag := newAutographer(1)
+	tmpag.addSigners(conf.Signers)
+	tmpag.addAuthorizations([]authorization{
+		{
+			ID:  "alice",
+			Key: "1862300e9bd18eafab2eb8d6",
+			HawkTimestampValidity: "2s",
+			Signers:               []string{"appkey1"},
+		}})
+
+	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	bodyrdr := bytes.NewReader(body)
+	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	authheader := getAuthHeader(req, "alice", "1862300e9bd18eafab2eb8d6", sha256.New, id(), "application/json", body)
+	req.Header.Set("Authorization", authheader)
+	time.Sleep(5 * time.Second)
+	_, _, err = tmpag.authorize(req, body)
+	if err.Error() != hawk.ErrTimestampSkew.Error() {
+		t.Errorf("expected auth to fail with skewed timestamp but got error: %v", err)
+	}
+
 }
