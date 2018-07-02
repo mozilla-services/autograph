@@ -148,7 +148,7 @@ func isValidCOSESignature(sig *cose.Signature) (eeCert *x509.Certificate, err er
 
 	kidBytes, ok := kidValue.([]byte)
 	if !ok {
-		err = fmt.Errorf("xpi: COSE Signature kid value is not bytes")
+		err = fmt.Errorf("xpi: COSE Signature kid value is not a byte array")
 		return
 	}
 
