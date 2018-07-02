@@ -141,3 +141,78 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 		}
 	}
 }
+
+func TestIsValidCOSEMessageErrs(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct{
+		input  *cose.SignMessage
+		results []string
+	}{
+		{
+			input: nil,
+			results: []string{"xpi: cannot validate nil COSE SignMessage"},
+		},
+		{
+			input: &cose.SignMessage{Payload: []byte("not nil!")},
+			results: []string{"xpi: expected SignMessage payload to be nil, but got [110 111 116 32 110 105 108 33]"},
+		},
+		{
+			input: &cose.SignMessage{Payload: nil},
+			results: []string{"xpi: got unexpected COSE SignMessage headers: xpi: cannot compare nil COSE headers"},
+		},
+		{
+			input: &cose.SignMessage{
+				Payload: nil,
+				Headers: &cose.Headers{
+					Unprotected: map[interface{}]interface{}{},
+					Protected: map[interface{}]interface{}{
+						kidHeaderValue: nil,
+					},
+				},
+			},
+			results: []string{"xpi: expected SignMessage Protected Headers kid value to be an array got <nil> with type <nil>"},
+		},
+		{
+			input: &cose.SignMessage{
+				Payload: nil,
+				Headers: &cose.Headers{
+					Unprotected: map[interface{}]interface{}{},
+					Protected: map[interface{}]interface{}{
+						kidHeaderValue: []interface{}{
+							nil,
+						},
+					},
+				},
+			},
+			results: []string{"xpi: expected SignMessage Protected Headers kid value 0 to be a byte slice got <nil> with type <nil>"},
+		},
+		{
+			input: &cose.SignMessage{
+				Payload: nil,
+				Headers: &cose.Headers{
+					Unprotected: map[interface{}]interface{}{},
+					Protected: map[interface{}]interface{}{
+						kidHeaderValue: []interface{}{
+							[]byte("not a cert"),
+						},
+					},
+				},
+			},
+			results: []string{"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match (16 vs {class:1 tag:14 length:111 isCompound:true}) {optional:false explicit:false application:false defaultValue:<nil> tag:<nil> stringType:0 timeType:0 set:false omitEmpty:false} certificate @2"},
+		},
+	}
+
+	for _, testcase := range cases {
+		_, _, err := isValidCOSEMessage(testcase.input)
+		anyMatches := false
+		for _, result := range testcase.results {
+			if err.Error() == result {
+				anyMatches = true
+			}
+		}
+		if !anyMatches {
+			t.Fatalf("isValidCOSEMessage returned '%v'", err)
+		}
+	}
+}
