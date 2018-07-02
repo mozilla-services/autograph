@@ -164,6 +164,10 @@ func isValidCOSESignature(sig *cose.Signature) (eeCert *x509.Certificate, err er
 // isValidCOSEMessage checks whether a COSE SignMessage is a valid for
 // XPIs and returns parsed intermediate and end entity certs
 func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, err error) {
+	if msg == nil {
+		err = errors.New("xpi: cannot validate nil COSE SignMessage")
+		return
+	}
 	if msg.Payload != nil {
 		err = fmt.Errorf("Expected SignMessage payload to be nil, but got %v", msg.Payload)
 		return
