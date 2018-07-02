@@ -1,6 +1,7 @@
 package xpi // import "go.mozilla.org/autograph/signer/xpi"
 
 import (
+	"bytes"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/rand"
@@ -182,7 +183,7 @@ func isValidCOSEMessage(msg cose.SignMessage) (intermediateCerts, eeCerts []*x50
 // TODO: 6) there is a trusted path from the included COSE EE certs to the signer cert using the provided intermediates
 //
 func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) error {
-	coseManifestBytes, err := readFileFromZIP(signedFile, "META-INF/cose.manifest")
+	coseManifest, err := readFileFromZIP(signedFile, "META-INF/cose.manifest")
 	if err != nil {
 		return fmt.Errorf("failed to read META-INF/cose.manifest from signed zip: %v", err)
 	}
@@ -190,18 +191,23 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 	if err != nil {
 		return fmt.Errorf("failed to read META-INF/cose.sig from signed zip: %v", err)
 	}
-	pkcs7ManifestBytes, err := readFileFromZIP(signedFile, "META-INF/manifest.mf")
+	pkcs7Manifest, err := readFileFromZIP(signedFile, "META-INF/manifest.mf")
 	if err != nil {
 		return fmt.Errorf("failed to read META-INF/manifest.mf from signed zip: %v", err)
 	}
-	coseManifest := string(coseManifestBytes)
-	pkcs7Manifest := string(pkcs7ManifestBytes)
 
-	if !strings.Contains(pkcs7Manifest, "cose") {
-		return fmt.Errorf("pkcs7 manifest does not contain cose files: %s", pkcs7Manifest)
+	var coseFileNames = [][]byte{
+		[]byte("Name: META-INF/cose.sig"),
+		[]byte("Name: META-INF/cose.manifest"),
 	}
-	if strings.Contains(coseManifest, "cose") {
-		return fmt.Errorf("cose manifest contains cose files: %s", coseManifest)
+	for _, coseFileName := range coseFileNames {
+		if !bytes.Contains(pkcs7Manifest, coseFileName) {
+			return fmt.Errorf("pkcs7 manifest does not contain cose file: %s", coseFileName)
+		}
+
+		if bytes.Contains(coseManifest, coseFileName) {
+			return fmt.Errorf("cose manifest contains cose file: %s", coseFileName)
+		}
 	}
 
 	xpiSig, err := Unmarshal(string(coseMsgBytes), nil)
@@ -209,7 +215,6 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 		return errors.Wrap(err, "error unmarshaling cose.sig")
 	}
 	coseMsg := *xpiSig.signMessage
-
 	if len(coseMsg.Signatures) != len(signOptions.COSEAlgorithms) {
 		return fmt.Errorf("cose.sig contains %d signatures, but expected %d", len(coseMsg.Signatures), len(signOptions.COSEAlgorithms))
 	}
