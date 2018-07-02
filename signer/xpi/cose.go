@@ -135,6 +135,11 @@ var (
 
 // isValidCOSESignature checks whether a COSE signature is valid for XPIs
 func isValidCOSESignature(sig *cose.Signature) (eeCert *x509.Certificate, err error) {
+	if sig == nil {
+		err = errors.New("xpi: cannot validate nil COSE Signature")
+		return
+	}
+
 	kidValue, err := expectHeadersAndGetKeyID(sig.Headers, expectedSignatureHeaders)
 	if err != nil {
 		err = errors.Wrapf(err, "xpi: got unexpected COSE Signature headers")
