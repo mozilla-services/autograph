@@ -201,6 +201,21 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 			},
 			results: []string{"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match (16 vs {class:1 tag:14 length:111 isCompound:true}) {optional:false explicit:false application:false defaultValue:<nil> tag:<nil> stringType:0 timeType:0 set:false omitEmpty:false} certificate @2"},
 		},
+		{
+			input: &cose.SignMessage{
+				Payload: nil,
+				Headers: &cose.Headers{
+					Unprotected: map[interface{}]interface{}{},
+					Protected: map[interface{}]interface{}{
+						kidHeaderValue: []interface{}{},
+					},
+				},
+				Signatures: []cose.Signature{
+					cose.Signature{},
+				},
+			},
+			results: []string{"xpi: cose signature 0 is invalid: xpi: got unexpected COSE Signature headers: xpi: cannot compare nil COSE headers"},
+		},
 	}
 
 	for _, testcase := range cases {

@@ -201,7 +201,7 @@ func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x5
 	for i, sig := range msg.Signatures {
 		eeCert, sigErr := isValidCOSESignature(&sig)
 		if sigErr != nil {
-			err = errors.Wrapf(sigErr, "cose signature %d is invalid", i)
+			err = errors.Wrapf(sigErr, "xpi: cose signature %d is invalid", i)
 			return
 		}
 		eeCerts = append(eeCerts, eeCert)
