@@ -3,8 +3,10 @@ package xpi
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -389,9 +391,12 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 	for _, intermediateCert := range intermediateCerts {
 		intermediates.AddCert(intermediateCert)
 	}
+	cndigest := sha256.Sum256([]byte(signOptions.ID))
+	dnsName := fmt.Sprintf("%x.%x.addons.mozilla.org", cndigest[:16], cndigest[16:])
+
 	for i, eeCert := range eeCerts {
 		opts := x509.VerifyOptions{
-			DNSName:       signOptions.ID,
+			DNSName:       dnsName,
 			Roots:         roots,
 			Intermediates: intermediates,
 		}

@@ -51,7 +51,6 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 
 // makeTemplate returns a pointer to a template for an x509.Certificate EE
 func (s *XPISigner) makeTemplate(cn string) *x509.Certificate {
-	var derCert []byte
 	cndigest := sha256.Sum256([]byte(cn))
 	return &x509.Certificate{
 		// The maximum length of a serial number per rfc 5280 is 20 bytes / 160 bits
