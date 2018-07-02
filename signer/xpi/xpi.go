@@ -165,7 +165,7 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	}
 	coseSigAlgs, err = opt.Algorithms()
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest from XPI")
+		return nil, errors.Wrap(err, "xpi: error parsing COSE Algorithms from options")
 	}
 
 	manifest, err = makeJARManifest(input)
@@ -310,7 +310,7 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 	for _, algStr := range o.COSEAlgorithms {
 		alg := stringToCOSEAlg(algStr)
 		if alg == nil {
-			return nil, errors.Wrapf(err, "xpi: invalid or unsupported COSE algorithm %s", algStr)
+			return nil, fmt.Errorf("xpi: invalid or unsupported COSE algorithm %s", algStr)
 		}
 		algs = append(algs, alg)
 	}

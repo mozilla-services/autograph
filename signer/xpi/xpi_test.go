@@ -349,6 +349,16 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to verify signed file: %v", err)
 	}
+
+	// test failure for unknown COSE Alg
+	signOptions = Options{
+		ID:             "test@example.net",
+		COSEAlgorithms: []string{"ROT13"},
+	}
+	_, err = s.SignFile(input, signOptions)
+	if err == nil {
+		t.Fatalf("failed to sign file did not fail for unknown alg: %v", err)
+	}
 }
 
 var PASSINGTESTCASES = []signer.Configuration{
