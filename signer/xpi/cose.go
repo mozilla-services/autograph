@@ -173,6 +173,10 @@ func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x5
 		return
 	}
 	kidValue, err := expectHeadersAndGetKeyID(msg.Headers, expectedMessageHeaders)
+	if err != nil {
+		err = errors.Wrapf(err, "xpi: got unexpected COSE SignMessage headers")
+		return
+	}
 
 	// check that all kid values are bytes and decode into certs
 	kidArray, ok := kidValue.([]interface{})
