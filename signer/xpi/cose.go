@@ -163,7 +163,7 @@ func isValidCOSESignature(sig *cose.Signature) (eeCert *x509.Certificate, err er
 
 // isValidCOSEMessage checks whether a COSE SignMessage is a valid for
 // XPIs and returns parsed intermediate and end entity certs
-func isValidCOSEMessage(msg cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, err error) {
+func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, err error) {
 	if msg.Payload != nil {
 		err = fmt.Errorf("Expected SignMessage payload to be nil, but got %v", msg.Payload)
 		return
@@ -243,12 +243,11 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 	if err != nil {
 		return errors.Wrap(err, "error unmarshaling cose.sig")
 	}
-	coseMsg := *xpiSig.signMessage
-	if len(coseMsg.Signatures) != len(signOptions.COSEAlgorithms) {
-		return fmt.Errorf("cose.sig contains %d signatures, but expected %d", len(coseMsg.Signatures), len(signOptions.COSEAlgorithms))
+	if len(xpiSig.signMessage.Signatures) != len(signOptions.COSEAlgorithms) {
+		return fmt.Errorf("cose.sig contains %d signatures, but expected %d", len(xpiSig.signMessage.Signatures), len(signOptions.COSEAlgorithms))
 	}
 
-	intermediateCerts, eeCerts, err := isValidCOSEMessage(coseMsg)
+	intermediateCerts, eeCerts, err := isValidCOSEMessage(xpiSig.signMessage)
 	if err != nil {
 		return errors.Wrap(err, "cose.sig is not a valid COSE SignMessage")
 	}
