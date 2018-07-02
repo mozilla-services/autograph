@@ -6,7 +6,9 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
+	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -204,7 +206,7 @@ func isValidCOSEMessage(msg cose.SignMessage) (intermediateCerts, eeCerts []*x50
 // 5) the right number of signatures are present and all intermediate and end entity certs parse properly
 // TODO: 6) there is a trusted path from the included COSE EE certs to the signer cert using the provided intermediates
 //
-func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) error {
+func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options) error {
 	coseManifest, err := readFileFromZIP(signedFile, "META-INF/cose.manifest")
 	if err != nil {
 		return fmt.Errorf("failed to read META-INF/cose.manifest from signed zip: %v", err)
@@ -232,7 +234,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 		}
 	}
 
-	xpiSig, err := Unmarshal(string(coseMsgBytes), nil)
+	xpiSig, err := Unmarshal(base64.StdEncoding.EncodeToString(coseMsgBytes), nil)
 	if err != nil {
 		return errors.Wrap(err, "error unmarshaling cose.sig")
 	}
@@ -241,11 +243,29 @@ func verifyCOSESignatures(signedFile signer.SignedFile, signOptions Options) err
 		return fmt.Errorf("cose.sig contains %d signatures, but expected %d", len(coseMsg.Signatures), len(signOptions.COSEAlgorithms))
 	}
 
-	_, _, err = isValidCOSEMessage(coseMsg)
+	intermediateCerts, eeCerts, err := isValidCOSEMessage(coseMsg)
 	if err != nil {
 		return errors.Wrap(err, "cose.sig is not a valid COSE SignMessage")
 	}
 
+	// check that we can verify EE certs with the provided intermediates
+	intermediates := x509.NewCertPool()
+	for _, intermediateCert := range intermediateCerts {
+		intermediates.AddCert(intermediateCert)
+	}
+	cndigest := sha256.Sum256([]byte(signOptions.ID))
+	dnsName := fmt.Sprintf("%x.%x.addons.mozilla.org", cndigest[:16], cndigest[16:])
+
+	for i, eeCert := range eeCerts {
+		opts := x509.VerifyOptions{
+			DNSName:       dnsName,
+			Roots:         truststore,
+			Intermediates: intermediates,
+		}
+		if _, err := eeCert.Verify(opts); err != nil {
+			return fmt.Errorf("failed to verify EECert %d %s", i, err)
+		}
+	}
 	return nil
 }
 

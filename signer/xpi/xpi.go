@@ -452,7 +452,7 @@ func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, o
 	}
 
 	if len(opts.COSEAlgorithms) > 0 {
-		err = verifyCOSESignatures(signedFile, opts)
+		err = verifyCOSESignatures(signedFile, truststore, opts)
 		return errors.Wrap(err, "xpi: error verifying COSE signatures for signed file")
 	}
 
