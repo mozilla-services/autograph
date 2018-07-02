@@ -80,91 +80,113 @@ func isSupportedCOSEAlgValue(algValue interface{}) bool {
 		algValue == cose.ES512.Value)
 }
 
+
+func expectHeadersAndGetKeyID(actual, expected *cose.Headers) (kidValue interface{}, err error) {
+	if actual == nil || expected == nil {
+		err = errors.New("xpi: cannot compare nil COSE headers")
+		return
+	}
+	if len(actual.Unprotected) != len(expected.Unprotected) {
+		err = fmt.Errorf("xpi: unexpected non-empty Unprotected headers got: %v", actual.Unprotected)
+		return
+	}
+	if len(actual.Protected) != len(expected.Protected) {
+		err = fmt.Errorf("xpi: unexpected Protected headers got: %v expected: %v", actual.Protected, expected.Protected)
+		return
+	}
+	if _, ok := expected.Protected[algHeaderValue]; ok {
+		algValue, ok := actual.Protected[algHeaderValue]
+		if !ok {
+			err = fmt.Errorf("xpi: missing expected alg in Protected Headers")
+			return
+		}
+		if !isSupportedCOSEAlgValue(algValue) {
+			err = fmt.Errorf("xpi: alg %v is not supported", algValue)
+			return
+		}
+	}
+	if _, ok := expected.Protected[kidHeaderValue]; ok {
+		kidValue, ok = actual.Protected[kidHeaderValue]
+		if !ok {
+			err = fmt.Errorf("xpi: missing expected kid in Protected Headers")
+			return
+		}
+	}
+	return
+}
+
+var (
+	expectedMessageHeaders = &cose.Headers{
+		Unprotected: map[interface{}]interface{}{},
+		Protected: map[interface{}]interface{}{
+			kidHeaderValue: nil,
+		},
+	}
+	expectedSignatureHeaders = &cose.Headers{
+		Unprotected: map[interface{}]interface{}{},
+		Protected: map[interface{}]interface{}{
+			kidHeaderValue: nil,
+			algHeaderValue: nil,
+		},
+	}
+)
+
 // isValidCOSESignature checks whether a COSE signature is valid for XPIs
-func isValidCOSESignature(sig cose.Signature) (eeCert *x509.Certificate, resultErr error) {
-	if len(sig.Headers.Unprotected) != 0 {
-		resultErr = fmt.Errorf("xpi: COSE Signature must have an empty Unprotected Header")
+func isValidCOSESignature(sig cose.Signature) (eeCert *x509.Certificate, err error) {
+	kidValue, err := expectHeadersAndGetKeyID(sig.Headers, expectedSignatureHeaders)
+	if err != nil {
+		err = errors.Wrapf(err, "xpi: got unexpected COSE Signature headers")
 		return
 	}
 
-	if len(sig.Headers.Protected) != 2 {
-		resultErr = fmt.Errorf("xpi: COSE Signature must have exactly two Protected Headers")
-		return
-	}
-	algValue, ok := sig.Headers.Protected[algHeaderValue]
-	if !ok {
-		resultErr = fmt.Errorf("xpi: COSE Signature must have alg in Protected Headers")
-		return
-	}
-	if !isSupportedCOSEAlgValue(algValue) {
-		resultErr = fmt.Errorf("xpi: COSE Signature alg %v is not supported", algValue)
-		return
-	}
-
-	kidValue, ok := sig.Headers.Protected[kidHeaderValue]
-	if !ok {
-		resultErr = fmt.Errorf("xpi: COSE Signature must have kid in Protected Headers")
-		return
-	}
 	kidBytes, ok := kidValue.([]byte)
 	if !ok {
-		resultErr = fmt.Errorf("xpi: COSE Signature kid value is not bytes")
+		err = fmt.Errorf("xpi: COSE Signature kid value is not bytes")
 		return
 	}
 
-	eeCert, err := x509.ParseCertificate(kidBytes) // eeCert
+	eeCert, err = x509.ParseCertificate(kidBytes)
 	if err != nil {
-		resultErr = errors.Wrapf(err, "xpi: failed to parse X509 EE certificate from COSE Signature")
+		err = errors.Wrapf(err, "xpi: failed to parse X509 EE certificate from COSE Signature")
 		return
 	}
+
 	return
 }
 
 // isValidCOSEMessage checks whether a COSE SignMessage is a valid for
 // XPIs and returns parsed intermediate and end entity certs
-func isValidCOSEMessage(msg cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, resultErr error) {
+func isValidCOSEMessage(msg cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, err error) {
 	if msg.Payload != nil {
-		resultErr = fmt.Errorf("Expected SignMessage payload to be nil, but got %v", msg.Payload)
+		err = fmt.Errorf("Expected SignMessage payload to be nil, but got %v", msg.Payload)
 		return
 	}
-	if len(msg.Headers.Unprotected) != 0 {
-		resultErr = fmt.Errorf("Expected SignMessage Unprotected headers to be empty, but got %v", msg.Headers.Unprotected)
-		return
-	}
+	kidValue, err := expectHeadersAndGetKeyID(msg.Headers, expectedMessageHeaders)
 
-	if len(msg.Headers.Protected) != 1 {
-		resultErr = fmt.Errorf("Expected SignMessage Protected headers must contain one value, but got %d", len(msg.Headers.Protected))
-		return
-	}
-	kidValue, ok := msg.Headers.Protected[kidHeaderValue]
-	if !ok {
-		resultErr = fmt.Errorf("Expected SignMessage must have kid in Protected Headers")
-		return
-	}
 	// check that all kid values are bytes and decode into certs
 	kidArray, ok := kidValue.([]interface{})
 	if !ok {
-		resultErr = fmt.Errorf("Expected SignMessage Protected Headers kid value to be an array got %v with type %T", kidValue, kidValue)
+		err = fmt.Errorf("Expected SignMessage Protected Headers kid value to be an array got %v with type %T", kidValue, kidValue)
 		return
 	}
 	for i, cert := range kidArray {
 		certBytes, ok := cert.([]byte)
 		if !ok {
-			resultErr = fmt.Errorf("Expected SignMessage Protected Headers kid value %d to be a byte slice got %v with type %T", i, cert, cert)
+			err = fmt.Errorf("Expected SignMessage Protected Headers kid value %d to be a byte slice got %v with type %T", i, cert, cert)
 			return
 		}
-		intermediateCert, err := x509.ParseCertificate(certBytes)
-		if err != nil {
-			resultErr = errors.Wrapf(err, "SignMessage Signature Protected Headers kid value %d does not decode to a parseable X509 cert", i)
+		intermediateCert, parseErr := x509.ParseCertificate(certBytes)
+		if parseErr != nil {
+			err = errors.Wrapf(parseErr, "SignMessage Signature Protected Headers kid value %d does not decode to a parseable X509 cert", i)
 			return
 		}
 		intermediateCerts = append(intermediateCerts, intermediateCert)
 	}
 
 	for i, sig := range msg.Signatures {
-		eeCert, err := isValidCOSESignature(sig)
-		if err != nil {
-			resultErr = errors.Wrapf(err, "cose signature %d is invalid", i)
+		eeCert, sigErr := isValidCOSESignature(sig)
+		if sigErr != nil {
+			err = errors.Wrapf(sigErr, "cose signature %d is invalid", i)
 			return
 		}
 		eeCerts = append(eeCerts, eeCert)
