@@ -28,5 +28,3 @@ script:
     python3 -m virtualenv venv && source venv/bin/activate && \
     python3 -m pip install -r requirements.txt && \
     python3 sign.py -t http://localhost:8000/sign/data -s webextensions-rsa -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu test-addon.xpi
-# sign an apk through the autograph-edge lambda
-- cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-edge && make && ./autograph-edge -f test.apk
