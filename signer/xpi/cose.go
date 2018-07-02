@@ -169,7 +169,7 @@ func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x5
 		return
 	}
 	if msg.Payload != nil {
-		err = fmt.Errorf("Expected SignMessage payload to be nil, but got %v", msg.Payload)
+		err = fmt.Errorf("xpi: expected SignMessage payload to be nil, but got %v", msg.Payload)
 		return
 	}
 	kidValue, err := expectHeadersAndGetKeyID(msg.Headers, expectedMessageHeaders)
@@ -177,18 +177,18 @@ func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x5
 	// check that all kid values are bytes and decode into certs
 	kidArray, ok := kidValue.([]interface{})
 	if !ok {
-		err = fmt.Errorf("Expected SignMessage Protected Headers kid value to be an array got %v with type %T", kidValue, kidValue)
+		err = fmt.Errorf("xpi: expected SignMessage Protected Headers kid value to be an array got %v with type %T", kidValue, kidValue)
 		return
 	}
 	for i, cert := range kidArray {
 		certBytes, ok := cert.([]byte)
 		if !ok {
-			err = fmt.Errorf("Expected SignMessage Protected Headers kid value %d to be a byte slice got %v with type %T", i, cert, cert)
+			err = fmt.Errorf("xpi: expected SignMessage Protected Headers kid value %d to be a byte slice got %v with type %T", i, cert, cert)
 			return
 		}
 		intermediateCert, parseErr := x509.ParseCertificate(certBytes)
 		if parseErr != nil {
-			err = errors.Wrapf(parseErr, "SignMessage Signature Protected Headers kid value %d does not decode to a parseable X509 cert", i)
+			err = errors.Wrapf(parseErr, "xpi: SignMessage Signature Protected Headers kid value %d does not decode to a parseable X509 cert", i)
 			return
 		}
 		intermediateCerts = append(intermediateCerts, intermediateCert)
