@@ -58,7 +58,7 @@ right after the signature is issued.
 Signature Request
 -----------------
 
-Supports the `/sign/data` and `/sign/file` endpoints for data and file signing respectively. Both use the same request format:
+Supports the `/sign/data` and `/sign/file` endpoints for data and file signing respectively. `/sign/data` uses the request format:
 
 .. code:: json
 
@@ -72,7 +72,7 @@ Supports the `/sign/data` and `/sign/file` endpoints for data and file signing r
 		}
 	]
 
-or to include COSE Signatures:
+`/sign/file` can include an **optional** list of COSE Algorithms to sign with too:
 
 .. code:: json
 
@@ -99,10 +99,10 @@ Where options includes the following fields:
   signer doesn't care about the content of the string, and uses it as
   received when generating the end-entity signing cert.
 
-* `cose_algorithms` is an **optional** array of strings of supported
-  `COSE Algorithms`_ (as of 2018-06-20 one of `"ES256"`, `"ES384"`,
-  `"ES512"`, or `"PS256"`) to sign the XPI with in addition to the
-  PKCS7 signature.
+* `cose_algorithms` is an **optional** array of strings representing
+  supported `COSE Algorithms`_ (as of 2018-06-20 one of `"ES256"`,
+  `"ES384"`, `"ES512"`, or `"PS256"`) to sign the XPI with in addition
+  to the PKCS7 signature. Only `/sign/file` supports this field.
 
 The `/sign/file` endpoint takes a whole XPI encoded in base64. As
 described in `Extension Signing Algorithm`_, it:
@@ -123,22 +123,11 @@ described in `Extension Signing Algorithm`_, it:
 * adds the generated manifest, signature, and detached signature files to the XPI `META-INF/`
 * repacks and returns the ZIP/XPI
 
-The `/sign/data` endpoint only generates the end entity cert and signs
-the signature file.
-
-When the options `cose_algorithms` is not provided or does not include
-a valid supported COSE algorithm name, the `input` field must contain
-the base64 encoding of a `mozilla.sf` signature file and returns the
-PKCS7 detached signature `mozilla.rsa` in the response `signature`
-field.
-
-When the options `cose_algorithms` is provided and includes one or
-more valid supported COSE algorithm names, the `input` field must
-contain the base64 encoding of a `cose.manifest` manifest file and
-returns the COSE detached signature `cose.sig` in the response
-`signature` field.
-
-In both cases, the caller is then responsible for repacking the ZIP.
+The `/sign/data` endpoint generates the end entity cert and signs the
+signature file. The `input` field must contain the base64 encoding of
+a `mozilla.sf` signature file and returns the PKCS7 detached signature
+`mozilla.rsa` in the response `signature` field. The caller is then
+responsible for repacking the ZIP.
 
 .. _`COSE Algorithms`: https://www.iana.org/assignments/cose/cose.xhtml#table-header-algorithm-parameters
 .. _`Extension Signing Algorithm`: https://wiki.mozilla.org/Add-ons/Extension_Signing#Algorithm
@@ -152,7 +141,7 @@ Data Signing
 XPI signatures are binary files encoded using the PKCS7 format and stored in the
 file called **mozilla.rsa** in the META-INF folder of XPI archives.
 
-Autograph returns the base64 representation of the mozilla.rsa file in its
+Autograph returns the base64 representation of the `mozilla.rsa` file in its
 signature responses. Clients must decode the base64 from the autograph response
 and write it to a `mozilla.rsa` file.
 

@@ -176,7 +176,11 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	if len(coseSigAlgs) < 1 {
 		pkcs7Manifest = manifest
 	} else {
-		coseSig, err = s.signData(manifest, opt)
+		cn, err := opt.CN(s)
+		if err != nil {
+			return nil, err
+		}
+		coseSig, err = s.issueCOSESignature(cn, manifest, coseSigAlgs)
 		if err != nil {
 			return nil, errors.Wrap(err, "xpi: error signing cose message")
 		}
@@ -244,35 +248,31 @@ func (s *XPISigner) signData(sigfile []byte, opt Options) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest from XPI")
 	}
-
-	if len(coseSigAlgs) < 1 {
-		eeCert, eeKey, err := s.MakeEndEntity(cn, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		toBeSigned, err := pkcs7.NewSignedData(sigfile)
-		if err != nil {
-			return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
-		}
-		// XPIs are signed with SHA256
-		toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA256)
-		err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
-		if err != nil {
-			return nil, errors.Wrap(err, "xpi: cannot sign")
-		}
-		toBeSigned.Detach()
-		p7sig, err := toBeSigned.Finish()
-		if err != nil {
-			return nil, errors.Wrap(err, "xpi: cannot finish signing data")
-		}
-		return p7sig, nil
+	if len(coseSigAlgs) > 0 {
+		return nil, fmt.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
 	}
-	coseSig, err := s.issueCOSESignature(cn, sigfile, coseSigAlgs)
+
+	eeCert, eeKey, err := s.MakeEndEntity(cn, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: error signing cose message")
+		return nil, err
 	}
-	return coseSig, nil
+
+	toBeSigned, err := pkcs7.NewSignedData(sigfile)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
+	}
+	// XPIs are signed with SHA256
+	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA256)
+	err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: cannot sign")
+	}
+	toBeSigned.Detach()
+	p7sig, err := toBeSigned.Finish()
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: cannot finish signing data")
+	}
+	return p7sig, nil
 }
 
 // Options contains specific parameters used to sign XPIs
