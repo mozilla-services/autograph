@@ -222,15 +222,15 @@ func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x5
 func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options) error {
 	coseManifest, err := readFileFromZIP(signedFile, "META-INF/cose.manifest")
 	if err != nil {
-		return fmt.Errorf("failed to read META-INF/cose.manifest from signed zip: %v", err)
+		return fmt.Errorf("xpi: failed to read META-INF/cose.manifest from signed zip: %v", err)
 	}
 	coseMsgBytes, err := readFileFromZIP(signedFile, "META-INF/cose.sig")
 	if err != nil {
-		return fmt.Errorf("failed to read META-INF/cose.sig from signed zip: %v", err)
+		return fmt.Errorf("xpi: failed to read META-INF/cose.sig from signed zip: %v", err)
 	}
 	pkcs7Manifest, err := readFileFromZIP(signedFile, "META-INF/manifest.mf")
 	if err != nil {
-		return fmt.Errorf("failed to read META-INF/manifest.mf from signed zip: %v", err)
+		return fmt.Errorf("xpi: failed to read META-INF/manifest.mf from signed zip: %v", err)
 	}
 
 	var coseFileNames = [][]byte{
@@ -239,25 +239,25 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 	}
 	for _, coseFileName := range coseFileNames {
 		if !bytes.Contains(pkcs7Manifest, coseFileName) {
-			return fmt.Errorf("pkcs7 manifest does not contain cose file: %s", coseFileName)
+			return fmt.Errorf("xpi: pkcs7 manifest does not contain the line: %s", coseFileName)
 		}
 
 		if bytes.Contains(coseManifest, coseFileName) {
-			return fmt.Errorf("cose manifest contains cose file: %s", coseFileName)
+			return fmt.Errorf("xpi: cose manifest contains the line: %s", coseFileName)
 		}
 	}
 
-	xpiSig, err := Unmarshal(base64.StdEncoding.EncodeToString(coseMsgBytes), nil)
-	if err != nil {
-		return errors.Wrap(err, "error unmarshaling cose.sig")
+	xpiSig, unmarshalErr := Unmarshal(base64.StdEncoding.EncodeToString(coseMsgBytes), nil)
+	if unmarshalErr != nil {
+		return errors.Wrap(unmarshalErr, "xpi: error unmarshaling cose.sig")
 	}
-	if len(xpiSig.signMessage.Signatures) != len(signOptions.COSEAlgorithms) {
-		return fmt.Errorf("cose.sig contains %d signatures, but expected %d", len(xpiSig.signMessage.Signatures), len(signOptions.COSEAlgorithms))
+	if xpiSig != nil && xpiSig.signMessage != nil && len(xpiSig.signMessage.Signatures) != len(signOptions.COSEAlgorithms) {
+		return fmt.Errorf("xpi: cose.sig contains %d signatures, but expected %d", len(xpiSig.signMessage.Signatures), len(signOptions.COSEAlgorithms))
 	}
 
 	intermediateCerts, eeCerts, err := isValidCOSEMessage(xpiSig.signMessage)
 	if err != nil {
-		return errors.Wrap(err, "cose.sig is not a valid COSE SignMessage")
+		return errors.Wrap(err, "xpi: cose.sig is not a valid COSE SignMessage")
 	}
 
 	// check that we can verify EE certs with the provided intermediates
