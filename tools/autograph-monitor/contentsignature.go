@@ -17,15 +17,6 @@ import (
 	"go.mozilla.org/autograph/signer/contentsignature"
 )
 
-// Certificates no longer in use but not yet removed from the autograph config.
-// we don't want to alert on those.
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1466523
-var ignoredCerts = map[string]bool{
-	"fingerprinting-defenses.content-signature.mozilla.org": true,
-	"fennec-dlc.content-signature.mozilla.org":              true,
-	"focus-experiments.content-signature.mozilla.org":       true,
-}
-
 // validate the signature and certificate chain of a content signature response
 //
 // If an X5U value was provided, use the public key from the end entity certificate
@@ -65,10 +56,6 @@ func verifyContentSignature(response signatureresponse) error {
 	if certs != nil {
 		err = verifyCertChain(certs)
 		if err != nil {
-			// check if we should ignore this cert
-			if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
-				return nil
-			}
 			return err
 		}
 	}
@@ -145,17 +132,9 @@ func verifyCertChain(certs []*x509.Certificate) error {
 			log.Printf("Certificate %d %q has a valid signature from parent certificate %d %q",
 				i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName)
 		}
-		if time.Now().Add(30 * 24 * time.Hour).After(cert.NotAfter) {
-			// cert expires in less than 30 days, this is a soft error. send an email.
-			err := sendSoftNotification(
-				fmt.Sprintf("%x", sha256.Sum256(cert.Raw)),
-				"Certificate %d %q expires in less than 30 days: notAfter=%s",
-				i, cert.Subject.CommonName, cert.NotAfter)
-			if err != nil {
-				log.Printf("failed to send soft notification: %v", err)
-			}
-		}
-		if time.Now().Add(15 * 24 * time.Hour).After(cert.NotAfter) {
+		daysLeft := cert.NotAfter.Sub(time.Now()) / (24 * time.Hour)
+		sendDatadogMetric(int(daysLeft), "count", "cert-expiry-"+cert.Subject.CommonName, []string{"app:autograph", "type:monitor"})
+		if daysLeft < 15 {
 			return fmt.Errorf("Certificate %d %q expires in less than 15 days: notAfter=%s",
 				i, cert.Subject.CommonName, cert.NotAfter)
 		}
