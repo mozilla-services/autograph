@@ -235,11 +235,11 @@ examples:
 						log.Fatal(err)
 					}
 				case apk.Type:
-					sigStatus = verifyAPK(input)
 					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
 					if err != nil {
 						log.Fatal(err)
 					}
+					sigStatus = verifyAPK(sigData)
 				case mar.Type:
 					sigStatus = verifyMAR(input)
 					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
