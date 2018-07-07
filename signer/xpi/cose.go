@@ -51,7 +51,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 	case nil:
 		err = fmt.Errorf("Cannot generate private key for nil cose Algorithm")
 	case cose.PS256:
-		const size = 2048
+		size := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to generate rsa private key of size %d", size)
