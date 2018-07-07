@@ -295,6 +295,9 @@ func (s *XPISigner) issueCOSESignature(cn string, manifest []byte, algs []*cose.
 	if s.issuerCert == nil {
 		return nil, errors.New("Cannot issue COSE Signature when XPISigner.issuerCert is nil")
 	}
+	if len(s.issuerCert.Raw) < 1 {
+		return nil, errors.New("Cannot issue COSE Signature when XPISigner.issuerCert is too short")
+	}
 
 	var (
 		coseSigners []cose.Signer
