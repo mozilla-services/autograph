@@ -261,8 +261,8 @@ func (s *XPISigner) signData(sigfile []byte, opt Options) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
 	}
-	// XPIs are signed with SHA256
-	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA256)
+	// XPIs are signed with SHA1
+	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA1)
 	err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot sign")
