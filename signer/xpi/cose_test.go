@@ -441,6 +441,28 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			}),
 			roots: nil,
 			opts: Options{
+				ID: "foo",
+				COSEAlgorithms: []string{"ES256"},
+			},
+			result: "EECert 0: id foo does not match cert cn jid1-Kt2kYYgi32zPuw@jetpack",
+		},
+		{
+			fin: mustPackJAR(t, []Metafile{
+				Metafile{
+					Name: "META-INF/cose.manifest",
+					Body: []byte(""),
+				},
+				Metafile{
+					Name: "META-INF/cose.sig",
+					Body: validSigBytes,
+				},
+				Metafile{
+					Name: "META-INF/manifest.mf",
+					Body: []byte("Name: META-INF/cose.sig\nName: META-INF/cose.manifest"),
+				},
+			}),
+			roots: nil,
+			opts: Options{
 				ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
 				COSEAlgorithms: []string{"ES256"},
 			},

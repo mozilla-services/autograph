@@ -265,6 +265,9 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 	dnsName := fmt.Sprintf("%x.%x.addons.mozilla.org", cndigest[:16], cndigest[16:])
 
 	for i, eeCert := range eeCerts {
+		if signOptions.ID != eeCert.Subject.CommonName {
+			return fmt.Errorf("EECert %d: id %s does not match cert cn %s", i, signOptions.ID, eeCert.Subject.CommonName)
+		}
 		opts := x509.VerifyOptions{
 			DNSName:       dnsName,
 			Roots:         truststore,
