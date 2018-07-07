@@ -353,7 +353,7 @@ func (sig *Signature) Marshal() (string, error) {
 // encoded Sign Message
 func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 	// signMessagePrefix is the prefix CBOR Encoded COSE SignMessages
-	signMessagePrefix := []byte{'\xd8', '\x62'}
+	signMessagePrefix := []byte{'\xd8', cose.SignMessageCBORTag}
 
 	sig = new(Signature)
 	sig.Data, err = base64.StdEncoding.DecodeString(signature)
