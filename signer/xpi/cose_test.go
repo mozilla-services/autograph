@@ -444,7 +444,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
 				COSEAlgorithms: []string{"ES256"},
 			},
-			result: "failed to verify EECert 0 x509: certificate is valid for jid1-Kt2kYYgi32zPuw@jetpack, not 13984ab878f915021670cd855c9399eb.c339676b2581855e4efd60c685f67c8e.addons.mozilla.org",
+			result: "failed to verify EECert 0: x509: certificate is valid for jid1-Kt2kYYgi32zPuw@jetpack, not 13984ab878f915021670cd855c9399eb.c339676b2581855e4efd60c685f67c8e.addons.mozilla.org",
 		},
 	}
 

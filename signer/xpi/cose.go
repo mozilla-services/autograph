@@ -218,15 +218,15 @@ func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x5
 func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options) error {
 	coseManifest, err := readFileFromZIP(signedFile, "META-INF/cose.manifest")
 	if err != nil {
-		return fmt.Errorf("xpi: failed to read META-INF/cose.manifest from signed zip: %v", err)
+		return errors.Wrap(err, "xpi: failed to read META-INF/cose.manifest from signed zip")
 	}
 	coseMsgBytes, err := readFileFromZIP(signedFile, "META-INF/cose.sig")
 	if err != nil {
-		return fmt.Errorf("xpi: failed to read META-INF/cose.sig from signed zip: %v", err)
+		return errors.Wrap(err, "xpi: failed to read META-INF/cose.sig from signed zip")
 	}
 	pkcs7Manifest, err := readFileFromZIP(signedFile, "META-INF/manifest.mf")
 	if err != nil {
-		return fmt.Errorf("xpi: failed to read META-INF/manifest.mf from signed zip: %v", err)
+		return errors.Wrap(err, "xpi: failed to read META-INF/manifest.mf from signed zip")
 	}
 
 	var coseFileNames = [][]byte{
@@ -271,7 +271,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 			Intermediates: intermediates,
 		}
 		if _, err := eeCert.Verify(opts); err != nil {
-			return fmt.Errorf("failed to verify EECert %d %s", i, err)
+			return errors.Wrapf(err, "failed to verify EECert %d", i)
 		}
 	}
 	return nil
