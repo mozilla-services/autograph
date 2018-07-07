@@ -163,6 +163,10 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot get options")
 	}
+	cn, err := opt.CN(s)
+	if err != nil {
+		return nil, err
+	}
 	coseSigAlgs, err = opt.Algorithms()
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: error parsing COSE Algorithms from options")
@@ -178,10 +182,6 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	if len(coseSigAlgs) < 1 {
 		pkcs7Manifest = manifest
 	} else {
-		cn, err := opt.CN(s)
-		if err != nil {
-			return nil, err
-		}
 		coseSig, err = s.issueCOSESignature(cn, manifest, coseSigAlgs)
 		if err != nil {
 			return nil, errors.Wrap(err, "xpi: error signing cose message")
@@ -206,8 +206,7 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest signature from XPI")
 	}
 
-	opt.COSEAlgorithms = []string{}
-	p7sig, err := s.signDataWithPKCS7(sigfile, opt)
+	p7sig, err := s.signDataWithPKCS7(sigfile, cn)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: failed to sign XPI")
 	}
@@ -231,17 +230,6 @@ func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot get options")
 	}
-	sigBytes, err := s.signDataWithPKCS7(sigfile, opt)
-	if err != nil {
-		return nil, err
-	}
-	sig := new(Signature)
-	sig.Data = sigBytes
-	sig.Finished = true
-	return sig, nil
-}
-
-func (s *XPISigner) signDataWithPKCS7(sigfile []byte, opt Options) ([]byte, error) {
 	cn, err := opt.CN(s)
 	if err != nil {
 		return nil, err
@@ -254,6 +242,17 @@ func (s *XPISigner) signDataWithPKCS7(sigfile []byte, opt Options) ([]byte, erro
 		return nil, fmt.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
 	}
 
+	sigBytes, err := s.signDataWithPKCS7(sigfile, cn)
+	if err != nil {
+		return nil, err
+	}
+	sig := new(Signature)
+	sig.Data = sigBytes
+	sig.Finished = true
+	return sig, nil
+}
+
+func (s *XPISigner) signDataWithPKCS7(sigfile []byte, cn string) ([]byte, error) {
 	eeCert, eeKey, err := s.MakeEndEntity(cn, nil)
 	if err != nil {
 		return nil, err
