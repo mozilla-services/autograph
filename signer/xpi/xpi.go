@@ -352,16 +352,13 @@ func (sig *Signature) Marshal() (string, error) {
 // Sign Message struct from the base64 representation of a CBOR
 // encoded Sign Message
 func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
-	// signMessagePrefix is the prefix CBOR Encoded COSE SignMessages
-	signMessagePrefix := []byte{'\xd8', cose.SignMessageCBORTag}
-
 	sig = new(Signature)
 	sig.Data, err = base64.StdEncoding.DecodeString(signature)
 	if err != nil {
 		return sig, errors.Wrap(err, "xpi.Unmarshal: failed to decode base64 signature")
 	}
 
-	if bytes.HasPrefix(sig.Data, signMessagePrefix) {
+	if cose.IsSignMessage(sig.Data) {
 		tmp, err := cose.Unmarshal(sig.Data)
 		if err != nil {
 			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to parse COSE Sign Message")

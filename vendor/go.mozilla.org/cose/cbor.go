@@ -1,6 +1,7 @@
 package cose
 
 import (
+	"bytes"
 	"fmt"
 	codec "github.com/ugorji/go/codec"
 	"reflect"
@@ -9,6 +10,14 @@ import (
 // SignMessageCBORTag is the CBOR tag for a COSE SignMessage
 // from https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml#tags
 const SignMessageCBORTag = 98
+
+var signMessagePrefix = []byte{'\xd8', SignMessageCBORTag}
+
+// IsSignMessage checks whether the prefix is 0xd8 0x62 for a COSE
+// SignMessage
+func IsSignMessage(data []byte) bool {
+	return bytes.HasPrefix(data, signMessagePrefix)
+}
 
 // GetCOSEHandle returns a codec.CborHandle with an extension
 // registered for COSE SignMessage as CBOR tag 98
