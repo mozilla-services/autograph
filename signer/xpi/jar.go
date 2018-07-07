@@ -63,7 +63,7 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 	manifest = []byte(fmt.Sprintf("Manifest-Version: 1.0\n\n"))
 
 	for _, f := range r.File {
-		if isSignatureFile(f.Name) {
+		if isJARSignatureFile(f.Name) {
 			// reserved signature files do not get included in the manifest
 			continue
 		}
@@ -137,7 +137,7 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 	// Iterate through the files in the archive,
 	for _, f := range r.File {
 		// skip signature files, we have new ones we'll add at the end
-		if isSignatureFile(f.Name) {
+		if isJARSignatureFile(f.Name) {
 			continue
 		}
 		rc, err = f.Open()
@@ -208,7 +208,7 @@ func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err e
 // META-INF/SIG-*
 // and their lowercase variants
 // https://docs.oracle.com/javase/8/docs/technotes/guides/jar/jar.html#Signed_JAR_File
-func isSignatureFile(name string) bool {
+func isJARSignatureFile(name string) bool {
 	if strings.HasPrefix(name, "META-INF/") {
 		name = strings.TrimPrefix(name, "META-INF/")
 		if name == "MANIFEST.MF" || name == "manifest.mf" ||

@@ -102,9 +102,9 @@ func TestIsSignatureFile(t *testing.T) {
 		{false, "META-INF/.mf.foo"},
 	}
 	for i, testcase := range testcases {
-		if isSignatureFile(testcase.filename) != testcase.expect {
+		if isJARSignatureFile(testcase.filename) != testcase.expect {
 			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
-				i, testcase.filename, isSignatureFile(testcase.filename), testcase.expect)
+				i, testcase.filename, isJARSignatureFile(testcase.filename), testcase.expect)
 		}
 	}
 }
