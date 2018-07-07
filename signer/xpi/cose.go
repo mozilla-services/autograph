@@ -129,8 +129,11 @@ var (
 	}
 )
 
-// isValidCOSESignature checks whether a COSE signature is valid for XPIs
-func isValidCOSESignature(sig *cose.Signature) (eeCert *x509.Certificate, err error) {
+// validateCOSESignatureStructureAndGetEECert checks whether a COSE
+// signature structure is valid for an XPI and returns the parsed EE
+// Cert from the protected header key id value. It does not verify the
+// COSE signature bytes
+func validateCOSESignatureStructureAndGetEECert(sig *cose.Signature) (eeCert *x509.Certificate, err error) {
 	if sig == nil {
 		err = errors.New("xpi: cannot validate nil COSE Signature")
 		return
@@ -157,9 +160,11 @@ func isValidCOSESignature(sig *cose.Signature) (eeCert *x509.Certificate, err er
 	return
 }
 
-// isValidCOSEMessage checks whether a COSE SignMessage is a valid for
-// XPIs and returns parsed intermediate and end entity certs
-func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, err error) {
+// validateCOSEMessageStructureAndGetCerts checks whether a COSE
+// SignMessage structure is valid for an XPI and returns the parsed
+// intermediate and EE Certs from the protected header key id
+// values. It does not verify the COSE signature bytes
+func validateCOSEMessageStructureAndGetCerts(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, err error) {
 	if msg == nil {
 		err = errors.New("xpi: cannot validate nil COSE SignMessage")
 		return
@@ -195,7 +200,7 @@ func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x5
 	}
 
 	for i, sig := range msg.Signatures {
-		eeCert, sigErr := isValidCOSESignature(&sig)
+		eeCert, sigErr := validateCOSESignatureStructureAndGetEECert(&sig)
 		if sigErr != nil {
 			err = errors.Wrapf(sigErr, "xpi: cose signature %d is invalid", i)
 			return
@@ -213,7 +218,8 @@ func isValidCOSEMessage(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x5
 // 3) the COSE and PKCS7 manifests do not include COSE files
 // 4) we can decode the COSE signature and it has the right format for an XPI
 // 5) the right number of signatures are present and all intermediate and end entity certs parse properly
-// TODO: 6) there is a trusted path from the included COSE EE certs to the signer cert using the provided intermediates
+// 6) **when a non-nil truststore is provided** that there is a trusted path from the included COSE EE certs to the signer cert using the provided intermediates
+// 7) TODO: use the public keys from the EE certs to verify the COSE signature bytes
 //
 func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options) error {
 	coseManifest, err := readFileFromZIP(signedFile, "META-INF/cose.manifest")
@@ -251,7 +257,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 		return fmt.Errorf("xpi: cose.sig contains %d signatures, but expected %d", len(xpiSig.signMessage.Signatures), len(signOptions.COSEAlgorithms))
 	}
 
-	intermediateCerts, eeCerts, err := isValidCOSEMessage(xpiSig.signMessage)
+	intermediateCerts, eeCerts, err := validateCOSEMessageStructureAndGetCerts(xpiSig.signMessage)
 	if err != nil {
 		return errors.Wrap(err, "xpi: cose.sig is not a valid COSE SignMessage")
 	}

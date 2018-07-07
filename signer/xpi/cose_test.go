@@ -135,7 +135,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 	}
 
 	for _, testcase := range cases {
-		_, err := isValidCOSESignature(testcase.input)
+		_, err := validateCOSESignatureStructureAndGetEECert(testcase.input)
 		anyMatches := false
 		for _, result := range testcase.results {
 			if err.Error() == result {
@@ -143,7 +143,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 			}
 		}
 		if !anyMatches {
-			t.Fatalf("isValidCOSESignature returned '%v'", err)
+			t.Fatalf("validateCOSESignatureStructureAndGetEECert returned '%v'", err)
 		}
 	}
 }
@@ -225,7 +225,7 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 	}
 
 	for _, testcase := range cases {
-		_, _, err := isValidCOSEMessage(testcase.input)
+		_, _, err := validateCOSEMessageStructureAndGetCerts(testcase.input)
 		anyMatches := false
 		for _, result := range testcase.results {
 			if err.Error() == result {
@@ -233,7 +233,7 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 			}
 		}
 		if !anyMatches {
-			t.Fatalf("isValidCOSEMessage returned '%v'", err)
+			t.Fatalf("validateCOSEMessageStructureAndGetCerts returned '%v'", err)
 		}
 	}
 }
@@ -463,10 +463,10 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			}),
 			roots: nil,
 			opts: Options{
-				ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+				ID: "jid1-Kt2kYYgi32zPuw@jetpack",
 				COSEAlgorithms: []string{"ES256"},
 			},
-			result: "failed to verify EECert 0: x509: certificate is valid for jid1-Kt2kYYgi32zPuw@jetpack, not 13984ab878f915021670cd855c9399eb.c339676b2581855e4efd60c685f67c8e.addons.mozilla.org",
+			result: "failed to verify EECert 0: x509: certificate is valid for jid1-Kt2kYYgi32zPuw@jetpack, not a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
 		},
 	}
 
