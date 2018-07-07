@@ -207,7 +207,7 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	}
 
 	opt.COSEAlgorithms = []string{}
-	p7sig, err := s.signData(sigfile, opt)
+	p7sig, err := s.signDataWithPKCS7(sigfile, opt)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: failed to sign XPI")
 	}
@@ -231,7 +231,7 @@ func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot get options")
 	}
-	sigBytes, err := s.signData(sigfile, opt)
+	sigBytes, err := s.signDataWithPKCS7(sigfile, opt)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 	return sig, nil
 }
 
-func (s *XPISigner) signData(sigfile []byte, opt Options) ([]byte, error) {
+func (s *XPISigner) signDataWithPKCS7(sigfile []byte, opt Options) ([]byte, error) {
 	cn, err := opt.CN(s)
 	if err != nil {
 		return nil, err
