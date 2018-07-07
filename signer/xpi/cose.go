@@ -58,11 +58,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 			return
 		}
 		eePublicKey = eeKey.(*rsa.PrivateKey).Public()
-	case cose.ES256:
-		fallthrough
-	case cose.ES384:
-		fallthrough
-	case cose.ES512:
+	case cose.ES256, cose.ES384, cose.ES512:
 		signer, err = cose.NewSigner(coseAlg, nil)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to generate private key")
