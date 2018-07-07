@@ -288,19 +288,13 @@ type Options struct {
 
 // CN returns the common name
 func (o *Options) CN(s *XPISigner) (cn string, err error) {
-	if o == nil {
-		err = errors.New("xpi: cannot get common name from nil Options")
+	if s != nil && s.EndEntityCN != "" {
+		return s.EndEntityCN, nil
 	}
-
-	cn = o.ID
-	if s.EndEntityCN != "" {
-		cn = s.EndEntityCN
+	if o != nil && o.ID != "" {
+		return o.ID, nil
 	}
-
-	if cn == "" {
-		err = errors.New("xpi: missing common name")
-	}
-	return
+	return "", errors.New("xpi: missing common name")
 }
 
 // Algorithms validates and returns COSE algorithms
