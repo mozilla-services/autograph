@@ -3,6 +3,7 @@ package xpi
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/ecdsa"
 	"crypto/x509"
 	"encoding/hex"
 	"strings"
@@ -35,6 +36,40 @@ func TestStringToCOSEAlg(t *testing.T) {
 	}
 }
 
+func TestGenerateCOSEKeyPair(t *testing.T) {
+	t.Parallel()
+
+	// initialize a signer
+	testcase := PASSINGTESTCASES[0]
+	s, err := New(testcase)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+
+	_, _, err = s.generateCOSEKeyPair(nil)
+	if err == nil {
+		t.Fatalf("didn't error generating keypair for nil COSE Algorithm got: %v instead", err)
+	}
+
+	s.issuerKey = nil
+	_, _, err = s.generateCOSEKeyPair(cose.PS256)
+	if err == nil {
+		t.Fatalf("didn't error generating key pair nil signer.issuerKey got: %v instead", err)
+	}
+
+	signer, err := cose.NewSigner(cose.ES256, nil)
+	if err != nil {
+		t.Fatalf("failed to generate ES256 key got error: %v", err)
+	}
+	s.issuerKey = signer.PrivateKey
+	if _, ok := s.issuerKey.(*ecdsa.PrivateKey); !ok {
+		t.Fatalf("Failed to generate an ecdsa privateKey to test COSEKeyPair generation")
+	}
+	_, _, err = s.generateCOSEKeyPair(cose.PS256)
+	if err != nil {
+		t.Fatalf("failed to generate RSA key pair from ESCDSA issuer got: %v instead", err)
+	}
+}
 
 func TestIsValidCOSESignatureErrs(t *testing.T) {
 	t.Parallel()
