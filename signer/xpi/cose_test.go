@@ -36,6 +36,29 @@ func TestStringToCOSEAlg(t *testing.T) {
 	}
 }
 
+func TestIntToCOSEAlg(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct{
+		input  int
+		result *cose.Algorithm
+	}{
+		{input: cose.ES256.Value, result: cose.ES256},
+		{input: cose.ES384.Value, result: cose.ES384},
+		{input: cose.ES512.Value, result: cose.ES512},
+		{input: cose.PS256.Value, result: cose.PS256},
+		{input: -1, result: nil},
+		{input: 0, result: nil},
+	}
+
+	for _, testcase := range cases {
+		result := intToCOSEAlg(testcase.input)
+		if result != testcase.result {
+			t.Fatalf("intToCOSEAlg returned %v but expected %v", result, testcase.result)
+		}
+	}
+}
+
 func TestGenerateCOSEKeyPair(t *testing.T) {
 	t.Parallel()
 
@@ -57,11 +80,11 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 		t.Fatalf("didn't error generating key pair nil signer.issuerKey got: %v instead", err)
 	}
 
-	signer, err := cose.NewSigner(cose.ES256, nil)
+	coseSigner, err := cose.NewSigner(cose.ES256, nil)
 	if err != nil {
 		t.Fatalf("failed to generate ES256 key got error: %v", err)
 	}
-	s.issuerKey = signer.PrivateKey
+	s.issuerKey = coseSigner.PrivateKey
 	if _, ok := s.issuerKey.(*ecdsa.PrivateKey); !ok {
 		t.Fatalf("Failed to generate an ecdsa privateKey to test COSEKeyPair generation")
 	}
@@ -119,6 +142,19 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 			input: &cose.Signature{
 				Headers: &cose.Headers{
 					Protected: map[interface{}]interface{}{
+						algHeaderValue: nil,
+						"bar": 1,
+					},
+				},
+			},
+			results: []string{
+				"xpi: got unexpected COSE Signature headers: xpi: alg <nil> is not supported",
+			},
+		},
+		{
+			input: &cose.Signature{
+				Headers: &cose.Headers{
+					Protected: map[interface{}]interface{}{
 						algHeaderValue: 2,
 						"bar": 1,
 					},
@@ -170,7 +206,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 	}
 
 	for _, testcase := range cases {
-		_, err := validateCOSESignatureStructureAndGetEECert(testcase.input)
+		_, _, err := validateCOSESignatureStructureAndGetEECertAndAlg(testcase.input)
 		anyMatches := false
 		for _, result := range testcase.results {
 			if err.Error() == result {
@@ -178,7 +214,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 			}
 		}
 		if !anyMatches {
-			t.Fatalf("validateCOSESignatureStructureAndGetEECert returned '%v'", err)
+			t.Fatalf("validateCOSESignatureStructureAndGetEECertAndAlg returned '%v'", err)
 		}
 	}
 }
@@ -260,7 +296,8 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 	}
 
 	for _, testcase := range cases {
-		_, _, err := validateCOSEMessageStructureAndGetCerts(testcase.input)
+		_, _, _, err := validateCOSEMessageStructureAndGetCertsAndAlgs(testcase.input)
+
 		anyMatches := false
 		for _, result := range testcase.results {
 			if err.Error() == result {
@@ -268,7 +305,7 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 			}
 		}
 		if !anyMatches {
-			t.Fatalf("validateCOSEMessageStructureAndGetCerts returned '%v'", err)
+			t.Fatalf("validateCOSEMessageStructureAndGetCertsAndAlgs returned '%v'", err)
 		}
 	}
 }
@@ -318,6 +355,21 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 	invalidSigBytes, err := cose.Marshal(msg)
 	if err != nil {
 		t.Fatalf("error unmarshaling invalidSigBytes %s", err)
+	}
+
+	s, err := New(PASSINGTESTCASES[0])
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	testCNValidSig, err := s.issueCOSESignature("test-cn", []byte("foo"), []*cose.Algorithm{cose.ES256})
+	if err != nil {
+		t.Fatalf("signer failed to issuer test COSE Signature with err: %v", err)
+	}
+
+	testCNRoots := x509.NewCertPool()
+	ok := testCNRoots.AppendCertsFromPEM([]byte(PASSINGTESTCASES[0].Certificate))
+	if !ok {
+		t.Fatalf("failed to add root cert to pool")
 	}
 
 	cases := []struct{
@@ -503,6 +555,28 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			},
 			result: "failed to verify EECert 0: x509: certificate is valid for jid1-Kt2kYYgi32zPuw@jetpack, not a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
 		},
+		{
+			fin: mustPackJAR(t, []Metafile{
+				Metafile{
+					Name: "META-INF/cose.manifest",
+					Body: []byte("bad manifest"),
+				},
+				Metafile{
+					Name: "META-INF/cose.sig",
+					Body: testCNValidSig,
+				},
+				Metafile{
+					Name: "META-INF/manifest.mf",
+					Body: []byte("Name: META-INF/cose.sig\nName: META-INF/cose.manifest"),
+				},
+			}),
+			roots: testCNRoots,
+			opts: Options{
+				ID: "test-cn",
+				COSEAlgorithms: []string{"ES256"},
+			},
+			result: "xpi: failed to verify COSE SignMessage Signatures: verification failed ecdsa.Verify",
+		},
 	}
 
 	for _, testcase := range cases {
@@ -510,6 +584,33 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 		if err.Error() != testcase.result {
 			t.Fatalf("verifyCOSESignatures returned '%v' but expected: '%v'", err, testcase.result)
 		}
+	}
+}
+
+func TestIssueCOSESignatureErrs(t *testing.T) {
+	t.Parallel()
+
+	signer, err := New(PASSINGTESTCASES[0])
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+
+	signer.issuerCert.Raw = []byte("")
+	_, err = signer.issueCOSESignature("cn", []byte("manifest"), []*cose.Algorithm{cose.ES256})
+	if err == nil {
+		t.Fatalf("issueCOSESignature did not error on empty signer.issuerCert.Raw")
+	}
+
+	signer.issuerCert = nil
+	_, err = signer.issueCOSESignature("cn", []byte("manifest"), []*cose.Algorithm{cose.ES256})
+	if err == nil {
+		t.Fatalf("issueCOSESignature did not error on nil signer.issuerCert")
+	}
+
+	signer = nil
+	_, err = signer.issueCOSESignature("cn", []byte("manifest"), []*cose.Algorithm{cose.ES256})
+	if err == nil {
+		t.Fatalf("issueCOSESignature did not error on nil signer")
 	}
 }
 

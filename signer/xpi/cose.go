@@ -42,6 +42,24 @@ func stringToCOSEAlg(s string) (v *cose.Algorithm) {
 	return v
 }
 
+// stringToCOSEAlg returns the cose.Algorithm for an int or nil if
+// the algorithm isn't implemented
+func intToCOSEAlg(i int) (v *cose.Algorithm) {
+	switch i {
+	case cose.PS256.Value:
+		v = cose.PS256
+	case cose.ES256.Value:
+		v = cose.ES256
+	case cose.ES384.Value:
+		v = cose.ES384
+	case cose.ES512.Value:
+		v = cose.ES512
+	default:
+		v = nil
+	}
+	return v
+}
+
 // generateIssuerEEKeyPair returns a public and private key pair for
 // the provided COSEAlgorithm
 func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
@@ -80,16 +98,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 	return
 }
 
-// isSupportedCOSEAlgValue returns whether the COSE alg value is supported or not
-func isSupportedCOSEAlgValue(algValue interface{}) bool {
-	return (algValue == cose.PS256.Value ||
-		algValue == cose.ES256.Value ||
-		algValue == cose.ES384.Value ||
-		algValue == cose.ES512.Value)
-}
-
-
-func expectHeadersAndGetKeyID(actual, expected *cose.Headers) (kidValue interface{}, err error) {
+func expectHeadersAndGetKeyIDAndAlg(actual, expected *cose.Headers) (kidValue interface{}, alg *cose.Algorithm, err error) {
 	if actual == nil || expected == nil {
 		err = errors.New("xpi: cannot compare nil COSE headers")
 		return
@@ -108,7 +117,10 @@ func expectHeadersAndGetKeyID(actual, expected *cose.Headers) (kidValue interfac
 			err = fmt.Errorf("xpi: missing expected alg in Protected Headers")
 			return
 		}
-		if !isSupportedCOSEAlgValue(algValue) {
+		if algInt, ok := algValue.(int); ok {
+			alg = intToCOSEAlg(algInt)
+		}
+		if alg == nil {
 			err = fmt.Errorf("xpi: alg %v is not supported", algValue)
 			return
 		}
@@ -143,13 +155,13 @@ var (
 // signature structure is valid for an XPI and returns the parsed EE
 // Cert from the protected header key id value. It does not verify the
 // COSE signature bytes
-func validateCOSESignatureStructureAndGetEECert(sig *cose.Signature) (eeCert *x509.Certificate, err error) {
+func validateCOSESignatureStructureAndGetEECertAndAlg(sig *cose.Signature) (eeCert *x509.Certificate, algValue *cose.Algorithm, err error) {
 	if sig == nil {
 		err = errors.New("xpi: cannot validate nil COSE Signature")
 		return
 	}
 
-	kidValue, err := expectHeadersAndGetKeyID(sig.Headers, expectedSignatureHeaders)
+	kidValue, algValue, err := expectHeadersAndGetKeyIDAndAlg(sig.Headers, expectedSignatureHeaders)
 	if err != nil {
 		err = errors.Wrapf(err, "xpi: got unexpected COSE Signature headers")
 		return
@@ -174,7 +186,7 @@ func validateCOSESignatureStructureAndGetEECert(sig *cose.Signature) (eeCert *x5
 // SignMessage structure is valid for an XPI and returns the parsed
 // intermediate and EE Certs from the protected header key id
 // values. It does not verify the COSE signature bytes
-func validateCOSEMessageStructureAndGetCerts(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, err error) {
+func validateCOSEMessageStructureAndGetCertsAndAlgs(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, algs []*cose.Algorithm, err error) {
 	if msg == nil {
 		err = errors.New("xpi: cannot validate nil COSE SignMessage")
 		return
@@ -183,7 +195,7 @@ func validateCOSEMessageStructureAndGetCerts(msg *cose.SignMessage) (intermediat
 		err = fmt.Errorf("xpi: expected SignMessage payload to be nil, but got %v", msg.Payload)
 		return
 	}
-	kidValue, err := expectHeadersAndGetKeyID(msg.Headers, expectedMessageHeaders)
+	kidValue, _, err := expectHeadersAndGetKeyIDAndAlg(msg.Headers, expectedMessageHeaders)
 	if err != nil {
 		err = errors.Wrapf(err, "xpi: got unexpected COSE SignMessage headers")
 		return
@@ -210,12 +222,13 @@ func validateCOSEMessageStructureAndGetCerts(msg *cose.SignMessage) (intermediat
 	}
 
 	for i, sig := range msg.Signatures {
-		eeCert, sigErr := validateCOSESignatureStructureAndGetEECert(&sig)
+		eeCert, alg, sigErr := validateCOSESignatureStructureAndGetEECertAndAlg(&sig)
 		if sigErr != nil {
 			err = errors.Wrapf(sigErr, "xpi: cose signature %d is invalid", i)
 			return
 		}
 		eeCerts = append(eeCerts, eeCert)
+		algs = append(algs, alg)
 	}
 
 	return
@@ -229,7 +242,7 @@ func validateCOSEMessageStructureAndGetCerts(msg *cose.SignMessage) (intermediat
 // 4) we can decode the COSE signature and it has the right format for an XPI
 // 5) the right number of signatures are present and all intermediate and end entity certs parse properly
 // 6) **when a non-nil truststore is provided** that there is a trusted path from the included COSE EE certs to the signer cert using the provided intermediates
-// 7) TODO: use the public keys from the EE certs to verify the COSE signature bytes
+// 7) use the public keys from the EE certs to verify the COSE signature bytes
 //
 func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options) error {
 	coseManifest, err := readFileFromZIP(signedFile, "META-INF/cose.manifest")
@@ -267,7 +280,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 		return fmt.Errorf("xpi: cose.sig contains %d signatures, but expected %d", len(xpiSig.signMessage.Signatures), len(signOptions.COSEAlgorithms))
 	}
 
-	intermediateCerts, eeCerts, err := validateCOSEMessageStructureAndGetCerts(xpiSig.signMessage)
+	intermediateCerts, eeCerts, algs, err := validateCOSEMessageStructureAndGetCertsAndAlgs(xpiSig.signMessage)
 	if err != nil {
 		return errors.Wrap(err, "xpi: cose.sig is not a valid COSE SignMessage")
 	}
@@ -279,6 +292,8 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 	}
 	cndigest := sha256.Sum256([]byte(signOptions.ID))
 	dnsName := fmt.Sprintf("%x.%x.addons.mozilla.org", cndigest[:16], cndigest[16:])
+
+	var verifiers = []cose.Verifier{}
 
 	for i, eeCert := range eeCerts {
 		if signOptions.ID != eeCert.Subject.CommonName {
@@ -292,6 +307,17 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 		if _, err := eeCert.Verify(opts); err != nil {
 			return errors.Wrapf(err, "failed to verify EECert %d", i)
 		}
+
+		verifiers = append(verifiers, cose.Verifier{
+			PublicKey: eeCert.PublicKey,
+			Alg: algs[i],
+		})
+	}
+
+	xpiSig.signMessage.Payload = coseManifest
+	err = xpiSig.signMessage.Verify(nil, verifiers)
+	if err != nil {
+		return errors.Wrap(err, "xpi: failed to verify COSE SignMessage Signatures")
 	}
 	return nil
 }
