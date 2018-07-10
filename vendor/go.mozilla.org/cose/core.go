@@ -185,26 +185,26 @@ func (s *Signer) Sign(rand io.Reader, digest []byte) (signature []byte, err erro
 // Algorithm
 func (s *Signer) Verifier() (verifier *Verifier) {
 	return &Verifier{
-		publicKey: s.Public(),
-		alg:       s.alg,
+		PublicKey: s.Public(),
+		Alg:       s.alg,
 	}
 }
 
 // Verifier holds a PublicKey and Algorithm to verify signatures
 type Verifier struct {
-	publicKey crypto.PublicKey
-	alg       *Algorithm
+	PublicKey crypto.PublicKey
+	Alg       *Algorithm
 }
 
 // Verify verifies a signature returning nil for success or an error
 func (v *Verifier) Verify(digest []byte, signature []byte) (err error) {
-	if v.alg.Value > -1 { // Negative numbers are used for second layer objects (COSE_Signature and COSE_recipient)
+	if v.Alg.Value > -1 { // Negative numbers are used for second layer objects (COSE_Signature and COSE_recipient)
 		return ErrInvalidAlg
 	}
 
-	switch key := v.publicKey.(type) {
+	switch key := v.PublicKey.(type) {
 	case *rsa.PublicKey:
-		hashFunc := v.alg.HashFunc
+		hashFunc := v.Alg.HashFunc
 
 		err = rsa.VerifyPSS(key, hashFunc, digest, signature, &rsa.PSSOptions{
 			SaltLength: rsa.PSSSaltLengthEqualsHash,
@@ -215,18 +215,18 @@ func (v *Verifier) Verify(digest []byte, signature []byte) (err error) {
 		}
 		return nil
 	case *ecdsa.PublicKey:
-		if v.alg.privateKeyECDSACurve == nil {
+		if v.Alg.privateKeyECDSACurve == nil {
 			return fmt.Errorf("Could not find an elliptic curve for the ecdsa algorithm")
 		}
 
-		algCurveBitSize := v.alg.privateKeyECDSACurve.Params().BitSize
+		algCurveBitSize := v.Alg.privateKeyECDSACurve.Params().BitSize
 		keyCurveBitSize := key.Curve.Params().BitSize
 
 		if algCurveBitSize != keyCurveBitSize {
 			return fmt.Errorf("Expected %d bit key, got %d bits instead", algCurveBitSize, keyCurveBitSize)
 		}
 
-		algKeyBytesSize := ecdsaCurveKeyBytesSize(v.alg.privateKeyECDSACurve)
+		algKeyBytesSize := ecdsaCurveKeyBytesSize(v.Alg.privateKeyECDSACurve)
 
 		// signature bytes is the keys with padding r and s
 		if len(signature) != 2*algKeyBytesSize {
