@@ -531,7 +531,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				ID: "foo",
 				COSEAlgorithms: []string{"ES256"},
 			},
-			result: "EECert 0: id foo does not match cert cn jid1-Kt2kYYgi32zPuw@jetpack",
+			result: "xpi: EECert 0: id foo does not match cert cn jid1-Kt2kYYgi32zPuw@jetpack",
 		},
 		{
 			fin: mustPackJAR(t, []Metafile{
@@ -553,7 +553,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				ID: "jid1-Kt2kYYgi32zPuw@jetpack",
 				COSEAlgorithms: []string{"ES256"},
 			},
-			result: "failed to verify EECert 0: x509: certificate is valid for jid1-Kt2kYYgi32zPuw@jetpack, not a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
+			result: "xpi: failed to verify EECert 0: x509: certificate is valid for jid1-Kt2kYYgi32zPuw@jetpack, not a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
 		},
 		{
 			fin: mustPackJAR(t, []Metafile{

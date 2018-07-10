@@ -297,7 +297,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 
 	for i, eeCert := range eeCerts {
 		if signOptions.ID != eeCert.Subject.CommonName {
-			return fmt.Errorf("EECert %d: id %s does not match cert cn %s", i, signOptions.ID, eeCert.Subject.CommonName)
+			return fmt.Errorf("xpi: EECert %d: id %s does not match cert cn %s", i, signOptions.ID, eeCert.Subject.CommonName)
 		}
 		opts := x509.VerifyOptions{
 			DNSName:       dnsName,
@@ -305,7 +305,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 			Intermediates: intermediates,
 		}
 		if _, err := eeCert.Verify(opts); err != nil {
-			return errors.Wrapf(err, "failed to verify EECert %d", i)
+			return errors.Wrapf(err, "xpi: failed to verify EECert %d", i)
 		}
 
 		verifiers = append(verifiers, cose.Verifier{
@@ -326,13 +326,13 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 // after generating EE certs and signatures for the COSE algorithms
 func (s *XPISigner) issueCOSESignature(cn string, manifest []byte, algs []*cose.Algorithm) (coseSig []byte, err error) {
 	if s == nil {
-		return nil, errors.New("Cannot issue COSE Signature from nil XPISigner")
+		return nil, errors.New("xpi: cannot issue COSE Signature from nil XPISigner")
 	}
 	if s.issuerCert == nil {
-		return nil, errors.New("Cannot issue COSE Signature when XPISigner.issuerCert is nil")
+		return nil, errors.New("xpi: cannot issue COSE Signature when XPISigner.issuerCert is nil")
 	}
 	if len(s.issuerCert.Raw) < 1 {
-		return nil, errors.New("Cannot issue COSE Signature when XPISigner.issuerCert is too short")
+		return nil, errors.New("xpi: cannot issue COSE Signature when XPISigner.issuerCert is too short")
 	}
 
 	var (
