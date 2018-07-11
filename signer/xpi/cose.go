@@ -337,8 +337,7 @@ func (s *XPISigner) issueCOSESignature(cn string, manifest []byte, algs []*cose.
 
 	var (
 		coseSigners []cose.Signer
-		tmp         = cose.NewSignMessage()
-		msg         = &tmp
+		msg         = cose.NewSignMessage()
 	)
 	msg.Payload = manifest
 
