@@ -11,7 +11,21 @@ import (
 // from https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml#tags
 const SignMessageCBORTag = 98
 
-var signMessagePrefix = []byte{'\xd8', SignMessageCBORTag}
+var signMessagePrefix = []byte{
+	// 0b110_11000 major type 6 (tag) with additional information
+	// length 24 bits / 3 bytes (since tags are always uints)
+	//
+	// per https://tools.ietf.org/html/rfc7049#section-2.4
+	'\xd8',
+
+	// uint8_t with the tag value
+	SignMessageCBORTag,
+
+	// 0b100_00100 major type 4 (array) with additional
+	// information 4 for a 4-item array representing a COSE_Sign
+	// message
+	'\x84',
+}
 
 // IsSignMessage checks whether the prefix is 0xd8 0x62 for a COSE
 // SignMessage

@@ -80,10 +80,10 @@ type SignMessage struct {
 	Signatures []Signature
 }
 
-// NewSignMessage takes a []byte payload and returns a new SignMessage
-// with empty headers and signatures
-func NewSignMessage() (msg SignMessage) {
-	msg = SignMessage{
+// NewSignMessage takes a []byte payload and returns a new pointer to
+// a SignMessage with empty headers and signatures
+func NewSignMessage() *SignMessage {
+	return &SignMessage{
 		Headers: &Headers{
 			Protected:   map[interface{}]interface{}{},
 			Unprotected: map[interface{}]interface{}{},
@@ -91,7 +91,6 @@ func NewSignMessage() (msg SignMessage) {
 		Payload:    nil,
 		Signatures: nil,
 	}
-	return msg
 }
 
 // AddSignature adds a signature to the message signatures creating an
