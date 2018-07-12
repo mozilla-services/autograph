@@ -283,6 +283,42 @@ func TestNoID(t *testing.T) {
 	}
 }
 
+func TestBadCOSEAlgsErrs(t *testing.T) {
+	t.Parallel()
+
+	input := []byte("foobarbaz1234abcd")
+	// init a signer, don't care which one, taking this one because p256 is fast
+	s, err := New(PASSINGTESTCASES[3])
+	if err != nil {
+		t.Fatalf("failed to initialize signer: %v", err)
+	}
+	// sign input data with invalid cose algs option
+	_, err = s.SignData(input, Options{
+		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		PKCS7Digest: "SHA1",
+		COSEAlgorithms: []string{"bar"},
+	})
+	expectedErr := "xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead"
+	if err == nil {
+		t.Fatal("bad COSE Algs should have errored by didn't")
+	} else if err.Error() != expectedErr {
+		t.Fatalf("bad COSE Algs should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+	}
+
+	// sign input data with valid cose algs option
+	_, err = s.SignData(input, Options{
+		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		PKCS7Digest: "SHA1",
+		COSEAlgorithms: []string{"ES256"},
+	})
+	expectedErr = "xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead"
+	if err == nil {
+		t.Fatal("bad COSE Algs should have errored by didn't")
+	} else if err.Error() != expectedErr {
+		t.Fatalf("bad COSE Algs should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+	}
+}
+
 func TestBadPKCS7DigestErrs(t *testing.T) {
 	t.Parallel()
 
