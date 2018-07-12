@@ -5,9 +5,11 @@ import (
 	"crypto"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -212,8 +214,12 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest signature from XPI")
 	}
+	p7Digest, err := opt.PK7Digest()
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: error parsing PK7 Digest")
+	}
 
-	p7sig, err := s.signDataWithPKCS7(sigfile, cn)
+	p7sig, err := s.signDataWithPKCS7(sigfile, cn, p7Digest)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: failed to sign XPI")
 	}
@@ -244,8 +250,11 @@ func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 	if len(opt.COSEAlgorithms) > 0 {
 		return nil, errors.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
 	}
+	if !(opt.PKCS7Digest == "" || strings.ToUpper(opt.PKCS7Digest) == "SHA1") {
+		return nil, errors.Errorf("xpi: can only use SHA1 digests with /sign/data. Use /sign/file instead")
+	}
 
-	sigBytes, err := s.signDataWithPKCS7(sigfile, cn)
+	sigBytes, err := s.signDataWithPKCS7(sigfile, cn, pkcs7.OIDDigestAlgorithmSHA1)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +264,7 @@ func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 	return sig, nil
 }
 
-func (s *XPISigner) signDataWithPKCS7(sigfile []byte, cn string) ([]byte, error) {
+func (s *XPISigner) signDataWithPKCS7(sigfile []byte, cn string, digest asn1.ObjectIdentifier) ([]byte, error) {
 	eeCert, eeKey, err := s.MakeEndEntity(cn, nil)
 	if err != nil {
 		return nil, err
@@ -265,8 +274,7 @@ func (s *XPISigner) signDataWithPKCS7(sigfile []byte, cn string) ([]byte, error)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
 	}
-	// XPIs are signed with SHA1
-	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA1)
+	toBeSigned.SetDigestAlgorithm(digest)
 	err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot sign")
@@ -284,8 +292,11 @@ type Options struct {
 	// ID is the add-on ID which is stored in the end-entity subject CN
 	ID string `json:"id"`
 
-	// COSEAlgorithms is a list of strings referring to IANA algorithms to use for COSE signatures
+	// COSEAlgorithms is an optional list of strings referring to IANA algorithms to use for COSE signatures
 	COSEAlgorithms []string `json:"cose_algorithms"`
+
+	// PKCS7Digest is a string required for /sign/file referring to algorithm to use for the PKCS7 signature digest
+	PKCS7Digest string `json:"pkcs7_digest"`
 }
 
 // CN returns the common name
@@ -315,9 +326,28 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 	return
 }
 
+// PK7Digest validates and return an ASN OID for a PKCS7 digest
+// algorithm or an error
+func (o *Options) PK7Digest() (asn1.ObjectIdentifier, error) {
+	if o == nil {
+		return nil, errors.New("xpi: Cannot get PK7Digest from nil Options")
+	}
+	switch strings.ToUpper(o.PKCS7Digest) {
+	case "SHA256":
+		return pkcs7.OIDDigestAlgorithmSHA256, nil
+	case "SHA1":
+		return pkcs7.OIDDigestAlgorithmSHA1, nil
+	default:
+		return nil, errors.New("xpi: Failed to recognize PK7Digest from Options")
+	}
+}
+
 // GetDefaultOptions returns default options of the signer
 func (s *XPISigner) GetDefaultOptions() interface{} {
-	return Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"}
+	return Options{
+		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		PKCS7Digest: "SHA1",
+	}
 }
 
 // GetOptions takes a input interface and reflects it into a struct of options
