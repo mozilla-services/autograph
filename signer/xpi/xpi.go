@@ -241,11 +241,7 @@ func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 	if err != nil {
 		return nil, err
 	}
-	coseSigAlgs, err := opt.Algorithms()
-	if err != nil {
-		return nil, errors.Wrap(err, "xpi: error parsing cose_algorithms options")
-	}
-	if len(coseSigAlgs) > 0 {
+	if len(opt.COSEAlgorithms) > 0 {
 		return nil, errors.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
 	}
 
