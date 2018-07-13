@@ -183,8 +183,10 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest from XPI")
 	}
 
-	// don't issue COSE signatures if we cannot parse valid and
-	// supported COSE Algorithms from signing request options
+	// when the optional COSE Algorithms params are not provided
+	// we don't need to add entries to the PKCS7 manifest for
+	// cose.sig and cose.manifest metafiles and can use the
+	// manifest as is
 	if len(coseSigAlgs) < 1 {
 		pkcs7Manifest = manifest
 	} else {
