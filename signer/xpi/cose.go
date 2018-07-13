@@ -69,16 +69,22 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 	case nil:
 		err = errors.New("Cannot generate private key for nil cose Algorithm")
 	case cose.PS256:
-		if s.issuerKey == nil {
+		var size int = 2048
+		switch key := s.issuerKey.(type) {
+		case *ecdsa.PrivateKey:
+			if key.D.BitLen() > size {
+				size = key.D.BitLen()
+			}
+		case *rsa.PrivateKey:
+			if key.N.BitLen() > size {
+				size = key.N.BitLen()
+			}
+		case nil:
 			err = errors.New("Cannot generate COSE key pair with nil issuerKey")
 			return
-		}
-		var size int
-		issuerRSAKey, ok := s.issuerKey.(*rsa.PrivateKey)
-		if ok {
-			size = issuerRSAKey.N.BitLen()
-		} else {
-			size = 2048
+		default:
+			err = errors.New("Unrecognized issuer key type")
+			return
 		}
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {

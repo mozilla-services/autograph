@@ -79,6 +79,11 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 	if err == nil {
 		t.Fatalf("didn't error generating key pair nil signer.issuerKey got: %v instead", err)
 	}
+	s.issuerKey = "bad non-nil key type"
+	_, _, err = s.generateCOSEKeyPair(cose.PS256)
+	if err == nil {
+		t.Fatalf("didn't error generating RSA key pair from string issuer")
+	}
 
 	coseSigner, err := cose.NewSigner(cose.ES256, nil)
 	if err != nil {
