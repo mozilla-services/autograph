@@ -9,7 +9,7 @@
 #
 INPUT_FILE=$1
 
-OUTPUT_BASENAME=autograph-$(git rev-parse --short HEAD)-$CONFIG-$(basename $INPUT_FILE '.zip')-PKCS7
+OUTPUT_BASENAME=autograph-$(git rev-parse --short HEAD)-$CONFIG-$(basename $INPUT_FILE '.zip')-PKCS7-SHA1
 
 # only PKCS7 signature
 go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k webextensions_rsa -o ${OUTPUT_BASENAME}.zip
@@ -17,8 +17,11 @@ go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k webexte
 # PKCS7 with COSE ES256
 go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k webextensions_rsa -o ${OUTPUT_BASENAME}-ES256.zip -c ES256
 
-# PKCS7 with COSE ES256 ES384 (multiple)
+# PKCS7 with COSE PS256
+go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k webextensions_rsa -o ${OUTPUT_BASENAME}-PS256.zip -c PS256
+
+# PKCS7 with COSE ES256 ES384 (multiple recognized)
 go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k webextensions_rsa -o ${OUTPUT_BASENAME}-ES256-ES384.zip -c ES256 -c ES384
 
-# PKCS7 with COSE ES256 PS256 (i.e. unrecognized COSE alg)
+# PKCS7 with COSE ES256 PS256 (multiple one Fx recognizes ES256 and another unrecognized PS256)
 go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k webextensions_rsa -o ${OUTPUT_BASENAME}-ES256-PS256.zip -c ES256 -c PS256
