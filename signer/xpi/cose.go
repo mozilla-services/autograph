@@ -251,30 +251,36 @@ func validateCOSEMessageStructureAndGetCertsAndAlgs(msg *cose.SignMessage) (inte
 // 7) use the public keys from the EE certs to verify the COSE signature bytes
 //
 func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options) error {
-	coseManifest, err := readFileFromZIP(signedFile, "META-INF/cose.manifest")
+	const (
+		coseManifestPath = "META-INF/cose.manifest"
+		coseSigPath = "META-INF/cose.sig"
+		pkcs7ManifestPath = "META-INF/manifest.mf"
+	)
+	coseManifest, err := readFileFromZIP(signedFile, coseManifestPath)
 	if err != nil {
 		return errors.Wrap(err, "xpi: failed to read META-INF/cose.manifest from signed zip")
 	}
-	coseMsgBytes, err := readFileFromZIP(signedFile, "META-INF/cose.sig")
+	coseMsgBytes, err := readFileFromZIP(signedFile, coseSigPath)
 	if err != nil {
 		return errors.Wrap(err, "xpi: failed to read META-INF/cose.sig from signed zip")
 	}
-	pkcs7Manifest, err := readFileFromZIP(signedFile, "META-INF/manifest.mf")
+	pkcs7Manifest, err := readFileFromZIP(signedFile, pkcs7ManifestPath)
 	if err != nil {
 		return errors.Wrap(err, "xpi: failed to read META-INF/manifest.mf from signed zip")
 	}
 
-	var coseFileNames = [][]byte{
-		[]byte("Name: META-INF/cose.sig"),
-		[]byte("Name: META-INF/cose.manifest"),
+	var coseFilePaths = []string{
+		coseSigPath,
+		coseManifestPath,
 	}
-	for _, coseFileName := range coseFileNames {
-		if !bytes.Contains(pkcs7Manifest, coseFileName) {
-			return fmt.Errorf("xpi: pkcs7 manifest does not contain the line: %s", coseFileName)
+	for _, coseFilePath := range coseFilePaths {
+		var coseFileEntry = []byte("Name: " + coseFilePath)
+		if !bytes.Contains(pkcs7Manifest, coseFileEntry) {
+			return fmt.Errorf("xpi: pkcs7 manifest does not contain the line: %s", coseFileEntry)
 		}
 
-		if bytes.Contains(coseManifest, coseFileName) {
-			return fmt.Errorf("xpi: cose manifest contains the line: %s", coseFileName)
+		if bytes.Contains(coseManifest, coseFileEntry) {
+			return fmt.Errorf("xpi: cose manifest contains the line: %s", coseFileEntry)
 		}
 	}
 
