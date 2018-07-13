@@ -109,6 +109,44 @@ func TestIsSignatureFile(t *testing.T) {
 	}
 }
 
+func TestMetafileIsNameValid(t *testing.T) {
+	var m = Metafile{
+		Name: "META-INF/foo",
+		Body: []byte("doesn't matter"),
+	}
+	if m.IsNameValid() != true {
+		t.Fatalf("TestMetafileIsNameValid: path META-INF/foo did not return expected result: true")
+	}
+	m.Name = "../../etc/shadow"
+	if m.IsNameValid() != false {
+		t.Fatalf("TestMetafileIsNameValid: path ../../etc/shadow did not return expected result: false")
+	}
+}
+
+func TestMakePKCS7ManifestValidatesMetafileName(t *testing.T) {
+	_, err := makePKCS7Manifest([]byte(""), []Metafile{
+		Metafile{
+			Name: "./",
+			Body: []byte("foo"),
+		},
+	})
+	if err == nil {
+		t.Fatalf("makePKCS7Manifest did not err for invalid metafile name")
+	}
+}
+
+func TestRepackJARWithMetafilesValidatesMetafileName(t *testing.T) {
+	_, err := repackJARWithMetafiles([]byte(""), []Metafile{
+		Metafile{
+			Name: "./",
+			Body: []byte("foo"),
+		},
+	})
+	if err == nil {
+		t.Fatalf("repackJARWithMetafiles did not err for invalid metafile name")
+	}
+}
+
 // Fixtures can be added by converting APKs to string literals using hexdump, eg:
 // hexdump -v -e '16/1 "_x%02X" "\n"' /tmp/fakeapk/fakeapk.zip | sed 's/_/\\/g; s/\\x  //g; s/.*/    "&"/'
 

@@ -14,6 +14,13 @@ import (
 )
 
 func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err error) {
+	for _, f := range metafiles {
+		if !f.IsNameValid() {
+			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
+			return
+		}
+	}
+
 	manifest, err = makeJARManifest(input)
 	if err != nil {
 		return
@@ -109,14 +116,26 @@ func makeJARSignature(manifest []byte) (sigfile []byte, err error) {
 }
 
 // Metafile is a file to pack into a JAR at .Name with contents .Body
-// .Name should begin with META-INF/ but this is not checked
 type Metafile struct {
 	Name string
 	Body []byte
 }
 
+// IsNameValid checks whether a Metafile.Name is non-nil and begins
+// with "META-INF/" functions taking Metafile args should validate
+// names before reading or writing them to JARs
+func (m *Metafile) IsNameValid() bool {
+	return m != nil && strings.HasPrefix(m.Name, "META-INF/")
+}
+
 // repackJARWithMetafiles inserts metafiles in the input JAR file and returns a JAR ZIP archive
 func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, err error) {
+	for _, f := range metafiles {
+		if !f.IsNameValid() {
+			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
+			return
+		}
+	}
 	var (
 		rc     io.ReadCloser
 		fwhead *zip.FileHeader
