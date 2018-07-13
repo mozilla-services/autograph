@@ -263,5 +263,5 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 			return data, nil
 		}
 	}
-	return nil, fmt.Errorf("failed to find %s in ZIP", filename)
+	return nil, errors.Errorf("failed to find %s in ZIP", filename)
 }

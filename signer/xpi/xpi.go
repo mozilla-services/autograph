@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -247,7 +246,7 @@ func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 		return nil, errors.Wrap(err, "xpi: error parsing cose_algorithms options")
 	}
 	if len(coseSigAlgs) > 0 {
-		return nil, fmt.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
+		return nil, errors.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
 	}
 
 	sigBytes, err := s.signDataWithPKCS7(sigfile, cn)
@@ -313,7 +312,7 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 	for _, algStr := range o.COSEAlgorithms {
 		alg := stringToCOSEAlg(algStr)
 		if alg == nil {
-			return nil, fmt.Errorf("xpi: invalid or unsupported COSE algorithm %s", algStr)
+			return nil, errors.Errorf("xpi: invalid or unsupported COSE algorithm %s", algStr)
 		}
 		algs = append(algs, alg)
 	}
@@ -427,16 +426,16 @@ func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x50
 	}
 	// verify signature on input data
 	if sig.VerifyWithChain(truststore) != nil {
-		return fmt.Errorf("failed to verify xpi signature: %v", sig.VerifyWithChain(truststore))
+		return errors.Errorf("failed to verify xpi signature: %v", sig.VerifyWithChain(truststore))
 	}
 
 	// make sure we still have the same string representation
 	sigStr2, err := sig.Marshal()
 	if err != nil {
-		return fmt.Errorf("failed to re-marshal signature: %v", err)
+		return errors.Errorf("failed to re-marshal signature: %v", err)
 	}
 	if sigStr != sigStr2 {
-		return fmt.Errorf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
+		return errors.Errorf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
 			sigStr, sigStr2)
 	}
 
