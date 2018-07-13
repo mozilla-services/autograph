@@ -193,9 +193,9 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 // and return a JAR ZIP archive
 func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err error) {
 	var metas = []Metafile{
-		{"META-INF/manifest.mf", manifest},
-		{"META-INF/mozilla.sf", sigfile},
-		{"META-INF/mozilla.rsa", signature},
+		{pkcs7ManifestPath, manifest},
+		{pkcs7SignatureFilePath, sigfile},
+		{pkcs7SigPath, signature},
 	}
 	return repackJARWithMetafiles(input, metas)
 }

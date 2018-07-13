@@ -36,6 +36,12 @@ const (
 	// ModeHotFix represents a signer that issues signatures for
 	// Firefox HotFixes
 	ModeHotFix = "hotfix"
+
+	coseManifestPath = "META-INF/cose.manifest"
+	coseSigPath = "META-INF/cose.sig"
+	pkcs7ManifestPath = "META-INF/manifest.mf"
+	pkcs7SignatureFilePath = "META-INF/mozilla.sf"
+	pkcs7SigPath = "META-INF/mozilla.rsa"
 )
 
 // An XPISigner is configured to issue detached PKCS7 and COSE
@@ -189,8 +195,8 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 
 		// add the cose files to the metafiles we'll add to the XPI
 		coseMetaFiles := []Metafile{
-			{"META-INF/cose.manifest", manifest},
-			{"META-INF/cose.sig", coseSig},
+			{coseManifestPath, manifest},
+			{coseSigPath, coseSig},
 		}
 		metas = append(metas, coseMetaFiles...)
 
@@ -212,9 +218,9 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	}
 
 	metas = append(metas, []Metafile{
-		{"META-INF/manifest.mf", pkcs7Manifest},
-		{"META-INF/mozilla.sf", sigfile},
-		{"META-INF/mozilla.rsa", p7sig},
+		{pkcs7ManifestPath, pkcs7Manifest},
+		{pkcs7SignatureFilePath, sigfile},
+		{pkcs7SigPath, p7sig},
 	}...)
 
 	signedFile, err = repackJARWithMetafiles(input, metas)
@@ -402,12 +408,12 @@ func (sig *Signature) String() string {
 // 4) the signature cert chain verifies when an optional non-nil truststore is provided
 //
 func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x509.CertPool) error {
-	sigStrBytes, err := readFileFromZIP(signedFile, "META-INF/mozilla.rsa")
+	sigStrBytes, err := readFileFromZIP(signedFile, pkcs7SigPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read PKCS7 signature META-INF/mozilla.rsa")
 	}
 	sigStr := base64.StdEncoding.EncodeToString(sigStrBytes)
-	sigData, err := readFileFromZIP(signedFile, "META-INF/mozilla.sf")
+	sigData, err := readFileFromZIP(signedFile, pkcs7SignatureFilePath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read META-INF/mozilla.sf")
 	}

@@ -251,11 +251,6 @@ func validateCOSEMessageStructureAndGetCertsAndAlgs(msg *cose.SignMessage) (inte
 // 7) use the public keys from the EE certs to verify the COSE signature bytes
 //
 func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options) error {
-	const (
-		coseManifestPath = "META-INF/cose.manifest"
-		coseSigPath = "META-INF/cose.sig"
-		pkcs7ManifestPath = "META-INF/manifest.mf"
-	)
 	coseManifest, err := readFileFromZIP(signedFile, coseManifestPath)
 	if err != nil {
 		return errors.Wrap(err, "xpi: failed to read META-INF/cose.manifest from signed zip")
