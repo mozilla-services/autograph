@@ -343,8 +343,8 @@ func (s *XPISigner) issueCOSESignature(cn string, manifest []byte, algs []*cose.
 	if s.issuerCert == nil {
 		return nil, errors.New("xpi: cannot issue COSE Signature when XPISigner.issuerCert is nil")
 	}
-	if len(s.issuerCert.Raw) < 1 {
-		return nil, errors.New("xpi: cannot issue COSE Signature when XPISigner.issuerCert is too short")
+	if len(s.issuerCert.Raw) < 1100 {
+		return nil, errors.New("xpi: cannot issue COSE Signature DER encoded XPISigner.issuerCert should be at least 1100 bytes long")
 	}
 
 	var (
