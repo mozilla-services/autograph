@@ -175,7 +175,7 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	}
 	coseSigAlgs, err = opt.Algorithms()
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: error parsing COSE Algorithms from options")
+		return nil, errors.Wrap(err, "xpi: error parsing cose_algorithms options")
 	}
 
 	manifest, err = makeJARManifest(input)
@@ -244,7 +244,7 @@ func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 	}
 	coseSigAlgs, err := opt.Algorithms()
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest from XPI")
+		return nil, errors.Wrap(err, "xpi: error parsing cose_algorithms options")
 	}
 	if len(coseSigAlgs) > 0 {
 		return nil, fmt.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
