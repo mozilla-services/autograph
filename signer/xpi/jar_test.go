@@ -8,7 +8,7 @@ import (
 )
 
 func TestMakingJarManifest(t *testing.T) {
-	manifest, sigfile, err := makeJARManifestAndSignature(unsignedBootstrap)
+	manifest, sigfile, err := makeJARManifestAndSignatureFile(unsignedBootstrap)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -209,7 +209,7 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 		}
 	}
 
-	sigfile, err := makeJARSignature(pkcs7Manifest)
+	sigfile, err := makeJARSignatureFile(pkcs7Manifest)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest signature from XPI")
 	}

@@ -40,16 +40,16 @@ func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err
 	return mw.Bytes(), err
 }
 
-// makeJARManifestAndSignature writes hashes for all entries in a zip to a
+// makeJARManifestAndSignatureFile writes hashes for all entries in a zip to a
 // manifest file then hashes the manifest file to write a signature
 // file and returns both
-func makeJARManifestAndSignature(input []byte) (manifest, sigfile []byte, err error) {
+func makeJARManifestAndSignatureFile(input []byte) (manifest, sigfile []byte, err error) {
 	manifest, err = makeJARManifest(input)
 	if err != nil {
 		return
 	}
 
-	sigfile, err = makeJARSignature(manifest)
+	sigfile, err = makeJARSignatureFile(manifest)
 	if err != nil {
 		return
 	}
@@ -100,8 +100,8 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 	return
 }
 
-// makeJARSignature calculates a signature file by hashing the manifest with sha1 and sha256
-func makeJARSignature(manifest []byte) (sigfile []byte, err error) {
+// makeJARSignatureFile calculates a signature file by hashing the manifest with sha1 and sha256
+func makeJARSignatureFile(manifest []byte) (sigfile []byte, err error) {
 	sw := bytes.NewBuffer(sigfile)
 	fmt.Fprint(sw, "Signature-Version: 1.0\n")
 	h1 := sha1.New()
