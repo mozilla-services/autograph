@@ -62,7 +62,7 @@ func (h *Headers) DecodeProtected(o interface{}) (err error) {
 
 	b, ok := o.([]byte)
 	if !ok {
-		return fmt.Errorf("error casting protected header bytes; got %T", o)
+		return errors.Errorf("error casting protected header bytes; got %T", o)
 	}
 	if len(b) <= 0 {
 		return nil
@@ -70,11 +70,11 @@ func (h *Headers) DecodeProtected(o interface{}) (err error) {
 
 	protected, err := Unmarshal(b)
 	if err != nil {
-		return fmt.Errorf("error CBOR decoding protected header bytes; got %T", protected)
+		return errors.Errorf("error CBOR decoding protected header bytes; got %T", protected)
 	}
 	protectedMap, ok := protected.(map[interface{}]interface{})
 	if !ok {
-		return fmt.Errorf("error casting protected to map; got %T", protected)
+		return errors.Errorf("error casting protected to map; got %T", protected)
 	}
 	h.Protected = protectedMap
 	return nil
@@ -84,7 +84,7 @@ func (h *Headers) DecodeProtected(o interface{}) (err error) {
 func (h *Headers) DecodeUnprotected(o interface{}) (err error) {
 	msgHeadersUnprotected, ok := o.(map[interface{}]interface{})
 	if !ok {
-		return fmt.Errorf("error decoding unprotected header as map[interface {}]interface {}; got %T", o)
+		return errors.Errorf("error decoding unprotected header as map[interface {}]interface {}; got %T", o)
 	}
 	h.Unprotected = msgHeadersUnprotected
 	return nil
@@ -94,7 +94,7 @@ func (h *Headers) DecodeUnprotected(o interface{}) (err error) {
 // and unprotected respectively
 func (h *Headers) Decode(o []interface{}) (err error) {
 	if len(o) != 2 {
-		return fmt.Errorf("can only decode headers from 2-item array; got %d", len(o))
+		return errors.Errorf("can only decode headers from 2-item array; got %d", len(o))
 	}
 	err = h.DecodeProtected(o[0])
 	if err != nil {
@@ -106,7 +106,7 @@ func (h *Headers) Decode(o []interface{}) (err error) {
 	}
 	dup := FindDuplicateHeader(h)
 	if dup != nil {
-		return fmt.Errorf("Duplicate header %+v found", dup)
+		return errors.Errorf("Duplicate header %+v found", dup)
 	}
 	return nil
 }
@@ -176,7 +176,7 @@ func getAlgByName(name string) (alg *Algorithm, err error) {
 			return &alg, nil
 		}
 	}
-	return nil, fmt.Errorf("Algorithm named %s not found", name)
+	return nil, errors.Errorf("Algorithm named %s not found", name)
 }
 
 // getAlgByNameOrPanic returns a Algorithm for an IANA name and panics otherwise
@@ -195,7 +195,7 @@ func getAlgByValue(value int) (alg *Algorithm, err error) {
 			return &alg, nil
 		}
 	}
-	return nil, fmt.Errorf("Algorithm with value %v not found", value)
+	return nil, errors.Errorf("Algorithm with value %v not found", value)
 }
 
 func compressHeader(k, v interface{}) (compressedK, compressedV interface{}) {
