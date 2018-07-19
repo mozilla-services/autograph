@@ -58,7 +58,21 @@ right after the signature is issued.
 Signature Request
 -----------------
 
-Supports the `/sign/data` and `/sign/file` endpoints for data and file signing respectively. Both use the same request format:
+Supports the `/sign/data` and `/sign/file` endpoints for data and file signing respectively. `/sign/data` uses the request format:
+
+.. code:: json
+
+	[
+		{
+			"input": "Y2FyaWJvdW1hdXJpY2UK",
+			"options": {
+				"id": "myaddon@allizom.org"
+			},
+			"keyid": "some_xpi_signer"
+		}
+	]
+
+`/sign/file` can include an **optional** list of COSE Algorithms to sign with too:
 
 .. code:: json
 
@@ -67,10 +81,14 @@ Supports the `/sign/data` and `/sign/file` endpoints for data and file signing r
 			"input": "Y2FyaWJvdW1hdXJpY2UK",
 			"options": {
 				"id": "myaddon@allizom.org",
+				"cose_algorithms": [
+					"ES256"
+				]
 			},
 			"keyid": "some_xpi_signer"
 		}
 	]
+
 
 Where options includes the following fields:
 
@@ -81,24 +99,37 @@ Where options includes the following fields:
   signer doesn't care about the content of the string, and uses it as
   received when generating the end-entity signing cert.
 
+* `cose_algorithms` is an **optional** array of strings representing
+  supported `COSE Algorithms`_ (as of 2018-06-20 one of `"ES256"`,
+  `"ES384"`, `"ES512"`, or `"PS256"`) to sign the XPI with in addition
+  to the PKCS7 signature. Only `/sign/file` supports this field.
 
 The `/sign/file` endpoint takes a whole XPI encoded in base64. As
 described in `Extension Signing Algorithm`_, it:
 
 * unzips the XPI
 * hashes each file to generate the manifest file `manifest.mf`
-* hashes the manifest to generate the signature file `mozilla.sf`
+* then when one or more supported COSE algorithms are in the options `cose_algorithms` field
+  * writes the manifest file to `cose.manifest`
+  * creates a COSE Sign Message and for each COSE algorithm:
+    * generates an end entity cert and key from the signer's intermediate
+    * signs the manifest with the end entity key using the COSE algorithm
+    * adds the detached signature to the Sign Message
+  * writes the CBOR-encoded Sign Message to `cose.sig`
+  * hashes `cose.manifest` and `cose.sig` and adds them to the manifest file `manifest.mf`
+* hashes the manifest file to generate the signature file `mozilla.sf`
 * generates an RSA end entity cert from the signer's intermediate
 * uses the generated cert to sign the signature file and create a PKCS7 detached signature `mozilla.rsa`
 * adds the generated manifest, signature, and detached signature files to the XPI `META-INF/`
 * repacks and returns the ZIP/XPI
 
-The `/sign/data` endpoint only generates the end entity cert and signs
-the signature file. It must contain the base64 encoding of a
-`mozilla.sf` signature file in the `input` field and returns the PKCS7
-detached signature `mozilla.sf`. The caller is then responsible for
-repacking the ZIP.
+The `/sign/data` endpoint generates the end entity cert and signs the
+signature file. The `input` field must contain the base64 encoding of
+a `mozilla.sf` signature file and returns the PKCS7 detached signature
+`mozilla.rsa` in the response `signature` field. The caller is then
+responsible for repacking the ZIP.
 
+.. _`COSE Algorithms`: https://www.iana.org/assignments/cose/cose.xhtml#table-header-algorithm-parameters
 .. _`Extension Signing Algorithm`: https://wiki.mozilla.org/Add-ons/Extension_Signing#Algorithm
 
 Signature Response
@@ -110,7 +141,7 @@ Data Signing
 XPI signatures are binary files encoded using the PKCS7 format and stored in the
 file called **mozilla.rsa** in the META-INF folder of XPI archives.
 
-Autograph returns the base64 representation of the mozilla.rsa file in its
+Autograph returns the base64 representation of the `mozilla.rsa` file in its
 signature responses. Clients must decode the base64 from the autograph response
 and write it to a `mozilla.rsa` file.
 

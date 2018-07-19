@@ -7,25 +7,70 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"strings"
-	"github.com/pkg/errors"
 )
 
-func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
+func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err error) {
+	for _, f := range metafiles {
+		if !f.IsNameValid() {
+			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
+			return
+		}
+	}
+
+	manifest, err = makeJARManifest(input)
+	if err != nil {
+		return
+	}
+
+	mw := bytes.NewBuffer(manifest)
+	for _, f := range metafiles {
+		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
+		h1 := sha1.New()
+		h1.Write(f.Body)
+		fmt.Fprintf(mw, "SHA1-Digest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
+		h2 := sha256.New()
+		h2.Write(f.Body)
+		fmt.Fprintf(mw, "SHA256-Digest: %s\n\n", base64.StdEncoding.EncodeToString(h2.Sum(nil)))
+	}
+
+	return mw.Bytes(), err
+}
+
+// makeJARManifestAndSignatureFile writes hashes for all entries in a zip to a
+// manifest file then hashes the manifest file to write a signature
+// file and returns both
+func makeJARManifestAndSignatureFile(input []byte) (manifest, sigfile []byte, err error) {
+	manifest, err = makeJARManifest(input)
+	if err != nil {
+		return
+	}
+
+	sigfile, err = makeJARSignatureFile(manifest)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+// makeJARManifest calculates a sha1 and sha256 hash for each zip entry and writes them to a manifest file
+func makeJARManifest(input []byte) (manifest []byte, err error) {
 	inputReader := bytes.NewReader(input)
 	r, err := zip.NewReader(inputReader, int64(len(input)))
 	if err != nil {
 		return
 	}
 
-	// first generate the manifest file by calculating a sha1 and sha256 hash for each zip entry
+	// generate the manifest file by calculating a sha1 and sha256 hash for each zip entry
 	mw := bytes.NewBuffer(manifest)
 	manifest = []byte(fmt.Sprintf("Manifest-Version: 1.0\n\n"))
 
 	for _, f := range r.File {
-		if isSignatureFile(f.Name) {
+		if isJARSignatureFile(f.Name) {
 			// reserved signature files do not get included in the manifest
 			continue
 		}
@@ -35,11 +80,11 @@ func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
 		}
 		rc, err := f.Open()
 		if err != nil {
-			return manifest, sigfile, err
+			return manifest, err
 		}
 		data, err := ioutil.ReadAll(rc)
 		if err != nil {
-			return manifest, sigfile, err
+			return manifest, err
 		}
 		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
 		h1 := sha1.New()
@@ -52,7 +97,11 @@ func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
 	manifestBody := mw.Bytes()
 	manifest = append(manifest, manifestBody...)
 
-	// then calculate a signature file by hashing the manifest with sha1 and sha256
+	return
+}
+
+// makeJARSignatureFile calculates a signature file by hashing the manifest with sha1 and sha256
+func makeJARSignatureFile(manifest []byte) (sigfile []byte, err error) {
 	sw := bytes.NewBuffer(sigfile)
 	fmt.Fprint(sw, "Signature-Version: 1.0\n")
 	h1 := sha1.New()
@@ -66,9 +115,27 @@ func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
 	return
 }
 
-// repackJAR inserts the manifest, signature file and pkcs7 signature in the input JAR file,
-// and return a JAR ZIP archive
-func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err error) {
+// Metafile is a file to pack into a JAR at .Name with contents .Body
+type Metafile struct {
+	Name string
+	Body []byte
+}
+
+// IsNameValid checks whether a Metafile.Name is non-nil and begins
+// with "META-INF/" functions taking Metafile args should validate
+// names before reading or writing them to JARs
+func (m *Metafile) IsNameValid() bool {
+	return m != nil && strings.HasPrefix(m.Name, "META-INF/")
+}
+
+// repackJARWithMetafiles inserts metafiles in the input JAR file and returns a JAR ZIP archive
+func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, err error) {
+	for _, f := range metafiles {
+		if !f.IsNameValid() {
+			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
+			return
+		}
+	}
 	var (
 		rc     io.ReadCloser
 		fwhead *zip.FileHeader
@@ -89,7 +156,7 @@ func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err e
 	// Iterate through the files in the archive,
 	for _, f := range r.File {
 		// skip signature files, we have new ones we'll add at the end
-		if isSignatureFile(f.Name) {
+		if isJARSignatureFile(f.Name) {
 			continue
 		}
 		rc, err = f.Open()
@@ -117,15 +184,7 @@ func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err e
 	}
 	// insert the signature files. Those will be compressed
 	// so we don't have to worry about their alignment
-	var metas = []struct {
-		Name string
-		Body []byte
-	}{
-		{"META-INF/manifest.mf", manifest},
-		{"META-INF/mozilla.sf", sigfile},
-		{"META-INF/mozilla.rsa", signature},
-	}
-	for _, meta := range metas {
+	for _, meta := range metafiles {
 		fwhead = &zip.FileHeader{
 			Name:   meta.Name,
 			Method: zip.Deflate,
@@ -149,6 +208,17 @@ func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err e
 	return
 }
 
+// repackJAR inserts the manifest, signature file and pkcs7 signature in the input JAR file,
+// and return a JAR ZIP archive
+func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err error) {
+	var metas = []Metafile{
+		{pkcs7ManifestPath, manifest},
+		{pkcs7SignatureFilePath, sigfile},
+		{pkcs7SigPath, signature},
+	}
+	return repackJARWithMetafiles(input, metas)
+}
+
 // The JAR format defines a number of signature files stored under the META-INF directory
 // META-INF/MANIFEST.MF
 // META-INF/*.SF
@@ -157,7 +227,7 @@ func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err e
 // META-INF/SIG-*
 // and their lowercase variants
 // https://docs.oracle.com/javase/8/docs/technotes/guides/jar/jar.html#Signed_JAR_File
-func isSignatureFile(name string) bool {
+func isJARSignatureFile(name string) bool {
 	if strings.HasPrefix(name, "META-INF/") {
 		name = strings.TrimPrefix(name, "META-INF/")
 		if name == "MANIFEST.MF" || name == "manifest.mf" ||
@@ -193,5 +263,5 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 			return data, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("failed to find %s in ZIP", filename))
+	return nil, errors.Errorf("failed to find %s in ZIP", filename)
 }
