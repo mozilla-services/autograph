@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.mozilla.org/autograph/signer"
+	"go.mozilla.org/pkcs7"
 )
 
 func TestSignFile(t *testing.T) {
@@ -107,7 +108,7 @@ func TestSignData(t *testing.T) {
 	}
 }
 
-func TestSignAndVerifyWithOpenSSL(t *testing.T) {
+func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 	t.Parallel()
 
 	input := []byte("foobarbaz1234abcd")
@@ -123,21 +124,21 @@ func TestSignAndVerifyWithOpenSSL(t *testing.T) {
 	pkcs7Sig := sig.(*Signature).String()
 
 	// write the signature to a temp file
-	tmpSignatureFile, err := ioutil.TempFile("", "TestSignAndVerifyWithOpenSSL_signature")
+	tmpSignatureFile, err := ioutil.TempFile("", "TestSignDataAndVerifyWithOpenSSL_signature")
 	if err != nil {
 		t.Fatal(err)
 	}
 	ioutil.WriteFile(tmpSignatureFile.Name(), []byte(pkcs7Sig), 0755)
 
 	// write the input to a temp file
-	tmpContentFile, err := ioutil.TempFile("", "TestSignAndVerifyWithOpenSSL_input")
+	tmpContentFile, err := ioutil.TempFile("", "TestSignDataAndVerifyWithOpenSSL_input")
 	if err != nil {
 		t.Fatal(err)
 	}
 	ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
 
 	// write the issuer cert to a temp file
-	tmpIssuerCertFile, err := ioutil.TempFile("", "TestSignAndVerifyWithOpenSSL_issuer")
+	tmpIssuerCertFile, err := ioutil.TempFile("", "TestSignDataAndVerifyWithOpenSSL_issuer")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,6 +165,57 @@ func TestSignAndVerifyWithOpenSSL(t *testing.T) {
 	os.Remove(tmpIssuerCertFile.Name())
 }
 
+func verifyPKCS7DigestWithPKCS7Lib(t *testing.T, input, pkcs7Sig, testCaseCerts []byte) error {
+	p7, err := pkcs7.Parse(pkcs7Sig)
+	if err != nil {
+		t.Fatalf("failed to parse XPI sig %s", err)
+	}
+	p7.Content = input
+
+	roots := x509.NewCertPool()
+	ok := roots.AppendCertsFromPEM(testCaseCerts)
+	if !ok {
+		t.Fatalf("failed to add root cert to pool")
+	}
+	return p7.VerifyWithChain(roots)
+}
+
+func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
+	t.Parallel()
+
+	input := []byte("foobarbaz1234abcd")
+	testcase := PASSINGTESTCASES[3]
+
+	s, err := New(testcase)
+	if err != nil {
+		t.Fatalf("failed to initialize signer: %v", err)
+	}
+
+	// NB: can't call SignData directly since it doesn't support SHA256
+	pkcs7SigSHA2, err := s.signDataWithPKCS7(input, "foo@bar.net", pkcs7.OIDDigestAlgorithmSHA256)
+	if err != nil {
+		t.Fatalf("failed to sign XPI with SHA2 digest %s", err)
+	}
+	err = verifyPKCS7DigestWithPKCS7Lib(t, input, pkcs7SigSHA2, []byte(testcase.Certificate))
+	if err != nil {
+		t.Fatalf("failed to verify PKCS7 with SHA2 digest")
+	}
+
+	pkcs7SigSHA1, err := s.signDataWithPKCS7(input, "foo@bar.net", pkcs7.OIDDigestAlgorithmSHA1)
+	if err != nil {
+		t.Fatalf("failed to sign XPI with SHA1 digest %s", err)
+	}
+	err = verifyPKCS7DigestWithPKCS7Lib(t, input, pkcs7SigSHA1, []byte(testcase.Certificate))
+	if err != nil {
+		t.Fatalf("failed to verify PKCS7 with SHA1 digest")
+	}
+
+	_, err = s.signDataWithPKCS7(input, "foo@bar.net", nil)
+	if err == nil {
+		t.Fatalf("signing XPI with nil digest did not error")
+	}
+}
+
 func TestNewFailure(t *testing.T) {
 	t.Parallel()
 
@@ -175,6 +227,41 @@ func TestNewFailure(t *testing.T) {
 		if err == nil {
 			t.Fatalf("testcase %d expected to fail with '%v' but succeeded", i, testcase.err)
 		}
+	}
+}
+
+func TestOptionsP7Digest(t *testing.T) {
+	t.Parallel()
+
+	testcase := PASSINGTESTCASES[3]
+	s, err := New(testcase)
+	if err != nil {
+		t.Fatalf("failed to initialize signer: %v", err)
+	}
+	opts := s.GetDefaultOptions().(Options)
+
+	opts.PKCS7Digest = "SHA256"
+	digest, err := opts.PK7Digest()
+	if err != nil {
+		t.Fatalf("PK7Digest() returned unexpected error %s", err)
+	}
+	if !digest.Equal(pkcs7.OIDDigestAlgorithmSHA256) {
+		t.Fatalf("PK7Digest() returned unexpected digest %s", digest)
+	}
+
+	opts.PKCS7Digest = "sha1"
+	digest, err = opts.PK7Digest()
+	if err != nil {
+		t.Fatalf("PK7Digest() returned unexpected error %s", err)
+	}
+	if !digest.Equal(pkcs7.OIDDigestAlgorithmSHA1) {
+		t.Fatalf("PK7Digest() returned unexpected digest %s", digest)
+	}
+
+	opts.PKCS7Digest = ""
+	_, err = opts.PK7Digest()
+	if err == nil {
+		t.Fatalf("PK7Digest() did not return error")
 	}
 }
 
@@ -193,6 +280,64 @@ func TestNoID(t *testing.T) {
 		t.Fatal("should have errored by didn't")
 	} else if err.Error() != "xpi: missing common name" {
 		t.Fatalf("expected to fail with missing CN but got error '%v'", err)
+	}
+}
+
+func TestBadCOSEAlgsErrs(t *testing.T) {
+	t.Parallel()
+
+	input := []byte("foobarbaz1234abcd")
+	// init a signer, don't care which one, taking this one because p256 is fast
+	s, err := New(PASSINGTESTCASES[3])
+	if err != nil {
+		t.Fatalf("failed to initialize signer: %v", err)
+	}
+	// sign input data with invalid cose algs option
+	_, err = s.SignData(input, Options{
+		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		PKCS7Digest: "SHA1",
+		COSEAlgorithms: []string{"bar"},
+	})
+	expectedErr := "xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead"
+	if err == nil {
+		t.Fatal("bad COSE Algs should have errored by didn't")
+	} else if err.Error() != expectedErr {
+		t.Fatalf("bad COSE Algs should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+	}
+
+	// sign input data with valid cose algs option
+	_, err = s.SignData(input, Options{
+		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		PKCS7Digest: "SHA1",
+		COSEAlgorithms: []string{"ES256"},
+	})
+	expectedErr = "xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead"
+	if err == nil {
+		t.Fatal("bad COSE Algs should have errored by didn't")
+	} else if err.Error() != expectedErr {
+		t.Fatalf("bad COSE Algs should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+	}
+}
+
+func TestBadPKCS7DigestErrs(t *testing.T) {
+	t.Parallel()
+
+	input := []byte("foobarbaz1234abcd")
+	// init a signer, don't care which one, taking this one because p256 is fast
+	s, err := New(PASSINGTESTCASES[3])
+	if err != nil {
+		t.Fatalf("failed to initialize signer: %v", err)
+	}
+	// sign input data with invalid pkcs7_digest options
+	_, err = s.SignData(input, Options{
+		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		PKCS7Digest: "SHA9000",
+	})
+	expectedErr := "xpi: can only use SHA1 digests with /sign/data. Use /sign/file instead"
+	if err == nil {
+		t.Fatal("bad PKCS7 digest should have errored by didn't")
+	} else if err.Error() != expectedErr {
+		t.Fatalf("bad PKCS7 digest should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
 	}
 }
 
@@ -333,6 +478,7 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 	signOptions := Options{
 		ID:             "test@example.net",
 		COSEAlgorithms: []string{"ES256", "PS256"},
+		PKCS7Digest: "SHA1",
 	}
 	signedXPI, err := s.SignFile(input, signOptions)
 	if err != nil {

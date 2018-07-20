@@ -72,7 +72,8 @@ Supports the `/sign/data` and `/sign/file` endpoints for data and file signing r
 		}
 	]
 
-`/sign/file` can include an **optional** list of COSE Algorithms to sign with too:
+`/sign/file` requires a PKCS7 digest algorithm and can include an
+**optional** list of COSE Algorithms:
 
 .. code:: json
 
@@ -83,7 +84,8 @@ Supports the `/sign/data` and `/sign/file` endpoints for data and file signing r
 				"id": "myaddon@allizom.org",
 				"cose_algorithms": [
 					"ES256"
-				]
+				],
+				"pkcs7_digest": "SHA256"
 			},
 			"keyid": "some_xpi_signer"
 		}
@@ -98,6 +100,10 @@ Where options includes the following fields:
   characters can be the hexadecimal encoding of a sha256 hash. This
   signer doesn't care about the content of the string, and uses it as
   received when generating the end-entity signing cert.
+
+* `pkcs7_digest` is a **required** string representing a supported
+  PKCS7 digest algorithm (`"SHA1"` or `"SHA256"`). Only `/sign/file`
+  supports this field.
 
 * `cose_algorithms` is an **optional** array of strings representing
   supported `COSE Algorithms`_ (as of 2018-06-20 one of `"ES256"`,
@@ -119,7 +125,7 @@ described in `Extension Signing Algorithm`_, it:
   * hashes `cose.manifest` and `cose.sig` and adds them to the manifest file `manifest.mf`
 * hashes the manifest file to generate the signature file `mozilla.sf`
 * generates an RSA end entity cert from the signer's intermediate
-* uses the generated cert to sign the signature file and create a PKCS7 detached signature `mozilla.rsa`
+* uses the generated cert to sign the signature file and create a PKCS7 detached signature `mozilla.rsa` using the algorithm from `pkcs7_digest`
 * adds the generated manifest, signature, and detached signature files to the XPI `META-INF/`
 * repacks and returns the ZIP/XPI
 
