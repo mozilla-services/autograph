@@ -69,7 +69,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 	case nil:
 		err = errors.New("Cannot generate private key for nil cose Algorithm")
 	case cose.PS256:
-		var size int = 2048
+		var size = 2048
 		switch key := s.issuerKey.(type) {
 		case *ecdsa.PrivateKey:
 			if key.D.BitLen() > size {
