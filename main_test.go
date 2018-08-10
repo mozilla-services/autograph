@@ -293,3 +293,11 @@ func TestStartMain(t *testing.T) {
 		t.Errorf("expected response code %d, got %d", http.StatusOK, resp.StatusCode)
 	}
 }
+
+func TestPortOverride(t *testing.T) {
+	expected := "0.0.0.0:8080"
+	_, listen, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
+	if listen != expected {
+		t.Errorf("expected listen %s got %s", expected, listen)
+	}
+}
