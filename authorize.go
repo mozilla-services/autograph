@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"go.mozilla.org/hawk"
 )
 
@@ -24,6 +26,13 @@ type authorization struct {
 	hawkMaxTimestampSkew  time.Duration
 }
 
+func abs(d time.Duration) time.Duration {
+	if d < 0 {
+		return -d
+	}
+	return d
+}
+
 // authorize validates the hawk authorization header on a request
 // and returns the userid and a boolean indicating authorization status
 func (a *autographer) authorize(r *http.Request, body []byte) (userid string, authorize bool, err error) {
@@ -34,21 +43,50 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 		return "", false, fmt.Errorf("missing Authorization header")
 	}
 	auth, err = hawk.ParseRequestHeader(r.Header.Get("Authorization"))
+	if a.stats != nil {
+		sendStatsErr := a.stats.Timing("hawk.header_parsed", time.Since(getRequestStartTime(r)), nil, 1.0)
+		if sendStatsErr != nil {
+			log.Warnf("Error sending hawk.header_parsed: %s", sendStatsErr)
+		}
+	}
 	if err != nil {
 		return "", false, err
 	}
 	userid = auth.Credentials.ID
 	auth, err = hawk.NewAuthFromRequest(r, a.lookupCred(auth.Credentials.ID), a.lookupNonce)
+	if a.stats != nil {
+		sendStatsErr := a.stats.Timing("hawk.auth_created", time.Since(getRequestStartTime(r)), nil, 1.0)
+		if sendStatsErr != nil {
+			log.Warnf("Error sending hawk.auth_created: %s", sendStatsErr)
+		}
+	}
 	if err != nil {
 		return "", false, err
 	}
 	hawk.MaxTimestampSkew = a.auths[userid].hawkMaxTimestampSkew
 	err = auth.Valid()
+	if a.stats != nil {
+		sendStatsErr := a.stats.Timing("hawk.validated", time.Since(getRequestStartTime(r)), nil, 1.0)
+		if sendStatsErr != nil {
+			log.Warnf("Error sending hawk.validated: %s", sendStatsErr)
+		}
+		skew := abs(auth.ActualTimestamp.Sub(auth.Timestamp))
+		sendStatsErr = a.stats.Timing("hawk.timestamp_skew", skew, nil, 1.0)
+		if sendStatsErr != nil {
+			log.Warnf("Error sending hawk.timestamp_skew: %s", sendStatsErr)
+		}
+	}
 	if err != nil {
 		return "", false, err
 	}
 	payloadhash := auth.PayloadHash(r.Header.Get("Content-Type"))
 	payloadhash.Write(body)
+	if a.stats != nil {
+		sendStatsErr := a.stats.Timing("hawk.payload_hashed", time.Since(getRequestStartTime(r)), nil, 1.0)
+		if sendStatsErr != nil {
+			log.Warnf("Error sending hawk.payload_hashed: %s", sendStatsErr)
+		}
+	}
 	if !auth.ValidHash(payloadhash) {
 		return "", false, fmt.Errorf("payload validation failed")
 	}
