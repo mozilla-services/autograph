@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -59,23 +60,44 @@ type autographer struct {
 }
 
 func main() {
+	run(parseArgsAndLoadConfig(os.Args[1:]))
+}
+
+func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, authPrint, debug bool) {
 	var (
-		ag        *autographer
-		conf      configuration
-		cfgFile   string
-		debug     bool
-		authPrint bool
-		err       error
+		cfgFile string
+		port    int
+		err     error
+		fset    = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
 	)
-	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
-	flag.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
-	flag.BoolVar(&debug, "D", false, "Print debug logs")
-	flag.Parse()
+
+	fset.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
+	fset.IntVar(&port, "p", 8000, "Port to listen on overrides the listen var from the config file")
+	fset.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
+	fset.BoolVar(&debug, "D", false, "Print debug logs")
+	fset.Parse(args)
 
 	err = conf.loadFromFile(cfgFile)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	confListen := strings.Split(conf.Server.Listen, ":")
+	if len(confListen) > 1 && string(port) != confListen[1] {
+		listen = fmt.Sprintf("%s:%d", confListen[0], port)
+		log.Infof("Overriding port from config %s with %d from the commandline", confListen[1], port)
+	} else {
+		listen = conf.Server.Listen
+	}
+
+	return
+}
+
+func run(conf configuration, listen string, authPrint, debug bool) {
+	var (
+		ag  *autographer
+		err error
+	)
 
 	// initialize signers from the configuration
 	// and store them into the autographer handler
@@ -128,7 +150,7 @@ func main() {
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
 
 	server := &http.Server{
-		Addr: conf.Server.Listen,
+		Addr: listen,
 		Handler: handleMiddlewares(
 			router,
 			setRequestID(),
@@ -137,7 +159,7 @@ func main() {
 			logRequest(),
 		),
 	}
-	log.Println("starting autograph on", conf.Server.Listen)
+	log.Println("starting autograph on", listen)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
