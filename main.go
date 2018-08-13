@@ -34,6 +34,7 @@ import (
 	"go.mozilla.org/sops"
 	"go.mozilla.org/sops/decrypt"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
 )
 
@@ -42,6 +43,11 @@ type configuration struct {
 	Server struct {
 		Listen         string
 		NonceCacheSize int
+	}
+	Statsd struct {
+		Addr      string
+		Namespace string
+		Buflen    int
 	}
 	HSM            crypto11.PKCS11Config
 	Signers        []signer.Configuration
@@ -52,6 +58,7 @@ type configuration struct {
 // An autographer is a running instance of an autograph service,
 // with all signers and permissions configured
 type autographer struct {
+	stats       *statsd.Client
 	signers     []signer.Signer
 	auths       map[string]authorization
 	signerIndex map[string]int
@@ -115,6 +122,13 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 			for i := range conf.Signers {
 				conf.Signers[i].HSMIsAvailable()
 			}
+		}
+	}
+
+	if conf.Statsd.Addr != "" {
+		err = ag.addStats(conf)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 
