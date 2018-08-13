@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"go.mozilla.org/hawk"
 )
 
@@ -45,6 +47,10 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 	hawk.MaxTimestampSkew = a.auths[userid].hawkMaxTimestampSkew
 	err = auth.Valid()
 	if err != nil {
+		if err.Error() == hawk.ErrTimestampSkew.Error() {
+			skew := auth.ActualTimestamp.Sub(auth.Timestamp)
+			log.Infof("Hawk skew %s exceeded MaxTimestampSkew of %s", skew, hawk.MaxTimestampSkew)
+		}
 		return "", false, err
 	}
 	payloadhash := auth.PayloadHash(r.Header.Get("Content-Type"))
