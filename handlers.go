@@ -46,7 +46,7 @@ type signatureresponse struct {
 // and calls the signers to generate signature responses.
 func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	rid := getRequestID(r)
-	starttime := time.Now()
+	starttime := getRequestStartTime(r)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
