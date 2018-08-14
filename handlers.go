@@ -67,12 +67,24 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userid, authorized, err := a.authorize(r, body)
+	if a.stats != nil {
+		sendStatsErr := a.stats.Timing("authorize_finished", time.Since(starttime), nil, 1.0)
+		if sendStatsErr != nil {
+			log.Warnf("Error sending authorize_finished: %s", sendStatsErr)
+		}
+	}
 	if err != nil || !authorized {
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
 		return
 	}
 	var sigreqs []signaturerequest
 	err = json.Unmarshal(body, &sigreqs)
+	if a.stats != nil {
+		sendStatsErr := a.stats.Timing("body_unmarshaled", time.Since(starttime), nil, 1.0)
+		if sendStatsErr != nil {
+			log.Warnf("Error sending body_unmarshaled: %s", sendStatsErr)
+		}
+	}
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to parse request body: %v", err)
 		return
