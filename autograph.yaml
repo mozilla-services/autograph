@@ -3,6 +3,11 @@ server:
     # cache 500k nonces to protect from authorization replay attacks
     noncecachesize: 524288
 
+statsd:
+    addr: "127.0.0.1:8125"
+    namespace: "autograph."
+    buflen: 1
+
 # When using an HSM, place the path to the pkcs11 client library,
 # token label and pin of the crypto user in the configuration below
 # hsm:

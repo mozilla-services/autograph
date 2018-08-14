@@ -77,4 +77,7 @@ showcoverage: test
 generate:
 	$(GO) generate
 
-.PHONY: all test generate vendor
+dummy-statsd:
+	nc -kluvw 0 localhost 8125
+
+.PHONY: all dummy-statsd test generate vendor
