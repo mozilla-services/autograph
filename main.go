@@ -66,13 +66,13 @@ func main() {
 func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, authPrint, debug bool) {
 	var (
 		cfgFile string
-		port    int
+		port    string
 		err     error
 		fset    = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
 	)
 
 	fset.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
-	fset.IntVar(&port, "p", 8000, "Port to listen on overrides the listen var from the config file")
+	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	fset.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
 	fset.BoolVar(&debug, "D", false, "Print debug logs")
 	fset.Parse(args)
@@ -83,9 +83,9 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 	}
 
 	confListen := strings.Split(conf.Server.Listen, ":")
-	if len(confListen) > 1 && string(port) != confListen[1] {
-		listen = fmt.Sprintf("%s:%d", confListen[0], port)
-		log.Infof("Overriding port from config %s with %d from the commandline", confListen[1], port)
+	if len(confListen) > 1 && port != "" && port != confListen[1] {
+		listen = fmt.Sprintf("%s:%s", confListen[0], port)
+		log.Infof("Overriding listen addr from config %s with new port from the commandline: %s", conf.Server.Listen, listen)
 	} else {
 		listen = conf.Server.Listen
 	}
