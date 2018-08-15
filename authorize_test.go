@@ -23,8 +23,8 @@ func TestMissingAuthorization(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, authorize, err := ag.authorize(req, body)
-	if authorize {
+	_, _, err = ag.authorizeHeader(req)
+	if err == nil {
 		t.Errorf("expected auth to fail with missing authorization but succeeded")
 	}
 	if err.Error() != "missing Authorization header" {
@@ -40,8 +40,8 @@ func TestBogusAuthorization(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Authorization", `Hawk thisisbob="bob", andhereisamac="nVg5STp2fD+P7G3ELmUztb3hP/LQajwD+FDQM7rZvhw=", ts="1453681057"`)
-	_, authorize, err := ag.authorize(req, body)
-	if authorize {
+	_, _, err = ag.authorizeHeader(req)
+	if err == nil {
 		t.Errorf("expected auth to fail with invalid authorization but succeeded")
 	}
 	if err.Error() != "hawk: invalid mac, missing or empty" {
@@ -58,8 +58,8 @@ func TestBadPayload(t *testing.T) {
 	}
 	authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", []byte(`9247oldfjd18weohfa`))
 	req.Header.Set("Authorization", authheader)
-	_, authorize, err := ag.authorize(req, body)
-	if authorize {
+	_, err = ag.authorize(req, body)
+	if err == nil {
 		t.Errorf("expected auth to fail with payload validation failed but succeeded")
 	}
 	if err.Error() != "payload validation failed" {
@@ -76,8 +76,8 @@ func TestExpiredAuth(t *testing.T) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", `Hawk id="bob", mac="nVg5STp2fD+P7G3ELmUztb3hP/LQajwD+FDQM7rZvhw=", ts="1453681057", nonce="TKLzwtGS", hash="sL12YYG2CnALd5o5dqHRKjNO0AvgmPPeIqlfZQfszfo=", ext="59d2rtbmji6617pthvwa1h370"`)
-	_, authorize, err := ag.authorize(req, body)
-	if authorize {
+	_, _, err = ag.authorizeHeader(req)
+	if err == nil {
 		t.Errorf("expected auth to fail with expired timestamp but succeeded")
 	}
 	if err.Error() != hawk.ErrTimestampSkew.Error() {
@@ -96,10 +96,10 @@ func TestDuplicateNonce(t *testing.T) {
 	authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", body)
 	req.Header.Set("Authorization", authheader)
 	// run it once
-	_, authorize, err := ag.authorize(req, body)
+	_, _, err = ag.authorizeHeader(req)
 	// and run it twice
-	_, authorize, err = ag.authorize(req, body)
-	if authorize {
+	_, _, err = ag.authorizeHeader(req)
+	if err == nil {
 		t.Errorf("expected auth to fail with duplicate nonce, but succeeded")
 	}
 	if err.Error() != hawk.ErrReplay.Error() {
@@ -121,7 +121,7 @@ func TestNonceFromLRU(t *testing.T) {
 			Hash: sha256.New},
 		0)
 	req.Header.Set("Authorization", auth1.RequestHeader())
-	_, _, err = ag.authorize(req, nil)
+	_, _, err = ag.authorizeHeader(req)
 
 	auth2 := hawk.NewRequestAuth(req,
 		&hawk.Credentials{
@@ -130,7 +130,7 @@ func TestNonceFromLRU(t *testing.T) {
 			Hash: sha256.New},
 		0)
 	req.Header.Set("Authorization", auth2.RequestHeader())
-	_, _, err = ag.authorize(req, nil)
+	_, _, err = ag.authorizeHeader(req)
 
 	if ag.nonces.Contains(auth1.Nonce) {
 		t.Errorf("First nonce %q found in cache, should have been removed", auth1.Nonce)
@@ -159,10 +159,10 @@ func TestDefaultSignerNotFound(t *testing.T) {
 // Two authorizations sharing the same ID should fail
 func TestAddDuplicateAuthorization(t *testing.T) {
 	var authorizations = []authorization{
-		authorization{
+		{
 			ID: "alice",
 		},
-		authorization{
+		{
 			ID: "alice",
 		},
 	}
@@ -202,7 +202,7 @@ func TestHawkTimestampSkewFail(t *testing.T) {
 	authheader := getAuthHeader(req, "alice", "1862300e9bd18eafab2eb8d6", sha256.New, id(), "application/json", body)
 	req.Header.Set("Authorization", authheader)
 	time.Sleep(5 * time.Second)
-	_, _, err = tmpag.authorize(req, body)
+	_, _, err = tmpag.authorizeHeader(req)
 	if err.Error() != hawk.ErrTimestampSkew.Error() {
 		t.Errorf("expected auth to fail with skewed timestamp but got error: %v", err)
 	}
