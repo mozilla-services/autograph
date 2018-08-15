@@ -265,6 +265,10 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 	// insert the remaining signature files. Those will be compressed
 	// so we don't have to worry about their alignment
 	for _, meta := range metafiles {
+		if meta.Name == pkcs7SigFile.Name {
+			continue
+		}
+
 		fwhead = &zip.FileHeader{
 			Name:   meta.Name,
 			Method: zip.Deflate,
