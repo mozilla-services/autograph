@@ -3,6 +3,7 @@ package xpi
 import (
 	"archive/zip"
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"testing"
 )
@@ -251,3 +252,84 @@ SHA256-Digest-Manifest: DEeZKUfwfIdRBxyA9IkCXkUaYaTn6mWnljQtELTy4cg=
 `)
 
 var unsignedBootstrapSignature = []byte("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+
+
+func getZIPReader(zipBytes []byte) *zip.Reader {
+	reader := bytes.NewReader(zipBytes)
+	r, err := zip.NewReader(reader, int64(len(zipBytes)))
+	if err != nil {
+		panic(fmt.Sprintf("Error reading ZIP %s", err))
+	}
+	return r
+}
+
+func TestMakeManifestsAndRepackJarMatchPythonSigningClients(t *testing.T) {
+	t.Parallel()
+
+	// NB: we're just checking JAR packing this isn't a valid signature
+	pkcs7Signature, err := ioutil.ReadFile("test/zigbert.test.pkcs7.der")
+	if err != nil {
+		t.Fatalf("error reading test/signingClientsPKCS7DataBlob %s", err)
+	}
+	testJar, err := ioutil.ReadFile("test/test-jar.zip")
+	if err != nil {
+		t.Fatalf("error reading test/test-jar.zip %s", err)
+	}
+	// result of signing_clients test_make_signed
+	pySignedJar, err := ioutil.ReadFile("test/test-jar-signed.zip")
+	if err != nil {
+		t.Fatalf("error reading test/test-jar-signed.zip %s", err)
+	}
+	// repacked
+	manifest, sigfile, err := makeJARManifestAndSignatureFile(testJar)
+	if err != nil {
+		t.Fatalf("error making JAR manifests: %s", err)
+	}
+	repacked, err := repackJAR(testJar, manifest, sigfile, pkcs7Signature)
+	if err != nil {
+		t.Fatalf("error repacking jar: %s", err)
+	}
+
+	var (
+		repackedReader = getZIPReader(repacked)
+		pySignedReader = getZIPReader(pySignedJar)
+	)
+	repackedManifest, err := readFileFromZIP(repacked, "META-INF/manifest.mf")
+	if err != nil {
+		t.Fatalf("error reading META-INF/manifest.mf from repacked jar: %s", err)
+	}
+	pySignedManifest, err := readFileFromZIP(pySignedJar, "META-INF/manifest.mf")
+	if err != nil {
+		t.Fatalf("error reading META-INF/manifest.mf from pySigned jar: %s", err)
+	}
+
+	if string(repackedManifest) != string(pySignedManifest) {
+		t.Fatalf("Manifest contents do not match!\nrepacked:\n%s\nexpected:\n%s\n", string(repackedManifest), string(pySignedManifest))
+	}
+	if len(repackedManifest) != len(pySignedManifest) {
+		t.Fatalf("Manifest lengths do not match!\nrepacked:\n%d\nexpected:\n%d\n", len(repackedManifest), len(pySignedManifest))
+	}
+
+	if len(repackedReader.File) != len(pySignedReader.File) {
+		for _, f := range pySignedReader.File {
+			t.Logf("pySigned: %s\n", f.Name)
+		}
+		for _, f := range repackedReader.File {
+			t.Logf("repacked: %s\n", f.Name)
+		}
+		t.Fatalf("Wrong number of entries %d in repacked and %d in expected", len(repackedReader.File), len(pySignedReader.File))
+	}
+
+        // verify the pySigned zipfiles match contents
+	for i, f := range pySignedReader.File {
+		if f.Name != repackedReader.File[i].Name {
+			for _, f := range pySignedReader.File {
+				t.Logf("pySigned: %s\n", f.Name)
+			}
+			for _, f := range repackedReader.File {
+				t.Logf("repacked: %s\n", f.Name)
+			}
+			t.Fatalf("file %d named %s does not match expected %s", i, repackedReader.File[i].Name, f.Name)
+		}
+	}
+}

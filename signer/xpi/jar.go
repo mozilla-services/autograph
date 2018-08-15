@@ -3,6 +3,7 @@ package xpi
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
@@ -10,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
+	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -57,6 +60,52 @@ func makeJARManifestAndSignatureFile(input []byte) (manifest, sigfile []byte, er
 	return
 }
 
+
+// getPriorityForFilename returns the priority for a filename
+//
+//     The filenames in a manifest are ordered so that files not in a
+//     directory come before files in any directory, ordered
+//     alphabetically but ignoring case, with a few exceptions
+//     (install.rdf, chrome.manifest, icon.png and icon64.png come at the
+//     beginning; licenses come at the end).
+//
+//     This order does not appear to affect anything in any way, but it
+//     looks nicer.
+func getPriorityForFilename(filename string) int {
+	switch filename {
+	case "install.rdf":
+		return 1
+	case "chrome.manifest", "icon.png", "icon64.png":
+		return 2
+	case "MPL", "GPL", "LGPL", "COPYING", "LICENSE", "license.txt":
+		return 5
+	default:
+		return 4
+	}
+}
+
+type byPriorityThenAlpha []*zip.File
+func (s byPriorityThenAlpha) Len() int {
+	return len(s)
+}
+func (s byPriorityThenAlpha) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s byPriorityThenAlpha) Less(i, j int) bool {
+	iPriority, jPriority := getPriorityForFilename(s[i].Name), getPriorityForFilename(s[j].Name)
+	if iPriority != jPriority {
+		return iPriority < jPriority
+	}
+
+	iPath, iFile := filepath.Split(strings.ToLower(s[i].Name))
+	jPath, jFile := filepath.Split(strings.ToLower(s[j].Name))
+
+	if iPath != jPath {
+		return iPath < jPath
+	}
+	return iFile < jFile
+}
+
 // makeJARManifest calculates a sha1 and sha256 hash for each zip entry and writes them to a manifest file
 func makeJARManifest(input []byte) (manifest []byte, err error) {
 	inputReader := bytes.NewReader(input)
@@ -65,10 +114,11 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 		return
 	}
 
-	// generate the manifest file by calculating a sha1 and sha256 hash for each zip entry
+	// first generate the manifest file by calculating md5, sha1, and sha256 hashes for each zip entry
 	mw := bytes.NewBuffer(manifest)
 	manifest = []byte(fmt.Sprintf("Manifest-Version: 1.0\n\n"))
 
+	sort.Sort(byPriorityThenAlpha(r.File))
 	for _, f := range r.File {
 		if isJARSignatureFile(f.Name) {
 			// reserved signature files do not get included in the manifest
@@ -86,7 +136,10 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 		if err != nil {
 			return manifest, err
 		}
-		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
+		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: MD5 SHA1 SHA256\n", f.Name)
+		h0 := md5.New()
+		h0.Write(data)
+		fmt.Fprintf(mw, "MD5-Digest: %s\n", base64.StdEncoding.EncodeToString(h0.Sum(nil)))
 		h1 := sha1.New()
 		h1.Write(data)
 		fmt.Fprintf(mw, "SHA1-Digest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
@@ -104,6 +157,9 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 func makeJARSignatureFile(manifest []byte) (sigfile []byte, err error) {
 	sw := bytes.NewBuffer(sigfile)
 	fmt.Fprint(sw, "Signature-Version: 1.0\n")
+	h0 := md5.New()
+	h0.Write(manifest)
+	fmt.Fprintf(sw, "MD5-Digest-Manifest: %s\n", base64.StdEncoding.EncodeToString(h0.Sum(nil)))
 	h1 := sha1.New()
 	h1.Write(manifest)
 	fmt.Fprintf(sw, "SHA1-Digest-Manifest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
@@ -130,18 +186,22 @@ func (m *Metafile) IsNameValid() bool {
 
 // repackJARWithMetafiles inserts metafiles in the input JAR file and returns a JAR ZIP archive
 func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, err error) {
-	for _, f := range metafiles {
-		if !f.IsNameValid() {
-			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
-			return
-		}
-	}
 	var (
 		rc     io.ReadCloser
 		fwhead *zip.FileHeader
 		fw     io.Writer
 		data   []byte
+		pkcs7SigFile *Metafile
 	)
+	for _, f := range metafiles {
+		if !f.IsNameValid() {
+			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
+			return
+		}
+		if f.Name == pkcs7SigPath {
+			pkcs7SigFile = &f
+		}
+	}
 	inputReader := bytes.NewReader(input)
 	r, err := zip.NewReader(inputReader, int64(len(input)))
 	if err != nil {
@@ -153,7 +213,26 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 	// Create a new zip archive.
 	w := zip.NewWriter(buf)
 
+	// The PKCS7 file("foo.rsa") *MUST* be the first file in the
+	// archive to take advantage of Firefox's optimized downloading
+	// of XPIs
+	if pkcs7SigFile != nil {
+		fwhead = &zip.FileHeader{
+			Name:   pkcs7SigPath,
+			Method: zip.Deflate,
+		}
+		fw, err = w.CreateHeader(fwhead)
+		if err != nil {
+			return
+		}
+		_, err = fw.Write(pkcs7SigFile.Body)
+		if err != nil {
+			return
+		}
+	}
+
 	// Iterate through the files in the archive,
+	sort.Sort(byPriorityThenAlpha(r.File))
 	for _, f := range r.File {
 		// skip signature files, we have new ones we'll add at the end
 		if isJARSignatureFile(f.Name) {
@@ -182,9 +261,14 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 		}
 		rc.Close()
 	}
-	// insert the signature files. Those will be compressed
+
+	// insert the remaining signature files. Those will be compressed
 	// so we don't have to worry about their alignment
 	for _, meta := range metafiles {
+		if meta.Name == pkcs7SigFile.Name {
+			continue
+		}
+
 		fwhead = &zip.FileHeader{
 			Name:   meta.Name,
 			Method: zip.Deflate,
