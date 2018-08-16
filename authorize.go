@@ -33,14 +33,14 @@ func abs(d time.Duration) time.Duration {
 	return d
 }
 
-// authorize validates the hawk authorization header on a request
-// and returns the userid and a boolean indicating authorization status
-func (a *autographer) authorize(r *http.Request, body []byte) (userid string, authorize bool, err error) {
-	var (
-		auth *hawk.Auth
-	)
+// authorizeHeader validates the existence of the Authorization header as a hawk
+// authorization header and makes sure that it is valid. It does not validate the
+// body of the request, that is done within authorizeBody. This function returns
+// the hawk auth struct, the userid, and an error which will indicate whether
+// validation was successful.
+func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid string, err error) {
 	if r.Header.Get("Authorization") == "" {
-		return "", false, fmt.Errorf("missing Authorization header")
+		return nil, "", fmt.Errorf("missing Authorization header")
 	}
 	auth, err = hawk.ParseRequestHeader(r.Header.Get("Authorization"))
 	if a.stats != nil {
@@ -50,7 +50,7 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 		}
 	}
 	if err != nil {
-		return "", false, err
+		return nil, "", err
 	}
 	userid = auth.Credentials.ID
 	auth, err = hawk.NewAuthFromRequest(r, a.lookupCred(auth.Credentials.ID), a.lookupNonce)
@@ -61,7 +61,7 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 		}
 	}
 	if err != nil {
-		return "", false, err
+		return nil, "", err
 	}
 	hawk.MaxTimestampSkew = a.auths[userid].hawkMaxTimestampSkew
 	err = auth.Valid()
@@ -77,8 +77,14 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 		}
 	}
 	if err != nil {
-		return "", false, err
+		return nil, "", err
 	}
+	return auth, userid, nil
+}
+
+// authorizeBody validates the body within the request and returns
+// an error which will be nil if the authorization is successful
+func (a *autographer) authorizeBody(auth *hawk.Auth, r *http.Request, body []byte) (err error) {
 	payloadhash := auth.PayloadHash(r.Header.Get("Content-Type"))
 	payloadhash.Write(body)
 	if a.stats != nil {
@@ -88,9 +94,19 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, au
 		}
 	}
 	if !auth.ValidHash(payloadhash) {
-		return "", false, fmt.Errorf("payload validation failed")
+		return fmt.Errorf("payload validation failed")
 	}
-	return userid, true, nil
+	return nil
+}
+
+// authorize combines authorizeHeader and authorizeBody into one function.
+func (a *autographer) authorize(r *http.Request, body []byte) (userid string, err error) {
+	auth, userid, err := a.authorizeHeader(r)
+	if err != nil {
+		return userid, err
+	}
+	err = a.authorizeBody(auth, r, body)
+	return userid, err
 }
 
 // lookupCred searches the authorizations for a user whose id matches the provided

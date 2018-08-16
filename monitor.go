@@ -26,8 +26,8 @@ func (a *autographer) addMonitoring(monitoring authorization) error {
 func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	rid := getRequestID(r)
 	starttime := time.Now()
-	userid, authorized, err := a.authorize(r, []byte(""))
-	if err != nil || !authorized {
+	userid, err := a.authorize(r, []byte(""))
+	if err != nil {
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
 		return
 	}
