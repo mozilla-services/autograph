@@ -304,7 +304,7 @@ func (a *autographer) makeSignerIndex() {
 		for _, sid := range auth.Signers {
 			for pos, s := range a.signers {
 				if sid == s.Config().ID {
-					log.Printf("Mapping auth id %q and signer id %q to signer %d", auth.ID, s.Config().ID, pos)
+					log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.hawkMaxTimestampSkew)
 					tag := auth.ID + "+" + s.Config().ID
 					a.signerIndex[tag] = pos
 				}
@@ -321,7 +321,7 @@ func (a *autographer) makeSignerIndex() {
 		}
 		for pos, signer := range a.signers {
 			if auth.Signers[0] == signer.Config().ID {
-				log.Printf("Mapping auth id %q to default signer %d", auth.ID, pos)
+				log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.hawkMaxTimestampSkew)
 				tag := auth.ID + "+"
 				a.signerIndex[tag] = pos
 				break
