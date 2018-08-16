@@ -21,7 +21,7 @@ func TestMakeEndEntity(t *testing.T) {
 	} {
 		cndigest := sha256.Sum256([]byte(testid))
 		dnsname := fmt.Sprintf("%x.%x.addons.mozilla.org", cndigest[:16], cndigest[16:])
-		cert, _, err := s.MakeEndEntity(testid)
+		cert, _, err := s.MakeEndEntity(testid, nil)
 		if err != nil {
 			t.Fatal(err)
 		}

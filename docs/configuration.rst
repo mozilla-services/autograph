@@ -9,16 +9,37 @@ The configuration lives in `autograph.yaml` and is expected in
 `/etc/autograph/autograph.yaml` (use flag `-c` to provide an alternate
 location).
 
-Listener
---------
+Server
+------
 
-Define an address and port for the API to listen on:
+Define an address and port for the API to listen on and an optional
+HAWK nonce cache size to prevent replay attacks:
 
 .. code:: yaml
 
 	server:
 		listen: "192.168.1.28:8000"
+		noncecachesize: 524288
 
+Use flag `-p` to provide an alternate port and override any port
+specified in the config.
+
+
+Statsd
+------
+
+Optionally, configure statsd with:
+
+* *addr* a UDP host and port to send statsd stats to
+* *namespace* a statsd prefix
+* *buflen* the number of statsd commands to buffer before sending or 100ms elapses in which case the buffer is flushed
+
+.. code:: yaml
+
+	statsd:
+		addr: "127.0.0.1:8125"
+		namespace: "autograph."
+		buflen: 1
 
 Signers
 -------
@@ -85,7 +106,7 @@ configuration file:
 
 .. code:: bash
 
-	$ $GOPATH/bin/autograph -c autograph.yaml 
+	$ $GOPATH/bin/autograph -c autograph.yaml
 	{"Timestamp":1453721399358695130,"Type":"app.log","Logger":"Autograph","Hostname":"gator1","EnvVersion":"2.0","Pid":17287,"Fields":{"msg":"main.go:74: Starting Autograph API on localhost:8000"}}
 
 

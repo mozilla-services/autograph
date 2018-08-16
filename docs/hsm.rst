@@ -24,7 +24,7 @@ HSM init
 * CO key len is shorter than 32, probably no more than 16 chars
 * create a CU to use to create keys
 * exit
-* Now generate a 2048 RSA key using the crypto user:
+* Now generate a 2048 RSA key using the crypto user (note: `MAR signers for SignatureAlgorithmID 2 / RSA-PKCS1-SHA384 require >=4096`_):
 
 .. code:: bash
 
@@ -47,6 +47,8 @@ HSM init
 			Node id 0 and err state 0x00000000 : HSM Return: SUCCESS
 
 	* Command:  quit
+
+.. _`MAR signers for SignatureAlgorithmID 2 / RSA-PKCS1-SHA384 require >=4096`: https://github.com/mozilla/build-mar/blob/607cb8cff99a3b2f8294b4175f81ed0cb28ef381/src/mardor/signing.py#L143
 
 PKCS11 CloudHSM client
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -99,5 +101,3 @@ label of each key in the HSM in their respective signer blocks, as follows:
 Note that autograph does not generate slots or keys, this must be handled
 separately. For a full working example, take a look at `autograph.softhsm.yaml`
 and how it is used by CircleCI in `.circleci/config.yaml`.
-
-

@@ -8,7 +8,7 @@ import (
 )
 
 func TestMakingJarManifest(t *testing.T) {
-	manifest, sigfile, err := makeJARManifests(unsignedBootstrap)
+	manifest, sigfile, err := makeJARManifestAndSignatureFile(unsignedBootstrap)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestRepack(t *testing.T) {
 			}
 			hasSignature = true
 		default:
-			t.Fatalf("found unknow file in zip archive: %s", f.Name)
+			t.Fatalf("found unknown file in zip archive: %s", f.Name)
 		}
 	}
 	if fileCount != 3 {
@@ -102,10 +102,48 @@ func TestIsSignatureFile(t *testing.T) {
 		{false, "META-INF/.mf.foo"},
 	}
 	for i, testcase := range testcases {
-		if isSignatureFile(testcase.filename) != testcase.expect {
+		if isJARSignatureFile(testcase.filename) != testcase.expect {
 			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
-				i, testcase.filename, isSignatureFile(testcase.filename), testcase.expect)
+				i, testcase.filename, isJARSignatureFile(testcase.filename), testcase.expect)
 		}
+	}
+}
+
+func TestMetafileIsNameValid(t *testing.T) {
+	var m = Metafile{
+		Name: "META-INF/foo",
+		Body: []byte("doesn't matter"),
+	}
+	if m.IsNameValid() != true {
+		t.Fatalf("TestMetafileIsNameValid: path META-INF/foo did not return expected result: true")
+	}
+	m.Name = "../../etc/shadow"
+	if m.IsNameValid() != false {
+		t.Fatalf("TestMetafileIsNameValid: path ../../etc/shadow did not return expected result: false")
+	}
+}
+
+func TestMakePKCS7ManifestValidatesMetafileName(t *testing.T) {
+	_, err := makePKCS7Manifest([]byte(""), []Metafile{
+		Metafile{
+			Name: "./",
+			Body: []byte("foo"),
+		},
+	})
+	if err == nil {
+		t.Fatalf("makePKCS7Manifest did not err for invalid metafile name")
+	}
+}
+
+func TestRepackJARWithMetafilesValidatesMetafileName(t *testing.T) {
+	_, err := repackJARWithMetafiles([]byte(""), []Metafile{
+		Metafile{
+			Name: "./",
+			Body: []byte("foo"),
+		},
+	})
+	if err == nil {
+		t.Fatalf("repackJARWithMetafiles did not err for invalid metafile name")
 	}
 }
 

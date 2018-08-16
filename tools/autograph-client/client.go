@@ -50,6 +50,17 @@ const (
 	requestTypeFile
 )
 
+type coseAlgs []string
+
+func (i *coseAlgs) String() string {
+	return ""
+}
+
+func (i *coseAlgs) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 func urlToRequestType(url string) requestType {
 	if strings.HasSuffix(url, "/sign/data") {
 		return requestTypeData
@@ -65,11 +76,12 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, keyid, cn string
-		iter, maxworkers                                          int
-		debug                                                     bool
-		err                                                       error
-		requests                                                  []signaturerequest
+		userid, pass, data, hash, url, infile, outfile, keyid, cn, pk7digest string
+		iter, maxworkers                                                     int
+		debug                                                                bool
+		err                                                                  error
+		requests                                                             []signaturerequest
+		algs                                                                 coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -97,6 +109,12 @@ examples:
 
 * sign an XPI file:
         $ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -o signed.xpi
+
+* sign an XPI file with SHA256 PKCS7 digest:
+        $ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -pk7digest sha256 -o signed.xpi
+
+* sign an XPI file with one or more COSE signatures:
+	$ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -o signed.xpi -c ES384 -c PS256
 `)
 	}
 	flag.StringVar(&userid, "u", "alice", "User ID")
@@ -110,6 +128,9 @@ examples:
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
 	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
 	flag.StringVar(&cn, "cn", "", "when signing XPI, sets the CN to the add-on ID")
+	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
+	flag.StringVar(&pk7digest, "pk7digest", "sha1", "an optional PK7 digest algorithm to use for XPI file signing. Defaults to 'sha1'")
+
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
 
@@ -133,9 +154,13 @@ examples:
 		Input: data,
 		KeyID: keyid,
 	}
-	// if signing an xpi, the CN is set in the options
+	// if signing an xpi, the CN, COSEAlgorithms, and PKCS7Digest are set in the options
 	if cn != "" {
-		request.Options = xpi.Options{ID: cn}
+		request.Options = xpi.Options{
+			ID: cn,
+			COSEAlgorithms: algs,
+			PKCS7Digest: pk7digest,
+		}
 	}
 	requests = append(requests, request)
 	reqBody, err := json.Marshal(requests)
@@ -342,7 +367,7 @@ func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqTy
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = xpi.VerifySignedFile(signedFile, nil)
+		err = xpi.VerifySignedFile(signedFile, nil, req.Options.(xpi.Options))
 		if err != nil {
 			log.Fatal(err)
 		}
