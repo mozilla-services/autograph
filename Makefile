@@ -6,12 +6,10 @@ GO := go
 all: generate test vet lint install
 
 install:
-	$(GO) install go.mozilla.org/autograph
+	vgo install go.mozilla.org/autograph
 
 vendor:
-	govend -u --prune
-	#go get -u github.com/golang/dep/...
-	#dep ensure -update
+	vgo build
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
