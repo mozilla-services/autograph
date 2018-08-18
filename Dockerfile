@@ -17,6 +17,7 @@ ADD . /go/src/go.mozilla.org/autograph
 ADD autograph.yaml /app
 ADD version.json /app
 
+RUN go get -u golang.org/x/vgo
 RUN vgo install go.mozilla.org/autograph
 
 USER app
