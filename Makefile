@@ -1,15 +1,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-GO := go
+GO := vgo
 
 all: generate test vet lint install
 
 install:
-	vgo install go.mozilla.org/autograph
+	$(GO) install go.mozilla.org/autograph
 
 vendor:
-	vgo build
+	$(GO) build
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
