@@ -16,8 +16,10 @@ jobs:
       - run:
           name: Install packages
           command: |
+              echo 'deb http://ftp.debian.org/debian stretch-backports main' > /etc/apt/sources.list.d/backports.list
               apt-get update
-              apt-get install -y git ssh softhsm2 libltdl-dev netcat
+              apt-get install -y ssh softhsm2 libltdl-dev netcat clang
+              apt-get -t stretch-backports install -y git
       - run:
           name: Setup SoftHSM
           command: |
