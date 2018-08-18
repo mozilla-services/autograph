@@ -6,6 +6,7 @@ GO := go
 all: generate test vet lint install
 
 install:
+	vgo || go get -u golang.org/x/vgo
 	vgo install go.mozilla.org/autograph
 
 vendor:

@@ -25,7 +25,7 @@ jobs:
               softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
       - checkout
       - run:
-          name: Install deps
+          name: Install vgo and deps
           command: |
               make install
       - run:
