@@ -1,4 +1,4 @@
-FROM golang:1.11
+FROM golang:1.10
 MAINTAINER Mozilla
 EXPOSE 8000
 
