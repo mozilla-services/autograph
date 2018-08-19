@@ -34,7 +34,7 @@ jobs:
       - run:
           name: Generate keys in softhsm
           command: |
-              $GOPATH/bin/vgo run tools/softhsm/genkeys.go
+              $GOPATH/bin/vgo run go.mozilla.org/autograph/tools/softhsm
       - run:
           name: Run Autograph with SoftHSM configuration
           command: |
