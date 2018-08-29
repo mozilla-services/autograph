@@ -77,7 +77,7 @@ func urlToRequestType(url string) requestType {
 func main() {
 	var (
 		userid, pass, data, hash, url, infile, outfile, keyid, cn, pk7digest, rootPath string
-		iter, maxworkers                                                               int
+		iter, maxworkers, sa                                                           int
 		debug                                                                          bool
 		err                                                                            error
 		requests                                                                       []signaturerequest
@@ -128,6 +128,7 @@ examples:
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
 	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
 	flag.StringVar(&cn, "cn", "", "when signing XPI, sets the CN to the add-on ID")
+	flag.IntVar(&sa, "sa", 0, "when signing MAR hashes, sets the Signature Algorithm")
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
 	flag.StringVar(&pk7digest, "pk7digest", "sha1", "an optional PK7 digest algorithm to use for XPI file signing. Defaults to 'sha1'")
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
@@ -161,6 +162,12 @@ examples:
 			ID:             cn,
 			COSEAlgorithms: algs,
 			PKCS7Digest:    pk7digest,
+		}
+	}
+	// if signing a MAR hash, the Signature Algorithm is set in the options
+	if sa > 0 {
+		request.Options = mar.Options{
+			SigAlg: uint32(sa),
 		}
 	}
 	requests = append(requests, request)
