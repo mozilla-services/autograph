@@ -29,7 +29,10 @@ func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err
 
 	mw := bytes.NewBuffer(manifest)
 	for _, f := range metafiles {
-		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
+		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: MD5 SHA1 SHA256\n", f.Name)
+		h0 := md5.New()
+		h0.Write(f.Body)
+		fmt.Fprintf(mw, "MD5-Digest: %s\n", base64.StdEncoding.EncodeToString(h0.Sum(nil)))
 		h1 := sha1.New()
 		h1.Write(f.Body)
 		fmt.Fprintf(mw, "SHA1-Digest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
