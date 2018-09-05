@@ -19,9 +19,9 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package crypto11 enables access to cryptographic keys from PKCS#11 using Go crypto API.
+// Access cryptographic keys from PKCS#11 using Go crypto API.
 //
-// Simple use
+// For simple use:
 //
 // 1. Either write a configuration file (see ConfigureFromFile) or
 // define a configuration in your application (see PKCS11Config and
@@ -40,7 +40,7 @@
 // or to *PKCS11PrivateKeyDSA, *PKCS11PrivateKeyECDSA or
 // *PKCS11PrivateKeyRSA.
 //
-// Sessions and concurrency
+// Sessions and concurrency:
 //
 // Note that PKCS#11 session handles must not be used concurrently
 // from multiple threads. Consumers of the Signer interface know
@@ -63,30 +63,15 @@
 // welcome.
 //
 // See also https://golang.org/pkg/crypto/
-//
-// Limitations
-//
-// The PKCS1v15DecryptOptions SessionKeyLen field is not implemented
-// and an error is returned if it is nonzero.
-// The reason for this is that it is not possible for crypto11 to guarantee the constant-time behavior in the specification.
-// See https://github.com/thalesignite/crypto11/issues/5 for further discussion.
 package crypto11
 
 import (
 	"crypto"
 	"encoding/json"
 	"errors"
-	"fmt"
+	pkcs11 "github.com/miekg/pkcs11"
 	"log"
 	"os"
-
-	pkcs11 "github.com/miekg/pkcs11"
-)
-
-const (
-	// DefaultMaxSessions controls the maximum number of concurrent sessions to
-	// open, unless otherwise specified in the PKCS11Config object.
-	DefaultMaxSessions = 1024
 )
 
 // ErrTokenNotFound represents the failure to find the requested PKCS#11 token
@@ -134,24 +119,24 @@ type PKCS11PrivateKey struct {
 
 /* Nasty globals */
 var libHandle *pkcs11.Ctx
+var session pkcs11.SessionHandle
 var defaultSlot uint
-var maxSessions int
 
 // Find a token given its serial number
-func findToken(slots []uint, serial string, label string) (uint, *pkcs11.TokenInfo, error) {
+func findToken(slots []uint, serial string, label string) (uint, uint, error) {
 	for _, slot := range slots {
 		tokenInfo, err := libHandle.GetTokenInfo(slot)
 		if err != nil {
-			return 0, nil, err
+			return 0, 0, err
 		}
 		if tokenInfo.SerialNumber == serial {
-			return slot, &tokenInfo, nil
+			return slot, tokenInfo.Flags, nil
 		}
 		if tokenInfo.Label == label {
-			return slot, &tokenInfo, nil
+			return slot, tokenInfo.Flags, nil
 		}
 	}
-	return 0, nil, ErrTokenNotFound
+	return 0, 0, ErrTokenNotFound
 }
 
 // PKCS11Config holds PKCS#11 configuration information.
@@ -172,9 +157,6 @@ type PKCS11Config struct {
 
 	// User PIN (password)
 	Pin string
-
-	// Maximum number of concurrent sessions to open
-	MaxSessions int
 }
 
 // Configure configures PKCS#11 from a PKCS11Config.
@@ -220,28 +202,16 @@ func Configure(config *PKCS11Config) (*pkcs11.Ctx, error) {
 		log.Printf("Failed to list PKCS#11 Slots: %s", err.Error())
 		return nil, err
 	}
-	slot, token, err := findToken(slots, config.TokenSerial, config.TokenLabel)
-	if err != nil {
+	if defaultSlot, flags, err = findToken(slots, config.TokenSerial, config.TokenLabel); err != nil {
 		log.Printf("Failed to find Token in any Slot: %s", err.Error())
 		return nil, err
 	}
-	defaultSlot = slot
-	flags = token.Flags
-
-	maxSessions = config.MaxSessions
-	if maxSessions == 0 {
-		maxSessions = DefaultMaxSessions
-	}
-	if token.MaxRwSessionCount > 0 && uint(maxSessions) > token.MaxRwSessionCount {
-		return nil, fmt.Errorf("crypto11: provided max sessions value (%d) exceeds max value the token supports (%d)", maxSessions, token.MaxRwSessionCount)
-	}
-
-	if err = setupSessions(libHandle, defaultSlot); err != nil {
+	if err = setupSessions(defaultSlot, 0); err != nil {
 		return nil, err
 	}
-	if err = withSession(defaultSlot, func(session *PKCS11Session) error {
+	if err = withSession(defaultSlot, func(session pkcs11.SessionHandle) error {
 		if flags&pkcs11.CKF_LOGIN_REQUIRED != 0 {
-			err = libHandle.Login(session.Handle, pkcs11.CKU_USER, config.Pin)
+			err = libHandle.Login(session, pkcs11.CKU_USER, config.Pin)
 			if err != nil {
 				log.Printf("Failed to login into PKCS#11 Token: %s", err.Error())
 			}
@@ -279,37 +249,6 @@ func ConfigureFromFile(configLocation string) (*pkcs11.Ctx, error) {
 		return nil, err
 	}
 	return Configure(config)
-}
-
-// Close releases all sessions and uninitializes library default handle.
-// Once library handle is released, library may be configured once again.
-func Close() error {
-	ctx := libHandle
-	if ctx != nil {
-		slots, err := ctx.GetSlotList(true)
-		if err != nil {
-			return err
-		}
-
-		for _, slot := range slots {
-			if err := pool.closeSessions(slot); err != nil && err != errPoolNotFound {
-				return err
-			}
-			// if something by passed cache
-			if err := ctx.CloseAllSessions(slot); err != nil {
-				return err
-			}
-		}
-
-		if err := ctx.Finalize(); err != nil {
-			return err
-		}
-
-		ctx.Destroy()
-		libHandle = nil
-	}
-
-	return nil
 }
 
 func init() {

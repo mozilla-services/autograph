@@ -5,16 +5,15 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"errors"
+	pkcs11 "github.com/miekg/pkcs11"
 	"math/big"
 	"unsafe"
-
-	pkcs11 "github.com/miekg/pkcs11"
 )
 
 // ErrMalformedDER represents a failure to decode an ASN.1-encoded message
 var ErrMalformedDER = errors.New("crypto11: malformed DER message")
 
-// ErrMalformedSignature represents a failure to decode a signature.  This
+// ErrMalformedDER represents a failure to decode a signature.  This
 // means the PKCS#11 library has returned an empty or odd-length byte
 // string.
 var ErrMalformedSignature = errors.New("crypto11xo: malformed signature")
@@ -78,11 +77,11 @@ func dsaGeneric(slot uint, key pkcs11.ObjectHandle, mechanism uint, digest []byt
 	var sigBytes []byte
 	var sig dsaSignature
 	mech := []*pkcs11.Mechanism{pkcs11.NewMechanism(mechanism, nil)}
-	err = withSession(slot, func(session *PKCS11Session) error {
-		if err = libHandle.SignInit(session.Handle, mech, key); err != nil {
+	err = withSession(slot, func(session pkcs11.SessionHandle) error {
+		if err = libHandle.SignInit(session, mech, key); err != nil {
 			return err
 		}
-		sigBytes, err = libHandle.Sign(session.Handle, digest)
+		sigBytes, err = libHandle.Sign(session, digest)
 		return err
 	})
 	if err != nil {
@@ -94,8 +93,8 @@ func dsaGeneric(slot uint, key pkcs11.ObjectHandle, mechanism uint, digest []byt
 
 // Pick a random label for a key
 func generateKeyLabel() ([]byte, error) {
-	const labelSize = 32
-	rawLabel := make([]byte, labelSize)
+	const label_size = 32
+	rawLabel := make([]byte, label_size)
 	var rand PKCS11RandReader
 	sz, err := rand.Read(rawLabel)
 	if err != nil {
@@ -104,7 +103,7 @@ func generateKeyLabel() ([]byte, error) {
 	if sz < len(rawLabel) {
 		return nil, ErrCannotGetRandomData
 	}
-	label := make([]byte, 2*labelSize)
+	label := make([]byte, 2*label_size)
 	base64.URLEncoding.Encode(label, rawLabel)
 	return label, nil
 }
