@@ -44,6 +44,7 @@ jobs:
                 sleep 1 # wait for a sec before checking again
               done
               ./autograph-monitor
+              ./autograph-monitor
 
   build:
     docker:
