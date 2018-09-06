@@ -12,6 +12,8 @@ vendor:
 	govend -u --prune
 	#go get -u github.com/golang/dep/...
 	#dep ensure -update
+	# https://github.com/ThalesIgnite/crypto11/issues/9
+	git checkout -f 2210ea80470825094edf8235b35f9565c7940555 vendor/github.com/ThalesIgnite/crypto11/
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
