@@ -21,6 +21,7 @@ import (
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/mar"
+	"go.mozilla.org/autograph/signer/pgp"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
@@ -68,10 +69,9 @@ func urlToRequestType(url string) requestType {
 		return requestTypeHash
 	} else if strings.HasSuffix(url, "/sign/file") {
 		return requestTypeFile
-	} else {
-		log.Fatalf("Unrecognized request type for url", url)
-		return requestTypeNone
 	}
+	log.Fatalf("Unrecognized request type for url %q", url)
+	return requestTypeNone
 }
 
 func main() {
@@ -180,7 +180,7 @@ examples:
 	}
 	cli := &http.Client{Transport: tr}
 
-	var roots *x509.CertPool = nil
+	var roots *x509.CertPool
 	if rootPath != "/path/to/root.pem" {
 		roots = x509.NewCertPool()
 		rootContent, err := ioutil.ReadFile(rootPath)
@@ -275,7 +275,7 @@ examples:
 					case requestTypeFile:
 						sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
 					default:
-						err = fmt.Errorf("Cannot decode signature data for request type %s", reqType)
+						err = fmt.Errorf("Cannot decode signature data for request type %v", reqType)
 					}
 					if err != nil {
 						log.Fatal(err)
@@ -292,6 +292,9 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
+				case pgp.Type:
+					sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
+					sigData = []byte(response.Signature)
 				default:
 					log.Fatal("unsupported signature type", response.Type)
 				}
@@ -446,5 +449,10 @@ func verifyAPK(signedAPK []byte) bool {
 }
 
 func verifyMAR(signedMAR []byte) bool {
+	return true
+}
+
+func verifyPGP(input []byte, signature string, pubkey string) bool {
+
 	return true
 }

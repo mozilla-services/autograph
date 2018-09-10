@@ -29,6 +29,7 @@ import (
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/mar"
+	"go.mozilla.org/autograph/signer/pgp"
 	"go.mozilla.org/autograph/signer/xpi"
 
 	"go.mozilla.org/sops"
@@ -265,6 +266,11 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			}
 		case mar.Type:
 			s, err = mar.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case pgp.Type:
+			s, err = pgp.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
