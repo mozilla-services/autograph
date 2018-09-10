@@ -17,6 +17,11 @@ signers:
       type: mar
       # label of the key in the hsm
       privatekey: testrsa2048
+    - id: testmar2
+      # 2 for SignatureAlgorithmID 2
+      type: mar
+      # label of the key in the hsm
+      privatekey: testrsa4096
     - id: testmarecdsa
       type: mar
       # label of the key in the hsm
@@ -27,6 +32,7 @@ authorizations:
       key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
       signers:
           - testmar
+          - testmar2
           - testmarecdsa
 monitoring:
     key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
