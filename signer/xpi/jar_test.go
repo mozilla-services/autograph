@@ -8,7 +8,7 @@ import (
 )
 
 func TestMakingJarManifest(t *testing.T) {
-	manifest, sigfile, err := makeJARManifests(unsignedBootstrap)
+	manifest, sigfile, err := makeJARManifestAndSignatureFile(unsignedBootstrap)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestRepack(t *testing.T) {
 			}
 			hasSignature = true
 		default:
-			t.Fatalf("found unknow file in zip archive: %s", f.Name)
+			t.Fatalf("found unknown file in zip archive: %s", f.Name)
 		}
 	}
 	if fileCount != 3 {
@@ -102,10 +102,48 @@ func TestIsSignatureFile(t *testing.T) {
 		{false, "META-INF/.mf.foo"},
 	}
 	for i, testcase := range testcases {
-		if isSignatureFile(testcase.filename) != testcase.expect {
+		if isJARSignatureFile(testcase.filename) != testcase.expect {
 			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
-				i, testcase.filename, isSignatureFile(testcase.filename), testcase.expect)
+				i, testcase.filename, isJARSignatureFile(testcase.filename), testcase.expect)
 		}
+	}
+}
+
+func TestMetafileIsNameValid(t *testing.T) {
+	var m = Metafile{
+		Name: "META-INF/foo",
+		Body: []byte("doesn't matter"),
+	}
+	if m.IsNameValid() != true {
+		t.Fatalf("TestMetafileIsNameValid: path META-INF/foo did not return expected result: true")
+	}
+	m.Name = "../../etc/shadow"
+	if m.IsNameValid() != false {
+		t.Fatalf("TestMetafileIsNameValid: path ../../etc/shadow did not return expected result: false")
+	}
+}
+
+func TestMakePKCS7ManifestValidatesMetafileName(t *testing.T) {
+	_, err := makePKCS7Manifest([]byte(""), []Metafile{
+		Metafile{
+			Name: "./",
+			Body: []byte("foo"),
+		},
+	})
+	if err == nil {
+		t.Fatalf("makePKCS7Manifest did not err for invalid metafile name")
+	}
+}
+
+func TestRepackJARWithMetafilesValidatesMetafileName(t *testing.T) {
+	_, err := repackJARWithMetafiles([]byte(""), []Metafile{
+		Metafile{
+			Name: "./",
+			Body: []byte("foo"),
+		},
+	})
+	if err == nil {
+		t.Fatalf("repackJARWithMetafiles did not err for invalid metafile name")
 	}
 }
 
@@ -190,25 +228,29 @@ var unsignedBootstrap = []byte("\x50\x4B\x03\x04\x14\x00\x02\x00\x08\x00\x62\x69
 var unsignedBootstrapManifest = []byte(`Manifest-Version: 1.0
 
 Name: bootstrap.js
-Digest-Algorithms: SHA1 SHA256
+Digest-Algorithms: MD5 SHA1 SHA256
+MD5-Digest: X4SEiQxO/fb3xSwAxbPIqw==
 SHA1-Digest: RBQlzx98wYTuqEZZQKdav2H9Gag=
 SHA256-Digest: m186SAMS1n5Q8hOWNE6+vGOXxfxH45sAzDlji1E3qaI=
 
 Name: install.rdf
-Digest-Algorithms: SHA1 SHA256
+Digest-Algorithms: MD5 SHA1 SHA256
+MD5-Digest: VbDrXLNnz3Lrnbk9Vy7/kQ==
 SHA1-Digest: WRohqAlB/BhgUjM2RDI+pTV6ihQ=
 SHA256-Digest: LHIIuDZ3MKJG7tRhByz81k3UThgCjakBe0JxGZhxF9w=
 
 Name: test.txt
-Digest-Algorithms: SHA1 SHA256
+Digest-Algorithms: MD5 SHA1 SHA256
+MD5-Digest: tT4aaxDCqRgFrpVHhe//Wg==
 SHA1-Digest: 8mPWZnQPS9arW9Tu/vmC+JHgnYA=
 SHA256-Digest: 8usFS0xIHQV5njGLlVZofDfPreYQP4+qWMMvYF5fvNw=
 
 `)
 
 var unsignedBootstrapSignatureFile = []byte(`Signature-Version: 1.0
-SHA1-Digest-Manifest: hWJRXCpbMGcu7pD6jEH4YibF5KQ=
-SHA256-Digest-Manifest: DEeZKUfwfIdRBxyA9IkCXkUaYaTn6mWnljQtELTy4cg=
+MD5-Digest-Manifest: JlV8uIxNHuMBFeAhiJ/WUw==
+SHA1-Digest-Manifest: 8uVi/q2jMt4M3wfhpT22pG+bNLA=
+SHA256-Digest-Manifest: 5uUrN1jNcf9D0rMUxMXBSi3bCSSJjumWEFQZI+C4siw=
 
 `)
 

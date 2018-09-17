@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -33,6 +34,7 @@ import (
 	"go.mozilla.org/sops"
 	"go.mozilla.org/sops/decrypt"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
 )
 
@@ -41,6 +43,11 @@ type configuration struct {
 	Server struct {
 		Listen         string
 		NonceCacheSize int
+	}
+	Statsd struct {
+		Addr      string
+		Namespace string
+		Buflen    int
 	}
 	HSM            crypto11.PKCS11Config
 	Signers        []signer.Configuration
@@ -51,6 +58,7 @@ type configuration struct {
 // An autographer is a running instance of an autograph service,
 // with all signers and permissions configured
 type autographer struct {
+	stats       *statsd.Client
 	signers     []signer.Signer
 	auths       map[string]authorization
 	signerIndex map[string]int
@@ -59,23 +67,44 @@ type autographer struct {
 }
 
 func main() {
+	run(parseArgsAndLoadConfig(os.Args[1:]))
+}
+
+func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, authPrint, debug bool) {
 	var (
-		ag        *autographer
-		conf      configuration
-		cfgFile   string
-		debug     bool
-		authPrint bool
-		err       error
+		cfgFile string
+		port    string
+		err     error
+		fset    = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
 	)
-	flag.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
-	flag.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
-	flag.BoolVar(&debug, "D", false, "Print debug logs")
-	flag.Parse()
+
+	fset.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
+	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
+	fset.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
+	fset.BoolVar(&debug, "D", false, "Print debug logs")
+	fset.Parse(args)
 
 	err = conf.loadFromFile(cfgFile)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	confListen := strings.Split(conf.Server.Listen, ":")
+	if len(confListen) > 1 && port != "" && port != confListen[1] {
+		listen = fmt.Sprintf("%s:%s", confListen[0], port)
+		log.Infof("Overriding listen addr from config %s with new port from the commandline: %s", conf.Server.Listen, listen)
+	} else {
+		listen = conf.Server.Listen
+	}
+
+	return
+}
+
+func run(conf configuration, listen string, authPrint, debug bool) {
+	var (
+		ag  *autographer
+		err error
+	)
 
 	// initialize signers from the configuration
 	// and store them into the autographer handler
@@ -93,6 +122,13 @@ func main() {
 			for i := range conf.Signers {
 				conf.Signers[i].HSMIsAvailable()
 			}
+		}
+	}
+
+	if conf.Statsd.Addr != "" {
+		err = ag.addStats(conf)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 
@@ -128,7 +164,7 @@ func main() {
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
 
 	server := &http.Server{
-		Addr: conf.Server.Listen,
+		Addr: listen,
 		Handler: handleMiddlewares(
 			router,
 			setRequestID(),
@@ -137,7 +173,7 @@ func main() {
 			logRequest(),
 		),
 	}
-	log.Println("starting autograph on", conf.Server.Listen)
+	log.Println("starting autograph on", listen)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
@@ -268,7 +304,7 @@ func (a *autographer) makeSignerIndex() {
 		for _, sid := range auth.Signers {
 			for pos, s := range a.signers {
 				if sid == s.Config().ID {
-					log.Printf("Mapping auth id %q and signer id %q to signer %d", auth.ID, s.Config().ID, pos)
+					log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.hawkMaxTimestampSkew)
 					tag := auth.ID + "+" + s.Config().ID
 					a.signerIndex[tag] = pos
 				}
@@ -285,7 +321,7 @@ func (a *autographer) makeSignerIndex() {
 		}
 		for pos, signer := range a.signers {
 			if auth.Signers[0] == signer.Config().ID {
-				log.Printf("Mapping auth id %q to default signer %d", auth.ID, pos)
+				log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.hawkMaxTimestampSkew)
 				tag := auth.ID + "+"
 				a.signerIndex[tag] = pos
 				break

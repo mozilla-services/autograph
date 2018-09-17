@@ -8,6 +8,8 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -21,6 +23,13 @@ func httpError(w http.ResponseWriter, r *http.Request, errorCode int, errorMessa
 	}).Errorf(errorMessage, args...)
 	msg := fmt.Sprintf(errorMessage, args...)
 	msg += "\r\nrequest-id: " + rid
+	// when nginx is in front of go, nginx requires that the entire
+	// request body is read before writing a response.
+	// https://github.com/golang/go/issues/15789
+	if r.Body != nil {
+		io.Copy(ioutil.Discard, r.Body)
+		r.Body.Close()
+	}
 	http.Error(w, msg, errorCode)
 	return
 }

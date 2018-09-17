@@ -50,6 +50,17 @@ const (
 	requestTypeFile
 )
 
+type coseAlgs []string
+
+func (i *coseAlgs) String() string {
+	return ""
+}
+
+func (i *coseAlgs) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 func urlToRequestType(url string) requestType {
 	if strings.HasSuffix(url, "/sign/data") {
 		return requestTypeData
@@ -65,11 +76,12 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, keyid, cn string
-		iter, maxworkers                                          int
-		debug                                                     bool
-		err                                                       error
-		requests                                                  []signaturerequest
+		userid, pass, data, hash, url, infile, outfile, keyid, cn, pk7digest, rootPath string
+		iter, maxworkers, sa                                                           int
+		debug                                                                          bool
+		err                                                                            error
+		requests                                                                       []signaturerequest
+		algs                                                                           coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -97,6 +109,12 @@ examples:
 
 * sign an XPI file:
         $ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -o signed.xpi
+
+* sign an XPI file with SHA256 PKCS7 digest:
+        $ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -pk7digest sha256 -o signed.xpi
+
+* sign an XPI file with one or more COSE signatures and verify against roots in roots.pem:
+	$ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -o signed.xpi -c ES384 -c PS256 -r roots.pem
 `)
 	}
 	flag.StringVar(&userid, "u", "alice", "User ID")
@@ -110,6 +128,11 @@ examples:
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
 	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
 	flag.StringVar(&cn, "cn", "", "when signing XPI, sets the CN to the add-on ID")
+	flag.IntVar(&sa, "sa", 0, "when signing MAR hashes, sets the Signature Algorithm")
+	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
+	flag.StringVar(&pk7digest, "pk7digest", "sha1", "an optional PK7 digest algorithm to use for XPI file signing. Defaults to 'sha1'")
+	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
+
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
 
@@ -133,9 +156,19 @@ examples:
 		Input: data,
 		KeyID: keyid,
 	}
-	// if signing an xpi, the CN is set in the options
+	// if signing an xpi, the CN, COSEAlgorithms, and PKCS7Digest are set in the options
 	if cn != "" {
-		request.Options = xpi.Options{ID: cn}
+		request.Options = xpi.Options{
+			ID:             cn,
+			COSEAlgorithms: algs,
+			PKCS7Digest:    pk7digest,
+		}
+	}
+	// if signing a MAR hash, the Signature Algorithm is set in the options
+	if sa > 0 {
+		request.Options = mar.Options{
+			SigAlg: uint32(sa),
+		}
 	}
 	requests = append(requests, request)
 	reqBody, err := json.Marshal(requests)
@@ -146,6 +179,19 @@ examples:
 		DisableKeepAlives: false,
 	}
 	cli := &http.Client{Transport: tr}
+
+	var roots *x509.CertPool = nil
+	if rootPath != "/path/to/root.pem" {
+		roots = x509.NewCertPool()
+		rootContent, err := ioutil.ReadFile(rootPath)
+		if err != nil {
+			log.Fatalf("failed to read roots from path %s: %s", rootPath, err)
+		}
+		ok := roots.AppendCertsFromPEM(rootContent)
+		if !ok {
+			log.Fatalf("failed to add root certs to pool")
+		}
+	}
 
 	workers := 0
 	for i := 0; i < iter; i++ {
@@ -222,7 +268,7 @@ examples:
 					sigStr += sig.Mode + "=" + response.Signature + "\n"
 					sigData = []byte(sigStr)
 				case xpi.Type:
-					sigStatus = verifyXPI(input, request, response, reqType)
+					sigStatus = verifyXPI(input, request, response, reqType, roots)
 					switch reqType {
 					case requestTypeData:
 						sigData, err = base64.StdEncoding.DecodeString(response.Signature)
@@ -235,11 +281,11 @@ examples:
 						log.Fatal(err)
 					}
 				case apk.Type:
-					sigStatus = verifyAPK(input)
 					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
 					if err != nil {
 						log.Fatal(err)
 					}
+					sigStatus = verifyAPK(sigData)
 				case mar.Type:
 					sigStatus = verifyMAR(input)
 					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
@@ -325,7 +371,7 @@ func verifyContentSignature(input []byte, resp signatureresponse, endpoint strin
 	return ecdsa.Verify(pubKey, input, sig.R, sig.S)
 }
 
-func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqType requestType) bool {
+func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqType requestType, roots *x509.CertPool) bool {
 	switch reqType {
 	case requestTypeData:
 		sig, err := xpi.Unmarshal(resp.Signature, input)
@@ -342,7 +388,7 @@ func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqTy
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = xpi.VerifySignedFile(signedFile, nil)
+		err = xpi.VerifySignedFile(signedFile, roots, req.Options.(xpi.Options))
 		if err != nil {
 			log.Fatal(err)
 		}

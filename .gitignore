@@ -24,6 +24,7 @@ _testmain.go
 *.prof
 
 *.out
+.DS_Store
 
 docs/*.html
 *.html
@@ -33,3 +34,4 @@ tools/autograph-lambda-python-healthcheck/*
 tools/sign-addon/venv/*
 
 tools/autograph-monitor/vendor/go.mozilla.org/autograph/*
+vendor/go.mozilla.org/cose/samples/*

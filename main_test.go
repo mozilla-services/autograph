@@ -43,6 +43,10 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = ag.addStats(conf)
+	if err != nil {
+		log.Fatal(err)
+	}
 	ag.makeSignerIndex()
 	log.Printf("autographer: %+v\n", ag)
 	// run the tests and exit
@@ -291,5 +295,13 @@ func TestStartMain(t *testing.T) {
 	}
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected response code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+}
+
+func TestPortOverride(t *testing.T) {
+	expected := "0.0.0.0:8080"
+	_, listen, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
+	if listen != expected {
+		t.Errorf("expected listen %s got %s", expected, listen)
 	}
 }

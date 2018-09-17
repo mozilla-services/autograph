@@ -39,6 +39,12 @@ func main() {
 	}
 	fmt.Printf("RSA Key: %+v\n", rsakey)
 
+	rsakey2, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], []byte("testrsa2048"), []byte("testrsa4096"), 4096)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("RSA 4096 Key: %+v\n", rsakey2)
+
 	ecdsakey, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], []byte("testecdsap384"), []byte("testecdsap384"), elliptic.P384())
 	if err != nil {
 		log.Fatal(err)
