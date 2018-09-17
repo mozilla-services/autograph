@@ -14,6 +14,8 @@ vendor:
 	#dep ensure -update
 	# https://github.com/ThalesIgnite/crypto11/issues/9
 	git checkout -f 2210ea80470825094edf8235b35f9565c7940555 vendor/github.com/ThalesIgnite/crypto11/
+	rm -rf vendor/go.mozilla.org/autograph/  # don't vendor ourselves
+	git add vendor/
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
