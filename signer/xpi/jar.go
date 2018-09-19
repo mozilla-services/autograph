@@ -3,7 +3,6 @@ package xpi
 import (
 	"archive/zip"
 	"bytes"
-	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
@@ -29,10 +28,7 @@ func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err
 
 	mw := bytes.NewBuffer(manifest)
 	for _, f := range metafiles {
-		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: MD5 SHA1 SHA256\n", f.Name)
-		h0 := md5.New()
-		h0.Write(f.Body)
-		fmt.Fprintf(mw, "MD5-Digest: %s\n", base64.StdEncoding.EncodeToString(h0.Sum(nil)))
+		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
 		h1 := sha1.New()
 		h1.Write(f.Body)
 		fmt.Fprintf(mw, "SHA1-Digest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
@@ -69,7 +65,7 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 		return
 	}
 
-	// generate the manifest file by calculating an MD5, sha1, and sha256 hash for each zip entry
+	// generate the manifest file by calculating a sha1 and sha256 hashes for each zip entry
 	mw := bytes.NewBuffer(manifest)
 	manifest = []byte(fmt.Sprintf("Manifest-Version: 1.0\n\n"))
 
@@ -90,10 +86,7 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 		if err != nil {
 			return manifest, err
 		}
-		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: MD5 SHA1 SHA256\n", f.Name)
-		h0 := md5.New()
-		h0.Write(data)
-		fmt.Fprintf(mw, "MD5-Digest: %s\n", base64.StdEncoding.EncodeToString(h0.Sum(nil)))
+		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
 		h1 := sha1.New()
 		h1.Write(data)
 		fmt.Fprintf(mw, "SHA1-Digest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
@@ -111,9 +104,6 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 func makeJARSignatureFile(manifest []byte) (sigfile []byte, err error) {
 	sw := bytes.NewBuffer(sigfile)
 	fmt.Fprint(sw, "Signature-Version: 1.0\n")
-	h0 := md5.New()
-	h0.Write(manifest)
-	fmt.Fprintf(sw, "MD5-Digest-Manifest: %s\n", base64.StdEncoding.EncodeToString(h0.Sum(nil)))
 	h1 := sha1.New()
 	h1.Write(manifest)
 	fmt.Fprintf(sw, "SHA1-Digest-Manifest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
