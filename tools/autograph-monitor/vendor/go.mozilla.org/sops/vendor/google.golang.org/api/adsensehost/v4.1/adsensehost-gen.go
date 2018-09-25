@@ -216,8 +216,8 @@ type Account struct {
 }
 
 func (s *Account) MarshalJSON() ([]byte, error) {
-	type noMethod Account
-	raw := noMethod(*s)
+	type NoMethod Account
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -253,8 +253,8 @@ type Accounts struct {
 }
 
 func (s *Accounts) MarshalJSON() ([]byte, error) {
-	type noMethod Accounts
-	raw := noMethod(*s)
+	type NoMethod Accounts
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -297,8 +297,8 @@ type AdClient struct {
 }
 
 func (s *AdClient) MarshalJSON() ([]byte, error) {
-	type noMethod AdClient
-	raw := noMethod(*s)
+	type NoMethod AdClient
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -339,8 +339,8 @@ type AdClients struct {
 }
 
 func (s *AdClients) MarshalJSON() ([]byte, error) {
-	type noMethod AdClients
-	raw := noMethod(*s)
+	type NoMethod AdClients
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -373,8 +373,8 @@ type AdCode struct {
 }
 
 func (s *AdCode) MarshalJSON() ([]byte, error) {
-	type noMethod AdCode
-	raw := noMethod(*s)
+	type NoMethod AdCode
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -412,8 +412,8 @@ type AdStyle struct {
 }
 
 func (s *AdStyle) MarshalJSON() ([]byte, error) {
-	type noMethod AdStyle
-	raw := noMethod(*s)
+	type NoMethod AdStyle
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -454,8 +454,8 @@ type AdStyleColors struct {
 }
 
 func (s *AdStyleColors) MarshalJSON() ([]byte, error) {
-	type noMethod AdStyleColors
-	raw := noMethod(*s)
+	type NoMethod AdStyleColors
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -488,8 +488,8 @@ type AdStyleFont struct {
 }
 
 func (s *AdStyleFont) MarshalJSON() ([]byte, error) {
-	type noMethod AdStyleFont
-	raw := noMethod(*s)
+	type NoMethod AdStyleFont
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -553,8 +553,8 @@ type AdUnit struct {
 }
 
 func (s *AdUnit) MarshalJSON() ([]byte, error) {
-	type noMethod AdUnit
-	raw := noMethod(*s)
+	type NoMethod AdUnit
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -591,8 +591,8 @@ type AdUnitContentAdsSettings struct {
 }
 
 func (s *AdUnitContentAdsSettings) MarshalJSON() ([]byte, error) {
-	type noMethod AdUnitContentAdsSettings
-	raw := noMethod(*s)
+	type NoMethod AdUnitContentAdsSettings
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -629,8 +629,8 @@ type AdUnitContentAdsSettingsBackupOption struct {
 }
 
 func (s *AdUnitContentAdsSettingsBackupOption) MarshalJSON() ([]byte, error) {
-	type noMethod AdUnitContentAdsSettingsBackupOption
-	raw := noMethod(*s)
+	type NoMethod AdUnitContentAdsSettingsBackupOption
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -668,8 +668,8 @@ type AdUnitMobileContentAdsSettings struct {
 }
 
 func (s *AdUnitMobileContentAdsSettings) MarshalJSON() ([]byte, error) {
-	type noMethod AdUnitMobileContentAdsSettings
-	raw := noMethod(*s)
+	type NoMethod AdUnitMobileContentAdsSettings
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -710,8 +710,8 @@ type AdUnits struct {
 }
 
 func (s *AdUnits) MarshalJSON() ([]byte, error) {
-	type noMethod AdUnits
-	raw := noMethod(*s)
+	type NoMethod AdUnits
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -772,8 +772,8 @@ type AssociationSession struct {
 }
 
 func (s *AssociationSession) MarshalJSON() ([]byte, error) {
-	type noMethod AssociationSession
-	raw := noMethod(*s)
+	type NoMethod AssociationSession
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -816,8 +816,8 @@ type CustomChannel struct {
 }
 
 func (s *CustomChannel) MarshalJSON() ([]byte, error) {
-	type noMethod CustomChannel
-	raw := noMethod(*s)
+	type NoMethod CustomChannel
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -858,8 +858,8 @@ type CustomChannels struct {
 }
 
 func (s *CustomChannels) MarshalJSON() ([]byte, error) {
-	type noMethod CustomChannels
-	raw := noMethod(*s)
+	type NoMethod CustomChannels
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -918,8 +918,8 @@ type Report struct {
 }
 
 func (s *Report) MarshalJSON() ([]byte, error) {
-	type noMethod Report
-	raw := noMethod(*s)
+	type NoMethod Report
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -953,8 +953,8 @@ type ReportHeaders struct {
 }
 
 func (s *ReportHeaders) MarshalJSON() ([]byte, error) {
-	type noMethod ReportHeaders
-	raw := noMethod(*s)
+	type NoMethod ReportHeaders
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -993,8 +993,8 @@ type UrlChannel struct {
 }
 
 func (s *UrlChannel) MarshalJSON() ([]byte, error) {
-	type noMethod UrlChannel
-	raw := noMethod(*s)
+	type NoMethod UrlChannel
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1035,8 +1035,8 @@ type UrlChannels struct {
 }
 
 func (s *UrlChannels) MarshalJSON() ([]byte, error) {
-	type noMethod UrlChannels
-	raw := noMethod(*s)
+	type NoMethod UrlChannels
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1104,6 +1104,7 @@ func (c *AccountsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1147,7 +1148,7 @@ func (c *AccountsGetCall) Do(opts ...googleapi.CallOption) (*Account, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1241,6 +1242,7 @@ func (c *AccountsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1281,7 +1283,7 @@ func (c *AccountsListCall) Do(opts ...googleapi.CallOption) (*Accounts, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1379,6 +1381,7 @@ func (c *AccountsAdclientsGetCall) doRequest(alt string) (*http.Response, error)
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/adclients/{adClientId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1423,7 +1426,7 @@ func (c *AccountsAdclientsGetCall) Do(opts ...googleapi.CallOption) (*AdClient, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1540,6 +1543,7 @@ func (c *AccountsAdclientsListCall) doRequest(alt string) (*http.Response, error
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/adclients")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1583,7 +1587,7 @@ func (c *AccountsAdclientsListCall) Do(opts ...googleapi.CallOption) (*AdClients
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1702,6 +1706,7 @@ func (c *AccountsAdunitsDeleteCall) doRequest(alt string) (*http.Response, error
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/adclients/{adClientId}/adunits/{adUnitId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -1747,7 +1752,7 @@ func (c *AccountsAdunitsDeleteCall) Do(opts ...googleapi.CallOption) (*AdUnit, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1859,6 +1864,7 @@ func (c *AccountsAdunitsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/adclients/{adClientId}/adunits/{adUnitId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1904,7 +1910,7 @@ func (c *AccountsAdunitsGetCall) Do(opts ...googleapi.CallOption) (*AdUnit, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2024,6 +2030,7 @@ func (c *AccountsAdunitsGetAdCodeCall) doRequest(alt string) (*http.Response, er
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/adclients/{adClientId}/adunits/{adUnitId}/adcode")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2069,7 +2076,7 @@ func (c *AccountsAdunitsGetAdCodeCall) Do(opts ...googleapi.CallOption) (*AdCode
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2179,6 +2186,7 @@ func (c *AccountsAdunitsInsertCall) doRequest(alt string) (*http.Response, error
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/adclients/{adClientId}/adunits")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2223,7 +2231,7 @@ func (c *AccountsAdunitsInsertCall) Do(opts ...googleapi.CallOption) (*AdUnit, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2352,6 +2360,7 @@ func (c *AccountsAdunitsListCall) doRequest(alt string) (*http.Response, error) 
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/adclients/{adClientId}/adunits")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2396,7 +2405,7 @@ func (c *AccountsAdunitsListCall) Do(opts ...googleapi.CallOption) (*AdUnits, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2533,6 +2542,7 @@ func (c *AccountsAdunitsPatchCall) doRequest(alt string) (*http.Response, error)
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/adclients/{adClientId}/adunits")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -2577,7 +2587,7 @@ func (c *AccountsAdunitsPatchCall) Do(opts ...googleapi.CallOption) (*AdUnit, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2684,6 +2694,7 @@ func (c *AccountsAdunitsUpdateCall) doRequest(alt string) (*http.Response, error
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/adclients/{adClientId}/adunits")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -2728,7 +2739,7 @@ func (c *AccountsAdunitsUpdateCall) Do(opts ...googleapi.CallOption) (*AdUnit, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2888,6 +2899,7 @@ func (c *AccountsReportsGenerateCall) doRequest(alt string) (*http.Response, err
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/reports")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2931,7 +2943,7 @@ func (c *AccountsReportsGenerateCall) Do(opts ...googleapi.CallOption) (*Report,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3092,6 +3104,7 @@ func (c *AdclientsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3135,7 +3148,7 @@ func (c *AdclientsGetCall) Do(opts ...googleapi.CallOption) (*AdClient, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3243,6 +3256,7 @@ func (c *AdclientsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3283,7 +3297,7 @@ func (c *AdclientsListCall) Do(opts ...googleapi.CallOption) (*AdClients, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3417,6 +3431,7 @@ func (c *AssociationsessionsStartCall) doRequest(alt string) (*http.Response, er
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "associationsessions/start")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3457,7 +3472,7 @@ func (c *AssociationsessionsStartCall) Do(opts ...googleapi.CallOption) (*Associ
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3583,6 +3598,7 @@ func (c *AssociationsessionsVerifyCall) doRequest(alt string) (*http.Response, e
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "associationsessions/verify")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3623,7 +3639,7 @@ func (c *AssociationsessionsVerifyCall) Do(opts ...googleapi.CallOption) (*Assoc
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3706,6 +3722,7 @@ func (c *CustomchannelsDeleteCall) doRequest(alt string) (*http.Response, error)
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}/customchannels/{customChannelId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -3750,7 +3767,7 @@ func (c *CustomchannelsDeleteCall) Do(opts ...googleapi.CallOption) (*CustomChan
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3853,6 +3870,7 @@ func (c *CustomchannelsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}/customchannels/{customChannelId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3897,7 +3915,7 @@ func (c *CustomchannelsGetCall) Do(opts ...googleapi.CallOption) (*CustomChannel
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3991,6 +4009,7 @@ func (c *CustomchannelsInsertCall) doRequest(alt string) (*http.Response, error)
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}/customchannels")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4034,7 +4053,7 @@ func (c *CustomchannelsInsertCall) Do(opts ...googleapi.CallOption) (*CustomChan
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4148,6 +4167,7 @@ func (c *CustomchannelsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}/customchannels")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4191,7 +4211,7 @@ func (c *CustomchannelsListCall) Do(opts ...googleapi.CallOption) (*CustomChanne
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4314,6 +4334,7 @@ func (c *CustomchannelsPatchCall) doRequest(alt string) (*http.Response, error) 
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}/customchannels")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -4357,7 +4378,7 @@ func (c *CustomchannelsPatchCall) Do(opts ...googleapi.CallOption) (*CustomChann
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4454,6 +4475,7 @@ func (c *CustomchannelsUpdateCall) doRequest(alt string) (*http.Response, error)
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}/customchannels")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -4497,7 +4519,7 @@ func (c *CustomchannelsUpdateCall) Do(opts ...googleapi.CallOption) (*CustomChan
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4648,6 +4670,7 @@ func (c *ReportsGenerateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "reports")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4688,7 +4711,7 @@ func (c *ReportsGenerateCall) Do(opts ...googleapi.CallOption) (*Report, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4829,6 +4852,7 @@ func (c *UrlchannelsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}/urlchannels/{urlChannelId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -4873,7 +4897,7 @@ func (c *UrlchannelsDeleteCall) Do(opts ...googleapi.CallOption) (*UrlChannel, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4967,6 +4991,7 @@ func (c *UrlchannelsInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}/urlchannels")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -5010,7 +5035,7 @@ func (c *UrlchannelsInsertCall) Do(opts ...googleapi.CallOption) (*UrlChannel, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5123,6 +5148,7 @@ func (c *UrlchannelsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "adclients/{adClientId}/urlchannels")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -5166,7 +5192,7 @@ func (c *UrlchannelsListCall) Do(opts ...googleapi.CallOption) (*UrlChannels, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

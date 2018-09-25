@@ -1,0 +1,227 @@
+# This file contains default values for vitess.
+#
+# You can override these defaults when installing:
+#   helm install -f site-values.yaml .
+#
+# The contents of site-values.yaml will be merged into this default config.
+# It's not necessary to copy the defaults into site-values.yaml.
+#
+# For command-line flag maps like backupFlags or extraFlags,
+# use 'flag_name: true|false' to enable or disable a boolean flag.
+
+# The main topology map declares what resources should be created.
+# Values for each component (etcd, vtctld, ...) that are not specified here
+# will be taken from defaults defined below.
+# topology:
+
+# config will be stored as a ConfigMap and mounted where appropriate
+config:
+  # Backup flags will be applied to components that need them.
+  # These are defined globally since all components should agree.
+  backup:
+  
+    enabled: false
+
+    # choose a backup service - valid values are gcs/s3
+    # TODO: add file and ceph support
+    # backup_storage_implementation: gcs
+
+    #########
+    # gcs settings
+    #########
+
+    # Google Cloud Storage bucket to use for backups
+    # gcs_backup_storage_bucket: vitess-backups
+
+    # root prefix for all backup-related object names
+    # gcs_backup_storage_root: vtbackups
+
+    # secret that contains Google service account json with read/write access to the bucket
+    # kubectl create secret generic vitess-backups-creds --from-file=gcp-creds.json
+    # can be omitted if running on a GCE/GKE node with default permissions
+    # gcsSecret: vitess-gcs-creds
+
+    #########
+    # s3 settings
+    #########
+
+    # AWS region to use
+    # s3_backup_aws_region: "us-east-1"
+
+    # S3 bucket to use for backups
+    # s3_backup_storage_bucket: "vitess-backups"
+    
+    # root prefix for all backup-related object names
+    # s3_backup_storage_root: "vtbackups"
+    
+    # server-side encryption algorithm (e.g., AES256, aws:kms)
+    # s3_backup_server_side_encryption: "AES256"
+
+    # secret that contains AWS S3 credentials file with read/write access to the bucket
+    # kubectl create secret generic s3-credentials --from-file=s3-creds
+    # can be omitted if running on a node with default permissions
+    # s3Secret: vitess-s3-creds
+
+topology:
+  globalCell:
+    etcd:
+      replicas: 3
+  cells:
+    - name: "zone1"
+
+      # set failure-domain.beta.kubernetes.io/region
+      # region: eastus
+
+      # enable or disable mysql protocol support, with accompanying auth details
+      mysqlProtocol:
+        enabled: false
+        # username: myuser
+        # this is the secret that will be mounted as the user password
+        # kubectl create secret generic myuser_password --from-literal=password=abc123
+        # passwordSecret: myuser-password
+
+      etcd:
+        replicas: 3
+      vtctld:
+        replicas: 1
+      vtgate:
+        replicas: 3
+        # if maxReplicas is higher than replicas, an HPA will be created
+        maxReplicas: 6
+
+# Default values for etcd resources defined in 'topology'
+etcd:
+  version: "3.2.13"
+  replicas: 3
+  resources:
+    limits:
+      cpu: 300m
+      memory: 200Mi
+    requests:
+      cpu: 200m
+      memory: 100Mi
+
+# Default values for vtctld resources defined in 'topology'
+vtctld:
+  serviceType: "ClusterIP"
+  vitessTag: "latest"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# Default values for vtgate resources defined in 'topology'
+vtgate:
+  serviceType: "ClusterIP"
+  vitessTag: "latest"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Default values for vttablet resources defined in 'topology'
+vttablet:
+  vitessTag: "latest"
+
+  # valid values are mysql, maria, or percona
+  # the flavor determines the base my.cnf file for vitess to function
+  flavor: "percona"
+
+  mysqlImage: "percona:5.7.20"
+  # mysqlImage: "mysql:5.7.20"
+  # mysqlImage: "mariadb:10.3.4"
+
+  enableHeartbeat: false
+
+  # This requires at least 2 instances of "replica" tablet types, otherwise semi-sync
+  # will block forever. "rdonly" tablets do not ACK.
+  enableSemisync: false
+
+  resources:
+    # common production values 2-4CPU/4-8Gi RAM
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  mysqlResources:
+    # common production values 4CPU/8-16Gi RAM
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  # PVC for mysql
+  dataVolumeClaimAnnotations:
+  dataVolumeClaimSpec:
+    # pd-ssd (Google Cloud)
+    # managed-premium (Azure)
+    # standard (AWS) - not sure what the default class is for ssd
+    # Note: Leave storageClassName unset to use cluster-specific default class.
+    #storageClassName: "pd-ssd"
+    accessModes: ["ReadWriteOnce"]
+    resources:
+      requests:
+        storage: "10Gi"
+
+# Default values for pmm
+pmm:
+  enabled: false
+  pmmTag: "1.10.0"
+  client:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  server:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    # PVC for pmm
+    dataVolumeClaimAnnotations:
+    dataVolumeClaimSpec:
+      # storageClassName: "pd-ssd"
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: "10Gi"
+    env:
+      # DISABLE_TELEMETRY
+      # With telemetry enabled, your PMM Server sends some statistics to v.percona.com every 24 hours
+      disableTelemetry: true
+
+      # METRICS_RESOLUTION (Option)
+      # This option sets the minimum resolution for checking metrics. You should set it if the latency is higher than 1 second
+      metricsResolution: 1s
+
+      # METRICS_RETENTION (Option)
+      # This option determines how long metrics are stored at PMM Server. 
+      # The value is passed as a combination of hours, minutes, and seconds, such as 720h0m0s. 
+      # The minutes (a number followed by m) and seconds (a number followed by s) are optional.
+      metricsRetention: 720h
+
+      # QUERIES_RETENTION
+      # This option determines how many days queries are stored at PMM Server
+      queriesRetention: 8
+
+      # METRICS_MEMORY (Option) -- TODO: automatically calculate based on resource limits
+      # NOTE: The value must be passed in kilobytes
+      # NOTE: Make sure to quote this value so it isn't converted into scientific notation
+
+      # By default, Prometheus in PMM Server uses up to 768 MB of memory for storing the most recently used data chunks. 
+      # Depending on the amount of data coming into Prometheus, you may require a higher limit to avoid throttling data ingestion,
+      # or allow less memory consumption if it is needed for other processes.
+      # The limit affects only memory reserved for data chunks. Actual RAM usage by Prometheus is higher. 
+      # It is recommended to set this limit to roughly 2/3 of the total memory that you are planning to allow for Prometheus.
+      metricsMemory: "600000"
+
+# Orchestrator requires at least version >= 3.0.9 and Kubernetes 1.9 to work
+# Default values for orchestrator resources
+orchestrator:
+  enabled: false
+  image: "vitess/orchestrator:3.0.11"
+  replicas: 3
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "64Mi"

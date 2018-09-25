@@ -9,6 +9,8 @@ import (
 func TestEncrypt(t *testing.T) {
 	modes := []int{
 		EncryptionAlgorithmDESCBC,
+		EncryptionAlgorithmAES128CBC,
+		EncryptionAlgorithmAES256CBC,
 		EncryptionAlgorithmAES128GCM,
 		EncryptionAlgorithmAES256GCM,
 	}

@@ -93,7 +93,9 @@ type issuerAndSerial struct {
 	SerialNumber *big.Int
 }
 
-// SetDigestAlgorithm sets the digest algorithm to be used in the signing process
+// SetDigestAlgorithm sets the digest algorithm to be used in the signing process.
+//
+// This should be called before adding signers
 func (sd *SignedData) SetDigestAlgorithm(d asn1.ObjectIdentifier) {
 	sd.digestOid = d
 }
@@ -224,6 +226,20 @@ func (sd *SignedData) Finish() ([]byte, error) {
 		Content:     asn1.RawValue{Class: 2, Tag: 0, Bytes: inner, IsCompound: true},
 	}
 	return asn1.Marshal(outer)
+}
+
+// RemoveAuthenticatedAttributes removes authenticated attributes from signedData
+// similar to OpenSSL's PKCS7_NOATTR or -noattr flags
+func (sd *SignedData) RemoveAuthenticatedAttributes() error {
+	for i := range sd.sd.SignerInfos {
+		blankAttrs := &attributes{}
+		finalBlankAttrs, err := blankAttrs.ForMarshalling()
+		if err != nil {
+			return err
+		}
+		sd.sd.SignerInfos[i].AuthenticatedAttributes = finalBlankAttrs
+	}
+	return nil
 }
 
 // verifyPartialChain checks that a given cert is issued by the first parent in the list,

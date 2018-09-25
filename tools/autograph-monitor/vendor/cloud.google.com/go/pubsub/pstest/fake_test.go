@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import (
 	"golang.org/x/net/context"
 	pb "google.golang.org/genproto/googleapis/pubsub/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestTopics(t *testing.T) {
@@ -127,6 +129,52 @@ func TestSubscriptions(t *testing.T) {
 	}
 }
 
+func TestSubscriptionErrors(t *testing.T) {
+	_, sclient, _ := newFake(t)
+	ctx := context.Background()
+
+	// TODO(jba): Go1.9: use t.Helper()
+	checkCode := func(msg string, err error, want codes.Code) {
+		if status.Code(err) != want {
+			t.Errorf("%s: got %v, want code %s", msg, err, want)
+		}
+	}
+
+	_, err := sclient.GetSubscription(ctx, &pb.GetSubscriptionRequest{})
+	checkCode("GetSubscription", err, codes.InvalidArgument)
+	_, err = sclient.GetSubscription(ctx, &pb.GetSubscriptionRequest{Subscription: "s"})
+	checkCode("GetSubscription", err, codes.NotFound)
+	_, err = sclient.UpdateSubscription(ctx, &pb.UpdateSubscriptionRequest{})
+	checkCode("UpdateSubscription", err, codes.InvalidArgument)
+	_, err = sclient.UpdateSubscription(ctx, &pb.UpdateSubscriptionRequest{Subscription: &pb.Subscription{}})
+	checkCode("UpdateSubscription", err, codes.InvalidArgument)
+	_, err = sclient.UpdateSubscription(ctx, &pb.UpdateSubscriptionRequest{Subscription: &pb.Subscription{Name: "s"}})
+	checkCode("UpdateSubscription", err, codes.NotFound)
+	_, err = sclient.DeleteSubscription(ctx, &pb.DeleteSubscriptionRequest{})
+	checkCode("DeleteSubscription", err, codes.InvalidArgument)
+	_, err = sclient.DeleteSubscription(ctx, &pb.DeleteSubscriptionRequest{Subscription: "s"})
+	checkCode("DeleteSubscription", err, codes.NotFound)
+	_, err = sclient.Acknowledge(ctx, &pb.AcknowledgeRequest{})
+	checkCode("Acknowledge", err, codes.InvalidArgument)
+	_, err = sclient.Acknowledge(ctx, &pb.AcknowledgeRequest{Subscription: "s"})
+	checkCode("Acknowledge", err, codes.NotFound)
+	_, err = sclient.ModifyAckDeadline(ctx, &pb.ModifyAckDeadlineRequest{})
+	checkCode("ModifyAckDeadline", err, codes.InvalidArgument)
+	_, err = sclient.ModifyAckDeadline(ctx, &pb.ModifyAckDeadlineRequest{Subscription: "s"})
+	checkCode("ModifyAckDeadline", err, codes.NotFound)
+	_, err = sclient.Pull(ctx, &pb.PullRequest{})
+	checkCode("Pull", err, codes.InvalidArgument)
+	_, err = sclient.Pull(ctx, &pb.PullRequest{Subscription: "s"})
+	checkCode("Pull", err, codes.NotFound)
+	_, err = sclient.Seek(ctx, &pb.SeekRequest{})
+	checkCode("Seek", err, codes.InvalidArgument)
+	srt := &pb.SeekRequest_Time{Time: ptypes.TimestampNow()}
+	_, err = sclient.Seek(ctx, &pb.SeekRequest{Target: srt})
+	checkCode("Seek", err, codes.InvalidArgument)
+	_, err = sclient.Seek(ctx, &pb.SeekRequest{Target: srt, Subscription: "s"})
+	checkCode("Seek", err, codes.NotFound)
+}
+
 func TestPublish(t *testing.T) {
 	s := NewServer()
 	var ids []string
@@ -150,7 +198,7 @@ func TestPublish(t *testing.T) {
 	}
 }
 
-// Note: this sets the fake's "now" time, so it is senstive to concurrent changes to "now".
+// Note: this sets the fake's "now" time, so it is sensitive to concurrent changes to "now".
 func publish(t *testing.T, pclient pb.PublisherClient, topic *pb.Topic, messages []*pb.PubsubMessage) map[string]*pb.PubsubMessage {
 	pubTime := time.Now()
 	now.Store(func() time.Time { return pubTime })
@@ -179,6 +227,34 @@ func publish(t *testing.T, pclient pb.PublisherClient, topic *pb.Topic, messages
 	return want
 }
 
+func TestPull(t *testing.T) {
+	pclient, sclient, _ := newFake(t)
+	top := mustCreateTopic(t, pclient, &pb.Topic{Name: "projects/P/topics/T"})
+	sub := mustCreateSubscription(t, sclient, &pb.Subscription{
+		Name:               "projects/P/subscriptions/S",
+		Topic:              top.Name,
+		AckDeadlineSeconds: 10,
+	})
+
+	want := publish(t, pclient, top, []*pb.PubsubMessage{
+		{Data: []byte("d1")},
+		{Data: []byte("d2")},
+		{Data: []byte("d3")},
+	})
+	got := pubsubMessages(pullN(t, len(want), sclient, sub))
+	if diff := testutil.Diff(got, want); diff != "" {
+		t.Error(diff)
+	}
+
+	res, err := sclient.Pull(context.Background(), &pb.PullRequest{Subscription: sub.Name})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.ReceivedMessages) != 0 {
+		t.Errorf("got %d messages, want zero", len(res.ReceivedMessages))
+	}
+}
+
 func TestStreamingPull(t *testing.T) {
 	// A simple test of streaming pull.
 	pclient, sclient, _ := newFake(t)
@@ -194,13 +270,13 @@ func TestStreamingPull(t *testing.T) {
 		{Data: []byte("d2")},
 		{Data: []byte("d3")},
 	})
-	got := pullN(t, len(want), sclient, sub)
+	got := pubsubMessages(streamingPullN(t, len(want), sclient, sub))
 	if diff := testutil.Diff(got, want); diff != "" {
 		t.Error(diff)
 	}
 }
 
-func TestAck(t *testing.T) {
+func TestStreamingPullAck(t *testing.T) {
 	// Ack each message as it arrives. Make sure we don't see dups.
 	minAckDeadlineSecs = 1
 	pclient, sclient, _ := newFake(t)
@@ -218,7 +294,7 @@ func TestAck(t *testing.T) {
 	})
 
 	got := map[string]bool{}
-	spc := mustStartPull(t, sclient, sub)
+	spc := mustStartStreamingPull(t, sclient, sub)
 	time.AfterFunc(time.Duration(3*minAckDeadlineSecs)*time.Second, func() {
 		if err := spc.CloseSend(); err != nil {
 			t.Errorf("CloseSend: %v", err)
@@ -247,6 +323,77 @@ func TestAck(t *testing.T) {
 	}
 }
 
+func TestAcknowledge(t *testing.T) {
+	ctx := context.Background()
+	pclient, sclient, srv := newFake(t)
+	top := mustCreateTopic(t, pclient, &pb.Topic{Name: "projects/P/topics/T"})
+	sub := mustCreateSubscription(t, sclient, &pb.Subscription{
+		Name:               "projects/P/subscriptions/S",
+		Topic:              top.Name,
+		AckDeadlineSeconds: 10,
+	})
+
+	publish(t, pclient, top, []*pb.PubsubMessage{
+		{Data: []byte("d1")},
+		{Data: []byte("d2")},
+		{Data: []byte("d3")},
+	})
+	msgs := streamingPullN(t, 3, sclient, sub)
+	var ackIDs []string
+	for _, m := range msgs {
+		ackIDs = append(ackIDs, m.AckId)
+	}
+	if _, err := sclient.Acknowledge(ctx, &pb.AcknowledgeRequest{
+		Subscription: sub.Name,
+		AckIds:       ackIDs,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	smsgs := srv.Messages()
+	if got, want := len(smsgs), 3; got != want {
+		t.Fatalf("got %d messages, want %d", got, want)
+	}
+	for _, sm := range smsgs {
+		if sm.Acks != 1 {
+			t.Errorf("message %s: got %d acks, want 1", sm.ID, sm.Acks)
+		}
+	}
+}
+
+func TestModAck(t *testing.T) {
+	ctx := context.Background()
+	pclient, sclient, _ := newFake(t)
+	top := mustCreateTopic(t, pclient, &pb.Topic{Name: "projects/P/topics/T"})
+	sub := mustCreateSubscription(t, sclient, &pb.Subscription{
+		Name:               "projects/P/subscriptions/S",
+		Topic:              top.Name,
+		AckDeadlineSeconds: 10,
+	})
+
+	publish(t, pclient, top, []*pb.PubsubMessage{
+		{Data: []byte("d1")},
+		{Data: []byte("d2")},
+		{Data: []byte("d3")},
+	})
+	msgs := streamingPullN(t, 3, sclient, sub)
+	var ackIDs []string
+	for _, m := range msgs {
+		ackIDs = append(ackIDs, m.AckId)
+	}
+	if _, err := sclient.ModifyAckDeadline(ctx, &pb.ModifyAckDeadlineRequest{
+		Subscription:       sub.Name,
+		AckIds:             ackIDs,
+		AckDeadlineSeconds: 0,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	// Having nacked all three messages, we should see them again.
+	msgs = streamingPullN(t, 3, sclient, sub)
+	if got, want := len(msgs), 3; got != want {
+		t.Errorf("got %d messages, want %d", got, want)
+	}
+}
+
 func TestAckDeadline(t *testing.T) {
 	// Messages should be resent after they expire.
 	pclient, sclient, _ := newFake(t)
@@ -265,7 +412,7 @@ func TestAckDeadline(t *testing.T) {
 	})
 
 	got := map[string]int{}
-	spc := mustStartPull(t, sclient, sub)
+	spc := mustStartStreamingPull(t, sclient, sub)
 	// In 5 seconds the ack deadline will expire twice, so we should see each message
 	// exactly three times.
 	time.AfterFunc(5*time.Second, func() {
@@ -312,8 +459,8 @@ func TestMultiSubs(t *testing.T) {
 		{Data: []byte("d2")},
 		{Data: []byte("d3")},
 	})
-	got1 := pullN(t, len(want), sclient, sub1)
-	got2 := pullN(t, len(want), sclient, sub2)
+	got1 := pubsubMessages(streamingPullN(t, len(want), sclient, sub1))
+	got2 := pubsubMessages(streamingPullN(t, len(want), sclient, sub2))
 	if diff := testutil.Diff(got1, want); diff != "" {
 		t.Error(diff)
 	}
@@ -338,8 +485,8 @@ func TestMultiStreams(t *testing.T) {
 		{Data: []byte("d4")},
 	})
 	streams := []pb.Subscriber_StreamingPullClient{
-		mustStartPull(t, sclient, sub),
-		mustStartPull(t, sclient, sub),
+		mustStartStreamingPull(t, sclient, sub),
+		mustStartStreamingPull(t, sclient, sub),
 	}
 	got := map[string]*pb.PubsubMessage{}
 	for i := 0; i < 2; i++ {
@@ -367,7 +514,7 @@ func TestStreamingPullTimeout(t *testing.T) {
 		Topic:              top.Name,
 		AckDeadlineSeconds: 10,
 	})
-	stream := mustStartPull(t, sclient, sub)
+	stream := mustStartStreamingPull(t, sclient, sub)
 	time.Sleep(2 * timeout)
 	_, err := stream.Recv()
 	if err != io.EOF {
@@ -375,7 +522,25 @@ func TestStreamingPullTimeout(t *testing.T) {
 	}
 }
 
-func mustStartPull(t *testing.T, sc pb.SubscriberClient, sub *pb.Subscription) pb.Subscriber_StreamingPullClient {
+func TestSeek(t *testing.T) {
+	pclient, sclient, _ := newFake(t)
+	top := mustCreateTopic(t, pclient, &pb.Topic{Name: "projects/P/topics/T"})
+	sub := mustCreateSubscription(t, sclient, &pb.Subscription{
+		Name:               "projects/P/subscriptions/S",
+		Topic:              top.Name,
+		AckDeadlineSeconds: 10,
+	})
+	ts := ptypes.TimestampNow()
+	_, err := sclient.Seek(context.Background(), &pb.SeekRequest{
+		Subscription: sub.Name,
+		Target:       &pb.SeekRequest_Time{Time: ts},
+	})
+	if err != nil {
+		t.Errorf("Seeking: %v", err)
+	}
+}
+
+func mustStartStreamingPull(t *testing.T, sc pb.SubscriberClient, sub *pb.Subscription) pb.Subscriber_StreamingPullClient {
 	spc, err := sc.StreamingPull(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -386,16 +551,31 @@ func mustStartPull(t *testing.T, sc pb.SubscriberClient, sub *pb.Subscription) p
 	return spc
 }
 
-func pullN(t *testing.T, n int, sc pb.SubscriberClient, sub *pb.Subscription) map[string]*pb.PubsubMessage {
-	spc := mustStartPull(t, sc, sub)
-	got := map[string]*pb.PubsubMessage{}
+func pullN(t *testing.T, n int, sc pb.SubscriberClient, sub *pb.Subscription) map[string]*pb.ReceivedMessage {
+	ctx := context.Background()
+	got := map[string]*pb.ReceivedMessage{}
+	for i := 0; len(got) < n; i++ {
+		res, err := sc.Pull(ctx, &pb.PullRequest{Subscription: sub.Name, MaxMessages: int32(n - len(got))})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, m := range res.ReceivedMessages {
+			got[m.Message.MessageId] = m
+		}
+	}
+	return got
+}
+
+func streamingPullN(t *testing.T, n int, sc pb.SubscriberClient, sub *pb.Subscription) map[string]*pb.ReceivedMessage {
+	spc := mustStartStreamingPull(t, sc, sub)
+	got := map[string]*pb.ReceivedMessage{}
 	for i := 0; i < n; i++ {
 		res, err := spc.Recv()
 		if err != nil {
 			t.Fatal(err)
 		}
 		for _, m := range res.ReceivedMessages {
-			got[m.Message.MessageId] = m.Message
+			got[m.Message.MessageId] = m
 		}
 	}
 	if err := spc.CloseSend(); err != nil {
@@ -406,6 +586,14 @@ func pullN(t *testing.T, n int, sc pb.SubscriberClient, sub *pb.Subscription) ma
 		t.Fatalf("Recv returned <%v> instead of EOF; res = %v", err, res)
 	}
 	return got
+}
+
+func pubsubMessages(rms map[string]*pb.ReceivedMessage) map[string]*pb.PubsubMessage {
+	ms := map[string]*pb.PubsubMessage{}
+	for k, rm := range rms {
+		ms[k] = rm.Message
+	}
+	return ms
 }
 
 func mustCreateTopic(t *testing.T, pc pb.PublisherClient, topic *pb.Topic) *pb.Topic {

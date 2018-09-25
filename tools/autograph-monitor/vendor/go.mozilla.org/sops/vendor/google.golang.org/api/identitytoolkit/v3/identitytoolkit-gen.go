@@ -143,8 +143,8 @@ type CreateAuthUriResponse struct {
 }
 
 func (s *CreateAuthUriResponse) MarshalJSON() ([]byte, error) {
-	type noMethod CreateAuthUriResponse
-	raw := noMethod(*s)
+	type NoMethod CreateAuthUriResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -175,8 +175,8 @@ type DeleteAccountResponse struct {
 }
 
 func (s *DeleteAccountResponse) MarshalJSON() ([]byte, error) {
-	type noMethod DeleteAccountResponse
-	raw := noMethod(*s)
+	type NoMethod DeleteAccountResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -214,8 +214,8 @@ type DownloadAccountResponse struct {
 }
 
 func (s *DownloadAccountResponse) MarshalJSON() ([]byte, error) {
-	type noMethod DownloadAccountResponse
-	raw := noMethod(*s)
+	type NoMethod DownloadAccountResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -264,8 +264,8 @@ type EmailLinkSigninResponse struct {
 }
 
 func (s *EmailLinkSigninResponse) MarshalJSON() ([]byte, error) {
-	type noMethod EmailLinkSigninResponse
-	raw := noMethod(*s)
+	type NoMethod EmailLinkSigninResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -307,8 +307,8 @@ type EmailTemplate struct {
 }
 
 func (s *EmailTemplate) MarshalJSON() ([]byte, error) {
-	type noMethod EmailTemplate
-	raw := noMethod(*s)
+	type NoMethod EmailTemplate
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -342,8 +342,8 @@ type GetAccountInfoResponse struct {
 }
 
 func (s *GetAccountInfoResponse) MarshalJSON() ([]byte, error) {
-	type noMethod GetAccountInfoResponse
-	raw := noMethod(*s)
+	type NoMethod GetAccountInfoResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -382,8 +382,8 @@ type GetOobConfirmationCodeResponse struct {
 }
 
 func (s *GetOobConfirmationCodeResponse) MarshalJSON() ([]byte, error) {
-	type noMethod GetOobConfirmationCodeResponse
-	raw := noMethod(*s)
+	type NoMethod GetOobConfirmationCodeResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -421,8 +421,8 @@ type GetRecaptchaParamResponse struct {
 }
 
 func (s *GetRecaptchaParamResponse) MarshalJSON() ([]byte, error) {
-	type noMethod GetRecaptchaParamResponse
-	raw := noMethod(*s)
+	type NoMethod GetRecaptchaParamResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -485,6 +485,15 @@ type IdentitytoolkitRelyingpartyCreateAuthUriRequest struct {
 	// SessionId: The session_id passed by client.
 	SessionId string `json:"sessionId,omitempty"`
 
+	// TenantId: For multi-tenant use cases, in order to construct sign-in
+	// URL with the correct IDP parameters, Firebear needs to know which
+	// Tenant to retrieve IDP configs from.
+	TenantId string `json:"tenantId,omitempty"`
+
+	// TenantProjectNumber: Tenant project number to be used for idp
+	// discovery.
+	TenantProjectNumber uint64 `json:"tenantProjectNumber,omitempty,string"`
+
 	// ForceSendFields is a list of field names (e.g. "AppId") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
@@ -503,8 +512,8 @@ type IdentitytoolkitRelyingpartyCreateAuthUriRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyCreateAuthUriRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyCreateAuthUriRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyCreateAuthUriRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -541,8 +550,8 @@ type IdentitytoolkitRelyingpartyDeleteAccountRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyDeleteAccountRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyDeleteAccountRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyDeleteAccountRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -584,8 +593,8 @@ type IdentitytoolkitRelyingpartyDownloadAccountRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyDownloadAccountRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyDownloadAccountRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyDownloadAccountRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -619,8 +628,8 @@ type IdentitytoolkitRelyingpartyEmailLinkSigninRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyEmailLinkSigninRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyEmailLinkSigninRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyEmailLinkSigninRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -664,8 +673,8 @@ type IdentitytoolkitRelyingpartyGetAccountInfoRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyGetAccountInfoRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyGetAccountInfoRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyGetAccountInfoRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -730,8 +739,8 @@ type IdentitytoolkitRelyingpartyGetProjectConfigResponse struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyGetProjectConfigResponse) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyGetProjectConfigResponse
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyGetProjectConfigResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -768,8 +777,8 @@ type IdentitytoolkitRelyingpartyResetPasswordRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyResetPasswordRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyResetPasswordRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyResetPasswordRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -807,8 +816,8 @@ type IdentitytoolkitRelyingpartySendVerificationCodeRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartySendVerificationCodeRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartySendVerificationCodeRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartySendVerificationCodeRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -840,8 +849,8 @@ type IdentitytoolkitRelyingpartySendVerificationCodeResponse struct {
 }
 
 func (s *IdentitytoolkitRelyingpartySendVerificationCodeResponse) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartySendVerificationCodeResponse
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartySendVerificationCodeResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -940,8 +949,8 @@ type IdentitytoolkitRelyingpartySetAccountInfoRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartySetAccountInfoRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartySetAccountInfoRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartySetAccountInfoRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1001,8 +1010,8 @@ type IdentitytoolkitRelyingpartySetProjectConfigRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartySetProjectConfigRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartySetProjectConfigRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartySetProjectConfigRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1034,8 +1043,8 @@ type IdentitytoolkitRelyingpartySetProjectConfigResponse struct {
 }
 
 func (s *IdentitytoolkitRelyingpartySetProjectConfigResponse) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartySetProjectConfigResponse
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartySetProjectConfigResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1066,8 +1075,8 @@ type IdentitytoolkitRelyingpartySignOutUserRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartySignOutUserRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartySignOutUserRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartySignOutUserRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1099,8 +1108,8 @@ type IdentitytoolkitRelyingpartySignOutUserResponse struct {
 }
 
 func (s *IdentitytoolkitRelyingpartySignOutUserResponse) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartySignOutUserResponse
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartySignOutUserResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1146,6 +1155,15 @@ type IdentitytoolkitRelyingpartySignupNewUserRequest struct {
 	// PhotoUrl: The photo url of the user.
 	PhotoUrl string `json:"photoUrl,omitempty"`
 
+	// TenantId: For multi-tenant use cases, in order to construct sign-in
+	// URL with the correct IDP parameters, Firebear needs to know which
+	// Tenant to retrieve IDP configs from.
+	TenantId string `json:"tenantId,omitempty"`
+
+	// TenantProjectNumber: Tenant project number to be used for idp
+	// discovery.
+	TenantProjectNumber uint64 `json:"tenantProjectNumber,omitempty,string"`
+
 	// ForceSendFields is a list of field names (e.g. "CaptchaChallenge") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
@@ -1165,8 +1183,8 @@ type IdentitytoolkitRelyingpartySignupNewUserRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartySignupNewUserRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartySignupNewUserRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartySignupNewUserRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1237,8 +1255,8 @@ type IdentitytoolkitRelyingpartyUploadAccountRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyUploadAccountRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyUploadAccountRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyUploadAccountRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1286,6 +1304,15 @@ type IdentitytoolkitRelyingpartyVerifyAssertionRequest struct {
 	// createAuthUri request.
 	SessionId string `json:"sessionId,omitempty"`
 
+	// TenantId: For multi-tenant use cases, in order to construct sign-in
+	// URL with the correct IDP parameters, Firebear needs to know which
+	// Tenant to retrieve IDP configs from.
+	TenantId string `json:"tenantId,omitempty"`
+
+	// TenantProjectNumber: Tenant project number to be used for idp
+	// discovery.
+	TenantProjectNumber uint64 `json:"tenantProjectNumber,omitempty,string"`
+
 	// ForceSendFields is a list of field names (e.g. "AutoCreate") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
@@ -1304,8 +1331,8 @@ type IdentitytoolkitRelyingpartyVerifyAssertionRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyVerifyAssertionRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyVerifyAssertionRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyVerifyAssertionRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1346,8 +1373,8 @@ type IdentitytoolkitRelyingpartyVerifyCustomTokenRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyVerifyCustomTokenRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyVerifyCustomTokenRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyVerifyCustomTokenRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1384,6 +1411,15 @@ type IdentitytoolkitRelyingpartyVerifyPasswordRequest struct {
 	// instead of gitkit token.
 	ReturnSecureToken bool `json:"returnSecureToken,omitempty"`
 
+	// TenantId: For multi-tenant use cases, in order to construct sign-in
+	// URL with the correct IDP parameters, Firebear needs to know which
+	// Tenant to retrieve IDP configs from.
+	TenantId string `json:"tenantId,omitempty"`
+
+	// TenantProjectNumber: Tenant project number to be used for idp
+	// discovery.
+	TenantProjectNumber uint64 `json:"tenantProjectNumber,omitempty,string"`
+
 	// ForceSendFields is a list of field names (e.g. "CaptchaChallenge") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
@@ -1403,8 +1439,8 @@ type IdentitytoolkitRelyingpartyVerifyPasswordRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyVerifyPasswordRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyVerifyPasswordRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyVerifyPasswordRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1445,8 +1481,8 @@ type IdentitytoolkitRelyingpartyVerifyPhoneNumberRequest struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyVerifyPhoneNumberRequest) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyVerifyPhoneNumberRequest
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyVerifyPhoneNumberRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1495,8 +1531,8 @@ type IdentitytoolkitRelyingpartyVerifyPhoneNumberResponse struct {
 }
 
 func (s *IdentitytoolkitRelyingpartyVerifyPhoneNumberResponse) MarshalJSON() ([]byte, error) {
-	type noMethod IdentitytoolkitRelyingpartyVerifyPhoneNumberResponse
-	raw := noMethod(*s)
+	type NoMethod IdentitytoolkitRelyingpartyVerifyPhoneNumberResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1539,8 +1575,8 @@ type IdpConfig struct {
 }
 
 func (s *IdpConfig) MarshalJSON() ([]byte, error) {
-	type noMethod IdpConfig
-	raw := noMethod(*s)
+	type NoMethod IdpConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1617,8 +1653,8 @@ type Relyingparty struct {
 }
 
 func (s *Relyingparty) MarshalJSON() ([]byte, error) {
-	type noMethod Relyingparty
-	raw := noMethod(*s)
+	type NoMethod Relyingparty
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1660,8 +1696,8 @@ type ResetPasswordResponse struct {
 }
 
 func (s *ResetPasswordResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ResetPasswordResponse
-	raw := noMethod(*s)
+	type NoMethod ResetPasswordResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1727,8 +1763,8 @@ type SetAccountInfoResponse struct {
 }
 
 func (s *SetAccountInfoResponse) MarshalJSON() ([]byte, error) {
-	type noMethod SetAccountInfoResponse
-	raw := noMethod(*s)
+	type NoMethod SetAccountInfoResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1765,8 +1801,8 @@ type SetAccountInfoResponseProviderUserInfo struct {
 }
 
 func (s *SetAccountInfoResponseProviderUserInfo) MarshalJSON() ([]byte, error) {
-	type noMethod SetAccountInfoResponseProviderUserInfo
-	raw := noMethod(*s)
+	type NoMethod SetAccountInfoResponseProviderUserInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1818,8 +1854,8 @@ type SignupNewUserResponse struct {
 }
 
 func (s *SignupNewUserResponse) MarshalJSON() ([]byte, error) {
-	type noMethod SignupNewUserResponse
-	raw := noMethod(*s)
+	type NoMethod SignupNewUserResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1853,8 +1889,8 @@ type UploadAccountResponse struct {
 }
 
 func (s *UploadAccountResponse) MarshalJSON() ([]byte, error) {
-	type noMethod UploadAccountResponse
-	raw := noMethod(*s)
+	type NoMethod UploadAccountResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1883,8 +1919,8 @@ type UploadAccountResponseError struct {
 }
 
 func (s *UploadAccountResponseError) MarshalJSON() ([]byte, error) {
-	type noMethod UploadAccountResponseError
-	raw := noMethod(*s)
+	type NoMethod UploadAccountResponseError
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1966,18 +2002,18 @@ type UserInfo struct {
 }
 
 func (s *UserInfo) MarshalJSON() ([]byte, error) {
-	type noMethod UserInfo
-	raw := noMethod(*s)
+	type NoMethod UserInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *UserInfo) UnmarshalJSON(data []byte) error {
-	type noMethod UserInfo
+	type NoMethod UserInfo
 	var s1 struct {
 		PasswordUpdatedAt gensupport.JSONFloat64 `json:"passwordUpdatedAt"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2030,8 +2066,8 @@ type UserInfoProviderUserInfo struct {
 }
 
 func (s *UserInfoProviderUserInfo) MarshalJSON() ([]byte, error) {
-	type noMethod UserInfoProviderUserInfo
-	raw := noMethod(*s)
+	type NoMethod UserInfoProviderUserInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2196,8 +2232,8 @@ type VerifyAssertionResponse struct {
 }
 
 func (s *VerifyAssertionResponse) MarshalJSON() ([]byte, error) {
-	type noMethod VerifyAssertionResponse
-	raw := noMethod(*s)
+	type NoMethod VerifyAssertionResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2243,8 +2279,8 @@ type VerifyCustomTokenResponse struct {
 }
 
 func (s *VerifyCustomTokenResponse) MarshalJSON() ([]byte, error) {
-	type noMethod VerifyCustomTokenResponse
-	raw := noMethod(*s)
+	type NoMethod VerifyCustomTokenResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2312,8 +2348,8 @@ type VerifyPasswordResponse struct {
 }
 
 func (s *VerifyPasswordResponse) MarshalJSON() ([]byte, error) {
-	type noMethod VerifyPasswordResponse
-	raw := noMethod(*s)
+	type NoMethod VerifyPasswordResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2373,6 +2409,7 @@ func (c *RelyingpartyCreateAuthUriCall) doRequest(alt string) (*http.Response, e
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "createAuthUri")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2413,7 +2450,7 @@ func (c *RelyingpartyCreateAuthUriCall) Do(opts ...googleapi.CallOption) (*Creat
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2490,6 +2527,7 @@ func (c *RelyingpartyDeleteAccountCall) doRequest(alt string) (*http.Response, e
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "deleteAccount")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2530,7 +2568,7 @@ func (c *RelyingpartyDeleteAccountCall) Do(opts ...googleapi.CallOption) (*Delet
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2607,6 +2645,7 @@ func (c *RelyingpartyDownloadAccountCall) doRequest(alt string) (*http.Response,
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "downloadAccount")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2647,7 +2686,7 @@ func (c *RelyingpartyDownloadAccountCall) Do(opts ...googleapi.CallOption) (*Dow
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2746,6 +2785,7 @@ func (c *RelyingpartyEmailLinkSigninCall) doRequest(alt string) (*http.Response,
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "emailLinkSignin")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2786,7 +2826,7 @@ func (c *RelyingpartyEmailLinkSigninCall) Do(opts ...googleapi.CallOption) (*Ema
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2863,6 +2903,7 @@ func (c *RelyingpartyGetAccountInfoCall) doRequest(alt string) (*http.Response, 
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "getAccountInfo")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2903,7 +2944,7 @@ func (c *RelyingpartyGetAccountInfoCall) Do(opts ...googleapi.CallOption) (*GetA
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2980,6 +3021,7 @@ func (c *RelyingpartyGetOobConfirmationCodeCall) doRequest(alt string) (*http.Re
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "getOobConfirmationCode")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3020,7 +3062,7 @@ func (c *RelyingpartyGetOobConfirmationCodeCall) Do(opts ...googleapi.CallOption
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3119,6 +3161,7 @@ func (c *RelyingpartyGetProjectConfigCall) doRequest(alt string) (*http.Response
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "getProjectConfig")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3161,7 +3204,7 @@ func (c *RelyingpartyGetProjectConfigCall) Do(opts ...googleapi.CallOption) (*Id
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3254,6 +3297,7 @@ func (c *RelyingpartyGetPublicKeysCall) doRequest(alt string) (*http.Response, e
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "publicKeys")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3274,7 +3318,7 @@ func (c *RelyingpartyGetPublicKeysCall) Do(opts ...googleapi.CallOption) (map[st
 	}
 	var ret map[string]string
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3355,6 +3399,7 @@ func (c *RelyingpartyGetRecaptchaParamCall) doRequest(alt string) (*http.Respons
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "getRecaptchaParam")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3395,7 +3440,7 @@ func (c *RelyingpartyGetRecaptchaParamCall) Do(opts ...googleapi.CallOption) (*G
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3469,6 +3514,7 @@ func (c *RelyingpartyResetPasswordCall) doRequest(alt string) (*http.Response, e
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "resetPassword")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3509,7 +3555,7 @@ func (c *RelyingpartyResetPasswordCall) Do(opts ...googleapi.CallOption) (*Reset
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3586,6 +3632,7 @@ func (c *RelyingpartySendVerificationCodeCall) doRequest(alt string) (*http.Resp
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "sendVerificationCode")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3629,7 +3676,7 @@ func (c *RelyingpartySendVerificationCodeCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3706,6 +3753,7 @@ func (c *RelyingpartySetAccountInfoCall) doRequest(alt string) (*http.Response, 
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "setAccountInfo")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3746,7 +3794,7 @@ func (c *RelyingpartySetAccountInfoCall) Do(opts ...googleapi.CallOption) (*SetA
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3823,6 +3871,7 @@ func (c *RelyingpartySetProjectConfigCall) doRequest(alt string) (*http.Response
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "setProjectConfig")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3865,7 +3914,7 @@ func (c *RelyingpartySetProjectConfigCall) Do(opts ...googleapi.CallOption) (*Id
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3942,6 +3991,7 @@ func (c *RelyingpartySignOutUserCall) doRequest(alt string) (*http.Response, err
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "signOutUser")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3984,7 +4034,7 @@ func (c *RelyingpartySignOutUserCall) Do(opts ...googleapi.CallOption) (*Identit
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4061,6 +4111,7 @@ func (c *RelyingpartySignupNewUserCall) doRequest(alt string) (*http.Response, e
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "signupNewUser")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4101,7 +4152,7 @@ func (c *RelyingpartySignupNewUserCall) Do(opts ...googleapi.CallOption) (*Signu
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4178,6 +4229,7 @@ func (c *RelyingpartyUploadAccountCall) doRequest(alt string) (*http.Response, e
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "uploadAccount")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4218,7 +4270,7 @@ func (c *RelyingpartyUploadAccountCall) Do(opts ...googleapi.CallOption) (*Uploa
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4296,6 +4348,7 @@ func (c *RelyingpartyVerifyAssertionCall) doRequest(alt string) (*http.Response,
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "verifyAssertion")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4336,7 +4389,7 @@ func (c *RelyingpartyVerifyAssertionCall) Do(opts ...googleapi.CallOption) (*Ver
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4413,6 +4466,7 @@ func (c *RelyingpartyVerifyCustomTokenCall) doRequest(alt string) (*http.Respons
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "verifyCustomToken")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4453,7 +4507,7 @@ func (c *RelyingpartyVerifyCustomTokenCall) Do(opts ...googleapi.CallOption) (*V
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4530,6 +4584,7 @@ func (c *RelyingpartyVerifyPasswordCall) doRequest(alt string) (*http.Response, 
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "verifyPassword")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4570,7 +4625,7 @@ func (c *RelyingpartyVerifyPasswordCall) Do(opts ...googleapi.CallOption) (*Veri
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4648,6 +4703,7 @@ func (c *RelyingpartyVerifyPhoneNumberCall) doRequest(alt string) (*http.Respons
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "verifyPhoneNumber")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4690,7 +4746,7 @@ func (c *RelyingpartyVerifyPhoneNumberCall) Do(opts ...googleapi.CallOption) (*I
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

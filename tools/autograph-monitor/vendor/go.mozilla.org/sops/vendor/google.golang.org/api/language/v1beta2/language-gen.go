@@ -1,4 +1,6 @@
-// Package language provides access to the Google Cloud Natural Language API.
+// Package language provides access to the Cloud Natural Language API.
+//
+// This package is DEPRECATED. Use package cloud.google.com/go/language/apiv1 instead.
 //
 // See https://cloud.google.com/natural-language/
 //
@@ -134,8 +136,8 @@ type AnalyzeEntitiesRequest struct {
 }
 
 func (s *AnalyzeEntitiesRequest) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyzeEntitiesRequest
-	raw := noMethod(*s)
+	type NoMethod AnalyzeEntitiesRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -173,8 +175,8 @@ type AnalyzeEntitiesResponse struct {
 }
 
 func (s *AnalyzeEntitiesResponse) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyzeEntitiesResponse
-	raw := noMethod(*s)
+	type NoMethod AnalyzeEntitiesResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -225,8 +227,8 @@ type AnalyzeEntitySentimentRequest struct {
 }
 
 func (s *AnalyzeEntitySentimentRequest) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyzeEntitySentimentRequest
-	raw := noMethod(*s)
+	type NoMethod AnalyzeEntitySentimentRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -266,8 +268,8 @@ type AnalyzeEntitySentimentResponse struct {
 }
 
 func (s *AnalyzeEntitySentimentResponse) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyzeEntitySentimentResponse
-	raw := noMethod(*s)
+	type NoMethod AnalyzeEntitySentimentResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -319,8 +321,8 @@ type AnalyzeSentimentRequest struct {
 }
 
 func (s *AnalyzeSentimentRequest) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyzeSentimentRequest
-	raw := noMethod(*s)
+	type NoMethod AnalyzeSentimentRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -362,8 +364,8 @@ type AnalyzeSentimentResponse struct {
 }
 
 func (s *AnalyzeSentimentResponse) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyzeSentimentResponse
-	raw := noMethod(*s)
+	type NoMethod AnalyzeSentimentResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -413,8 +415,8 @@ type AnalyzeSyntaxRequest struct {
 }
 
 func (s *AnalyzeSyntaxRequest) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyzeSyntaxRequest
-	raw := noMethod(*s)
+	type NoMethod AnalyzeSyntaxRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -456,8 +458,8 @@ type AnalyzeSyntaxResponse struct {
 }
 
 func (s *AnalyzeSyntaxResponse) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyzeSyntaxResponse
-	raw := noMethod(*s)
+	type NoMethod AnalyzeSyntaxResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -512,8 +514,8 @@ type AnnotateTextRequest struct {
 }
 
 func (s *AnnotateTextRequest) MarshalJSON() ([]byte, error) {
-	type noMethod AnnotateTextRequest
-	raw := noMethod(*s)
+	type NoMethod AnnotateTextRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -576,8 +578,8 @@ type AnnotateTextResponse struct {
 }
 
 func (s *AnnotateTextResponse) MarshalJSON() ([]byte, error) {
-	type noMethod AnnotateTextResponse
-	raw := noMethod(*s)
+	type NoMethod AnnotateTextResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -589,7 +591,9 @@ type ClassificationCategory struct {
 	// the classifier is that this category represents the given text.
 	Confidence float64 `json:"confidence,omitempty"`
 
-	// Name: The name of the category representing the document.
+	// Name: The name of the category representing the document, from the
+	// [predefined
+	// taxonomy](/natural-language/docs/categories).
 	Name string `json:"name,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Confidence") to
@@ -610,18 +614,18 @@ type ClassificationCategory struct {
 }
 
 func (s *ClassificationCategory) MarshalJSON() ([]byte, error) {
-	type noMethod ClassificationCategory
-	raw := noMethod(*s)
+	type NoMethod ClassificationCategory
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *ClassificationCategory) UnmarshalJSON(data []byte) error {
-	type noMethod ClassificationCategory
+	type NoMethod ClassificationCategory
 	var s1 struct {
 		Confidence gensupport.JSONFloat64 `json:"confidence"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -652,8 +656,8 @@ type ClassifyTextRequest struct {
 }
 
 func (s *ClassifyTextRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ClassifyTextRequest
-	raw := noMethod(*s)
+	type NoMethod ClassifyTextRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -684,8 +688,8 @@ type ClassifyTextResponse struct {
 }
 
 func (s *ClassifyTextResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ClassifyTextResponse
-	raw := noMethod(*s)
+	type NoMethod ClassifyTextResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -812,8 +816,8 @@ type DependencyEdge struct {
 }
 
 func (s *DependencyEdge) MarshalJSON() ([]byte, error) {
-	type noMethod DependencyEdge
-	raw := noMethod(*s)
+	type NoMethod DependencyEdge
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -824,6 +828,7 @@ func (s *DependencyEdge) MarshalJSON() ([]byte, error) {
 // Represents the input to API methods.
 type Document struct {
 	// Content: The content of the input in string format.
+	// Cloud audit logging exempt since it is based on user data.
 	Content string `json:"content,omitempty"`
 
 	// GcsContentUri: The Google Cloud Storage URI where the file content is
@@ -877,8 +882,8 @@ type Document struct {
 }
 
 func (s *Document) MarshalJSON() ([]byte, error) {
-	type noMethod Document
-	raw := noMethod(*s)
+	type NoMethod Document
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -955,18 +960,18 @@ type Entity struct {
 }
 
 func (s *Entity) MarshalJSON() ([]byte, error) {
-	type noMethod Entity
-	raw := noMethod(*s)
+	type NoMethod Entity
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Entity) UnmarshalJSON(data []byte) error {
-	type noMethod Entity
+	type NoMethod Entity
 	var s1 struct {
 		Salience gensupport.JSONFloat64 `json:"salience"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1015,8 +1020,8 @@ type EntityMention struct {
 }
 
 func (s *EntityMention) MarshalJSON() ([]byte, error) {
-	type noMethod EntityMention
-	raw := noMethod(*s)
+	type NoMethod EntityMention
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1024,8 +1029,13 @@ func (s *EntityMention) MarshalJSON() ([]byte, error) {
 // analysis.
 // Setting each one to true will enable that specific analysis for the
 // input.
+// Next ID: 10
 type Features struct {
-	// ClassifyText: Classify the full document into categories.
+	// ClassifyText: Classify the full document into categories. If this is
+	// true,
+	// the API will use the default model which classifies into
+	// a
+	// [predefined taxonomy](/natural-language/docs/categories).
 	ClassifyText bool `json:"classifyText,omitempty"`
 
 	// ExtractDocumentSentiment: Extract document-level sentiment.
@@ -1059,8 +1069,8 @@ type Features struct {
 }
 
 func (s *Features) MarshalJSON() ([]byte, error) {
-	type noMethod Features
-	raw := noMethod(*s)
+	type NoMethod Features
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1238,8 +1248,8 @@ type PartOfSpeech struct {
 }
 
 func (s *PartOfSpeech) MarshalJSON() ([]byte, error) {
-	type noMethod PartOfSpeech
-	raw := noMethod(*s)
+	type NoMethod PartOfSpeech
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1273,14 +1283,15 @@ type Sentence struct {
 }
 
 func (s *Sentence) MarshalJSON() ([]byte, error) {
-	type noMethod Sentence
-	raw := noMethod(*s)
+	type NoMethod Sentence
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // Sentiment: Represents the feeling associated with the entire text or
 // entities in
 // the text.
+// Next ID: 6
 type Sentiment struct {
 	// Magnitude: A non-negative number in the [0, +inf) range, which
 	// represents
@@ -1312,19 +1323,19 @@ type Sentiment struct {
 }
 
 func (s *Sentiment) MarshalJSON() ([]byte, error) {
-	type noMethod Sentiment
-	raw := noMethod(*s)
+	type NoMethod Sentiment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Sentiment) UnmarshalJSON(data []byte) error {
-	type noMethod Sentiment
+	type NoMethod Sentiment
 	var s1 struct {
 		Magnitude gensupport.JSONFloat64 `json:"magnitude"`
 		Score     gensupport.JSONFloat64 `json:"score"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1447,8 +1458,8 @@ type Status struct {
 }
 
 func (s *Status) MarshalJSON() ([]byte, error) {
-	type noMethod Status
-	raw := noMethod(*s)
+	type NoMethod Status
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1480,8 +1491,8 @@ type TextSpan struct {
 }
 
 func (s *TextSpan) MarshalJSON() ([]byte, error) {
-	type noMethod TextSpan
-	raw := noMethod(*s)
+	type NoMethod TextSpan
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1519,8 +1530,8 @@ type Token struct {
 }
 
 func (s *Token) MarshalJSON() ([]byte, error) {
-	type noMethod Token
-	raw := noMethod(*s)
+	type NoMethod Token
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1583,6 +1594,7 @@ func (c *DocumentsAnalyzeEntitiesCall) doRequest(alt string) (*http.Response, er
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/documents:analyzeEntities")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1623,7 +1635,7 @@ func (c *DocumentsAnalyzeEntitiesCall) Do(opts ...googleapi.CallOption) (*Analyz
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1706,6 +1718,7 @@ func (c *DocumentsAnalyzeEntitySentimentCall) doRequest(alt string) (*http.Respo
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/documents:analyzeEntitySentiment")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1746,7 +1759,7 @@ func (c *DocumentsAnalyzeEntitySentimentCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1827,6 +1840,7 @@ func (c *DocumentsAnalyzeSentimentCall) doRequest(alt string) (*http.Response, e
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/documents:analyzeSentiment")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1867,7 +1881,7 @@ func (c *DocumentsAnalyzeSentimentCall) Do(opts ...googleapi.CallOption) (*Analy
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1952,6 +1966,7 @@ func (c *DocumentsAnalyzeSyntaxCall) doRequest(alt string) (*http.Response, erro
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/documents:analyzeSyntax")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1992,7 +2007,7 @@ func (c *DocumentsAnalyzeSyntaxCall) Do(opts ...googleapi.CallOption) (*AnalyzeS
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2075,6 +2090,7 @@ func (c *DocumentsAnnotateTextCall) doRequest(alt string) (*http.Response, error
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/documents:annotateText")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2115,7 +2131,7 @@ func (c *DocumentsAnnotateTextCall) Do(opts ...googleapi.CallOption) (*AnnotateT
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2196,6 +2212,7 @@ func (c *DocumentsClassifyTextCall) doRequest(alt string) (*http.Response, error
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/documents:classifyText")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2236,7 +2253,7 @@ func (c *DocumentsClassifyTextCall) Do(opts ...googleapi.CallOption) (*ClassifyT
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

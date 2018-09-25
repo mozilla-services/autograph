@@ -129,7 +129,7 @@ type ListTracesResponse struct {
 	// retrieving additional traces.
 	NextPageToken string `json:"nextPageToken,omitempty"`
 
-	// Traces: List of trace records returned.
+	// Traces: List of trace records as specified by the view parameter.
 	Traces []*Trace `json:"traces,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -154,8 +154,8 @@ type ListTracesResponse struct {
 }
 
 func (s *ListTracesResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListTracesResponse
-	raw := noMethod(*s)
+	type NoMethod ListTracesResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -199,8 +199,8 @@ type Trace struct {
 }
 
 func (s *Trace) MarshalJSON() ([]byte, error) {
-	type noMethod Trace
-	raw := noMethod(*s)
+	type NoMethod Trace
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -261,9 +261,11 @@ type TraceSpan struct {
 	// *   `/http/client_region`
 	// *   `/http/host`
 	// *   `/http/method`
+	// *   `/http/path`
 	// *   `/http/redirected_url`
 	// *   `/http/request/size`
 	// *   `/http/response/size`
+	// *   `/http/route`
 	// *   `/http/status_code`
 	// *   `/http/url`
 	// *   `/http/user_agent`
@@ -275,7 +277,7 @@ type TraceSpan struct {
 	// Name: Name of the span. Must be less than 128 bytes. The span name is
 	// sanitized
 	// and displayed in the Stackdriver Trace tool in the
-	// {% dynamic print site_values.console_name %}.
+	// Google Cloud Platform Console.
 	// The name may be a method name or some other per-call site name.
 	// For the same executable and the same call point, a best practice
 	// is
@@ -313,8 +315,8 @@ type TraceSpan struct {
 }
 
 func (s *TraceSpan) MarshalJSON() ([]byte, error) {
-	type noMethod TraceSpan
-	raw := noMethod(*s)
+	type NoMethod TraceSpan
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -341,8 +343,8 @@ type Traces struct {
 }
 
 func (s *Traces) MarshalJSON() ([]byte, error) {
-	type noMethod Traces
-	raw := noMethod(*s)
+	type NoMethod Traces
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -411,6 +413,7 @@ func (c *ProjectsPatchTracesCall) doRequest(alt string) (*http.Response, error) 
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/projects/{projectId}/traces")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -454,7 +457,7 @@ func (c *ProjectsPatchTracesCall) Do(opts ...googleapi.CallOption) (*Empty, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -555,6 +558,7 @@ func (c *ProjectsTracesGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/projects/{projectId}/traces/{traceId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -599,7 +603,7 @@ func (c *ProjectsTracesGetCall) Do(opts ...googleapi.CallOption) (*Trace, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -817,6 +821,7 @@ func (c *ProjectsTracesListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/projects/{projectId}/traces")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -860,7 +865,7 @@ func (c *ProjectsTracesListCall) Do(opts ...googleapi.CallOption) (*ListTracesRe
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,10 @@
 package firestore
 
 import (
-	"golang.org/x/net/context"
 	"testing"
+
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/status"
 
 	pb "google.golang.org/genproto/googleapis/firestore/v1beta1"
 
@@ -52,12 +54,16 @@ func TestRunTransaction(t *testing.T) {
 		Fields:     map[string]*pb.Value{"count": intval(1)},
 	}
 	srv.addRPC(
-		&pb.GetDocumentRequest{
-			Name:                db + "/documents/C/a",
-			ConsistencySelector: &pb.GetDocumentRequest_Transaction{tid},
-		},
-		aDoc,
-	)
+		&pb.BatchGetDocumentsRequest{
+			Database:            c.path(),
+			Documents:           []string{db + "/documents/C/a"},
+			ConsistencySelector: &pb.BatchGetDocumentsRequest_Transaction{tid},
+		}, []interface{}{
+			&pb.BatchGetDocumentsResponse{
+				Result:   &pb.BatchGetDocumentsResponse_Found{aDoc},
+				ReadTime: aTimestamp2,
+			},
+		})
 	aDoc2 := &pb.Document{
 		Name:   aDoc.Name,
 		Fields: map[string]*pb.Value{"count": intval(2)},
@@ -86,8 +92,7 @@ func TestRunTransaction(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		tx.UpdateMap(docref, map[string]interface{}{"count": count.(int64) + 1})
-		return nil
+		return tx.Update(docref, []Update{{Path: "count", Value: count.(int64) + 1}})
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -111,6 +116,7 @@ func TestRunTransaction(t *testing.T) {
 	srv.addRPC(commitReq, &pb.CommitResponse{CommitTime: aTimestamp3})
 	err = c.RunTransaction(ctx, func(_ context.Context, tx *Transaction) error {
 		it := tx.Documents(c.Collection("C"))
+		defer it.Stop()
 		_, err := it.Next()
 		if err != iterator.Done {
 			return err
@@ -124,13 +130,13 @@ func TestRunTransaction(t *testing.T) {
 	// Retry entire transaction.
 	srv.reset()
 	srv.addRPC(beginReq, beginRes)
-	srv.addRPC(commitReq, grpc.Errorf(codes.Aborted, ""))
+	srv.addRPC(commitReq, status.Errorf(codes.Aborted, ""))
 	srv.addRPC(
 		&pb.BeginTransactionRequest{
 			Database: db,
 			Options: &pb.TransactionOptions{
 				Mode: &pb.TransactionOptions_ReadWrite_{
-					&pb.TransactionOptions_ReadWrite{tid},
+					&pb.TransactionOptions_ReadWrite{RetryTransaction: tid},
 				},
 			},
 		},
@@ -149,14 +155,15 @@ func TestTransactionErrors(t *testing.T) {
 	c, srv := newMock(t)
 	var (
 		tid         = []byte{1}
-		internalErr = grpc.Errorf(codes.Internal, "so sad")
+		internalErr = status.Errorf(codes.Internal, "so sad")
 		beginReq    = &pb.BeginTransactionRequest{
 			Database: db,
 		}
 		beginRes = &pb.BeginTransactionResponse{Transaction: tid}
-		getReq   = &pb.GetDocumentRequest{
-			Name:                db + "/documents/C/a",
-			ConsistencySelector: &pb.GetDocumentRequest_Transaction{tid},
+		getReq   = &pb.BatchGetDocumentsRequest{
+			Database:            c.path(),
+			Documents:           []string{db + "/documents/C/a"},
+			ConsistencySelector: &pb.BatchGetDocumentsRequest_Transaction{tid},
 		}
 		rollbackReq = &pb.RollbackRequest{Database: db, Transaction: tid}
 		commitReq   = &pb.CommitRequest{Database: db, Transaction: tid}
@@ -188,7 +195,7 @@ func TestTransactionErrors(t *testing.T) {
 	srv.reset()
 	srv.addRPC(beginReq, beginRes)
 	srv.addRPC(getReq, internalErr)
-	srv.addRPC(rollbackReq, grpc.Errorf(codes.FailedPrecondition, ""))
+	srv.addRPC(rollbackReq, status.Errorf(codes.FailedPrecondition, ""))
 	err = c.RunTransaction(ctx, get)
 	if grpc.Code(err) != codes.Internal {
 		t.Errorf("got <%v>, want Internal", err)
@@ -197,10 +204,15 @@ func TestTransactionErrors(t *testing.T) {
 	// Commit has a permanent error.
 	srv.reset()
 	srv.addRPC(beginReq, beginRes)
-	srv.addRPC(getReq, &pb.Document{
-		Name:       "projects/projectID/databases/(default)/documents/C/a",
-		CreateTime: aTimestamp,
-		UpdateTime: aTimestamp2,
+	srv.addRPC(getReq, []interface{}{
+		&pb.BatchGetDocumentsResponse{
+			Result: &pb.BatchGetDocumentsResponse_Found{&pb.Document{
+				Name:       "projects/projectID/databases/(default)/documents/C/a",
+				CreateTime: aTimestamp,
+				UpdateTime: aTimestamp2,
+			}},
+			ReadTime: aTimestamp2,
+		},
 	})
 	srv.addRPC(commitReq, internalErr)
 	err = c.RunTransaction(ctx, get)
@@ -213,7 +225,9 @@ func TestTransactionErrors(t *testing.T) {
 	srv.addRPC(beginReq, beginRes)
 	srv.addRPC(rollbackReq, &empty.Empty{})
 	err = c.RunTransaction(ctx, func(_ context.Context, tx *Transaction) error {
-		tx.Delete(c.Doc("C/a"))
+		if err := tx.Delete(c.Doc("C/a")); err != nil {
+			return err
+		}
 		if _, err := tx.Get(c.Doc("C/a")); err != nil {
 			return err
 		}
@@ -228,8 +242,11 @@ func TestTransactionErrors(t *testing.T) {
 	srv.addRPC(beginReq, beginRes)
 	srv.addRPC(rollbackReq, &empty.Empty{})
 	err = c.RunTransaction(ctx, func(_ context.Context, tx *Transaction) error {
-		tx.Delete(c.Doc("C/a"))
+		if err := tx.Delete(c.Doc("C/a")); err != nil {
+			return err
+		}
 		it := tx.Documents(c.Collection("C").Select("x"))
+		defer it.Stop()
 		if _, err := it.Next(); err != iterator.Done {
 			return err
 		}
@@ -244,8 +261,12 @@ func TestTransactionErrors(t *testing.T) {
 	srv.addRPC(beginReq, beginRes)
 	srv.addRPC(rollbackReq, &empty.Empty{})
 	err = c.RunTransaction(ctx, func(_ context.Context, tx *Transaction) error {
-		tx.Delete(c.Doc("C/a"))
-		tx.Get(c.Doc("C/a"))
+		if err := tx.Delete(c.Doc("C/a")); err != nil {
+			return err
+		}
+		if _, err := tx.Get(c.Doc("C/a")); err != nil {
+			return err
+		}
 		return nil
 	})
 	if err != errReadAfterWrite {
@@ -274,19 +295,19 @@ func TestTransactionErrors(t *testing.T) {
 	// Too many retries.
 	srv.reset()
 	srv.addRPC(beginReq, beginRes)
-	srv.addRPC(commitReq, grpc.Errorf(codes.Aborted, ""))
+	srv.addRPC(commitReq, status.Errorf(codes.Aborted, ""))
 	srv.addRPC(
 		&pb.BeginTransactionRequest{
 			Database: db,
 			Options: &pb.TransactionOptions{
 				Mode: &pb.TransactionOptions_ReadWrite_{
-					&pb.TransactionOptions_ReadWrite{tid},
+					&pb.TransactionOptions_ReadWrite{RetryTransaction: tid},
 				},
 			},
 		},
 		beginRes,
 	)
-	srv.addRPC(commitReq, grpc.Errorf(codes.Aborted, ""))
+	srv.addRPC(commitReq, status.Errorf(codes.Aborted, ""))
 	srv.addRPC(rollbackReq, &empty.Empty{})
 	err = c.RunTransaction(ctx, func(context.Context, *Transaction) error { return nil },
 		MaxAttempts(2))
@@ -302,7 +323,7 @@ func TestTransactionErrors(t *testing.T) {
 		return c.RunTransaction(ctx, func(context.Context, *Transaction) error { return nil })
 	})
 	if got, want := err, errNestedTransaction; got != want {
-		t.Errorf("got <%v>, want <%V>", got, want)
+		t.Errorf("got <%v>, want <%v>", got, want)
 	}
 
 	// Non-transactional operation.
@@ -315,20 +336,19 @@ func TestTransactionErrors(t *testing.T) {
 		func(ctx context.Context) error { _, err := dr.Create(ctx, testData); return err },
 		func(ctx context.Context) error { _, err := dr.Set(ctx, testData); return err },
 		func(ctx context.Context) error { _, err := dr.Delete(ctx); return err },
-		func(ctx context.Context) error { _, err := dr.UpdateMap(ctx, testData); return err },
 		func(ctx context.Context) error {
-			_, err := dr.UpdateStruct(ctx, []string{"x"}, struct{}{})
-			return err
-		},
-		func(ctx context.Context) error {
-			_, err := dr.UpdatePaths(ctx, []FieldPathUpdate{{Path: []string{"*"}, Value: 1}})
+			_, err := dr.Update(ctx, []Update{{FieldPath: []string{"*"}, Value: 1}})
 			return err
 		},
 		func(ctx context.Context) error { it := c.Collections(ctx); _, err := it.Next(); return err },
 		func(ctx context.Context) error { it := dr.Collections(ctx); _, err := it.Next(); return err },
-		func(ctx context.Context) error { _, err := c.Batch().Commit(ctx); return err },
+		func(ctx context.Context) error {
+			_, err := c.Batch().Set(dr, testData).Commit(ctx)
+			return err
+		},
 		func(ctx context.Context) error {
 			it := c.Collection("C").Documents(ctx)
+			defer it.Stop()
 			_, err := it.Next()
 			return err
 		},
@@ -342,5 +362,35 @@ func TestTransactionErrors(t *testing.T) {
 		if got, want := err, errNonTransactionalOp; got != want {
 			t.Errorf("#%d: got <%v>, want <%v>", i, got, want)
 		}
+	}
+}
+
+func TestTransactionGetAll(t *testing.T) {
+	c, srv := newMock(t)
+	defer c.Close()
+	const dbPath = "projects/projectID/databases/(default)"
+	tid := []byte{1}
+	beginReq := &pb.BeginTransactionRequest{Database: dbPath}
+	beginRes := &pb.BeginTransactionResponse{Transaction: tid}
+	srv.addRPC(beginReq, beginRes)
+	req := &pb.BatchGetDocumentsRequest{
+		Database: dbPath,
+		Documents: []string{
+			dbPath + "/documents/C/a",
+			dbPath + "/documents/C/b",
+			dbPath + "/documents/C/c",
+		},
+		ConsistencySelector: &pb.BatchGetDocumentsRequest_Transaction{tid},
+	}
+	err := c.RunTransaction(context.Background(), func(_ context.Context, tx *Transaction) error {
+		testGetAll(t, c, srv, dbPath,
+			func(drs []*DocumentRef) ([]*DocumentSnapshot, error) { return tx.GetAll(drs) },
+			req)
+		commitReq := &pb.CommitRequest{Database: dbPath, Transaction: tid}
+		srv.addRPC(commitReq, &pb.CommitResponse{CommitTime: aTimestamp})
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }

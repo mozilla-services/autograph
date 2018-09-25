@@ -1,0 +1,16 @@
+FROM vitess/bootstrap:common
+
+# Install MySQL 5.7
+RUN for i in $(seq 1 10); do apt-key adv --recv-keys --keyserver ha.pool.sks-keyservers.net 5072E1F5 && break; done && \
+    add-apt-repository 'deb http://repo.mysql.com/apt/debian/ stretch mysql-5.7' && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server libmysqlclient-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Bootstrap Vitess
+WORKDIR /vt/src/vitess.io/vitess
+USER vitess
+# Required by e2e test dependencies e.g. test/environment.py.
+ENV USER vitess
+ENV MYSQL_FLAVOR MySQL56
+RUN ./bootstrap.sh

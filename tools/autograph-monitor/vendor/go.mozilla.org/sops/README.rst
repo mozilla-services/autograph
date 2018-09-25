@@ -2,7 +2,7 @@ SOPS: Secrets OPerationS
 ========================
 
 **sops** is an editor of encrypted files that supports YAML, JSON and BINARY
-formats and encrypts with AWS KMS, GCP KMS and PGP.
+formats and encrypts with AWS KMS, GCP KMS, Azure Key Vault and PGP.
 (`demo <https://www.youtube.com/watch?v=YTEVyLXFiq0>`_)
 
 .. image:: https://i.imgur.com/X0TM5NI.gif
@@ -37,7 +37,7 @@ If you don't have Go installed, set it up with:
 .. code:: bash
 
 	$ {apt,yum,brew} install golang
-	$ echo 'GOPATH=~/go' >> ~/.bashrc
+	$ echo 'export GOPATH=~/go' >> ~/.bashrc
 	$ source ~/.bashrc
 	$ mkdir $GOPATH
 
@@ -207,35 +207,97 @@ And decrypt it using::
 
 	 $ sops --decrypt test.enc.yaml
 
+Encrypting using Azure Key Vault
+~~~~~~~~~~~~~~~~~~~~~~~~
+The Azure Key Vault integration uses service principals to access secrets in
+the vault. The following environment variables are used to authenticate:
+
+.. code:: bash
+
+	AZURE_TENANT_ID
+	AZURE_CLIENT_ID
+	AZURE_CLIENT_SECRET
+
+You can create a service principal using the cli like this:
+
+.. code:: bash
+
+	$ az ad sp create-for-rbac -n my-keyvault-sp
+
+	{
+		"appId": "<some-uuid>",
+		"displayName": "my-keyvault-sp",
+		"name": "http://my-keyvault-sp",
+		"password": "<some-uuid>",
+		"tenant": "<tenant-id>"
+	}
+
+The appId is the client id, and the password is the client secret.
+
+Encrypting/decrypting with Azure Key Vault requires the resource identifier for
+a key. This has the following form::
+
+	https://${VAULT_URL}/keys/${KEY_NAME}/${KEY_VERSION}
+
+To create a Key Vault and assign your service principal permissions on it
+from the commandline:
+
+.. code:: bash
+
+	# Create a resource group if you do not have one:
+	$ az group create --name sops-rg --location westeurope
+	# Key Vault names are globally unique, so generate one:
+	$ keyvault_name=sops-$(uuidgen | tr -d - | head -c 16)
+	# Create a Vault, a key, and give the service principal access:
+	$ az keyvault create --name $keyvault_name --resource-group sops-rg --location westeurope
+	$ az keyvault key create --name sops-key --vault-name $keyvault_name --protection software --ops encrypt decrypt
+	$ az keyvault set-policy --name $keyvault_name --resource-group sops-rg --spn $AZURE_CLIENT_ID \
+		--key-permissions encrypt decrypt
+	# Read the key id:
+	$ az keyvault key show --name sops-key --vault-name $keyvault_name --query key.kid
+
+	https://sops.vault.azure.net/keys/sops-key/some-string
+
+Now you can encrypt a file using::
+
+	$ sops --encrypt --azure-kv https://sops.vault.azure.net/keys/sops-key/some-string test.yaml > test.enc.yaml
+
+And decrypt it using::
+
+	 $ sops --decrypt test.enc.yaml
+
 
 Adding and removing keys
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 When creating new files, `sops` uses the PGP, KMS and GCP KMS defined in the
-command line arguments `--kms`, `--pgp` or `--gcp-kms`, or from the environment
-variables `SOPS_KMS_ARN`, `SOPS_PGP_FP`, `SOPS_GCP_KMS_IDS`. That information is
-stored in the file under the `sops` section, such that decrypting files does not
-require providing those parameters again.
+command line arguments `--kms`, `--pgp`, `--gcp-kms` or `--azure-kv`, or from
+the environment variables `SOPS_KMS_ARN`, `SOPS_PGP_FP`, `SOPS_GCP_KMS_IDS`,
+`SOPS_AZURE_KEYVAULT_URL`. That information is stored in the file under the
+`sops` section, such that decrypting files does not require providing those
+parameters again.
 
 Master PGP and KMS keys can be added and removed from a `sops` file in one of
 two ways: by using command line flag, or by editing the file directly.
 
-Command line flag `--add-kms`, `--add-pgp`, `--add-gcp-kms`, `--rm-kms`,
-`--rm-pgp` and `--rm-gcp-kms` can be used to add and remove keys from a file.
-These flags use the comma separated syntax as the `--kms`, `--pgp` and `--gcp-kms`
-arguments when creating new files.
+Command line flag `--add-kms`, `--add-pgp`, `--add-gcp-kms`, `--add-azure-kv`,
+`--rm-kms`, `--rm-pgp`, `--rm-gcp-kms` and `--rm-azure-kv` can be used to add
+and remove keys from a file.
+These flags use the comma separated syntax as the `--kms`, `--pgp`, `--gcp-kms`
+and `--azure-kv` arguments when creating new files.
 
 .. code:: bash
 
 	# add a new pgp key to the file and rotate the data key
-	$ sops -r --add-pgp 85D77543B3D624B63CEA9E6DBC17301B491B3F21 example.yaml
+	$ sops -r -i --add-pgp 85D77543B3D624B63CEA9E6DBC17301B491B3F21 example.yaml
 
 	# remove a pgp key from the file and rotate the data key
-	$ sops -r --rm-pgp 85D77543B3D624B63CEA9E6DBC17301B491B3F21 example.yaml
+	$ sops -r -i --rm-pgp 85D77543B3D624B63CEA9E6DBC17301B491B3F21 example.yaml
 
 Alternatively, invoking `sops` with the flag **-s** will display the master keys
 while editing. This method can be used to add or remove kms or pgp keys under the
-sops section.
+sops section. Invoking `sops` with the **-i** flag will perform an in-place edit
+instead of redirecting output to `stdout`.
 
 For example, to add a KMS master key to a file, add the following entry while
 editing:
@@ -396,22 +458,22 @@ can manage the three sets of configurations for the three types of files:
 	creation_rules:
 		# upon creation of a file that matches the pattern *.dev.yaml,
 		# KMS set A is used
-		- filename_regex: \.dev\.yaml$
+		- path_regex: \.dev\.yaml$
 		  kms: 'arn:aws:kms:us-west-2:927034868273:key/fe86dd69-4132-404c-ab86-4269956b4500,arn:aws:kms:us-west-2:361527076523:key/5052f06a-5d3f-489e-b86c-57201e06f31e+arn:aws:iam::361527076523:role/hiera-sops-prod'
 		  pgp: '1022470DE3F0BC54BC6AB62DE05550BC07FB1A0A'
 
 		# prod files use KMS set B in the PROD IAM
-		- filename_regex: \.prod\.yaml$
+		- path_regex: \.prod\.yaml$
 		  kms: 'arn:aws:kms:us-west-2:361527076523:key/5052f06a-5d3f-489e-b86c-57201e06f31e+arn:aws:iam::361527076523:role/hiera-sops-prod,arn:aws:kms:eu-central-1:361527076523:key/cb1fab90-8d17-42a1-a9d8-334968904f94+arn:aws:iam::361527076523:role/hiera-sops-prod'
 		  pgp: '1022470DE3F0BC54BC6AB62DE05550BC07FB1A0A'
 
 		# gcp files using GCP KMS
-		- filename_regex: \.gcp\.yaml$
+		- path_regex: \.gcp\.yaml$
 		  gcp_kms: projects/mygcproject/locations/global/keyRings/mykeyring/cryptoKeys/thekey
 
 		# Finally, if the rules above have not matched, this one is a
 		# catchall that will encrypt the file using KMS set C
-		# The absence of a filename_regex means it will match everything
+		# The absence of a path_regex means it will match everything
 		- kms: 'arn:aws:kms:us-west-2:927034868273:key/fe86dd69-4132-404c-ab86-4269956b4500,arn:aws:kms:us-west-2:142069644989:key/846cfb17-373d-49b9-8baf-f36b04512e47,arn:aws:kms:us-west-2:361527076523:key/5052f06a-5d3f-489e-b86c-57201e06f31e'
 		  pgp: '1022470DE3F0BC54BC6AB62DE05550BC07FB1A0A'
 
@@ -484,7 +546,7 @@ like so:
 .. code:: yaml
 
     creation_rules:
-        - filename_regex: .*keygroups.*
+        - path_regex: .*keygroups.*
           key_groups:
           # First key group
           - pgp:
@@ -525,7 +587,7 @@ with `shamir_threshold`:
 .. code:: yaml
 
     creation_rules:
-        - filename_regex: .*keygroups.*
+        - path_regex: .*keygroups.*
           shamir_threshold: 2
           key_groups:
           # First key group
@@ -602,6 +664,53 @@ in `/tmp/sops.sock` and not the local key service, you can run:
 
 `sops --enable-local-keyservice=false --keyservice unix:///tmp/sops.sock -d file.yaml`
 
+Auditing
+~~~~~~~~
+
+Sometimes, users want to be able to tell what files were accessed by whom in an
+environment they control. For this reason, SOPS can generate audit logs to
+record activity on encrypted files. When enabled, SOPS will write a log entry
+into a pre-configured PostgreSQL database when a file is decrypted. The log
+includes a timestamp, the username SOPS is running as, and the file that was
+decrypted.
+
+In order to enable auditing, you must first create the database and credentials
+using the schema found in :code:`audit/schema.sql`. This schema defines the
+tables that store the audit events and a role named :code:`sops` that only has
+permission to add entries to the audit event tables. The default password for
+the role :code:`sops` is :code:`sops`. You should change this password.
+
+Once you have created the database, you have to tell SOPS how to connect to it.
+Because we don't want users of SOPS to be able to control auditing, the audit
+configuration file location is not configurable, and must be at
+:code:`/etc/sops/audit.yaml`. This file should have strict permissions such
+that only the root user can modify it.
+
+For example, to enable auditing to a PostgreSQL database named :code:`sops`
+running on localhost, using the user :code:`sops` and the password :code:`sops`,
+:code:`/etc/sops/audit.yaml` should have the following contents:
+
+.. code:: yaml
+
+    backends:
+        postgres:
+            - connection_string: "postgres://sops:sops@localhost/sops?sslmode=verify-full"
+
+
+You can find more information on the :code:`connection_string` format in the
+`PostgreSQL docs <https://www.postgresql.org/docs/current/static/libpq-connect.html#libpq-connstring>`_.
+
+Under the :code:`postgres` map entry in the above YAML is a list, so one can
+provide more than one backend, and SOPS will log to all of them:
+
+.. code:: yaml
+
+    backends:
+        postgres:
+            - connection_string: "postgres://sops:sops@localhost/sops?sslmode=verify-full"
+            - connection_string: "postgres://sops:sops@remotehost/sops?sslmode=verify-full"
+
+
 Important information on types
 ------------------------------
 
@@ -651,6 +760,23 @@ This file will not work in `sops`:
 dynamic paths generated by anchors break the authentication step.
 
 JSON and TEXT file types do not support anchors and thus have no such limitation.
+
+YAML Streams
+~~~~~~~~~~~~
+
+`YAML` supports having more than one document in a single file. `sops` does not. For this
+reason, the following file won't work in `sops`:
+
+.. code:: yaml
+
+	---
+	data: foo
+	---
+	data: bar
+
+If you try to encrypt this file with `sops`, it will ignore all documents except the first,
+effectively deleting them. `sops` does not support multi-document files, and until our YAML
+parser does, it is unlikely it will.
 
 Top-level arrays
 ~~~~~~~~~~~~~~~~
@@ -894,6 +1020,14 @@ breaking the file integrity check.
 The unencrypted suffix can be set to a different value using the
 `--unencrypted-suffix` option.
 
+Conversely, you can opt in to only encrypt some values in a YAML or JSON file,
+by adding a chosen suffix to those keys and passing it to the `--encrypted-suffix` option.
+
+You can also specify these options in the `.sops.yaml` config file.
+
+Note: these two options `--unencrypted-suffix` and `--encrypted-suffix` are mutually exclusive and
+cannot both be used in the same file.
+
 Encryption Protocol
 -------------------
 
@@ -1083,7 +1217,7 @@ Threat Model
 
 The security of the data stored using sops is as strong as the weakest
 cryptographic mechanism. Values are encrypted using AES256_GCM which is the
-strongest symetric encryption algorithm known today. Data keys are encrypted
+strongest symmetric encryption algorithm known today. Data keys are encrypted
 in either KMS, which also uses AES256_GCM, or PGP which uses either RSA or
 ECDSA keys.
 

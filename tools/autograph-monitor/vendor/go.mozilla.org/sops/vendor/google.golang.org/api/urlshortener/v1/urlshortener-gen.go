@@ -127,8 +127,8 @@ type AnalyticsSnapshot struct {
 }
 
 func (s *AnalyticsSnapshot) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyticsSnapshot
-	raw := noMethod(*s)
+	type NoMethod AnalyticsSnapshot
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -166,8 +166,8 @@ type AnalyticsSummary struct {
 }
 
 func (s *AnalyticsSummary) MarshalJSON() ([]byte, error) {
-	type noMethod AnalyticsSummary
-	raw := noMethod(*s)
+	type NoMethod AnalyticsSummary
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -197,8 +197,8 @@ type StringCount struct {
 }
 
 func (s *StringCount) MarshalJSON() ([]byte, error) {
-	type noMethod StringCount
-	raw := noMethod(*s)
+	type NoMethod StringCount
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -249,8 +249,8 @@ type Url struct {
 }
 
 func (s *Url) MarshalJSON() ([]byte, error) {
-	type noMethod Url
-	raw := noMethod(*s)
+	type NoMethod Url
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -295,8 +295,8 @@ type UrlHistory struct {
 }
 
 func (s *UrlHistory) MarshalJSON() ([]byte, error) {
-	type noMethod UrlHistory
-	raw := noMethod(*s)
+	type NoMethod UrlHistory
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -376,6 +376,7 @@ func (c *UrlGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "url")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -416,7 +417,7 @@ func (c *UrlGetCall) Do(opts ...googleapi.CallOption) (*Url, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -516,6 +517,7 @@ func (c *UrlInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "url")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -556,7 +558,7 @@ func (c *UrlInsertCall) Do(opts ...googleapi.CallOption) (*Url, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -658,6 +660,7 @@ func (c *UrlListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "url/history")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -698,7 +701,7 @@ func (c *UrlListCall) Do(opts ...googleapi.CallOption) (*UrlHistory, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

@@ -219,6 +219,27 @@ func TestEncodeSimpleJSON(t *testing.T) {
 	assert.Equal(t, expected, branch)
 }
 
+func TestEncodeJSONWithEscaping(t *testing.T) {
+	branch := sops.TreeBranch{
+		sops.TreeItem{
+			Key:   "foo\\bar",
+			Value: "value",
+		},
+		sops.TreeItem{
+			Key:   "a_key_with\"quotes\"",
+			Value: 4.0,
+		},
+		sops.TreeItem{
+			Key:   "baz\\\\foo",
+			Value: 2.0,
+		},
+	}
+	out, err := Store{}.jsonFromTreeBranch(branch)
+	assert.Nil(t, err)
+	expected, _ := Store{}.treeBranchFromJSON(out)
+	assert.Equal(t, expected, branch)
+}
+
 func TestEncodeJSONArrayOfObjects(t *testing.T) {
 	branch := sops.TreeBranch{
 		sops.TreeItem{
@@ -247,13 +268,25 @@ func TestEncodeJSONArrayOfObjects(t *testing.T) {
 		2
 	]
 }`
-	out, err := Store{}.Marshal(branch)
+	store := Store{}
+	out, err := store.EmitPlainFile(branch)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, string(out))
 }
 
 func TestUnmarshalMetadataFromNonSOPSFile(t *testing.T) {
 	data := []byte(`{"hello": 2}`)
-	_, err := Store{}.UnmarshalMetadata(data)
+	store := Store{}
+	_, err := store.LoadEncryptedFile(data)
 	assert.Equal(t, sops.MetadataNotFound, err)
+}
+
+func TestLoadJSONFormattedBinaryFile(t *testing.T) {
+	// This is JSON data, but we want SOPS to interpret it as binary,
+	// e.g. because the --input-type binary flag was provided.
+	data := []byte(`{"hello": 2}`)
+	store := BinaryStore{}
+	branch, err := store.LoadPlainFile(data)
+	assert.Nil(t, err)
+	assert.Equal(t, "data", branch[0].Key)
 }

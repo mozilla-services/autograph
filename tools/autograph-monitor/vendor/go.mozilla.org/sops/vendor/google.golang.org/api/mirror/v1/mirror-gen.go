@@ -192,8 +192,8 @@ type Account struct {
 }
 
 func (s *Account) MarshalJSON() ([]byte, error) {
-	type noMethod Account
-	raw := noMethod(*s)
+	type NoMethod Account
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -236,8 +236,8 @@ type Attachment struct {
 }
 
 func (s *Attachment) MarshalJSON() ([]byte, error) {
-	type noMethod Attachment
-	raw := noMethod(*s)
+	type NoMethod Attachment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -272,8 +272,8 @@ type AttachmentsListResponse struct {
 }
 
 func (s *AttachmentsListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod AttachmentsListResponse
-	raw := noMethod(*s)
+	type NoMethod AttachmentsListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -300,8 +300,8 @@ type AuthToken struct {
 }
 
 func (s *AuthToken) MarshalJSON() ([]byte, error) {
-	type noMethod AuthToken
-	raw := noMethod(*s)
+	type NoMethod AuthToken
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -333,8 +333,8 @@ type Command struct {
 }
 
 func (s *Command) MarshalJSON() ([]byte, error) {
-	type noMethod Command
-	raw := noMethod(*s)
+	type NoMethod Command
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -424,8 +424,8 @@ type Contact struct {
 }
 
 func (s *Contact) MarshalJSON() ([]byte, error) {
-	type noMethod Contact
-	raw := noMethod(*s)
+	type NoMethod Contact
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -461,8 +461,8 @@ type ContactsListResponse struct {
 }
 
 func (s *ContactsListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ContactsListResponse
-	raw := noMethod(*s)
+	type NoMethod ContactsListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -517,20 +517,20 @@ type Location struct {
 }
 
 func (s *Location) MarshalJSON() ([]byte, error) {
-	type noMethod Location
-	raw := noMethod(*s)
+	type NoMethod Location
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Location) UnmarshalJSON(data []byte) error {
-	type noMethod Location
+	type NoMethod Location
 	var s1 struct {
 		Accuracy  gensupport.JSONFloat64 `json:"accuracy"`
 		Latitude  gensupport.JSONFloat64 `json:"latitude"`
 		Longitude gensupport.JSONFloat64 `json:"longitude"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -571,8 +571,8 @@ type LocationsListResponse struct {
 }
 
 func (s *LocationsListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod LocationsListResponse
-	raw := noMethod(*s)
+	type NoMethod LocationsListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -665,8 +665,8 @@ type MenuItem struct {
 }
 
 func (s *MenuItem) MarshalJSON() ([]byte, error) {
-	type noMethod MenuItem
-	raw := noMethod(*s)
+	type NoMethod MenuItem
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -707,8 +707,8 @@ type MenuValue struct {
 }
 
 func (s *MenuValue) MarshalJSON() ([]byte, error) {
-	type noMethod MenuValue
-	raw := noMethod(*s)
+	type NoMethod MenuValue
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -753,8 +753,8 @@ type Notification struct {
 }
 
 func (s *Notification) MarshalJSON() ([]byte, error) {
-	type noMethod Notification
-	raw := noMethod(*s)
+	type NoMethod Notification
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -788,8 +788,8 @@ type NotificationConfig struct {
 }
 
 func (s *NotificationConfig) MarshalJSON() ([]byte, error) {
-	type noMethod NotificationConfig
-	raw := noMethod(*s)
+	type NoMethod NotificationConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -831,8 +831,8 @@ type Setting struct {
 }
 
 func (s *Setting) MarshalJSON() ([]byte, error) {
-	type noMethod Setting
-	raw := noMethod(*s)
+	type NoMethod Setting
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -902,8 +902,8 @@ type Subscription struct {
 }
 
 func (s *Subscription) MarshalJSON() ([]byte, error) {
-	type noMethod Subscription
-	raw := noMethod(*s)
+	type NoMethod Subscription
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -939,8 +939,8 @@ type SubscriptionsListResponse struct {
 }
 
 func (s *SubscriptionsListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod SubscriptionsListResponse
-	raw := noMethod(*s)
+	type NoMethod SubscriptionsListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1132,8 +1132,8 @@ type TimelineItem struct {
 }
 
 func (s *TimelineItem) MarshalJSON() ([]byte, error) {
-	type noMethod TimelineItem
-	raw := noMethod(*s)
+	type NoMethod TimelineItem
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1172,8 +1172,8 @@ type TimelineListResponse struct {
 }
 
 func (s *TimelineListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod TimelineListResponse
-	raw := noMethod(*s)
+	type NoMethod TimelineListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1218,8 +1218,8 @@ type UserAction struct {
 }
 
 func (s *UserAction) MarshalJSON() ([]byte, error) {
-	type noMethod UserAction
-	raw := noMethod(*s)
+	type NoMethod UserAction
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1246,8 +1246,8 @@ type UserData struct {
 }
 
 func (s *UserData) MarshalJSON() ([]byte, error) {
-	type noMethod UserData
-	raw := noMethod(*s)
+	type NoMethod UserData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1312,6 +1312,7 @@ func (c *AccountsInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{userToken}/{accountType}/{accountName}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1357,7 +1358,7 @@ func (c *AccountsInsertCall) Do(opts ...googleapi.CallOption) (*Account, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1451,6 +1452,7 @@ func (c *ContactsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "contacts/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -1560,6 +1562,7 @@ func (c *ContactsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "contacts/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1603,7 +1606,7 @@ func (c *ContactsGetCall) Do(opts ...googleapi.CallOption) (*Contact, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1688,6 +1691,7 @@ func (c *ContactsInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "contacts")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1728,7 +1732,7 @@ func (c *ContactsInsertCall) Do(opts ...googleapi.CallOption) (*Contact, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1812,6 +1816,7 @@ func (c *ContactsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "contacts")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1852,7 +1857,7 @@ func (c *ContactsListCall) Do(opts ...googleapi.CallOption) (*ContactsListRespon
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1929,6 +1934,7 @@ func (c *ContactsPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "contacts/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -1972,7 +1978,7 @@ func (c *ContactsPatchCall) Do(opts ...googleapi.CallOption) (*Contact, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2062,6 +2068,7 @@ func (c *ContactsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "contacts/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -2105,7 +2112,7 @@ func (c *ContactsUpdateCall) Do(opts ...googleapi.CallOption) (*Contact, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2202,6 +2209,7 @@ func (c *LocationsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "locations/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2245,7 +2253,7 @@ func (c *LocationsGetCall) Do(opts ...googleapi.CallOption) (*Location, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2338,6 +2346,7 @@ func (c *LocationsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "locations")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2378,7 +2387,7 @@ func (c *LocationsListCall) Do(opts ...googleapi.CallOption) (*LocationsListResp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2462,6 +2471,7 @@ func (c *SettingsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "settings/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2505,7 +2515,7 @@ func (c *SettingsGetCall) Do(opts ...googleapi.CallOption) (*Setting, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2585,6 +2595,7 @@ func (c *SubscriptionsDeleteCall) doRequest(alt string) (*http.Response, error) 
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "subscriptions/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -2685,6 +2696,7 @@ func (c *SubscriptionsInsertCall) doRequest(alt string) (*http.Response, error) 
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "subscriptions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2725,7 +2737,7 @@ func (c *SubscriptionsInsertCall) Do(opts ...googleapi.CallOption) (*Subscriptio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2810,6 +2822,7 @@ func (c *SubscriptionsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "subscriptions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2850,7 +2863,7 @@ func (c *SubscriptionsListCall) Do(opts ...googleapi.CallOption) (*Subscriptions
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2926,6 +2939,7 @@ func (c *SubscriptionsUpdateCall) doRequest(alt string) (*http.Response, error) 
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "subscriptions/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -2969,7 +2983,7 @@ func (c *SubscriptionsUpdateCall) Do(opts ...googleapi.CallOption) (*Subscriptio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3052,6 +3066,7 @@ func (c *TimelineDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -3162,6 +3177,7 @@ func (c *TimelineGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3205,7 +3221,7 @@ func (c *TimelineGetCall) Do(opts ...googleapi.CallOption) (*TimelineItem, error
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3331,6 +3347,7 @@ func (c *TimelineInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline")
 	if c.mediaInfo_ != nil {
 		urls = strings.Replace(urls, "https://www.googleapis.com/", "https://www.googleapis.com/upload/", 1)
@@ -3340,11 +3357,12 @@ func (c *TimelineInsertCall) doRequest(alt string) (*http.Response, error) {
 		body = new(bytes.Buffer)
 		reqHeaders.Set("Content-Type", "application/json")
 	}
-	body, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
 	defer cleanup()
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
 	req.Header = reqHeaders
+	gensupport.SetGetBody(req, getBody)
 	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
@@ -3398,7 +3416,7 @@ func (c *TimelineInsertCall) Do(opts ...googleapi.CallOption) (*TimelineItem, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3557,6 +3575,7 @@ func (c *TimelineListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3597,7 +3616,7 @@ func (c *TimelineListCall) Do(opts ...googleapi.CallOption) (*TimelineListRespon
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3742,6 +3761,7 @@ func (c *TimelinePatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline/{id}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -3785,7 +3805,7 @@ func (c *TimelinePatchCall) Do(opts ...googleapi.CallOption) (*TimelineItem, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3916,6 +3936,7 @@ func (c *TimelineUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline/{id}")
 	if c.mediaInfo_ != nil {
 		urls = strings.Replace(urls, "https://www.googleapis.com/", "https://www.googleapis.com/upload/", 1)
@@ -3925,11 +3946,12 @@ func (c *TimelineUpdateCall) doRequest(alt string) (*http.Response, error) {
 		body = new(bytes.Buffer)
 		reqHeaders.Set("Content-Type", "application/json")
 	}
-	body, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
 	defer cleanup()
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
 	req.Header = reqHeaders
+	gensupport.SetGetBody(req, getBody)
 	googleapi.Expand(req.URL, map[string]string{
 		"id": c.id,
 	})
@@ -3986,7 +4008,7 @@ func (c *TimelineUpdateCall) Do(opts ...googleapi.CallOption) (*TimelineItem, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4091,6 +4113,7 @@ func (c *TimelineAttachmentsDeleteCall) doRequest(alt string) (*http.Response, e
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline/{itemId}/attachments/{attachmentId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -4211,6 +4234,7 @@ func (c *TimelineAttachmentsGetCall) doRequest(alt string) (*http.Response, erro
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline/{itemId}/attachments/{attachmentId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4271,7 +4295,7 @@ func (c *TimelineAttachmentsGetCall) Do(opts ...googleapi.CallOption) (*Attachme
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4399,6 +4423,7 @@ func (c *TimelineAttachmentsInsertCall) doRequest(alt string) (*http.Response, e
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline/{itemId}/attachments")
 	if c.mediaInfo_ != nil {
 		urls = strings.Replace(urls, "https://www.googleapis.com/", "https://www.googleapis.com/upload/", 1)
@@ -4408,11 +4433,12 @@ func (c *TimelineAttachmentsInsertCall) doRequest(alt string) (*http.Response, e
 		body = new(bytes.Buffer)
 		reqHeaders.Set("Content-Type", "application/json")
 	}
-	body, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
 	defer cleanup()
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
 	req.Header = reqHeaders
+	gensupport.SetGetBody(req, getBody)
 	googleapi.Expand(req.URL, map[string]string{
 		"itemId": c.itemId,
 	})
@@ -4469,7 +4495,7 @@ func (c *TimelineAttachmentsInsertCall) Do(opts ...googleapi.CallOption) (*Attac
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4582,6 +4608,7 @@ func (c *TimelineAttachmentsListCall) doRequest(alt string) (*http.Response, err
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "timeline/{itemId}/attachments")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4625,7 +4652,7 @@ func (c *TimelineAttachmentsListCall) Do(opts ...googleapi.CallOption) (*Attachm
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

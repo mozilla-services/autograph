@@ -1,0 +1,118 @@
+"create table a(abcd)"
+{
+  "Action": "create", "NewName": "a"
+}
+
+"drop  table b"
+{
+  "Action": "drop", "TableName": "b"
+}
+
+"drop table b.c"
+{
+  "Action": "drop", "TableName": "b.c"
+}
+
+"alter table c alter foo"
+{
+  "Action": "alter", "TableName": "c", "NewTable": "c"
+}
+
+"alter table c comment 'aa'"
+{
+  "Action": "alter", "TableName": "c", "NewTable": "c"
+}
+
+"alter table b.c comment 'aa'"
+{
+  "Action": "alter", "TableName": "b.c", "NewTable": "b.c"
+}
+
+"drop index a on b"
+{
+  "Action": "alter", "TableName": "b", "NewName": "b"
+}
+
+"drop index a on b.c"
+{
+  "Action": "alter", "TableName": "b.c", "NewName": "b.c"
+}
+
+"drop index a on b lock=none"
+{
+  "Action": "alter", "TableName": "b", "NewName": "b"
+}
+
+"rename table a to b"
+{
+  "Action": "rename", "TableName": "a", "NewTable": "b"
+}
+
+"rename table c.a to c.b"
+{
+  "Action": "rename", "TableName": "c.a", "NewTable": "c.b"
+}
+
+"alter table a rename b"
+{
+  "Action": "rename", "TableName": "a", "NewTable": "b"
+}
+
+"alter table a rename to b"
+{
+  "Action": "rename", "TableName": "a", "NewTable": "b"
+}
+
+"alter table c.a rename to c.b"
+{
+  "Action": "rename", "TableName": "c.a", "NewTable": "c.b"
+}
+
+"create view a asdasd"
+{
+  "Action": "create", "NewName": "a"
+}
+
+"alter view c as foo"
+{
+  "Action": "alter", "TableName": "c", "NewTable": "c"
+}
+
+"drop  view b"
+{
+  "Action": "drop", "TableName": "b"
+}
+
+"select * from a"
+{
+  "Action": ""
+}
+
+"syntax error"
+{
+  "Action": ""
+}
+
+"alter table a reorganize partition b into (partition c values less than (1000), partition d values less than (maxvalue))"
+{
+  "Action": "alter"
+}
+
+"alter table a partition by range (id) (partition p0 values less than (10), partition p1 values less than (maxvalue))"
+{
+  "Action": "alter", "TableName": "a", "NewTable": "a"
+}
+
+# truncate
+"truncate a"
+{
+  "PlanID": "DDL",
+  "TableName": "a"
+}
+
+# truncate
+"truncate table a"
+{
+  "PlanID": "DDL",
+  "TableName": "a"
+}

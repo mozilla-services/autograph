@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -56,17 +56,30 @@ func errSessionClosed(sh *sessionHandle) error {
 
 // Read returns a RowIterator for reading multiple rows from the database.
 func (t *txReadOnly) Read(ctx context.Context, table string, keys KeySet, columns []string) *RowIterator {
-	// ReadUsingIndex will use primary index if an empty index name is provided.
-	return t.ReadUsingIndex(ctx, table, "", keys, columns)
+	return t.ReadWithOptions(ctx, table, keys, columns, nil)
 }
 
-// ReadUsingIndex returns a RowIterator for reading multiple rows from the database
-// using an index.
-//
-// Currently, this function can only read columns that are part of the index
-// key, part of the primary key, or stored in the index due to a STORING clause
-// in the index definition.
-func (t *txReadOnly) ReadUsingIndex(ctx context.Context, table, index string, keys KeySet, columns []string) *RowIterator {
+// ReadUsingIndex calls ReadWithOptions with ReadOptions{Index: index}.
+func (t *txReadOnly) ReadUsingIndex(ctx context.Context, table, index string, keys KeySet, columns []string) (ri *RowIterator) {
+	return t.ReadWithOptions(ctx, table, keys, columns, &ReadOptions{Index: index})
+}
+
+// ReadOptions provides options for reading rows from a database.
+type ReadOptions struct {
+	// The index to use for reading. If non-empty, you can only read columns that are
+	// part of the index key, part of the primary key, or stored in the index due to
+	// a STORING clause in the index definition.
+	Index string
+
+	// The maximum number of rows to read. A limit value less than 1 means no limit.
+	Limit int
+}
+
+// ReadWithOptions returns a RowIterator for reading multiple rows from the database.
+// Pass a ReadOptions to modify the read operation.
+func (t *txReadOnly) ReadWithOptions(ctx context.Context, table string, keys KeySet, columns []string, opts *ReadOptions) (ri *RowIterator) {
+	ctx = traceStartSpan(ctx, "cloud.google.com/go/spanner.Read")
+	defer func() { traceEndSpan(ctx, ri.err) }()
 	var (
 		sh  *sessionHandle
 		ts  *sppb.TransactionSelector
@@ -85,6 +98,14 @@ func (t *txReadOnly) ReadUsingIndex(ctx context.Context, table, index string, ke
 		// Might happen if transaction is closed in the middle of a API call.
 		return &RowIterator{err: errSessionClosed(sh)}
 	}
+	index := ""
+	limit := 0
+	if opts != nil {
+		index = opts.Index
+		if opts.Limit > 0 {
+			limit = opts.Limit
+		}
+	}
 	return stream(
 		contextWithOutgoingMetadata(ctx, sh.getMetadata()),
 		func(ctx context.Context, resumeToken []byte) (streamingReceiver, error) {
@@ -97,6 +118,7 @@ func (t *txReadOnly) ReadUsingIndex(ctx context.Context, table, index string, ke
 					Columns:     columns,
 					KeySet:      kset,
 					ResumeToken: resumeToken,
+					Limit:       int64(limit),
 				})
 		},
 		t.setTimestamp,
@@ -129,7 +151,43 @@ func (t *txReadOnly) ReadRow(ctx context.Context, table string, key Key, columns
 
 // Query executes a query against the database. It returns a RowIterator
 // for retrieving the resulting rows.
+//
+// Query returns only row data, without a query plan or execution statistics.
+// Use QueryWithStats to get rows along with the plan and statistics.
+// Use AnalyzeQuery to get just the plan.
 func (t *txReadOnly) Query(ctx context.Context, statement Statement) *RowIterator {
+	return t.query(ctx, statement, sppb.ExecuteSqlRequest_NORMAL)
+}
+
+// Query executes a query against the database. It returns a RowIterator
+// for retrieving the resulting rows. The RowIterator will also be populated
+// with a query plan and execution statistics.
+func (t *txReadOnly) QueryWithStats(ctx context.Context, statement Statement) *RowIterator {
+	return t.query(ctx, statement, sppb.ExecuteSqlRequest_PROFILE)
+}
+
+// AnalyzeQuery returns the query plan for statement.
+func (t *txReadOnly) AnalyzeQuery(ctx context.Context, statement Statement) (*sppb.QueryPlan, error) {
+	iter := t.query(ctx, statement, sppb.ExecuteSqlRequest_PLAN)
+	defer iter.Stop()
+	for {
+		_, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	if iter.QueryPlan == nil {
+		return nil, spannerErrorf(codes.Internal, "query plan unavailable")
+	}
+	return iter.QueryPlan, nil
+}
+
+func (t *txReadOnly) query(ctx context.Context, statement Statement, mode sppb.ExecuteSqlRequest_QueryMode) (ri *RowIterator) {
+	ctx = traceStartSpan(ctx, "cloud.google.com/go/spanner.Query")
+	defer func() { traceEndSpan(ctx, ri.err) }()
 	var (
 		sh  *sessionHandle
 		ts  *sppb.TransactionSelector
@@ -148,6 +206,7 @@ func (t *txReadOnly) Query(ctx context.Context, statement Statement) *RowIterato
 		Session:     sid,
 		Transaction: ts,
 		Sql:         statement.SQL,
+		QueryMode:   mode,
 	}
 	if err := statement.bindParams(req); err != nil {
 		return &RowIterator{err: err}
@@ -210,7 +269,7 @@ func errUnexpectedTxState(ts txState) error {
 // applications do not need to worry about this in practice. See the
 // documentation of TimestampBound for more details.
 //
-// A ReadOnlyTransaction consumes resources on the server until Close() is
+// A ReadOnlyTransaction consumes resources on the server until Close is
 // called.
 type ReadOnlyTransaction struct {
 	// txReadOnly contains methods for performing transactional reads.
@@ -271,7 +330,7 @@ func (t *ReadOnlyTransaction) begin(ctx context.Context) error {
 		}
 		t.mu.Unlock()
 		if err != nil && sh != nil {
-			// Got a valid session handle, but failed to initalize transaction on Cloud Spanner.
+			// Got a valid session handle, but failed to initialize transaction on Cloud Spanner.
 			if shouldDropSession(err) {
 				sh.destroy()
 			}
@@ -565,7 +624,7 @@ type ReadWriteTransaction struct {
 	mu sync.Mutex
 	// state is the current transaction status of the read-write transaction.
 	state txState
-	// wb is the set of buffered mutations waiting to be commited.
+	// wb is the set of buffered mutations waiting to be committed.
 	wb []*Mutation
 }
 
@@ -662,7 +721,7 @@ func (t *ReadWriteTransaction) begin(ctx context.Context) error {
 func (t *ReadWriteTransaction) commit(ctx context.Context) (time.Time, error) {
 	var ts time.Time
 	t.mu.Lock()
-	t.state = txClosed // No futher operations after commit.
+	t.state = txClosed // No further operations after commit.
 	mPb, err := mutationsProto(t.wb)
 	t.mu.Unlock()
 	if err != nil {
@@ -742,7 +801,7 @@ func (t *ReadWriteTransaction) runInTransaction(ctx context.Context, f func(cont
 		return ts, err
 	}
 	// err == nil, return commit timestamp.
-	return ts, err
+	return ts, nil
 }
 
 // writeOnlyTransaction provides the most efficient way of doing write-only transactions. It essentially does blind writes to Cloud Spanner.
@@ -751,9 +810,9 @@ type writeOnlyTransaction struct {
 	sp *sessionPool
 }
 
-// applyAtLeastOnce commits a list of mutations to Cloud Spanner for at least once, unless one of the following happends:
-//     1) Context is timeout.
-//     2) An unretryable error(e.g. database not found) occurs.
+// applyAtLeastOnce commits a list of mutations to Cloud Spanner at least once, unless one of the following happens:
+//     1) Context times out.
+//     2) An unretryable error (e.g. database not found) occurs.
 //     3) There is a malformed Mutation object.
 func (t *writeOnlyTransaction) applyAtLeastOnce(ctx context.Context, ms ...*Mutation) (time.Time, error) {
 	var (

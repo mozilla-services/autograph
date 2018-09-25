@@ -1,10 +1,10 @@
-// Copyright 2017, Google Inc. All rights reserved.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//     https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/internal/version"
+	"github.com/golang/protobuf/proto"
 	gax "github.com/googleapis/gax-go"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
@@ -29,6 +30,7 @@ import (
 	clouderrorreportingpb "google.golang.org/genproto/googleapis/devtools/clouderrorreporting/v1beta1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 )
 
 // ErrorStatsCallOptions contains the retry settings for each method of ErrorStatsClient.
@@ -68,6 +70,8 @@ func defaultErrorStatsCallOptions() *ErrorStatsCallOptions {
 }
 
 // ErrorStatsClient is a client for interacting with Stackdriver Error Reporting API.
+//
+// Methods, except Close, may be called concurrently. However, fields must not be modified concurrently with method calls.
 type ErrorStatsClient struct {
 	// The connection to the service.
 	conn *grpc.ClientConn
@@ -78,8 +82,8 @@ type ErrorStatsClient struct {
 	// The call options for this service.
 	CallOptions *ErrorStatsCallOptions
 
-	// The metadata to be sent with each request.
-	xGoogHeader []string
+	// The x-goog-* metadata to be sent with each request.
+	xGoogMetadata metadata.MD
 }
 
 // NewErrorStatsClient creates a new error stats service client.
@@ -118,22 +122,15 @@ func (c *ErrorStatsClient) Close() error {
 func (c *ErrorStatsClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
-}
-
-// ErrorStatsProjectPath returns the path for the project resource.
-func ErrorStatsProjectPath(project string) string {
-	return "" +
-		"projects/" +
-		project +
-		""
+	c.xGoogMetadata = metadata.Pairs("x-goog-api-client", gax.XGoogHeader(kv...))
 }
 
 // ListGroupStats lists the specified groups.
 func (c *ErrorStatsClient) ListGroupStats(ctx context.Context, req *clouderrorreportingpb.ListGroupStatsRequest, opts ...gax.CallOption) *ErrorGroupStatsIterator {
-	ctx = insertXGoog(ctx, c.xGoogHeader)
+	ctx = insertMetadata(ctx, c.xGoogMetadata)
 	opts = append(c.CallOptions.ListGroupStats[0:len(c.CallOptions.ListGroupStats):len(c.CallOptions.ListGroupStats)], opts...)
 	it := &ErrorGroupStatsIterator{}
+	req = proto.Clone(req).(*clouderrorreportingpb.ListGroupStatsRequest)
 	it.InternalFetch = func(pageSize int, pageToken string) ([]*clouderrorreportingpb.ErrorGroupStats, string, error) {
 		var resp *clouderrorreportingpb.ListGroupStatsResponse
 		req.PageToken = pageToken
@@ -161,14 +158,16 @@ func (c *ErrorStatsClient) ListGroupStats(ctx context.Context, req *clouderrorre
 		return nextPageToken, nil
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
+	it.pageInfo.MaxSize = int(req.PageSize)
 	return it
 }
 
 // ListEvents lists the specified events.
 func (c *ErrorStatsClient) ListEvents(ctx context.Context, req *clouderrorreportingpb.ListEventsRequest, opts ...gax.CallOption) *ErrorEventIterator {
-	ctx = insertXGoog(ctx, c.xGoogHeader)
+	ctx = insertMetadata(ctx, c.xGoogMetadata)
 	opts = append(c.CallOptions.ListEvents[0:len(c.CallOptions.ListEvents):len(c.CallOptions.ListEvents)], opts...)
 	it := &ErrorEventIterator{}
+	req = proto.Clone(req).(*clouderrorreportingpb.ListEventsRequest)
 	it.InternalFetch = func(pageSize int, pageToken string) ([]*clouderrorreportingpb.ErrorEvent, string, error) {
 		var resp *clouderrorreportingpb.ListEventsResponse
 		req.PageToken = pageToken
@@ -196,12 +195,13 @@ func (c *ErrorStatsClient) ListEvents(ctx context.Context, req *clouderrorreport
 		return nextPageToken, nil
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
+	it.pageInfo.MaxSize = int(req.PageSize)
 	return it
 }
 
 // DeleteEvents deletes all error events of a given project.
 func (c *ErrorStatsClient) DeleteEvents(ctx context.Context, req *clouderrorreportingpb.DeleteEventsRequest, opts ...gax.CallOption) (*clouderrorreportingpb.DeleteEventsResponse, error) {
-	ctx = insertXGoog(ctx, c.xGoogHeader)
+	ctx = insertMetadata(ctx, c.xGoogMetadata)
 	opts = append(c.CallOptions.DeleteEvents[0:len(c.CallOptions.DeleteEvents):len(c.CallOptions.DeleteEvents)], opts...)
 	var resp *clouderrorreportingpb.DeleteEventsResponse
 	err := gax.Invoke(ctx, func(ctx context.Context, settings gax.CallSettings) error {

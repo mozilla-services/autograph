@@ -1,4 +1,6 @@
-// Package pubsub provides access to the Google Cloud Pub/Sub API.
+// Package pubsub provides access to the Cloud Pub/Sub API.
+//
+// This package is DEPRECATED. Use package cloud.google.com/go/pubsub instead.
 //
 // See https://cloud.google.com/pubsub/docs
 //
@@ -148,13 +150,22 @@ type AcknowledgeRequest struct {
 }
 
 func (s *AcknowledgeRequest) MarshalJSON() ([]byte, error) {
-	type noMethod AcknowledgeRequest
-	raw := noMethod(*s)
+	type NoMethod AcknowledgeRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // Binding: Associates `members` with a `role`.
 type Binding struct {
+	// Condition: Unimplemented. The condition that is associated with this
+	// binding.
+	// NOTE: an unsatisfied condition will not allow user access via
+	// current
+	// binding. Different bindings, including their conditions, are
+	// examined
+	// independently.
+	Condition *Expr `json:"condition,omitempty"`
+
 	// Members: Specifies the identities requesting access for a Cloud
 	// Platform resource.
 	// `members` can have the following values:
@@ -169,7 +180,7 @@ type Binding struct {
 	//
 	// * `user:{emailid}`: An email address that represents a specific
 	// Google
-	//    account. For example, `alice@gmail.com` or `joe@example.com`.
+	//    account. For example, `alice@gmail.com` .
 	//
 	//
 	// * `serviceAccount:{emailid}`: An email address that represents a
@@ -191,12 +202,10 @@ type Binding struct {
 	Members []string `json:"members,omitempty"`
 
 	// Role: Role that is assigned to `members`.
-	// For example, `roles/viewer`, `roles/editor`, or
-	// `roles/owner`.
-	// Required
+	// For example, `roles/viewer`, `roles/editor`, or `roles/owner`.
 	Role string `json:"role,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "Members") to
+	// ForceSendFields is a list of field names (e.g. "Condition") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -204,7 +213,7 @@ type Binding struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "Members") to include in
+	// NullFields is a list of field names (e.g. "Condition") to include in
 	// API requests with the JSON null value. By default, fields with empty
 	// values are omitted from API requests. However, any field with an
 	// empty value appearing in NullFields will be sent to the server as
@@ -214,8 +223,8 @@ type Binding struct {
 }
 
 func (s *Binding) MarshalJSON() ([]byte, error) {
-	type noMethod Binding
-	raw := noMethod(*s)
+	type NoMethod Binding
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -235,6 +244,60 @@ type Empty struct {
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
 	googleapi.ServerResponse `json:"-"`
+}
+
+// Expr: Represents an expression text. Example:
+//
+//     title: "User account presence"
+//     description: "Determines whether the request has a user account"
+//     expression: "size(request.user) > 0"
+type Expr struct {
+	// Description: An optional description of the expression. This is a
+	// longer text which
+	// describes the expression, e.g. when hovered over it in a UI.
+	Description string `json:"description,omitempty"`
+
+	// Expression: Textual representation of an expression in
+	// Common Expression Language syntax.
+	//
+	// The application context of the containing message determines
+	// which
+	// well-known feature set of CEL is supported.
+	Expression string `json:"expression,omitempty"`
+
+	// Location: An optional string indicating the location of the
+	// expression for error
+	// reporting, e.g. a file name and a position in the file.
+	Location string `json:"location,omitempty"`
+
+	// Title: An optional title for the expression, i.e. a short string
+	// describing
+	// its purpose. This can be used e.g. in UIs which allow to enter
+	// the
+	// expression.
+	Title string `json:"title,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Description") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Description") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Expr) MarshalJSON() ([]byte, error) {
+	type NoMethod Expr
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // ListSubscriptionsResponse: Response for the `ListSubscriptions`
@@ -272,8 +335,8 @@ type ListSubscriptionsResponse struct {
 }
 
 func (s *ListSubscriptionsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListSubscriptionsResponse
-	raw := noMethod(*s)
+	type NoMethod ListSubscriptionsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -312,8 +375,8 @@ type ListTopicSubscriptionsResponse struct {
 }
 
 func (s *ListTopicSubscriptionsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListTopicSubscriptionsResponse
-	raw := noMethod(*s)
+	type NoMethod ListTopicSubscriptionsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -349,8 +412,8 @@ type ListTopicsResponse struct {
 }
 
 func (s *ListTopicsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListTopicsResponse
-	raw := noMethod(*s)
+	type NoMethod ListTopicsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -394,8 +457,8 @@ type ModifyAckDeadlineRequest struct {
 }
 
 func (s *ModifyAckDeadlineRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ModifyAckDeadlineRequest
-	raw := noMethod(*s)
+	type NoMethod ModifyAckDeadlineRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -427,8 +490,8 @@ type ModifyPushConfigRequest struct {
 }
 
 func (s *ModifyPushConfigRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ModifyPushConfigRequest
-	raw := noMethod(*s)
+	type NoMethod ModifyPushConfigRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -437,7 +500,7 @@ func (s *ModifyPushConfigRequest) MarshalJSON() ([]byte, error) {
 // specify access control policies for Cloud Platform resources.
 //
 //
-// A `Policy` consists of a list of `bindings`. A `Binding` binds a list
+// A `Policy` consists of a list of `bindings`. A `binding` binds a list
 // of
 // `members` to a `role`, where the members can be user accounts, Google
 // groups,
@@ -445,7 +508,7 @@ func (s *ModifyPushConfigRequest) MarshalJSON() ([]byte, error) {
 // permissions
 // defined by IAM.
 //
-// **Example**
+// **JSON Example**
 //
 //     {
 //       "bindings": [
@@ -456,7 +519,7 @@ func (s *ModifyPushConfigRequest) MarshalJSON() ([]byte, error) {
 //             "group:admins@example.com",
 //             "domain:google.com",
 //
-// "serviceAccount:my-other-app@appspot.gserviceaccount.com",
+// "serviceAccount:my-other-app@appspot.gserviceaccount.com"
 //           ]
 //         },
 //         {
@@ -466,8 +529,22 @@ func (s *ModifyPushConfigRequest) MarshalJSON() ([]byte, error) {
 //       ]
 //     }
 //
+// **YAML Example**
+//
+//     bindings:
+//     - members:
+//       - user:mike@example.com
+//       - group:admins@example.com
+//       - domain:google.com
+//       - serviceAccount:my-other-app@appspot.gserviceaccount.com
+//       role: roles/owner
+//     - members:
+//       - user:sean@example.com
+//       role: roles/viewer
+//
+//
 // For a description of IAM and its features, see the
-// [IAM developer's guide](https://cloud.google.com/iam).
+// [IAM developer's guide](https://cloud.google.com/iam/docs).
 type Policy struct {
 	// Bindings: Associates a list of `members` to a `role`.
 	// `bindings` with no members will result in an error.
@@ -493,7 +570,7 @@ type Policy struct {
 	// policy is overwritten blindly.
 	Etag string `json:"etag,omitempty"`
 
-	// Version: Version of the `Policy`. The default version is 0.
+	// Version: Deprecated.
 	Version int64 `json:"version,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -518,8 +595,8 @@ type Policy struct {
 }
 
 func (s *Policy) MarshalJSON() ([]byte, error) {
-	type noMethod Policy
-	raw := noMethod(*s)
+	type NoMethod Policy
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -546,8 +623,8 @@ type PublishRequest struct {
 }
 
 func (s *PublishRequest) MarshalJSON() ([]byte, error) {
-	type noMethod PublishRequest
-	raw := noMethod(*s)
+	type NoMethod PublishRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -582,8 +659,8 @@ type PublishResponse struct {
 }
 
 func (s *PublishResponse) MarshalJSON() ([]byte, error) {
-	type noMethod PublishResponse
-	raw := noMethod(*s)
+	type NoMethod PublishResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -635,8 +712,8 @@ type PubsubMessage struct {
 }
 
 func (s *PubsubMessage) MarshalJSON() ([]byte, error) {
-	type noMethod PubsubMessage
-	raw := noMethod(*s)
+	type NoMethod PubsubMessage
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -676,8 +753,8 @@ type PullRequest struct {
 }
 
 func (s *PullRequest) MarshalJSON() ([]byte, error) {
-	type noMethod PullRequest
-	raw := noMethod(*s)
+	type NoMethod PullRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -715,8 +792,8 @@ type PullResponse struct {
 }
 
 func (s *PullResponse) MarshalJSON() ([]byte, error) {
-	type noMethod PullResponse
-	raw := noMethod(*s)
+	type NoMethod PullResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -780,8 +857,8 @@ type PushConfig struct {
 }
 
 func (s *PushConfig) MarshalJSON() ([]byte, error) {
-	type noMethod PushConfig
-	raw := noMethod(*s)
+	type NoMethod PushConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -811,8 +888,8 @@ type ReceivedMessage struct {
 }
 
 func (s *ReceivedMessage) MarshalJSON() ([]byte, error) {
-	type noMethod ReceivedMessage
-	raw := noMethod(*s)
+	type NoMethod ReceivedMessage
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -844,8 +921,8 @@ type SetIamPolicyRequest struct {
 }
 
 func (s *SetIamPolicyRequest) MarshalJSON() ([]byte, error) {
-	type noMethod SetIamPolicyRequest
-	raw := noMethod(*s)
+	type NoMethod SetIamPolicyRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -930,8 +1007,8 @@ type Subscription struct {
 }
 
 func (s *Subscription) MarshalJSON() ([]byte, error) {
-	type noMethod Subscription
-	raw := noMethod(*s)
+	type NoMethod Subscription
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -965,8 +1042,8 @@ type TestIamPermissionsRequest struct {
 }
 
 func (s *TestIamPermissionsRequest) MarshalJSON() ([]byte, error) {
-	type noMethod TestIamPermissionsRequest
-	raw := noMethod(*s)
+	type NoMethod TestIamPermissionsRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1000,8 +1077,8 @@ type TestIamPermissionsResponse struct {
 }
 
 func (s *TestIamPermissionsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod TestIamPermissionsResponse
-	raw := noMethod(*s)
+	type NoMethod TestIamPermissionsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1042,8 +1119,8 @@ type Topic struct {
 }
 
 func (s *Topic) MarshalJSON() ([]byte, error) {
-	type noMethod Topic
-	raw := noMethod(*s)
+	type NoMethod Topic
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1114,6 +1191,7 @@ func (c *ProjectsSubscriptionsAcknowledgeCall) doRequest(alt string) (*http.Resp
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+subscription}:acknowledge")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1157,7 +1235,7 @@ func (c *ProjectsSubscriptionsAcknowledgeCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1258,6 +1336,7 @@ func (c *ProjectsSubscriptionsCreateCall) doRequest(alt string) (*http.Response,
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+name}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -1301,7 +1380,7 @@ func (c *ProjectsSubscriptionsCreateCall) Do(opts ...googleapi.CallOption) (*Sub
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1395,6 +1474,7 @@ func (c *ProjectsSubscriptionsDeleteCall) doRequest(alt string) (*http.Response,
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+subscription}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -1438,7 +1518,7 @@ func (c *ProjectsSubscriptionsDeleteCall) Do(opts ...googleapi.CallOption) (*Emp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1535,6 +1615,7 @@ func (c *ProjectsSubscriptionsGetCall) doRequest(alt string) (*http.Response, er
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+subscription}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1578,7 +1659,7 @@ func (c *ProjectsSubscriptionsGetCall) Do(opts ...googleapi.CallOption) (*Subscr
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1678,6 +1759,7 @@ func (c *ProjectsSubscriptionsGetIamPolicyCall) doRequest(alt string) (*http.Res
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+resource}:getIamPolicy")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1721,7 +1803,7 @@ func (c *ProjectsSubscriptionsGetIamPolicyCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1835,6 +1917,7 @@ func (c *ProjectsSubscriptionsListCall) doRequest(alt string) (*http.Response, e
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+project}/subscriptions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1878,7 +1961,7 @@ func (c *ProjectsSubscriptionsListCall) Do(opts ...googleapi.CallOption) (*ListS
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2008,6 +2091,7 @@ func (c *ProjectsSubscriptionsModifyAckDeadlineCall) doRequest(alt string) (*htt
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+subscription}:modifyAckDeadline")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2051,7 +2135,7 @@ func (c *ProjectsSubscriptionsModifyAckDeadlineCall) Do(opts ...googleapi.CallOp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2154,6 +2238,7 @@ func (c *ProjectsSubscriptionsModifyPushConfigCall) doRequest(alt string) (*http
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+subscription}:modifyPushConfig")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2197,7 +2282,7 @@ func (c *ProjectsSubscriptionsModifyPushConfigCall) Do(opts ...googleapi.CallOpt
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2296,6 +2381,7 @@ func (c *ProjectsSubscriptionsPullCall) doRequest(alt string) (*http.Response, e
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+subscription}:pull")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2339,7 +2425,7 @@ func (c *ProjectsSubscriptionsPullCall) Do(opts ...googleapi.CallOption) (*PullR
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2434,6 +2520,7 @@ func (c *ProjectsSubscriptionsSetIamPolicyCall) doRequest(alt string) (*http.Res
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+resource}:setIamPolicy")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2477,7 +2564,7 @@ func (c *ProjectsSubscriptionsSetIamPolicyCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2580,6 +2667,7 @@ func (c *ProjectsSubscriptionsTestIamPermissionsCall) doRequest(alt string) (*ht
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+resource}:testIamPermissions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2623,7 +2711,7 @@ func (c *ProjectsSubscriptionsTestIamPermissionsCall) Do(opts ...googleapi.CallO
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2716,6 +2804,7 @@ func (c *ProjectsTopicsCreateCall) doRequest(alt string) (*http.Response, error)
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+name}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -2759,7 +2848,7 @@ func (c *ProjectsTopicsCreateCall) Do(opts ...googleapi.CallOption) (*Topic, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2853,6 +2942,7 @@ func (c *ProjectsTopicsDeleteCall) doRequest(alt string) (*http.Response, error)
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+topic}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -2896,7 +2986,7 @@ func (c *ProjectsTopicsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2993,6 +3083,7 @@ func (c *ProjectsTopicsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+topic}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3036,7 +3127,7 @@ func (c *ProjectsTopicsGetCall) Do(opts ...googleapi.CallOption) (*Topic, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3136,6 +3227,7 @@ func (c *ProjectsTopicsGetIamPolicyCall) doRequest(alt string) (*http.Response, 
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+resource}:getIamPolicy")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3179,7 +3271,7 @@ func (c *ProjectsTopicsGetIamPolicyCall) Do(opts ...googleapi.CallOption) (*Poli
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3293,6 +3385,7 @@ func (c *ProjectsTopicsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+project}/topics")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3336,7 +3429,7 @@ func (c *ProjectsTopicsListCall) Do(opts ...googleapi.CallOption) (*ListTopicsRe
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3462,6 +3555,7 @@ func (c *ProjectsTopicsPublishCall) doRequest(alt string) (*http.Response, error
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+topic}:publish")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3505,7 +3599,7 @@ func (c *ProjectsTopicsPublishCall) Do(opts ...googleapi.CallOption) (*PublishRe
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3600,6 +3694,7 @@ func (c *ProjectsTopicsSetIamPolicyCall) doRequest(alt string) (*http.Response, 
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+resource}:setIamPolicy")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3643,7 +3738,7 @@ func (c *ProjectsTopicsSetIamPolicyCall) Do(opts ...googleapi.CallOption) (*Poli
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3746,6 +3841,7 @@ func (c *ProjectsTopicsTestIamPermissionsCall) doRequest(alt string) (*http.Resp
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+resource}:testIamPermissions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3789,7 +3885,7 @@ func (c *ProjectsTopicsTestIamPermissionsCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3906,6 +4002,7 @@ func (c *ProjectsTopicsSubscriptionsListCall) doRequest(alt string) (*http.Respo
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+topic}/subscriptions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3949,7 +4046,7 @@ func (c *ProjectsTopicsSubscriptionsListCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

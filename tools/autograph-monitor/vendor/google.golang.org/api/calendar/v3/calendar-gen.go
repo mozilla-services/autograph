@@ -50,8 +50,17 @@ const (
 	// Manage your calendars
 	CalendarScope = "https://www.googleapis.com/auth/calendar"
 
+	// View and edit events on all your calendars
+	CalendarEventsScope = "https://www.googleapis.com/auth/calendar.events"
+
+	// View events on all your calendars
+	CalendarEventsReadonlyScope = "https://www.googleapis.com/auth/calendar.events.readonly"
+
 	// View your calendars
 	CalendarReadonlyScope = "https://www.googleapis.com/auth/calendar.readonly"
+
+	// View your Calendar settings
+	CalendarSettingsReadonlyScope = "https://www.googleapis.com/auth/calendar.settings.readonly"
 )
 
 func New(client *http.Client) (*Service, error) {
@@ -572,6 +581,7 @@ type CalendarNotification struct {
 	// - "sms" - Reminders are sent via SMS. This value is read-only and is
 	// ignored on inserts and updates. SMS reminders are only available for
 	// G Suite customers.
+	// Required when adding a notification.
 	Method string `json:"method,omitempty"`
 
 	// Type: The type of notification. Possible values are:
@@ -580,9 +590,11 @@ type CalendarNotification struct {
 	// - "eventChange" - Notification sent when an event is changed.
 	// - "eventCancellation" - Notification sent when an event is cancelled.
 	//
-	// - "eventResponse" - Notification sent when an event is changed.
+	// - "eventResponse" - Notification sent when an attendee responds to
+	// the event invitation.
 	// - "agenda" - An agenda with the events of the day (sent out in the
 	// morning).
+	// Required when adding a notification.
 	Type string `json:"type,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Method") to
@@ -1064,6 +1076,11 @@ type EntryPoint struct {
 	// Optional.
 	AccessCode string `json:"accessCode,omitempty"`
 
+	// EntryPointFeatures: Features of the entry point, such as being toll
+	// or toll-free. One entry point can have multiple features. However,
+	// toll and toll-free cannot be both set on the same entry point.
+	EntryPointFeatures []string `json:"entryPointFeatures,omitempty"`
+
 	// EntryPointType: The type of the conference entry point.
 	// Possible values are:
 	// - "video" - joining a conference over HTTP. A conference can have
@@ -1122,6 +1139,12 @@ type EntryPoint struct {
 	// fields should be displayed.
 	// Optional.
 	Pin string `json:"pin,omitempty"`
+
+	// RegionCode: The CLDR/ISO 3166 region code for the country associated
+	// with this phone access. Example: "SE" for Sweden.
+	// Calendar backend will populate this field only for
+	// EntryPointType.PHONE.
+	RegionCode string `json:"regionCode,omitempty"`
 
 	// Uri: The URI of the entry point. The maximum length is 1300
 	// characters.
@@ -1335,7 +1358,9 @@ type Event struct {
 
 	// OriginalStartTime: For an instance of a recurring event, this is the
 	// time at which this event would start according to the recurrence data
-	// in the recurring event identified by recurringEventId. Immutable.
+	// in the recurring event identified by recurringEventId. It uniquely
+	// identifies the instance within the recurring event series even if the
+	// instance was moved to a different time. Immutable.
 	OriginalStartTime *EventDateTime `json:"originalStartTime,omitempty"`
 
 	// PrivateCopy: Whether this is a private event copy where changes are
@@ -1375,7 +1400,34 @@ type Event struct {
 	// - "confirmed" - The event is confirmed. This is the default status.
 	//
 	// - "tentative" - The event is tentatively confirmed.
-	// - "cancelled" - The event is cancelled.
+	// - "cancelled" - The event is cancelled (deleted). The list method
+	// returns cancelled events only on incremental sync (when syncToken or
+	// updatedMin are specified) or if the showDeleted flag is set to true.
+	// The get method always returns them.
+	// A cancelled status represents two different states depending on the
+	// event type:
+	// - Cancelled exceptions of an uncancelled recurring event indicate
+	// that this instance should no longer be presented to the user. Clients
+	// should store these events for the lifetime of the parent recurring
+	// event.
+	// Cancelled exceptions are only guaranteed to have values for the id,
+	// recurringEventId and originalStartTime fields populated. The other
+	// fields might be empty.
+	// - All other cancelled events represent deleted events. Clients should
+	// remove their locally synced copies. Such cancelled events will
+	// eventually disappear, so do not rely on them being available
+	// indefinitely.
+	// Deleted events are only guaranteed to have the id field populated.
+	// On the organizer's calendar, cancelled events continue to expose
+	// event details (summary, location, etc.) so that they can be restored
+	// (undeleted). Similarly, the events to which the user was invited and
+	// that they manually removed continue to provide details. However,
+	// incremental sync requests with showDeleted set to false will not
+	// return these details.
+	// If an event changes its organizer (for example via the move
+	// operation) and the original organizer is not on the attendee list, it
+	// will leave behind a cancelled event where only the id field is
+	// guaranteed to be populated.
 	Status string `json:"status,omitempty"`
 
 	// Summary: Title of the event.
@@ -1442,7 +1494,7 @@ type EventCreator struct {
 	// Email: The creator's email address, if available.
 	Email string `json:"email,omitempty"`
 
-	// Id: The creator's Profile ID, if available. It corresponds to theid
+	// Id: The creator's Profile ID, if available. It corresponds to the id
 	// field in the People collection of the Google+ API
 	Id string `json:"id,omitempty"`
 
@@ -1573,8 +1625,8 @@ type EventOrganizer struct {
 	// valid email address as per RFC5322.
 	Email string `json:"email,omitempty"`
 
-	// Id: The organizer's Profile ID, if available. It corresponds to theid
-	// field in the People collection of the Google+ API
+	// Id: The organizer's Profile ID, if available. It corresponds to the
+	// id field in the People collection of the Google+ API
 	Id string `json:"id,omitempty"`
 
 	// Self: Whether the organizer corresponds to the calendar on which this
@@ -1684,7 +1736,9 @@ type EventAttachment struct {
 
 	// FileUrl: URL link to the attachment.
 	// For adding Google Drive file attachments use the same format as in
-	// alternateLink property of the Files resource in the Drive API.
+	// alternateLink property of the Files resource in the Drive
+	// API.
+	// Required when adding an attachment.
 	FileUrl string `json:"fileUrl,omitempty"`
 
 	// IconLink: URL link to the attachment's icon. Read-only.
@@ -1733,9 +1787,10 @@ type EventAttendee struct {
 	// Email: The attendee's email address, if available. This field must be
 	// present when adding an attendee. It must be a valid email address as
 	// per RFC5322.
+	// Required when adding an attendee.
 	Email string `json:"email,omitempty"`
 
-	// Id: The attendee's Profile ID, if available. It corresponds to theid
+	// Id: The attendee's Profile ID, if available. It corresponds to the id
 	// field in the People collection of the Google+ API
 	Id string `json:"id,omitempty"`
 
@@ -1747,8 +1802,9 @@ type EventAttendee struct {
 	// Read-only. The default is False.
 	Organizer bool `json:"organizer,omitempty"`
 
-	// Resource: Whether the attendee is a resource. Read-only. The default
-	// is False.
+	// Resource: Whether the attendee is a resource. Can only be set when
+	// the attendee is added to the event for the first time. Subsequent
+	// modifications are ignored. Optional. The default is False.
 	Resource bool `json:"resource,omitempty"`
 
 	// ResponseStatus: The attendee's response status. Possible values are:
@@ -1836,11 +1892,13 @@ type EventReminder struct {
 	// Suite customers. Requests to set SMS reminders for other account
 	// types are ignored.
 	// - "popup" - Reminders are sent via a UI popup.
+	// Required when adding a reminder.
 	Method string `json:"method,omitempty"`
 
 	// Minutes: Number of minutes before the start of the event when the
 	// reminder should trigger. Valid values are between 0 and 40320 (4
 	// weeks in minutes).
+	// Required when adding a reminder.
 	Minutes int64 `json:"minutes,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Method") to
@@ -2012,21 +2070,23 @@ func (s *FreeBusyGroup) MarshalJSON() ([]byte, error) {
 
 type FreeBusyRequest struct {
 	// CalendarExpansionMax: Maximal number of calendars for which FreeBusy
-	// information is to be provided. Optional.
+	// information is to be provided. Optional. Maximum value is 50.
 	CalendarExpansionMax int64 `json:"calendarExpansionMax,omitempty"`
 
 	// GroupExpansionMax: Maximal number of calendar identifiers to be
-	// provided for a single group. Optional. An error will be returned for
-	// a group with more members than this value.
+	// provided for a single group. Optional. An error is returned for a
+	// group with more members than this value. Maximum value is 100.
 	GroupExpansionMax int64 `json:"groupExpansionMax,omitempty"`
 
 	// Items: List of calendars and/or groups to query.
 	Items []*FreeBusyRequestItem `json:"items,omitempty"`
 
-	// TimeMax: The end of the interval for the query.
+	// TimeMax: The end of the interval for the query formatted as per
+	// RFC3339.
 	TimeMax string `json:"timeMax,omitempty"`
 
-	// TimeMin: The start of the interval for the query.
+	// TimeMin: The start of the interval for the query formatted as per
+	// RFC3339.
 	TimeMin string `json:"timeMin,omitempty"`
 
 	// TimeZone: Time zone used in the response. Optional. The default is
@@ -2300,6 +2360,7 @@ func (c *AclDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/{ruleId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -2419,6 +2480,7 @@ func (c *AclGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/{ruleId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2566,6 +2628,7 @@ func (c *AclInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2751,6 +2814,7 @@ func (c *AclListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2937,6 +3001,7 @@ func (c *AclPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/{ruleId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -3094,6 +3159,7 @@ func (c *AclUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/{ruleId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -3280,6 +3346,7 @@ func (c *AclWatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/watch")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3390,7 +3457,7 @@ type CalendarListDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes an entry on the user's calendar list.
+// Delete: Removes a calendar from the user's calendar list.
 func (r *CalendarListService) Delete(calendarId string) *CalendarListDeleteCall {
 	c := &CalendarListDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarId = calendarId
@@ -3430,6 +3497,7 @@ func (c *CalendarListDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -3453,7 +3521,7 @@ func (c *CalendarListDeleteCall) Do(opts ...googleapi.CallOption) error {
 	}
 	return nil
 	// {
-	//   "description": "Deletes an entry on the user's calendar list.",
+	//   "description": "Removes a calendar from the user's calendar list.",
 	//   "httpMethod": "DELETE",
 	//   "id": "calendar.calendarList.delete",
 	//   "parameterOrder": [
@@ -3486,7 +3554,7 @@ type CalendarListGetCall struct {
 	header_      http.Header
 }
 
-// Get: Returns an entry on the user's calendar list.
+// Get: Returns a calendar from the user's calendar list.
 func (r *CalendarListService) Get(calendarId string) *CalendarListGetCall {
 	c := &CalendarListGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarId = calendarId
@@ -3539,6 +3607,7 @@ func (c *CalendarListGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3587,7 +3656,7 @@ func (c *CalendarListGetCall) Do(opts ...googleapi.CallOption) (*CalendarListEnt
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns an entry on the user's calendar list.",
+	//   "description": "Returns a calendar from the user's calendar list.",
 	//   "httpMethod": "GET",
 	//   "id": "calendar.calendarList.get",
 	//   "parameterOrder": [
@@ -3623,7 +3692,7 @@ type CalendarListInsertCall struct {
 	header_           http.Header
 }
 
-// Insert: Adds an entry to the user's calendar list.
+// Insert: Inserts an existing calendar into the user's calendar list.
 func (r *CalendarListService) Insert(calendarlistentry *CalendarListEntry) *CalendarListInsertCall {
 	c := &CalendarListInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarlistentry = calendarlistentry
@@ -3678,6 +3747,7 @@ func (c *CalendarListInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3723,7 +3793,7 @@ func (c *CalendarListInsertCall) Do(opts ...googleapi.CallOption) (*CalendarList
 	}
 	return ret, nil
 	// {
-	//   "description": "Adds an entry to the user's calendar list.",
+	//   "description": "Inserts an existing calendar into the user's calendar list.",
 	//   "httpMethod": "POST",
 	//   "id": "calendar.calendarList.insert",
 	//   "parameters": {
@@ -3757,7 +3827,7 @@ type CalendarListListCall struct {
 	header_      http.Header
 }
 
-// List: Returns entries on the user's calendar list.
+// List: Returns the calendars on the user's calendar list.
 func (r *CalendarListService) List() *CalendarListListCall {
 	c := &CalendarListListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	return c
@@ -3874,6 +3944,7 @@ func (c *CalendarListListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3919,7 +3990,7 @@ func (c *CalendarListListCall) Do(opts ...googleapi.CallOption) (*CalendarList, 
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns entries on the user's calendar list.",
+	//   "description": "Returns the calendars on the user's calendar list.",
 	//   "httpMethod": "GET",
 	//   "id": "calendar.calendarList.list",
 	//   "parameters": {
@@ -4013,8 +4084,8 @@ type CalendarListPatchCall struct {
 	header_           http.Header
 }
 
-// Patch: Updates an entry on the user's calendar list. This method
-// supports patch semantics.
+// Patch: Updates an existing calendar on the user's calendar list. This
+// method supports patch semantics.
 func (r *CalendarListService) Patch(calendarId string, calendarlistentry *CalendarListEntry) *CalendarListPatchCall {
 	c := &CalendarListPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarId = calendarId
@@ -4070,6 +4141,7 @@ func (c *CalendarListPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -4118,7 +4190,7 @@ func (c *CalendarListPatchCall) Do(opts ...googleapi.CallOption) (*CalendarListE
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates an entry on the user's calendar list. This method supports patch semantics.",
+	//   "description": "Updates an existing calendar on the user's calendar list. This method supports patch semantics.",
 	//   "httpMethod": "PATCH",
 	//   "id": "calendar.calendarList.patch",
 	//   "parameterOrder": [
@@ -4162,7 +4234,7 @@ type CalendarListUpdateCall struct {
 	header_           http.Header
 }
 
-// Update: Updates an entry on the user's calendar list.
+// Update: Updates an existing calendar on the user's calendar list.
 func (r *CalendarListService) Update(calendarId string, calendarlistentry *CalendarListEntry) *CalendarListUpdateCall {
 	c := &CalendarListUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarId = calendarId
@@ -4218,6 +4290,7 @@ func (c *CalendarListUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -4266,7 +4339,7 @@ func (c *CalendarListUpdateCall) Do(opts ...googleapi.CallOption) (*CalendarList
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates an entry on the user's calendar list.",
+	//   "description": "Updates an existing calendar on the user's calendar list.",
 	//   "httpMethod": "PUT",
 	//   "id": "calendar.calendarList.update",
 	//   "parameterOrder": [
@@ -4419,6 +4492,7 @@ func (c *CalendarListWatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/watch")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4581,6 +4655,7 @@ func (c *CalendarsClearCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/clear")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4677,6 +4752,7 @@ func (c *CalendarsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -4786,6 +4862,7 @@ func (c *CalendarsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4915,6 +4992,7 @@ func (c *CalendarsInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -5035,6 +5113,7 @@ func (c *CalendarsPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -5168,6 +5247,7 @@ func (c *CalendarsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -5299,6 +5379,7 @@ func (c *ChannelsStopCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "channels/stop")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -5329,7 +5410,10 @@ func (c *ChannelsStopCall) Do(opts ...googleapi.CallOption) error {
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/calendar",
-	//     "https://www.googleapis.com/auth/calendar.readonly"
+	//     "https://www.googleapis.com/auth/calendar.events",
+	//     "https://www.googleapis.com/auth/calendar.events.readonly",
+	//     "https://www.googleapis.com/auth/calendar.readonly",
+	//     "https://www.googleapis.com/auth/calendar.settings.readonly"
 	//   ]
 	// }
 
@@ -5397,6 +5481,7 @@ func (c *ColorsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "colors")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -5517,6 +5602,7 @@ func (c *EventsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -5569,7 +5655,8 @@ func (c *EventsDeleteCall) Do(opts ...googleapi.CallOption) error {
 	//   },
 	//   "path": "calendars/{calendarId}/events/{eventId}",
 	//   "scopes": [
-	//     "https://www.googleapis.com/auth/calendar"
+	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events"
 	//   ]
 	// }
 
@@ -5669,6 +5756,7 @@ func (c *EventsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -5762,6 +5850,8 @@ func (c *EventsGetCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events",
+	//     "https://www.googleapis.com/auth/calendar.events.readonly",
 	//     "https://www.googleapis.com/auth/calendar.readonly"
 	//   ]
 	// }
@@ -5846,6 +5936,7 @@ func (c *EventsImportCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/import")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -5929,7 +6020,8 @@ func (c *EventsImportCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//     "$ref": "Event"
 	//   },
 	//   "scopes": [
-	//     "https://www.googleapis.com/auth/calendar"
+	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events"
 	//   ]
 	// }
 
@@ -6029,6 +6121,7 @@ func (c *EventsInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -6124,7 +6217,8 @@ func (c *EventsInsertCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//     "$ref": "Event"
 	//   },
 	//   "scopes": [
-	//     "https://www.googleapis.com/auth/calendar"
+	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events"
 	//   ]
 	// }
 
@@ -6273,6 +6367,7 @@ func (c *EventsInstancesCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}/instances")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -6400,6 +6495,8 @@ func (c *EventsInstancesCall) Do(opts ...googleapi.CallOption) (*Events, error) 
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events",
+	//     "https://www.googleapis.com/auth/calendar.events.readonly",
 	//     "https://www.googleapis.com/auth/calendar.readonly"
 	//   ],
 	//   "supportsSubscription": true
@@ -6676,6 +6773,7 @@ func (c *EventsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -6847,6 +6945,8 @@ func (c *EventsListCall) Do(opts ...googleapi.CallOption) (*Events, error) {
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events",
+	//     "https://www.googleapis.com/auth/calendar.events.readonly",
 	//     "https://www.googleapis.com/auth/calendar.readonly"
 	//   ],
 	//   "supportsSubscription": true
@@ -6937,6 +7037,7 @@ func (c *EventsMoveCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}/move")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -7024,7 +7125,8 @@ func (c *EventsMoveCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//     "$ref": "Event"
 	//   },
 	//   "scopes": [
-	//     "https://www.googleapis.com/auth/calendar"
+	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events"
 	//   ]
 	// }
 
@@ -7138,6 +7240,7 @@ func (c *EventsPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -7246,7 +7349,8 @@ func (c *EventsPatchCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//     "$ref": "Event"
 	//   },
 	//   "scopes": [
-	//     "https://www.googleapis.com/auth/calendar"
+	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events"
 	//   ]
 	// }
 
@@ -7311,6 +7415,7 @@ func (c *EventsQuickAddCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/quickAdd")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -7390,7 +7495,8 @@ func (c *EventsQuickAddCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//     "$ref": "Event"
 	//   },
 	//   "scopes": [
-	//     "https://www.googleapis.com/auth/calendar"
+	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events"
 	//   ]
 	// }
 
@@ -7504,6 +7610,7 @@ func (c *EventsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -7612,7 +7719,8 @@ func (c *EventsUpdateCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//     "$ref": "Event"
 	//   },
 	//   "scopes": [
-	//     "https://www.googleapis.com/auth/calendar"
+	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events"
 	//   ]
 	// }
 
@@ -7859,6 +7967,7 @@ func (c *EventsWatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/watch")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -8034,6 +8143,8 @@ func (c *EventsWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/calendar",
+	//     "https://www.googleapis.com/auth/calendar.events",
+	//     "https://www.googleapis.com/auth/calendar.events.readonly",
 	//     "https://www.googleapis.com/auth/calendar.readonly"
 	//   ],
 	//   "supportsSubscription": true
@@ -8096,6 +8207,7 @@ func (c *FreebusyQueryCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "freeBusy")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -8223,6 +8335,7 @@ func (c *SettingsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/settings/{setting}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -8291,7 +8404,8 @@ func (c *SettingsGetCall) Do(opts ...googleapi.CallOption) (*Setting, error) {
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/calendar",
-	//     "https://www.googleapis.com/auth/calendar.readonly"
+	//     "https://www.googleapis.com/auth/calendar.readonly",
+	//     "https://www.googleapis.com/auth/calendar.settings.readonly"
 	//   ]
 	// }
 
@@ -8388,6 +8502,7 @@ func (c *SettingsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/settings")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -8461,7 +8576,8 @@ func (c *SettingsListCall) Do(opts ...googleapi.CallOption) (*Settings, error) {
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/calendar",
-	//     "https://www.googleapis.com/auth/calendar.readonly"
+	//     "https://www.googleapis.com/auth/calendar.readonly",
+	//     "https://www.googleapis.com/auth/calendar.settings.readonly"
 	//   ],
 	//   "supportsSubscription": true
 	// }
@@ -8573,6 +8689,7 @@ func (c *SettingsWatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/settings/watch")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -8650,7 +8767,8 @@ func (c *SettingsWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/calendar",
-	//     "https://www.googleapis.com/auth/calendar.readonly"
+	//     "https://www.googleapis.com/auth/calendar.readonly",
+	//     "https://www.googleapis.com/auth/calendar.settings.readonly"
 	//   ],
 	//   "supportsSubscription": true
 	// }

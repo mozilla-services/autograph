@@ -167,8 +167,8 @@ type AchievementConfiguration struct {
 }
 
 func (s *AchievementConfiguration) MarshalJSON() ([]byte, error) {
-	type noMethod AchievementConfiguration
-	raw := noMethod(*s)
+	type NoMethod AchievementConfiguration
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -214,8 +214,8 @@ type AchievementConfigurationDetail struct {
 }
 
 func (s *AchievementConfigurationDetail) MarshalJSON() ([]byte, error) {
-	type noMethod AchievementConfigurationDetail
-	raw := noMethod(*s)
+	type NoMethod AchievementConfigurationDetail
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -254,8 +254,8 @@ type AchievementConfigurationListResponse struct {
 }
 
 func (s *AchievementConfigurationListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod AchievementConfigurationListResponse
-	raw := noMethod(*s)
+	type NoMethod AchievementConfigurationListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -307,8 +307,8 @@ type GamesNumberAffixConfiguration struct {
 }
 
 func (s *GamesNumberAffixConfiguration) MarshalJSON() ([]byte, error) {
-	type noMethod GamesNumberAffixConfiguration
-	raw := noMethod(*s)
+	type NoMethod GamesNumberAffixConfiguration
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -355,8 +355,8 @@ type GamesNumberFormatConfiguration struct {
 }
 
 func (s *GamesNumberFormatConfiguration) MarshalJSON() ([]byte, error) {
-	type noMethod GamesNumberFormatConfiguration
-	raw := noMethod(*s)
+	type NoMethod GamesNumberFormatConfiguration
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -398,8 +398,8 @@ type ImageConfiguration struct {
 }
 
 func (s *ImageConfiguration) MarshalJSON() ([]byte, error) {
-	type noMethod ImageConfiguration
-	raw := noMethod(*s)
+	type NoMethod ImageConfiguration
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -456,8 +456,8 @@ type LeaderboardConfiguration struct {
 }
 
 func (s *LeaderboardConfiguration) MarshalJSON() ([]byte, error) {
-	type noMethod LeaderboardConfiguration
-	raw := noMethod(*s)
+	type NoMethod LeaderboardConfiguration
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -500,8 +500,8 @@ type LeaderboardConfigurationDetail struct {
 }
 
 func (s *LeaderboardConfigurationDetail) MarshalJSON() ([]byte, error) {
-	type noMethod LeaderboardConfigurationDetail
-	raw := noMethod(*s)
+	type NoMethod LeaderboardConfigurationDetail
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -540,8 +540,8 @@ type LeaderboardConfigurationListResponse struct {
 }
 
 func (s *LeaderboardConfigurationListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod LeaderboardConfigurationListResponse
-	raw := noMethod(*s)
+	type NoMethod LeaderboardConfigurationListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -576,8 +576,8 @@ type LocalizedString struct {
 }
 
 func (s *LocalizedString) MarshalJSON() ([]byte, error) {
-	type noMethod LocalizedString
-	raw := noMethod(*s)
+	type NoMethod LocalizedString
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -609,8 +609,8 @@ type LocalizedStringBundle struct {
 }
 
 func (s *LocalizedStringBundle) MarshalJSON() ([]byte, error) {
-	type noMethod LocalizedStringBundle
-	raw := noMethod(*s)
+	type NoMethod LocalizedStringBundle
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -664,6 +664,7 @@ func (c *AchievementConfigurationsDeleteCall) doRequest(alt string) (*http.Respo
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "achievements/{achievementId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -774,6 +775,7 @@ func (c *AchievementConfigurationsGetCall) doRequest(alt string) (*http.Response
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "achievements/{achievementId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -817,7 +819,7 @@ func (c *AchievementConfigurationsGetCall) Do(opts ...googleapi.CallOption) (*Ac
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -904,6 +906,7 @@ func (c *AchievementConfigurationsInsertCall) doRequest(alt string) (*http.Respo
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "applications/{applicationId}/achievements")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -947,7 +950,7 @@ func (c *AchievementConfigurationsInsertCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1061,6 +1064,7 @@ func (c *AchievementConfigurationsListCall) doRequest(alt string) (*http.Respons
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "applications/{applicationId}/achievements")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1105,7 +1109,7 @@ func (c *AchievementConfigurationsListCall) Do(opts ...googleapi.CallOption) (*A
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1227,6 +1231,7 @@ func (c *AchievementConfigurationsPatchCall) doRequest(alt string) (*http.Respon
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "achievements/{achievementId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -1270,7 +1275,7 @@ func (c *AchievementConfigurationsPatchCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1361,6 +1366,7 @@ func (c *AchievementConfigurationsUpdateCall) doRequest(alt string) (*http.Respo
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "achievements/{achievementId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -1404,7 +1410,7 @@ func (c *AchievementConfigurationsUpdateCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1530,6 +1536,7 @@ func (c *ImageConfigurationsUploadCall) doRequest(alt string) (*http.Response, e
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "images/{resourceId}/imageType/{imageType}")
 	if c.mediaInfo_ != nil {
 		urls = strings.Replace(urls, "https://www.googleapis.com/", "https://www.googleapis.com/upload/", 1)
@@ -1539,11 +1546,12 @@ func (c *ImageConfigurationsUploadCall) doRequest(alt string) (*http.Response, e
 		body = new(bytes.Buffer)
 		reqHeaders.Set("Content-Type", "application/json")
 	}
-	body, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
 	defer cleanup()
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
 	req.Header = reqHeaders
+	gensupport.SetGetBody(req, getBody)
 	googleapi.Expand(req.URL, map[string]string{
 		"resourceId": c.resourceId,
 		"imageType":  c.imageType,
@@ -1601,7 +1609,7 @@ func (c *ImageConfigurationsUploadCall) Do(opts ...googleapi.CallOption) (*Image
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1713,6 +1721,7 @@ func (c *LeaderboardConfigurationsDeleteCall) doRequest(alt string) (*http.Respo
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "leaderboards/{leaderboardId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -1823,6 +1832,7 @@ func (c *LeaderboardConfigurationsGetCall) doRequest(alt string) (*http.Response
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "leaderboards/{leaderboardId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1866,7 +1876,7 @@ func (c *LeaderboardConfigurationsGetCall) Do(opts ...googleapi.CallOption) (*Le
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1953,6 +1963,7 @@ func (c *LeaderboardConfigurationsInsertCall) doRequest(alt string) (*http.Respo
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "applications/{applicationId}/leaderboards")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1996,7 +2007,7 @@ func (c *LeaderboardConfigurationsInsertCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2110,6 +2121,7 @@ func (c *LeaderboardConfigurationsListCall) doRequest(alt string) (*http.Respons
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "applications/{applicationId}/leaderboards")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2154,7 +2166,7 @@ func (c *LeaderboardConfigurationsListCall) Do(opts ...googleapi.CallOption) (*L
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2276,6 +2288,7 @@ func (c *LeaderboardConfigurationsPatchCall) doRequest(alt string) (*http.Respon
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "leaderboards/{leaderboardId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -2319,7 +2332,7 @@ func (c *LeaderboardConfigurationsPatchCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2410,6 +2423,7 @@ func (c *LeaderboardConfigurationsUpdateCall) doRequest(alt string) (*http.Respo
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "leaderboards/{leaderboardId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -2453,7 +2467,7 @@ func (c *LeaderboardConfigurationsUpdateCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

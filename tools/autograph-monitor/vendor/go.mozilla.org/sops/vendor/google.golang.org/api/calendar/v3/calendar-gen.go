@@ -214,8 +214,8 @@ type Acl struct {
 }
 
 func (s *Acl) MarshalJSON() ([]byte, error) {
-	type noMethod Acl
-	raw := noMethod(*s)
+	type NoMethod Acl
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -269,8 +269,8 @@ type AclRule struct {
 }
 
 func (s *AclRule) MarshalJSON() ([]byte, error) {
-	type noMethod AclRule
-	raw := noMethod(*s)
+	type NoMethod AclRule
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -307,12 +307,16 @@ type AclRuleScope struct {
 }
 
 func (s *AclRuleScope) MarshalJSON() ([]byte, error) {
-	type noMethod AclRuleScope
-	raw := noMethod(*s)
+	type NoMethod AclRuleScope
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 type Calendar struct {
+	// ConferenceProperties: Conferencing properties for this calendar, for
+	// example what types of conferences are allowed.
+	ConferenceProperties *ConferenceProperties `json:"conferenceProperties,omitempty"`
+
 	// Description: Description of the calendar. Optional.
 	Description string `json:"description,omitempty"`
 
@@ -341,26 +345,28 @@ type Calendar struct {
 	// server.
 	googleapi.ServerResponse `json:"-"`
 
-	// ForceSendFields is a list of field names (e.g. "Description") to
-	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// ForceSendFields is a list of field names (e.g.
+	// "ConferenceProperties") to unconditionally include in API requests.
+	// By default, fields with empty values are omitted from API requests.
+	// However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "Description") to include
-	// in API requests with the JSON null value. By default, fields with
-	// empty values are omitted from API requests. However, any field with
-	// an empty value appearing in NullFields will be sent to the server as
-	// null. It is an error if a field in this list has a non-empty value.
-	// This may be used to include null fields in Patch requests.
+	// NullFields is a list of field names (e.g. "ConferenceProperties") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
 	NullFields []string `json:"-"`
 }
 
 func (s *Calendar) MarshalJSON() ([]byte, error) {
-	type noMethod Calendar
-	raw := noMethod(*s)
+	type NoMethod Calendar
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -407,8 +413,8 @@ type CalendarList struct {
 }
 
 func (s *CalendarList) MarshalJSON() ([]byte, error) {
-	type noMethod CalendarList
-	raw := noMethod(*s)
+	type NoMethod CalendarList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -441,6 +447,10 @@ type CalendarListEntry struct {
 	// and foregroundColor properties and can be ignored when using these
 	// properties. Optional.
 	ColorId string `json:"colorId,omitempty"`
+
+	// ConferenceProperties: Conferencing properties for this calendar, for
+	// example what types of conferences are allowed.
+	ConferenceProperties *ConferenceProperties `json:"conferenceProperties,omitempty"`
 
 	// DefaultReminders: The default reminders that the authenticated user
 	// has for this calendar.
@@ -521,8 +531,8 @@ type CalendarListEntry struct {
 }
 
 func (s *CalendarListEntry) MarshalJSON() ([]byte, error) {
-	type noMethod CalendarListEntry
-	raw := noMethod(*s)
+	type NoMethod CalendarListEntry
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -550,8 +560,8 @@ type CalendarListEntryNotificationSettings struct {
 }
 
 func (s *CalendarListEntryNotificationSettings) MarshalJSON() ([]byte, error) {
-	type noMethod CalendarListEntryNotificationSettings
-	raw := noMethod(*s)
+	type NoMethod CalendarListEntryNotificationSettings
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -562,6 +572,7 @@ type CalendarNotification struct {
 	// - "sms" - Reminders are sent via SMS. This value is read-only and is
 	// ignored on inserts and updates. SMS reminders are only available for
 	// G Suite customers.
+	// Required when adding a notification.
 	Method string `json:"method,omitempty"`
 
 	// Type: The type of notification. Possible values are:
@@ -570,9 +581,11 @@ type CalendarNotification struct {
 	// - "eventChange" - Notification sent when an event is changed.
 	// - "eventCancellation" - Notification sent when an event is cancelled.
 	//
-	// - "eventResponse" - Notification sent when an event is changed.
+	// - "eventResponse" - Notification sent when an attendee responds to
+	// the event invitation.
 	// - "agenda" - An agenda with the events of the day (sent out in the
 	// morning).
+	// Required when adding a notification.
 	Type string `json:"type,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Method") to
@@ -593,8 +606,8 @@ type CalendarNotification struct {
 }
 
 func (s *CalendarNotification) MarshalJSON() ([]byte, error) {
-	type noMethod CalendarNotification
-	raw := noMethod(*s)
+	type NoMethod CalendarNotification
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -658,8 +671,8 @@ type Channel struct {
 }
 
 func (s *Channel) MarshalJSON() ([]byte, error) {
-	type noMethod Channel
-	raw := noMethod(*s)
+	type NoMethod Channel
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -690,8 +703,8 @@ type ColorDefinition struct {
 }
 
 func (s *ColorDefinition) MarshalJSON() ([]byte, error) {
-	type noMethod ColorDefinition
-	raw := noMethod(*s)
+	type NoMethod ColorDefinition
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -735,8 +748,426 @@ type Colors struct {
 }
 
 func (s *Colors) MarshalJSON() ([]byte, error) {
-	type noMethod Colors
-	raw := noMethod(*s)
+	type NoMethod Colors
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type ConferenceData struct {
+	// ConferenceId: The ID of the conference.
+	// Can be used by developers to keep track of conferences, should not be
+	// displayed to users.
+	// Values for solution types:
+	// - "eventHangout": unset.
+	// - "eventNamedHangout": the name of the Hangout.
+	// - "hangoutsMeet": the 10-letter meeting code, for example
+	// "aaa-bbbb-ccc".  Optional.
+	ConferenceId string `json:"conferenceId,omitempty"`
+
+	// ConferenceSolution: The conference solution, such as Hangouts or
+	// Hangouts Meet.
+	// Unset for a conference with a failed create request.
+	// Either conferenceSolution and at least one entryPoint, or
+	// createRequest is required.
+	ConferenceSolution *ConferenceSolution `json:"conferenceSolution,omitempty"`
+
+	// CreateRequest: A request to generate a new conference and attach it
+	// to the event. The data is generated asynchronously. To see whether
+	// the data is present check the status field.
+	// Either conferenceSolution and at least one entryPoint, or
+	// createRequest is required.
+	CreateRequest *CreateConferenceRequest `json:"createRequest,omitempty"`
+
+	// EntryPoints: Information about individual conference entry points,
+	// such as URLs or phone numbers.
+	// All of them must belong to the same conference.
+	// Either conferenceSolution and at least one entryPoint, or
+	// createRequest is required.
+	EntryPoints []*EntryPoint `json:"entryPoints,omitempty"`
+
+	// Notes: Additional notes (such as instructions from the domain
+	// administrator, legal notices) to display to the user. Can contain
+	// HTML. The maximum length is 2048 characters. Optional.
+	Notes string `json:"notes,omitempty"`
+
+	// Parameters: Additional properties related to a conference. An example
+	// would be a solution-specific setting for enabling video streaming.
+	Parameters *ConferenceParameters `json:"parameters,omitempty"`
+
+	// Signature: The signature of the conference data.
+	// Genereated on server side. Must be preserved while copying the
+	// conference data between events, otherwise the conference data will
+	// not be copied.
+	// Unset for a conference with a failed create request.
+	// Optional for a conference with a pending create request.
+	Signature string `json:"signature,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ConferenceId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ConferenceId") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConferenceData) MarshalJSON() ([]byte, error) {
+	type NoMethod ConferenceData
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type ConferenceParameters struct {
+	// AddOnParameters: Additional add-on specific data.
+	AddOnParameters *ConferenceParametersAddOnParameters `json:"addOnParameters,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AddOnParameters") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AddOnParameters") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConferenceParameters) MarshalJSON() ([]byte, error) {
+	type NoMethod ConferenceParameters
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type ConferenceParametersAddOnParameters struct {
+	Parameters map[string]string `json:"parameters,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Parameters") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Parameters") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConferenceParametersAddOnParameters) MarshalJSON() ([]byte, error) {
+	type NoMethod ConferenceParametersAddOnParameters
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type ConferenceProperties struct {
+	// AllowedConferenceSolutionTypes: The types of conference solutions
+	// that are supported for this calendar.
+	// The possible values are:
+	// - "eventHangout"
+	// - "eventNamedHangout"
+	// - "hangoutsMeet"  Optional.
+	AllowedConferenceSolutionTypes []string `json:"allowedConferenceSolutionTypes,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "AllowedConferenceSolutionTypes") to unconditionally include in API
+	// requests. By default, fields with empty values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "AllowedConferenceSolutionTypes") to include in API requests with the
+	// JSON null value. By default, fields with empty values are omitted
+	// from API requests. However, any field with an empty value appearing
+	// in NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConferenceProperties) MarshalJSON() ([]byte, error) {
+	type NoMethod ConferenceProperties
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type ConferenceRequestStatus struct {
+	// StatusCode: The current status of the conference create request.
+	// Read-only.
+	// The possible values are:
+	// - "pending": the conference create request is still being
+	// processed.
+	// - "success": the conference create request succeeded, the entry
+	// points are populated.
+	// - "failure": the conference create request failed, there are no entry
+	// points.
+	StatusCode string `json:"statusCode,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "StatusCode") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "StatusCode") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConferenceRequestStatus) MarshalJSON() ([]byte, error) {
+	type NoMethod ConferenceRequestStatus
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type ConferenceSolution struct {
+	// IconUri: The user-visible icon for this solution.
+	IconUri string `json:"iconUri,omitempty"`
+
+	// Key: The key which can uniquely identify the conference solution for
+	// this event.
+	Key *ConferenceSolutionKey `json:"key,omitempty"`
+
+	// Name: The user-visible name of this solution. Not localized.
+	Name string `json:"name,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "IconUri") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "IconUri") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConferenceSolution) MarshalJSON() ([]byte, error) {
+	type NoMethod ConferenceSolution
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type ConferenceSolutionKey struct {
+	// Type: The conference solution type.
+	// If a client encounters an unfamiliar or empty type, it should still
+	// be able to display the entry points. However, it should disallow
+	// modifications.
+	// The possible values are:
+	// - "eventHangout" for Hangouts for consumers
+	// (http://hangouts.google.com)
+	// - "eventNamedHangout" for classic Hangouts for G Suite users
+	// (http://hangouts.google.com)
+	// - "hangoutsMeet" for Hangouts Meet (http://meet.google.com)
+	Type string `json:"type,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Type") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Type") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConferenceSolutionKey) MarshalJSON() ([]byte, error) {
+	type NoMethod ConferenceSolutionKey
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type CreateConferenceRequest struct {
+	// ConferenceSolutionKey: The conference solution, such as Hangouts or
+	// Hangouts Meet.
+	ConferenceSolutionKey *ConferenceSolutionKey `json:"conferenceSolutionKey,omitempty"`
+
+	// RequestId: The client-generated unique ID for this request.
+	// Clients should regenerate this ID for every new request. If an ID
+	// provided is the same as for the previous request, the request is
+	// ignored.
+	RequestId string `json:"requestId,omitempty"`
+
+	// Status: The status of the conference create request.
+	Status *ConferenceRequestStatus `json:"status,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "ConferenceSolutionKey") to unconditionally include in API requests.
+	// By default, fields with empty values are omitted from API requests.
+	// However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ConferenceSolutionKey") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CreateConferenceRequest) MarshalJSON() ([]byte, error) {
+	type NoMethod CreateConferenceRequest
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type EntryPoint struct {
+	// AccessCode: The access code to access the conference. The maximum
+	// length is 128 characters.
+	// When creating new conference data, populate only the subset of
+	// {meetingCode, accessCode, passcode, password, pin} fields that match
+	// the terminology that the conference provider uses. Only the populated
+	// fields should be displayed.
+	// Optional.
+	AccessCode string `json:"accessCode,omitempty"`
+
+	// EntryPointFeatures: Features of the entry point, such as being toll
+	// or toll-free. One entry point can have multiple features. However,
+	// toll and toll-free cannot be both set on the same entry point.
+	EntryPointFeatures []string `json:"entryPointFeatures,omitempty"`
+
+	// EntryPointType: The type of the conference entry point.
+	// Possible values are:
+	// - "video" - joining a conference over HTTP. A conference can have
+	// zero or one video entry point.
+	// - "phone" - joining a conference by dialing a phone number. A
+	// conference can have zero or more phone entry points.
+	// - "sip" - joining a conference over SIP. A conference can have zero
+	// or one sip entry point.
+	// - "more" - further conference joining instructions, for example
+	// additional phone numbers. A conference can have zero or one more
+	// entry point. A conference with only a more entry point is not a valid
+	// conference.
+	EntryPointType string `json:"entryPointType,omitempty"`
+
+	// Label: The label for the URI. Visible to end users. Not localized.
+	// The maximum length is 512 characters.
+	// Examples:
+	// - for video: meet.google.com/aaa-bbbb-ccc
+	// - for phone: +1 123 268 2601
+	// - for sip: 12345678@altostrat.com
+	// - for more: should not be filled
+	// Optional.
+	Label string `json:"label,omitempty"`
+
+	// MeetingCode: The meeting code to access the conference. The maximum
+	// length is 128 characters.
+	// When creating new conference data, populate only the subset of
+	// {meetingCode, accessCode, passcode, password, pin} fields that match
+	// the terminology that the conference provider uses. Only the populated
+	// fields should be displayed.
+	// Optional.
+	MeetingCode string `json:"meetingCode,omitempty"`
+
+	// Passcode: The passcode to access the conference. The maximum length
+	// is 128 characters.
+	// When creating new conference data, populate only the subset of
+	// {meetingCode, accessCode, passcode, password, pin} fields that match
+	// the terminology that the conference provider uses. Only the populated
+	// fields should be displayed.
+	Passcode string `json:"passcode,omitempty"`
+
+	// Password: The password to access the conference. The maximum length
+	// is 128 characters.
+	// When creating new conference data, populate only the subset of
+	// {meetingCode, accessCode, passcode, password, pin} fields that match
+	// the terminology that the conference provider uses. Only the populated
+	// fields should be displayed.
+	// Optional.
+	Password string `json:"password,omitempty"`
+
+	// Pin: The PIN to access the conference. The maximum length is 128
+	// characters.
+	// When creating new conference data, populate only the subset of
+	// {meetingCode, accessCode, passcode, password, pin} fields that match
+	// the terminology that the conference provider uses. Only the populated
+	// fields should be displayed.
+	// Optional.
+	Pin string `json:"pin,omitempty"`
+
+	// RegionCode: The CLDR/ISO 3166 region code for the country associated
+	// with this phone access. Example: "SE" for Sweden.
+	// Calendar backend will populate this field only for
+	// EntryPointType.PHONE.
+	RegionCode string `json:"regionCode,omitempty"`
+
+	// Uri: The URI of the entry point. The maximum length is 1300
+	// characters.
+	// Format:
+	// - for video, http: or https: schema is required.
+	// - for phone, tel: schema is required. The URI should include the
+	// entire dial sequence (e.g., tel:+12345678900,,,123456789;1234).
+	// - for sip, sip: schema is required, e.g.,
+	// sip:12345678@myprovider.com.
+	// - for more, http: or https: schema is required.
+	Uri string `json:"uri,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AccessCode") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AccessCode") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *EntryPoint) MarshalJSON() ([]byte, error) {
+	type NoMethod EntryPoint
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -775,8 +1206,8 @@ type Error struct {
 }
 
 func (s *Error) MarshalJSON() ([]byte, error) {
-	type noMethod Error
-	raw := noMethod(*s)
+	type NoMethod Error
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -809,6 +1240,13 @@ type Event struct {
 	// in the event section of the colors definition (see the  colors
 	// endpoint). Optional.
 	ColorId string `json:"colorId,omitempty"`
+
+	// ConferenceData: The conference-related information, such as details
+	// of a Hangouts Meet conference. To create new conference details use
+	// the createRequest field. To persist your changes, remember to set the
+	// conferenceDataVersion request parameter to 1 for all event
+	// modification requests.
+	ConferenceData *ConferenceData `json:"conferenceData,omitempty"`
 
 	// Created: Creation time of the event (as a RFC3339 timestamp).
 	// Read-only.
@@ -911,7 +1349,9 @@ type Event struct {
 
 	// OriginalStartTime: For an instance of a recurring event, this is the
 	// time at which this event would start according to the recurrence data
-	// in the recurring event identified by recurringEventId. Immutable.
+	// in the recurring event identified by recurringEventId. It uniquely
+	// identifies the instance within the recurring event series even if the
+	// instance was moved to a different time. Immutable.
 	OriginalStartTime *EventDateTime `json:"originalStartTime,omitempty"`
 
 	// PrivateCopy: Whether this is a private event copy where changes are
@@ -951,7 +1391,34 @@ type Event struct {
 	// - "confirmed" - The event is confirmed. This is the default status.
 	//
 	// - "tentative" - The event is tentatively confirmed.
-	// - "cancelled" - The event is cancelled.
+	// - "cancelled" - The event is cancelled (deleted). The list method
+	// returns cancelled events only on incremental sync (when syncToken or
+	// updatedMin are specified) or if the showDeleted flag is set to true.
+	// The get method always returns them.
+	// A cancelled status represents two different states depending on the
+	// event type:
+	// - Cancelled exceptions of an uncancelled recurring event indicate
+	// that this instance should no longer be presented to the user. Clients
+	// should store these events for the lifetime of the parent recurring
+	// event.
+	// Cancelled exceptions are only guaranteed to have values for the id,
+	// recurringEventId and originalStartTime fields populated. The other
+	// fields might be empty.
+	// - All other cancelled events represent deleted events. Clients should
+	// remove their locally synced copies. Such cancelled events will
+	// eventually disappear, so do not rely on them being available
+	// indefinitely.
+	// Deleted events are only guaranteed to have the id field populated.
+	// On the organizer's calendar, cancelled events continue to expose
+	// event details (summary, location, etc.) so that they can be restored
+	// (undeleted). Similarly, the events to which the user was invited and
+	// that they manually removed continue to provide details. However,
+	// incremental sync requests with showDeleted set to false will not
+	// return these details.
+	// If an event changes its organizer (for example via the move
+	// operation) and the original organizer is not on the attendee list, it
+	// will leave behind a cancelled event where only the id field is
+	// guaranteed to be populated.
 	Status string `json:"status,omitempty"`
 
 	// Summary: Title of the event.
@@ -1005,8 +1472,8 @@ type Event struct {
 }
 
 func (s *Event) MarshalJSON() ([]byte, error) {
-	type noMethod Event
-	raw := noMethod(*s)
+	type NoMethod Event
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1018,7 +1485,7 @@ type EventCreator struct {
 	// Email: The creator's email address, if available.
 	Email string `json:"email,omitempty"`
 
-	// Id: The creator's Profile ID, if available. It corresponds to theid
+	// Id: The creator's Profile ID, if available. It corresponds to the id
 	// field in the People collection of the Google+ API
 	Id string `json:"id,omitempty"`
 
@@ -1044,8 +1511,8 @@ type EventCreator struct {
 }
 
 func (s *EventCreator) MarshalJSON() ([]byte, error) {
-	type noMethod EventCreator
-	raw := noMethod(*s)
+	type NoMethod EventCreator
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1077,8 +1544,8 @@ type EventExtendedProperties struct {
 }
 
 func (s *EventExtendedProperties) MarshalJSON() ([]byte, error) {
-	type noMethod EventExtendedProperties
-	raw := noMethod(*s)
+	type NoMethod EventExtendedProperties
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1132,8 +1599,8 @@ type EventGadget struct {
 }
 
 func (s *EventGadget) MarshalJSON() ([]byte, error) {
-	type noMethod EventGadget
-	raw := noMethod(*s)
+	type NoMethod EventGadget
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1149,8 +1616,8 @@ type EventOrganizer struct {
 	// valid email address as per RFC5322.
 	Email string `json:"email,omitempty"`
 
-	// Id: The organizer's Profile ID, if available. It corresponds to theid
-	// field in the People collection of the Google+ API
+	// Id: The organizer's Profile ID, if available. It corresponds to the
+	// id field in the People collection of the Google+ API
 	Id string `json:"id,omitempty"`
 
 	// Self: Whether the organizer corresponds to the calendar on which this
@@ -1175,8 +1642,8 @@ type EventOrganizer struct {
 }
 
 func (s *EventOrganizer) MarshalJSON() ([]byte, error) {
-	type noMethod EventOrganizer
-	raw := noMethod(*s)
+	type NoMethod EventOrganizer
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1211,8 +1678,8 @@ type EventReminders struct {
 }
 
 func (s *EventReminders) MarshalJSON() ([]byte, error) {
-	type noMethod EventReminders
-	raw := noMethod(*s)
+	type NoMethod EventReminders
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1247,8 +1714,8 @@ type EventSource struct {
 }
 
 func (s *EventSource) MarshalJSON() ([]byte, error) {
-	type noMethod EventSource
-	raw := noMethod(*s)
+	type NoMethod EventSource
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1260,7 +1727,9 @@ type EventAttachment struct {
 
 	// FileUrl: URL link to the attachment.
 	// For adding Google Drive file attachments use the same format as in
-	// alternateLink property of the Files resource in the Drive API.
+	// alternateLink property of the Files resource in the Drive
+	// API.
+	// Required when adding an attachment.
 	FileUrl string `json:"fileUrl,omitempty"`
 
 	// IconLink: URL link to the attachment's icon. Read-only.
@@ -1290,8 +1759,8 @@ type EventAttachment struct {
 }
 
 func (s *EventAttachment) MarshalJSON() ([]byte, error) {
-	type noMethod EventAttachment
-	raw := noMethod(*s)
+	type NoMethod EventAttachment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1309,9 +1778,10 @@ type EventAttendee struct {
 	// Email: The attendee's email address, if available. This field must be
 	// present when adding an attendee. It must be a valid email address as
 	// per RFC5322.
+	// Required when adding an attendee.
 	Email string `json:"email,omitempty"`
 
-	// Id: The attendee's Profile ID, if available. It corresponds to theid
+	// Id: The attendee's Profile ID, if available. It corresponds to the id
 	// field in the People collection of the Google+ API
 	Id string `json:"id,omitempty"`
 
@@ -1323,8 +1793,9 @@ type EventAttendee struct {
 	// Read-only. The default is False.
 	Organizer bool `json:"organizer,omitempty"`
 
-	// Resource: Whether the attendee is a resource. Read-only. The default
-	// is False.
+	// Resource: Whether the attendee is a resource. Can only be set when
+	// the attendee is added to the event for the first time. Subsequent
+	// modifications are ignored. Optional. The default is False.
 	Resource bool `json:"resource,omitempty"`
 
 	// ResponseStatus: The attendee's response status. Possible values are:
@@ -1360,8 +1831,8 @@ type EventAttendee struct {
 }
 
 func (s *EventAttendee) MarshalJSON() ([]byte, error) {
-	type noMethod EventAttendee
-	raw := noMethod(*s)
+	type NoMethod EventAttendee
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1400,8 +1871,8 @@ type EventDateTime struct {
 }
 
 func (s *EventDateTime) MarshalJSON() ([]byte, error) {
-	type noMethod EventDateTime
-	raw := noMethod(*s)
+	type NoMethod EventDateTime
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1412,11 +1883,13 @@ type EventReminder struct {
 	// Suite customers. Requests to set SMS reminders for other account
 	// types are ignored.
 	// - "popup" - Reminders are sent via a UI popup.
+	// Required when adding a reminder.
 	Method string `json:"method,omitempty"`
 
 	// Minutes: Number of minutes before the start of the event when the
 	// reminder should trigger. Valid values are between 0 and 40320 (4
 	// weeks in minutes).
+	// Required when adding a reminder.
 	Minutes int64 `json:"minutes,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Method") to
@@ -1437,8 +1910,8 @@ type EventReminder struct {
 }
 
 func (s *EventReminder) MarshalJSON() ([]byte, error) {
-	type noMethod EventReminder
-	raw := noMethod(*s)
+	type NoMethod EventReminder
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1520,8 +1993,8 @@ type Events struct {
 }
 
 func (s *Events) MarshalJSON() ([]byte, error) {
-	type noMethod Events
-	raw := noMethod(*s)
+	type NoMethod Events
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1551,8 +2024,8 @@ type FreeBusyCalendar struct {
 }
 
 func (s *FreeBusyCalendar) MarshalJSON() ([]byte, error) {
-	type noMethod FreeBusyCalendar
-	raw := noMethod(*s)
+	type NoMethod FreeBusyCalendar
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1581,28 +2054,30 @@ type FreeBusyGroup struct {
 }
 
 func (s *FreeBusyGroup) MarshalJSON() ([]byte, error) {
-	type noMethod FreeBusyGroup
-	raw := noMethod(*s)
+	type NoMethod FreeBusyGroup
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 type FreeBusyRequest struct {
 	// CalendarExpansionMax: Maximal number of calendars for which FreeBusy
-	// information is to be provided. Optional.
+	// information is to be provided. Optional. Maximum value is 50.
 	CalendarExpansionMax int64 `json:"calendarExpansionMax,omitempty"`
 
 	// GroupExpansionMax: Maximal number of calendar identifiers to be
-	// provided for a single group. Optional. An error will be returned for
-	// a group with more members than this value.
+	// provided for a single group. Optional. An error is returned for a
+	// group with more members than this value. Maximum value is 100.
 	GroupExpansionMax int64 `json:"groupExpansionMax,omitempty"`
 
 	// Items: List of calendars and/or groups to query.
 	Items []*FreeBusyRequestItem `json:"items,omitempty"`
 
-	// TimeMax: The end of the interval for the query.
+	// TimeMax: The end of the interval for the query formatted as per
+	// RFC3339.
 	TimeMax string `json:"timeMax,omitempty"`
 
-	// TimeMin: The start of the interval for the query.
+	// TimeMin: The start of the interval for the query formatted as per
+	// RFC3339.
 	TimeMin string `json:"timeMin,omitempty"`
 
 	// TimeZone: Time zone used in the response. Optional. The default is
@@ -1629,8 +2104,8 @@ type FreeBusyRequest struct {
 }
 
 func (s *FreeBusyRequest) MarshalJSON() ([]byte, error) {
-	type noMethod FreeBusyRequest
-	raw := noMethod(*s)
+	type NoMethod FreeBusyRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1656,8 +2131,8 @@ type FreeBusyRequestItem struct {
 }
 
 func (s *FreeBusyRequestItem) MarshalJSON() ([]byte, error) {
-	type noMethod FreeBusyRequestItem
-	raw := noMethod(*s)
+	type NoMethod FreeBusyRequestItem
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1699,8 +2174,8 @@ type FreeBusyResponse struct {
 }
 
 func (s *FreeBusyResponse) MarshalJSON() ([]byte, error) {
-	type noMethod FreeBusyResponse
-	raw := noMethod(*s)
+	type NoMethod FreeBusyResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1741,8 +2216,8 @@ type Setting struct {
 }
 
 func (s *Setting) MarshalJSON() ([]byte, error) {
-	type noMethod Setting
-	raw := noMethod(*s)
+	type NoMethod Setting
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1789,8 +2264,8 @@ type Settings struct {
 }
 
 func (s *Settings) MarshalJSON() ([]byte, error) {
-	type noMethod Settings
-	raw := noMethod(*s)
+	type NoMethod Settings
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1819,8 +2294,8 @@ type TimePeriod struct {
 }
 
 func (s *TimePeriod) MarshalJSON() ([]byte, error) {
-	type noMethod TimePeriod
-	raw := noMethod(*s)
+	type NoMethod TimePeriod
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1876,6 +2351,7 @@ func (c *AclDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/{ruleId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -1995,6 +2471,7 @@ func (c *AclGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/{ruleId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2039,7 +2516,7 @@ func (c *AclGetCall) Do(opts ...googleapi.CallOption) (*AclRule, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2096,6 +2573,14 @@ func (r *AclService) Insert(calendarId string, aclrule *AclRule) *AclInsertCall 
 	return c
 }
 
+// SendNotifications sets the optional parameter "sendNotifications":
+// Whether to send notifications about the calendar sharing change.  The
+// default is True.
+func (c *AclInsertCall) SendNotifications(sendNotifications bool) *AclInsertCall {
+	c.urlParams_.Set("sendNotifications", fmt.Sprint(sendNotifications))
+	return c
+}
+
 // Fields allows partial responses to be retrieved. See
 // https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
 // for more information.
@@ -2134,6 +2619,7 @@ func (c *AclInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2177,7 +2663,7 @@ func (c *AclInsertCall) Do(opts ...googleapi.CallOption) (*AclRule, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2194,6 +2680,11 @@ func (c *AclInsertCall) Do(opts ...googleapi.CallOption) (*AclRule, error) {
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
+	//     },
+	//     "sendNotifications": {
+	//       "description": "Whether to send notifications about the calendar sharing change. Optional. The default is True.",
+	//       "location": "query",
+	//       "type": "boolean"
 	//     }
 	//   },
 	//   "path": "calendars/{calendarId}/acl",
@@ -2314,6 +2805,7 @@ func (c *AclListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2357,7 +2849,7 @@ func (c *AclListCall) Do(opts ...googleapi.CallOption) (*Acl, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2453,6 +2945,15 @@ func (r *AclService) Patch(calendarId string, ruleId string, aclrule *AclRule) *
 	return c
 }
 
+// SendNotifications sets the optional parameter "sendNotifications":
+// Whether to send notifications about the calendar sharing change. Note
+// that there are no notifications on access removal.  The default is
+// True.
+func (c *AclPatchCall) SendNotifications(sendNotifications bool) *AclPatchCall {
+	c.urlParams_.Set("sendNotifications", fmt.Sprint(sendNotifications))
+	return c
+}
+
 // Fields allows partial responses to be retrieved. See
 // https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
 // for more information.
@@ -2491,6 +2992,7 @@ func (c *AclPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/{ruleId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -2535,7 +3037,7 @@ func (c *AclPatchCall) Do(opts ...googleapi.CallOption) (*AclRule, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2559,6 +3061,11 @@ func (c *AclPatchCall) Do(opts ...googleapi.CallOption) (*AclRule, error) {
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
+	//     },
+	//     "sendNotifications": {
+	//       "description": "Whether to send notifications about the calendar sharing change. Note that there are no notifications on access removal. Optional. The default is True.",
+	//       "location": "query",
+	//       "type": "boolean"
 	//     }
 	//   },
 	//   "path": "calendars/{calendarId}/acl/{ruleId}",
@@ -2593,6 +3100,15 @@ func (r *AclService) Update(calendarId string, ruleId string, aclrule *AclRule) 
 	c.calendarId = calendarId
 	c.ruleId = ruleId
 	c.aclrule = aclrule
+	return c
+}
+
+// SendNotifications sets the optional parameter "sendNotifications":
+// Whether to send notifications about the calendar sharing change. Note
+// that there are no notifications on access removal.  The default is
+// True.
+func (c *AclUpdateCall) SendNotifications(sendNotifications bool) *AclUpdateCall {
+	c.urlParams_.Set("sendNotifications", fmt.Sprint(sendNotifications))
 	return c
 }
 
@@ -2634,6 +3150,7 @@ func (c *AclUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/{ruleId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -2678,7 +3195,7 @@ func (c *AclUpdateCall) Do(opts ...googleapi.CallOption) (*AclRule, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2702,6 +3219,11 @@ func (c *AclUpdateCall) Do(opts ...googleapi.CallOption) (*AclRule, error) {
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
+	//     },
+	//     "sendNotifications": {
+	//       "description": "Whether to send notifications about the calendar sharing change. Note that there are no notifications on access removal. Optional. The default is True.",
+	//       "location": "query",
+	//       "type": "boolean"
 	//     }
 	//   },
 	//   "path": "calendars/{calendarId}/acl/{ruleId}",
@@ -2815,6 +3337,7 @@ func (c *AclWatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/acl/watch")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2858,7 +3381,7 @@ func (c *AclWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2925,7 +3448,7 @@ type CalendarListDeleteCall struct {
 	header_    http.Header
 }
 
-// Delete: Deletes an entry on the user's calendar list.
+// Delete: Removes a calendar from the user's calendar list.
 func (r *CalendarListService) Delete(calendarId string) *CalendarListDeleteCall {
 	c := &CalendarListDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarId = calendarId
@@ -2965,6 +3488,7 @@ func (c *CalendarListDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -2988,7 +3512,7 @@ func (c *CalendarListDeleteCall) Do(opts ...googleapi.CallOption) error {
 	}
 	return nil
 	// {
-	//   "description": "Deletes an entry on the user's calendar list.",
+	//   "description": "Removes a calendar from the user's calendar list.",
 	//   "httpMethod": "DELETE",
 	//   "id": "calendar.calendarList.delete",
 	//   "parameterOrder": [
@@ -3021,7 +3545,7 @@ type CalendarListGetCall struct {
 	header_      http.Header
 }
 
-// Get: Returns an entry on the user's calendar list.
+// Get: Returns a calendar from the user's calendar list.
 func (r *CalendarListService) Get(calendarId string) *CalendarListGetCall {
 	c := &CalendarListGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarId = calendarId
@@ -3074,6 +3598,7 @@ func (c *CalendarListGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3117,12 +3642,12 @@ func (c *CalendarListGetCall) Do(opts ...googleapi.CallOption) (*CalendarListEnt
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns an entry on the user's calendar list.",
+	//   "description": "Returns a calendar from the user's calendar list.",
 	//   "httpMethod": "GET",
 	//   "id": "calendar.calendarList.get",
 	//   "parameterOrder": [
@@ -3158,7 +3683,7 @@ type CalendarListInsertCall struct {
 	header_           http.Header
 }
 
-// Insert: Adds an entry to the user's calendar list.
+// Insert: Inserts an existing calendar into the user's calendar list.
 func (r *CalendarListService) Insert(calendarlistentry *CalendarListEntry) *CalendarListInsertCall {
 	c := &CalendarListInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarlistentry = calendarlistentry
@@ -3213,6 +3738,7 @@ func (c *CalendarListInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3253,12 +3779,12 @@ func (c *CalendarListInsertCall) Do(opts ...googleapi.CallOption) (*CalendarList
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Adds an entry to the user's calendar list.",
+	//   "description": "Inserts an existing calendar into the user's calendar list.",
 	//   "httpMethod": "POST",
 	//   "id": "calendar.calendarList.insert",
 	//   "parameters": {
@@ -3292,7 +3818,7 @@ type CalendarListListCall struct {
 	header_      http.Header
 }
 
-// List: Returns entries on the user's calendar list.
+// List: Returns the calendars on the user's calendar list.
 func (r *CalendarListService) List() *CalendarListListCall {
 	c := &CalendarListListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	return c
@@ -3409,6 +3935,7 @@ func (c *CalendarListListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3449,12 +3976,12 @@ func (c *CalendarListListCall) Do(opts ...googleapi.CallOption) (*CalendarList, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Returns entries on the user's calendar list.",
+	//   "description": "Returns the calendars on the user's calendar list.",
 	//   "httpMethod": "GET",
 	//   "id": "calendar.calendarList.list",
 	//   "parameters": {
@@ -3548,8 +4075,8 @@ type CalendarListPatchCall struct {
 	header_           http.Header
 }
 
-// Patch: Updates an entry on the user's calendar list. This method
-// supports patch semantics.
+// Patch: Updates an existing calendar on the user's calendar list. This
+// method supports patch semantics.
 func (r *CalendarListService) Patch(calendarId string, calendarlistentry *CalendarListEntry) *CalendarListPatchCall {
 	c := &CalendarListPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarId = calendarId
@@ -3605,6 +4132,7 @@ func (c *CalendarListPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -3648,12 +4176,12 @@ func (c *CalendarListPatchCall) Do(opts ...googleapi.CallOption) (*CalendarListE
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates an entry on the user's calendar list. This method supports patch semantics.",
+	//   "description": "Updates an existing calendar on the user's calendar list. This method supports patch semantics.",
 	//   "httpMethod": "PATCH",
 	//   "id": "calendar.calendarList.patch",
 	//   "parameterOrder": [
@@ -3697,7 +4225,7 @@ type CalendarListUpdateCall struct {
 	header_           http.Header
 }
 
-// Update: Updates an entry on the user's calendar list.
+// Update: Updates an existing calendar on the user's calendar list.
 func (r *CalendarListService) Update(calendarId string, calendarlistentry *CalendarListEntry) *CalendarListUpdateCall {
 	c := &CalendarListUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarId = calendarId
@@ -3753,6 +4281,7 @@ func (c *CalendarListUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -3796,12 +4325,12 @@ func (c *CalendarListUpdateCall) Do(opts ...googleapi.CallOption) (*CalendarList
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates an entry on the user's calendar list.",
+	//   "description": "Updates an existing calendar on the user's calendar list.",
 	//   "httpMethod": "PUT",
 	//   "id": "calendar.calendarList.update",
 	//   "parameterOrder": [
@@ -3954,6 +4483,7 @@ func (c *CalendarListWatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/calendarList/watch")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3994,7 +4524,7 @@ func (c *CalendarListWatchCall) Do(opts ...googleapi.CallOption) (*Channel, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4116,6 +4646,7 @@ func (c *CalendarsClearCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/clear")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4212,6 +4743,7 @@ func (c *CalendarsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -4321,6 +4853,7 @@ func (c *CalendarsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4364,7 +4897,7 @@ func (c *CalendarsGetCall) Do(opts ...googleapi.CallOption) (*Calendar, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4450,6 +4983,7 @@ func (c *CalendarsInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4490,7 +5024,7 @@ func (c *CalendarsInsertCall) Do(opts ...googleapi.CallOption) (*Calendar, error
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4570,6 +5104,7 @@ func (c *CalendarsPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -4613,7 +5148,7 @@ func (c *CalendarsPatchCall) Do(opts ...googleapi.CallOption) (*Calendar, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4703,6 +5238,7 @@ func (c *CalendarsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -4746,7 +5282,7 @@ func (c *CalendarsUpdateCall) Do(opts ...googleapi.CallOption) (*Calendar, error
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4834,6 +5370,7 @@ func (c *ChannelsStopCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "channels/stop")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -4932,6 +5469,7 @@ func (c *ColorsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "colors")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4972,7 +5510,7 @@ func (c *ColorsGetCall) Do(opts ...googleapi.CallOption) (*Colors, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5052,6 +5590,7 @@ func (c *EventsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -5204,6 +5743,7 @@ func (c *EventsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -5248,7 +5788,7 @@ func (c *EventsGetCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5323,6 +5863,18 @@ func (r *EventsService) Import(calendarId string, event *Event) *EventsImportCal
 	return c
 }
 
+// ConferenceDataVersion sets the optional parameter
+// "conferenceDataVersion": Version number of conference data supported
+// by the API client. Version 0 assumes no conference data support and
+// ignores conference data in the event's body. Version 1 enables
+// support for copying of ConferenceData as well as for creating new
+// conferences using the createRequest field of conferenceData. The
+// default is 0.
+func (c *EventsImportCall) ConferenceDataVersion(conferenceDataVersion int64) *EventsImportCall {
+	c.urlParams_.Set("conferenceDataVersion", fmt.Sprint(conferenceDataVersion))
+	return c
+}
+
 // SupportsAttachments sets the optional parameter
 // "supportsAttachments": Whether API client performing operation
 // supports event attachments.  The default is False.
@@ -5369,6 +5921,7 @@ func (c *EventsImportCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/import")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -5412,7 +5965,7 @@ func (c *EventsImportCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5429,6 +5982,14 @@ func (c *EventsImportCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
+	//     },
+	//     "conferenceDataVersion": {
+	//       "description": "Version number of conference data supported by the API client. Version 0 assumes no conference data support and ignores conference data in the event's body. Version 1 enables support for copying of ConferenceData as well as for creating new conferences using the createRequest field of conferenceData. The default is 0.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "maximum": "1",
+	//       "minimum": "0",
+	//       "type": "integer"
 	//     },
 	//     "supportsAttachments": {
 	//       "description": "Whether API client performing operation supports event attachments. Optional. The default is False.",
@@ -5466,6 +6027,18 @@ func (r *EventsService) Insert(calendarId string, event *Event) *EventsInsertCal
 	c := &EventsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendarId = calendarId
 	c.event = event
+	return c
+}
+
+// ConferenceDataVersion sets the optional parameter
+// "conferenceDataVersion": Version number of conference data supported
+// by the API client. Version 0 assumes no conference data support and
+// ignores conference data in the event's body. Version 1 enables
+// support for copying of ConferenceData as well as for creating new
+// conferences using the createRequest field of conferenceData. The
+// default is 0.
+func (c *EventsInsertCall) ConferenceDataVersion(conferenceDataVersion int64) *EventsInsertCall {
+	c.urlParams_.Set("conferenceDataVersion", fmt.Sprint(conferenceDataVersion))
 	return c
 }
 
@@ -5532,6 +6105,7 @@ func (c *EventsInsertCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -5575,7 +6149,7 @@ func (c *EventsInsertCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5592,6 +6166,14 @@ func (c *EventsInsertCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
+	//     },
+	//     "conferenceDataVersion": {
+	//       "description": "Version number of conference data supported by the API client. Version 0 assumes no conference data support and ignores conference data in the event's body. Version 1 enables support for copying of ConferenceData as well as for creating new conferences using the createRequest field of conferenceData. The default is 0.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "maximum": "1",
+	//       "minimum": "0",
+	//       "type": "integer"
 	//     },
 	//     "maxAttendees": {
 	//       "description": "The maximum number of attendees to include in the response. If there are more than the specified number of attendees, only the participant is returned. Optional.",
@@ -5768,6 +6350,7 @@ func (c *EventsInstancesCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}/instances")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -5812,7 +6395,7 @@ func (c *EventsInstancesCall) Do(opts ...googleapi.CallOption) (*Events, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6171,6 +6754,7 @@ func (c *EventsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -6214,7 +6798,7 @@ func (c *EventsListCall) Do(opts ...googleapi.CallOption) (*Events, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6432,6 +7016,7 @@ func (c *EventsMoveCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}/move")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -6476,7 +7061,7 @@ func (c *EventsMoveCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6558,6 +7143,18 @@ func (c *EventsPatchCall) AlwaysIncludeEmail(alwaysIncludeEmail bool) *EventsPat
 	return c
 }
 
+// ConferenceDataVersion sets the optional parameter
+// "conferenceDataVersion": Version number of conference data supported
+// by the API client. Version 0 assumes no conference data support and
+// ignores conference data in the event's body. Version 1 enables
+// support for copying of ConferenceData as well as for creating new
+// conferences using the createRequest field of conferenceData. The
+// default is 0.
+func (c *EventsPatchCall) ConferenceDataVersion(conferenceDataVersion int64) *EventsPatchCall {
+	c.urlParams_.Set("conferenceDataVersion", fmt.Sprint(conferenceDataVersion))
+	return c
+}
+
 // MaxAttendees sets the optional parameter "maxAttendees": The maximum
 // number of attendees to include in the response. If there are more
 // than the specified number of attendees, only the participant is
@@ -6621,6 +7218,7 @@ func (c *EventsPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -6665,7 +7263,7 @@ func (c *EventsPatchCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6688,6 +7286,14 @@ func (c *EventsPatchCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
+	//     },
+	//     "conferenceDataVersion": {
+	//       "description": "Version number of conference data supported by the API client. Version 0 assumes no conference data support and ignores conference data in the event's body. Version 1 enables support for copying of ConferenceData as well as for creating new conferences using the createRequest field of conferenceData. The default is 0.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "maximum": "1",
+	//       "minimum": "0",
+	//       "type": "integer"
 	//     },
 	//     "eventId": {
 	//       "description": "Event identifier.",
@@ -6786,6 +7392,7 @@ func (c *EventsQuickAddCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/quickAdd")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -6829,7 +7436,7 @@ func (c *EventsQuickAddCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6904,6 +7511,18 @@ func (c *EventsUpdateCall) AlwaysIncludeEmail(alwaysIncludeEmail bool) *EventsUp
 	return c
 }
 
+// ConferenceDataVersion sets the optional parameter
+// "conferenceDataVersion": Version number of conference data supported
+// by the API client. Version 0 assumes no conference data support and
+// ignores conference data in the event's body. Version 1 enables
+// support for copying of ConferenceData as well as for creating new
+// conferences using the createRequest field of conferenceData. The
+// default is 0.
+func (c *EventsUpdateCall) ConferenceDataVersion(conferenceDataVersion int64) *EventsUpdateCall {
+	c.urlParams_.Set("conferenceDataVersion", fmt.Sprint(conferenceDataVersion))
+	return c
+}
+
 // MaxAttendees sets the optional parameter "maxAttendees": The maximum
 // number of attendees to include in the response. If there are more
 // than the specified number of attendees, only the participant is
@@ -6967,6 +7586,7 @@ func (c *EventsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/{eventId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -7011,7 +7631,7 @@ func (c *EventsUpdateCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7034,6 +7654,14 @@ func (c *EventsUpdateCall) Do(opts ...googleapi.CallOption) (*Event, error) {
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
+	//     },
+	//     "conferenceDataVersion": {
+	//       "description": "Version number of conference data supported by the API client. Version 0 assumes no conference data support and ignores conference data in the event's body. Version 1 enables support for copying of ConferenceData as well as for creating new conferences using the createRequest field of conferenceData. The default is 0.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "maximum": "1",
+	//       "minimum": "0",
+	//       "type": "integer"
 	//     },
 	//     "eventId": {
 	//       "description": "Event identifier.",
@@ -7314,6 +7942,7 @@ func (c *EventsWatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/events/watch")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -7357,7 +7986,7 @@ func (c *EventsWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7551,6 +8180,7 @@ func (c *FreebusyQueryCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "freeBusy")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -7591,7 +8221,7 @@ func (c *FreebusyQueryCall) Do(opts ...googleapi.CallOption) (*FreeBusyResponse,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7678,6 +8308,7 @@ func (c *SettingsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/settings/{setting}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -7721,7 +8352,7 @@ func (c *SettingsGetCall) Do(opts ...googleapi.CallOption) (*Setting, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7843,6 +8474,7 @@ func (c *SettingsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/settings")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -7883,7 +8515,7 @@ func (c *SettingsListCall) Do(opts ...googleapi.CallOption) (*Settings, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8028,6 +8660,7 @@ func (c *SettingsWatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/me/settings/watch")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -8068,7 +8701,7 @@ func (c *SettingsWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

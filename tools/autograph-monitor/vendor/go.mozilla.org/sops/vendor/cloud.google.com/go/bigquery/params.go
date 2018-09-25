@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math/big"
 	"reflect"
 	"regexp"
 	"time"
@@ -36,17 +37,24 @@ var (
 	validFieldName = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]{0,127}$")
 )
 
+const nullableTagOption = "nullable"
+
 func bqTagParser(t reflect.StructTag) (name string, keep bool, other interface{}, err error) {
-	if s := t.Get("bigquery"); s != "" {
-		if s == "-" {
-			return "", false, nil, nil
-		}
-		if !validFieldName.MatchString(s) {
-			return "", false, nil, errInvalidFieldName
-		}
-		return s, true, nil, nil
+	name, keep, opts, err := fields.ParseStandardTag("bigquery", t)
+	if err != nil {
+		return "", false, nil, err
 	}
-	return "", true, nil, nil
+	if name != "" && !validFieldName.MatchString(name) {
+		return "", false, nil, errInvalidFieldName
+	}
+	for _, opt := range opts {
+		if opt != nullableTagOption {
+			return "", false, nil, fmt.Errorf(
+				"bigquery: invalid tag option %q. The only valid option is %q",
+				opt, nullableTagOption)
+		}
+	}
+	return name, keep, opts, nil
 }
 
 var fieldCache = fields.NewCache(bqTagParser, nil, nil)
@@ -61,6 +69,7 @@ var (
 	timeParamType      = &bq.QueryParameterType{Type: "TIME"}
 	dateTimeParamType  = &bq.QueryParameterType{Type: "DATETIME"}
 	timestampParamType = &bq.QueryParameterType{Type: "TIMESTAMP"}
+	numericParamType   = &bq.QueryParameterType{Type: "NUMERIC"}
 )
 
 var (
@@ -68,6 +77,7 @@ var (
 	typeOfTime     = reflect.TypeOf(civil.Time{})
 	typeOfDateTime = reflect.TypeOf(civil.DateTime{})
 	typeOfGoTime   = reflect.TypeOf(time.Time{})
+	typeOfRat      = reflect.TypeOf(&big.Rat{})
 )
 
 // A QueryParameter is a parameter to a query.
@@ -77,8 +87,9 @@ type QueryParameter struct {
 	Name string
 
 	// Value is the value of the parameter.
-	// The following Go types are supported, with their corresponding
-	// Bigquery types:
+	//
+	// When you create a QueryParameter to send to BigQuery, the following Go types
+	// are supported, with their corresponding Bigquery types:
 	// int, int8, int16, int32, int64, uint8, uint16, uint32: INT64
 	//   Note that uint, uint64 and uintptr are not supported, because
 	//   they may contain values that cannot fit into a 64-bit signed integer.
@@ -87,12 +98,20 @@ type QueryParameter struct {
 	// string: STRING
 	// []byte: BYTES
 	// time.Time: TIMESTAMP
+	// *big.Rat: NUMERIC
 	// Arrays and slices of the above.
 	// Structs of the above. Only the exported fields are used.
+	//
+	// When a QueryParameter is returned inside a QueryConfig from a call to
+	// Job.Config:
+	// Integers are of type int64.
+	// Floating-point values are of type float64.
+	// Arrays are of type []interface{}, regardless of the array element type.
+	// Structs are of type map[string]interface{}.
 	Value interface{}
 }
 
-func (p QueryParameter) toRaw() (*bq.QueryParameter, error) {
+func (p QueryParameter) toBQ() (*bq.QueryParameter, error) {
 	pv, err := paramValue(reflect.ValueOf(p.Value))
 	if err != nil {
 		return nil, err
@@ -121,6 +140,8 @@ func paramType(t reflect.Type) (*bq.QueryParameterType, error) {
 		return dateTimeParamType, nil
 	case typeOfGoTime:
 		return timestampParamType, nil
+	case typeOfRat:
+		return numericParamType, nil
 	}
 	switch t.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32:
@@ -189,16 +210,21 @@ func paramValue(v reflect.Value) (bq.QueryParameterValue, error) {
 
 	case typeOfTime:
 		// civil.Time has nanosecond resolution, but BigQuery TIME only microsecond.
-		res.Value = civilTimeParamString(v.Interface().(civil.Time))
+		// (If we send nanoseconds, then when we try to read the result we get "query job
+		// missing destination table").
+		res.Value = CivilTimeString(v.Interface().(civil.Time))
 		return res, nil
 
 	case typeOfDateTime:
-		dt := v.Interface().(civil.DateTime)
-		res.Value = dt.Date.String() + " " + civilTimeParamString(dt.Time)
+		res.Value = CivilDateTimeString(v.Interface().(civil.DateTime))
 		return res, nil
 
 	case typeOfGoTime:
 		res.Value = v.Interface().(time.Time).Format(timestampFormat)
+		return res, nil
+
+	case typeOfRat:
+		res.Value = NumericString(v.Interface().(*big.Rat))
 		return res, nil
 	}
 	switch t.Kind() {
@@ -254,12 +280,78 @@ func paramValue(v reflect.Value) (bq.QueryParameterValue, error) {
 	return res, nil
 }
 
-func civilTimeParamString(t civil.Time) string {
-	if t.Nanosecond == 0 {
-		return t.String()
-	} else {
-		micro := (t.Nanosecond + 500) / 1000 // round to nearest microsecond
-		t.Nanosecond = 0
-		return t.String() + fmt.Sprintf(".%06d", micro)
+func bqToQueryParameter(q *bq.QueryParameter) (QueryParameter, error) {
+	p := QueryParameter{Name: q.Name}
+	val, err := convertParamValue(q.ParameterValue, q.ParameterType)
+	if err != nil {
+		return QueryParameter{}, err
 	}
+	p.Value = val
+	return p, nil
+}
+
+var paramTypeToFieldType = map[string]FieldType{
+	int64ParamType.Type:   IntegerFieldType,
+	float64ParamType.Type: FloatFieldType,
+	boolParamType.Type:    BooleanFieldType,
+	stringParamType.Type:  StringFieldType,
+	bytesParamType.Type:   BytesFieldType,
+	dateParamType.Type:    DateFieldType,
+	timeParamType.Type:    TimeFieldType,
+	numericParamType.Type: NumericFieldType,
+}
+
+// Convert a parameter value from the service to a Go value. This is similar to, but
+// not quite the same as, converting data values.
+func convertParamValue(qval *bq.QueryParameterValue, qtype *bq.QueryParameterType) (interface{}, error) {
+	switch qtype.Type {
+	case "ARRAY":
+		if qval == nil {
+			return []interface{}(nil), nil
+		}
+		return convertParamArray(qval.ArrayValues, qtype.ArrayType)
+	case "STRUCT":
+		if qval == nil {
+			return map[string]interface{}(nil), nil
+		}
+		return convertParamStruct(qval.StructValues, qtype.StructTypes)
+	case "TIMESTAMP":
+		return time.Parse(timestampFormat, qval.Value)
+	case "DATETIME":
+		return parseCivilDateTime(qval.Value)
+	default:
+		return convertBasicType(qval.Value, paramTypeToFieldType[qtype.Type])
+	}
+}
+
+// convertParamArray converts a query parameter array value to a Go value. It
+// always returns a []interface{}.
+func convertParamArray(elVals []*bq.QueryParameterValue, elType *bq.QueryParameterType) ([]interface{}, error) {
+	var vals []interface{}
+	for _, el := range elVals {
+		val, err := convertParamValue(el, elType)
+		if err != nil {
+			return nil, err
+		}
+		vals = append(vals, val)
+	}
+	return vals, nil
+}
+
+// convertParamStruct converts a query parameter struct value into a Go value. It
+// always returns a map[string]interface{}.
+func convertParamStruct(sVals map[string]bq.QueryParameterValue, sTypes []*bq.QueryParameterTypeStructTypes) (map[string]interface{}, error) {
+	vals := map[string]interface{}{}
+	for _, st := range sTypes {
+		if sv, ok := sVals[st.Name]; ok {
+			val, err := convertParamValue(&sv, st.Type)
+			if err != nil {
+				return nil, err
+			}
+			vals[st.Name] = val
+		} else {
+			vals[st.Name] = nil
+		}
+	}
+	return vals, nil
 }

@@ -142,8 +142,8 @@ type Jwk struct {
 }
 
 func (s *Jwk) MarshalJSON() ([]byte, error) {
-	type noMethod Jwk
-	raw := noMethod(*s)
+	type NoMethod Jwk
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -178,8 +178,8 @@ type JwkKeys struct {
 }
 
 func (s *JwkKeys) MarshalJSON() ([]byte, error) {
-	type noMethod JwkKeys
-	raw := noMethod(*s)
+	type NoMethod JwkKeys
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -239,8 +239,8 @@ type Tokeninfo struct {
 }
 
 func (s *Tokeninfo) MarshalJSON() ([]byte, error) {
-	type noMethod Tokeninfo
-	raw := noMethod(*s)
+	type NoMethod Tokeninfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -305,8 +305,8 @@ type Userinfoplus struct {
 }
 
 func (s *Userinfoplus) MarshalJSON() ([]byte, error) {
-	type noMethod Userinfoplus
-	raw := noMethod(*s)
+	type NoMethod Userinfoplus
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -372,6 +372,7 @@ func (c *GetCertForOpenIdConnectCall) doRequest(alt string) (*http.Response, err
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "oauth2/v2/certs")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -412,7 +413,7 @@ func (c *GetCertForOpenIdConnectCall) Do(opts ...googleapi.CallOption) (*Jwk, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -493,6 +494,7 @@ func (c *TokeninfoCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "oauth2/v2/tokeninfo")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -533,7 +535,7 @@ func (c *TokeninfoCall) Do(opts ...googleapi.CallOption) (*Tokeninfo, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -624,6 +626,7 @@ func (c *UserinfoGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "oauth2/v2/userinfo")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -664,7 +667,7 @@ func (c *UserinfoGetCall) Do(opts ...googleapi.CallOption) (*Userinfoplus, error
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -747,6 +750,7 @@ func (c *UserinfoV2MeGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "userinfo/v2/me")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -787,7 +791,7 @@ func (c *UserinfoV2MeGetCall) Do(opts ...googleapi.CallOption) (*Userinfoplus, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

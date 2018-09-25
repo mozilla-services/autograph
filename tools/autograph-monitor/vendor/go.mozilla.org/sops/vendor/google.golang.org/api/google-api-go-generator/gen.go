@@ -7,6 +7,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"go/format"
@@ -29,7 +30,7 @@ import (
 
 const (
 	googleDiscoveryURL = "https://www.googleapis.com/discovery/v1/apis"
-	generatorVersion   = "20170210"
+	generatorVersion   = "2018018"
 )
 
 var (
@@ -132,11 +133,11 @@ func main() {
 		matches = append(matches, api)
 		log.Printf("Generating API %s", api.ID)
 		err := api.WriteGeneratedCode()
-		if err != nil {
+		if err != nil && err != errNoDoc {
 			errors = append(errors, &generateError{api, err})
 			continue
 		}
-		if *build {
+		if *build && err == nil {
 			var args []string
 			if *install {
 				args = append(args, "install")
@@ -309,6 +310,10 @@ func slurpURL(urlStr string) []byte {
 	if err != nil {
 		log.Fatalf("Error fetching URL %s: %v", urlStr, err)
 	}
+	if res.StatusCode >= 300 {
+		log.Printf("WARNING: URL %s served status code %d", urlStr, res.StatusCode)
+		return nil
+	}
 	bs, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Fatalf("Error reading body of URL %s: %v", urlStr, err)
@@ -435,27 +440,53 @@ func (a *API) needsDataWrapper() bool {
 }
 
 func (a *API) jsonBytes() []byte {
-	if v := a.forceJSON; v != nil {
-		return v
-	}
-	if *useCache {
-		slurp, err := ioutil.ReadFile(a.JSONFile())
-		if err != nil {
-			log.Fatal(err)
+	if a.forceJSON == nil {
+		var slurp []byte
+		var err error
+		if *useCache {
+			slurp, err = ioutil.ReadFile(a.JSONFile())
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			slurp = slurpURL(a.DiscoveryURL())
+			if slurp != nil {
+				// Make sure that keys are sorted by re-marshalling.
+				d := make(map[string]interface{})
+				json.Unmarshal(slurp, &d)
+				if err != nil {
+					log.Fatal(err)
+				}
+				var err error
+				slurp, err = json.MarshalIndent(d, "", "  ")
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
 		}
-		return slurp
+		a.forceJSON = slurp
 	}
-	return slurpURL(a.DiscoveryURL())
+	return a.forceJSON
 }
 
 func (a *API) JSONFile() string {
 	return filepath.Join(a.SourceDir(), a.Package()+"-api.json")
 }
 
+var errNoDoc = errors.New("could not read discovery doc")
+
+// WriteGeneratedCode generates code for a.
+// It returns errNoDoc if we couldn't read the discovery doc.
 func (a *API) WriteGeneratedCode() error {
 	genfilename := *output
+	jsonBytes := a.jsonBytes()
+	// Skip generation if we don't have the discovery doc.
+	if jsonBytes == nil {
+		// No message here, because slurpURL printed one.
+		return errNoDoc
+	}
 	if genfilename == "" {
-		if err := writeFile(a.JSONFile(), a.jsonBytes()); err != nil {
+		if err := writeFile(a.JSONFile(), jsonBytes); err != nil {
 			return err
 		}
 		outdir := a.SourceDir()
@@ -472,7 +503,10 @@ func (a *API) WriteGeneratedCode() error {
 	if err == nil {
 		err = errw
 	}
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 var docsLink string
@@ -520,6 +554,10 @@ func (a *API) GenerateCode() ([]byte, error) {
 	}
 
 	pn("// Package %s provides access to the %s.", pkg, a.doc.Title)
+	if r := replacementPackage[pkg]; r != "" {
+		pn("//")
+		pn("// This package is DEPRECATED. Use package %s instead.", r)
+	}
 	docsLink = a.doc.DocumentationLink
 	if docsLink != "" {
 		pn("//")
@@ -592,7 +630,7 @@ func (a *API) GenerateCode() ([]byte, error) {
 	pn("if client == nil { return nil, errors.New(\"client is nil\") }")
 	pn("s := &%s{client: client, BasePath: basePath}", service)
 	for _, res := range a.doc.Resources { // add top level resources.
-		pn("s.%s = New%s(s)", resourceGoField(res), resourceGoType(res))
+		pn("s.%s = New%s(s)", resourceGoField(res, nil), resourceGoType(res))
 	}
 	pn("return s, nil")
 	pn("}")
@@ -603,7 +641,7 @@ func (a *API) GenerateCode() ([]byte, error) {
 	pn(" UserAgent string // optional additional User-Agent fragment")
 
 	for _, res := range a.doc.Resources {
-		pn("\n\t%s\t*%s", resourceGoField(res), resourceGoType(res))
+		pn("\n\t%s\t*%s", resourceGoField(res, nil), resourceGoType(res))
 	}
 	pn("}")
 	pn("\nfunc (s *%s) userAgent() string {", service)
@@ -765,6 +803,9 @@ type fieldName struct {
 // This makes it possible to distinguish between a field being unset vs having
 // an empty value.
 var pointerFields = []fieldName{
+	{api: "androidpublisher:v1.1", schema: "InappPurchase", field: "PurchaseType"},
+	{api: "androidpublisher:v2", schema: "ProductPurchase", field: "PurchaseType"},
+	{api: "androidpublisher:v3", schema: "ProductPurchase", field: "PurchaseType"},
 	{api: "androidpublisher:v2", schema: "SubscriptionPurchase", field: "CancelReason"},
 	{api: "androidpublisher:v2", schema: "SubscriptionPurchase", field: "PaymentState"},
 	{api: "cloudmonitoring:v2beta2", schema: "Point", field: "BoolValue"},
@@ -1019,7 +1060,7 @@ func (s *Schema) populateSubSchemas() (outerr error) {
 			case disco.StructKind:
 				addSubStruct(subApiName, p.Type())
 			default:
-				panicf("Unknown type for %q: %s", subApiName, p.Type())
+				panicf("Unknown type for %q: %v", subApiName, p.Type())
 			}
 		}
 	case disco.ArrayKind:
@@ -1040,7 +1081,7 @@ func (s *Schema) populateSubSchemas() (outerr error) {
 		case disco.StructKind:
 			addSubStruct(subApiName, at)
 		default:
-			panicf("Unknown array type for %q: %s", subApiName, at)
+			panicf("Unknown array type for %q: %v", subApiName, at)
 		}
 	case disco.AnyStructKind, disco.MapKind, disco.SimpleKind, disco.ReferenceKind:
 		// Do nothing.
@@ -1238,9 +1279,9 @@ func (s *Schema) writeSchemaStruct(api *API) {
 // by listing them in the field identified by nullFieldsName.
 func (s *Schema) writeSchemaMarshal(forceSendFieldName, nullFieldsName string) {
 	s.api.pn("func (s *%s) MarshalJSON() ([]byte, error) {", s.GoName())
-	s.api.pn("\ttype noMethod %s", s.GoName())
+	s.api.pn("\ttype NoMethod %s", s.GoName())
 	// pass schema as methodless type to prevent subsequent calls to MarshalJSON from recursing indefinitely.
-	s.api.pn("\traw := noMethod(*s)")
+	s.api.pn("\traw := NoMethod(*s)")
 	s.api.pn("\treturn gensupport.MarshalJSON(raw, s.%s, s.%s)", forceSendFieldName, nullFieldsName)
 	s.api.pn("}")
 }
@@ -1257,7 +1298,7 @@ func (s *Schema) writeSchemaUnmarshal() {
 	}
 	pn := s.api.pn
 	pn("\nfunc (s *%s) UnmarshalJSON(data []byte) error {", s.GoName())
-	pn("  type noMethod %s", s.GoName()) // avoid infinite recursion
+	pn("  type NoMethod %s", s.GoName()) // avoid infinite recursion
 	pn("  var s1 struct {")
 	// Hide the float64 fields of the schema with fields that correctly
 	// unmarshal special values.
@@ -1268,10 +1309,10 @@ func (s *Schema) writeSchemaUnmarshal() {
 		}
 		pn("%s %s `json:\"%s\"`", p.assignedGoName, typ, p.p.Name)
 	}
-	pn("    *noMethod") // embed the schema
+	pn("    *NoMethod") // embed the schema
 	pn("  }")
 	// Set the schema value into the wrapper so its other fields are unmarshaled.
-	pn("  s1.noMethod = (*noMethod)(s)")
+	pn("  s1.NoMethod = (*NoMethod)(s)")
 	pn("  if err := json.Unmarshal(data, &s1); err != nil {")
 	pn("    return err")
 	pn("  }")
@@ -1328,7 +1369,7 @@ func (a *API) generateResource(r *disco.Resource) {
 	pn(fmt.Sprintf("func New%s(s *%s) *%s {", t, a.ServiceType(), t))
 	pn("rs := &%s{s : s}", t)
 	for _, res := range r.Resources {
-		pn("rs.%s = New%s(s)", resourceGoField(res), resourceGoType(res))
+		pn("rs.%s = New%s(s)", resourceGoField(res, r), resourceGoType(res))
 	}
 	pn("return rs")
 	pn("}")
@@ -1336,7 +1377,7 @@ func (a *API) generateResource(r *disco.Resource) {
 	pn("\ntype %s struct {", t)
 	pn(" s *%s", a.ServiceType())
 	for _, res := range r.Resources {
-		pn("\n\t%s\t*%s", resourceGoField(res), resourceGoType(res))
+		pn("\n\t%s\t*%s", resourceGoField(res, r), resourceGoType(res))
 	}
 	pn("}")
 
@@ -1363,8 +1404,19 @@ func (a *API) generateResourceMethods(r *disco.Resource) {
 	}
 }
 
-func resourceGoField(r *disco.Resource) string {
-	return initialCap(r.Name)
+func resourceGoField(r, parent *disco.Resource) string {
+	// Avoid conflicts with method names.
+	und := ""
+	if parent != nil {
+		for _, m := range parent.Methods {
+			if m.Name == r.Name {
+				und = "_"
+				break
+			}
+		}
+	}
+	// Note: initialCap(r.Name + "_") doesn't work because initialCap calls depunct.
+	return initialCap(r.Name) + und
 }
 
 func resourceGoType(r *disco.Resource) string {
@@ -1388,7 +1440,7 @@ type Method struct {
 	r   *disco.Resource // or nil if a API-level (top-level) method
 	m   *disco.Method
 
-	params []*Param // all Params, of each type, lazily set by first access to Parameters
+	params []*Param // all Params, of each type, lazily set by first call of Params method.
 }
 
 func (m *Method) Id() string {
@@ -1805,6 +1857,7 @@ func (meth *Method) generateCode() {
 		pn(`reqHeaders.Set("Content-Type", "application/json")`)
 	}
 	pn(`c.urlParams_.Set("alt", alt)`)
+	pn(`c.urlParams_.Set("prettyPrint", "false")`)
 
 	pn("urls := googleapi.ResolveRelative(c.s.BasePath, %q)", meth.m.Path)
 	if meth.supportsMediaUpload() {
@@ -1820,12 +1873,15 @@ func (meth *Method) generateCode() {
 		pn(" body = new(bytes.Buffer)")
 		pn(` reqHeaders.Set("Content-Type", "application/json")`)
 		pn("}")
-		pn("body, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)")
+		pn("body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)")
 		pn("defer cleanup()")
 	}
 	pn("urls += \"?\" + c.urlParams_.Encode()")
 	pn("req, _ := http.NewRequest(%q, urls, body)", httpMethod)
 	pn("req.Header = reqHeaders")
+	if meth.supportsMediaUpload() {
+		pn("gensupport.SetGetBody(req, getBody)")
+	}
 
 	// Replace param values after NewRequest to avoid reencoding them.
 	// E.g. Cloud Storage API requires '%2F' in entity param to be kept, but url.Parse replaces it with '/'.
@@ -1925,8 +1981,7 @@ func (meth *Method) generateCode() {
 		} else {
 			pn("target := &ret")
 		}
-
-		pn("if err := json.NewDecoder(res.Body).Decode(target); err != nil { return nil, err }")
+		pn("if err := gensupport.DecodeResponse(target, res); err != nil { return nil, err }")
 		pn("return ret, nil")
 	}
 
@@ -2035,22 +2090,27 @@ func resolveRelative(basestr, relstr string) string {
 	return u.String()
 }
 
-func (meth *Method) NewArguments() (args *arguments) {
-	args = &arguments{
+func (meth *Method) NewArguments() *arguments {
+	args := &arguments{
 		method: meth,
 		m:      make(map[string]*argument),
 	}
-	po := meth.m.ParameterOrder
-	if len(po) > 0 {
-		for _, pname := range po {
-			arg := meth.NewArg(pname, meth.NamedParam(pname))
-			args.AddArg(arg)
+	pnames := meth.m.ParameterOrder
+	if len(pnames) == 0 {
+		// No parameterOrder; collect required parameters and sort by name.
+		for _, reqParam := range meth.grepParams(func(p *Param) bool { return p.p.Required }) {
+			pnames = append(pnames, reqParam.p.Name)
 		}
+		sort.Strings(pnames)
+	}
+	for _, pname := range pnames {
+		arg := meth.NewArg(pname, meth.NamedParam(pname))
+		args.AddArg(arg)
 	}
 	if rs := meth.m.Request; rs != nil {
 		args.AddArg(meth.NewBodyArg(rs))
 	}
-	return
+	return args
 }
 
 func (meth *Method) NewBodyArg(ds *disco.Schema) *argument {
@@ -2109,6 +2169,8 @@ func (a *argument) exprAsString(prefix string) string {
 		return "strconv.FormatInt(" + prefix + a.goname + ", 10)"
 	case "uint64":
 		return "strconv.FormatUint(" + prefix + a.goname + ", 10)"
+	case "bool":
+		return "strconv.FormatBool(" + prefix + a.goname + ")"
 	}
 	log.Panicf("unknown type: apitype=%q, gotype=%q", a.apitype, a.gotype)
 	return ""

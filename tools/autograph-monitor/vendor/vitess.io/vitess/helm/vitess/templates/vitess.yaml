@@ -1,0 +1,86 @@
+# Create global resources.
+---
+# create a single vttablet service
+{{ include "vttablet-service" (tuple $.Values.pmm) }}
+---
+{{ if $.Values.pmm.enabled }}
+# create the pmm service and stateful set
+{{ include "pmm" (tuple $.Values.pmm $.Release.Namespace) }}
+---
+{{ end }}
+
+{{ if $.Values.orchestrator.enabled }}
+
+# create orchestrator global services and StatefulSet
+{{ include "orchestrator" (tuple $.Values.orchestrator) }}
+---
+# create orchestrator config map
+{{ include "orchestrator-config" (tuple $.Values.orchestrator $.Release.Namespace $.Values.vttablet.enableHeartbeat) }}
+---
+# create a Service per StatefulSet replica
+{{ range $i := until (int $.Values.orchestrator.replicas) }}
+{{ include "orchestrator-statefulset-service" (tuple $.Values.orchestrator $i) }}
+---
+{{ end }}
+
+{{ end }}
+
+# create an etcd cluster for the global topology
+{{- $replicas := $.Values.topology.globalCell.replicas | default $.Values.etcd.replicas -}}
+{{- $version := $.Values.topology.globalCell.version | default $.Values.etcd.version -}}
+{{- $resources := $.Values.topology.globalCell.resources | default $.Values.etcd.resources -}}
+
+{{ include "etcd" (tuple "global" $replicas $version $resources) }}
+
+# Create requested resources in each cell.
+{{ range $cell := $.Values.topology.cells }}
+
+---
+# create an etcd cluster per cell
+{{- $cellClean := include "clean-label" $cell.name -}}
+{{- $replicas := $cell.etcd.replicas | default $.Values.etcd.replicas -}}
+{{- $version := $cell.etcd.version | default $.Values.etcd.version -}}
+{{- $resources := $cell.etcd.resources | default $.Values.etcd.resources -}}
+
+{{ include "etcd" (tuple $cellClean $replicas $version $resources) }}
+---
+# create one controller per cell
+{{ include "vtctld" (tuple $.Values.topology $cell $.Values.vtctld $.Release.Namespace $.Values.config) }}
+---
+# create a pool of vtgates per cell
+{{ include "vtgate" (tuple $.Values.topology $cell $.Values.vtgate $.Release.Namespace) }}
+
+  # Tablets for keyspaces
+  {{ range $keyspace := $cell.keyspaces }}
+    {{ range $shard := $keyspace.shards }}
+
+      {{ $totalTabletCount := len (include "tablet-count" $shard.tablets) }}
+
+      # now range through the tablets again to set them up
+      {{ range $tablet := $shard.tablets }}
+---
+{{ include "vttablet" (tuple $.Values.topology $cell $keyspace $shard $tablet $.Values.vttablet $.Release.Namespace $.Values.config $.Values.pmm $.Values.orchestrator $totalTabletCount) }}
+
+      {{ end }} # range $tablet
+    {{ end }} # range $shard
+  {{ end }} # range $keyspace
+
+{{ end }} # range $cell
+---
+{{ with $.Values.config }}
+# shared ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vitess-cm
+data:
+  backup.backup_storage_implementation: {{ .backup.backup_storage_implementation }}
+  backup.gcs_backup_storage_bucket: {{ .backup.gcs_backup_storage_bucket }}
+  backup.gcs_backup_storage_root: {{ .backup.gcs_backup_storage_root }}
+  backup.s3_backup_aws_region: {{ .backup.s3_backup_aws_region }}
+  backup.s3_backup_storage_bucket: {{ .backup.s3_backup_storage_bucket }}
+  backup.s3_backup_storage_root: {{ .backup.s3_backup_storage_root }}
+  backup.s3_backup_server_side_encryption: {{ .backup.s3_backup_server_side_encryption }}
+
+  db.flavor: {{ $.Values.vttablet.flavor }}
+{{ end }} # end with config

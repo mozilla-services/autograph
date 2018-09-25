@@ -1,5 +1,5 @@
 /*
-Copyright 2016 Google Inc. All Rights Reserved.
+Copyright 2016 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ type EmulatedEnv struct {
 
 // NewEmulatedEnv builds and starts the emulator based environment
 func NewEmulatedEnv(config IntegrationTestConfig) (*EmulatedEnv, error) {
-	srv, err := bttest.NewServer("127.0.0.1:0", grpc.MaxRecvMsgSize(200<<20), grpc.MaxSendMsgSize(100<<20))
+	srv, err := bttest.NewServer("localhost:0", grpc.MaxRecvMsgSize(200<<20), grpc.MaxSendMsgSize(100<<20))
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (e *EmulatedEnv) Config() IntegrationTestConfig {
 func (e *EmulatedEnv) NewAdminClient() (*AdminClient, error) {
 	timeout := 20 * time.Second
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	conn, err := grpc.Dial(e.server.Addr, grpc.WithInsecure())
+	conn, err := grpc.Dial(e.server.Addr, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,8 @@ func (e *EmulatedEnv) NewInstanceAdminClient() (*InstanceAdminClient, error) {
 func (e *EmulatedEnv) NewClient() (*Client, error) {
 	timeout := 20 * time.Second
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	conn, err := grpc.Dial(e.server.Addr, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(100<<20), grpc.MaxCallRecvMsgSize(100<<20)))
+	conn, err := grpc.Dial(e.server.Addr, grpc.WithInsecure(), grpc.WithBlock(),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(100<<20), grpc.MaxCallRecvMsgSize(100<<20)))
 	if err != nil {
 		return nil, err
 	}
@@ -189,33 +190,27 @@ func (e *ProdEnv) Config() IntegrationTestConfig {
 
 // NewAdminClient builds a new connected admin client for this environment
 func (e *ProdEnv) NewAdminClient() (*AdminClient, error) {
-	timeout := 20 * time.Second
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	var clientOpts []option.ClientOption
 	if endpoint := e.config.AdminEndpoint; endpoint != "" {
 		clientOpts = append(clientOpts, option.WithEndpoint(endpoint))
 	}
-	return NewAdminClient(ctx, e.config.Project, e.config.Instance, clientOpts...)
+	return NewAdminClient(context.Background(), e.config.Project, e.config.Instance, clientOpts...)
 }
 
 // NewInstanceAdminClient returns a new connected instance admin client for this environment
 func (e *ProdEnv) NewInstanceAdminClient() (*InstanceAdminClient, error) {
-	timeout := 20 * time.Second
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	var clientOpts []option.ClientOption
 	if endpoint := e.config.AdminEndpoint; endpoint != "" {
 		clientOpts = append(clientOpts, option.WithEndpoint(endpoint))
 	}
-	return NewInstanceAdminClient(ctx, e.config.Project, clientOpts...)
+	return NewInstanceAdminClient(context.Background(), e.config.Project, clientOpts...)
 }
 
 // NewClient builds a connected data client for this environment
 func (e *ProdEnv) NewClient() (*Client, error) {
-	timeout := 20 * time.Second
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	var clientOpts []option.ClientOption
 	if endpoint := e.config.DataEndpoint; endpoint != "" {
 		clientOpts = append(clientOpts, option.WithEndpoint(endpoint))
 	}
-	return NewClient(ctx, e.config.Project, e.config.Instance, clientOpts...)
+	return NewClient(context.Background(), e.config.Project, e.config.Instance, clientOpts...)
 }

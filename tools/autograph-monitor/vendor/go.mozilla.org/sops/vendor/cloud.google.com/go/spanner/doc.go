@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,6 +23,10 @@ Note: This package is in beta. Some backwards-incompatible changes may occur.
 
 See https://cloud.google.com/spanner/docs/getting-started/go/ for an introduction
 to Cloud Spanner and additional help on using this API.
+
+See https://godoc.org/cloud.google.com/go for authentication, timeouts,
+connection pooling and similar aspects of this package.
+
 
 Creating a Client
 
@@ -192,7 +196,7 @@ For Cloud Spanner columns that may contain NULL, use one of the NullXXX types,
 like NullString:
 
     var ns spanner.NullString
-    if err =: row.Column(0, &ns); err != nil {
+    if err := row.Column(0, &ns); err != nil {
         // TODO: Handle error.
     }
     if ns.Valid {
@@ -278,7 +282,7 @@ You pass in a function to ReadWriteTransaction, and the client will handle the
 retries automatically. Use the transaction's BufferWrite method to buffer
 mutations, which will all be executed at the end of the transaction:
 
-    _, err := client.ReadWriteTransaction(ctx, func(txn *spanner.ReadWriteTransaction) error {
+    _, err := client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
         var balance int64
         row, err := txn.ReadRow(ctx, "Accounts", spanner.Key{"alice"}, []string{"balance"})
         if err != nil {
@@ -302,9 +306,10 @@ mutations, which will all be executed at the end of the transaction:
         return nil
     })
 
-Authentication
+Tracing
 
-See examples of authorization and authentication at
-https://godoc.org/cloud.google.com/go#pkg-examples.
+This client has been instrumented to use OpenCensus tracing (http://opencensus.io).
+To enable tracing, see "Enabling Tracing for a Program" at
+https://godoc.org/go.opencensus.io/trace. OpenCensus tracing requires Go 1.8 or higher.
 */
 package spanner // import "cloud.google.com/go/spanner"

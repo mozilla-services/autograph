@@ -3,11 +3,13 @@
 
 package publish
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "google.golang.org/genproto/googleapis/api/annotations"
-import google_protobuf4 "github.com/golang/protobuf/ptypes/empty"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	empty "github.com/golang/protobuf/ptypes/empty"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
+	math "math"
+)
 
 import (
 	context "golang.org/x/net/context"
@@ -19,6 +21,12 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -27,8 +35,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for StreetViewPublishService service
-
+// StreetViewPublishServiceClient is the client API for StreetViewPublishService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type StreetViewPublishServiceClient interface {
 	// Creates an upload session to start uploading photo data. The upload URL of
 	// the returned `UploadRef` is used to upload the data for the photo.
@@ -36,7 +45,7 @@ type StreetViewPublishServiceClient interface {
 	// After the upload is complete, the `UploadRef` is used with
 	// `StreetViewPublishService:CreatePhoto()` to create the `Photo` object
 	// entry.
-	StartUpload(ctx context.Context, in *google_protobuf4.Empty, opts ...grpc.CallOption) (*UploadRef, error)
+	StartUpload(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*UploadRef, error)
 	// After the client finishes uploading the photo with the returned
 	// `UploadRef`, `photo.create` publishes the uploaded photo to Street View on
 	// Google Maps.
@@ -92,7 +101,7 @@ type StreetViewPublishServiceClient interface {
 	// * `PERMISSION_DENIED` if the requesting user did not create the requested
 	// photo.
 	// * `NOT_FOUND` if the photo ID does not exist.
-	DeletePhoto(ctx context.Context, in *DeletePhotoRequest, opts ...grpc.CallOption) (*google_protobuf4.Empty, error)
+	DeletePhoto(ctx context.Context, in *DeletePhotoRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// Deletes a list of photos and their metadata.
 	//
 	// Note that if `photos.batchDelete` fails, either critical fields
@@ -112,9 +121,9 @@ func NewStreetViewPublishServiceClient(cc *grpc.ClientConn) StreetViewPublishSer
 	return &streetViewPublishServiceClient{cc}
 }
 
-func (c *streetViewPublishServiceClient) StartUpload(ctx context.Context, in *google_protobuf4.Empty, opts ...grpc.CallOption) (*UploadRef, error) {
+func (c *streetViewPublishServiceClient) StartUpload(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*UploadRef, error) {
 	out := new(UploadRef)
-	err := grpc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/StartUpload", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/StartUpload", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +132,7 @@ func (c *streetViewPublishServiceClient) StartUpload(ctx context.Context, in *go
 
 func (c *streetViewPublishServiceClient) CreatePhoto(ctx context.Context, in *CreatePhotoRequest, opts ...grpc.CallOption) (*Photo, error) {
 	out := new(Photo)
-	err := grpc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/CreatePhoto", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/CreatePhoto", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +141,7 @@ func (c *streetViewPublishServiceClient) CreatePhoto(ctx context.Context, in *Cr
 
 func (c *streetViewPublishServiceClient) GetPhoto(ctx context.Context, in *GetPhotoRequest, opts ...grpc.CallOption) (*Photo, error) {
 	out := new(Photo)
-	err := grpc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/GetPhoto", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/GetPhoto", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +150,7 @@ func (c *streetViewPublishServiceClient) GetPhoto(ctx context.Context, in *GetPh
 
 func (c *streetViewPublishServiceClient) BatchGetPhotos(ctx context.Context, in *BatchGetPhotosRequest, opts ...grpc.CallOption) (*BatchGetPhotosResponse, error) {
 	out := new(BatchGetPhotosResponse)
-	err := grpc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/BatchGetPhotos", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/BatchGetPhotos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +159,7 @@ func (c *streetViewPublishServiceClient) BatchGetPhotos(ctx context.Context, in 
 
 func (c *streetViewPublishServiceClient) ListPhotos(ctx context.Context, in *ListPhotosRequest, opts ...grpc.CallOption) (*ListPhotosResponse, error) {
 	out := new(ListPhotosResponse)
-	err := grpc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/ListPhotos", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/ListPhotos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +168,7 @@ func (c *streetViewPublishServiceClient) ListPhotos(ctx context.Context, in *Lis
 
 func (c *streetViewPublishServiceClient) UpdatePhoto(ctx context.Context, in *UpdatePhotoRequest, opts ...grpc.CallOption) (*Photo, error) {
 	out := new(Photo)
-	err := grpc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/UpdatePhoto", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/UpdatePhoto", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -168,16 +177,16 @@ func (c *streetViewPublishServiceClient) UpdatePhoto(ctx context.Context, in *Up
 
 func (c *streetViewPublishServiceClient) BatchUpdatePhotos(ctx context.Context, in *BatchUpdatePhotosRequest, opts ...grpc.CallOption) (*BatchUpdatePhotosResponse, error) {
 	out := new(BatchUpdatePhotosResponse)
-	err := grpc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/BatchUpdatePhotos", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/BatchUpdatePhotos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *streetViewPublishServiceClient) DeletePhoto(ctx context.Context, in *DeletePhotoRequest, opts ...grpc.CallOption) (*google_protobuf4.Empty, error) {
-	out := new(google_protobuf4.Empty)
-	err := grpc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/DeletePhoto", in, out, c.cc, opts...)
+func (c *streetViewPublishServiceClient) DeletePhoto(ctx context.Context, in *DeletePhotoRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/DeletePhoto", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,15 +195,14 @@ func (c *streetViewPublishServiceClient) DeletePhoto(ctx context.Context, in *De
 
 func (c *streetViewPublishServiceClient) BatchDeletePhotos(ctx context.Context, in *BatchDeletePhotosRequest, opts ...grpc.CallOption) (*BatchDeletePhotosResponse, error) {
 	out := new(BatchDeletePhotosResponse)
-	err := grpc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/BatchDeletePhotos", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/google.streetview.publish.v1.StreetViewPublishService/BatchDeletePhotos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for StreetViewPublishService service
-
+// StreetViewPublishServiceServer is the server API for StreetViewPublishService service.
 type StreetViewPublishServiceServer interface {
 	// Creates an upload session to start uploading photo data. The upload URL of
 	// the returned `UploadRef` is used to upload the data for the photo.
@@ -202,7 +210,7 @@ type StreetViewPublishServiceServer interface {
 	// After the upload is complete, the `UploadRef` is used with
 	// `StreetViewPublishService:CreatePhoto()` to create the `Photo` object
 	// entry.
-	StartUpload(context.Context, *google_protobuf4.Empty) (*UploadRef, error)
+	StartUpload(context.Context, *empty.Empty) (*UploadRef, error)
 	// After the client finishes uploading the photo with the returned
 	// `UploadRef`, `photo.create` publishes the uploaded photo to Street View on
 	// Google Maps.
@@ -258,7 +266,7 @@ type StreetViewPublishServiceServer interface {
 	// * `PERMISSION_DENIED` if the requesting user did not create the requested
 	// photo.
 	// * `NOT_FOUND` if the photo ID does not exist.
-	DeletePhoto(context.Context, *DeletePhotoRequest) (*google_protobuf4.Empty, error)
+	DeletePhoto(context.Context, *DeletePhotoRequest) (*empty.Empty, error)
 	// Deletes a list of photos and their metadata.
 	//
 	// Note that if `photos.batchDelete` fails, either critical fields
@@ -275,7 +283,7 @@ func RegisterStreetViewPublishServiceServer(s *grpc.Server, srv StreetViewPublis
 }
 
 func _StreetViewPublishService_StartUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf4.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -287,7 +295,7 @@ func _StreetViewPublishService_StartUpload_Handler(srv interface{}, ctx context.
 		FullMethod: "/google.streetview.publish.v1.StreetViewPublishService/StartUpload",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StreetViewPublishServiceServer).StartUpload(ctx, req.(*google_protobuf4.Empty))
+		return srv.(StreetViewPublishServiceServer).StartUpload(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -482,10 +490,10 @@ var _StreetViewPublishService_serviceDesc = grpc.ServiceDesc{
 }
 
 func init() {
-	proto.RegisterFile("google/streetview/publish/v1/streetview_publish.proto", fileDescriptor2)
+	proto.RegisterFile("google/streetview/publish/v1/streetview_publish.proto", fileDescriptor_39e5f334059d9d6e)
 }
 
-var fileDescriptor2 = []byte{
+var fileDescriptor_39e5f334059d9d6e = []byte{
 	// 533 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0x4f, 0x6f, 0xd3, 0x30,
 	0x18, 0xc6, 0x15, 0x24, 0x10, 0xb8, 0x08, 0x69, 0x86, 0x55, 0x53, 0x3a, 0x24, 0x08, 0x12, 0xa0,

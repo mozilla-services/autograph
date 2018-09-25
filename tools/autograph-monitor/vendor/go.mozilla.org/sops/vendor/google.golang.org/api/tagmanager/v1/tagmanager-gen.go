@@ -275,8 +275,8 @@ type Account struct {
 }
 
 func (s *Account) MarshalJSON() ([]byte, error) {
-	type noMethod Account
-	raw := noMethod(*s)
+	type NoMethod Account
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -289,6 +289,7 @@ type AccountAccess struct {
 	// Possible values:
 	//   "delete"
 	//   "edit"
+	//   "editWorkspace"
 	//   "manage"
 	//   "publish"
 	//   "read"
@@ -312,8 +313,8 @@ type AccountAccess struct {
 }
 
 func (s *AccountAccess) MarshalJSON() ([]byte, error) {
-	type noMethod AccountAccess
-	raw := noMethod(*s)
+	type NoMethod AccountAccess
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -366,8 +367,8 @@ type Condition struct {
 }
 
 func (s *Condition) MarshalJSON() ([]byte, error) {
-	type noMethod Condition
-	raw := noMethod(*s)
+	type NoMethod Condition
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -394,6 +395,26 @@ type Container struct {
 	// Possible values:
 	//   "advertiserId"
 	//   "advertisingTrackingEnabled"
+	//   "ampBrowserLanguage"
+	//   "ampCanonicalHost"
+	//   "ampCanonicalPath"
+	//   "ampCanonicalUrl"
+	//   "ampClientId"
+	//   "ampClientMaxScrollX"
+	//   "ampClientMaxScrollY"
+	//   "ampClientScreenHeight"
+	//   "ampClientScreenWidth"
+	//   "ampClientScrollX"
+	//   "ampClientScrollY"
+	//   "ampClientTimestamp"
+	//   "ampClientTimezone"
+	//   "ampGtmEvent"
+	//   "ampPageDownloadTime"
+	//   "ampPageLoadTime"
+	//   "ampPageViewId"
+	//   "ampReferrer"
+	//   "ampTitle"
+	//   "ampTotalEngagedTime"
 	//   "appId"
 	//   "appName"
 	//   "appVersionCode"
@@ -408,11 +429,39 @@ type Container struct {
 	//   "containerVersion"
 	//   "debugMode"
 	//   "deviceName"
+	//   "elementVisibilityFirstTime"
+	//   "elementVisibilityRatio"
+	//   "elementVisibilityRecentTime"
+	//   "elementVisibilityTime"
 	//   "environmentName"
 	//   "errorLine"
 	//   "errorMessage"
 	//   "errorUrl"
 	//   "event"
+	//   "eventName"
+	//   "firebaseEventParameterCampaign"
+	//   "firebaseEventParameterCampaignAclid"
+	//   "firebaseEventParameterCampaignAnid"
+	//   "firebaseEventParameterCampaignClickTimestamp"
+	//   "firebaseEventParameterCampaignContent"
+	//   "firebaseEventParameterCampaignCp1"
+	//   "firebaseEventParameterCampaignGclid"
+	//   "firebaseEventParameterCampaignSource"
+	//   "firebaseEventParameterCampaignTerm"
+	//   "firebaseEventParameterCurrency"
+	//   "firebaseEventParameterDynamicLinkAcceptTime"
+	//   "firebaseEventParameterDynamicLinkLinkid"
+	//   "firebaseEventParameterNotificationMessageDeviceTime"
+	//   "firebaseEventParameterNotificationMessageId"
+	//   "firebaseEventParameterNotificationMessageName"
+	//   "firebaseEventParameterNotificationMessageTime"
+	//   "firebaseEventParameterNotificationTopic"
+	//   "firebaseEventParameterPreviousAppVersion"
+	//   "firebaseEventParameterPreviousOsVersion"
+	//   "firebaseEventParameterPrice"
+	//   "firebaseEventParameterProductId"
+	//   "firebaseEventParameterQuantity"
+	//   "firebaseEventParameterValue"
 	//   "formClasses"
 	//   "formElement"
 	//   "formId"
@@ -434,7 +483,18 @@ type Container struct {
 	//   "randomNumber"
 	//   "referrer"
 	//   "resolution"
+	//   "scrollDepthDirection"
+	//   "scrollDepthThreshold"
+	//   "scrollDepthUnits"
 	//   "sdkVersion"
+	//   "videoCurrentTime"
+	//   "videoDuration"
+	//   "videoPercent"
+	//   "videoProvider"
+	//   "videoStatus"
+	//   "videoTitle"
+	//   "videoUrl"
+	//   "videoVisible"
 	EnabledBuiltInVariable []string `json:"enabledBuiltInVariable,omitempty"`
 
 	// Fingerprint: The fingerprint of the GTM Container as computed at
@@ -461,6 +521,7 @@ type Container struct {
 	// include: web, android, ios.
 	//
 	// Possible values:
+	//   "amp"
 	//   "android"
 	//   "androidSdk5"
 	//   "ios"
@@ -490,8 +551,8 @@ type Container struct {
 }
 
 func (s *Container) MarshalJSON() ([]byte, error) {
-	type noMethod Container
-	raw := noMethod(*s)
+	type NoMethod Container
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -507,6 +568,7 @@ type ContainerAccess struct {
 	// Possible values:
 	//   "delete"
 	//   "edit"
+	//   "editWorkspace"
 	//   "manage"
 	//   "publish"
 	//   "read"
@@ -530,8 +592,8 @@ type ContainerAccess struct {
 }
 
 func (s *ContainerAccess) MarshalJSON() ([]byte, error) {
-	type noMethod ContainerAccess
-	raw := noMethod(*s)
+	type NoMethod ContainerAccess
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -609,8 +671,8 @@ type ContainerVersion struct {
 }
 
 func (s *ContainerVersion) MarshalJSON() ([]byte, error) {
-	type noMethod ContainerVersion
-	raw := noMethod(*s)
+	type NoMethod ContainerVersion
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -667,8 +729,8 @@ type ContainerVersionHeader struct {
 }
 
 func (s *ContainerVersionHeader) MarshalJSON() ([]byte, error) {
-	type noMethod ContainerVersionHeader
-	raw := noMethod(*s)
+	type NoMethod ContainerVersionHeader
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -703,8 +765,8 @@ type CreateContainerVersionRequestVersionOptions struct {
 }
 
 func (s *CreateContainerVersionRequestVersionOptions) MarshalJSON() ([]byte, error) {
-	type noMethod CreateContainerVersionRequestVersionOptions
-	raw := noMethod(*s)
+	type NoMethod CreateContainerVersionRequestVersionOptions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -738,8 +800,8 @@ type CreateContainerVersionResponse struct {
 }
 
 func (s *CreateContainerVersionResponse) MarshalJSON() ([]byte, error) {
-	type noMethod CreateContainerVersionResponse
-	raw := noMethod(*s)
+	type NoMethod CreateContainerVersionResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -818,8 +880,8 @@ type Environment struct {
 }
 
 func (s *Environment) MarshalJSON() ([]byte, error) {
-	type noMethod Environment
-	raw := noMethod(*s)
+	type NoMethod Environment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -863,8 +925,8 @@ type Folder struct {
 }
 
 func (s *Folder) MarshalJSON() ([]byte, error) {
-	type noMethod Folder
-	raw := noMethod(*s)
+	type NoMethod Folder
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -901,8 +963,8 @@ type FolderEntities struct {
 }
 
 func (s *FolderEntities) MarshalJSON() ([]byte, error) {
-	type noMethod FolderEntities
-	raw := noMethod(*s)
+	type NoMethod FolderEntities
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -933,8 +995,8 @@ type ListAccountUsersResponse struct {
 }
 
 func (s *ListAccountUsersResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListAccountUsersResponse
-	raw := noMethod(*s)
+	type NoMethod ListAccountUsersResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -965,8 +1027,8 @@ type ListAccountsResponse struct {
 }
 
 func (s *ListAccountsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListAccountsResponse
-	raw := noMethod(*s)
+	type NoMethod ListAccountsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1002,8 +1064,8 @@ type ListContainerVersionsResponse struct {
 }
 
 func (s *ListContainerVersionsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListContainerVersionsResponse
-	raw := noMethod(*s)
+	type NoMethod ListContainerVersionsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1034,8 +1096,8 @@ type ListContainersResponse struct {
 }
 
 func (s *ListContainersResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListContainersResponse
-	raw := noMethod(*s)
+	type NoMethod ListContainersResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1066,8 +1128,8 @@ type ListEnvironmentsResponse struct {
 }
 
 func (s *ListEnvironmentsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListEnvironmentsResponse
-	raw := noMethod(*s)
+	type NoMethod ListEnvironmentsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1098,8 +1160,8 @@ type ListFoldersResponse struct {
 }
 
 func (s *ListFoldersResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListFoldersResponse
-	raw := noMethod(*s)
+	type NoMethod ListFoldersResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1130,8 +1192,8 @@ type ListTagsResponse struct {
 }
 
 func (s *ListTagsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListTagsResponse
-	raw := noMethod(*s)
+	type NoMethod ListTagsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1162,8 +1224,8 @@ type ListTriggersResponse struct {
 }
 
 func (s *ListTriggersResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListTriggersResponse
-	raw := noMethod(*s)
+	type NoMethod ListTriggersResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1194,8 +1256,8 @@ type ListVariablesResponse struct {
 }
 
 func (s *ListVariablesResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListVariablesResponse
-	raw := noMethod(*s)
+	type NoMethod ListVariablesResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1266,8 +1328,8 @@ type Macro struct {
 }
 
 func (s *Macro) MarshalJSON() ([]byte, error) {
-	type noMethod Macro
-	raw := noMethod(*s)
+	type NoMethod Macro
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1325,8 +1387,8 @@ type Parameter struct {
 }
 
 func (s *Parameter) MarshalJSON() ([]byte, error) {
-	type noMethod Parameter
-	raw := noMethod(*s)
+	type NoMethod Parameter
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1360,8 +1422,8 @@ type PublishContainerVersionResponse struct {
 }
 
 func (s *PublishContainerVersionResponse) MarshalJSON() ([]byte, error) {
-	type noMethod PublishContainerVersionResponse
-	raw := noMethod(*s)
+	type NoMethod PublishContainerVersionResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1408,8 +1470,8 @@ type Rule struct {
 }
 
 func (s *Rule) MarshalJSON() ([]byte, error) {
-	type noMethod Rule
-	raw := noMethod(*s)
+	type NoMethod Rule
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1441,8 +1503,8 @@ type SetupTag struct {
 }
 
 func (s *SetupTag) MarshalJSON() ([]byte, error) {
-	type noMethod SetupTag
-	raw := noMethod(*s)
+	type NoMethod SetupTag
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1491,6 +1553,9 @@ type Tag struct {
 
 	// ParentFolderId: Parent folder id.
 	ParentFolderId string `json:"parentFolderId,omitempty"`
+
+	// Paused: True if the tag is paused.
+	Paused bool `json:"paused,omitempty"`
 
 	// Priority: User defined numeric priority of the tag. Tags are fired
 	// asynchronously in order of priority. Tags with higher numeric value
@@ -1547,8 +1612,8 @@ type Tag struct {
 }
 
 func (s *Tag) MarshalJSON() ([]byte, error) {
-	type noMethod Tag
-	raw := noMethod(*s)
+	type NoMethod Tag
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1581,8 +1646,8 @@ type TeardownTag struct {
 }
 
 func (s *TeardownTag) MarshalJSON() ([]byte, error) {
-	type noMethod TeardownTag
-	raw := noMethod(*s)
+	type NoMethod TeardownTag
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1603,14 +1668,14 @@ type Trigger struct {
 	// ContainerId: GTM Container ID.
 	ContainerId string `json:"containerId,omitempty"`
 
+	// ContinuousTimeMinMilliseconds: A visibility trigger minimum
+	// continuous visible time (in milliseconds). Only valid for AMP
+	// Visibility trigger.
+	ContinuousTimeMinMilliseconds *Parameter `json:"continuousTimeMinMilliseconds,omitempty"`
+
 	// CustomEventFilter: Used in the case of custom event, which is fired
 	// iff all Conditions are true.
 	CustomEventFilter []*Condition `json:"customEventFilter,omitempty"`
-
-	// EnableAllVideos: Reloads the videos in the page that don't already
-	// have the YT API enabled. If false, only capture events from videos
-	// that already have the API enabled. Only valid for YouTube triggers.
-	EnableAllVideos *Parameter `json:"enableAllVideos,omitempty"`
 
 	// EventName: Name of the GTM event that is fired. Only valid for Timer
 	// triggers.
@@ -1624,20 +1689,45 @@ type Trigger struct {
 	// modified.
 	Fingerprint string `json:"fingerprint,omitempty"`
 
+	// HorizontalScrollPercentageList: List of integer percentage values for
+	// scroll triggers. The trigger will fire when each percentage is
+	// reached when the view is scrolled horizontally. Only valid for AMP
+	// scroll triggers.
+	HorizontalScrollPercentageList *Parameter `json:"horizontalScrollPercentageList,omitempty"`
+
 	// Interval: Time between triggering recurring Timer Events (in
 	// milliseconds). Only valid for Timer triggers.
 	Interval *Parameter `json:"interval,omitempty"`
+
+	// IntervalSeconds: Time between Timer Events to fire (in seconds). Only
+	// valid for AMP Timer trigger.
+	IntervalSeconds *Parameter `json:"intervalSeconds,omitempty"`
 
 	// Limit: Limit of the number of GTM events this Timer Trigger will
 	// fire. If no limit is set, we will continue to fire GTM events until
 	// the user leaves the page. Only valid for Timer triggers.
 	Limit *Parameter `json:"limit,omitempty"`
 
+	// MaxTimerLengthSeconds: Max time to fire Timer Events (in seconds).
+	// Only valid for AMP Timer trigger.
+	MaxTimerLengthSeconds *Parameter `json:"maxTimerLengthSeconds,omitempty"`
+
 	// Name: Trigger display name.
 	Name string `json:"name,omitempty"`
 
+	// Parameter: Additional parameters.
+	Parameter []*Parameter `json:"parameter,omitempty"`
+
 	// ParentFolderId: Parent folder id.
 	ParentFolderId string `json:"parentFolderId,omitempty"`
+
+	// Selector: A click trigger CSS selector (i.e. "a", "button" etc.).
+	// Only valid for AMP Click trigger.
+	Selector *Parameter `json:"selector,omitempty"`
+
+	// TotalTimeMinMilliseconds: A visibility trigger minimum total visible
+	// time (in milliseconds). Only valid for AMP Visibility trigger.
+	TotalTimeMinMilliseconds *Parameter `json:"totalTimeMinMilliseconds,omitempty"`
 
 	// TriggerId: The Trigger ID uniquely identifies the GTM Trigger.
 	TriggerId string `json:"triggerId,omitempty"`
@@ -1645,19 +1735,24 @@ type Trigger struct {
 	// Type: Defines the data layer event that causes this trigger.
 	//
 	// Possible values:
-	//   "ajaxSubmission"
 	//   "always"
+	//   "ampClick"
+	//   "ampScroll"
+	//   "ampTimer"
+	//   "ampVisibility"
 	//   "click"
 	//   "customEvent"
 	//   "domReady"
+	//   "elementVisibility"
 	//   "formSubmission"
 	//   "historyChange"
 	//   "jsError"
 	//   "linkClick"
 	//   "pageview"
+	//   "scrollDepth"
 	//   "timer"
 	//   "windowLoaded"
-	//   "youTube"
+	//   "youTubeVideo"
 	Type string `json:"type,omitempty"`
 
 	// UniqueTriggerId: Globally unique id of the trigger that
@@ -1668,10 +1763,23 @@ type Trigger struct {
 	// Only valid for Form Submit, Link Click and Timer triggers.
 	UniqueTriggerId *Parameter `json:"uniqueTriggerId,omitempty"`
 
-	// VideoPercentageList: List of integer percentage values. The trigger
-	// will fire as each percentage is reached in any instrumented videos.
-	// Only valid for YouTube triggers.
-	VideoPercentageList *Parameter `json:"videoPercentageList,omitempty"`
+	// VerticalScrollPercentageList: List of integer percentage values for
+	// scroll triggers. The trigger will fire when each percentage is
+	// reached when the view is scrolled vertically. Only valid for AMP
+	// scroll triggers.
+	VerticalScrollPercentageList *Parameter `json:"verticalScrollPercentageList,omitempty"`
+
+	// VisibilitySelector: A visibility trigger CSS selector (i.e. "#id").
+	// Only valid for AMP Visibility trigger.
+	VisibilitySelector *Parameter `json:"visibilitySelector,omitempty"`
+
+	// VisiblePercentageMax: A visibility trigger maximum percent
+	// visibility. Only valid for AMP Visibility trigger.
+	VisiblePercentageMax *Parameter `json:"visiblePercentageMax,omitempty"`
+
+	// VisiblePercentageMin: A visibility trigger minimum percent
+	// visibility. Only valid for AMP Visibility trigger.
+	VisiblePercentageMin *Parameter `json:"visiblePercentageMin,omitempty"`
 
 	// WaitForTags: Whether or not we should delay the form submissions or
 	// link opening until all of the tags have fired (by preventing the
@@ -1706,8 +1814,8 @@ type Trigger struct {
 }
 
 func (s *Trigger) MarshalJSON() ([]byte, error) {
-	type noMethod Trigger
-	raw := noMethod(*s)
+	type NoMethod Trigger
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1751,8 +1859,8 @@ type UserAccess struct {
 }
 
 func (s *UserAccess) MarshalJSON() ([]byte, error) {
-	type noMethod UserAccess
-	raw := noMethod(*s)
+	type NoMethod UserAccess
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1829,8 +1937,8 @@ type Variable struct {
 }
 
 func (s *Variable) MarshalJSON() ([]byte, error) {
-	type noMethod Variable
-	raw := noMethod(*s)
+	type NoMethod Variable
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1898,6 +2006,7 @@ func (c *AccountsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1941,7 +2050,7 @@ func (c *AccountsGetCall) Do(opts ...googleapi.CallOption) (*Account, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2035,6 +2144,7 @@ func (c *AccountsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2075,7 +2185,7 @@ func (c *AccountsListCall) Do(opts ...googleapi.CallOption) (*ListAccountsRespon
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2161,6 +2271,7 @@ func (c *AccountsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -2204,7 +2315,7 @@ func (c *AccountsUpdateCall) Do(opts ...googleapi.CallOption) (*Account, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2299,6 +2410,7 @@ func (c *AccountsContainersCreateCall) doRequest(alt string) (*http.Response, er
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2342,7 +2454,7 @@ func (c *AccountsContainersCreateCall) Do(opts ...googleapi.CallOption) (*Contai
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2427,6 +2539,7 @@ func (c *AccountsContainersDeleteCall) doRequest(alt string) (*http.Response, er
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -2546,6 +2659,7 @@ func (c *AccountsContainersGetCall) doRequest(alt string) (*http.Response, error
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2590,7 +2704,7 @@ func (c *AccountsContainersGetCall) Do(opts ...googleapi.CallOption) (*Container
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2692,6 +2806,7 @@ func (c *AccountsContainersListCall) doRequest(alt string) (*http.Response, erro
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2735,7 +2850,7 @@ func (c *AccountsContainersListCall) Do(opts ...googleapi.CallOption) (*ListCont
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2833,6 +2948,7 @@ func (c *AccountsContainersUpdateCall) doRequest(alt string) (*http.Response, er
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -2877,7 +2993,7 @@ func (c *AccountsContainersUpdateCall) Do(opts ...googleapi.CallOption) (*Contai
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2981,6 +3097,7 @@ func (c *AccountsContainersEnvironmentsCreateCall) doRequest(alt string) (*http.
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/environments")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3025,7 +3142,7 @@ func (c *AccountsContainersEnvironmentsCreateCall) Do(opts ...googleapi.CallOpti
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3119,6 +3236,7 @@ func (c *AccountsContainersEnvironmentsDeleteCall) doRequest(alt string) (*http.
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/environments/{environmentId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -3248,6 +3366,7 @@ func (c *AccountsContainersEnvironmentsGetCall) doRequest(alt string) (*http.Res
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/environments/{environmentId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3293,7 +3412,7 @@ func (c *AccountsContainersEnvironmentsGetCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3404,6 +3523,7 @@ func (c *AccountsContainersEnvironmentsListCall) doRequest(alt string) (*http.Re
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/environments")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -3448,7 +3568,7 @@ func (c *AccountsContainersEnvironmentsListCall) Do(opts ...googleapi.CallOption
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3556,6 +3676,7 @@ func (c *AccountsContainersEnvironmentsPatchCall) doRequest(alt string) (*http.R
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/environments/{environmentId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -3601,7 +3722,7 @@ func (c *AccountsContainersEnvironmentsPatchCall) Do(opts ...googleapi.CallOptio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3722,6 +3843,7 @@ func (c *AccountsContainersEnvironmentsUpdateCall) doRequest(alt string) (*http.
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/environments/{environmentId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -3767,7 +3889,7 @@ func (c *AccountsContainersEnvironmentsUpdateCall) Do(opts ...googleapi.CallOpti
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3878,6 +4000,7 @@ func (c *AccountsContainersFoldersCreateCall) doRequest(alt string) (*http.Respo
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/folders")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3922,7 +4045,7 @@ func (c *AccountsContainersFoldersCreateCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4016,6 +4139,7 @@ func (c *AccountsContainersFoldersDeleteCall) doRequest(alt string) (*http.Respo
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/folders/{folderId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -4145,6 +4269,7 @@ func (c *AccountsContainersFoldersGetCall) doRequest(alt string) (*http.Response
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/folders/{folderId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4190,7 +4315,7 @@ func (c *AccountsContainersFoldersGetCall) Do(opts ...googleapi.CallOption) (*Fo
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4301,6 +4426,7 @@ func (c *AccountsContainersFoldersListCall) doRequest(alt string) (*http.Respons
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/folders")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4345,7 +4471,7 @@ func (c *AccountsContainersFoldersListCall) Do(opts ...googleapi.CallOption) (*L
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4451,6 +4577,7 @@ func (c *AccountsContainersFoldersUpdateCall) doRequest(alt string) (*http.Respo
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/folders/{folderId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -4496,7 +4623,7 @@ func (c *AccountsContainersFoldersUpdateCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4616,6 +4743,7 @@ func (c *AccountsContainersFoldersEntitiesListCall) doRequest(alt string) (*http
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/folders/{folderId}/entities")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -4661,7 +4789,7 @@ func (c *AccountsContainersFoldersEntitiesListCall) Do(opts ...googleapi.CallOpt
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4788,6 +4916,7 @@ func (c *AccountsContainersMoveFoldersUpdateCall) doRequest(alt string) (*http.R
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/move_folders/{folderId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -4931,6 +5060,7 @@ func (c *AccountsContainersReauthorizeEnvironmentsUpdateCall) doRequest(alt stri
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/reauthorize_environments/{environmentId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -4976,7 +5106,7 @@ func (c *AccountsContainersReauthorizeEnvironmentsUpdateCall) Do(opts ...googlea
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5082,6 +5212,7 @@ func (c *AccountsContainersTagsCreateCall) doRequest(alt string) (*http.Response
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/tags")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -5126,7 +5257,7 @@ func (c *AccountsContainersTagsCreateCall) Do(opts ...googleapi.CallOption) (*Ta
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5220,6 +5351,7 @@ func (c *AccountsContainersTagsDeleteCall) doRequest(alt string) (*http.Response
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/tags/{tagId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -5349,6 +5481,7 @@ func (c *AccountsContainersTagsGetCall) doRequest(alt string) (*http.Response, e
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/tags/{tagId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -5394,7 +5527,7 @@ func (c *AccountsContainersTagsGetCall) Do(opts ...googleapi.CallOption) (*Tag, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5505,6 +5638,7 @@ func (c *AccountsContainersTagsListCall) doRequest(alt string) (*http.Response, 
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/tags")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -5549,7 +5683,7 @@ func (c *AccountsContainersTagsListCall) Do(opts ...googleapi.CallOption) (*List
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5655,6 +5789,7 @@ func (c *AccountsContainersTagsUpdateCall) doRequest(alt string) (*http.Response
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/tags/{tagId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -5700,7 +5835,7 @@ func (c *AccountsContainersTagsUpdateCall) Do(opts ...googleapi.CallOption) (*Ta
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5811,6 +5946,7 @@ func (c *AccountsContainersTriggersCreateCall) doRequest(alt string) (*http.Resp
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/triggers")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -5855,7 +5991,7 @@ func (c *AccountsContainersTriggersCreateCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5949,6 +6085,7 @@ func (c *AccountsContainersTriggersDeleteCall) doRequest(alt string) (*http.Resp
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/triggers/{triggerId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -6078,6 +6215,7 @@ func (c *AccountsContainersTriggersGetCall) doRequest(alt string) (*http.Respons
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/triggers/{triggerId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -6123,7 +6261,7 @@ func (c *AccountsContainersTriggersGetCall) Do(opts ...googleapi.CallOption) (*T
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6234,6 +6372,7 @@ func (c *AccountsContainersTriggersListCall) doRequest(alt string) (*http.Respon
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/triggers")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -6278,7 +6417,7 @@ func (c *AccountsContainersTriggersListCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6385,6 +6524,7 @@ func (c *AccountsContainersTriggersUpdateCall) doRequest(alt string) (*http.Resp
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/triggers/{triggerId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -6430,7 +6570,7 @@ func (c *AccountsContainersTriggersUpdateCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6541,6 +6681,7 @@ func (c *AccountsContainersVariablesCreateCall) doRequest(alt string) (*http.Res
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/variables")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -6585,7 +6726,7 @@ func (c *AccountsContainersVariablesCreateCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6679,6 +6820,7 @@ func (c *AccountsContainersVariablesDeleteCall) doRequest(alt string) (*http.Res
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/variables/{variableId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -6808,6 +6950,7 @@ func (c *AccountsContainersVariablesGetCall) doRequest(alt string) (*http.Respon
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/variables/{variableId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -6853,7 +6996,7 @@ func (c *AccountsContainersVariablesGetCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6964,6 +7107,7 @@ func (c *AccountsContainersVariablesListCall) doRequest(alt string) (*http.Respo
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/variables")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -7008,7 +7152,7 @@ func (c *AccountsContainersVariablesListCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7115,6 +7259,7 @@ func (c *AccountsContainersVariablesUpdateCall) doRequest(alt string) (*http.Res
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/variables/{variableId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -7160,7 +7305,7 @@ func (c *AccountsContainersVariablesUpdateCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7271,6 +7416,7 @@ func (c *AccountsContainersVersionsCreateCall) doRequest(alt string) (*http.Resp
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/versions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -7315,7 +7461,7 @@ func (c *AccountsContainersVersionsCreateCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7409,6 +7555,7 @@ func (c *AccountsContainersVersionsDeleteCall) doRequest(alt string) (*http.Resp
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/versions/{containerVersionId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -7538,6 +7685,7 @@ func (c *AccountsContainersVersionsGetCall) doRequest(alt string) (*http.Respons
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/versions/{containerVersionId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -7583,7 +7731,7 @@ func (c *AccountsContainersVersionsGetCall) Do(opts ...googleapi.CallOption) (*C
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7709,6 +7857,7 @@ func (c *AccountsContainersVersionsListCall) doRequest(alt string) (*http.Respon
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/versions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -7753,7 +7902,7 @@ func (c *AccountsContainersVersionsListCall) Do(opts ...googleapi.CallOption) (*
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7866,6 +8015,7 @@ func (c *AccountsContainersVersionsPublishCall) doRequest(alt string) (*http.Res
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/versions/{containerVersionId}/publish")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -7911,7 +8061,7 @@ func (c *AccountsContainersVersionsPublishCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8017,6 +8167,7 @@ func (c *AccountsContainersVersionsRestoreCall) doRequest(alt string) (*http.Res
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/versions/{containerVersionId}/restore")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -8062,7 +8213,7 @@ func (c *AccountsContainersVersionsRestoreCall) Do(opts ...googleapi.CallOption)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8160,6 +8311,7 @@ func (c *AccountsContainersVersionsUndeleteCall) doRequest(alt string) (*http.Re
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/versions/{containerVersionId}/undelete")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -8205,7 +8357,7 @@ func (c *AccountsContainersVersionsUndeleteCall) Do(opts ...googleapi.CallOption
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8318,6 +8470,7 @@ func (c *AccountsContainersVersionsUpdateCall) doRequest(alt string) (*http.Resp
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/containers/{containerId}/versions/{containerVersionId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -8363,7 +8516,7 @@ func (c *AccountsContainersVersionsUpdateCall) Do(opts ...googleapi.CallOption) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8472,6 +8625,7 @@ func (c *AccountsPermissionsCreateCall) doRequest(alt string) (*http.Response, e
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/permissions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -8515,7 +8669,7 @@ func (c *AccountsPermissionsCreateCall) Do(opts ...googleapi.CallOption) (*UserA
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8601,6 +8755,7 @@ func (c *AccountsPermissionsDeleteCall) doRequest(alt string) (*http.Response, e
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/permissions/{permissionId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -8720,6 +8875,7 @@ func (c *AccountsPermissionsGetCall) doRequest(alt string) (*http.Response, erro
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/permissions/{permissionId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -8764,7 +8920,7 @@ func (c *AccountsPermissionsGetCall) Do(opts ...googleapi.CallOption) (*UserAcce
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8866,6 +9022,7 @@ func (c *AccountsPermissionsListCall) doRequest(alt string) (*http.Response, err
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/permissions")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -8909,7 +9066,7 @@ func (c *AccountsPermissionsListCall) Do(opts ...googleapi.CallOption) (*ListAcc
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8998,6 +9155,7 @@ func (c *AccountsPermissionsUpdateCall) doRequest(alt string) (*http.Response, e
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "accounts/{accountId}/permissions/{permissionId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -9042,7 +9200,7 @@ func (c *AccountsPermissionsUpdateCall) Do(opts ...googleapi.CallOption) (*UserA
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

@@ -1,4 +1,4 @@
-// Package storagetransfer provides access to the Google Storage Transfer API.
+// Package storagetransfer provides access to the Storage Transfer API.
 //
 // See https://cloud.google.com/storage/transfer
 //
@@ -140,13 +140,15 @@ type AwsAccessKey struct {
 }
 
 func (s *AwsAccessKey) MarshalJSON() ([]byte, error) {
-	type noMethod AwsAccessKey
-	raw := noMethod(*s)
+	type NoMethod AwsAccessKey
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// AwsS3Data: An AwsS3Data can be a data source, but not a data sink.
-// In an AwsS3Data, an object's name is the S3 object's key name.
+// AwsS3Data: An AwsS3Data resource can be a data source, but not a data
+// sink.
+// In an AwsS3Data resource, an object's name is the S3 object's key
+// name.
 type AwsS3Data struct {
 	// AwsAccessKey: AWS access key used to sign the API requests to the AWS
 	// S3 bucket.
@@ -180,8 +182,8 @@ type AwsS3Data struct {
 }
 
 func (s *AwsS3Data) MarshalJSON() ([]byte, error) {
-	type noMethod AwsS3Data
-	raw := noMethod(*s)
+	type NoMethod AwsS3Data
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -204,7 +206,9 @@ type Date struct {
 	// if specifying a year/month where the day is not significant.
 	Day int64 `json:"day,omitempty"`
 
-	// Month: Month of year. Must be from 1 to 12.
+	// Month: Month of year. Must be from 1 to 12, or 0 if specifying a date
+	// without a
+	// month.
 	Month int64 `json:"month,omitempty"`
 
 	// Year: Year of date. Must be from 1 to 9999, or 0 if specifying a date
@@ -230,8 +234,8 @@ type Date struct {
 }
 
 func (s *Date) MarshalJSON() ([]byte, error) {
-	type noMethod Date
-	raw := noMethod(*s)
+	type NoMethod Date
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -281,8 +285,8 @@ type ErrorLogEntry struct {
 }
 
 func (s *ErrorLogEntry) MarshalJSON() ([]byte, error) {
-	type noMethod ErrorLogEntry
-	raw := noMethod(*s)
+	type NoMethod ErrorLogEntry
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -473,21 +477,23 @@ type ErrorSummary struct {
 }
 
 func (s *ErrorSummary) MarshalJSON() ([]byte, error) {
-	type noMethod ErrorSummary
-	raw := noMethod(*s)
+	type NoMethod ErrorSummary
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// GcsData: In a GcsData, an object's name is the Google Cloud Storage
-// object's name and
-// its `lastModificationTime` refers to the object's updated time, which
-// changes
-// when the content or the metadata of the object is updated.
+// GcsData: In a GcsData resource, an object's name is the Google Cloud
+// Storage object's
+// name and its `lastModificationTime` refers to the object's updated
+// time,
+// which changes when the content or the metadata of the object is
+// updated.
 type GcsData struct {
 	// BucketName: Google Cloud Storage bucket name (see
-	// [Bucket Name
-	// Requirements](https://cloud.google.com/storage/docs/bucket-naming#requ
-	// irements)).
+	// [Bucket
+	// Name
+	// Requirements](https://cloud.google.com/storage/docs/naming#requir
+	// ements)).
 	// Required.
 	BucketName string `json:"bucketName,omitempty"`
 
@@ -509,8 +515,8 @@ type GcsData struct {
 }
 
 func (s *GcsData) MarshalJSON() ([]byte, error) {
-	type noMethod GcsData
-	raw := noMethod(*s)
+	type NoMethod GcsData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -541,16 +547,16 @@ type GoogleServiceAccount struct {
 }
 
 func (s *GoogleServiceAccount) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleServiceAccount
-	raw := noMethod(*s)
+	type NoMethod GoogleServiceAccount
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// HttpData: An HttpData specifies a list of objects on the web to be
-// transferred over
-// HTTP.  The information of the objects to be transferred is contained
-// in a
-// file referenced by a URL. The first line in the file must
+// HttpData: An HttpData resource specifies a list of objects on the web
+// to be transferred
+// over HTTP.  The information of the objects to be transferred is
+// contained in
+// a file referenced by a URL. The first line in the file must
 // be
 // "TsvHttpData-1.0", which specifies the format of the file.
 // Subsequent lines
@@ -565,16 +571,17 @@ func (s *GoogleServiceAccount) MarshalJSON() ([]byte, error) {
 // * MD5 - The base64-encoded MD5 hash of the object.
 //
 // For an example of a valid TSV file, see
-// [Transferring data from
+// [Transferring data
+// from
 // URLs](https://cloud.google.com/storage/transfer/create-url-list).
 //
-// Whe
-// n transferring data based on a URL list, keep the following in
+//
+// When transferring data based on a URL list, keep the following in
 // mind:
 //
-// * When an object located at `http(s)://hostname:port/<URL-path>` is
-// transferred
-// to a data sink, the name of the object at the data sink
+// * When an object located at `http(s)://hostname:port/<URL-path>`
+// is
+// transferred to a data sink, the name of the object at the data sink
 // is
 // `<hostname>/<URL-path>`.
 //
@@ -634,8 +641,8 @@ type HttpData struct {
 }
 
 func (s *HttpData) MarshalJSON() ([]byte, error) {
-	type noMethod HttpData
-	raw := noMethod(*s)
+	type NoMethod HttpData
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -671,8 +678,8 @@ type ListOperationsResponse struct {
 }
 
 func (s *ListOperationsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListOperationsResponse
-	raw := noMethod(*s)
+	type NoMethod ListOperationsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -706,8 +713,8 @@ type ListTransferJobsResponse struct {
 }
 
 func (s *ListTransferJobsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListTransferJobsResponse
-	raw := noMethod(*s)
+	type NoMethod ListTransferJobsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -809,8 +816,8 @@ type ObjectConditions struct {
 }
 
 func (s *ObjectConditions) MarshalJSON() ([]byte, error) {
-	type noMethod ObjectConditions
-	raw := noMethod(*s)
+	type NoMethod ObjectConditions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -877,8 +884,8 @@ type Operation struct {
 }
 
 func (s *Operation) MarshalJSON() ([]byte, error) {
-	type noMethod Operation
-	raw := noMethod(*s)
+	type NoMethod Operation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -943,8 +950,8 @@ type Schedule struct {
 }
 
 func (s *Schedule) MarshalJSON() ([]byte, error) {
-	type noMethod Schedule
-	raw := noMethod(*s)
+	type NoMethod Schedule
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1062,8 +1069,8 @@ type Status struct {
 }
 
 func (s *Status) MarshalJSON() ([]byte, error) {
-	type noMethod Status
-	raw := noMethod(*s)
+	type NoMethod Status
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1109,8 +1116,8 @@ type TimeOfDay struct {
 }
 
 func (s *TimeOfDay) MarshalJSON() ([]byte, error) {
-	type noMethod TimeOfDay
-	raw := noMethod(*s)
+	type NoMethod TimeOfDay
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1132,17 +1139,18 @@ type TransferCounters struct {
 
 	// BytesFoundFromSource: Bytes found in the data source that are
 	// scheduled to be transferred,
-	// which will be copied, excluded based on conditions, or skipped due
-	// to
-	// failures.
+	// excluding any that are filtered based on object conditions or skipped
+	// due
+	// to sync.
 	BytesFoundFromSource int64 `json:"bytesFoundFromSource,omitempty,string"`
 
 	// BytesFoundOnlyFromSink: Bytes found only in the data sink that are
 	// scheduled to be deleted.
 	BytesFoundOnlyFromSink int64 `json:"bytesFoundOnlyFromSink,omitempty,string"`
 
-	// BytesFromSourceFailed: Bytes in the data source that failed during
-	// the transfer.
+	// BytesFromSourceFailed: Bytes in the data source that failed to be
+	// transferred or that failed to
+	// be deleted after being transferred.
 	BytesFromSourceFailed int64 `json:"bytesFromSourceFailed,omitempty,string"`
 
 	// BytesFromSourceSkippedBySync: Bytes in the data source that are not
@@ -1166,17 +1174,18 @@ type TransferCounters struct {
 
 	// ObjectsFoundFromSource: Objects found in the data source that are
 	// scheduled to be transferred,
-	// which will be copied, excluded based on conditions, or skipped due
-	// to
-	// failures.
+	// excluding any that are filtered based on object conditions or skipped
+	// due
+	// to sync.
 	ObjectsFoundFromSource int64 `json:"objectsFoundFromSource,omitempty,string"`
 
 	// ObjectsFoundOnlyFromSink: Objects found only in the data sink that
 	// are scheduled to be deleted.
 	ObjectsFoundOnlyFromSink int64 `json:"objectsFoundOnlyFromSink,omitempty,string"`
 
-	// ObjectsFromSourceFailed: Objects in the data source that failed
-	// during the transfer.
+	// ObjectsFromSourceFailed: Objects in the data source that failed to be
+	// transferred or that failed
+	// to be deleted after being transferred.
 	ObjectsFromSourceFailed int64 `json:"objectsFromSourceFailed,omitempty,string"`
 
 	// ObjectsFromSourceSkippedBySync: Objects in the data source that are
@@ -1203,8 +1212,8 @@ type TransferCounters struct {
 }
 
 func (s *TransferCounters) MarshalJSON() ([]byte, error) {
-	type noMethod TransferCounters
-	raw := noMethod(*s)
+	type NoMethod TransferCounters
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1261,7 +1270,9 @@ type TransferJob struct {
 	//   "DELETED" - This is a soft delete state. After a transfer job is
 	// set to this
 	// state, the job and all the transfer executions are subject to
-	// garbage collection.
+	// garbage collection. Transfer jobs become eligible for garbage
+	// collection
+	// 30 days after their status is set to `DELETED`.
 	Status string `json:"status,omitempty"`
 
 	// TransferSpec: Transfer specification.
@@ -1289,8 +1300,8 @@ type TransferJob struct {
 }
 
 func (s *TransferJob) MarshalJSON() ([]byte, error) {
-	type noMethod TransferJob
-	raw := noMethod(*s)
+	type NoMethod TransferJob
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1354,8 +1365,8 @@ type TransferOperation struct {
 }
 
 func (s *TransferOperation) MarshalJSON() ([]byte, error) {
-	type noMethod TransferOperation
-	raw := noMethod(*s)
+	type NoMethod TransferOperation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1401,8 +1412,8 @@ type TransferOptions struct {
 }
 
 func (s *TransferOptions) MarshalJSON() ([]byte, error) {
-	type noMethod TransferOptions
-	raw := noMethod(*s)
+	type NoMethod TransferOptions
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1454,8 +1465,8 @@ type TransferSpec struct {
 }
 
 func (s *TransferSpec) MarshalJSON() ([]byte, error) {
-	type noMethod TransferSpec
-	raw := noMethod(*s)
+	type NoMethod TransferSpec
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1507,8 +1518,8 @@ type UpdateTransferJobRequest struct {
 }
 
 func (s *UpdateTransferJobRequest) MarshalJSON() ([]byte, error) {
-	type noMethod UpdateTransferJobRequest
-	raw := noMethod(*s)
+	type NoMethod UpdateTransferJobRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1587,6 +1598,7 @@ func (c *GoogleServiceAccountsGetCall) doRequest(alt string) (*http.Response, er
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/googleServiceAccounts/{projectId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1630,7 +1642,7 @@ func (c *GoogleServiceAccountsGetCall) Do(opts ...googleapi.CallOption) (*Google
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1716,6 +1728,7 @@ func (c *TransferJobsCreateCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/transferJobs")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1756,7 +1769,7 @@ func (c *TransferJobsCreateCall) Do(opts ...googleapi.CallOption) (*TransferJob,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1853,6 +1866,7 @@ func (c *TransferJobsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/{+jobName}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1896,7 +1910,7 @@ func (c *TransferJobsGetCall) Do(opts ...googleapi.CallOption) (*TransferJob, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2028,6 +2042,7 @@ func (c *TransferJobsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/transferJobs")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2068,7 +2083,7 @@ func (c *TransferJobsListCall) Do(opts ...googleapi.CallOption) (*ListTransferJo
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2189,6 +2204,7 @@ func (c *TransferJobsPatchCall) doRequest(alt string) (*http.Response, error) {
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/{+jobName}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -2232,7 +2248,7 @@ func (c *TransferJobsPatchCall) Do(opts ...googleapi.CallOption) (*TransferJob, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2319,6 +2335,7 @@ func (c *TransferOperationsCancelCall) doRequest(alt string) (*http.Response, er
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/{+name}:cancel")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2362,7 +2379,7 @@ func (c *TransferOperationsCancelCall) Do(opts ...googleapi.CallOption) (*Empty,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2445,6 +2462,7 @@ func (c *TransferOperationsDeleteCall) doRequest(alt string) (*http.Response, er
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/{+name}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -2488,7 +2506,7 @@ func (c *TransferOperationsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2588,6 +2606,7 @@ func (c *TransferOperationsGetCall) doRequest(alt string) (*http.Response, error
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/{+name}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2631,7 +2650,7 @@ func (c *TransferOperationsGetCall) Do(opts ...googleapi.CallOption) (*Operation
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2770,6 +2789,7 @@ func (c *TransferOperationsListCall) doRequest(alt string) (*http.Response, erro
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/{+name}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2813,7 +2833,7 @@ func (c *TransferOperationsListCall) Do(opts ...googleapi.CallOption) (*ListOper
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2939,6 +2959,7 @@ func (c *TransferOperationsPauseCall) doRequest(alt string) (*http.Response, err
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/{+name}:pause")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -2982,7 +3003,7 @@ func (c *TransferOperationsPauseCall) Do(opts ...googleapi.CallOption) (*Empty, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3074,6 +3095,7 @@ func (c *TransferOperationsResumeCall) doRequest(alt string) (*http.Response, er
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1/{+name}:resume")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -3117,7 +3139,7 @@ func (c *TransferOperationsResumeCall) Do(opts ...googleapi.CallOption) (*Empty,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

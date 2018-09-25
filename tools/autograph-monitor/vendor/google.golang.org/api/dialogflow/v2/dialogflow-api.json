@@ -60,11 +60,6 @@
       "location": "query",
       "type": "string"
     },
-    "bearer_token": {
-      "description": "OAuth bearer token.",
-      "location": "query",
-      "type": "string"
-    },
     "callback": {
       "description": "JSONP",
       "location": "query",
@@ -84,12 +79,6 @@
       "description": "OAuth 2.0 token for the current user.",
       "location": "query",
       "type": "string"
-    },
-    "pp": {
-      "default": "true",
-      "description": "Pretty-print response.",
-      "location": "query",
-      "type": "boolean"
     },
     "prettyPrint": {
       "default": "true",
@@ -147,7 +136,7 @@
         "agent": {
           "methods": {
             "export": {
-              "description": "Exports the specified agent to a ZIP file.\n\n\nOperation \u003cresponse: ExportAgentResponse,\n           metadata: google.protobuf.Struct\u003e",
+              "description": "Exports the specified agent to a ZIP file.\n\nOperation \u003cresponse: ExportAgentResponse,\n           metadata: google.protobuf.Struct\u003e",
               "flatPath": "v2/projects/{projectsId}/agent:export",
               "httpMethod": "POST",
               "id": "dialogflow.projects.agent.export",
@@ -175,7 +164,7 @@
               ]
             },
             "import": {
-              "description": "Imports the specified agent from a ZIP file.\n\nUploads new intents and entity types without deleting the existing ones.\nIntents and entity types with the same name are replaced with the new\nversions from ImportAgentRequest.\n\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: google.protobuf.Struct\u003e",
+              "description": "Imports the specified agent from a ZIP file.\n\nUploads new intents and entity types without deleting the existing ones.\nIntents and entity types with the same name are replaced with the new\nversions from ImportAgentRequest.\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: google.protobuf.Struct\u003e",
               "flatPath": "v2/projects/{projectsId}/agent:import",
               "httpMethod": "POST",
               "id": "dialogflow.projects.agent.import",
@@ -203,7 +192,7 @@
               ]
             },
             "restore": {
-              "description": "Restores the specified agent from a ZIP file.\n\nReplaces the current agent version with a new one. All the intents and\nentity types in the older version are deleted.\n\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: google.protobuf.Struct\u003e",
+              "description": "Restores the specified agent from a ZIP file.\n\nReplaces the current agent version with a new one. All the intents and\nentity types in the older version are deleted.\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: google.protobuf.Struct\u003e",
               "flatPath": "v2/projects/{projectsId}/agent:restore",
               "httpMethod": "POST",
               "id": "dialogflow.projects.agent.restore",
@@ -267,7 +256,7 @@
               ]
             },
             "train": {
-              "description": "Trains the specified agent.\n\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: google.protobuf.Struct\u003e",
+              "description": "Trains the specified agent.\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: google.protobuf.Struct\u003e",
               "flatPath": "v2/projects/{projectsId}/agent:train",
               "httpMethod": "POST",
               "id": "dialogflow.projects.agent.train",
@@ -527,7 +516,7 @@
                 "entities": {
                   "methods": {
                     "batchCreate": {
-                      "description": "Creates multiple new entities in the specified entity type (extends the\nexisting collection of entries).\n\nOperation \u003cresponse: google.protobuf.Empty\u003e",
+                      "description": "Creates multiple new entities in the specified entity type.\n\nOperation \u003cresponse: google.protobuf.Empty\u003e",
                       "flatPath": "v2/projects/{projectsId}/agent/entityTypes/{entityTypesId}/entities:batchCreate",
                       "httpMethod": "POST",
                       "id": "dialogflow.projects.agent.entityTypes.entities.batchCreate",
@@ -583,7 +572,7 @@
                       ]
                     },
                     "batchUpdate": {
-                      "description": "Updates entities in the specified entity type (replaces the existing\ncollection of entries).\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: google.protobuf.Struct\u003e",
+                      "description": "Updates or creates multiple entities in the specified entity type. This\nmethod does not affect entities in the entity type that aren't explicitly\nspecified in the request.\n\nOperation \u003cresponse: google.protobuf.Empty,\n           metadata: google.protobuf.Struct\u003e",
                       "flatPath": "v2/projects/{projectsId}/agent/entityTypes/{entityTypesId}/entities:batchUpdate",
                       "httpMethod": "POST",
                       "id": "dialogflow.projects.agent.entityTypes.entities.batchUpdate",
@@ -592,7 +581,7 @@
                       ],
                       "parameters": {
                         "parent": {
-                          "description": "Required. The name of the entity type to update the entities in. Format:\n`projects/\u003cProject ID\u003e/agent/entityTypes/\u003cEntity Type ID\u003e`.",
+                          "description": "Required. The name of the entity type to update or create entities in.\nFormat: `projects/\u003cProject ID\u003e/agent/entityTypes/\u003cEntity Type ID\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/entityTypes/[^/]+$",
                           "required": true,
@@ -715,7 +704,7 @@
                   ]
                 },
                 "delete": {
-                  "description": "Deletes the specified intent.",
+                  "description": "Deletes the specified intent and its direct or indirect followup intents.",
                   "flatPath": "v2/projects/{projectsId}/agent/intents/{intentsId}",
                   "httpMethod": "DELETE",
                   "id": "dialogflow.projects.agent.intents.delete",
@@ -724,7 +713,7 @@
                   ],
                   "parameters": {
                     "name": {
-                      "description": "Required. The name of the intent to delete.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
+                      "description": "Required. The name of the intent to delete. If this intent has direct or\nindirect followup intents, we also delete them.\n\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
                       "location": "path",
                       "pattern": "^projects/[^/]+/agent/intents/[^/]+$",
                       "required": true,
@@ -878,373 +867,6 @@
                 }
               }
             },
-            "runtimes": {
-              "resources": {
-                "sessions": {
-                  "methods": {
-                    "deleteContexts": {
-                      "description": "Deletes all active contexts in the specified session.",
-                      "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/contexts",
-                      "httpMethod": "DELETE",
-                      "id": "dialogflow.projects.agent.runtimes.sessions.deleteContexts",
-                      "parameterOrder": [
-                        "parent"
-                      ],
-                      "parameters": {
-                        "parent": {
-                          "description": "Required. The name of the session to delete all contexts from. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or `projects/\u003cProject\nID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`. Note: Runtimes are\nunder construction and will be available soon. If \u003cRuntime ID\u003e is not\nspecified we assume default 'sandbox' runtime.",
-                          "location": "path",
-                          "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+$",
-                          "required": true,
-                          "type": "string"
-                        }
-                      },
-                      "path": "v2/{+parent}/contexts",
-                      "response": {
-                        "$ref": "GoogleProtobufEmpty"
-                      },
-                      "scopes": [
-                        "https://www.googleapis.com/auth/cloud-platform"
-                      ]
-                    },
-                    "detectIntent": {
-                      "description": "Processes a natural language query and returns structured, actionable data\nas a result. This method is not idempotent, because it may cause contexts\nand session entity types to be updated, which in turn might affect\nresults of future queries.",
-                      "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}:detectIntent",
-                      "httpMethod": "POST",
-                      "id": "dialogflow.projects.agent.runtimes.sessions.detectIntent",
-                      "parameterOrder": [
-                        "session"
-                      ],
-                      "parameters": {
-                        "session": {
-                          "description": "Required. The name of the session this query is sent to. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e`, or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.\nIt's up to the API caller to choose an appropriate session ID. It can be\na random number or some type of user identifier (preferably hashed).\nThe length of the session ID must not exceed 36 bytes.",
-                          "location": "path",
-                          "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+$",
-                          "required": true,
-                          "type": "string"
-                        }
-                      },
-                      "path": "v2/{+session}:detectIntent",
-                      "request": {
-                        "$ref": "GoogleCloudDialogflowV2DetectIntentRequest"
-                      },
-                      "response": {
-                        "$ref": "GoogleCloudDialogflowV2DetectIntentResponse"
-                      },
-                      "scopes": [
-                        "https://www.googleapis.com/auth/cloud-platform"
-                      ]
-                    }
-                  },
-                  "resources": {
-                    "contexts": {
-                      "methods": {
-                        "create": {
-                          "description": "Creates a context.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/contexts",
-                          "httpMethod": "POST",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.contexts.create",
-                          "parameterOrder": [
-                            "parent"
-                          ],
-                          "parameters": {
-                            "parent": {
-                              "description": "Required. The session to create a context for.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+parent}/contexts",
-                          "request": {
-                            "$ref": "GoogleCloudDialogflowV2Context"
-                          },
-                          "response": {
-                            "$ref": "GoogleCloudDialogflowV2Context"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        },
-                        "delete": {
-                          "description": "Deletes the specified context.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/contexts/{contextsId}",
-                          "httpMethod": "DELETE",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.contexts.delete",
-                          "parameterOrder": [
-                            "name"
-                          ],
-                          "parameters": {
-                            "name": {
-                              "description": "Required. The name of the context to delete. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`\nor `projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession\nID\u003e/contexts/\u003cContext ID\u003e`. Note: Runtimes are under construction and will\nbe available soon. If \u003cRuntime ID\u003e is not specified, we assume default\n'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+/contexts/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+name}",
-                          "response": {
-                            "$ref": "GoogleProtobufEmpty"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        },
-                        "get": {
-                          "description": "Retrieves the specified context.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/contexts/{contextsId}",
-                          "httpMethod": "GET",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.contexts.get",
-                          "parameterOrder": [
-                            "name"
-                          ],
-                          "parameters": {
-                            "name": {
-                              "description": "Required. The name of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`\nor `projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession\nID\u003e/contexts/\u003cContext ID\u003e`. Note: Runtimes are under construction and will\nbe available soon. If \u003cRuntime ID\u003e is not specified, we assume default\n'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+/contexts/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+name}",
-                          "response": {
-                            "$ref": "GoogleCloudDialogflowV2Context"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        },
-                        "list": {
-                          "description": "Returns the list of all contexts in the specified session.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/contexts",
-                          "httpMethod": "GET",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.contexts.list",
-                          "parameterOrder": [
-                            "parent"
-                          ],
-                          "parameters": {
-                            "pageSize": {
-                              "description": "Optional. The maximum number of items to return in a single page. By\ndefault 100 and at most 1000.",
-                              "format": "int32",
-                              "location": "query",
-                              "type": "integer"
-                            },
-                            "pageToken": {
-                              "description": "Optional. The next_page_token value returned from a previous list request.",
-                              "location": "query",
-                              "type": "string"
-                            },
-                            "parent": {
-                              "description": "Required. The session to list all contexts from.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+parent}/contexts",
-                          "response": {
-                            "$ref": "GoogleCloudDialogflowV2ListContextsResponse"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        },
-                        "patch": {
-                          "description": "Updates the specified context.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/contexts/{contextsId}",
-                          "httpMethod": "PATCH",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.contexts.patch",
-                          "parameterOrder": [
-                            "name"
-                          ],
-                          "parameters": {
-                            "name": {
-                              "description": "Required. The unique identifier of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`,\nor\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession\nID\u003e/contexts/\u003cContext ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nThe Context ID is always converted to lowercase.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+/contexts/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            },
-                            "updateMask": {
-                              "description": "Optional. The mask to control which fields get updated.",
-                              "format": "google-fieldmask",
-                              "location": "query",
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+name}",
-                          "request": {
-                            "$ref": "GoogleCloudDialogflowV2Context"
-                          },
-                          "response": {
-                            "$ref": "GoogleCloudDialogflowV2Context"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        }
-                      }
-                    },
-                    "entityTypes": {
-                      "methods": {
-                        "create": {
-                          "description": "Creates a session entity type.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/entityTypes",
-                          "httpMethod": "POST",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.entityTypes.create",
-                          "parameterOrder": [
-                            "parent"
-                          ],
-                          "parameters": {
-                            "parent": {
-                              "description": "Required. The session to create a session entity type for.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+parent}/entityTypes",
-                          "request": {
-                            "$ref": "GoogleCloudDialogflowV2SessionEntityType"
-                          },
-                          "response": {
-                            "$ref": "GoogleCloudDialogflowV2SessionEntityType"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        },
-                        "delete": {
-                          "description": "Deletes the specified session entity type.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/entityTypes/{entityTypesId}",
-                          "httpMethod": "DELETE",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.entityTypes.delete",
-                          "parameterOrder": [
-                            "name"
-                          ],
-                          "parameters": {
-                            "name": {
-                              "description": "Required. The name of the entity type to delete. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e` or `projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime\nID\u003e/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type Display Name\u003e`. Note:\nRuntimes are under construction and will be available soon. If \u003cRuntime ID\u003e\nis not specified, we assume default 'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+/entityTypes/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+name}",
-                          "response": {
-                            "$ref": "GoogleProtobufEmpty"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        },
-                        "get": {
-                          "description": "Retrieves the specified session entity type.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/entityTypes/{entityTypesId}",
-                          "httpMethod": "GET",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.entityTypes.get",
-                          "parameterOrder": [
-                            "name"
-                          ],
-                          "parameters": {
-                            "name": {
-                              "description": "Required. The name of the session entity type. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e` or `projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime\nID\u003e/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type Display Name\u003e`. Note:\nRuntimes are under construction and will be available soon. If \u003cRuntime ID\u003e\nis not specified, we assume default 'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+/entityTypes/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+name}",
-                          "response": {
-                            "$ref": "GoogleCloudDialogflowV2SessionEntityType"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        },
-                        "list": {
-                          "description": "Returns the list of all session entity types in the specified session.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/entityTypes",
-                          "httpMethod": "GET",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.entityTypes.list",
-                          "parameterOrder": [
-                            "parent"
-                          ],
-                          "parameters": {
-                            "pageSize": {
-                              "description": "Optional. The maximum number of items to return in a single page. By\ndefault 100 and at most 1000.",
-                              "format": "int32",
-                              "location": "query",
-                              "type": "integer"
-                            },
-                            "pageToken": {
-                              "description": "Optional. The next_page_token value returned from a previous list request.",
-                              "location": "query",
-                              "type": "string"
-                            },
-                            "parent": {
-                              "description": "Required. The session to list all session entity types from.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+parent}/entityTypes",
-                          "response": {
-                            "$ref": "GoogleCloudDialogflowV2ListSessionEntityTypesResponse"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        },
-                        "patch": {
-                          "description": "Updates the specified session entity type.",
-                          "flatPath": "v2/projects/{projectsId}/agent/runtimes/{runtimesId}/sessions/{sessionsId}/entityTypes/{entityTypesId}",
-                          "httpMethod": "PATCH",
-                          "id": "dialogflow.projects.agent.runtimes.sessions.entityTypes.patch",
-                          "parameterOrder": [
-                            "name"
-                          ],
-                          "parameters": {
-                            "name": {
-                              "description": "Required. The unique identifier of this session entity type. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e`, or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003esessions/\u003cSession\nID\u003e/entityTypes/\u003cEntity Type Display Name\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+/agent/runtimes/[^/]+/sessions/[^/]+/entityTypes/[^/]+$",
-                              "required": true,
-                              "type": "string"
-                            },
-                            "updateMask": {
-                              "description": "Optional. The mask to control which fields get updated.",
-                              "format": "google-fieldmask",
-                              "location": "query",
-                              "type": "string"
-                            }
-                          },
-                          "path": "v2/{+name}",
-                          "request": {
-                            "$ref": "GoogleCloudDialogflowV2SessionEntityType"
-                          },
-                          "response": {
-                            "$ref": "GoogleCloudDialogflowV2SessionEntityType"
-                          },
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform"
-                          ]
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
             "sessions": {
               "methods": {
                 "deleteContexts": {
@@ -1257,7 +879,7 @@
                   ],
                   "parameters": {
                     "parent": {
-                      "description": "Required. The name of the session to delete all contexts from. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or `projects/\u003cProject\nID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`. Note: Runtimes are\nunder construction and will be available soon. If \u003cRuntime ID\u003e is not\nspecified we assume default 'sandbox' runtime.",
+                      "description": "Required. The name of the session to delete all contexts from. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e`.",
                       "location": "path",
                       "pattern": "^projects/[^/]+/agent/sessions/[^/]+$",
                       "required": true,
@@ -1282,7 +904,7 @@
                   ],
                   "parameters": {
                     "session": {
-                      "description": "Required. The name of the session this query is sent to. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e`, or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.\nIt's up to the API caller to choose an appropriate session ID. It can be\na random number or some type of user identifier (preferably hashed).\nThe length of the session ID must not exceed 36 bytes.",
+                      "description": "Required. The name of the session this query is sent to. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e`. It's up to the API\ncaller to choose an appropriate session ID. It can be a random number or\nsome type of user identifier (preferably hashed). The length of the session\nID must not exceed 36 bytes.",
                       "location": "path",
                       "pattern": "^projects/[^/]+/agent/sessions/[^/]+$",
                       "required": true,
@@ -1314,7 +936,7 @@
                       ],
                       "parameters": {
                         "parent": {
-                          "description": "Required. The session to create a context for.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
+                          "description": "Required. The session to create a context for.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+$",
                           "required": true,
@@ -1342,7 +964,7 @@
                       ],
                       "parameters": {
                         "name": {
-                          "description": "Required. The name of the context to delete. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`\nor `projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession\nID\u003e/contexts/\u003cContext ID\u003e`. Note: Runtimes are under construction and will\nbe available soon. If \u003cRuntime ID\u003e is not specified, we assume default\n'sandbox' runtime.",
+                          "description": "Required. The name of the context to delete. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+/contexts/[^/]+$",
                           "required": true,
@@ -1367,7 +989,7 @@
                       ],
                       "parameters": {
                         "name": {
-                          "description": "Required. The name of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`\nor `projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession\nID\u003e/contexts/\u003cContext ID\u003e`. Note: Runtimes are under construction and will\nbe available soon. If \u003cRuntime ID\u003e is not specified, we assume default\n'sandbox' runtime.",
+                          "description": "Required. The name of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+/contexts/[^/]+$",
                           "required": true,
@@ -1403,7 +1025,7 @@
                           "type": "string"
                         },
                         "parent": {
-                          "description": "Required. The session to list all contexts from.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
+                          "description": "Required. The session to list all contexts from.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+$",
                           "required": true,
@@ -1428,7 +1050,7 @@
                       ],
                       "parameters": {
                         "name": {
-                          "description": "Required. The unique identifier of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`,\nor\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession\nID\u003e/contexts/\u003cContext ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nThe Context ID is always converted to lowercase.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
+                          "description": "Required. The unique identifier of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+/contexts/[^/]+$",
                           "required": true,
@@ -1466,7 +1088,7 @@
                       ],
                       "parameters": {
                         "parent": {
-                          "description": "Required. The session to create a session entity type for.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
+                          "description": "Required. The session to create a session entity type for.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+$",
                           "required": true,
@@ -1494,7 +1116,7 @@
                       ],
                       "parameters": {
                         "name": {
-                          "description": "Required. The name of the entity type to delete. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e` or `projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime\nID\u003e/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type Display Name\u003e`. Note:\nRuntimes are under construction and will be available soon. If \u003cRuntime ID\u003e\nis not specified, we assume default 'sandbox' runtime.",
+                          "description": "Required. The name of the entity type to delete. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+/entityTypes/[^/]+$",
                           "required": true,
@@ -1519,7 +1141,7 @@
                       ],
                       "parameters": {
                         "name": {
-                          "description": "Required. The name of the session entity type. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e` or `projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime\nID\u003e/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type Display Name\u003e`. Note:\nRuntimes are under construction and will be available soon. If \u003cRuntime ID\u003e\nis not specified, we assume default 'sandbox' runtime.",
+                          "description": "Required. The name of the session entity type. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+/entityTypes/[^/]+$",
                           "required": true,
@@ -1555,7 +1177,7 @@
                           "type": "string"
                         },
                         "parent": {
-                          "description": "Required. The session to list all session entity types from.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e` or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
+                          "description": "Required. The session to list all session entity types from.\nFormat: `projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+$",
                           "required": true,
@@ -1580,7 +1202,7 @@
                       ],
                       "parameters": {
                         "name": {
-                          "description": "Required. The unique identifier of this session entity type. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e`, or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003esessions/\u003cSession\nID\u003e/entityTypes/\u003cEntity Type Display Name\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
+                          "description": "Required. The unique identifier of this session entity type. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e`.",
                           "location": "path",
                           "pattern": "^projects/[^/]+/agent/sessions/[^/]+/entityTypes/[^/]+$",
                           "required": true,
@@ -1642,7 +1264,7 @@
       }
     }
   },
-  "revision": "20180317",
+  "revision": "20180920",
   "rootUrl": "https://dialogflow.googleapis.com/",
   "schemas": {
     "GoogleCloudDialogflowV2Agent": {
@@ -1650,7 +1272,7 @@
       "id": "GoogleCloudDialogflowV2Agent",
       "properties": {
         "avatarUri": {
-          "description": "Optional. The URI of the agent's avatar.\nAvatars are used throughout API.AI console and in the self-hosted\n[Web Demo](https://dialogflow.com/docs/integrations/web-demo) integration.",
+          "description": "Optional. The URI of the agent's avatar.\nAvatars are used throughout the Dialogflow console and in the self-hosted\n[Web Demo](https://dialogflow.com/docs/integrations/web-demo) integration.",
           "type": "string"
         },
         "classificationThreshold": {
@@ -1711,7 +1333,7 @@
       "id": "GoogleCloudDialogflowV2BatchCreateEntitiesRequest",
       "properties": {
         "entities": {
-          "description": "Required. The collection of entities to create.",
+          "description": "Required. The entities to create.",
           "items": {
             "$ref": "GoogleCloudDialogflowV2EntityTypeEntity"
           },
@@ -1771,11 +1393,11 @@
       "type": "object"
     },
     "GoogleCloudDialogflowV2BatchUpdateEntitiesRequest": {
-      "description": "The response message for EntityTypes.BatchCreateEntities.",
+      "description": "The request message for EntityTypes.BatchUpdateEntities.",
       "id": "GoogleCloudDialogflowV2BatchUpdateEntitiesRequest",
       "properties": {
         "entities": {
-          "description": "Required. The collection of new entities to replace the existing entities.",
+          "description": "Required. The entities to update or create.",
           "items": {
             "$ref": "GoogleCloudDialogflowV2EntityTypeEntity"
           },
@@ -1799,7 +1421,7 @@
       "properties": {
         "entityTypeBatchInline": {
           "$ref": "GoogleCloudDialogflowV2EntityTypeBatch",
-          "description": "The collection of entity type to update or create."
+          "description": "The collection of entity types to update or create."
         },
         "entityTypeBatchUri": {
           "description": "The URI to a Google Cloud Storage file containing entity types to update\nor create. The file format can either be a serialized proto (of\nEntityBatch type) or a JSON object. Note: The URI must start with\n\"gs://\".",
@@ -1891,7 +1513,7 @@
           "type": "integer"
         },
         "name": {
-          "description": "Required. The unique identifier of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`,\nor\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession\nID\u003e/contexts/\u003cContext ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nThe Context ID is always converted to lowercase.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
+          "description": "Required. The unique identifier of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`.",
           "type": "string"
         },
         "parameters": {
@@ -1931,7 +1553,7 @@
       "properties": {
         "queryResult": {
           "$ref": "GoogleCloudDialogflowV2QueryResult",
-          "description": "The results of the conversational query or event processing."
+          "description": "The selected results of the conversational query or event processing.\nSee `alternative_query_results` for additional potential results."
         },
         "responseId": {
           "description": "The unique identifier of the response. It can be used to\nlocate a response in the training example set or for reporting issues.",
@@ -2052,7 +1674,7 @@
       "id": "GoogleCloudDialogflowV2ExportAgentRequest",
       "properties": {
         "agentUri": {
-          "description": "Optional. The Google Cloud Storage URI to export the agent to.\nNote: The URI must start with\n\"gs://\". If left unspecified, the serialized agent is returned inline.",
+          "description": "Optional. The\n[Google Cloud Storage](https://cloud.google.com/storage/docs/)\nURI to export the agent to.\nThe format of this URI must be `gs://\u003cbucket-name\u003e/\u003cobject-name\u003e`.\nIf left unspecified, the serialized agent is returned inline.",
           "type": "string"
         }
       },
@@ -2063,7 +1685,7 @@
       "id": "GoogleCloudDialogflowV2ExportAgentResponse",
       "properties": {
         "agentContent": {
-          "description": "The exported agent.\n\nExample for how to export an agent to a zip file via a command line:\n\ncurl \\\n  'https://dialogflow.googleapis.com/v2/projects/\u003cproject_name\u003e/agent:export'\\\n  -X POST \\\n  -H 'Authorization: Bearer '$(gcloud auth print-access-token) \\\n  -H 'Accept: application/json' \\\n  -H 'Content-Type: application/json' \\\n  --compressed \\\n  --data-binary '{}' \\\n| grep agentContent | sed -e 's/.*\"agentContent\": \"\\([^\"]*\\)\".*/\\1/' \\\n| base64 --decode \u003e \u003cagent zip file\u003e",
+          "description": "The exported agent.\n\nExample for how to export an agent to a zip file via a command line:\n\u003cpre\u003ecurl \\\n  'https://dialogflow.googleapis.com/v2/projects/\u0026lt;project_name\u0026gt;/agent:export'\\\n  -X POST \\\n  -H 'Authorization: Bearer '$(gcloud auth application-default\n  print-access-token) \\\n  -H 'Accept: application/json' \\\n  -H 'Content-Type: application/json' \\\n  --compressed \\\n  --data-binary '{}' \\\n| grep agentContent | sed -e 's/.*\"agentContent\": \"\\([^\"]*\\)\".*/\\1/' \\\n| base64 --decode \u003e \u0026lt;agent zip file\u0026gt;\u003c/pre\u003e",
           "format": "byte",
           "type": "string"
         },
@@ -2079,7 +1701,7 @@
       "id": "GoogleCloudDialogflowV2ImportAgentRequest",
       "properties": {
         "agentContent": {
-          "description": "The agent to import.\n\nExample for how to import an agent via the command line:\n\ncurl \\\n  'https://dialogflow.googleapis.com/v2/projects/\u003cproject_name\u003e/agent:import\\\n   -X POST \\\n   -H 'Authorization: Bearer '$(gcloud auth print-access-token) \\\n   -H 'Accept: application/json' \\\n   -H 'Content-Type: application/json' \\\n   --compressed \\\n   --data-binary \"{\n      'agentContent': '$(cat \u003cagent zip file\u003e | base64 -w 0)'\n   }\"",
+          "description": "The agent to import.\n\nExample for how to import an agent via the command line:\n\u003cpre\u003ecurl \\\n  'https://dialogflow.googleapis.com/v2/projects/\u0026lt;project_name\u0026gt;/agent:import\\\n   -X POST \\\n   -H 'Authorization: Bearer '$(gcloud auth application-default\n   print-access-token) \\\n   -H 'Accept: application/json' \\\n   -H 'Content-Type: application/json' \\\n   --compressed \\\n   --data-binary \"{\n      'agentContent': '$(cat \u0026lt;agent zip file\u0026gt; | base64 -w 0)'\n   }\"\u003c/pre\u003e",
           "format": "byte",
           "type": "string"
         },
@@ -2123,14 +1745,14 @@
           "type": "string"
         },
         "phraseHints": {
-          "description": "Optional. The collection of phrase hints which are used to boost accuracy\nof speech recognition.\nRefer to [Cloud Speech API documentation](/speech/docs/basics#phrase-hints)\nfor more details.",
+          "description": "Optional. The collection of phrase hints which are used to boost accuracy\nof speech recognition.\nRefer to\n[Cloud Speech API\ndocumentation](https://cloud.google.com/speech-to-text/docs/basics#phrase-hints)\nfor more details.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "sampleRateHertz": {
-          "description": "Required. Sample rate (in Hertz) of the audio content sent in the query.\nRefer to [Cloud Speech API documentation](/speech/docs/basics) for more\ndetails.",
+          "description": "Required. Sample rate (in Hertz) of the audio content sent in the query.\nRefer to\n[Cloud Speech API\ndocumentation](https://cloud.google.com/speech-to-text/docs/basics) for\nmore details.",
           "format": "int32",
           "type": "integer"
         }
@@ -2142,7 +1764,7 @@
       "id": "GoogleCloudDialogflowV2Intent",
       "properties": {
         "action": {
-          "description": "Optional. The name of the action associated with the intent.",
+          "description": "Optional. The name of the action associated with the intent.\nNote: The action name must not contain whitespaces.",
           "type": "string"
         },
         "defaultResponsePlatforms": {
@@ -2156,7 +1778,7 @@
             "Skype.",
             "Line.",
             "Viber.",
-            "Actions on Google."
+            "Actions on Google.\nWhen using Actions on Google, you can choose one of the specific\nIntent.Message types that mention support for Actions on Google,\nor you can use the advanced Intent.Message.payload field.\nThe payload field provides access to AoG features not available in the\nspecific message types.\nIf using the Intent.Message.payload field, it should have a structure\nsimilar to the JSON message shown here. For more information, see\n[Actions on Google Webhook\nFormat](https://developers.google.com/actions/dialogflow/webhook)\n\u003cpre\u003e{\n  \"expectUserResponse\": true,\n  \"isSsml\": false,\n  \"noInputPrompts\": [],\n  \"richResponse\": {\n    \"items\": [\n      {\n        \"simpleResponse\": {\n          \"displayText\": \"hi\",\n          \"textToSpeech\": \"hello\"\n        }\n      }\n    ],\n    \"suggestions\": [\n      {\n        \"title\": \"Say this\"\n      },\n      {\n        \"title\": \"or this\"\n      }\n    ]\n  },\n  \"systemIntent\": {\n    \"data\": {\n      \"@type\": \"type.googleapis.com/google.actions.v2.OptionValueSpec\",\n      \"listSelect\": {\n        \"items\": [\n          {\n            \"optionInfo\": {\n              \"key\": \"key1\",\n              \"synonyms\": [\n                \"key one\"\n              ]\n            },\n            \"title\": \"must not be empty, but unique\"\n          },\n          {\n            \"optionInfo\": {\n              \"key\": \"key2\",\n              \"synonyms\": [\n                \"key two\"\n              ]\n            },\n            \"title\": \"must not be empty, but unique\"\n          }\n        ]\n      }\n    },\n    \"intent\": \"actions.intent.OPTION\"\n  }\n}\u003c/pre\u003e"
           ],
           "items": {
             "enum": [
@@ -2186,7 +1808,7 @@
           "type": "array"
         },
         "followupIntentInfo": {
-          "description": "Optional. Collection of information about all followup intents that have\nname of this intent as a root_name.",
+          "description": "Read-only. Information about all followup intents that have this intent as\na direct or indirect parent. We populate this field only in the output.",
           "items": {
             "$ref": "GoogleCloudDialogflowV2IntentFollowupIntentInfo"
           },
@@ -2204,7 +1826,7 @@
           "type": "boolean"
         },
         "messages": {
-          "description": "Optional. The collection of rich messages corresponding to the\n`Response` field in API.AI console.",
+          "description": "Optional. The collection of rich messages corresponding to the\n`Response` field in the Dialogflow console.",
           "items": {
             "$ref": "GoogleCloudDialogflowV2IntentMessage"
           },
@@ -2233,7 +1855,7 @@
           "type": "array"
         },
         "parentFollowupIntentName": {
-          "description": "The unique identifier of the parent intent in the chain of followup\nintents.\nIt identifies the parent followup intent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
+          "description": "Read-only after creation. The unique identifier of the parent intent in the\nchain of followup intents. You can set this field when creating an intent,\nfor example with CreateIntent or BatchUpdateIntents, in order to\nmake this intent a followup intent.\n\nIt identifies the parent followup intent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
           "type": "string"
         },
         "priority": {
@@ -2246,7 +1868,7 @@
           "type": "boolean"
         },
         "rootFollowupIntentName": {
-          "description": "The unique identifier of the root intent in the chain of followup intents.\nIt identifies the correct followup intents chain for this intent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
+          "description": "Read-only. The unique identifier of the root intent in the chain of\nfollowup intents. It identifies the correct followup intents chain for\nthis intent. We populate this field only in the output.\n\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
           "type": "string"
         },
         "trainingPhrases": {
@@ -2257,7 +1879,7 @@
           "type": "array"
         },
         "webhookState": {
-          "description": "Required. Indicates whether webhooks are enabled for the intent.",
+          "description": "Optional. Indicates whether webhooks are enabled for the intent.",
           "enum": [
             "WEBHOOK_STATE_UNSPECIFIED",
             "WEBHOOK_STATE_ENABLED",
@@ -2296,14 +1918,14 @@
           "type": "string"
         },
         "parentFollowupIntentName": {
-          "description": "The unique identifier of the followup intent parent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
+          "description": "The unique identifier of the followup intent's parent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
           "type": "string"
         }
       },
       "type": "object"
     },
     "GoogleCloudDialogflowV2IntentMessage": {
-      "description": "Corresponds to the `Response` field in API.AI console.",
+      "description": "Corresponds to the `Response` field in the Dialogflow console.",
       "id": "GoogleCloudDialogflowV2IntentMessage",
       "properties": {
         "basicCard": {
@@ -2335,7 +1957,7 @@
             "description": "Properties of the object.",
             "type": "any"
           },
-          "description": "The response containing a custom payload.",
+          "description": "Returns a response containing a custom, platform-specific payload.\nSee the Intent.Message.Platform type for a description of the\nstructure that may be required for your platform.",
           "type": "object"
         },
         "platform": {
@@ -2360,7 +1982,7 @@
             "Skype.",
             "Line.",
             "Viber.",
-            "Actions on Google."
+            "Actions on Google.\nWhen using Actions on Google, you can choose one of the specific\nIntent.Message types that mention support for Actions on Google,\nor you can use the advanced Intent.Message.payload field.\nThe payload field provides access to AoG features not available in the\nspecific message types.\nIf using the Intent.Message.payload field, it should have a structure\nsimilar to the JSON message shown here. For more information, see\n[Actions on Google Webhook\nFormat](https://developers.google.com/actions/dialogflow/webhook)\n\u003cpre\u003e{\n  \"expectUserResponse\": true,\n  \"isSsml\": false,\n  \"noInputPrompts\": [],\n  \"richResponse\": {\n    \"items\": [\n      {\n        \"simpleResponse\": {\n          \"displayText\": \"hi\",\n          \"textToSpeech\": \"hello\"\n        }\n      }\n    ],\n    \"suggestions\": [\n      {\n        \"title\": \"Say this\"\n      },\n      {\n        \"title\": \"or this\"\n      }\n    ]\n  },\n  \"systemIntent\": {\n    \"data\": {\n      \"@type\": \"type.googleapis.com/google.actions.v2.OptionValueSpec\",\n      \"listSelect\": {\n        \"items\": [\n          {\n            \"optionInfo\": {\n              \"key\": \"key1\",\n              \"synonyms\": [\n                \"key one\"\n              ]\n            },\n            \"title\": \"must not be empty, but unique\"\n          },\n          {\n            \"optionInfo\": {\n              \"key\": \"key2\",\n              \"synonyms\": [\n                \"key two\"\n              ]\n            },\n            \"title\": \"must not be empty, but unique\"\n          }\n        ]\n      }\n    },\n    \"intent\": \"actions.intent.OPTION\"\n  }\n}\u003c/pre\u003e"
           ],
           "type": "string"
         },
@@ -2743,7 +2365,7 @@
       "id": "GoogleCloudDialogflowV2IntentTrainingPhrase",
       "properties": {
         "name": {
-          "description": "Required. The unique identifier of this training phrase.",
+          "description": "Output only. The unique identifier of this training phrase.",
           "type": "string"
         },
         "parts": {
@@ -2879,11 +2501,15 @@
             "description": "Properties of the object.",
             "type": "any"
           },
-          "description": "Optional. This field is set to the value of `QueryParameters.payload` field\npassed in the request.",
+          "description": "Optional. This field is set to the value of the `QueryParameters.payload`\nfield passed in the request. Some integrations that query a Dialogflow\nagent may provide additional information in the payload.\n\nIn particular for the Telephony Gateway this field has the form:\n\u003cpre\u003e{\n \"telephony\": {\n   \"caller_id\": \"+18558363987\"\n }\n}\u003c/pre\u003e\nNote: The caller ID field (`caller_id`) will be redacted for Standard\nEdition agents and populated with the caller ID in [E.164\nformat](https://en.wikipedia.org/wiki/E.164) for Enterprise Edition agents.",
           "type": "object"
         },
         "source": {
-          "description": "The source of this request, e.g., `google`, `facebook`, `slack`. It is set\nby Dialogflow-owned servers. Possible values of this field correspond to\nIntent.Message.Platform.",
+          "description": "The source of this request, e.g., `google`, `facebook`, `slack`. It is set\nby Dialogflow-owned servers.",
+          "type": "string"
+        },
+        "version": {
+          "description": "Optional. The version of the protocol used for this request.\nThis field is AoG-specific.",
           "type": "string"
         }
       },
@@ -2985,7 +2611,7 @@
           "description": "The intent that matched the conversational query. Some, not\nall fields are filled in this message, including but not limited to:\n`name`, `display_name` and `webhook_state`."
         },
         "intentDetectionConfidence": {
-          "description": "The intent detection confidence. Values range from 0.0\n(completely uncertain) to 1.0 (completely certain).",
+          "description": "The intent detection confidence. Values range from 0.0\n(completely uncertain) to 1.0 (completely certain).\nIf there are `multiple knowledge_answers` messages, this value is set to\nthe greatest `knowledgeAnswers.match_confidence` value in the list.",
           "format": "float",
           "type": "number"
         },
@@ -3013,7 +2639,7 @@
           "type": "string"
         },
         "speechRecognitionConfidence": {
-          "description": "The Speech recognition confidence between 0.0 and 1.0. A higher number\nindicates an estimated greater likelihood that the recognized words are\ncorrect. The default of 0.0 is a sentinel value indicating that confidence\nwas not set.\n\nYou should not rely on this field as it isn't guaranteed to be accurate, or\neven set. In particular this field isn't set in Webhook calls and for\nStreamingDetectIntent since the streaming endpoint has separate confidence\nestimates per portion of the audio in StreamingRecognitionResult.",
+          "description": "The Speech recognition confidence between 0.0 and 1.0. A higher number\nindicates an estimated greater likelihood that the recognized words are\ncorrect. The default of 0.0 is a sentinel value indicating that confidence\nwas not set.\n\nThis field is not guaranteed to be accurate or set. In particular this\nfield isn't set for StreamingDetectIntent since the streaming endpoint has\nseparate confidence estimates per portion of the audio in\nStreamingRecognitionResult.",
           "format": "float",
           "type": "number"
         },
@@ -3037,7 +2663,7 @@
       "id": "GoogleCloudDialogflowV2RestoreAgentRequest",
       "properties": {
         "agentContent": {
-          "description": "The agent to restore.\n\nExample for how to restore an agent via the command line:\n\ncurl \\\n  'https://dialogflow.googleapis.com/v2/projects/\u003cproject_name\u003e/agent:restore\\\n   -X POST \\\n   -H 'Authorization: Bearer '$(gcloud auth print-access-token) \\\n   -H 'Accept: application/json' \\\n   -H 'Content-Type: application/json' \\\n   --compressed \\\n   --data-binary \"{\n       'agentContent': '$(cat \u003cagent zip file\u003e | base64 -w 0)'\n   }\" \\",
+          "description": "The agent to restore.\n\nExample for how to restore an agent via the command line:\n\u003cpre\u003ecurl \\\n  'https://dialogflow.googleapis.com/v2/projects/\u0026lt;project_name\u0026gt;/agent:restore\\\n   -X POST \\\n   -H 'Authorization: Bearer '$(gcloud auth application-default\n   print-access-token) \\\n   -H 'Accept: application/json' \\\n   -H 'Content-Type: application/json' \\\n   --compressed \\\n   --data-binary \"{\n       'agentContent': '$(cat \u0026lt;agent zip file\u0026gt; | base64 -w 0)'\n   }\"\u003c/pre\u003e",
           "format": "byte",
           "type": "string"
         },
@@ -3092,7 +2718,7 @@
           "type": "string"
         },
         "name": {
-          "description": "Required. The unique identifier of this session entity type. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e`, or\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003esessions/\u003cSession\nID\u003e/entityTypes/\u003cEntity Type Display Name\u003e`.\nNote: Runtimes are under construction and will be available soon.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
+          "description": "Required. The unique identifier of this session entity type. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/entityTypes/\u003cEntity Type\nDisplay Name\u003e`.",
           "type": "string"
         }
       },
@@ -3173,7 +2799,7 @@
             "description": "Properties of the object.",
             "type": "any"
           },
-          "description": "Optional. This value is passed directly to `QueryResult.webhook_payload`.",
+          "description": "Optional. This value is passed directly to `QueryResult.webhook_payload`.\nSee the related `fulfillment_messages[i].payload field`, which may be used\nas an alternative to this field.\n\nThis field can be used for Actions on Google responses.\nIt should have a structure similar to the JSON message shown here. For more\ninformation, see\n[Actions on Google Webhook\nFormat](https://developers.google.com/actions/dialogflow/webhook)\n\u003cpre\u003e{\n  \"google\": {\n    \"expectUserResponse\": true,\n    \"richResponse\": {\n      \"items\": [\n        {\n          \"simpleResponse\": {\n            \"textToSpeech\": \"this is a simple response\"\n          }\n        }\n      ]\n    }\n  }\n}\u003c/pre\u003e",
           "type": "object"
         },
         "source": {
@@ -3221,7 +2847,7 @@
           "type": "integer"
         },
         "name": {
-          "description": "Required. The unique identifier of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`,\nor\n`projects/\u003cProject ID\u003e/agent/runtimes/\u003cRuntime ID\u003e/sessions/\u003cSession\nID\u003e/contexts/\u003cContext ID\u003e`.\nNote: Runtimes are under construction and will be available soon.\nThe Context ID is always converted to lowercase.\nIf \u003cRuntime ID\u003e is not specified, we assume default 'sandbox' runtime.",
+          "description": "Required. The unique identifier of the context. Format:\n`projects/\u003cProject ID\u003e/agent/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`,\nor `projects/\u003cProject ID\u003e/agent/environments/\u003cEnvironment ID\u003e/users/\u003cUser\nID\u003e/sessions/\u003cSession ID\u003e/contexts/\u003cContext ID\u003e`. The `Context ID` is\nalways converted to lowercase. If `Environment ID` is not specified, we\nassume default 'draft' environment. If `User ID` is not specified, we\nassume default '-' user.",
           "type": "string"
         },
         "parameters": {
@@ -3329,7 +2955,7 @@
       "id": "GoogleCloudDialogflowV2beta1ExportAgentResponse",
       "properties": {
         "agentContent": {
-          "description": "The exported agent.\n\nExample for how to export an agent to a zip file via a command line:\n\ncurl \\\n  'https://dialogflow.googleapis.com/v2beta1/projects/\u003cproject_name\u003e/agent:export'\\\n  -X POST \\\n  -H 'Authorization: Bearer '$(gcloud auth print-access-token) \\\n  -H 'Accept: application/json' \\\n  -H 'Content-Type: application/json' \\\n  --compressed \\\n  --data-binary '{}' \\\n| grep agentContent | sed -e 's/.*\"agentContent\": \"\\([^\"]*\\)\".*/\\1/' \\\n| base64 --decode \u003e \u003cagent zip file\u003e",
+          "description": "The exported agent.\n\nExample for how to export an agent to a zip file via a command line:\n\u003cpre\u003ecurl \\\n  'https://dialogflow.googleapis.com/v2beta1/projects/\u0026lt;project_name\u0026gt;/agent:export'\\\n  -X POST \\\n  -H 'Authorization: Bearer '$(gcloud auth application-default\n  print-access-token) \\\n  -H 'Accept: application/json' \\\n  -H 'Content-Type: application/json' \\\n  --compressed \\\n  --data-binary '{}' \\\n| grep agentContent | sed -e 's/.*\"agentContent\": \"\\([^\"]*\\)\".*/\\1/' \\\n| base64 --decode \u003e \u0026lt;agent zip file\u0026gt;\u003c/pre\u003e",
           "format": "byte",
           "type": "string"
         },
@@ -3345,7 +2971,7 @@
       "id": "GoogleCloudDialogflowV2beta1Intent",
       "properties": {
         "action": {
-          "description": "Optional. The name of the action associated with the intent.",
+          "description": "Optional. The name of the action associated with the intent.\nNote: The action name must not contain whitespaces.",
           "type": "string"
         },
         "defaultResponsePlatforms": {
@@ -3359,7 +2985,8 @@
             "Skype.",
             "Line.",
             "Viber.",
-            "Actions on Google."
+            "Actions on Google.\nWhen using Actions on Google, you can choose one of the specific\nIntent.Message types that mention support for Actions on Google,\nor you can use the advanced Intent.Message.payload field.\nThe payload field provides access to AoG features not available in the\nspecific message types.\nIf using the Intent.Message.payload field, it should have a structure\nsimilar to the JSON message shown here. For more information, see\n[Actions on Google Webhook\nFormat](https://developers.google.com/actions/dialogflow/webhook)\n\u003cpre\u003e{\n  \"expectUserResponse\": true,\n  \"isSsml\": false,\n  \"noInputPrompts\": [],\n  \"richResponse\": {\n    \"items\": [\n      {\n        \"simpleResponse\": {\n          \"displayText\": \"hi\",\n          \"textToSpeech\": \"hello\"\n        }\n      }\n    ],\n    \"suggestions\": [\n      {\n        \"title\": \"Say this\"\n      },\n      {\n        \"title\": \"or this\"\n      }\n    ]\n  },\n  \"systemIntent\": {\n    \"data\": {\n      \"@type\": \"type.googleapis.com/google.actions.v2.OptionValueSpec\",\n      \"listSelect\": {\n        \"items\": [\n          {\n            \"optionInfo\": {\n              \"key\": \"key1\",\n              \"synonyms\": [\n                \"key one\"\n              ]\n            },\n            \"title\": \"must not be empty, but unique\"\n          },\n          {\n            \"optionInfo\": {\n              \"key\": \"key2\",\n              \"synonyms\": [\n                \"key two\"\n              ]\n            },\n            \"title\": \"must not be empty, but unique\"\n          }\n        ]\n      }\n    },\n    \"intent\": \"actions.intent.OPTION\"\n  }\n}\u003c/pre\u003e",
+            "Telephony Gateway."
           ],
           "items": {
             "enum": [
@@ -3371,7 +2998,8 @@
               "SKYPE",
               "LINE",
               "VIBER",
-              "ACTIONS_ON_GOOGLE"
+              "ACTIONS_ON_GOOGLE",
+              "TELEPHONY"
             ],
             "type": "string"
           },
@@ -3381,6 +3009,10 @@
           "description": "Required. The name of this intent.",
           "type": "string"
         },
+        "endInteraction": {
+          "description": "Optional. Indicates that this intent ends an interaction. Some integrations\n(e.g., Actions on Google or Dialogflow phone gateway) use this information\nto close interaction with an end user. Default is false.",
+          "type": "boolean"
+        },
         "events": {
           "description": "Optional. The collection of event names that trigger the intent.\nIf the collection of input contexts is not empty, all of the contexts must\nbe present in the active user session for an event to trigger this intent.",
           "items": {
@@ -3389,7 +3021,7 @@
           "type": "array"
         },
         "followupIntentInfo": {
-          "description": "Optional. Collection of information about all followup intents that have\nname of this intent as a root_name.",
+          "description": "Read-only. Information about all followup intents that have this intent as\na direct or indirect parent. We populate this field only in the output.",
           "items": {
             "$ref": "GoogleCloudDialogflowV2beta1IntentFollowupIntentInfo"
           },
@@ -3407,7 +3039,7 @@
           "type": "boolean"
         },
         "messages": {
-          "description": "Optional. The collection of rich messages corresponding to the\n`Response` field in API.AI console.",
+          "description": "Optional. The collection of rich messages corresponding to the\n`Response` field in the Dialogflow console.",
           "items": {
             "$ref": "GoogleCloudDialogflowV2beta1IntentMessage"
           },
@@ -3418,7 +3050,7 @@
           "type": "boolean"
         },
         "mlEnabled": {
-          "description": "Optional. Indicates whether Machine Learning is enabled for the intent.\nNote: If `ml_enabled` setting is set to false, then this intent is not\ntaken into account during inference in `ML ONLY` match mode. Also,\nauto-markup in the UI is turned off.\nDEPRECATED! Please use `ml_disabled` field instead.\nNOTE: If neither `ml_enabled` nor `ml_disabled` field is set, then the\ndefault value is determined as follows:\n- Before April 15th, 2018 the default is:\n  ml_enabled = false / ml_disabled = true.\n- After April 15th, 2018 the default is:\n  ml_enabled = true / ml_disabled = false.",
+          "description": "Optional. Indicates whether Machine Learning is enabled for the intent.\nNote: If `ml_enabled` setting is set to false, then this intent is not\ntaken into account during inference in `ML ONLY` match mode. Also,\nauto-markup in the UI is turned off.\nDEPRECATED! Please use `ml_disabled` field instead.\nNOTE: If both `ml_enabled` and `ml_disabled` are either not set or false,\nthen the default value is determined as follows:\n- Before April 15th, 2018 the default is:\n  ml_enabled = false / ml_disabled = true.\n- After April 15th, 2018 the default is:\n  ml_enabled = true / ml_disabled = false.",
           "type": "boolean"
         },
         "name": {
@@ -3440,7 +3072,7 @@
           "type": "array"
         },
         "parentFollowupIntentName": {
-          "description": "The unique identifier of the parent intent in the chain of followup\nintents.\nIt identifies the parent followup intent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
+          "description": "Read-only after creation. The unique identifier of the parent intent in the\nchain of followup intents. You can set this field when creating an intent,\nfor example with CreateIntent or BatchUpdateIntents, in order to\nmake this intent a followup intent.\n\nIt identifies the parent followup intent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
           "type": "string"
         },
         "priority": {
@@ -3453,7 +3085,7 @@
           "type": "boolean"
         },
         "rootFollowupIntentName": {
-          "description": "The unique identifier of the root intent in the chain of followup intents.\nIt identifies the correct followup intents chain for this intent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
+          "description": "Read-only. The unique identifier of the root intent in the chain of\nfollowup intents. It identifies the correct followup intents chain for\nthis intent. We populate this field only in the output.\n\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
           "type": "string"
         },
         "trainingPhrases": {
@@ -3464,7 +3096,7 @@
           "type": "array"
         },
         "webhookState": {
-          "description": "Required. Indicates whether webhooks are enabled for the intent.",
+          "description": "Optional. Indicates whether webhooks are enabled for the intent.",
           "enum": [
             "WEBHOOK_STATE_UNSPECIFIED",
             "WEBHOOK_STATE_ENABLED",
@@ -3489,14 +3121,14 @@
           "type": "string"
         },
         "parentFollowupIntentName": {
-          "description": "The unique identifier of the followup intent parent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
+          "description": "The unique identifier of the followup intent's parent.\nFormat: `projects/\u003cProject ID\u003e/agent/intents/\u003cIntent ID\u003e`.",
           "type": "string"
         }
       },
       "type": "object"
     },
     "GoogleCloudDialogflowV2beta1IntentMessage": {
-      "description": "Corresponds to the `Response` field in API.AI console.",
+      "description": "Corresponds to the `Response` field in the Dialogflow console.",
       "id": "GoogleCloudDialogflowV2beta1IntentMessage",
       "properties": {
         "basicCard": {
@@ -3528,7 +3160,7 @@
             "description": "Properties of the object.",
             "type": "any"
           },
-          "description": "Returns a response containing a custom payload.",
+          "description": "Returns a response containing a custom, platform-specific payload.\nSee the Intent.Message.Platform type for a description of the\nstructure that may be required for your platform.",
           "type": "object"
         },
         "platform": {
@@ -3542,7 +3174,8 @@
             "SKYPE",
             "LINE",
             "VIBER",
-            "ACTIONS_ON_GOOGLE"
+            "ACTIONS_ON_GOOGLE",
+            "TELEPHONY"
           ],
           "enumDescriptions": [
             "Not specified.",
@@ -3553,7 +3186,8 @@
             "Skype.",
             "Line.",
             "Viber.",
-            "Actions on Google."
+            "Actions on Google.\nWhen using Actions on Google, you can choose one of the specific\nIntent.Message types that mention support for Actions on Google,\nor you can use the advanced Intent.Message.payload field.\nThe payload field provides access to AoG features not available in the\nspecific message types.\nIf using the Intent.Message.payload field, it should have a structure\nsimilar to the JSON message shown here. For more information, see\n[Actions on Google Webhook\nFormat](https://developers.google.com/actions/dialogflow/webhook)\n\u003cpre\u003e{\n  \"expectUserResponse\": true,\n  \"isSsml\": false,\n  \"noInputPrompts\": [],\n  \"richResponse\": {\n    \"items\": [\n      {\n        \"simpleResponse\": {\n          \"displayText\": \"hi\",\n          \"textToSpeech\": \"hello\"\n        }\n      }\n    ],\n    \"suggestions\": [\n      {\n        \"title\": \"Say this\"\n      },\n      {\n        \"title\": \"or this\"\n      }\n    ]\n  },\n  \"systemIntent\": {\n    \"data\": {\n      \"@type\": \"type.googleapis.com/google.actions.v2.OptionValueSpec\",\n      \"listSelect\": {\n        \"items\": [\n          {\n            \"optionInfo\": {\n              \"key\": \"key1\",\n              \"synonyms\": [\n                \"key one\"\n              ]\n            },\n            \"title\": \"must not be empty, but unique\"\n          },\n          {\n            \"optionInfo\": {\n              \"key\": \"key2\",\n              \"synonyms\": [\n                \"key two\"\n              ]\n            },\n            \"title\": \"must not be empty, but unique\"\n          }\n        ]\n      }\n    },\n    \"intent\": \"actions.intent.OPTION\"\n  }\n}\u003c/pre\u003e",
+            "Telephony Gateway."
           ],
           "type": "string"
         },
@@ -3568,6 +3202,18 @@
         "suggestions": {
           "$ref": "GoogleCloudDialogflowV2beta1IntentMessageSuggestions",
           "description": "Displays suggestion chips for Actions on Google."
+        },
+        "telephonyPlayAudio": {
+          "$ref": "GoogleCloudDialogflowV2beta1IntentMessageTelephonyPlayAudio",
+          "description": "Plays audio from a file in Telephony Gateway."
+        },
+        "telephonySynthesizeSpeech": {
+          "$ref": "GoogleCloudDialogflowV2beta1IntentMessageTelephonySynthesizeSpeech",
+          "description": "Synthesizes speech in Telephony Gateway."
+        },
+        "telephonyTransferCall": {
+          "$ref": "GoogleCloudDialogflowV2beta1IntentMessageTelephonyTransferCall",
+          "description": "Transfers the call in Telephony Gateway."
         },
         "text": {
           "$ref": "GoogleCloudDialogflowV2beta1IntentMessageText",
@@ -3715,7 +3361,7 @@
       "id": "GoogleCloudDialogflowV2beta1IntentMessageImage",
       "properties": {
         "accessibilityText": {
-          "description": "Optional. A text description of the image to be used for accessibility,\ne.g., screen readers.",
+          "description": "A text description of the image to be used for accessibility,\ne.g., screen readers. Required if image_uri is set for CarouselSelect.",
           "type": "string"
         },
         "imageUri": {
@@ -3875,6 +3521,43 @@
       },
       "type": "object"
     },
+    "GoogleCloudDialogflowV2beta1IntentMessageTelephonyPlayAudio": {
+      "description": "Plays audio from a file in Telephony Gateway.",
+      "id": "GoogleCloudDialogflowV2beta1IntentMessageTelephonyPlayAudio",
+      "properties": {
+        "audioUri": {
+          "description": "Required. URI to a Google Cloud Storage object containing the audio to\nplay, e.g., \"gs://bucket/object\". The object must contain a single\nchannel (mono) of linear PCM audio (2 bytes / sample) at 8kHz.\n\nThis object must be readable by the `service-\u003cProject\nNumber\u003e@gcp-sa-dialogflow.iam.gserviceaccount.com` service account\nwhere \u003cProject Number\u003e is the number of the Telephony Gateway project\n(usually the same as the Dialogflow agent project). If the Google Cloud\nStorage bucket is in the Telephony Gateway project, this permission is\nadded by default when enabling the Dialogflow V2 API.\n\nFor audio from other sources, consider using the\n`TelephonySynthesizeSpeech` message with SSML.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDialogflowV2beta1IntentMessageTelephonySynthesizeSpeech": {
+      "description": "Synthesizes speech and plays back the synthesized audio to the caller in\nTelephony Gateway.\n\nTelephony Gateway takes the synthesizer settings from\n`DetectIntentResponse.output_audio_config` which can either be set\nat request-level or can come from the agent-level synthesizer config.",
+      "id": "GoogleCloudDialogflowV2beta1IntentMessageTelephonySynthesizeSpeech",
+      "properties": {
+        "ssml": {
+          "description": "The SSML to be synthesized. For more information, see\n[SSML](https://developers.google.com/actions/reference/ssml).",
+          "type": "string"
+        },
+        "text": {
+          "description": "The raw text to be synthesized.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDialogflowV2beta1IntentMessageTelephonyTransferCall": {
+      "description": "Transfers the call in Telephony Gateway.",
+      "id": "GoogleCloudDialogflowV2beta1IntentMessageTelephonyTransferCall",
+      "properties": {
+        "phoneNumber": {
+          "description": "Required. The phone number to transfer the call to\nin [E.164 format](https://en.wikipedia.org/wiki/E.164).\n\nWe currently only allow transferring to US numbers (+1xxxyyyzzzz).",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "GoogleCloudDialogflowV2beta1IntentMessageText": {
       "description": "The text response message.",
       "id": "GoogleCloudDialogflowV2beta1IntentMessageText",
@@ -3936,7 +3619,7 @@
       "id": "GoogleCloudDialogflowV2beta1IntentTrainingPhrase",
       "properties": {
         "name": {
-          "description": "Required. The unique identifier of this training phrase.",
+          "description": "Output only. The unique identifier of this training phrase.",
           "type": "string"
         },
         "parts": {
@@ -3991,6 +3674,83 @@
       },
       "type": "object"
     },
+    "GoogleCloudDialogflowV2beta1KnowledgeAnswers": {
+      "description": "Represents the result of querying a Knowledge base.",
+      "id": "GoogleCloudDialogflowV2beta1KnowledgeAnswers",
+      "properties": {
+        "answers": {
+          "description": "A list of answers from Knowledge Connector.",
+          "items": {
+            "$ref": "GoogleCloudDialogflowV2beta1KnowledgeAnswersAnswer"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDialogflowV2beta1KnowledgeAnswersAnswer": {
+      "description": "An answer from Knowledge Connector.",
+      "id": "GoogleCloudDialogflowV2beta1KnowledgeAnswersAnswer",
+      "properties": {
+        "answer": {
+          "description": "The piece of text from the `source` knowledge base document that answers\nthis conversational query.",
+          "type": "string"
+        },
+        "faqQuestion": {
+          "description": "The corresponding FAQ question if the answer was extracted from a FAQ\nDocument, empty otherwise.",
+          "type": "string"
+        },
+        "matchConfidence": {
+          "description": "The system's confidence score that this Knowledge answer is a good match\nfor this converstational query, range from 0.0 (completely uncertain)\nto 1.0 (completely certain).\nNote: The confidence score is likely to vary somewhat (possibly even for\nidentical requests), as the underlying model is under constant\nimprovement, we may deprecate it in the future. We recommend using\n`match_confidence_level` which should be generally more stable.",
+          "format": "float",
+          "type": "number"
+        },
+        "matchConfidenceLevel": {
+          "description": "The system's confidence level that this knowledge answer is a good match\nfor this conversational query.\nNOTE: The confidence level for a given `\u003cquery, answer\u003e` pair may change\nwithout notice, as it depends on models that are constantly being\nimproved. However, it will change less frequently than the confidence\nscore below, and should be preferred for referencing the quality of an\nanswer.",
+          "enum": [
+            "MATCH_CONFIDENCE_LEVEL_UNSPECIFIED",
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ],
+          "enumDescriptions": [
+            "Not specified.",
+            "Indicates that the confidence is low.",
+            "Indicates our confidence is medium.",
+            "Indicates our confidence is high."
+          ],
+          "type": "string"
+        },
+        "source": {
+          "description": "Indicates which Knowledge Document this answer was extracted from.\nFormat: `projects/\u003cProject ID\u003e/knowledgeBases/\u003cKnowledge Base\nID\u003e/documents/\u003cDocument ID\u003e`.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDialogflowV2beta1KnowledgeOperationMetadata": {
+      "description": "Metadata in google::longrunning::Operation for Knowledge operations.",
+      "id": "GoogleCloudDialogflowV2beta1KnowledgeOperationMetadata",
+      "properties": {
+        "state": {
+          "description": "Required. The current state of this operation.",
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "PENDING",
+            "RUNNING",
+            "DONE"
+          ],
+          "enumDescriptions": [
+            "State unspecified.",
+            "The operation has been created.",
+            "The operation is currently running.",
+            "The operation is done, either cancelled or completed."
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "GoogleCloudDialogflowV2beta1OriginalDetectIntentRequest": {
       "description": "Represents the contents of the original request that was passed to\nthe `[Streaming]DetectIntent` call.",
       "id": "GoogleCloudDialogflowV2beta1OriginalDetectIntentRequest",
@@ -4000,11 +3760,15 @@
             "description": "Properties of the object.",
             "type": "any"
           },
-          "description": "Optional. This field is set to the value of `QueryParameters.payload` field\npassed in the request.",
+          "description": "Optional. This field is set to the value of the `QueryParameters.payload`\nfield passed in the request. Some integrations that query a Dialogflow\nagent may provide additional information in the payload.\n\nIn particular for the Telephony Gateway this field has the form:\n\u003cpre\u003e{\n \"telephony\": {\n   \"caller_id\": \"+18558363987\"\n }\n}\u003c/pre\u003e\nNote: The caller ID field (`caller_id`) will be redacted for Standard\nEdition agents and populated with the caller ID in [E.164\nformat](https://en.wikipedia.org/wiki/E.164) for Enterprise Edition agents.",
           "type": "object"
         },
         "source": {
-          "description": "The source of this request, e.g., `google`, `facebook`, `slack`. It is set\nby Dialogflow-owned servers. Possible values of this field correspond to\nIntent.Message.Platform.",
+          "description": "The source of this request, e.g., `google`, `facebook`, `slack`. It is set\nby Dialogflow-owned servers.",
+          "type": "string"
+        },
+        "version": {
+          "description": "Optional. The version of the protocol used for this request.\nThis field is AoG-specific.",
           "type": "string"
         }
       },
@@ -4046,9 +3810,13 @@
           "description": "The intent that matched the conversational query. Some, not\nall fields are filled in this message, including but not limited to:\n`name`, `display_name` and `webhook_state`."
         },
         "intentDetectionConfidence": {
-          "description": "The intent detection confidence. Values range from 0.0\n(completely uncertain) to 1.0 (completely certain).",
+          "description": "The intent detection confidence. Values range from 0.0\n(completely uncertain) to 1.0 (completely certain).\nIf there are `multiple knowledge_answers` messages, this value is set to\nthe greatest `knowledgeAnswers.match_confidence` value in the list.",
           "format": "float",
           "type": "number"
+        },
+        "knowledgeAnswers": {
+          "$ref": "GoogleCloudDialogflowV2beta1KnowledgeAnswers",
+          "description": "The result from Knowledge Connector (if any), ordered by decreasing\n`KnowledgeAnswers.match_confidence`."
         },
         "languageCode": {
           "description": "The language that was triggered during intent detection.\nSee [Language Support](https://dialogflow.com/docs/reference/language)\nfor a list of the currently supported language codes.",
@@ -4073,8 +3841,12 @@
           "description": "The original conversational query text:\n- If natural language text was provided as input, `query_text` contains\n  a copy of the input.\n- If natural language speech audio was provided as input, `query_text`\n  contains the speech recognition result. If speech recognizer produced\n  multiple alternatives, a particular one is picked.\n- If an event was provided as input, `query_text` is not set.",
           "type": "string"
         },
+        "sentimentAnalysisResult": {
+          "$ref": "GoogleCloudDialogflowV2beta1SentimentAnalysisResult",
+          "description": "The sentiment analysis result, which depends on the\n`sentiment_analysis_request_config` specified in the request."
+        },
         "speechRecognitionConfidence": {
-          "description": "The Speech recognition confidence between 0.0 and 1.0. A higher number\nindicates an estimated greater likelihood that the recognized words are\ncorrect. The default of 0.0 is a sentinel value indicating that confidence\nwas not set.\n\nYou should not rely on this field as it isn't guaranteed to be accurate, or\neven set. In particular this field isn't set in Webhook calls and for\nStreamingDetectIntent since the streaming endpoint has separate confidence\nestimates per portion of the audio in StreamingRecognitionResult.",
+          "description": "The Speech recognition confidence between 0.0 and 1.0. A higher number\nindicates an estimated greater likelihood that the recognized words are\ncorrect. The default of 0.0 is a sentinel value indicating that confidence\nwas not set.\n\nThis field is not guaranteed to be accurate or set. In particular this\nfield isn't set for StreamingDetectIntent since the streaming endpoint has\nseparate confidence estimates per portion of the audio in\nStreamingRecognitionResult.",
           "format": "float",
           "type": "number"
         },
@@ -4093,10 +3865,45 @@
       },
       "type": "object"
     },
+    "GoogleCloudDialogflowV2beta1Sentiment": {
+      "description": "The sentiment, such as positive/negative feeling or association, for a unit\nof analysis, such as the query text.",
+      "id": "GoogleCloudDialogflowV2beta1Sentiment",
+      "properties": {
+        "magnitude": {
+          "description": "A non-negative number in the [0, +inf) range, which represents the absolute\nmagnitude of sentiment, regardless of score (positive or negative).",
+          "format": "float",
+          "type": "number"
+        },
+        "score": {
+          "description": "Sentiment score between -1.0 (negative sentiment) and 1.0 (positive\nsentiment).",
+          "format": "float",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDialogflowV2beta1SentimentAnalysisResult": {
+      "description": "The result of sentiment analysis as configured by\n`sentiment_analysis_request_config`.",
+      "id": "GoogleCloudDialogflowV2beta1SentimentAnalysisResult",
+      "properties": {
+        "queryTextSentiment": {
+          "$ref": "GoogleCloudDialogflowV2beta1Sentiment",
+          "description": "The sentiment analysis result for `query_text`."
+        }
+      },
+      "type": "object"
+    },
     "GoogleCloudDialogflowV2beta1WebhookRequest": {
       "description": "The request message for a webhook call.",
       "id": "GoogleCloudDialogflowV2beta1WebhookRequest",
       "properties": {
+        "alternativeQueryResults": {
+          "description": "Alternative query results from KnowledgeService.",
+          "items": {
+            "$ref": "GoogleCloudDialogflowV2beta1QueryResult"
+          },
+          "type": "array"
+        },
         "originalDetectIntentRequest": {
           "$ref": "GoogleCloudDialogflowV2beta1OriginalDetectIntentRequest",
           "description": "Optional. The contents of the original request that was passed to\n`[Streaming]DetectIntent` call."
@@ -4120,6 +3927,10 @@
       "description": "The response message for a webhook call.",
       "id": "GoogleCloudDialogflowV2beta1WebhookResponse",
       "properties": {
+        "endInteraction": {
+          "description": "Optional. Indicates that this intent ends an interaction. Some integrations\n(e.g., Actions on Google or Dialogflow phone gateway) use this information\nto close interaction with an end user. Default is false.",
+          "type": "boolean"
+        },
         "followupEventInput": {
           "$ref": "GoogleCloudDialogflowV2beta1EventInput",
           "description": "Optional. Makes the platform immediately invoke another `DetectIntent` call\ninternally with the specified event as input."
@@ -4147,7 +3958,7 @@
             "description": "Properties of the object.",
             "type": "any"
           },
-          "description": "Optional. This value is passed directly to `QueryResult.webhook_payload`.",
+          "description": "Optional. This value is passed directly to `QueryResult.webhook_payload`.\nSee the related `fulfillment_messages[i].payload field`, which may be used\nas an alternative to this field.\n\nThis field can be used for Actions on Google responses.\nIt should have a structure similar to the JSON message shown here. For more\ninformation, see\n[Actions on Google Webhook\nFormat](https://developers.google.com/actions/dialogflow/webhook)\n\u003cpre\u003e{\n  \"google\": {\n    \"expectUserResponse\": true,\n    \"richResponse\": {\n      \"items\": [\n        {\n          \"simpleResponse\": {\n            \"textToSpeech\": \"this is a simple response\"\n          }\n        }\n      ]\n    }\n  }\n}\u003c/pre\u003e",
           "type": "object"
         },
         "source": {

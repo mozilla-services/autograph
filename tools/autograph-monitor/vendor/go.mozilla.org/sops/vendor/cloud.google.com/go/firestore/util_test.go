@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,17 +16,19 @@ package firestore
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 	"time"
+
+	"cloud.google.com/go/internal/testutil"
 
 	"golang.org/x/net/context"
 
 	pb "google.golang.org/genproto/googleapis/firestore/v1beta1"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	tspb "github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/api/option"
 	"google.golang.org/genproto/googleapis/type/latlng"
 	"google.golang.org/grpc"
@@ -49,22 +51,19 @@ func mustTimestampProto(t time.Time) *tspb.Timestamp {
 	return ts
 }
 
+var cmpOpts = []cmp.Option{
+	cmp.AllowUnexported(DocumentRef{}, CollectionRef{}, DocumentSnapshot{},
+		Query{}, filter{}, order{}, fpv{}),
+	cmpopts.IgnoreTypes(Client{}, &Client{}),
+}
+
 // testEqual implements equality for Firestore tests.
 func testEqual(a, b interface{}) bool {
-	switch a := a.(type) {
-	case time.Time:
-		return a.Equal(b.(time.Time))
-	case proto.Message:
-		return proto.Equal(a, b.(proto.Message))
-	case *DocumentSnapshot:
-		return a.equal(b.(*DocumentSnapshot))
-	case *DocumentRef:
-		return a.equal(b.(*DocumentRef))
-	case *CollectionRef:
-		return a.equal(b.(*CollectionRef))
-	default:
-		return reflect.DeepEqual(a, b)
-	}
+	return testutil.Equal(a, b, cmpOpts...)
+}
+
+func testDiff(a, b interface{}) string {
+	return testutil.Diff(a, b, cmpOpts...)
 }
 
 func TestTestEqual(t *testing.T) {
@@ -100,23 +99,27 @@ func newMock(t *testing.T) (*Client, *mockServer) {
 }
 
 func intval(i int) *pb.Value {
-	return &pb.Value{&pb.Value_IntegerValue{int64(i)}}
+	return int64val(int64(i))
+}
+
+func int64val(i int64) *pb.Value {
+	return &pb.Value{ValueType: &pb.Value_IntegerValue{i}}
 }
 
 func boolval(b bool) *pb.Value {
-	return &pb.Value{&pb.Value_BooleanValue{b}}
+	return &pb.Value{ValueType: &pb.Value_BooleanValue{b}}
 }
 
 func floatval(f float64) *pb.Value {
-	return &pb.Value{&pb.Value_DoubleValue{f}}
+	return &pb.Value{ValueType: &pb.Value_DoubleValue{f}}
 }
 
 func strval(s string) *pb.Value {
-	return &pb.Value{&pb.Value_StringValue{s}}
+	return &pb.Value{ValueType: &pb.Value_StringValue{s}}
 }
 
 func bytesval(b []byte) *pb.Value {
-	return &pb.Value{&pb.Value_BytesValue{b}}
+	return &pb.Value{ValueType: &pb.Value_BytesValue{b}}
 }
 
 func tsval(t time.Time) *pb.Value {
@@ -124,24 +127,24 @@ func tsval(t time.Time) *pb.Value {
 	if err != nil {
 		panic(fmt.Sprintf("bad time %s in test: %v", t, err))
 	}
-	return &pb.Value{&pb.Value_TimestampValue{ts}}
+	return &pb.Value{ValueType: &pb.Value_TimestampValue{ts}}
 }
 
 func geoval(ll *latlng.LatLng) *pb.Value {
-	return &pb.Value{&pb.Value_GeoPointValue{ll}}
+	return &pb.Value{ValueType: &pb.Value_GeoPointValue{ll}}
 }
 
 func arrayval(s ...*pb.Value) *pb.Value {
 	if s == nil {
 		s = []*pb.Value{}
 	}
-	return &pb.Value{&pb.Value_ArrayValue{&pb.ArrayValue{s}}}
+	return &pb.Value{ValueType: &pb.Value_ArrayValue{&pb.ArrayValue{Values: s}}}
 }
 
 func mapval(m map[string]*pb.Value) *pb.Value {
-	return &pb.Value{&pb.Value_MapValue{&pb.MapValue{m}}}
+	return &pb.Value{ValueType: &pb.Value_MapValue{&pb.MapValue{Fields: m}}}
 }
 
 func refval(path string) *pb.Value {
-	return &pb.Value{&pb.Value_ReferenceValue{path}}
+	return &pb.Value{ValueType: &pb.Value_ReferenceValue{path}}
 }

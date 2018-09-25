@@ -186,8 +186,8 @@ type ErrorContext struct {
 }
 
 func (s *ErrorContext) MarshalJSON() ([]byte, error) {
-	type noMethod ErrorContext
-	raw := noMethod(*s)
+	type NoMethod ErrorContext
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -229,8 +229,8 @@ type ErrorEvent struct {
 }
 
 func (s *ErrorEvent) MarshalJSON() ([]byte, error) {
-	type noMethod ErrorEvent
-	raw := noMethod(*s)
+	type NoMethod ErrorEvent
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -271,8 +271,8 @@ type ErrorGroup struct {
 }
 
 func (s *ErrorGroup) MarshalJSON() ([]byte, error) {
-	type noMethod ErrorGroup
-	raw := noMethod(*s)
+	type NoMethod ErrorGroup
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -368,8 +368,8 @@ type ErrorGroupStats struct {
 }
 
 func (s *ErrorGroupStats) MarshalJSON() ([]byte, error) {
-	type noMethod ErrorGroupStats
-	raw := noMethod(*s)
+	type NoMethod ErrorGroupStats
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -421,8 +421,8 @@ type HttpRequestContext struct {
 }
 
 func (s *HttpRequestContext) MarshalJSON() ([]byte, error) {
-	type noMethod HttpRequestContext
-	raw := noMethod(*s)
+	type NoMethod HttpRequestContext
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -463,8 +463,8 @@ type ListEventsResponse struct {
 }
 
 func (s *ListEventsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListEventsResponse
-	raw := noMethod(*s)
+	type NoMethod ListEventsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -512,8 +512,8 @@ type ListGroupStatsResponse struct {
 }
 
 func (s *ListGroupStatsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListGroupStatsResponse
-	raw := noMethod(*s)
+	type NoMethod ListGroupStatsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -596,8 +596,8 @@ type ReportedErrorEvent struct {
 }
 
 func (s *ReportedErrorEvent) MarshalJSON() ([]byte, error) {
-	type noMethod ReportedErrorEvent
-	raw := noMethod(*s)
+	type NoMethod ReportedErrorEvent
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -655,8 +655,8 @@ type ServiceContext struct {
 }
 
 func (s *ServiceContext) MarshalJSON() ([]byte, error) {
-	type noMethod ServiceContext
-	raw := noMethod(*s)
+	type NoMethod ServiceContext
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -700,8 +700,8 @@ type SourceLocation struct {
 }
 
 func (s *SourceLocation) MarshalJSON() ([]byte, error) {
-	type noMethod SourceLocation
-	raw := noMethod(*s)
+	type NoMethod SourceLocation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -737,8 +737,8 @@ type SourceReference struct {
 }
 
 func (s *SourceReference) MarshalJSON() ([]byte, error) {
-	type noMethod SourceReference
-	raw := noMethod(*s)
+	type NoMethod SourceReference
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -774,8 +774,8 @@ type TimedCount struct {
 }
 
 func (s *TimedCount) MarshalJSON() ([]byte, error) {
-	type noMethod TimedCount
-	raw := noMethod(*s)
+	type NoMethod TimedCount
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -805,8 +805,8 @@ type TrackingIssue struct {
 }
 
 func (s *TrackingIssue) MarshalJSON() ([]byte, error) {
-	type noMethod TrackingIssue
-	raw := noMethod(*s)
+	type NoMethod TrackingIssue
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -860,6 +860,7 @@ func (c *ProjectsDeleteEventsCall) doRequest(alt string) (*http.Response, error)
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta1/{+projectName}/events")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -903,7 +904,7 @@ func (c *ProjectsDeleteEventsCall) Do(opts ...googleapi.CallOption) (*DeleteEven
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1065,6 +1066,7 @@ func (c *ProjectsEventsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta1/{+projectName}/events")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1108,7 +1110,7 @@ func (c *ProjectsEventsListCall) Do(opts ...googleapi.CallOption) (*ListEventsRe
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1218,16 +1220,15 @@ type ProjectsEventsReportCall struct {
 
 // Report: Report an individual error event.
 //
-// This endpoint accepts <strong>either</strong> an OAuth
-// token,
-// <strong>or</strong> an
-// <a href="https://support.google.com/cloud/answer/6158862">API
-// key</a>
+// This endpoint accepts **either** an OAuth token,
+// **or** an [API
+// key](https://support.google.com/cloud/answer/6158862)
 // for authentication. To use an API key, append it to the URL as the
 // value of
 // a `key` parameter. For example:
-// <pre>POST
-// https://clouderrorreporting.googleapis.com/v1beta1/projects/example-project/events:report?key=123ABC456</pre>
+//
+// `POST
+// https://clouderrorreporting.googleapis.com/v1beta1/projects/example-project/events:report?key=123ABC456`
 func (r *ProjectsEventsService) Report(projectName string, reportederrorevent *ReportedErrorEvent) *ProjectsEventsReportCall {
 	c := &ProjectsEventsReportCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.projectName = projectName
@@ -1273,6 +1274,7 @@ func (c *ProjectsEventsReportCall) doRequest(alt string) (*http.Response, error)
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta1/{+projectName}/events:report")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -1316,12 +1318,12 @@ func (c *ProjectsEventsReportCall) Do(opts ...googleapi.CallOption) (*ReportErro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Report an individual error event.\n\nThis endpoint accepts \u003cstrong\u003eeither\u003c/strong\u003e an OAuth token,\n\u003cstrong\u003eor\u003c/strong\u003e an\n\u003ca href=\"https://support.google.com/cloud/answer/6158862\"\u003eAPI key\u003c/a\u003e\nfor authentication. To use an API key, append it to the URL as the value of\na `key` parameter. For example:\n\u003cpre\u003ePOST https://clouderrorreporting.googleapis.com/v1beta1/projects/example-project/events:report?key=123ABC456\u003c/pre\u003e",
+	//   "description": "Report an individual error event.\n\nThis endpoint accepts **either** an OAuth token,\n**or** an [API key](https://support.google.com/cloud/answer/6158862)\nfor authentication. To use an API key, append it to the URL as the value of\na `key` parameter. For example:\n\n`POST https://clouderrorreporting.googleapis.com/v1beta1/projects/example-project/events:report?key=123ABC456`",
 	//   "flatPath": "v1beta1/projects/{projectsId}/events:report",
 	//   "httpMethod": "POST",
 	//   "id": "clouderrorreporting.projects.events.report",
@@ -1530,6 +1532,7 @@ func (c *ProjectsGroupStatsListCall) doRequest(alt string) (*http.Response, erro
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta1/{+projectName}/groupStats")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1573,7 +1576,7 @@ func (c *ProjectsGroupStatsListCall) Do(opts ...googleapi.CallOption) (*ListGrou
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1769,6 +1772,7 @@ func (c *ProjectsGroupsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta1/{+groupName}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1812,7 +1816,7 @@ func (c *ProjectsGroupsGetCall) Do(opts ...googleapi.CallOption) (*ErrorGroup, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1902,6 +1906,7 @@ func (c *ProjectsGroupsUpdateCall) doRequest(alt string) (*http.Response, error)
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta1/{+name}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
@@ -1945,7 +1950,7 @@ func (c *ProjectsGroupsUpdateCall) Do(opts ...googleapi.CallOption) (*ErrorGroup
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
