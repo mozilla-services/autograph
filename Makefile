@@ -29,7 +29,9 @@ lint:
 vet:
 	$(GO) vet go.mozilla.org/autograph
 	$(GO) vet go.mozilla.org/autograph/signer
+	$(GO) vet go.mozilla.org/autograph/signer/apk
 	$(GO) vet go.mozilla.org/autograph/signer/contentsignature
+	$(GO) vet go.mozilla.org/autograph/signer/mar
 	$(GO) vet go.mozilla.org/autograph/signer/xpi
 
 testautograph:
