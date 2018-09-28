@@ -79,6 +79,8 @@ func TestFormatFilenameExact(t *testing.T) {
 
 
 func TestMakingJarManifest(t *testing.T) {
+	t.Parallel()
+
 	manifest, sigfile, err := makeJARManifests(smallZip)
 	if err != nil {
 		t.Fatal(err)
@@ -92,6 +94,8 @@ func TestMakingJarManifest(t *testing.T) {
 }
 
 func TestRepackAndAlign(t *testing.T) {
+	t.Parallel()
+
 	repackedZip, err := repackAndAlignJAR(smallZip, smallZipManifest, smallZipSignatureFile, smallZipSignature)
 	if err != nil {
 		t.Fatal(err)
@@ -153,6 +157,8 @@ func TestRepackAndAlign(t *testing.T) {
 }
 
 func TestIsSignatureFile(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		expect   bool
 		filename string
@@ -176,9 +182,177 @@ func TestIsSignatureFile(t *testing.T) {
 	}
 	for i, testcase := range testcases {
 		if isSignatureFile(testcase.filename) != testcase.expect {
-			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
+			t.Fatalf("isCompressibleFile testcase %d failed. %q returned %t, expected %t",
 				i, testcase.filename, isSignatureFile(testcase.filename), testcase.expect)
 		}
+	}
+}
+
+func TestGetCompressionMethod(t *testing.T) {
+	var testcases = []struct {
+		expect   uint16
+		filename string
+	}{
+		{zip.Store, "resources.arsc"},
+		{zip.Deflate, "resources.ARSC"},
+		{zip.Deflate, "resources.ArSc"},
+		{zip.Deflate, ".arsc"},
+
+		{zip.Store, "foo.3g2"},
+		{zip.Store, "foo.3gp"},
+		{zip.Store, "foo.3gpp"},
+		{zip.Store, "foo.3gpp2"},
+		{zip.Store, "foo.aac"},
+		{zip.Store, "foo.amr"},
+		{zip.Store, "foo.awb"},
+		{zip.Store, "foo.gif"},
+		{zip.Store, "foo.imy"},
+		{zip.Store, "foo.jet"},
+		{zip.Store, "foo.jpeg"},
+		{zip.Store, "foo.jpg"},
+		{zip.Store, "foo.m4a"},
+		{zip.Store, "foo.m4v"},
+		{zip.Store, "foo.mid"},
+		{zip.Store, "foo.midi"},
+		{zip.Store, "foo.mkv"},
+		{zip.Store, "foo.mp2"},
+		{zip.Store, "foo.mp3"},
+		{zip.Store, "foo.mp4"},
+		{zip.Store, "foo.mpeg"},
+		{zip.Store, "foo.mpg"},
+		{zip.Store, "foo.ogg"},
+		{zip.Store, "foo.png"},
+		{zip.Store, "foo.rtttl"},
+		{zip.Store, "foo.smf"},
+		{zip.Store, "foo.wav"},
+		{zip.Store, "foo.webm"},
+		{zip.Store, "foo.wma"},
+		{zip.Store, "foo.wmv"},
+		{zip.Store, "foo.xmf"},
+
+		{zip.Deflate, "3g2"},
+		{zip.Deflate, "3gp"},
+		{zip.Deflate, "3gpp"},
+		{zip.Deflate, "3gpp2"},
+		{zip.Deflate, "aac"},
+		{zip.Deflate, "amr"},
+		{zip.Deflate, "awb"},
+		{zip.Deflate, "gif"},
+		{zip.Deflate, "imy"},
+		{zip.Deflate, "jet"},
+		{zip.Deflate, "jpeg"},
+		{zip.Deflate, "jpg"},
+		{zip.Deflate, "m4a"},
+		{zip.Deflate, "m4v"},
+		{zip.Deflate, "mid"},
+		{zip.Deflate, "midi"},
+		{zip.Deflate, "mkv"},
+		{zip.Deflate, "mp2"},
+		{zip.Deflate, "mp3"},
+		{zip.Deflate, "mp4"},
+		{zip.Deflate, "mpeg"},
+		{zip.Deflate, "mpg"},
+		{zip.Deflate, "ogg"},
+		{zip.Deflate, "png"},
+		{zip.Deflate, "rtttl"},
+		{zip.Deflate, "smf"},
+		{zip.Deflate, "wav"},
+		{zip.Deflate, "webm"},
+		{zip.Deflate, "wma"},
+		{zip.Deflate, "wmv"},
+		{zip.Deflate, "xmf"},
+
+		{zip.Store, "bar.3G2"},
+		{zip.Store, "bar.3GP"},
+		{zip.Store, "bar.3GPP"},
+		{zip.Store, "bar.3GPP2"},
+		{zip.Store, "bar.AAC"},
+		{zip.Store, "bar.AMR"},
+		{zip.Store, "bar.AWB"},
+		{zip.Store, "bar.GIF"},
+		{zip.Store, "bar.IMY"},
+		{zip.Store, "bar.JET"},
+		{zip.Store, "bar.JPEG"},
+		{zip.Store, "bar.JPG"},
+		{zip.Store, "bar.M4A"},
+		{zip.Store, "bar.M4V"},
+		{zip.Store, "bar.MID"},
+		{zip.Store, "bar.MIDI"},
+		{zip.Store, "bar.MKV"},
+		{zip.Store, "bar.MP2"},
+		{zip.Store, "bar.MP3"},
+		{zip.Store, "bar.MP4"},
+		{zip.Store, "bar.MPEG"},
+		{zip.Store, "bar.MPG"},
+		{zip.Store, "bar.OGG"},
+		{zip.Store, "bar.PNG"},
+		{zip.Store, "bar.RTTTL"},
+		{zip.Store, "bar.SMF"},
+		{zip.Store, "bar.WAV"},
+		{zip.Store, "bar.WEBM"},
+		{zip.Store, "bar.WMA"},
+		{zip.Store, "bar.WMV"},
+		{zip.Store, "bar.XMF"},
+
+		{zip.Store, "bar.3g2"}, // can't be mixed case if only one alpha char
+		{zip.Deflate, "bar.3gP"},
+		{zip.Deflate, "bar.3gPP"},
+		{zip.Deflate, "bar.3gPP2"},
+		{zip.Deflate, "bar.AaC"},
+		{zip.Deflate, "bar.AmR"},
+		{zip.Deflate, "bar.AwB"},
+		{zip.Deflate, "bar.GiF"},
+		{zip.Deflate, "bar.ImY"},
+		{zip.Deflate, "bar.JeT"},
+		{zip.Deflate, "bar.JpEG"},
+		{zip.Deflate, "bar.JpG"},
+		{zip.Deflate, "bar.m4A"},
+		{zip.Deflate, "bar.m4V"},
+		{zip.Deflate, "bar.MiD"},
+		{zip.Deflate, "bar.MiDI"},
+		{zip.Deflate, "bar.MkV"},
+		{zip.Deflate, "bar.Mp2"},
+		{zip.Deflate, "bar.Mp3"},
+		{zip.Deflate, "bar.Mp4"},
+		{zip.Deflate, "bar.MpEG"},
+		{zip.Deflate, "bar.MpG"},
+		{zip.Deflate, "bar.OgG"},
+		{zip.Deflate, "bar.PnG"},
+		{zip.Deflate, "bar.RtTTL"},
+		{zip.Deflate, "bar.SmF"},
+		{zip.Deflate, "bar.WaV"},
+		{zip.Deflate, "bar.WeBM"},
+		{zip.Deflate, "bar.WmA"},
+		{zip.Deflate, "bar.WmV"},
+		{zip.Deflate, "bar.XmF"},
+
+		{zip.Deflate, "SIGNATURE.RSA"},
+		{zip.Deflate, "signature.rsa"},
+		{zip.Deflate, "SiGnAtUre.RSA"},
+		{zip.Deflate, "SIGNATURE.DSA"},
+		{zip.Deflate, "signature.dsa"},
+		{zip.Deflate, "SiGnAtUre.DSA"},
+		{zip.Deflate, "MANIFEST.MF"},
+		{zip.Deflate, "manifest.mf"},
+		{zip.Deflate, "signature.sf"},
+		{zip.Deflate, "signature.SF"},
+		{zip.Deflate, "SIG-foo"},
+		{zip.Deflate, "sig-bar"},
+		{zip.Deflate, "foo.bar"},
+		{zip.Deflate, "foo.rsa.bar"},
+		{zip.Deflate, "foo.RSA.bar"},
+		{zip.Deflate, ".mf.foo"},
+	}
+	for i, testcase := range testcases {
+		testcase := testcase
+		t.Run(testcase.filename, func (t *testing.T) {
+			t.Parallel()
+
+			if getCompressionMethod(testcase.filename) != testcase.expect {
+				t.Fatalf("getCompressionMethod testcase %d failed. %q returned %v, expected %v",
+					i, testcase.filename, getCompressionMethod(testcase.filename), testcase.expect)
+			}
+		})
 	}
 }
 

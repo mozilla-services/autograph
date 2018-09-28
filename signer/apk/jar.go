@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"path"
 	"strings"
 	"unicode/utf8"
 	"github.com/pkg/errors"
@@ -169,7 +170,7 @@ func repackAndAlignJAR(input, manifest, sigfile, signature []byte) (output []byt
 
 		fwhead := &zip.FileHeader{
 			Name:   f.Name,
-			Method: zip.Deflate,
+			Method: getCompressionMethod(f.Name),
 		}
 		// add the padding (padlen number of null bytes) to the extra field of the file header
 		// in order to align files on 4 bytes
@@ -247,4 +248,34 @@ func isSignatureFile(name string) bool {
 		}
 	}
 	return false
+}
+
+// getCompressionMethod returns the compression method (zip.Deflate or
+// zip.Store) to use for a given filename. Defaults to zip.Default.
+//
+// This matches the behavior of Android Studio using Gradle 3.1.4,
+// which does not compress a number of media formats and the app
+// resource table (at: /resources.arsc).
+//
+// https://developer.android.com/studio/build/building-cmdline
+func getCompressionMethod(name string) uint16 {
+	ext := path.Ext(name)
+	extIsAllUpperOrLowerCase := ext == strings.ToLower(ext) || ext == strings.ToUpper(ext)
+
+	if !extIsAllUpperOrLowerCase {
+		return zip.Deflate
+	}
+
+	switch strings.ToLower(ext) {
+	case ".3g2", ".3gp", ".3gpp", ".3gpp2", ".aac", ".amr", ".awb", ".gif", ".imy", ".jet", ".jpeg", ".jpg", ".m4a", ".m4v", ".mid", ".midi", ".mkv", ".mp2", ".mp3", ".mp4", ".mpeg", ".mpg", ".ogg", ".png", ".rtttl", ".smf", ".wav", ".webm", ".wma", ".wmv", ".xmf":
+		return zip.Store
+	case ".arsc":
+		if name == "resources.arsc" {
+			return zip.Store
+		} else {
+			return zip.Deflate
+		}
+	default:
+		return zip.Deflate
+	}
 }
