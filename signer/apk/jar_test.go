@@ -154,6 +154,11 @@ func TestRepackAndAlign(t *testing.T) {
 	if !hasSignature {
 		t.Fatal("signature not found in zip archive")
 	}
+
+	alignErr := isJARAligned(repackedZip)
+	if alignErr != nil {
+		t.Fatalf("repacked JAR is not aligned: %s", alignErr)
+	}
 }
 
 func TestIsSignatureFile(t *testing.T) {
@@ -185,6 +190,43 @@ func TestIsSignatureFile(t *testing.T) {
 			t.Fatalf("isSignatureFile testcase %d failed. %q returned %t, expected %t",
 				i, testcase.filename, isSignatureFile(testcase.filename), testcase.expect)
 		}
+	}
+}
+
+func TestIsJARAligned(t *testing.T) {
+	var testcases = []struct {
+		expected interface{}
+		filename string
+	}{
+		{
+			"apk: unaligned file at 2499 resources.arsc (BAD - 3)",
+			"one-unaligned-file.apk",
+		},
+	}
+	for i, testcase := range testcases {
+		testcase := testcase
+		t.Run(testcase.filename, func (t *testing.T) {
+			t.Parallel()
+
+			filebytes, err := ioutil.ReadFile(testcase.filename)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = isJARAligned(filebytes)
+			switch testcase.expected.(type) {
+			case string:
+				if err.Error() != testcase.expected {
+					t.Fatalf("isJARAligned testcase %d failed. for %q returned %#v, expected %#v",
+						i, testcase.filename, err.Error(), testcase.expected)
+				}
+			case nil:
+				if err != testcase.expected {
+					t.Fatalf("isJARAligned testcase %d failed. for %q returned %#v, expected %#v",
+						i, testcase.filename, err, testcase.expected)
+				}
+			}
+		})
 	}
 }
 

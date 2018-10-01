@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -247,4 +248,42 @@ func isSignatureFile(name string) bool {
 		}
 	}
 	return false
+}
+
+// isJARAligned checks if an APK is aligned to 4 bytes / 32-bits (to
+// which "allows those portions to be accessed directly with mmap()
+// even if they contain binary data with alignment restrictions.")
+// returns an err when an uncompressed file isn't aligned or another
+// error occurs (error reading ZIP bytes or fetching a file data
+// offset) should be equivalent to zipalign -c -v 4 from:
+// https://android.googlesource.com/platform/build.git/+/android-4.2.2_r1/tools/zipalign/README.txt
+//
+// Since this function logs, but not in MozLog format it should not be
+// called from server code.
+func isJARAligned(input []byte) error {
+	const alignment = 4
+	r, err := zip.NewReader(bytes.NewReader(input), int64(len(input)))
+	if err != nil {
+		return err
+	}
+
+	for _, f := range r.File {
+		offset, err := f.DataOffset()
+		if err != nil {
+			return err
+		}
+		isCompressed := f.Method != zip.Store
+
+		if isCompressed {
+			log.Printf("%10d %s (OK - compressed)\n", offset, f.Name)
+			continue
+		}
+		if offset % alignment == 0 {
+			log.Printf("%10d %s (OK)\n", offset, f.Name)
+		} else {
+			log.Printf("%10d %s (BAD - %d)\n", offset, f.Name, offset % alignment)
+			return errors.Errorf("apk: unaligned file at %d %s (BAD - %d)", offset, f.Name, offset % alignment)
+		}
+	}
+	return nil
 }
