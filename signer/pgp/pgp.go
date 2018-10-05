@@ -78,7 +78,7 @@ func (s *PGPSigner) Config() signer.Configuration {
 	}
 }
 
-// SignData takes a PGP file and returns an armored signature with header and footer
+// SignData takes data and returns an armored signature with pgp header and footer
 func (s *PGPSigner) SignData(data []byte, options interface{}) (signer.Signature, error) {
 	out := bytes.NewBuffer(nil)
 	message := bytes.NewBuffer(data)
