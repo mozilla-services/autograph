@@ -71,7 +71,7 @@ func TestSignAndVerifyWithGnuPG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	//defer os.Remove(tmpSignatureFile.Name())
+	defer os.Remove(tmpSignatureFile.Name())
 	ioutil.WriteFile(tmpSignatureFile.Name(), []byte(pgpSig), 0755)
 
 	// write the input to a temp file
@@ -79,7 +79,7 @@ func TestSignAndVerifyWithGnuPG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	//defer os.Remove(tmpContentFile.Name())
+	defer os.Remove(tmpContentFile.Name())
 	ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
 
 	// write the public key to a temp file
@@ -87,7 +87,7 @@ func TestSignAndVerifyWithGnuPG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	//defer os.Remove(tmpIssuerCertFile.Name())
+	defer os.Remove(tmpPubKeyFile.Name())
 	fd, err := os.OpenFile(tmpPubKeyFile.Name(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		t.Fatal(err)
@@ -115,7 +115,7 @@ func TestSignAndVerifyWithGnuPG(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to load public key into keyring: %s\n%s", err, out)
 	}
-	//t.Logf("GnuPG PGP signature verification output:\n%s\n", out)
+	t.Logf("GnuPG PGP signature verification output:\n%s\n", out)
 }
 
 var pgpsignerconf = signer.Configuration{
