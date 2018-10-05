@@ -18,6 +18,7 @@ import (
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/mar"
+	"go.mozilla.org/autograph/signer/pgp"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 	"go.mozilla.org/sops"
@@ -126,6 +127,11 @@ func Handler() (err error) {
 		case mar.Type:
 			log.Printf("Verifying MAR signature from signer %q", response.SignerID)
 			err = verifyMARSignature(response.Signature, response.PublicKey)
+		case pgp.Type:
+			// we don't verify pgp signatures because that requires building a keyring
+			// using the public key which is hard to do using the current openpgp package
+			log.Printf("Skipping verification of PGP signature from signer %q", response.SignerID)
+			continue
 		default:
 			err = fmt.Errorf("unknown signature type %q", response.Type)
 		}
