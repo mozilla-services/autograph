@@ -135,7 +135,7 @@ func TestRepackAndAlign(t *testing.T) {
 			}
 			hasSignature = true
 		default:
-			t.Fatalf("found unknow file in zip archive: %s", f.Name)
+			t.Fatalf("found unknown file in zip archive: %s", f.Name)
 		}
 	}
 	if !hasData {
