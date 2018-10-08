@@ -15,6 +15,8 @@ import (
 )
 
 func TestSignFile(t *testing.T) {
+	t.Parallel()
+
 	// initialize a signer
 	s, err := New(apksignerconf)
 	if err != nil {
@@ -91,6 +93,8 @@ func TestSignFile(t *testing.T) {
 }
 
 func TestSignData(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// initialize a signer
 	s, err := New(apksignerconf)
@@ -140,6 +144,8 @@ func TestSignData(t *testing.T) {
 }
 
 func TestSignAndVerifyWithOpenSSL(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 
 	// init a signer
@@ -195,6 +201,8 @@ func TestSignAndVerifyWithOpenSSL(t *testing.T) {
 }
 
 func TestMarshalUnfinishedSignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(apksignerconf)
@@ -213,6 +221,8 @@ func TestMarshalUnfinishedSignature(t *testing.T) {
 }
 
 func TestMarshalEmptySignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(apksignerconf)
@@ -231,6 +241,8 @@ func TestMarshalEmptySignature(t *testing.T) {
 }
 
 func TestUnmarshalBadSignatureBase64(t *testing.T) {
+	t.Parallel()
+
 	_, err := Unmarshal(`{{{{{`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
@@ -240,6 +252,8 @@ func TestUnmarshalBadSignatureBase64(t *testing.T) {
 }
 
 func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
+	t.Parallel()
+
 	_, err := Unmarshal(`Y2FyaWJvdW1hdXJpY2UK`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
@@ -249,6 +263,8 @@ func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
 }
 
 func TestVerifyUnfinishedSignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(apksignerconf)
