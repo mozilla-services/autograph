@@ -36,7 +36,7 @@ PKCS12, then extract the private key from the PKCS12 file, as follows:
 
     # export the private key from the pkcs12 file into PEM
     openssl pkcs12 -in testkeystore.p12  -nodes -nocerts -out key.pem
-    
+
     # export the public certificate from the keystore into PEM
     keytool -exportcert -keystore testkeystore.jks -alias testapp|openssl x509 -inform der -text
 
@@ -61,8 +61,12 @@ You can then place the certificate and private key in `autograph.yaml`:
 Signature request
 -----------------
 
-This signer supports both `/sign/data/` and `/sign/file` endpoints. Both use
-the same request format:
+This signer supports both `/sign/data/` and `/sign/file` endpoints.
+
+The `/sign/data` endpoint only does the signing step. It takes a
+jarsigner signature file as input and returns a PKCS7 detached
+signature. The caller is then responsible for repacking the APK. It
+uses the request format:
 
 .. code:: json
 
@@ -73,12 +77,28 @@ the same request format:
 		}
 	]
 
-The `/sign/file` endpoint takes a whole APK encoded in base64. It will unzip the
-apk, generate the manifests, sign and align the output zip.
 
-The `/sign/data` endpoint only does the signing step. It takes a jarsigner
-signature file as input and returns a PKCS7 detached signature. The caller is
-then responsible for repacking the APK.
+The `/sign/file` endpoint takes a whole APK encoded in base64. It will
+unzip the apk, generate the manifests, sign and align the output
+zip. It uses the same request format with an optional param `zip` that
+defaults to `"all"` for DEFLATE compressing all files in the APK. It
+can also be `"passthrough"` to preserve the compression of the input
+APK (e.g. for `mmap`ed media files) in which case the caller is
+responsible for zip-aligning APK after submitting it:
+
+.. code:: json
+
+	[
+		{
+			"input": "Y2FyaWJvdW1hdXJpY2UK",
+			"keyid": "some-android-app",
+			"options": {
+				"zip": "all"
+			}
+		}
+	]
+
+
 
 Signature response
 ------------------
@@ -101,8 +121,6 @@ base64 and write it to a file called `META-INF/SIGNATURE.RSA` in the APK.
 	  }
 	]
 
-File Signing
-~~~~~~~~~~~~
 
 The response to a file signing request contains the base64 of the signed and
 aligned APK in the `signed_file` field of the json response. You should base64
