@@ -79,6 +79,8 @@ func TestFormatFilenameExact(t *testing.T) {
 
 
 func TestMakingJarManifest(t *testing.T) {
+	t.Parallel()
+
 	manifest, sigfile, err := makeJARManifests(smallZip)
 	if err != nil {
 		t.Fatal(err)
@@ -92,6 +94,8 @@ func TestMakingJarManifest(t *testing.T) {
 }
 
 func TestRepackAndAlign(t *testing.T) {
+	t.Parallel()
+
 	repackedZip, err := repackAndAlignJAR(smallZip, smallZipManifest, smallZipSignatureFile, smallZipSignature)
 	if err != nil {
 		t.Fatal(err)
@@ -153,6 +157,8 @@ func TestRepackAndAlign(t *testing.T) {
 }
 
 func TestIsSignatureFile(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		expect   bool
 		filename string
