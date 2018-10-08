@@ -1,3 +1,5 @@
+PARSE_FILE := cmd/margo_verify_firefox/parse.go
+
 all: lint vet test getsamplemar testparser testsigner
 
 lint:
@@ -21,11 +23,11 @@ getsamplemar:
 	fi
 
 testparser:
-	go run -ldflags "-X go.mozilla.org/mar.debug=true" examples/parse.go firefox-60.0esr-60.0.1esr.partial.mar 2>&1 | grep 'signature: OK, valid signature from release1_sha384'
+	go run -ldflags "-X go.mozilla.org/mar.debug=true" ${PARSE_FILE} firefox-60.0esr-60.0.1esr.partial.mar 2>&1 | grep 'signature: OK, valid signature from release1_sha384'
 
 testsigner:
 	go run -ldflags "-X go.mozilla.org/mar.debug=true" examples/sign.go firefox-60.0esr-60.0.1esr.partial.mar /tmp/resigned.mar
-	go run examples/parse.go /tmp/resigned.mar
+	go run ${PARSE_FILE} /tmp/resigned.mar
 
 getmarcorpus:
 	@if [ ! -e /tmp/marworkdir ]; then mkdir /tmp/marworkdir; fi
@@ -39,7 +41,7 @@ getmarcorpus:
 	@if [ ! -e /tmp/marworkdir/firefox-60.0esr-60.0.1esr.partial.mar ]; then wget -P /tmp/marworkdir http://download.cdn.mozilla.net/pub/firefox/releases/60.0.1esr/update/win64/en-US/firefox-60.0esr-60.0.1esr.partial.mar; fi
 
 testmarcorpus:
-	for f in $$(ls /tmp/marworkdir/firefox*.mar); do go run examples/parse.go "$$f"; done
+	for f in $$(ls /tmp/marworkdir/firefox*.mar); do go run ${PARSE_FILE} "$$f"; done
 
 fuzz: getmarcorpus
 	go get -u github.com/dvyukov/go-fuzz/...
@@ -47,4 +49,3 @@ fuzz: getmarcorpus
 	go-fuzz -bin=mar-fuzz.zip -workdir=/tmp/marworkdir
 
 .PHONY: all lint vet test getkeys getsamplemar testparser
-

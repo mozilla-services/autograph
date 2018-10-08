@@ -175,10 +175,12 @@ func (u *unmarshalInfo) unmarshal(m pointer, b []byte) error {
 				reqMask |= f.reqMask
 				continue
 			}
-			if r, ok := err.(*RequiredNotSetError); ok && errLater == nil {
+			if r, ok := err.(*RequiredNotSetError); ok {
 				// Remember this error, but keep parsing. We need to produce
 				// a full parse even if a required field is missing.
-				errLater = r
+				if errLater == nil {
+					errLater = r
+				}
 				reqMask |= f.reqMask
 				continue
 			}
@@ -1946,7 +1948,7 @@ func encodeVarint(b []byte, x uint64) []byte {
 // If there is an error, it returns 0,0.
 func decodeVarint(b []byte) (uint64, int) {
 	var x, y uint64
-	if len(b) <= 0 {
+	if len(b) == 0 {
 		goto bad
 	}
 	x = uint64(b[0])

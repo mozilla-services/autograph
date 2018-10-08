@@ -231,7 +231,7 @@ func (sd *SignedData) Finish() ([]byte, error) {
 // RemoveAuthenticatedAttributes removes authenticated attributes from signedData
 // similar to OpenSSL's PKCS7_NOATTR or -noattr flags
 func (sd *SignedData) RemoveAuthenticatedAttributes() error {
-	for i, _ := range sd.sd.SignerInfos {
+	for i := range sd.sd.SignerInfos {
 		blankAttrs := &attributes{}
 		finalBlankAttrs, err := blankAttrs.ForMarshalling()
 		if err != nil {

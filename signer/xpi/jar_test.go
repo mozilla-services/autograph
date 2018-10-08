@@ -228,29 +228,25 @@ var unsignedBootstrap = []byte("\x50\x4B\x03\x04\x14\x00\x02\x00\x08\x00\x62\x69
 var unsignedBootstrapManifest = []byte(`Manifest-Version: 1.0
 
 Name: bootstrap.js
-Digest-Algorithms: MD5 SHA1 SHA256
-MD5-Digest: X4SEiQxO/fb3xSwAxbPIqw==
+Digest-Algorithms: SHA1 SHA256
 SHA1-Digest: RBQlzx98wYTuqEZZQKdav2H9Gag=
 SHA256-Digest: m186SAMS1n5Q8hOWNE6+vGOXxfxH45sAzDlji1E3qaI=
 
 Name: install.rdf
-Digest-Algorithms: MD5 SHA1 SHA256
-MD5-Digest: VbDrXLNnz3Lrnbk9Vy7/kQ==
+Digest-Algorithms: SHA1 SHA256
 SHA1-Digest: WRohqAlB/BhgUjM2RDI+pTV6ihQ=
 SHA256-Digest: LHIIuDZ3MKJG7tRhByz81k3UThgCjakBe0JxGZhxF9w=
 
 Name: test.txt
-Digest-Algorithms: MD5 SHA1 SHA256
-MD5-Digest: tT4aaxDCqRgFrpVHhe//Wg==
+Digest-Algorithms: SHA1 SHA256
 SHA1-Digest: 8mPWZnQPS9arW9Tu/vmC+JHgnYA=
 SHA256-Digest: 8usFS0xIHQV5njGLlVZofDfPreYQP4+qWMMvYF5fvNw=
 
 `)
 
 var unsignedBootstrapSignatureFile = []byte(`Signature-Version: 1.0
-MD5-Digest-Manifest: JlV8uIxNHuMBFeAhiJ/WUw==
-SHA1-Digest-Manifest: 8uVi/q2jMt4M3wfhpT22pG+bNLA=
-SHA256-Digest-Manifest: 5uUrN1jNcf9D0rMUxMXBSi3bCSSJjumWEFQZI+C4siw=
+SHA1-Digest-Manifest: hWJRXCpbMGcu7pD6jEH4YibF5KQ=
+SHA256-Digest-Manifest: DEeZKUfwfIdRBxyA9IkCXkUaYaTn6mWnljQtELTy4cg=
 
 `)
 
