@@ -182,7 +182,7 @@ func TestIsSignatureFile(t *testing.T) {
 	}
 	for i, testcase := range testcases {
 		if isSignatureFile(testcase.filename) != testcase.expect {
-			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
+			t.Fatalf("isSignatureFile testcase %d failed. %q returned %t, expected %t",
 				i, testcase.filename, isSignatureFile(testcase.filename), testcase.expect)
 		}
 	}
