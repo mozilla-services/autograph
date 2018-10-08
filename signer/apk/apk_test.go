@@ -5,14 +5,40 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+	"github.com/pkg/errors"
 
 	"go.mozilla.org/autograph/signer"
 )
+
+func TestValidateZIPOption(t *testing.T) {
+	var testcases = []struct {
+		input    string
+		result   error
+	}{
+		{ZIPMethodCompressAll, nil},
+		{ZIPMethodCompressPassthrough, nil},
+		{"", errors.New("Invalid APK ZIP option")},
+	}
+	for i, testcase := range testcases {
+		testcase := testcase // capture range variable
+		t.Run(fmt.Sprintf("GetOptions (%d) input: %#v", i, testcase.input), func (t *testing.T) {
+			t.Parallel()
+
+			err := validateZIPOption(testcase.input)
+			if testcase.result == nil && err != nil {
+				t.Fatalf("ValidateZIPOption returned unexpected error %s", err)
+			} else if testcase.result != nil && err.Error() != testcase.result.Error() {
+				t.Fatalf("Expected GetOptions to err with msg %s but got %s", testcase.result.Error(), err.Error())
+			}
+		})
+	}
+}
 
 func TestSignFile(t *testing.T) {
 	t.Parallel()
