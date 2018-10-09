@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"time"
 
@@ -16,6 +17,13 @@ import (
 const (
 	// Type of this signer is "apk"
 	Type = "apk"
+
+	// ZIPMethodCompressAll represents the default option to
+	// compress all files in repacked JARs
+	ZIPMethodCompressAll = "all"
+	// ZIPMethodCompressPassthrough represents the option to pass
+	// through all files with their current compression in JARs
+	ZIPMethodCompressPassthrough = "passthrough"
 )
 
 // An APKSigner is configured to issue PKCS7 detached signatures
@@ -80,6 +88,18 @@ func (s *APKSigner) Config() signer.Configuration {
 //
 // This implements apksigning v1, aka jarsigner. apksigning v2 is not supported.
 func (s *APKSigner) SignFile(input []byte, options interface{}) (signer.SignedFile, error) {
+	opt, err := GetOptions(options)
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: cannot get options")
+	}
+	if opt.ZIP == "" {
+		opt.ZIP = ZIPMethodCompressAll
+	}
+	err = validateZIPOption(opt.ZIP)
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: got invalid ZIP option")
+	}
+
 	var (
 		signedFile []byte
 	)
@@ -91,9 +111,16 @@ func (s *APKSigner) SignFile(input []byte, options interface{}) (signer.SignedFi
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: failed to sign APK")
 	}
-	signedFile, err = repackAndAlignJAR(input, manifest, sigfile, p7sig)
-	if err != nil {
-		return nil, errors.Wrap(err, "apk: failed to repack and align APK")
+	if opt.ZIP == ZIPMethodCompressPassthrough {
+		signedFile, err = appendSignatureFilesToJAR(input, manifest, sigfile, p7sig)
+		if err != nil {
+			return nil, errors.Wrap(err, "apk: failed to append signatures files to APK")
+		}
+	} else { // opt.ZIP == ZIPMethodCompressAll
+		signedFile, err = repackAndAlignJAR(input, manifest, sigfile, p7sig)
+		if err != nil {
+			return nil, errors.Wrap(err, "apk: failed to repack and align APK")
+		}
 	}
 
 	return signedFile, nil
@@ -182,9 +209,34 @@ func (sig *Signature) String() string {
 }
 
 // Options is empty for this signer type
-type Options struct{}
+type Options struct{
+	ZIP string `json:"zip"`
+}
+
+// GetOptions takes a input interface and reflects it into a struct of options
+func GetOptions(input interface{}) (options Options, err error) {
+	buf, err := json.Marshal(input)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(buf, &options)
+	return
+}
 
 // GetDefaultOptions returns default options of the signer
 func (s *APKSigner) GetDefaultOptions() interface{} {
-	return Options{}
+	return Options{
+		ZIP: ZIPMethodCompressAll,
+	}
+}
+
+func validateZIPOption(zipOpt string) error {
+	switch zipOpt {
+	case ZIPMethodCompressAll:
+		return nil
+	case ZIPMethodCompressPassthrough:
+		return nil
+	default:
+		return errors.Errorf("Invalid APK ZIP option")
+	}
 }

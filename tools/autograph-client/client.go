@@ -76,12 +76,12 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, keyid, cn, pk7digest, rootPath string
-		iter, maxworkers, sa                                                           int
-		debug                                                                          bool
-		err                                                                            error
-		requests                                                                       []signaturerequest
-		algs                                                                           coseAlgs
+		userid, pass, data, hash, url, infile, outfile, keyid, cn, pk7digest, rootPath, zipMethodOption string
+		iter, maxworkers, sa                                                                            int
+		debug                                                                                           bool
+		err                                                                                             error
+		requests                                                                                        []signaturerequest
+		algs                                                                                            coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -95,6 +95,17 @@ examples:
 	Verified using v1 scheme (JAR signing): true
 	Verified using v2 scheme (APK Signature Scheme v2): false
 	Number of signers: 1
+
+* sign an APK, returns a signed APK without compressing files in the ZIP that weren't already compressed
+	$ go run client.go -f signed.apk -o test.apk -k testapp-android -zip passthrough
+	$ /opt/android-sdk/build-tools/27.0.3/apksigner verify -v test.apk
+	Verifies
+	Verified using v1 scheme (JAR signing): true
+	Verified using v2 scheme (APK Signature Scheme v2): false
+	Number of signers: 1
+        4
+        $ zipinfo ~/signed.apk | grep stor | wc -l
+        326
 
 * issue a content signature on a hash, returns a CS header string:
 	$ echo -en "Content-Signature:\0\0foo bar baz" | openssl dgst -sha256 -binary | openssl enc -base64
@@ -131,6 +142,7 @@ examples:
 	flag.IntVar(&sa, "sa", 0, "when signing MAR hashes, sets the Signature Algorithm")
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
 	flag.StringVar(&pk7digest, "pk7digest", "sha1", "an optional PK7 digest algorithm to use for XPI file signing. Defaults to 'sha1'")
+	flag.StringVar(&zipMethodOption, "zip", "", "an optional param for APK file signing. Defaults to '' to compress all files (the other options are 'all' which does the same thing and 'passthrough' which doesn't change file compression")
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
 
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
@@ -170,6 +182,14 @@ examples:
 			SigAlg: uint32(sa),
 		}
 	}
+
+	// if signing an APK file, set option for set files to compress
+	if zipMethodOption != "" {
+		request.Options = apk.Options{
+			ZIP: zipMethodOption,
+		}
+	}
+
 	requests = append(requests, request)
 	reqBody, err := json.Marshal(requests)
 	if err != nil {

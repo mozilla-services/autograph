@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -125,8 +126,97 @@ Created-By: go.mozilla.org/autograph
 	return
 }
 
-// repackAndAlignJAR inserts the manifest, signature file and pkcs7 signature in the input JAR file,
-// and return a JAR ZIP archive aligned on 4 bytes words
+// appendSignatureFilesToJAR
+//
+// insert the signature files. Those will be compressed
+// so we don't have to worry about their alignment
+func appendSignatureFilesToJAR(input, manifest, sigfile, signature []byte) (output []byte, err error) {
+	var (
+		rc        io.ReadCloser
+		fwhead    *zip.FileHeader
+		fw        io.Writer
+		data      []byte
+		w         *zip.Writer
+	)
+	inputReader := bytes.NewReader(input)
+	r, err := zip.NewReader(inputReader, int64(len(input)))
+	if err != nil {
+		return
+	}
+	// Create a buffer to write our archive to.
+	buf := new(bytes.Buffer)
+
+	// Create a new zip archive.
+	w = zip.NewWriter(buf)
+
+	// Iterate through the files in the archive,
+	for _, f := range r.File {
+		// skip signature files, we have new ones we'll add at the end
+		if isSignatureFile(f.Name) {
+			continue
+		}
+		rc, err = f.Open()
+		if err != nil {
+			return
+		}
+		fwhead := &zip.FileHeader{
+			Name:   f.Name,
+			Method: f.Method,
+		}
+
+		// insert the file into the archive
+		fw, err = w.CreateHeader(fwhead)
+		if err != nil {
+			return
+		}
+		data, err = ioutil.ReadAll(rc)
+		if err != nil {
+			return
+		}
+		_, err = fw.Write(data)
+		if err != nil {
+			return
+		}
+		rc.Close()
+	}
+
+	// insert the signature files. Those will be compressed
+	// so we don't have to worry about their alignment
+	var metas = []struct {
+		Name string
+		Body []byte
+	}{
+		{"META-INF/MANIFEST.MF", manifest},
+		{"META-INF/SIGNATURE.SF", sigfile},
+		{"META-INF/SIGNATURE.RSA", signature},
+	}
+	for _, meta := range metas {
+		fwhead = &zip.FileHeader{
+			Name:   meta.Name,
+			Method: zip.Deflate,
+		}
+		fw, err = w.CreateHeader(fwhead)
+		if err != nil {
+			return
+		}
+		_, err = fw.Write(meta.Body)
+		if err != nil {
+			return
+		}
+	}
+	// Make sure to check the error on Close.
+	err = w.Close()
+	if err != nil {
+		return
+	}
+
+	output = buf.Bytes()
+	return
+}
+
+// repackAndAlignJAR inserts the manifest, signature file, and pkcs7
+// signature in the input JAR file.  It returns a JAR ZIP archive
+// aligned on 4 bytes words
 func repackAndAlignJAR(input, manifest, sigfile, signature []byte) (output []byte, err error) {
 	var (
 		alignment = 4
@@ -247,4 +337,42 @@ func isSignatureFile(name string) bool {
 		}
 	}
 	return false
+}
+
+// isJARAligned checks if an APK is aligned to 4 bytes / 32-bits (to
+// which "allows those portions to be accessed directly with mmap()
+// even if they contain binary data with alignment restrictions.")
+// returns an err when an uncompressed file isn't aligned or another
+// error occurs (error reading ZIP bytes or fetching a file data
+// offset) should be equivalent to zipalign -c -v 4 from:
+// https://android.googlesource.com/platform/build.git/+/android-4.2.2_r1/tools/zipalign/README.txt
+//
+// Since this function logs, but not in MozLog format it should not be
+// called from server code.
+func isJARAligned(input []byte) error {
+	const alignment = 4
+	r, err := zip.NewReader(bytes.NewReader(input), int64(len(input)))
+	if err != nil {
+		return err
+	}
+
+	for _, f := range r.File {
+		offset, err := f.DataOffset()
+		if err != nil {
+			return err
+		}
+		isCompressed := f.Method != zip.Store
+
+		if isCompressed {
+			log.Printf("%10d %s (OK - compressed)\n", offset, f.Name)
+			continue
+		}
+		if offset % alignment == 0 {
+			log.Printf("%10d %s (OK)\n", offset, f.Name)
+		} else {
+			log.Printf("%10d %s (BAD - %d)\n", offset, f.Name, offset % alignment)
+			return errors.Errorf("apk: unaligned file at %d %s (BAD - %d)", offset, f.Name, offset % alignment)
+		}
+	}
+	return nil
 }
