@@ -5,16 +5,44 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+	"github.com/pkg/errors"
 
 	"go.mozilla.org/autograph/signer"
 )
 
+func TestValidateZIPOption(t *testing.T) {
+	var testcases = []struct {
+		input    string
+		result   error
+	}{
+		{ZIPMethodCompressAll, nil},
+		{ZIPMethodCompressPassthrough, nil},
+		{"", errors.New("Invalid APK ZIP option")},
+	}
+	for i, testcase := range testcases {
+		testcase := testcase // capture range variable
+		t.Run(fmt.Sprintf("GetOptions (%d) input: %#v", i, testcase.input), func (t *testing.T) {
+			t.Parallel()
+
+			err := validateZIPOption(testcase.input)
+			if testcase.result == nil && err != nil {
+				t.Fatalf("ValidateZIPOption returned unexpected error %s", err)
+			} else if testcase.result != nil && err.Error() != testcase.result.Error() {
+				t.Fatalf("Expected GetOptions to err with msg %s but got %s", testcase.result.Error(), err.Error())
+			}
+		})
+	}
+}
+
 func TestSignFile(t *testing.T) {
+	t.Parallel()
+
 	// initialize a signer
 	s, err := New(apksignerconf)
 	if err != nil {
@@ -91,6 +119,8 @@ func TestSignFile(t *testing.T) {
 }
 
 func TestSignData(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// initialize a signer
 	s, err := New(apksignerconf)
@@ -140,6 +170,8 @@ func TestSignData(t *testing.T) {
 }
 
 func TestSignAndVerifyWithOpenSSL(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 
 	// init a signer
@@ -195,6 +227,8 @@ func TestSignAndVerifyWithOpenSSL(t *testing.T) {
 }
 
 func TestMarshalUnfinishedSignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(apksignerconf)
@@ -213,6 +247,8 @@ func TestMarshalUnfinishedSignature(t *testing.T) {
 }
 
 func TestMarshalEmptySignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(apksignerconf)
@@ -231,6 +267,8 @@ func TestMarshalEmptySignature(t *testing.T) {
 }
 
 func TestUnmarshalBadSignatureBase64(t *testing.T) {
+	t.Parallel()
+
 	_, err := Unmarshal(`{{{{{`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
@@ -240,6 +278,8 @@ func TestUnmarshalBadSignatureBase64(t *testing.T) {
 }
 
 func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
+	t.Parallel()
+
 	_, err := Unmarshal(`Y2FyaWJvdW1hdXJpY2UK`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
@@ -249,6 +289,8 @@ func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
 }
 
 func TestVerifyUnfinishedSignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(apksignerconf)
