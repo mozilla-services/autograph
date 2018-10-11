@@ -21,6 +21,7 @@ import (
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/mar"
+	"go.mozilla.org/autograph/signer/pgp"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
@@ -68,20 +69,19 @@ func urlToRequestType(url string) requestType {
 		return requestTypeHash
 	} else if strings.HasSuffix(url, "/sign/file") {
 		return requestTypeFile
-	} else {
-		log.Fatalf("Unrecognized request type for url", url)
-		return requestTypeNone
 	}
+	log.Fatalf("Unrecognized request type for url %q", url)
+	return requestTypeNone
 }
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, keyid, cn, pk7digest, rootPath, zipMethodOption string
-		iter, maxworkers, sa                                                                            int
-		debug                                                                                           bool
-		err                                                                                             error
-		requests                                                                                        []signaturerequest
-		algs                                                                                            coseAlgs
+		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, zipMethodOption string
+		iter, maxworkers, sa                                                                       int
+		debug                                                                                      bool
+		err                                                                                        error
+		requests                                                                                   []signaturerequest
+		algs                                                                                       coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -134,6 +134,7 @@ examples:
 	flag.StringVar(&hash, "a", "base64(sha256(data))", "Base64 hash to sign, will use the /sign/hash endpoint")
 	flag.StringVar(&infile, "f", "/path/to/file", "Input file to sign, will use the /sign/file endpoint")
 	flag.StringVar(&outfile, "o", ``, "Output file. If set, writes the signature or file to this location")
+	flag.StringVar(&outkeyfile, "ko", ``, "Key Output file. If set, writes the public key to a file at this location")
 	flag.StringVar(&keyid, "k", ``, "Key ID to request a signature from a specific signer")
 	flag.StringVar(&url, "t", `http://localhost:8000`, "target server, do not specific a URI or trailing slash")
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
@@ -200,7 +201,7 @@ examples:
 	}
 	cli := &http.Client{Transport: tr}
 
-	var roots *x509.CertPool = nil
+	var roots *x509.CertPool
 	if rootPath != "/path/to/root.pem" {
 		roots = x509.NewCertPool()
 		rootContent, err := ioutil.ReadFile(rootPath)
@@ -295,7 +296,7 @@ examples:
 					case requestTypeFile:
 						sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
 					default:
-						err = fmt.Errorf("Cannot decode signature data for request type %s", reqType)
+						err = fmt.Errorf("Cannot decode signature data for request type %v", reqType)
 					}
 					if err != nil {
 						log.Fatal(err)
@@ -312,6 +313,9 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
+				case pgp.Type:
+					sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
+					sigData = []byte(response.Signature)
 				default:
 					log.Fatal("unsupported signature type", response.Type)
 				}
@@ -326,6 +330,13 @@ examples:
 						log.Fatal(err)
 					}
 					log.Println("response written to", outfile)
+				}
+				if outkeyfile != "" {
+					err = ioutil.WriteFile(outkeyfile, []byte(response.PublicKey), 0644)
+					if err != nil {
+						log.Fatal(err)
+					}
+					log.Println("public key written to", outkeyfile)
 				}
 			}
 			workers--
@@ -466,5 +477,10 @@ func verifyAPK(signedAPK []byte) bool {
 }
 
 func verifyMAR(signedMAR []byte) bool {
+	return true
+}
+
+func verifyPGP(input []byte, signature string, pubkey string) bool {
+
 	return true
 }
