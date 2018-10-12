@@ -63,6 +63,11 @@ Signature request
 
 This signer supports both `/sign/data/` and `/sign/file` endpoints.
 
+Both endpoints take an **optional** string representing a supported
+PKCS7 digest algorithm (`"SHA1"` or `"SHA256"`). Both endpoints
+support this option. It defaults to SHA256 for null and the empty `""`
+string.
+
 The `/sign/data` endpoint only does the signing step. It takes a
 jarsigner signature file as input and returns a PKCS7 detached
 signature. The caller is then responsible for repacking the APK. It
@@ -73,6 +78,9 @@ uses the request format:
 	[
 		{
 			"input": "Y2FyaWJvdW1hdXJpY2UK",
+			"options": {
+				"pkcs7_digest": "SHA1"
+			},
 			"keyid": "some-android-app"
 		}
 	]
@@ -94,6 +102,7 @@ responsible for zip-aligning APK after submitting it:
 			"keyid": "some-android-app",
 			"options": {
 				"zip": "all"
+				"pkcs7_digest": "SHA256"
 			}
 		}
 	]
