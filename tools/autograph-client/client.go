@@ -77,11 +77,11 @@ func urlToRequestType(url string) requestType {
 func main() {
 	var (
 		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, zipMethodOption string
-		iter, maxworkers, sa                                                                       int
-		debug                                                                                      bool
-		err                                                                                        error
-		requests                                                                                   []signaturerequest
-		algs                                                                                       coseAlgs
+		iter, maxworkers, sa                                                                                        int
+		debug                                                                                                       bool
+		err                                                                                                         error
+		requests                                                                                                    []signaturerequest
+		algs                                                                                                        coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -142,7 +142,7 @@ examples:
 	flag.StringVar(&cn, "cn", "", "when signing XPI, sets the CN to the add-on ID")
 	flag.IntVar(&sa, "sa", 0, "when signing MAR hashes, sets the Signature Algorithm")
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
-	flag.StringVar(&pk7digest, "pk7digest", "sha1", "an optional PK7 digest algorithm to use for XPI file signing. Defaults to 'sha1'")
+	flag.StringVar(&pk7digest, "pk7digest", "", "an optional PK7 digest algorithm to use for APK and XPI file signing.")
 	flag.StringVar(&zipMethodOption, "zip", "", "an optional param for APK file signing. Defaults to '' to compress all files (the other options are 'all' which does the same thing and 'passthrough' which doesn't change file compression")
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
 
@@ -171,23 +171,29 @@ examples:
 	}
 	// if signing an xpi, the CN, COSEAlgorithms, and PKCS7Digest are set in the options
 	if cn != "" {
+		if pk7digest == "" {
+			pk7digest = "SHA1"
+		}
 		request.Options = xpi.Options{
 			ID:             cn,
 			COSEAlgorithms: algs,
 			PKCS7Digest:    pk7digest,
 		}
 	}
+	// if signing an APK the CN should not be set but PKCS7Digest and ZIP can be set in the options
+	if cn == "" && (zipMethodOption != "" || pk7digest != "") {
+		if pk7digest == "" {
+			pk7digest = "SHA256"
+		}
+		request.Options = apk.Options{
+			PKCS7Digest: pk7digest,
+			ZIP:         zipMethodOption,
+		}
+	}
 	// if signing a MAR hash, the Signature Algorithm is set in the options
 	if sa > 0 {
 		request.Options = mar.Options{
 			SigAlg: uint32(sa),
-		}
-	}
-
-	// if signing an APK file, set option for set files to compress
-	if zipMethodOption != "" {
-		request.Options = apk.Options{
-			ZIP: zipMethodOption,
 		}
 	}
 
