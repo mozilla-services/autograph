@@ -40,29 +40,7 @@ func TestValidateZIPOption(t *testing.T) {
 	}
 }
 
-func TestSignFile(t *testing.T) {
-	t.Parallel()
-
-	// initialize a signer
-	s, err := New(apksignerconf)
-	if err != nil {
-		t.Fatalf("signer initialization failed with: %v", err)
-	}
-	if s.Config().Type != apksignerconf.Type {
-		t.Fatalf("signer type %q does not match configuration %q", s.Config().Type, apksignerconf.Type)
-	}
-	if s.Config().ID != apksignerconf.ID {
-		t.Fatalf("signer id %q does not match configuration %q", s.Config().ID, apksignerconf.ID)
-	}
-	if s.Config().PrivateKey != apksignerconf.PrivateKey {
-		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, apksignerconf.PrivateKey)
-	}
-
-	// sign input file
-	signedAPK, err := s.SignFile(testAPK, s.GetDefaultOptions())
-	if err != nil {
-		t.Fatalf("failed to sign file: %v", err)
-	}
+func validateSignedAPK(t *testing.T, signedAPK []byte) {
 	zipReader := bytes.NewReader(signedAPK)
 	r, err := zip.NewReader(zipReader, int64(len(signedAPK)))
 	if err != nil {
@@ -118,10 +96,9 @@ func TestSignFile(t *testing.T) {
 	}
 }
 
-func TestSignData(t *testing.T) {
+func TestSignFile(t *testing.T) {
 	t.Parallel()
 
-	input := []byte("foobarbaz1234abcd")
 	// initialize a signer
 	s, err := New(apksignerconf)
 	if err != nil {
@@ -137,11 +114,38 @@ func TestSignData(t *testing.T) {
 		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, apksignerconf.PrivateKey)
 	}
 
-	// sign input data
-	sig, err := s.SignData(input, s.GetDefaultOptions())
+	// sign input file w/ default digest (SHA256)
+	signedAPK, err := s.SignFile(testAPK, s.GetDefaultOptions())
 	if err != nil {
-		t.Fatalf("failed to sign data: %v", err)
+		t.Fatalf("failed to sign file: %v", err)
 	}
+	validateSignedAPK(t, signedAPK)
+
+	// sign w/ SHA1 digest
+	sha1Opts := &Options{
+		PKCS7Digest: "SHA1",
+		ZIP: ZIPMethodCompressAll,
+	}
+	signedAPK, err = s.SignFile(testAPK, sha1Opts)
+	if err != nil {
+		t.Fatalf("failed to sign file: %v", err)
+	}
+	validateSignedAPK(t, signedAPK)
+
+	// sign w/ explicit SHA256 digest
+	sha2Opts := &Options{
+		PKCS7Digest: "SHA256",
+		ZIP: ZIPMethodCompressAll,
+	}
+	signedAPK, err = s.SignFile(testAPK, sha2Opts)
+	if err != nil {
+		t.Fatalf("failed to sign file: %v", err)
+	}
+	validateSignedAPK(t, signedAPK)
+}
+
+
+func validateSignedData(t *testing.T, sig signer.Signature, input []byte) {
 	// convert signature to string format
 	sigstr, err := sig.Marshal()
 	if err != nil {
@@ -167,6 +171,41 @@ func TestSignData(t *testing.T) {
 	if sig2.Verify() != nil {
 		t.Fatalf("failed to verify apk signature: %v", sig2.Verify())
 	}
+}
+
+func TestSignData(t *testing.T) {
+	t.Parallel()
+
+	input := []byte("foobarbaz1234abcd")
+	// initialize a signer
+	s, err := New(apksignerconf)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	if s.Config().Type != apksignerconf.Type {
+		t.Fatalf("signer type %q does not match configuration %q", s.Config().Type, apksignerconf.Type)
+	}
+	if s.Config().ID != apksignerconf.ID {
+		t.Fatalf("signer id %q does not match configuration %q", s.Config().ID, apksignerconf.ID)
+	}
+	if s.Config().PrivateKey != apksignerconf.PrivateKey {
+		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, apksignerconf.PrivateKey)
+	}
+
+	// sign input data
+	sig, err := s.SignData(input, s.GetDefaultOptions())
+	if err != nil {
+		t.Fatalf("failed to sign data: %v", err)
+	}
+	validateSignedData(t, sig, input)
+
+	sig, err = s.SignData(input, &Options{
+		PKCS7Digest: "SHA1",
+	})
+	if err != nil {
+		t.Fatalf("failed to sign data: %v", err)
+	}
+	validateSignedData(t, sig, input)
 }
 
 func TestSignAndVerifyWithOpenSSL(t *testing.T) {
