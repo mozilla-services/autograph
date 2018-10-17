@@ -176,7 +176,9 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
 
 	server := &http.Server{
-		Addr: listen,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
+		Addr:         listen,
 		Handler: handleMiddlewares(
 			router,
 			setRequestID(),
