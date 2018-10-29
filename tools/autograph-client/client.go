@@ -77,11 +77,11 @@ func urlToRequestType(url string) requestType {
 func main() {
 	var (
 		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, zipMethodOption string
-		iter, maxworkers, sa                                                                       int
-		debug                                                                                      bool
-		err                                                                                        error
-		requests                                                                                   []signaturerequest
-		algs                                                                                       coseAlgs
+		iter, maxworkers, sa                                                                                        int
+		debug                                                                                                       bool
+		err                                                                                                         error
+		requests                                                                                                    []signaturerequest
+		algs                                                                                                        coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -142,7 +142,7 @@ examples:
 	flag.StringVar(&cn, "cn", "", "when signing XPI, sets the CN to the add-on ID")
 	flag.IntVar(&sa, "sa", 0, "when signing MAR hashes, sets the Signature Algorithm")
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
-	flag.StringVar(&pk7digest, "pk7digest", "sha1", "an optional PK7 digest algorithm to use for XPI file signing. Defaults to 'sha1'")
+	flag.StringVar(&pk7digest, "pk7digest", "", "an optional PK7 digest algorithm to use for XPI file signing, either 'sha1' (default) or 'sha256'.")
 	flag.StringVar(&zipMethodOption, "zip", "", "an optional param for APK file signing. Defaults to '' to compress all files (the other options are 'all' which does the same thing and 'passthrough' which doesn't change file compression")
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
 
@@ -171,6 +171,9 @@ examples:
 	}
 	// if signing an xpi, the CN, COSEAlgorithms, and PKCS7Digest are set in the options
 	if cn != "" {
+		if pk7digest == "" {
+			pk7digest = "sha1"
+		}
 		request.Options = xpi.Options{
 			ID:             cn,
 			COSEAlgorithms: algs,
@@ -188,6 +191,12 @@ examples:
 	if zipMethodOption != "" {
 		request.Options = apk.Options{
 			ZIP: zipMethodOption,
+		}
+	}
+	// if we have a pk7digest but no cn, assume we're signing an APK
+	if pk7digest != "" && cn == "" {
+		request.Options = apk.Options{
+			PKCS7Digest: pk7digest,
 		}
 	}
 
@@ -451,7 +460,7 @@ func verifyAPK(signedAPK []byte) bool {
 			if err != nil {
 				log.Fatal(err)
 			}
-		case "META-INF/SIGNATURE.RSA":
+		case "META-INF/SIGNATURE.RSA", "META-INF/SIGNATURE.DSA", "META-INF/SIGNATURE.EC":
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {

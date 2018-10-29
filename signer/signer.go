@@ -8,12 +8,16 @@ package signer // import "go.mozilla.org/autograph/signer"
 
 import (
 	"crypto"
+	"crypto/dsa"
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"math/big"
 	"regexp"
 	"strings"
 
@@ -98,7 +102,9 @@ func (cfg *Configuration) GetPrivateKey() (crypto.PrivateKey, error) {
 }
 
 // ParsePrivateKey takes a PEM blocks are returns a crypto.PrivateKey
-func ParsePrivateKey(keyPEMBlock []byte) (crypto.PrivateKey, error) {
+// It tries to parse as many known key types as possible before failing and
+// returning all the errors it encountered.
+func ParsePrivateKey(keyPEMBlock []byte) (key crypto.PrivateKey, err error) {
 	var (
 		keyDERBlock       *pem.Block
 		skippedBlockTypes []string
@@ -121,19 +127,66 @@ func ParsePrivateKey(keyPEMBlock []byte) (crypto.PrivateKey, error) {
 	// PKCS#1 private keys by default, while OpenSSL 1.0.0 generates PKCS#8 keys.
 	// OpenSSL ecparam generates SEC1 EC private keys for ECDSA. We try all three.
 	// Code taken from the crypto/tls standard library.
-	if key, err := x509.ParsePKCS1PrivateKey(keyDERBlock.Bytes); err == nil {
+	if key, err = x509.ParsePKCS1PrivateKey(keyDERBlock.Bytes); err == nil {
 		return key, nil
 	}
-	if key, err := x509.ParsePKCS8PrivateKey(keyDERBlock.Bytes); err == nil {
+	var savedErr []string
+	savedErr = append(savedErr, "pkcs1: "+err.Error())
+	if key, err = x509.ParsePKCS8PrivateKey(keyDERBlock.Bytes); err == nil {
 		switch key := key.(type) {
 		case *rsa.PrivateKey, *ecdsa.PrivateKey:
 			return key, nil
-		default:
-			return nil, errors.New("found unknown private key type in PKCS#8 wrapping")
 		}
 	}
-	if key, err := x509.ParseECPrivateKey(keyDERBlock.Bytes); err == nil {
+	savedErr = append(savedErr, "pkcs8: "+err.Error())
+
+	if key, err = x509.ParseECPrivateKey(keyDERBlock.Bytes); err == nil {
 		return key, nil
 	}
-	return nil, errors.New("failed to parse private key")
+	savedErr = append(savedErr, "ecdsa: "+err.Error())
+
+	if key, err = parseDSAPKCS8PrivateKey(keyDERBlock.Bytes); err == nil {
+		return key, nil
+	}
+	savedErr = append(savedErr, "dsa: "+err.Error())
+
+	return nil, errors.New("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for (EC)DSA. errors: " + strings.Join(savedErr, ";;; "))
+}
+
+// parseDSAPKCS8PrivateKey returns a DSA private key from its ASN.1 DER encoding
+func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
+	var k struct {
+		Version int
+		Algo    pkix.AlgorithmIdentifier
+		Priv    []byte
+	}
+	rest, err := asn1.Unmarshal(der, &k)
+	if err != nil {
+		return nil, err
+	}
+	if len(rest) > 0 {
+		return nil, errors.New("garbage after DSA key")
+	}
+	var params dsa.Parameters
+	_, err = asn1.Unmarshal(k.Algo.Parameters.FullBytes, &params)
+	if err != nil {
+		return nil, err
+	}
+	// FIXME: couldn't get asn1.Unmarshal to properly parse the OCTET STRING
+	// tag in front of the X value of the DSA key, but doing it manually by
+	// stripping off the first two bytes and loading it as a bigint works
+	if len(k.Priv) < 22 {
+		return nil, errors.New("DSA key is too short")
+	}
+	x := new(big.Int).SetBytes(k.Priv[2:])
+	return &dsa.PrivateKey{
+		PublicKey: dsa.PublicKey{
+			Parameters: dsa.Parameters{
+				P: params.P,
+				Q: params.Q,
+				G: params.G,
+			},
+		},
+		X: x,
+	}, nil
 }
