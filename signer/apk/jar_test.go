@@ -61,7 +61,6 @@ func TestFormatFilenameLonger(t *testing.T) {
 	}
 }
 
-
 func TestFormatFilenameExact(t *testing.T) {
 	t.Parallel()
 
@@ -76,7 +75,6 @@ func TestFormatFilenameExact(t *testing.T) {
 		t.Fatalf("manifest filename mismatch Expected:\n%+v\nGot:\n%+v", expected, formatted)
 	}
 }
-
 
 func TestMakingJarManifest(t *testing.T) {
 	t.Parallel()
@@ -105,7 +103,7 @@ func TestAppendSignatureFilesToJARMislignsAlignedTwoFilesZIP(t *testing.T) {
 		t.Fatal("aligned JAR not aligned to begin with")
 	}
 
-	appendedZip, err := appendSignatureFilesToJAR(filebytes, smallZipManifest, smallZipSignatureFile, smallZipSignature)
+	appendedZip, err := appendSignatureFilesToJAR(filebytes, smallZipManifest, smallZipSignatureFile, smallZipSignature, "SIGNATURE.RSA")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +145,7 @@ func TestAppendSignatureFilesToJARStaysMisalignedOneUnalignedFile(t *testing.T) 
 		t.Fatal(err)
 	}
 
-	appendedZip, err := appendSignatureFilesToJAR(filebytes, smallZipManifest, smallZipSignatureFile, smallZipSignature)
+	appendedZip, err := appendSignatureFilesToJAR(filebytes, smallZipManifest, smallZipSignatureFile, smallZipSignature, "SIGNATURE.RSA")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +176,7 @@ func TestAppendSignatureFilesToJARStaysMisalignedOneUnalignedFile(t *testing.T) 
 func TestAppendSignatureFilesToJARStaysMisalignedSmallZIP(t *testing.T) {
 	t.Parallel()
 
-	appendedZip, err := appendSignatureFilesToJAR(smallZip, smallZipManifest, smallZipSignatureFile, smallZipSignature)
+	appendedZip, err := appendSignatureFilesToJAR(smallZip, smallZipManifest, smallZipSignatureFile, smallZipSignature, "SIGNATURE.RSA")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -246,7 +244,7 @@ func TestAppendSignatureFilesToJARStaysMisalignedSmallZIP(t *testing.T) {
 func TestRepackAndAlign(t *testing.T) {
 	t.Parallel()
 
-	repackedZip, err := repackAndAlignJAR(smallZip, smallZipManifest, smallZipSignatureFile, smallZipSignature)
+	repackedZip, err := repackAndAlignJAR(smallZip, smallZipManifest, smallZipSignatureFile, smallZipSignature, "SIGNATURE.RSA")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -324,6 +322,8 @@ func TestIsSignatureFile(t *testing.T) {
 		{true, "META-INF/SIGNATURE.DSA"},
 		{true, "META-INF/signature.dsa"},
 		{true, "META-INF/SiGnAtUre.DSA"},
+		{true, "META-INF/signature.ec"},
+		{true, "META-INF/SiGnAtUre.EC"},
 		{true, "META-INF/MANIFEST.MF"},
 		{true, "META-INF/manifest.mf"},
 		{true, "META-INF/signature.sf"},
@@ -355,7 +355,7 @@ func TestIsJARAligned(t *testing.T) {
 	}
 	for i, testcase := range testcases {
 		testcase := testcase
-		t.Run(testcase.filename, func (t *testing.T) {
+		t.Run(testcase.filename, func(t *testing.T) {
 			t.Parallel()
 
 			filebytes, err := ioutil.ReadFile(testcase.filename)
@@ -402,15 +402,18 @@ Created-By: go.mozilla.org/autograph
 
 Name: foo.txt
 SHA-256-Digest: aE/i11OBml60LVIdT0GjCqhQdvwtRRY+sL8ySX8+1EY=
+SHA1-Digest: gUgazJ8cMSO89+PvkESa8Z8FdCo=
 
 `)
 
 var smallZipSignatureFile = []byte(`Signature-Version: 1.0
 Created-By: 1.0.0 autograph-client (go.mozilla.org/autograph)
-SHA-256-Digest-Manifest: LpKUd4ScoPSLipDW2FHd6XJqnxx3pgCBEXygZPGQFCw=
+SHA-256-Digest-Manifest: PiMJ2cG0E5KVOUvTlHcMoZiSAk+YXHxljgQVrQ8JK1w=
+SHA1-Digest-Manifest: mbdwf+AjTvVjEt2PFnP0psedQ5I=
 
 Name: foo.txt
 SHA-256-Digest: aE/i11OBml60LVIdT0GjCqhQdvwtRRY+sL8ySX8+1EY=
+SHA1-Digest: gUgazJ8cMSO89+PvkESa8Z8FdCo=
 
 `)
 

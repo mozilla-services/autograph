@@ -3,23 +3,26 @@ package apk
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"io"
 	"io/ioutil"
+	"log"
 	"strings"
 	"unicode/utf8"
+
 	"github.com/pkg/errors"
 )
 
 // consts and vars for formatFilename
 const (
-	maxLineByteLen = 72
+	maxLineByteLen      = 72
 	maxContinuedByteLen = 70 // -1 for leading space and -1 for trailing \n newline
 )
-var maxFirstLineByteLen = maxLineByteLen - (len([]byte("Name: ")) + 1)  // + 1 for a \n newline
+
+var maxFirstLineByteLen = maxLineByteLen - (len([]byte("Name: ")) + 1) // + 1 for a \n newline
 
 // formatFilename formats filename lines to satisfy:
 //
@@ -36,7 +39,7 @@ func formatFilename(filename []byte) (formatted []byte, err error) {
 		return
 	}
 	var (
-		filenameLen = len(filename)
+		filenameLen      = len(filename)
 		writtenFileBytes = 0 // number of bytes of the filename we've written
 	)
 	if filenameLen <= maxFirstLineByteLen {
@@ -46,15 +49,15 @@ func formatFilename(filename []byte) (formatted []byte, err error) {
 	formatted = append(formatted, filename[:maxFirstLineByteLen]...)
 	writtenFileBytes += maxFirstLineByteLen
 	for {
-		if filenameLen - writtenFileBytes <= 0 {
+		if filenameLen-writtenFileBytes <= 0 {
 			break
-		} else if filenameLen - writtenFileBytes < maxContinuedByteLen {
+		} else if filenameLen-writtenFileBytes < maxContinuedByteLen {
 			formatted = append(formatted, []byte("\n ")...)
 			formatted = append(formatted, filename[writtenFileBytes:]...)
 			break
 		} else {
 			formatted = append(formatted, []byte("\n ")...)
-			formatted = append(formatted, filename[writtenFileBytes:writtenFileBytes + maxContinuedByteLen]...)
+			formatted = append(formatted, filename[writtenFileBytes:writtenFileBytes+maxContinuedByteLen]...)
 			writtenFileBytes += maxContinuedByteLen
 		}
 	}
@@ -90,14 +93,17 @@ func makeJARManifests(input []byte) (manifest, sigfile []byte, err error) {
 		}
 		h := sha256.New()
 		h.Write(data)
+		h1 := sha1.New()
+		h1.Write(data)
 
 		filename, err := formatFilename([]byte(f.Name))
 		if err != nil {
 			return manifest, sigfile, err
 		}
-		fmt.Fprintf(mw, "Name: %s\nSHA-256-Digest: %s\n\n",
+		fmt.Fprintf(mw, "Name: %s\nSHA-256-Digest: %s\nSHA1-Digest: %s\n\n",
 			filename,
-			base64.StdEncoding.EncodeToString(h.Sum(nil)))
+			base64.StdEncoding.EncodeToString(h.Sum(nil)),
+			base64.StdEncoding.EncodeToString(h1.Sum(nil)))
 	}
 	manifestBody := mw.Bytes()
 	manifest = []byte(`Manifest-Version: 1.0
@@ -118,8 +124,11 @@ Created-By: go.mozilla.org/autograph
 	fmt.Fprint(sw, "Created-By: 1.0.0 autograph-client (go.mozilla.org/autograph)\n")
 	h := sha256.New()
 	h.Write(manifest)
-	fmt.Fprintf(sw, "SHA-256-Digest-Manifest: %s\n\n",
-		base64.StdEncoding.EncodeToString(h.Sum(nil)))
+	h1 := sha1.New()
+	h1.Write(manifest)
+	fmt.Fprintf(sw, "SHA-256-Digest-Manifest: %s\nSHA1-Digest-Manifest: %s\n\n",
+		base64.StdEncoding.EncodeToString(h.Sum(nil)),
+		base64.StdEncoding.EncodeToString(h1.Sum(nil)))
 	fmt.Fprintf(sw, "%s", manifestBody)
 	sigfile = sw.Bytes()
 
@@ -130,13 +139,13 @@ Created-By: go.mozilla.org/autograph
 //
 // insert the signature files. Those will be compressed
 // so we don't have to worry about their alignment
-func appendSignatureFilesToJAR(input, manifest, sigfile, signature []byte) (output []byte, err error) {
+func appendSignatureFilesToJAR(input, manifest, sigfile, signature []byte, signaturefilename string) (output []byte, err error) {
 	var (
-		rc        io.ReadCloser
-		fwhead    *zip.FileHeader
-		fw        io.Writer
-		data      []byte
-		w         *zip.Writer
+		rc     io.ReadCloser
+		fwhead *zip.FileHeader
+		fw     io.Writer
+		data   []byte
+		w      *zip.Writer
 	)
 	inputReader := bytes.NewReader(input)
 	r, err := zip.NewReader(inputReader, int64(len(input)))
@@ -188,7 +197,7 @@ func appendSignatureFilesToJAR(input, manifest, sigfile, signature []byte) (outp
 	}{
 		{"META-INF/MANIFEST.MF", manifest},
 		{"META-INF/SIGNATURE.SF", sigfile},
-		{"META-INF/SIGNATURE.RSA", signature},
+		{"META-INF/" + signaturefilename, signature},
 	}
 	for _, meta := range metas {
 		fwhead = &zip.FileHeader{
@@ -217,7 +226,7 @@ func appendSignatureFilesToJAR(input, manifest, sigfile, signature []byte) (outp
 // repackAndAlignJAR inserts the manifest, signature file, and pkcs7
 // signature in the input JAR file.  It returns a JAR ZIP archive
 // aligned on 4 bytes words
-func repackAndAlignJAR(input, manifest, sigfile, signature []byte) (output []byte, err error) {
+func repackAndAlignJAR(input, manifest, sigfile, signature []byte, signatureFileName string) (output []byte, err error) {
 	var (
 		alignment = 4
 		bias      = 0
@@ -291,7 +300,7 @@ func repackAndAlignJAR(input, manifest, sigfile, signature []byte) (output []byt
 	}{
 		{"META-INF/MANIFEST.MF", manifest},
 		{"META-INF/SIGNATURE.SF", sigfile},
-		{"META-INF/SIGNATURE.RSA", signature},
+		{"META-INF/" + signatureFileName, signature},
 	}
 	for _, meta := range metas {
 		fwhead = &zip.FileHeader{
@@ -322,6 +331,7 @@ func repackAndAlignJAR(input, manifest, sigfile, signature []byte) (output []byt
 // META-INF/*.SF
 // META-INF/*.DSA
 // META-INF/*.RSA
+// META-INF/*.EC
 // META-INF/SIG-*
 // and their lowercase variants
 // https://docs.oracle.com/javase/8/docs/technotes/guides/jar/jar.html#Signed_JAR_File
@@ -332,6 +342,7 @@ func isSignatureFile(name string) bool {
 			strings.HasSuffix(name, ".SF") || strings.HasSuffix(name, ".sf") ||
 			strings.HasSuffix(name, ".RSA") || strings.HasSuffix(name, ".rsa") ||
 			strings.HasSuffix(name, ".DSA") || strings.HasSuffix(name, ".dsa") ||
+			strings.HasSuffix(name, ".EC") || strings.HasSuffix(name, ".ec") ||
 			strings.HasPrefix(name, "SIG-") || strings.HasPrefix(name, "sig-") {
 			return true
 		}
@@ -367,11 +378,11 @@ func isJARAligned(input []byte) error {
 			log.Printf("%10d %s (OK - compressed)\n", offset, f.Name)
 			continue
 		}
-		if offset % alignment == 0 {
+		if offset%alignment == 0 {
 			log.Printf("%10d %s (OK)\n", offset, f.Name)
 		} else {
-			log.Printf("%10d %s (BAD - %d)\n", offset, f.Name, offset % alignment)
-			return errors.Errorf("apk: unaligned file at %d %s (BAD - %d)", offset, f.Name, offset % alignment)
+			log.Printf("%10d %s (BAD - %d)\n", offset, f.Name, offset%alignment)
+			return errors.Errorf("apk: unaligned file at %d %s (BAD - %d)", offset, f.Name, offset%alignment)
 		}
 	}
 	return nil

@@ -23,4 +23,4 @@ staticcheck:
 
 gettools:
 	go get -u honnef.co/go/tools/...
-	go get -u github.com/golang/lint/golint
+	go get -u golang.org/x/lint/golint
