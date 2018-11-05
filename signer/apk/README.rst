@@ -77,6 +77,7 @@ uses the request format:
 		}
 	]
 
+**NB: Signing an APK with autograph-edge will require setting the zip option in its config. Ask the autograph ops to do that for you.** 
 
 The `/sign/file` endpoint takes a whole APK encoded in base64. It will
 unzip the apk, generate the manifests, sign and align the output
