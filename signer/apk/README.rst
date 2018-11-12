@@ -99,8 +99,25 @@ responsible for zip-aligning APK after submitting it:
 		}
 	]
 
+Both endpoints take an **optional** string representing a supported
+PKCS7 digest algorithm (`"SHA1"`, `"SHA256"`, `"SHA384"` or `"SHA512"`).
+Both `/sign/file` and `/sign/data` support this option. It defaults to SHA256
+for null and the empty `""` string.
 
 
+.. code:: json
+
+	[
+		{
+			"input": "Y2FyaWJvdW1hdXJpY2UK",
+			"keyid": "some-android-app",
+			"options": {
+				"zip": "all",
+				"pkcs7_digest": "SHA1"
+			}
+		}
+	]
+	
 Signature response
 ------------------
 
