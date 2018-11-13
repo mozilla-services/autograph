@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 	}
 	log.Printf("configuration: %+v\n", conf)
 	ag = newAutographer(1)
-	err = ag.addSigners(conf.Signers)
+	err = ag.addSigners(conf.Signers, false)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -200,7 +200,7 @@ signers:
 	// initialize signers from the configuration
 	// and store them into the autographer handler
 	dupag := newAutographer(conf.Server.NonceCacheSize)
-	err = dupag.addSigners(conf.Signers)
+	err = dupag.addSigners(conf.Signers, false)
 	if err == nil {
 		t.Fatalf("should have failed with duplicate signers but didn't")
 	}
@@ -260,7 +260,7 @@ authorizations:
 	// initialize signers from the configuration
 	// and store them into the autographer handler
 	dupag := newAutographer(conf.Server.NonceCacheSize)
-	err = dupag.addSigners(conf.Signers)
+	err = dupag.addSigners(conf.Signers, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -303,5 +303,21 @@ func TestPortOverride(t *testing.T) {
 	_, listen, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
 	if listen != expected {
 		t.Errorf("expected listen %s got %s", expected, listen)
+	}
+}
+
+func TestSkipHSMDefault(t *testing.T) {
+	expected := true
+	conf, _, _, _ := parseArgsAndLoadConfig([]string{})
+	if conf.isHsmEnabled != expected {
+		t.Errorf("expected skipHSM %v got %v", expected, conf.isHsmEnabled)
+	}
+}
+
+func TestSkipHSMOverride(t *testing.T) {
+	expected := false
+	conf, _, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080", "--skip-hsm"})
+	if conf.isHsmEnabled != expected {
+		t.Errorf("expected skipHSM %v got %v", expected, conf.isHsmEnabled)
 	}
 }
