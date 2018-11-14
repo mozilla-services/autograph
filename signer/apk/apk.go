@@ -3,9 +3,15 @@ package apk
 import (
 	"bytes"
 	"crypto"
+	"crypto/dsa"
+	"crypto/ecdsa"
+	"crypto/rsa"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -16,14 +22,22 @@ import (
 const (
 	// Type of this signer is "apk"
 	Type = "apk"
+
+	// ZIPMethodCompressAll represents the default option to
+	// compress all files in repacked JARs
+	ZIPMethodCompressAll = "all"
+	// ZIPMethodCompressPassthrough represents the option to pass
+	// through all files with their current compression in JARs
+	ZIPMethodCompressPassthrough = "passthrough"
 )
 
 // An APKSigner is configured to issue PKCS7 detached signatures
 // for Android application packages.
 type APKSigner struct {
 	signer.Configuration
-	signingKey  crypto.PrivateKey
-	signingCert *x509.Certificate
+	signingKey        crypto.PrivateKey
+	signingCert       *x509.Certificate
+	signatureFileName string
 }
 
 // New initializes an apk signer using a configuration
@@ -58,6 +72,16 @@ func New(conf signer.Configuration) (s *APKSigner, err error) {
 	if time.Now().Before(s.signingCert.NotBefore) || time.Now().After(s.signingCert.NotAfter) {
 		return nil, errors.New("apk: signer certificate is not currently valid")
 	}
+	// the name of the signature block file inside the META-INF directory
+	// is determined by the private key type
+	switch s.signingKey.(type) {
+	case *rsa.PrivateKey:
+		s.signatureFileName = "SIGNATURE.RSA"
+	case *dsa.PrivateKey:
+		s.signatureFileName = "SIGNATURE.DSA"
+	case *ecdsa.PrivateKey:
+		s.signatureFileName = "SIGNATURE.EC"
+	}
 	return
 }
 
@@ -80,6 +104,18 @@ func (s *APKSigner) Config() signer.Configuration {
 //
 // This implements apksigning v1, aka jarsigner. apksigning v2 is not supported.
 func (s *APKSigner) SignFile(input []byte, options interface{}) (signer.SignedFile, error) {
+	opt, err := GetOptions(options)
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: cannot get options")
+	}
+	if opt.ZIP == "" {
+		opt.ZIP = ZIPMethodCompressAll
+	}
+	err = validateZIPOption(opt.ZIP)
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: got invalid ZIP option")
+	}
+
 	var (
 		signedFile []byte
 	)
@@ -87,13 +123,20 @@ func (s *APKSigner) SignFile(input []byte, options interface{}) (signer.SignedFi
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: cannot make JAR manifests from APK")
 	}
-	p7sig, err := s.signData(sigfile)
+	p7sig, err := s.signData(sigfile, options)
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: failed to sign APK")
 	}
-	signedFile, err = repackAndAlignJAR(input, manifest, sigfile, p7sig)
-	if err != nil {
-		return nil, errors.Wrap(err, "apk: failed to repack and align APK")
+	if opt.ZIP == ZIPMethodCompressPassthrough {
+		signedFile, err = appendSignatureFilesToJAR(input, manifest, sigfile, p7sig, s.signatureFileName)
+		if err != nil {
+			return nil, errors.Wrap(err, "apk: failed to append signatures files to APK")
+		}
+	} else { // opt.ZIP == ZIPMethodCompressAll
+		signedFile, err = repackAndAlignJAR(input, manifest, sigfile, p7sig, s.signatureFileName)
+		if err != nil {
+			return nil, errors.Wrap(err, "apk: failed to repack and align APK")
+		}
 	}
 
 	return signedFile, nil
@@ -101,7 +144,7 @@ func (s *APKSigner) SignFile(input []byte, options interface{}) (signer.SignedFi
 
 // SignData takes a JAR signature file and returns a pkcs7 signature
 func (s *APKSigner) SignData(sigfile []byte, options interface{}) (signer.Signature, error) {
-	p7sig, err := s.signData(sigfile)
+	p7sig, err := s.signData(sigfile, options)
 	if err != nil {
 		return nil, err
 	}
@@ -111,14 +154,30 @@ func (s *APKSigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 	return sig, nil
 }
 
-func (s *APKSigner) signData(sigfile []byte) ([]byte, error) {
+func (s *APKSigner) signData(sigfile []byte, options interface{}) ([]byte, error) {
+	opt, err := GetOptions(options)
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: cannot get options")
+	}
 	toBeSigned, err := pkcs7.NewSignedData(sigfile)
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: cannot initialize signed data")
 	}
-	// APKs are signed with SHA256
-	toBeSigned.SetDigestAlgorithm(pkcs7.OIDDigestAlgorithmSHA256)
-	err = toBeSigned.AddSigner(s.signingCert, s.signingKey, pkcs7.SignerInfoConfig{})
+	p7Digest, err := opt.PK7Digest()
+	if err != nil {
+		return nil, errors.Wrap(err, "apk: error parsing PK7 Digest")
+	}
+	toBeSigned.SetDigestAlgorithm(p7Digest)
+	switch s.signingKey.(type) {
+	case *dsa.PrivateKey:
+		// When signing with DSA, the attributes need to be removed from
+		// the PKCS7, otherwise android returns the
+		// java.security.SignatureException: APKs with Signed Attributes
+		// broken on platforms with API Level < 19
+		err = toBeSigned.SignWithoutAttr(s.signingCert, s.signingKey, pkcs7.SignerInfoConfig{})
+	default:
+		err = toBeSigned.AddSigner(s.signingCert, s.signingKey, pkcs7.SignerInfoConfig{})
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "apk: cannot sign")
 	}
@@ -182,9 +241,56 @@ func (sig *Signature) String() string {
 }
 
 // Options is empty for this signer type
-type Options struct{}
+type Options struct {
+	ZIP string `json:"zip"`
+
+	// PKCS7Digest is a string referring to algorithm to use for the PKCS7 signature digest
+	PKCS7Digest string `json:"pkcs7_digest"`
+}
+
+// GetOptions takes a input interface and reflects it into a struct of options
+func GetOptions(input interface{}) (options Options, err error) {
+	buf, err := json.Marshal(input)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(buf, &options)
+	return
+}
 
 // GetDefaultOptions returns default options of the signer
 func (s *APKSigner) GetDefaultOptions() interface{} {
-	return Options{}
+	return Options{
+		ZIP:         ZIPMethodCompressAll,
+		PKCS7Digest: "SHA256",
+	}
+}
+
+func validateZIPOption(zipOpt string) error {
+	switch zipOpt {
+	case ZIPMethodCompressAll:
+		return nil
+	case ZIPMethodCompressPassthrough:
+		return nil
+	default:
+		return errors.Errorf("Invalid APK ZIP option")
+	}
+}
+
+// PK7Digest validates and return an ASN OID for a PKCS7 digest
+// algorithm or an error. If no specific digest is specific, SHA256 is used.
+func (o *Options) PK7Digest() (asn1.ObjectIdentifier, error) {
+	if o == nil {
+		return nil, errors.New("apk: Cannot get PK7Digest from nil Options")
+	}
+	switch strings.ToUpper(o.PKCS7Digest) {
+	case "SHA1":
+		return pkcs7.OIDDigestAlgorithmSHA1, nil
+	case "SHA384":
+		return pkcs7.OIDDigestAlgorithmSHA384, nil
+	case "SHA512":
+		return pkcs7.OIDDigestAlgorithmSHA512, nil
+	default:
+		return pkcs7.OIDDigestAlgorithmSHA256, nil
+	}
 }

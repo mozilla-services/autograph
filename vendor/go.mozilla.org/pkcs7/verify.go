@@ -67,7 +67,7 @@ func verifySignature(p7 *PKCS7, signer signerInfo, truststore *x509.CertPool) (e
 		if err == nil {
 			// signing time found, performing validity check
 			if signingTime.After(ee.NotAfter) || signingTime.Before(ee.NotBefore) {
-				return fmt.Errorf("pkcs7: signing time %q it outside of certificate validity %q to %q",
+				return fmt.Errorf("pkcs7: signing time %q is outside of certificate validity %q to %q",
 					signingTime.Format(time.RFC3339),
 					ee.NotBefore.Format(time.RFC3339),
 					ee.NotBefore.Format(time.RFC3339))
@@ -130,8 +130,12 @@ func parseSignedData(data []byte) (*PKCS7, error) {
 	}
 	// Compound octet string
 	if compound.IsCompound {
-		if _, err = asn1.Unmarshal(compound.Bytes, &content); err != nil {
-			return nil, err
+		if compound.Tag == 4 {
+			if _, err = asn1.Unmarshal(compound.Bytes, &content); err != nil {
+				return nil, err
+			}
+		} else {
+			content = compound.Bytes
 		}
 	} else {
 		// assuming this is tag 04
@@ -207,7 +211,8 @@ func getSignatureAlgorithm(digestEncryption, digest pkix.AlgorithmIdentifier) (x
 			return -1, fmt.Errorf("pkcs7: unsupported digest %q for encryption algorithm %q",
 				digest.Algorithm.String(), digestEncryption.Algorithm.String())
 		}
-	case digestEncryption.Algorithm.Equal(OIDEncryptionAlgorithmDSA):
+	case digestEncryption.Algorithm.Equal(OIDDigestAlgorithmDSA),
+		digestEncryption.Algorithm.Equal(OIDDigestAlgorithmDSASHA1):
 		switch {
 		case digest.Algorithm.Equal(OIDDigestAlgorithmSHA1):
 			return x509.DSAWithSHA1, nil
@@ -234,7 +239,7 @@ func getSignatureAlgorithm(digestEncryption, digest pkix.AlgorithmIdentifier) (x
 				digest.Algorithm.String(), digestEncryption.Algorithm.String())
 		}
 	default:
-		return -1, fmt.Errorf("pkcs7: unsupported encryption algorithm %q",
+		return -1, fmt.Errorf("pkcs7: unsupported algorithm %q",
 			digestEncryption.Algorithm.String())
 	}
 }

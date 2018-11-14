@@ -3,6 +3,7 @@ package pkcs7
 import (
 	"bytes"
 	"crypto"
+	"crypto/dsa"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -143,11 +144,11 @@ func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKe
 	if err != nil {
 		return err
 	}
-	unsigned_attrs := &attributes{}
+	unsignedAttrs := &attributes{}
 	for _, attr := range config.ExtraUnsignedAttributes {
-		unsigned_attrs.Add(attr.Type, attr.Value)
+		unsignedAttrs.Add(attr.Type, attr.Value)
 	}
-	finalUnsignedAttrs, err := unsigned_attrs.ForMarshalling()
+	finalUnsignedAttrs, err := unsignedAttrs.ForMarshalling()
 	if err != nil {
 		return err
 	}
@@ -179,17 +180,79 @@ func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKe
 	}
 	// create signature of signed attributes
 	sd.certs = append(sd.certs, ee)
-	sd.certs = append(sd.certs, chain...)
+	if len(chain) > 0 {
+		sd.certs = append(sd.certs, chain...)
+	}
 	sd.sd.SignerInfos = append(sd.sd.SignerInfos, signer)
 	return nil
 }
 
-func (si *signerInfo) SetUnauthenticatedAttributes(extra_unsigned_attrs []Attribute) error {
-	unsigned_attrs := &attributes{}
-	for _, attr := range extra_unsigned_attrs {
-		unsigned_attrs.Add(attr.Type, attr.Value)
+// SignWithoutAttr issues a signature on the content of the pkcs7 SignedData.
+// Unlike AddSigner/AddSignerChain, it calculates the digest on the data alone
+// and does not include any signed attributes like timestamp and so on.
+//
+// This function is needed to sign Android APKs with DSA private keys, something
+// you probably shouldn't do unless you're maintaining backward compatibility
+// for old applications.
+func (sd *SignedData) SignWithoutAttr(ee *x509.Certificate, pkey crypto.PrivateKey, config SignerInfoConfig) error {
+	var signature []byte
+	sd.sd.DigestAlgorithmIdentifiers = append(sd.sd.DigestAlgorithmIdentifiers, pkix.AlgorithmIdentifier{Algorithm: sd.digestOid})
+	hash, err := getHashForOID(sd.digestOid)
+	if err != nil {
+		return err
 	}
-	finalUnsignedAttrs, err := unsigned_attrs.ForMarshalling()
+	h := hash.New()
+	h.Write(sd.data)
+	sd.messageDigest = h.Sum(nil)
+	switch pkey.(type) {
+	case *dsa.PrivateKey:
+		// dsa doesn't implement crypto.Signer so we make a special case
+		// https://github.com/golang/go/issues/27889
+		r, s, err := dsa.Sign(rand.Reader, pkey.(*dsa.PrivateKey), sd.messageDigest)
+		if err != nil {
+			return err
+		}
+		signature, err = asn1.Marshal(dsaSignature{r, s})
+		if err != nil {
+			return err
+		}
+	default:
+		key, ok := pkey.(crypto.Signer)
+		if !ok {
+			return errors.New("pkcs7: private key does not implement crypto.Signer")
+		}
+		signature, err = key.Sign(rand.Reader, sd.messageDigest, hash)
+		if err != nil {
+			return err
+		}
+	}
+	var ias issuerAndSerial
+	ias.SerialNumber = ee.SerialNumber
+	// no parent, the issue is the end-entity cert itself
+	ias.IssuerName = asn1.RawValue{FullBytes: ee.RawIssuer}
+	encryptionOid, err := getOIDForEncryptionAlgorithm(pkey, sd.digestOid)
+	if err != nil {
+		return err
+	}
+	signer := signerInfo{
+		DigestAlgorithm:           pkix.AlgorithmIdentifier{Algorithm: sd.digestOid},
+		DigestEncryptionAlgorithm: pkix.AlgorithmIdentifier{Algorithm: encryptionOid},
+		IssuerAndSerialNumber:     ias,
+		EncryptedDigest:           signature,
+		Version:                   1,
+	}
+	// create signature of signed attributes
+	sd.certs = append(sd.certs, ee)
+	sd.sd.SignerInfos = append(sd.sd.SignerInfos, signer)
+	return nil
+}
+
+func (si *signerInfo) SetUnauthenticatedAttributes(extraUnsignedAttrs []Attribute) error {
+	unsignedAttrs := &attributes{}
+	for _, attr := range extraUnsignedAttrs {
+		unsignedAttrs.Add(attr.Type, attr.Value)
+	}
+	finalUnsignedAttrs, err := unsignedAttrs.ForMarshalling()
 	if err != nil {
 		return err
 	}
@@ -210,6 +273,7 @@ func (sd *SignedData) Detach() {
 	sd.sd.ContentInfo = contentInfo{ContentType: OIDData}
 }
 
+// GetSignedData returns the private Signed Data
 func (sd *SignedData) GetSignedData() *signedData {
 	return &sd.sd
 }
@@ -230,16 +294,17 @@ func (sd *SignedData) Finish() ([]byte, error) {
 
 // RemoveAuthenticatedAttributes removes authenticated attributes from signedData
 // similar to OpenSSL's PKCS7_NOATTR or -noattr flags
-func (sd *SignedData) RemoveAuthenticatedAttributes() error {
-	for i, _ := range sd.sd.SignerInfos {
-		blankAttrs := &attributes{}
-		finalBlankAttrs, err := blankAttrs.ForMarshalling()
-		if err != nil {
-			return err
-		}
-		sd.sd.SignerInfos[i].AuthenticatedAttributes = finalBlankAttrs
+func (sd *SignedData) RemoveAuthenticatedAttributes() {
+	for i := range sd.sd.SignerInfos {
+		sd.sd.SignerInfos[i].AuthenticatedAttributes = nil
 	}
-	return nil
+}
+
+// RemoveUnauthenticatedAttributes removes unauthenticated attributes from signedData
+func (sd *SignedData) RemoveUnauthenticatedAttributes() {
+	for i := range sd.sd.SignerInfos {
+		sd.sd.SignerInfos[i].UnauthenticatedAttributes = nil
+	}
 }
 
 // verifyPartialChain checks that a given cert is issued by the first parent in the list,
@@ -273,11 +338,6 @@ func cert2issuerAndSerial(cert *x509.Certificate) (issuerAndSerial, error) {
 
 // signs the DER encoded form of the attributes with the private key
 func signAttributes(attrs []attribute, pkey crypto.PrivateKey, digestAlg crypto.Hash) ([]byte, error) {
-	key, ok := pkey.(crypto.Signer)
-	if !ok {
-		return nil, errors.New("pkcs7: private key does not implement crypto.Signer")
-	}
-
 	attrBytes, err := marshalAttributes(attrs)
 	if err != nil {
 		return nil, err
@@ -286,7 +346,26 @@ func signAttributes(attrs []attribute, pkey crypto.PrivateKey, digestAlg crypto.
 	h.Write(attrBytes)
 	hash := h.Sum(nil)
 
+	// dsa doesn't implement crypto.Signer so we make a special case
+	// https://github.com/golang/go/issues/27889
+	switch pkey.(type) {
+	case *dsa.PrivateKey:
+		r, s, err := dsa.Sign(rand.Reader, pkey.(*dsa.PrivateKey), hash)
+		if err != nil {
+			return nil, err
+		}
+		return asn1.Marshal(dsaSignature{r, s})
+	}
+
+	key, ok := pkey.(crypto.Signer)
+	if !ok {
+		return nil, errors.New("pkcs7: private key does not implement crypto.Signer")
+	}
 	return key.Sign(rand.Reader, hash, digestAlg)
+}
+
+type dsaSignature struct {
+	R, S *big.Int
 }
 
 // concats and wraps the certificates in the RawValue structure

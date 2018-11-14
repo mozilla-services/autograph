@@ -14,6 +14,8 @@ vendor:
 	#dep ensure -update
 	# https://github.com/ThalesIgnite/crypto11/issues/9
 	git checkout -f 2210ea80470825094edf8235b35f9565c7940555 vendor/github.com/ThalesIgnite/crypto11/
+	rm -rf vendor/go.mozilla.org/autograph/  # don't vendor ourselves
+	git add vendor/
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
@@ -23,12 +25,20 @@ lint:
 	golint go.mozilla.org/autograph/signer
 	golint go.mozilla.org/autograph/signer/contentsignature
 	golint go.mozilla.org/autograph/signer/xpi
+	golint go.mozilla.org/autograph/signer/apk
+	golint go.mozilla.org/autograph/signer/mar
+	golint go.mozilla.org/autograph/signer/pgp
 
 vet:
 	$(GO) vet go.mozilla.org/autograph
 	$(GO) vet go.mozilla.org/autograph/signer
+	$(GO) vet go.mozilla.org/autograph/signer/apk
 	$(GO) vet go.mozilla.org/autograph/signer/contentsignature
+	$(GO) vet go.mozilla.org/autograph/signer/mar
 	$(GO) vet go.mozilla.org/autograph/signer/xpi
+	$(GO) vet go.mozilla.org/autograph/signer/apk
+	$(GO) vet go.mozilla.org/autograph/signer/mar
+	$(GO) vet go.mozilla.org/autograph/signer/pgp
 
 testautograph:
 	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
@@ -69,7 +79,13 @@ testmar:
 showcoveragemar: testmar
 	$(GO) tool cover -html=coverage_mar.out
 
-test: testautograph testsigner testcs testxpi testapk testmar
+testpgp:
+	$(GO) test -v -covermode=count -coverprofile=coverage_pgp.out go.mozilla.org/autograph/signer/pgp
+
+showcoveragepgp: testpgp
+	$(GO) tool cover -html=coverage_pgp.out
+
+test: testautograph testsigner testcs testxpi testapk testmar testpgp
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 

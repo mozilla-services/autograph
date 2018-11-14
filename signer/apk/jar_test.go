@@ -7,7 +7,78 @@ import (
 	"testing"
 )
 
+func TestFormatFilenameShort(t *testing.T) {
+	t.Parallel()
+
+	fn := []byte("LocalizedFormats_fr.properties")
+	expected := []byte("LocalizedFormats_fr.properties")
+
+	formatted, err := formatFilename(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(formatted, expected) {
+		t.Fatalf("manifest filename mismatch Expected:\n%s\nGot:\n%s", expected, formatted)
+	}
+}
+
+func TestFormatFilenameLong(t *testing.T) {
+	t.Parallel()
+
+	fn := []byte("assets/org/apache/commons/math3/exception/util/LocalizedFormats_fr.properties")
+	expected := []byte("assets/org/apache/commons/math3/exception/util/LocalizedFormats_f\n r.properties")
+
+	formatted, err := formatFilename(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(formatted, expected) {
+		t.Fatalf("manifest filename mismatch Expected:\n%s\nGot:\n%s", expected, formatted)
+	}
+}
+
+func TestFormatFilenameInvalidUTF8(t *testing.T) {
+	t.Parallel()
+
+	_, err := formatFilename([]byte{0xff, 0xfe, 0xfd})
+	if err == nil {
+		t.Fatal("format filename did not error for invalid UTF8")
+	}
+}
+
+func TestFormatFilenameLonger(t *testing.T) {
+	t.Parallel()
+
+	fn := []byte("assets/org/apache/commons/math3/exception/assets/org/apache/commons/math3/exception/util/assets/org/apache/commons/math3/exception/util/LocalizedFormats_fr.properties")
+	expected := []byte("assets/org/apache/commons/math3/exception/assets/org/apache/commo\n ns/math3/exception/util/assets/org/apache/commons/math3/exception/util\n /LocalizedFormats_fr.properties")
+
+	formatted, err := formatFilename(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(formatted, expected) {
+		t.Fatalf("manifest filename mismatch Expected:\n%s\nGot:\n%s", expected, formatted)
+	}
+}
+
+func TestFormatFilenameExact(t *testing.T) {
+	t.Parallel()
+
+	fn := []byte("assets/org/apache/commons/math3/exception/assets/org/apache/commons/math3/exception/util/assets/org/apache/commons/math3/exception/util")
+	expected := []byte("assets/org/apache/commons/math3/exception/assets/org/apache/commo\n ns/math3/exception/util/assets/org/apache/commons/math3/exception/util")
+
+	formatted, err := formatFilename(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(formatted, expected) {
+		t.Fatalf("manifest filename mismatch Expected:\n%+v\nGot:\n%+v", expected, formatted)
+	}
+}
+
 func TestMakingJarManifest(t *testing.T) {
+	t.Parallel()
+
 	manifest, sigfile, err := makeJARManifests(smallZip)
 	if err != nil {
 		t.Fatal(err)
@@ -20,8 +91,160 @@ func TestMakingJarManifest(t *testing.T) {
 	}
 }
 
+func TestAppendSignatureFilesToJARMislignsAlignedTwoFilesZIP(t *testing.T) {
+	t.Parallel()
+
+	filebytes, err := ioutil.ReadFile("aligned-two-files.apk")
+	if err != nil {
+		t.Fatal(err)
+	}
+	alignErr := isJARAligned(filebytes)
+	if alignErr != nil {
+		t.Fatal("aligned JAR not aligned to begin with")
+	}
+
+	appendedZip, err := appendSignatureFilesToJAR(filebytes, smallZipManifest, smallZipSignatureFile, smallZipSignature, "SIGNATURE.RSA")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = ioutil.WriteFile("test-out.zip", appendedZip, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	zipReader := bytes.NewReader(appendedZip)
+	r, err := zip.NewReader(zipReader, int64(len(appendedZip)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range r.File {
+		rc, err := f.Open()
+		defer rc.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = ioutil.ReadAll(rc)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	alignErr = isJARAligned(appendedZip)
+	// we'd like to preserve this instead
+	if alignErr == nil {
+		t.Fatal("appending to aligned JAR did not misalign it")
+	}
+}
+
+func TestAppendSignatureFilesToJARStaysMisalignedOneUnalignedFile(t *testing.T) {
+	t.Parallel()
+
+	filebytes, err := ioutil.ReadFile("one-unaligned-file.apk")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appendedZip, err := appendSignatureFilesToJAR(filebytes, smallZipManifest, smallZipSignatureFile, smallZipSignature, "SIGNATURE.RSA")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	zipReader := bytes.NewReader(appendedZip)
+	r, err := zip.NewReader(zipReader, int64(len(appendedZip)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range r.File {
+		rc, err := f.Open()
+		defer rc.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = ioutil.ReadAll(rc)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	alignErr := isJARAligned(appendedZip)
+	if alignErr == nil {
+		t.Fatal("appending to unaligned JAR aligned")
+	}
+}
+
+func TestAppendSignatureFilesToJARStaysMisalignedSmallZIP(t *testing.T) {
+	t.Parallel()
+
+	appendedZip, err := appendSignatureFilesToJAR(smallZip, smallZipManifest, smallZipSignatureFile, smallZipSignature, "SIGNATURE.RSA")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	zipReader := bytes.NewReader(appendedZip)
+	r, err := zip.NewReader(zipReader, int64(len(appendedZip)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var hasData, hasManifest, hasSignatureFile, hasSignature bool
+	for _, f := range r.File {
+		rc, err := f.Open()
+		defer rc.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		data, err := ioutil.ReadAll(rc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		switch f.Name {
+		case "foo.txt":
+			if !bytes.Equal(data, []byte("bar \n")) {
+				t.Fatalf("data mismatch. Expect: 'bar \\n' Got:%q", data)
+			}
+			hasData = true
+		case "META-INF/MANIFEST.MF":
+			if !bytes.Equal(data, smallZipManifest) {
+				t.Fatalf("manifest mismatch. Expect:\n%s\nGot:\n%s", smallZipManifest, data)
+			}
+			hasManifest = true
+		case "META-INF/SIGNATURE.SF":
+			if !bytes.Equal(data, smallZipSignatureFile) {
+				t.Fatalf("signature file mismatch. Expect:\n%s\nGot:\n%s", smallZipSignatureFile, data)
+			}
+			hasSignatureFile = true
+		case "META-INF/SIGNATURE.RSA":
+			if !bytes.Equal(data, smallZipSignature) {
+				t.Fatalf("signature mismatch. Expect:\n%x\nGot:\n%x", smallZipSignature, data)
+			}
+			hasSignature = true
+		default:
+			t.Fatalf("found unknown file in zip archive: %s", f.Name)
+		}
+	}
+	if !hasData {
+		t.Fatal("data file not found in zip archive")
+	}
+	if !hasManifest {
+		t.Fatal("manifest file not found in zip archive")
+	}
+	if !hasSignatureFile {
+		t.Fatal("signature file not found in zip archive")
+	}
+	if !hasSignature {
+		t.Fatal("signature not found in zip archive")
+	}
+
+	alignErr := isJARAligned(appendedZip)
+	if alignErr == nil {
+		t.Fatal("appending to unaligned JAR aligned")
+	}
+}
+
 func TestRepackAndAlign(t *testing.T) {
-	repackedZip, err := repackAndAlignJAR(smallZip, smallZipManifest, smallZipSignatureFile, smallZipSignature)
+	t.Parallel()
+
+	repackedZip, err := repackAndAlignJAR(smallZip, smallZipManifest, smallZipSignatureFile, smallZipSignature, "SIGNATURE.RSA")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +287,7 @@ func TestRepackAndAlign(t *testing.T) {
 			}
 			hasSignature = true
 		default:
-			t.Fatalf("found unknow file in zip archive: %s", f.Name)
+			t.Fatalf("found unknown file in zip archive: %s", f.Name)
 		}
 	}
 	if !hasData {
@@ -79,9 +302,16 @@ func TestRepackAndAlign(t *testing.T) {
 	if !hasSignature {
 		t.Fatal("signature not found in zip archive")
 	}
+
+	alignErr := isJARAligned(repackedZip)
+	if alignErr != nil {
+		t.Fatalf("repacked JAR is not aligned: %s", alignErr)
+	}
 }
 
 func TestIsSignatureFile(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		expect   bool
 		filename string
@@ -92,6 +322,8 @@ func TestIsSignatureFile(t *testing.T) {
 		{true, "META-INF/SIGNATURE.DSA"},
 		{true, "META-INF/signature.dsa"},
 		{true, "META-INF/SiGnAtUre.DSA"},
+		{true, "META-INF/signature.ec"},
+		{true, "META-INF/SiGnAtUre.EC"},
 		{true, "META-INF/MANIFEST.MF"},
 		{true, "META-INF/manifest.mf"},
 		{true, "META-INF/signature.sf"},
@@ -105,9 +337,46 @@ func TestIsSignatureFile(t *testing.T) {
 	}
 	for i, testcase := range testcases {
 		if isSignatureFile(testcase.filename) != testcase.expect {
-			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
+			t.Fatalf("isSignatureFile testcase %d failed. %q returned %t, expected %t",
 				i, testcase.filename, isSignatureFile(testcase.filename), testcase.expect)
 		}
+	}
+}
+
+func TestIsJARAligned(t *testing.T) {
+	var testcases = []struct {
+		expected interface{}
+		filename string
+	}{
+		{
+			"apk: unaligned file at 2499 resources.arsc (BAD - 3)",
+			"one-unaligned-file.apk",
+		},
+	}
+	for i, testcase := range testcases {
+		testcase := testcase
+		t.Run(testcase.filename, func(t *testing.T) {
+			t.Parallel()
+
+			filebytes, err := ioutil.ReadFile(testcase.filename)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			err = isJARAligned(filebytes)
+			switch testcase.expected.(type) {
+			case string:
+				if err.Error() != testcase.expected {
+					t.Fatalf("isJARAligned testcase %d failed. for %q returned %#v, expected %#v",
+						i, testcase.filename, err.Error(), testcase.expected)
+				}
+			case nil:
+				if err != testcase.expected {
+					t.Fatalf("isJARAligned testcase %d failed. for %q returned %#v, expected %#v",
+						i, testcase.filename, err, testcase.expected)
+				}
+			}
+		})
 	}
 }
 
@@ -133,15 +402,18 @@ Created-By: go.mozilla.org/autograph
 
 Name: foo.txt
 SHA-256-Digest: aE/i11OBml60LVIdT0GjCqhQdvwtRRY+sL8ySX8+1EY=
+SHA1-Digest: gUgazJ8cMSO89+PvkESa8Z8FdCo=
 
 `)
 
 var smallZipSignatureFile = []byte(`Signature-Version: 1.0
 Created-By: 1.0.0 autograph-client (go.mozilla.org/autograph)
-SHA-256-Digest-Manifest: LpKUd4ScoPSLipDW2FHd6XJqnxx3pgCBEXygZPGQFCw=
+SHA-256-Digest-Manifest: PiMJ2cG0E5KVOUvTlHcMoZiSAk+YXHxljgQVrQ8JK1w=
+SHA1-Digest-Manifest: mbdwf+AjTvVjEt2PFnP0psedQ5I=
 
 Name: foo.txt
 SHA-256-Digest: aE/i11OBml60LVIdT0GjCqhQdvwtRRY+sL8ySX8+1EY=
+SHA1-Digest: gUgazJ8cMSO89+PvkESa8Z8FdCo=
 
 `)
 

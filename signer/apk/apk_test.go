@@ -5,16 +5,45 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
 
+	"github.com/pkg/errors"
+
 	"go.mozilla.org/autograph/signer"
 )
 
+func TestValidateZIPOption(t *testing.T) {
+	var testcases = []struct {
+		input  string
+		result error
+	}{
+		{ZIPMethodCompressAll, nil},
+		{ZIPMethodCompressPassthrough, nil},
+		{"", errors.New("Invalid APK ZIP option")},
+	}
+	for i, testcase := range testcases {
+		testcase := testcase // capture range variable
+		t.Run(fmt.Sprintf("GetOptions (%d) input: %#v", i, testcase.input), func(t *testing.T) {
+			t.Parallel()
+
+			err := validateZIPOption(testcase.input)
+			if testcase.result == nil && err != nil {
+				t.Fatalf("ValidateZIPOption returned unexpected error %s", err)
+			} else if testcase.result != nil && err.Error() != testcase.result.Error() {
+				t.Fatalf("Expected GetOptions to err with msg %s but got %s", testcase.result.Error(), err.Error())
+			}
+		})
+	}
+}
+
 func TestSignFile(t *testing.T) {
+	t.Parallel()
+
 	// initialize a signer
 	s, err := New(apksignerconf)
 	if err != nil {
@@ -91,6 +120,8 @@ func TestSignFile(t *testing.T) {
 }
 
 func TestSignData(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// initialize a signer
 	s, err := New(apksignerconf)
@@ -140,6 +171,8 @@ func TestSignData(t *testing.T) {
 }
 
 func TestSignAndVerifyWithOpenSSL(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 
 	// init a signer
@@ -194,7 +227,52 @@ func TestSignAndVerifyWithOpenSSL(t *testing.T) {
 	os.Remove(tmpIssuerCertFile.Name())
 }
 
+func TestSignDsaAndVerifyWithOpenSSL(t *testing.T) {
+	t.Parallel()
+
+	input := []byte("foobarbaz1234abcd")
+
+	// init a signer
+	s, err := New(dsasignerconf)
+	if err != nil {
+		t.Fatalf("failed to initialize signer: %v", err)
+	}
+
+	// sign input data with bad option
+	sig, err := s.SignData(input, Options{PKCS7Digest: "SHA1"})
+	pkcs7Sig := sig.(*Signature).String()
+
+	// write the signature to a temp file
+	tmpSignatureFile, err := ioutil.TempFile("", "TestSignDsaAndVerifyWithOpenSSL_signature")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ioutil.WriteFile(tmpSignatureFile.Name(), []byte(pkcs7Sig), 0755)
+
+	// write the input to a temp file
+	tmpContentFile, err := ioutil.TempFile("", "TestSignDsaAndVerifyWithOpenSSL_input")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
+
+	// call openssl to verify the signature on the content using the root
+	opensslCMD := exec.Command("openssl", "smime", "-verify", "-noverify",
+		"-in", tmpSignatureFile.Name(), "-inform", "PEM",
+		"-content", tmpContentFile.Name())
+	out, err := opensslCMD.CombinedOutput()
+	if err != nil {
+		t.Fatalf("failed to verify pkcs7 signature with openssl: %s\n%s", err, out)
+	}
+	t.Logf("OpenSSL PKCS7 DSA signature verification output:\n%s\n", out)
+	// clean up
+	os.Remove(tmpSignatureFile.Name())
+	os.Remove(tmpContentFile.Name())
+}
+
 func TestMarshalUnfinishedSignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(apksignerconf)
@@ -213,6 +291,8 @@ func TestMarshalUnfinishedSignature(t *testing.T) {
 }
 
 func TestMarshalEmptySignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(apksignerconf)
@@ -231,6 +311,8 @@ func TestMarshalEmptySignature(t *testing.T) {
 }
 
 func TestUnmarshalBadSignatureBase64(t *testing.T) {
+	t.Parallel()
+
 	_, err := Unmarshal(`{{{{{`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
@@ -240,6 +322,8 @@ func TestUnmarshalBadSignatureBase64(t *testing.T) {
 }
 
 func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
+	t.Parallel()
+
 	_, err := Unmarshal(`Y2FyaWJvdW1hdXJpY2UK`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
@@ -249,6 +333,8 @@ func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
 }
 
 func TestVerifyUnfinishedSignature(t *testing.T) {
+	t.Parallel()
+
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
 	s, err := New(apksignerconf)
@@ -319,6 +405,40 @@ ljx2rIvQQOw2FiuXLVKATUxo6/cre9Rgpp9lIQN2Sq6maS9ZSJeur4k8NpQFJMGT
 Q9+gIrgtjJrWCw6SHF3pIB749A1J4NMlQ+0XjPhcwSMrxxkMTwmLhgSEHZcVl3C6
 zw097oFSo1ZF/8Qpe3cb3252I9MOWKSXWTJ1BP2iVlCp0jRteFCJj8SB2CAnay9F
 1KDtwVd+U8cK/z6UQxo8YQ==
+-----END PRIVATE KEY-----`,
+}
+
+var dsasignerconf = signer.Configuration{
+	ID:   "dsa apk",
+	Type: Type,
+	Certificate: `-----BEGIN CERTIFICATE-----
+MIIDNTCCAvOgAwIBAgIEPkN7ozALBgcqhkjOOAQDBQAwbDEQMA4GA1UEBhMHVW5r
+bm93bjEQMA4GA1UECBMHVW5rbm93bjEQMA4GA1UEBxMHVW5rbm93bjEQMA4GA1UE
+ChMHVW5rbm93bjEQMA4GA1UECxMHVW5rbm93bjEQMA4GA1UEAxMHVW5rbm93bjAe
+Fw0xODEwMjUxODIxNThaFw00NjAzMTIxODIxNThaMGwxEDAOBgNVBAYTB1Vua25v
+d24xEDAOBgNVBAgTB1Vua25vd24xEDAOBgNVBAcTB1Vua25vd24xEDAOBgNVBAoT
+B1Vua25vd24xEDAOBgNVBAsTB1Vua25vd24xEDAOBgNVBAMTB1Vua25vd24wggG4
+MIIBLAYHKoZIzjgEATCCAR8CgYEA/X9TgR11EilS30qcLuzk5/YRt1I870QAwx4/
+gLZRJmlFXUAiUftZPY1Y+r/F9bow9subVWzXgTuAHTRv8mZgt2uZUKWkn5/oBHsQ
+IsJPu6nX/rfGG/g7V+fGqKYVDwT7g/bTxR7DAjVUE1oWkTL2dfOuK2HXKu/yIgMZ
+ndFIAccCFQCXYFCPFSMLzLKSuYKi64QL8Fgc9QKBgQD34aCF1ps93su8q1w2uFe5
+eZSvu/o66oL5V0wLPQeCZ1FZV4661FlP5nEHEIGAtEkWcSPoTCgWE7fPCTKMyKbh
+PBZ6i1R8jSjgo64eK7OmdZFuo38L+iE1YvH7YnoBJDvMpPG+qFGQiaiD3+Fa5Z8G
+kotmXoB7VSVkAUw7/s9JKgOBhQACgYEAp6RH2AVNLclXnF5m4eGbzuIYGW67kYzK
+08Qq1znWiVz0vSbkIXSxxCiSvsyuhlcxRNeAPy2eOuNyP46Ro42eOHD4fWFO+HG2
+U5Cd5Ze6+ngGTV/knFMtQAh3vYAUCiPzvUkwmy/y3/GBuDlJaWamWIjktbxuZmCI
+nWYHN60pC7GjITAfMB0GA1UdDgQWBBRw99lmXsOq/barDZWDCX2H+xs1GTALBgcq
+hkjOOAQDBQADLwAwLAIUQ3+xH1ogvYhz7+8VnepK/8uktFsCFG9EIelgB9Q+XRbw
+jDltmrkAEA+c
+-----END CERTIFICATE-----`,
+	PrivateKey: `-----BEGIN PRIVATE KEY-----
+MIIBSwIBADCCASwGByqGSM44BAEwggEfAoGBAP1/U4EddRIpUt9KnC7s5Of2EbdS
+PO9EAMMeP4C2USZpRV1AIlH7WT2NWPq/xfW6MPbLm1Vs14E7gB00b/JmYLdrmVCl
+pJ+f6AR7ECLCT7up1/63xhv4O1fnxqimFQ8E+4P208UewwI1VBNaFpEy9nXzrith
+1yrv8iIDGZ3RSAHHAhUAl2BQjxUjC8yykrmCouuEC/BYHPUCgYEA9+GghdabPd7L
+vKtcNrhXuXmUr7v6OuqC+VdMCz0HgmdRWVeOutRZT+ZxBxCBgLRJFnEj6EwoFhO3
+zwkyjMim4TwWeotUfI0o4KOuHiuzpnWRbqN/C/ohNWLx+2J6ASQ7zKTxvqhRkImo
+g9/hWuWfBpKLZl6Ae1UlZAFMO/7PSSoEFgIUBKjr9eyGEjtYJ4Onyf3ITWeIHs8=
 -----END PRIVATE KEY-----`,
 }
 

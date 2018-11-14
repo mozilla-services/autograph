@@ -21,6 +21,7 @@ import (
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/mar"
+	"go.mozilla.org/autograph/signer/pgp"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
@@ -68,20 +69,19 @@ func urlToRequestType(url string) requestType {
 		return requestTypeHash
 	} else if strings.HasSuffix(url, "/sign/file") {
 		return requestTypeFile
-	} else {
-		log.Fatalf("Unrecognized request type for url", url)
-		return requestTypeNone
 	}
+	log.Fatalf("Unrecognized request type for url %q", url)
+	return requestTypeNone
 }
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, keyid, cn, pk7digest, rootPath string
-		iter, maxworkers, sa                                                           int
-		debug                                                                          bool
-		err                                                                            error
-		requests                                                                       []signaturerequest
-		algs                                                                           coseAlgs
+		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, zipMethodOption string
+		iter, maxworkers, sa                                                                                        int
+		debug                                                                                                       bool
+		err                                                                                                         error
+		requests                                                                                                    []signaturerequest
+		algs                                                                                                        coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -95,6 +95,17 @@ examples:
 	Verified using v1 scheme (JAR signing): true
 	Verified using v2 scheme (APK Signature Scheme v2): false
 	Number of signers: 1
+
+* sign an APK, returns a signed APK without compressing files in the ZIP that weren't already compressed
+	$ go run client.go -f signed.apk -o test.apk -k testapp-android -zip passthrough
+	$ /opt/android-sdk/build-tools/27.0.3/apksigner verify -v test.apk
+	Verifies
+	Verified using v1 scheme (JAR signing): true
+	Verified using v2 scheme (APK Signature Scheme v2): false
+	Number of signers: 1
+        4
+        $ zipinfo ~/signed.apk | grep stor | wc -l
+        326
 
 * issue a content signature on a hash, returns a CS header string:
 	$ echo -en "Content-Signature:\0\0foo bar baz" | openssl dgst -sha256 -binary | openssl enc -base64
@@ -123,6 +134,7 @@ examples:
 	flag.StringVar(&hash, "a", "base64(sha256(data))", "Base64 hash to sign, will use the /sign/hash endpoint")
 	flag.StringVar(&infile, "f", "/path/to/file", "Input file to sign, will use the /sign/file endpoint")
 	flag.StringVar(&outfile, "o", ``, "Output file. If set, writes the signature or file to this location")
+	flag.StringVar(&outkeyfile, "ko", ``, "Key Output file. If set, writes the public key to a file at this location")
 	flag.StringVar(&keyid, "k", ``, "Key ID to request a signature from a specific signer")
 	flag.StringVar(&url, "t", `http://localhost:8000`, "target server, do not specific a URI or trailing slash")
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
@@ -130,7 +142,8 @@ examples:
 	flag.StringVar(&cn, "cn", "", "when signing XPI, sets the CN to the add-on ID")
 	flag.IntVar(&sa, "sa", 0, "when signing MAR hashes, sets the Signature Algorithm")
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
-	flag.StringVar(&pk7digest, "pk7digest", "sha1", "an optional PK7 digest algorithm to use for XPI file signing. Defaults to 'sha1'")
+	flag.StringVar(&pk7digest, "pk7digest", "", "an optional PK7 digest algorithm to use for XPI file signing, either 'sha1' (default) or 'sha256'.")
+	flag.StringVar(&zipMethodOption, "zip", "", "an optional param for APK file signing. Defaults to '' to compress all files (the other options are 'all' which does the same thing and 'passthrough' which doesn't change file compression")
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
 
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
@@ -158,6 +171,9 @@ examples:
 	}
 	// if signing an xpi, the CN, COSEAlgorithms, and PKCS7Digest are set in the options
 	if cn != "" {
+		if pk7digest == "" {
+			pk7digest = "sha1"
+		}
 		request.Options = xpi.Options{
 			ID:             cn,
 			COSEAlgorithms: algs,
@@ -170,6 +186,20 @@ examples:
 			SigAlg: uint32(sa),
 		}
 	}
+
+	// if signing an APK file, set option for set files to compress
+	if zipMethodOption != "" {
+		request.Options = apk.Options{
+			ZIP: zipMethodOption,
+		}
+	}
+	// if we have a pk7digest but no cn, assume we're signing an APK
+	if pk7digest != "" && cn == "" {
+		request.Options = apk.Options{
+			PKCS7Digest: pk7digest,
+		}
+	}
+
 	requests = append(requests, request)
 	reqBody, err := json.Marshal(requests)
 	if err != nil {
@@ -180,7 +210,7 @@ examples:
 	}
 	cli := &http.Client{Transport: tr}
 
-	var roots *x509.CertPool = nil
+	var roots *x509.CertPool
 	if rootPath != "/path/to/root.pem" {
 		roots = x509.NewCertPool()
 		rootContent, err := ioutil.ReadFile(rootPath)
@@ -275,7 +305,7 @@ examples:
 					case requestTypeFile:
 						sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
 					default:
-						err = fmt.Errorf("Cannot decode signature data for request type %s", reqType)
+						err = fmt.Errorf("Cannot decode signature data for request type %v", reqType)
 					}
 					if err != nil {
 						log.Fatal(err)
@@ -292,6 +322,9 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
+				case pgp.Type:
+					sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
+					sigData = []byte(response.Signature)
 				default:
 					log.Fatal("unsupported signature type", response.Type)
 				}
@@ -306,6 +339,13 @@ examples:
 						log.Fatal(err)
 					}
 					log.Println("response written to", outfile)
+				}
+				if outkeyfile != "" {
+					err = ioutil.WriteFile(outkeyfile, []byte(response.PublicKey), 0644)
+					if err != nil {
+						log.Fatal(err)
+					}
+					log.Println("public key written to", outkeyfile)
 				}
 			}
 			workers--
@@ -420,7 +460,7 @@ func verifyAPK(signedAPK []byte) bool {
 			if err != nil {
 				log.Fatal(err)
 			}
-		case "META-INF/SIGNATURE.RSA":
+		case "META-INF/SIGNATURE.RSA", "META-INF/SIGNATURE.DSA", "META-INF/SIGNATURE.EC":
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
@@ -446,5 +486,10 @@ func verifyAPK(signedAPK []byte) bool {
 }
 
 func verifyMAR(signedMAR []byte) bool {
+	return true
+}
+
+func verifyPGP(input []byte, signature string, pubkey string) bool {
+
 	return true
 }
