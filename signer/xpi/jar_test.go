@@ -91,6 +91,7 @@ func TestIsSignatureFile(t *testing.T) {
 		{true, "META-INF/mozilla.dsa"},
 		{true, "META-INF/MoZiLLa.DSA"},
 		{true, "META-INF/MANIFEST.MF"},
+		{true, "META-INF/maniFesT.mf"},
 		{true, "META-INF/manifest.mf"},
 		{true, "META-INF/mozilla.sf"},
 		{true, "META-INF/mozilla.SF"},
