@@ -227,10 +227,14 @@ func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err e
 // META-INF/SIG-*
 // and their lowercase variants
 // https://docs.oracle.com/javase/8/docs/technotes/guides/jar/jar.html#Signed_JAR_File
+//
+// Also per https://bugzil.la/1169574 we skip mixed-case META-INF and manifest.mf files
 func isJARSignatureFile(name string) bool {
-	if strings.HasPrefix(name, "META-INF/") {
+	if strings.HasPrefix(strings.ToUpper(name), "META-INF/") {
+
 		name = strings.TrimPrefix(name, "META-INF/")
-		if name == "MANIFEST.MF" || name == "manifest.mf" ||
+
+		if strings.ToUpper(name) == "MANIFEST.MF" ||
 			strings.HasSuffix(name, ".SF") || strings.HasSuffix(name, ".sf") ||
 			strings.HasSuffix(name, ".RSA") || strings.HasSuffix(name, ".rsa") ||
 			strings.HasSuffix(name, ".DSA") || strings.HasSuffix(name, ".dsa") ||
