@@ -11,6 +11,7 @@ import (
 	"encoding/pem"
 	"strings"
 	"time"
+	"io"
 
 	"github.com/pkg/errors"
 	"go.mozilla.org/autograph/signer"
@@ -61,6 +62,10 @@ type XPISigner struct {
 	// the ID will be left blank and provided by the requester of the
 	// signature, but for hotfix signers, it is set to a specific value.
 	EndEntityCN string
+
+	// rand is random number generator. It should be
+	// cryptographically secure.
+	rand io.Reader
 
 	// rsa cache is used to pre-generate RSA private keys and speed up
 	// the signing process
@@ -129,6 +134,7 @@ func New(conf signer.Configuration) (s *XPISigner, err error) {
 		return nil, errors.Errorf("xpi: unknown signer mode %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Mode)
 	}
 	s.Mode = conf.Mode
+	s.rand = conf.GetRandReader()
 
 	// If the private key is rsa, launch a go routine that populates
 	// the rsa cache with private keys of the same length

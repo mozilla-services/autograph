@@ -21,7 +21,7 @@ import (
 // the channel is full then it blocks
 func (s *XPISigner) populateRsaCache(size int) {
 	for {
-		key, err := rsa.GenerateKey(rand.Reader, size)
+		key, err := rsa.GenerateKey(s.rand, size)
 		if err != nil {
 			log.Fatalf("xpi.populateRsaCache: %v", err)
 		}
