@@ -10,17 +10,20 @@ import (
 	"crypto"
 	"crypto/dsa"
 	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/pem"
 	"errors"
+	"io"
 	"fmt"
 	"math/big"
 	"regexp"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/ThalesIgnite/crypto11"
 )
 
@@ -99,6 +102,18 @@ func (cfg *Configuration) GetPrivateKey() (crypto.PrivateKey, error) {
 		return key, nil
 	}
 	return nil, fmt.Errorf("no suitable key found")
+}
+
+
+// GetRandReader returns the HSM rand reader when available and
+// otherwise returns the golang crypto/rand rand reader
+func (cfg *Configuration) GetRandReader() io.Reader {
+	if cfg.isHsmAvailable {
+		log.Infof("Using HSM RNG for XPI RSA key cache generation")
+		return new(crypto11.PKCS11RandReader)
+	} else {
+		return rand.Reader
+	}
 }
 
 // ParsePrivateKey takes a PEM blocks are returns a crypto.PrivateKey

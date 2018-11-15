@@ -7,6 +7,7 @@
 package signer
 
 import (
+	"io"
 	"crypto/rsa"
 	"testing"
 )
@@ -201,5 +202,39 @@ func TestNoSuitableKeyFound(t *testing.T) {
 	}
 	if err.Error() != "no suitable key found" {
 		t.Fatalf("expected to fail with no suitable key found but failed with: %v", err)
+	}
+}
+
+func TestGetRandReaderNoHSM(t *testing.T) {
+	tcfg := new(Configuration)
+	tcfg.isHsmAvailable = false
+	randReader := tcfg.GetRandReader()
+	if randReader == nil {
+		t.Fatal("expected io.Reader but got nil")
+	}
+	switch randReader.(type) {
+	case io.Reader:
+		break
+	default:
+		t.Fatalf("expected io.Reader but got %T", randReader)
+	}
+}
+
+func TestGetRandReaderHSM(t *testing.T) {
+	tcfg := new(Configuration)
+	tcfg.HSMIsAvailable()
+	randReader := tcfg.GetRandReader()
+	if randReader == nil {
+		t.Fatal("expected io.Reader but got nil")
+	}
+	switch randReader.(type) {
+	case io.Reader:
+		break
+	default:
+		t.Fatalf("expected io.Reader but got %T", randReader)
+	}
+	numBytesRead, err := randReader.Read([]byte("000"))
+	if err == nil && numBytesRead != 0 {
+		t.Fatalf("did not get err using RNG %+v and read %d bytes (expecting 0)", err, numBytesRead)
 	}
 }
