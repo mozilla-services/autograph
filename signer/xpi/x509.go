@@ -44,6 +44,7 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 		return key, nil
 	case <-time.After(100 * time.Millisecond):
 		// generate a key if none available
+		log.Printf("xpi: RSA key cache exhausted. Generating a new key")
 		return rsa.GenerateKey(rand.Reader, size)
 	}
 }
