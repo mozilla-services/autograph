@@ -3,7 +3,6 @@ package xpi
 import (
 	"crypto"
 	"crypto/ecdsa"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
@@ -39,13 +38,13 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 			// because the end entity has the same key size has
 			// the signer, but we're paranoid so handling it
 			log.Printf("WARNING: xpi rsa cache returned a key of size %d when %d was requested", key.N.BitLen(), size)
-			return rsa.GenerateKey(rand.Reader, size)
+			return rsa.GenerateKey(s.rand, size)
 		}
 		return key, nil
 	case <-time.After(100 * time.Millisecond):
 		// generate a key if none available
 		log.Printf("xpi: RSA key cache exhausted. Generating a new key")
-		return rsa.GenerateKey(rand.Reader, size)
+		return rsa.GenerateKey(s.rand, size)
 	}
 }
 
@@ -89,7 +88,7 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		eePublicKey = eeKey.(*rsa.PrivateKey).Public()
 	case *ecdsa.PrivateKey:
 		curve := s.issuerKey.(*ecdsa.PrivateKey).Curve
-		eeKey, err = ecdsa.GenerateKey(curve, rand.Reader)
+		eeKey, err = ecdsa.GenerateKey(curve, s.rand)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to generate ecdsa private key on curve %s", curve.Params().Name)
 			return
@@ -134,7 +133,7 @@ func (s *XPISigner) MakeEndEntity(cn string, coseAlg *cose.Algorithm) (eeCert *x
 		}
 	}
 
-	derCert, err = x509.CreateCertificate(rand.Reader, template, s.issuerCert, eePublicKey, s.issuerKey)
+	derCert, err = x509.CreateCertificate(s.rand, template, s.issuerCert, eePublicKey, s.issuerKey)
 	if err != nil {
 		err = errors.Wrapf(err, "xpi.MakeEndEntity: failed to create certificate")
 		return
