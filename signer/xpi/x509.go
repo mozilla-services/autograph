@@ -8,10 +8,10 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"fmt"
-	"log"
 	"math/big"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/pkg/errors"
 	"go.mozilla.org/cose"
 )
@@ -37,13 +37,13 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 			// it's theoritically impossible for this to happen
 			// because the end entity has the same key size has
 			// the signer, but we're paranoid so handling it
-			log.Printf("WARNING: xpi rsa cache returned a key of size %d when %d was requested", key.N.BitLen(), size)
+			log.Warnf("WARNING: xpi rsa cache returned a key of size %d when %d was requested", key.N.BitLen(), size)
 			return rsa.GenerateKey(s.rand, size)
 		}
 		return key, nil
 	case <-time.After(100 * time.Millisecond):
 		// generate a key if none available
-		log.Printf("xpi: RSA key cache exhausted. Generating a new key")
+		log.Warnf("xpi: rsa key cache exhausted. Generating a new key")
 		return rsa.GenerateKey(s.rand, size)
 	}
 }
