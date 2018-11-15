@@ -98,4 +98,10 @@ generate:
 dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
-.PHONY: all dummy-statsd test generate vendor
+softhsm-setup:
+	mkdir -p /var/lib/softhsm/tokens
+	softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
+	go run tools/softhsm/genkeys.go
+
+
+.PHONY: all dummy-statsd softhsm-setup test generate vendor
