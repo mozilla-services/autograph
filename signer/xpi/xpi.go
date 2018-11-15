@@ -134,7 +134,7 @@ func New(conf signer.Configuration) (s *XPISigner, err error) {
 	// the rsa cache with private keys of the same length
 	if issuerPrivateKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {
 		s.rsaCache = make(chan *rsa.PrivateKey, 100)
-		go s.populateRsaCache(s.issuerKey.(*rsa.PrivateKey).N.BitLen())
+		go s.populateRsaCache(issuerPrivateKey.N.BitLen())
 
 		if issuerPrivateKey.N.BitLen() < 2048 {
 			return nil, errors.Errorf("xpi: issuer RSA key must be at least 2048 bits")
