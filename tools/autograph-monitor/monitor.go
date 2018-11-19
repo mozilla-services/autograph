@@ -76,10 +76,16 @@ func Handler() (err error) {
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		confdir = os.Getenv("LAMBDA_TASK_ROOT")
 	}
+
 	// load the local configuration file
 	conf, err = loadConf(confdir + "/monitor.autograph.yaml")
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %v", err)
+	}
+	envUrl := os.Getenv("AUTOGRAPH_URL")
+	if envUrl != "" {
+		log.Printf("Overriding conf.URL %s with env var URL %s\n", conf.URL, envUrl)
+		conf.URL = envUrl
 	}
 
 	log.Println("Retrieving monitoring data from", conf.URL)
