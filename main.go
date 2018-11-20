@@ -69,7 +69,12 @@ type autographer struct {
 }
 
 func main() {
-	run(parseArgsAndLoadConfig(os.Args[1:]))
+	args := os.Args
+	// e.g. when run as 'autograph -c config.yaml' strip leading autograph
+	if len(args) > 0 {
+		args = os.Args[1:]
+	}
+	run(parseArgsAndLoadConfig(args))
 }
 
 func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, authPrint, debug bool) {
