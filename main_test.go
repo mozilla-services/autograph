@@ -279,23 +279,31 @@ func TestConfigLoadFileNotExist(t *testing.T) {
 }
 
 func TestStartMain(t *testing.T) {
+	// save args since main parses os.Args[1:] but we don't want
+	// to pass test ... when running with go test
+	oldArgs := os.Args
+
+	os.Args = []string{"test-autograph", "-D"}
 	go main()
 	time.Sleep(200 * time.Millisecond)
 	resp, err := http.Get("http://localhost:8000/__heartbeat__")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if fmt.Sprintf("%s", body) != "ohai" {
-		t.Errorf("expected heartbeat message 'ohai', got %q", body)
+		t.Fatalf("expected heartbeat message 'ohai', got %q", body)
 	}
 	if resp.StatusCode != http.StatusOK {
-		t.Errorf("expected response code %d, got %d", http.StatusOK, resp.StatusCode)
+		t.Fatalf("expected response code %d, got %d", http.StatusOK, resp.StatusCode)
 	}
+
+	// restore os.Args
+	os.Args = oldArgs
 }
 
 func TestPortOverride(t *testing.T) {
