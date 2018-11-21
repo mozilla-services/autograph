@@ -20,19 +20,40 @@ import (
 	"math/big"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/ThalesIgnite/crypto11"
 )
 
+// RSACacheConfig is a config for the RSAKeyCache
+type RSACacheConfig struct {
+	// NumKeys is the number of RSA keys matching the issuer size
+	// to cache
+	NumKeys uint64
+
+	// NumGenerators is the number of key generator workers to run
+	// that populate the RSA key cache
+	NumGenerators uint8
+
+	// GeneratorSleepDuration is how frequently each cache key
+	// generator tries to add a key to the cache chan
+	GeneratorSleepDuration time.Duration
+
+	// FetchTimeout is how long a consumer waits for the cache
+	// before generating its own key
+	FetchTimeout time.Duration
+}
+
 // Configuration defines the parameters of a signer
 type Configuration struct {
-	ID          string `json:"id"`
-	Type        string `json:"type"`
-	Mode        string `json:"mode"`
-	PrivateKey  string `json:"privatekey,omitempty"`
-	PublicKey   string `json:"publickey,omitempty"`
-	Certificate string `json:"certificate,omitempty"`
-	X5U         string `json:"x5u,omitempty"`
+	ID             string         `json:"id"`
+	Type           string         `json:"type"`
+	Mode           string         `json:"mode"`
+	PrivateKey     string         `json:"privatekey,omitempty"`
+	PublicKey      string         `json:"publickey,omitempty"`
+	Certificate    string         `json:"certificate,omitempty"`
+	X5U            string         `json:"x5u,omitempty"`
+	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty"`
 
 	isHsmAvailable bool
 }

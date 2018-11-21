@@ -83,6 +83,13 @@ signers:
       # 'system add-on' are signed with the OU 'Mozilla Components' and the provided ID
       # 'hotfix' are signed with the OU 'Production' and the ID 'firefox-hotfix@mozilla.org'
       mode: add-on
+      # RSA key gen is slow and CPU intensive, so we can optionally
+      # pregenerate and cache keys with a worker pool
+      rsacacheconfig:
+        numkeys: 25
+        numgenerators: 2
+        generatorsleepduration: 1m
+        fetchtimeout: 100ms
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
