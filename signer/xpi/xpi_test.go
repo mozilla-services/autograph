@@ -22,6 +22,13 @@ func TestSignFile(t *testing.T) {
 	input := unsignedBootstrap
 	// initialize a signer
 	testcase := PASSINGTESTCASES[0]
+	testcase.RSACacheConfig = signer.RSACacheConfig{
+		NumKeys:                5,
+		NumGenerators:          2,
+		GeneratorSleepDuration: time.Minute,
+		FetchTimeout:           100 * time.Millisecond,
+		MonitorSampleRate:      10 * time.Second,
+	}
 	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)

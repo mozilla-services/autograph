@@ -76,6 +76,10 @@ type XPISigner struct {
 	// cache before generating its own key
 	rsaCacheFetchTimeout time.Duration
 
+	// rsaCacheSizeSampleRate is how frequently the monitor
+	// reports the cache size and capacity
+	rsaCacheSizeSampleRate time.Duration
+
 	// stats is the statsd client for reporting metrics
 	stats *statsd.Client
 }
@@ -151,8 +155,12 @@ func New(conf signer.Configuration, stats *statsd.Client) (s *XPISigner, err err
 		if issuerPrivateKey.N.BitLen() < 2048 {
 			return nil, errors.Errorf("xpi: issuer RSA key must be at least 2048 bits")
 		}
+		if conf.RSACacheConfig.MonitorSampleRate < 5*time.Millisecond {
+			log.Warnf("xpi: sampling rsa cache as rate of %s (less than 5ms)", conf.RSACacheConfig.MonitorSampleRate)
+		}
 		s.rsaCacheGeneratorSleepDuration = conf.RSACacheConfig.GeneratorSleepDuration
 		s.rsaCacheFetchTimeout = conf.RSACacheConfig.FetchTimeout
+		s.rsaCacheSizeSampleRate = conf.RSACacheConfig.MonitorSampleRate
 
 		s.rsaCache = make(chan *rsa.PrivateKey, conf.RSACacheConfig.NumKeys)
 		for i := 0; i < int(conf.RSACacheConfig.NumGenerators); i++ {
@@ -160,6 +168,13 @@ func New(conf signer.Configuration, stats *statsd.Client) (s *XPISigner, err err
 		}
 
 		log.Infof("xpi: %d RSA key cache started with %d generators running every %s\n and a %s timeout", conf.RSACacheConfig.NumKeys, conf.RSACacheConfig.NumGenerators, s.rsaCacheGeneratorSleepDuration, s.rsaCacheFetchTimeout)
+
+		if s.stats == nil {
+			log.Warnf("xpi: No statsd client found to send RSA cache metrics")
+		} else {
+			go s.monitorRsaCacheSize()
+			log.Infof("xpi: Started RSA cache monitor")
+		}
 	}
 
 	return

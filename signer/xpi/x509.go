@@ -31,6 +31,30 @@ func (s *XPISigner) populateRsaCache(size int) {
 	}
 }
 
+// monitorRsaCacheSize sends the number of cached keys and cache size
+// to datadog. It should be run as a goroutine
+func (s *XPISigner) monitorRsaCacheSize() {
+	var (
+		signerTags []string = []string{s.ID, s.Type, s.Mode}
+		err error
+	)
+	for {
+		err = s.stats.Gauge("xpi.rsa_cache.chan_len", float64(len(s.rsaCache)), signerTags, 1)
+		if err != nil {
+			log.Warnf("Error sending xpi.rsa_cache.chan_len: %s", err)
+		}
+
+		// chan capacity should be constant but is useful for
+		// knowing % cache filled across deploys
+		err = s.stats.Gauge("xpi.rsa_cache.chan_cap", float64(cap(s.rsaCache)), signerTags, 1)
+		if err != nil {
+			log.Warnf("Error sending xpi.rsa_cache.chan_cap: %s", err)
+		}
+
+		time.Sleep(s.rsaCacheSizeSampleRate)
+	}
+}
+
 // retrieve a key from the cache or generate one if it takes too long
 // or if the size is wrong
 func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {

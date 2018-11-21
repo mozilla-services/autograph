@@ -42,6 +42,10 @@ type RSACacheConfig struct {
 	// FetchTimeout is how long a consumer waits for the cache
 	// before generating its own key
 	FetchTimeout time.Duration
+
+	// MonitorSampleRate is how frequently the monitor reports the
+	// cache size and capacity
+	MonitorSampleRate time.Duration
 }
 
 // Configuration defines the parameters of a signer
