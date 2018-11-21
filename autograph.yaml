@@ -12,7 +12,7 @@ statsd:
 # token label and pin of the crypto user in the configuration below
 # hsm:
 #     # sample config for cloudhsm
-#     path:       /opt/cloudhsm/lib/libcloudhsm_pkcs11.so 
+#     path:       /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
 #     tokenlabel: cavium
 #     pin:        ulfr:e2deea623796eecd
 
