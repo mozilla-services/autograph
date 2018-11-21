@@ -17,8 +17,9 @@ import (
 	"go.mozilla.org/cose"
 )
 
-// every minute, add an rsa key to the cache. This will block if
-// the cache channel is already full, which is what we want anyway
+// populateRsaCache adds an rsa key to the cache every
+// XPISigner.rsaCacheSleepDuration, blocks when the cache channel is
+// full, and should be run as a goroutine
 func (s *XPISigner) populateRsaCache(size int) {
 	for {
 		key, err := rsa.GenerateKey(rand.Reader, size)
@@ -26,7 +27,7 @@ func (s *XPISigner) populateRsaCache(size int) {
 			log.Fatalf("xpi.populateRsaCache: %v", err)
 		}
 		s.rsaCache <- key
-		time.Sleep(time.Minute)
+		time.Sleep(s.rsaCacheGeneratorSleepDuration)
 	}
 }
 
@@ -43,7 +44,7 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 			return rsa.GenerateKey(rand.Reader, size)
 		}
 		return key, nil
-	case <-time.After(100 * time.Millisecond):
+	case <-time.After(s.rsaCacheFetchTimeout):
 		// generate a key if none available
 		return rsa.GenerateKey(rand.Reader, size)
 	}

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/cose"
 	"go.mozilla.org/pkcs7"
@@ -65,6 +66,14 @@ type XPISigner struct {
 	// rsa cache is used to pre-generate RSA private keys and speed up
 	// the signing process
 	rsaCache chan *rsa.PrivateKey
+
+	// rsaCacheGeneratorSleepDuration is how frequently each cache key
+	// generator tries to add a key to the cache chan
+	rsaCacheGeneratorSleepDuration time.Duration
+
+	// rsaCacheFetchTimeout is how long a consumer waits for the
+	// cache before generating its own key
+	rsaCacheFetchTimeout time.Duration
 }
 
 // New initializes an XPI signer using a configuration
@@ -130,15 +139,22 @@ func New(conf signer.Configuration) (s *XPISigner, err error) {
 	}
 	s.Mode = conf.Mode
 
-	// If the private key is rsa, launch a go routine that populates
-	// the rsa cache with private keys of the same length
+	// If the private key is rsa, launch go routines that
+	// populates the rsa cache with private keys of the same
+	// length
 	if issuerPrivateKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {
-		s.rsaCache = make(chan *rsa.PrivateKey, 100)
-		go s.populateRsaCache(issuerPrivateKey.N.BitLen())
-
 		if issuerPrivateKey.N.BitLen() < 2048 {
 			return nil, errors.Errorf("xpi: issuer RSA key must be at least 2048 bits")
 		}
+		s.rsaCacheGeneratorSleepDuration = conf.RSACacheConfig.GeneratorSleepDuration
+		s.rsaCacheFetchTimeout = conf.RSACacheConfig.FetchTimeout
+
+		s.rsaCache = make(chan *rsa.PrivateKey, conf.RSACacheConfig.NumKeys)
+		for i := 0; i < int(conf.RSACacheConfig.NumGenerators); i++ {
+			go s.populateRsaCache(issuerPrivateKey.N.BitLen())
+		}
+
+		log.Infof("xpi: %d RSA key cache started with %d generators running every %s\n and a %s timeout", conf.RSACacheConfig.NumKeys, conf.RSACacheConfig.NumGenerators, s.rsaCacheGeneratorSleepDuration, s.rsaCacheFetchTimeout)
 	}
 
 	return
