@@ -39,11 +39,11 @@ const (
 	// Firefox HotFixes
 	ModeHotFix = "hotfix"
 
-	coseManifestPath = "META-INF/cose.manifest"
-	coseSigPath = "META-INF/cose.sig"
-	pkcs7ManifestPath = "META-INF/manifest.mf"
+	coseManifestPath       = "META-INF/cose.manifest"
+	coseSigPath            = "META-INF/cose.sig"
+	pkcs7ManifestPath      = "META-INF/manifest.mf"
 	pkcs7SignatureFilePath = "META-INF/mozilla.sf"
-	pkcs7SigPath = "META-INF/mozilla.rsa"
+	pkcs7SigPath           = "META-INF/mozilla.rsa"
 )
 
 // An XPISigner is configured to issue detached PKCS7 and COSE
@@ -361,7 +361,7 @@ func (o *Options) PK7Digest() (asn1.ObjectIdentifier, error) {
 // GetDefaultOptions returns default options of the signer
 func (s *XPISigner) GetDefaultOptions() interface{} {
 	return Options{
-		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		ID:          "ffffffff-ffff-ffff-ffff-ffffffffffff",
 		PKCS7Digest: "SHA1",
 	}
 }
