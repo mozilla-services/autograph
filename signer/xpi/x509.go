@@ -70,20 +70,31 @@ func (s *XPISigner) monitorRsaCacheSize() {
 // retrieve a key from the cache or generate one if it takes too long
 // or if the size is wrong
 func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
+	var (
+		err, sendStatsErr error
+		key *rsa.PrivateKey
+		signerTags []string = []string{s.ID, s.Type, s.Mode}
+		start time.Time
+	)
+	start = time.Now()
 	select {
-	case key := <-s.rsaCache:
+	case key = <-s.rsaCache:
 		if key.N.BitLen() != size {
 			// it's theoritically impossible for this to happen
 			// because the end entity has the same key size has
 			// the signer, but we're paranoid so handling it
 			log.Warnf("WARNING: xpi rsa cache returned a key of size %d when %d was requested", key.N.BitLen(), size)
-			return rsa.GenerateKey(rand.Reader, size)
+			key, err = rsa.GenerateKey(rand.Reader, size)
 		}
-		return key, nil
 	case <-time.After(s.rsaCacheFetchTimeout):
 		// generate a key if none available
-		return rsa.GenerateKey(rand.Reader, size)
+		key, err = rsa.GenerateKey(rand.Reader, size)
 	}
+	sendStatsErr = s.stats.Histogram("xpi.rsa_cache.get_key", float64(time.Since(start)), signerTags, 1)
+	if sendStatsErr != nil {
+		log.Warnf("Error sending xpi.rsa_cache.get_key: %s", err)
+	}
+	return key, err
 }
 
 // makeTemplate returns a pointer to a template for an x509.Certificate EE
