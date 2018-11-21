@@ -21,10 +21,22 @@ import (
 // XPISigner.rsaCacheSleepDuration, blocks when the cache channel is
 // full, and should be run as a goroutine
 func (s *XPISigner) populateRsaCache(size int) {
+	var (
+		err error
+		key *rsa.PrivateKey
+		signerTags []string = []string{s.ID, s.Type, s.Mode}
+		start time.Time
+	)
 	for {
-		key, err := rsa.GenerateKey(rand.Reader, size)
+		start = time.Now()
+		key, err = rsa.GenerateKey(rand.Reader, size)
 		if err != nil {
-			log.Fatalf("xpi.populateRsaCache: %v", err)
+			log.Fatalf("xpi: error generating RSA key for cache:", err)
+		}
+
+		err = s.stats.Histogram("xpi.rsa_cache.gen_key_dur", float64(time.Since(start)), signerTags, 1)
+		if err != nil {
+			log.Warnf("Error sending xpi.rsa_cache.gen_key_dur: %s", err)
 		}
 		s.rsaCache <- key
 		time.Sleep(s.rsaCacheGeneratorSleepDuration)
