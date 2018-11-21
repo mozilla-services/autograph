@@ -64,7 +64,7 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 
 	// initialize a signer
 	testcase := PASSINGTESTCASES[0]
-	s, err := New(testcase)
+	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
@@ -362,7 +362,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 		t.Fatalf("error unmarshaling invalidSigBytes %s", err)
 	}
 
-	s, err := New(PASSINGTESTCASES[0])
+	s, err := New(PASSINGTESTCASES[0], nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
@@ -595,7 +595,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 func TestIssueCOSESignatureErrs(t *testing.T) {
 	t.Parallel()
 
-	signer, err := New(PASSINGTESTCASES[0])
+	signer, err := New(PASSINGTESTCASES[0], nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}

@@ -22,7 +22,7 @@ func TestSignFile(t *testing.T) {
 	input := unsignedBootstrap
 	// initialize a signer
 	testcase := PASSINGTESTCASES[0]
-	s, err := New(testcase)
+	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestSignData(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 	for i, testcase := range PASSINGTESTCASES {
 		// initialize a signer
-		s, err := New(testcase)
+		s, err := New(testcase, nil)
 		if err != nil {
 			t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
 		}
@@ -114,7 +114,7 @@ func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 
 	// init a signer
-	s, err := New(PASSINGTESTCASES[3])
+	s, err := New(PASSINGTESTCASES[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -186,7 +186,7 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 	testcase := PASSINGTESTCASES[3]
 
-	s, err := New(testcase)
+	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -220,7 +220,7 @@ func TestNewFailure(t *testing.T) {
 	t.Parallel()
 
 	for i, testcase := range FAILINGTESTCASES {
-		_, err := New(testcase.cfg)
+		_, err := New(testcase.cfg, nil)
 		if !strings.Contains(err.Error(), testcase.err) {
 			t.Fatalf("testcase %d expected to fail with '%v' but failed with '%v' instead", i, testcase.err, err)
 		}
@@ -234,7 +234,7 @@ func TestOptionsP7Digest(t *testing.T) {
 	t.Parallel()
 
 	testcase := PASSINGTESTCASES[3]
-	s, err := New(testcase)
+	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -270,7 +270,7 @@ func TestNoID(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3])
+	s, err := New(PASSINGTESTCASES[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -288,7 +288,7 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3])
+	s, err := New(PASSINGTESTCASES[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -324,7 +324,7 @@ func TestBadPKCS7DigestErrs(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3])
+	s, err := New(PASSINGTESTCASES[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -346,7 +346,7 @@ func TestMarshalUnfinishedSignature(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3])
+	s, err := New(PASSINGTESTCASES[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -366,7 +366,7 @@ func TestMarshalEmptySignature(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3])
+	s, err := New(PASSINGTESTCASES[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -408,7 +408,7 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3])
+	s, err := New(PASSINGTESTCASES[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -428,7 +428,7 @@ func TestRsaCaching(t *testing.T) {
 
 	// initialize a rsa signer
 	testcase := PASSINGTESTCASES[0]
-	s, err := New(testcase)
+	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
@@ -469,7 +469,7 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 	input := unsignedBootstrap
 	// initialize a signer
 	testcase := PASSINGTESTCASES[0]
-	s, err := New(testcase)
+	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}

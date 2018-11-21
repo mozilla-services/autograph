@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/autograph/signer"
@@ -74,10 +75,13 @@ type XPISigner struct {
 	// rsaCacheFetchTimeout is how long a consumer waits for the
 	// cache before generating its own key
 	rsaCacheFetchTimeout time.Duration
+
+	// stats is the statsd client for reporting metrics
+	stats *statsd.Client
 }
 
 // New initializes an XPI signer using a configuration
-func New(conf signer.Configuration) (s *XPISigner, err error) {
+func New(conf signer.Configuration, stats *statsd.Client) (s *XPISigner, err error) {
 	s = new(XPISigner)
 	if conf.Type != Type {
 		return nil, errors.Errorf("xpi: invalid type %q, must be %q", conf.Type, Type)
@@ -138,6 +142,7 @@ func New(conf signer.Configuration) (s *XPISigner, err error) {
 		return nil, errors.Errorf("xpi: unknown signer mode %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Mode)
 	}
 	s.Mode = conf.Mode
+	s.stats = stats
 
 	// If the private key is rsa, launch go routines that
 	// populates the rsa cache with private keys of the same

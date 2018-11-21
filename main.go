@@ -270,7 +270,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
 		case xpi.Type:
-			s, err = xpi.New(signerConf)
+			s, err = xpi.New(signerConf, a.stats)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
