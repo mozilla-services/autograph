@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/pkcs7"
 )
@@ -29,7 +30,14 @@ func TestSignFile(t *testing.T) {
 		FetchTimeout:           100 * time.Millisecond,
 		MonitorSampleRate:      10 * time.Second,
 	}
-	s, err := New(testcase, nil)
+
+	statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
+	if err != nil {
+		t.Fatalf("Error constructing statsdClient: %v", err)
+	}
+	statsdClient.Namespace = "test_autograph_stats_ns"
+
+	s, err := New(testcase, statsdClient)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
