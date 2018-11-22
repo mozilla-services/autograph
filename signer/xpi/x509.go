@@ -116,7 +116,7 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		size := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {
-			err = errors.Wrapf(err, "failed to generate rsa private key of size %d", size)
+			err = errors.Wrapf(err, "xpi: failed to generate rsa private key of size %d", size)
 			return
 		}
 		eePublicKey = eeKey.(*rsa.PrivateKey).Public()
@@ -124,7 +124,7 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		curve := s.issuerKey.(*ecdsa.PrivateKey).Curve
 		eeKey, err = ecdsa.GenerateKey(curve, rand.Reader)
 		if err != nil {
-			err = errors.Wrapf(err, "failed to generate ecdsa private key on curve %s", curve.Params().Name)
+			err = errors.Wrapf(err, "xpi: failed to generate ecdsa private key on curve %s", curve.Params().Name)
 			return
 		}
 		eePublicKey = eeKey.(*ecdsa.PrivateKey).Public()
