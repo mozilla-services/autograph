@@ -119,7 +119,12 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 			err = errors.Wrapf(err, "xpi: failed to generate rsa private key of size %d", size)
 			return
 		}
-		eePublicKey = eeKey.(*rsa.PrivateKey).Public()
+		newKey, ok := eeKey.(*rsa.PrivateKey)
+		if !ok {
+			err = errors.Wrapf(err, "xpi: failed to cast generated key of size %d to *rsa.PrivateKey", size)
+			return
+		}
+		eePublicKey = newKey.Public()
 	case *ecdsa.PrivateKey:
 		curve := s.issuerKey.(*ecdsa.PrivateKey).Curve
 		eeKey, err = ecdsa.GenerateKey(curve, rand.Reader)
@@ -127,7 +132,12 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 			err = errors.Wrapf(err, "xpi: failed to generate ecdsa private key on curve %s", curve.Params().Name)
 			return
 		}
-		eePublicKey = eeKey.(*ecdsa.PrivateKey).Public()
+		newKey, ok := eeKey.(*ecdsa.PrivateKey)
+		if !ok {
+			err = errors.Wrapf(err, "xpi: failed to cast generated key on curve %s to *ecdsa.PrivateKey", curve)
+			return
+		}
+		eePublicKey = newKey.Public()
 	}
 	return
 }
