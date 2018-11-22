@@ -301,8 +301,8 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 	}
 	// sign input data with invalid cose algs option
 	_, err = s.SignData(input, Options{
-		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
-		PKCS7Digest: "SHA1",
+		ID:             "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		PKCS7Digest:    "SHA1",
 		COSEAlgorithms: []string{"bar"},
 	})
 	expectedErr := "xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead"
@@ -314,8 +314,8 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 
 	// sign input data with valid cose algs option
 	_, err = s.SignData(input, Options{
-		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
-		PKCS7Digest: "SHA1",
+		ID:             "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		PKCS7Digest:    "SHA1",
 		COSEAlgorithms: []string{"ES256"},
 	})
 	expectedErr = "xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead"
@@ -337,7 +337,7 @@ func TestBadPKCS7DigestErrs(t *testing.T) {
 	}
 	// sign input data with invalid pkcs7_digest options
 	_, err = s.SignData(input, Options{
-		ID: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+		ID:          "ffffffff-ffff-ffff-ffff-ffffffffffff",
 		PKCS7Digest: "SHA9000",
 	})
 	expectedErr := "xpi: can only use SHA1 digests with /sign/data. Use /sign/file instead"
@@ -485,7 +485,7 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 	signOptions := Options{
 		ID:             "test@example.net",
 		COSEAlgorithms: []string{"ES256", "PS256"},
-		PKCS7Digest: "SHA1",
+		PKCS7Digest:    "SHA1",
 	}
 	signedXPI, err := s.SignFile(input, signOptions)
 	if err != nil {
