@@ -323,6 +323,42 @@ func (s *XPISigner) signDataWithPKCS7(sigfile []byte, cn string, digest asn1.Obj
 	return p7sig, nil
 }
 
+// SendGauge checks for a client and when one is present sends a
+// statsd gauge with the given name, int value cast to
+// float64, tags for the signer, and sampling rate of 1
+func (s *XPISigner) SendGauge(name string, value int) {
+	if s.stats == nil {
+		log.Warnf("xpi: statsd client is nil. Could not send gauge %s with value %v", name, value)
+		return
+	}
+	var (
+		err        error
+		signerTags []string = []string{s.ID, s.Type, s.Mode}
+	)
+	err = s.stats.Gauge(name, float64(value), signerTags, 1)
+	if err != nil {
+		log.Warnf("Error sending gauge %s: %s", name, err)
+	}
+}
+
+// SendHistogram checks for a client and when one is present sends a
+// statsd histogram with the given name, time.Duration value cast to
+// float64, tags for the signer, and sampling rate of 1
+func (s *XPISigner) SendHistogram(name string, value time.Duration) {
+	if s.stats == nil {
+		log.Warnf("xpi: statsd client is nil. Could not send histogram %s with value %s", name, value)
+		return
+	}
+	var (
+		err        error
+		signerTags []string = []string{s.ID, s.Type, s.Mode}
+	)
+	err = s.stats.Histogram(name, float64(value), signerTags, 1)
+	if err != nil {
+		log.Warnf("Error sending histogram %s: %s", name, err)
+	}
+}
+
 // Options contains specific parameters used to sign XPIs
 type Options struct {
 	// ID is the add-on ID which is stored in the end-entity subject CN

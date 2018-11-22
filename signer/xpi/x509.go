@@ -24,7 +24,6 @@ func (s *XPISigner) populateRsaCache(size int) {
 	var (
 		err error
 		key *rsa.PrivateKey
-		signerTags []string = []string{s.ID, s.Type, s.Mode}
 		start time.Time
 	)
 	for {
@@ -34,10 +33,7 @@ func (s *XPISigner) populateRsaCache(size int) {
 			log.Fatalf("xpi: error generating RSA key for cache:", err)
 		}
 
-		err = s.stats.Histogram("xpi.rsa_cache.gen_key_dur", float64(time.Since(start)), signerTags, 1)
-		if err != nil {
-			log.Warnf("Error sending xpi.rsa_cache.gen_key_dur: %s", err)
-		}
+		s.SendHistogram("xpi.rsa_cache.gen_key_dur", time.Since(start))
 		s.rsaCache <- key
 		time.Sleep(s.rsaCacheGeneratorSleepDuration)
 	}
@@ -46,22 +42,12 @@ func (s *XPISigner) populateRsaCache(size int) {
 // monitorRsaCacheSize sends the number of cached keys and cache size
 // to datadog. It should be run as a goroutine
 func (s *XPISigner) monitorRsaCacheSize() {
-	var (
-		signerTags []string = []string{s.ID, s.Type, s.Mode}
-		err error
-	)
 	for {
-		err = s.stats.Gauge("xpi.rsa_cache.chan_len", float64(len(s.rsaCache)), signerTags, 1)
-		if err != nil {
-			log.Warnf("Error sending xpi.rsa_cache.chan_len: %s", err)
-		}
+		s.SendGauge("xpi.rsa_cache.chan_len", len(s.rsaCache))
 
 		// chan capacity should be constant but is useful for
 		// knowing % cache filled across deploys
-		err = s.stats.Gauge("xpi.rsa_cache.chan_cap", float64(cap(s.rsaCache)), signerTags, 1)
-		if err != nil {
-			log.Warnf("Error sending xpi.rsa_cache.chan_cap: %s", err)
-		}
+		s.SendGauge("xpi.rsa_cache.chan_cap", cap(s.rsaCache))
 
 		time.Sleep(s.rsaCacheSizeSampleRate)
 	}
@@ -71,9 +57,8 @@ func (s *XPISigner) monitorRsaCacheSize() {
 // or if the size is wrong
 func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 	var (
-		err, sendStatsErr error
+		err error
 		key *rsa.PrivateKey
-		signerTags []string = []string{s.ID, s.Type, s.Mode}
 		start time.Time
 	)
 	start = time.Now()
@@ -90,10 +75,7 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 		// generate a key if none available
 		key, err = rsa.GenerateKey(rand.Reader, size)
 	}
-	sendStatsErr = s.stats.Histogram("xpi.rsa_cache.get_key", float64(time.Since(start)), signerTags, 1)
-	if sendStatsErr != nil {
-		log.Warnf("Error sending xpi.rsa_cache.get_key: %s", err)
-	}
+	s.SendHistogram("xpi.rsa_cache.get_key", time.Since(start))
 	return key, err
 }
 
