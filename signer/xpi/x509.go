@@ -30,7 +30,7 @@ func (s *XPISigner) populateRsaCache(size int) {
 		start = time.Now()
 		key, err = rsa.GenerateKey(rand.Reader, size)
 		if err != nil {
-			log.Fatalf("xpi: error generating RSA key for cache:", err)
+			log.Fatalf("xpi: error generating RSA key for cache: %s", err)
 		}
 
 		s.SendHistogram("xpi.rsa_cache.gen_key_dur", time.Since(start))
