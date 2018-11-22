@@ -285,7 +285,12 @@ func TestStartMain(t *testing.T) {
 
 	os.Args = []string{"test-autograph", "-D"}
 	go main()
-	time.Sleep(200 * time.Millisecond)
+	if os.Getenv("CI") == "true" {
+		// sleep longer when running in continuous integration
+		time.Sleep(3 * time.Second)
+	} else {
+		time.Sleep(200 * time.Millisecond)
+	}
 	resp, err := http.Get("http://localhost:8000/__heartbeat__")
 	if err != nil {
 		t.Fatal(err)
