@@ -43,9 +43,9 @@ type RSACacheConfig struct {
 	// before generating its own key
 	FetchTimeout time.Duration
 
-	// MonitorSampleRate is how frequently the monitor reports the
+	// StatsSampleRate is how frequently the monitor reports the
 	// cache size and capacity
-	MonitorSampleRate time.Duration
+	StatsSampleRate time.Duration
 }
 
 // Configuration defines the parameters of a signer
