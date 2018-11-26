@@ -15,7 +15,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"math/big"
 	"regexp"
@@ -23,6 +22,9 @@ import (
 	"time"
 
 	"github.com/ThalesIgnite/crypto11"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/DataDog/datadog-go/statsd"
 )
 
 // RSACacheConfig is a config for the RSAKeyCache
@@ -42,6 +44,10 @@ type RSACacheConfig struct {
 	// FetchTimeout is how long a consumer waits for the cache
 	// before generating its own key
 	FetchTimeout time.Duration
+
+	// StatsSampleRate is how frequently the monitor reports the
+	// cache size and capacity
+	StatsSampleRate time.Duration
 }
 
 // Configuration defines the parameters of a signer
@@ -210,4 +216,52 @@ func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
 		},
 		X: x,
 	}, nil
+}
+
+// StatsClient is a helper for sending statsd stats with the relevant
+// tags for the signer and error handling
+type StatsClient struct {
+	// signerTags is the
+	signerTags []string
+
+	// stats is the statsd client for reporting metrics
+	stats *statsd.Client
+}
+
+func NewStatsClient(signerConfig Configuration, stats *statsd.Client) (*StatsClient, error) {
+	if stats == nil {
+		return nil, errors.Errorf("xpi: statsd client is nil. Could not create StatsClient for signer %s", signerConfig.ID)
+	}
+	return &StatsClient{
+		stats: stats,
+		signerTags: []string{signerConfig.ID, signerConfig.Type, signerConfig.Mode},
+	}, nil
+}
+
+// SendGauge checks for a statsd client and when one is present sends
+// a statsd gauge with the given name, int value cast to float64, tags
+// for the signer, and sampling rate of 1
+func (s *StatsClient) SendGauge(name string, value int) {
+	if s.stats == nil {
+		log.Warnf("xpi: statsd client is nil. Could not send gauge %s with value %v", name, value)
+		return
+	}
+	err := s.stats.Gauge(name, float64(value), s.signerTags, 1)
+	if err != nil {
+		log.Warnf("Error sending gauge %s: %s", name, err)
+	}
+}
+
+// SendHistogram checks for a statsd client and when one is present
+// sends a statsd histogram with the given name, time.Duration value
+// cast to float64, tags for the signer, and sampling rate of 1
+func (s *StatsClient) SendHistogram(name string, value time.Duration) {
+	if s.stats == nil {
+		log.Warnf("xpi: statsd client is nil. Could not send histogram %s with value %s", name, value)
+		return
+	}
+	err := s.stats.Histogram(name, float64(value), s.signerTags, 1)
+	if err != nil {
+		log.Warnf("Error sending histogram %s: %s", name, err)
+	}
 }

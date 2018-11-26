@@ -90,6 +90,7 @@ signers:
         numgenerators: 2
         generatorsleepduration: 1m
         fetchtimeout: 100ms
+        statssamplerate: 1m
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx

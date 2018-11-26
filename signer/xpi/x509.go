@@ -21,33 +21,73 @@ import (
 // XPISigner.rsaCacheSleepDuration, blocks when the cache channel is
 // full, and should be run as a goroutine
 func (s *XPISigner) populateRsaCache(size int) {
+	var (
+		err error
+		key *rsa.PrivateKey
+		start time.Time
+	)
 	for {
-		key, err := rsa.GenerateKey(rand.Reader, size)
+		start = time.Now()
+		key, err = rsa.GenerateKey(rand.Reader, size)
 		if err != nil {
-			log.Fatalf("xpi.populateRsaCache: %v", err)
+			log.Fatalf("xpi: error generating RSA key for cache: %s", err)
+		}
+		if key == nil {
+			log.Fatal("xpi: error generated nil RSA key for cache")
+		}
+
+		if s.stats != nil {
+			s.stats.SendHistogram("xpi.rsa_cache.gen_key_dur", time.Since(start))
 		}
 		s.rsaCache <- key
 		time.Sleep(s.rsaCacheGeneratorSleepDuration)
 	}
 }
 
+// monitorRsaCacheSize sends the number of cached keys and cache size
+// to datadog. It should be run as a goroutine
+func (s *XPISigner) monitorRsaCacheSize() {
+	if s.stats == nil {
+		return
+	}
+	for {
+		s.stats.SendGauge("xpi.rsa_cache.chan_len", len(s.rsaCache))
+
+		// chan capacity should be constant but is useful for
+		// knowing % cache filled across deploys
+		s.stats.SendGauge("xpi.rsa_cache.chan_cap", cap(s.rsaCache))
+
+		time.Sleep(s.rsaCacheSizeSampleRate)
+	}
+}
+
 // retrieve a key from the cache or generate one if it takes too long
 // or if the size is wrong
 func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
+	var (
+		err error
+		key *rsa.PrivateKey
+		start time.Time
+	)
+	start = time.Now()
 	select {
-	case key := <-s.rsaCache:
+	case key = <-s.rsaCache:
 		if key.N.BitLen() != size {
 			// it's theoritically impossible for this to happen
 			// because the end entity has the same key size has
 			// the signer, but we're paranoid so handling it
 			log.Warnf("WARNING: xpi rsa cache returned a key of size %d when %d was requested", key.N.BitLen(), size)
-			return rsa.GenerateKey(rand.Reader, size)
+			key, err = rsa.GenerateKey(rand.Reader, size)
 		}
-		return key, nil
 	case <-time.After(s.rsaCacheFetchTimeout):
 		// generate a key if none available
-		return rsa.GenerateKey(rand.Reader, size)
+		key, err = rsa.GenerateKey(rand.Reader, size)
 	}
+
+	if s.stats != nil {
+		s.stats.SendHistogram("xpi.rsa_cache.get_key", time.Since(start))
+	}
+	return key, err
 }
 
 // makeTemplate returns a pointer to a template for an x509.Certificate EE
@@ -84,18 +124,33 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		size := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {
-			err = errors.Wrapf(err, "failed to generate rsa private key of size %d", size)
+			err = errors.Wrapf(err, "xpi: failed to generate rsa private key of size %d", size)
 			return
 		}
-		eePublicKey = eeKey.(*rsa.PrivateKey).Public()
+		if eeKey == nil {
+			err = errors.Wrapf(err, "xpi: failed to get rsa private key of size %d", size)
+			return
+		}
+
+		newKey, ok := eeKey.(*rsa.PrivateKey)
+		if !ok {
+			err = errors.Wrapf(err, "xpi: failed to cast generated key of size %d to *rsa.PrivateKey", size)
+			return
+		}
+		eePublicKey = newKey.Public()
 	case *ecdsa.PrivateKey:
 		curve := s.issuerKey.(*ecdsa.PrivateKey).Curve
 		eeKey, err = ecdsa.GenerateKey(curve, rand.Reader)
 		if err != nil {
-			err = errors.Wrapf(err, "failed to generate ecdsa private key on curve %s", curve.Params().Name)
+			err = errors.Wrapf(err, "xpi: failed to generate ecdsa private key on curve %s", curve.Params().Name)
 			return
 		}
-		eePublicKey = eeKey.(*ecdsa.PrivateKey).Public()
+		newKey, ok := eeKey.(*ecdsa.PrivateKey)
+		if !ok {
+			err = errors.Wrapf(err, "xpi: failed to cast generated key on curve %s to *ecdsa.PrivateKey", curve)
+			return
+		}
+		eePublicKey = newKey.Public()
 	}
 	return
 }

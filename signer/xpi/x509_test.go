@@ -8,7 +8,7 @@ import (
 
 func TestMakeEndEntity(t *testing.T) {
 	t.Parallel()
-	s, err := New(PASSINGTESTCASES[3])
+	s, err := New(PASSINGTESTCASES[3], nil)
 	if err != nil {
 		t.Fatal(err)
 	}
