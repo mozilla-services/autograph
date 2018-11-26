@@ -261,8 +261,16 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 		sids[signerConf.ID] = true
 		var (
 			s   signer.Signer
+			statsClient *signer.StatsClient
 			err error
 		)
+		if a.stats != nil {
+			statsClient, err = signer.NewStatsClient(signerConf, a.stats)
+			if statsClient == nil || err != nil {
+				return errors.Wrapf(err, "failed to add signer stats client %q or got back nil statsClient", signerConf.ID)
+			}
+		}
+
 		switch signerConf.Type {
 		case contentsignature.Type:
 			s, err = contentsignature.New(signerConf)
@@ -270,7 +278,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
 		case xpi.Type:
-			s, err = xpi.New(signerConf, a.stats)
+			s, err = xpi.New(signerConf, statsClient)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}

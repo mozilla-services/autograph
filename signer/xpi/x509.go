@@ -36,7 +36,9 @@ func (s *XPISigner) populateRsaCache(size int) {
 			log.Fatal("xpi: error generated nil RSA key for cache")
 		}
 
-		s.SendHistogram("xpi.rsa_cache.gen_key_dur", time.Since(start))
+		if s.stats != nil {
+			s.stats.SendHistogram("xpi.rsa_cache.gen_key_dur", time.Since(start))
+		}
 		s.rsaCache <- key
 		time.Sleep(s.rsaCacheGeneratorSleepDuration)
 	}
@@ -45,12 +47,15 @@ func (s *XPISigner) populateRsaCache(size int) {
 // monitorRsaCacheSize sends the number of cached keys and cache size
 // to datadog. It should be run as a goroutine
 func (s *XPISigner) monitorRsaCacheSize() {
+	if s.stats == nil {
+		return
+	}
 	for {
-		s.SendGauge("xpi.rsa_cache.chan_len", len(s.rsaCache))
+		s.stats.SendGauge("xpi.rsa_cache.chan_len", len(s.rsaCache))
 
 		// chan capacity should be constant but is useful for
 		// knowing % cache filled across deploys
-		s.SendGauge("xpi.rsa_cache.chan_cap", cap(s.rsaCache))
+		s.stats.SendGauge("xpi.rsa_cache.chan_cap", cap(s.rsaCache))
 
 		time.Sleep(s.rsaCacheSizeSampleRate)
 	}
@@ -78,7 +83,10 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 		// generate a key if none available
 		key, err = rsa.GenerateKey(rand.Reader, size)
 	}
-	s.SendHistogram("xpi.rsa_cache.get_key", time.Since(start))
+
+	if s.stats != nil {
+		s.stats.SendHistogram("xpi.rsa_cache.get_key", time.Since(start))
+	}
 	return key, err
 }
 

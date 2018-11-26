@@ -36,8 +36,12 @@ func TestSignFile(t *testing.T) {
 		t.Fatalf("Error constructing statsdClient: %v", err)
 	}
 	statsdClient.Namespace = "test_autograph_stats_ns"
+	signerStatsClient, err := signer.NewStatsClient(testcase, statsdClient)
+	if err != nil {
+		t.Fatalf("Error constructing signer.StatsdClient: %v", err)
+	}
 
-	s, err := New(testcase, statsdClient)
+	s, err := New(testcase, signerStatsClient)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
