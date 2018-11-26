@@ -79,6 +79,14 @@ type XPISigner struct {
 	// reports the cache size and capacity
 	rsaCacheSizeSampleRate time.Duration
 
+	// rsaKeyMaxAge is a duration that represents the max lifetime of a
+	// given rsa key
+	rsaKeyMaxAge time.Duration
+
+	// rsaKeyMaxUsage represents the max number of times a given key can be
+	// used to sign addons
+	rsaKeyMaxUsage int
+
 	// stats is the statsd client for reporting metrics
 	stats *signer.StatsClient
 }
@@ -160,6 +168,8 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		s.rsaCacheGeneratorSleepDuration = conf.RSACacheConfig.GeneratorSleepDuration
 		s.rsaCacheFetchTimeout = conf.RSACacheConfig.FetchTimeout
 		s.rsaCacheSizeSampleRate = conf.RSACacheConfig.StatsSampleRate
+		s.rsaKeyMaxUsage = conf.RSACacheConfig.KeyMaxUsage
+		s.rsaKeyMaxAge = conf.RSACacheConfig.KeyMaxAge
 
 		s.rsaCache = make(chan *rsa.PrivateKey, conf.RSACacheConfig.NumKeys)
 		for i := 0; i < int(conf.RSACacheConfig.NumGenerators); i++ {

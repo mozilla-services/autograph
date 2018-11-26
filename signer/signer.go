@@ -48,6 +48,14 @@ type RSACacheConfig struct {
 	// StatsSampleRate is how frequently the monitor reports the
 	// cache size and capacity
 	StatsSampleRate time.Duration
+
+	// KeyMaxAge is a duration that represents the max lifetime of a
+	// given rsa key
+	KeyMaxAge time.Duration
+
+	// KeyMaxUsage represents the max number of times a given key can be
+	// used to sign addons
+	KeyMaxUsage int
 }
 
 // Configuration defines the parameters of a signer

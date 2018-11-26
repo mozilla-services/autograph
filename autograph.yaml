@@ -91,6 +91,10 @@ signers:
         generatorsleepduration: 1m
         fetchtimeout: 100ms
         statssamplerate: 1m
+        # reuse a given rsa key for up to 10 minutes or 200 signatures,
+        # whichever comes first
+        keymaxage: 10m
+        keymaxusage: 200
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx

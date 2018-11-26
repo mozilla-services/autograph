@@ -10,10 +10,11 @@ import (
 	"crypto/x509/pkix"
 	"fmt"
 	"math/big"
+	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/cose"
 )
 
@@ -22,8 +23,8 @@ import (
 // full, and should be run as a goroutine
 func (s *XPISigner) populateRsaCache(size int) {
 	var (
-		err error
-		key *rsa.PrivateKey
+		err   error
+		key   *rsa.PrivateKey
 		start time.Time
 	)
 	for {
@@ -61,33 +62,63 @@ func (s *XPISigner) monitorRsaCacheSize() {
 	}
 }
 
-// retrieve a key from the cache or generate one if it takes too long
-// or if the size is wrong
+type rsaKey struct {
+	lock  sync.Mutex
+	age   time.Time
+	usage int
+	key   *rsa.PrivateKey
+}
+
+var currentRsaKey rsaKey
+
+// getRsaKey applies some intelligence to key management. It will return the
+// current key if its lifetime or usage count aren't exceeded, or will get a
+// new key from the cache. If the cache is unresponsive, it will generate a new
+// RSA key by itself and return it. All while publishing stats so we can
+// monitor the state of the cache.
 func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 	var (
-		err error
-		key *rsa.PrivateKey
+		err   error
 		start time.Time
 	)
+
+	// we're messing with pointers and counters shared across goroutines, so
+	// only allow one execution of this function at a time
+	currentRsaKey.lock.Lock()
+	defer currentRsaKey.lock.Unlock()
+
+	// see if we can reuse the current key
+	if currentRsaKey.key != nil &&
+		currentRsaKey.age.Add(s.rsaKeyMaxAge).After(time.Now()) && // if current key hasn't reached max lifetime
+		currentRsaKey.usage < s.rsaKeyMaxUsage { // if current key hasn't reached max usage
+		currentRsaKey.usage++
+		return currentRsaKey.key, nil
+	}
+
+	// we're making a new key, allocate a new pointer
+	// to avoid messing with the old one
 	start = time.Now()
+	currentRsaKey.key = new(rsa.PrivateKey)
+	currentRsaKey.age = time.Now()
+	currentRsaKey.usage = 1
 	select {
-	case key = <-s.rsaCache:
-		if key.N.BitLen() != size {
+	case currentRsaKey.key = <-s.rsaCache:
+		if currentRsaKey.key.N.BitLen() != size {
 			// it's theoritically impossible for this to happen
 			// because the end entity has the same key size has
 			// the signer, but we're paranoid so handling it
-			log.Warnf("WARNING: xpi rsa cache returned a key of size %d when %d was requested", key.N.BitLen(), size)
-			key, err = rsa.GenerateKey(rand.Reader, size)
+			log.Warnf("WARNING: xpi rsa cache returned a key of size %d when %d was requested", currentRsaKey.key.N.BitLen(), size)
+			currentRsaKey.key, err = rsa.GenerateKey(rand.Reader, size)
 		}
 	case <-time.After(s.rsaCacheFetchTimeout):
 		// generate a key if none available
-		key, err = rsa.GenerateKey(rand.Reader, size)
+		currentRsaKey.key, err = rsa.GenerateKey(rand.Reader, size)
 	}
 
 	if s.stats != nil {
 		s.stats.SendHistogram("xpi.rsa_cache.get_key", time.Since(start))
 	}
-	return key, err
+	return currentRsaKey.key, err
 }
 
 // makeTemplate returns a pointer to a template for an x509.Certificate EE
