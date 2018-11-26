@@ -155,8 +155,8 @@ func New(conf signer.Configuration, stats *statsd.Client) (s *XPISigner, err err
 		if issuerPrivateKey.N.BitLen() < 2048 {
 			return nil, errors.Errorf("xpi: issuer RSA key must be at least 2048 bits")
 		}
-		if conf.RSACacheConfig.StatsSampleRate < 5*time.Millisecond {
-			log.Warnf("xpi: sampling rsa cache as rate of %s (less than 5ms)", conf.RSACacheConfig.StatsSampleRate)
+		if conf.RSACacheConfig.StatsSampleRate < 5*time.Second {
+			log.Warnf("xpi: sampling rsa cache as rate of %s (less than 5s)", conf.RSACacheConfig.StatsSampleRate)
 		}
 		s.rsaCacheGeneratorSleepDuration = conf.RSACacheConfig.GeneratorSleepDuration
 		s.rsaCacheFetchTimeout = conf.RSACacheConfig.FetchTimeout
