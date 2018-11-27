@@ -234,7 +234,11 @@ func NewStatsClient(signerConfig Configuration, stats *statsd.Client) (*StatsCli
 	}
 	return &StatsClient{
 		stats: stats,
-		signerTags: []string{signerConfig.ID, signerConfig.Type, signerConfig.Mode},
+		signerTags: []string{
+			fmt.Sprintf("autograph-signer-id:%s", signerConfig.ID),
+			fmt.Sprintf("autograph-signer-type:%s", signerConfig.Type),
+			fmt.Sprintf("autograph-signer-mode:%s", signerConfig.Mode),
+		},
 	}, nil
 }
 
