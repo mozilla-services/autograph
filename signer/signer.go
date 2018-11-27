@@ -258,13 +258,14 @@ func (s *StatsClient) SendGauge(name string, value int) {
 
 // SendHistogram checks for a statsd client and when one is present
 // sends a statsd histogram with the given name, time.Duration value
-// cast to float64, tags for the signer, and sampling rate of 1
+// converted to ms, cast to float64, tags for the signer, and sampling
+// rate of 1
 func (s *StatsClient) SendHistogram(name string, value time.Duration) {
 	if s.stats == nil {
 		log.Warnf("xpi: statsd client is nil. Could not send histogram %s with value %s", name, value)
 		return
 	}
-	err := s.stats.Histogram(name, float64(value), s.signerTags, 1)
+	err := s.stats.Histogram(name, float64(value / time.Millisecond), s.signerTags, 1)
 	if err != nil {
 		log.Warnf("Error sending histogram %s: %s", name, err)
 	}
