@@ -21,10 +21,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/DataDog/datadog-go/statsd"
 )
 
 // RSACacheConfig is a config for the RSAKeyCache
