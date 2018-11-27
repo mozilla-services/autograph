@@ -1,8 +1,6 @@
 package xpi
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"io/ioutil"
@@ -28,7 +26,7 @@ func TestSignFile(t *testing.T) {
 		NumGenerators:          2,
 		GeneratorSleepDuration: time.Minute,
 		FetchTimeout:           100 * time.Millisecond,
-		StatsSampleRate:      10 * time.Second,
+		StatsSampleRate:        10 * time.Second,
 	}
 
 	statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
@@ -442,46 +440,6 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 	}
 }
 
-func TestRsaCaching(t *testing.T) {
-	t.Parallel()
-
-	// initialize a rsa signer
-	testcase := PASSINGTESTCASES[0]
-	s, err := New(testcase, nil)
-	if err != nil {
-		t.Fatalf("signer initialization failed with: %v", err)
-	}
-	keySize := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
-
-	go s.populateRsaCache(keySize)
-	if os.Getenv("CI") == "true" {
-		// sleep longer when running in continuous integration
-		time.Sleep(30 * time.Second)
-	} else {
-		time.Sleep(10 * time.Second)
-	}
-	// retrieving a rsa key should be really fast now
-	start := time.Now()
-	key, err := s.getRsaKey(keySize)
-	if err != nil {
-		t.Fatalf("signer initialization failed with: %v", err)
-	}
-	cachedElapsed := time.Since(start)
-	t.Logf("retrieved rsa key from cache in %s", cachedElapsed)
-
-	start = time.Now()
-	rsa.GenerateKey(rand.Reader, keySize)
-	generatedElapsed := time.Since(start)
-	t.Logf("generated rsa key without cache in %s", generatedElapsed)
-
-	if cachedElapsed > generatedElapsed {
-		t.Fatal("key retrieval from populated cache took longer than generating directly")
-	}
-	if key.N.BitLen() != keySize {
-		t.Fatalf("key bitlen does not match. expected %d, got %d", keySize, key.N.BitLen())
-	}
-}
-
 func TestSignFileWithCOSESignatures(t *testing.T) {
 	t.Parallel()
 
@@ -531,6 +489,15 @@ var PASSINGTESTCASES = []signer.Configuration{
 		ID:   "rsa addon",
 		Type: Type,
 		Mode: ModeAddOn,
+		RSACacheConfig: signer.RSACacheConfig{
+			NumKeys:                10,
+			NumGenerators:          1,
+			GeneratorSleepDuration: 1000000000,   //1s
+			FetchTimeout:           10000000000,  //10s
+			StatsSampleRate:        60000000000,  //60s
+			KeyMaxAge:              600000000000, //10m
+			KeyMaxUsage:            5,
+		},
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -634,6 +601,15 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 		ID:   "rsa system addon",
 		Type: Type,
 		Mode: ModeSystemAddOn,
+		RSACacheConfig: signer.RSACacheConfig{
+			NumKeys:                10,
+			NumGenerators:          1,
+			GeneratorSleepDuration: 1000000000,   //1s
+			FetchTimeout:           10000000000,  //10s
+			StatsSampleRate:        60000000000,  //60s
+			KeyMaxAge:              600000000000, //10m
+			KeyMaxUsage:            5,
+		},
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -737,6 +713,15 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 		Type: Type,
 		ID:   "rsa extension",
 		Mode: ModeExtension,
+		RSACacheConfig: signer.RSACacheConfig{
+			NumKeys:                10,
+			NumGenerators:          1,
+			GeneratorSleepDuration: 1000000000,   //1s
+			FetchTimeout:           10000000000,  //10s
+			StatsSampleRate:        60000000000,  //60s
+			KeyMaxAge:              600000000000, //10m
+			KeyMaxUsage:            5,
+		},
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
