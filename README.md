@@ -25,6 +25,11 @@ $ export GOPATH=$HOME/go
 $ mkdir $GOPATH
 ```
 
+Install ltdl:
+* on Ubuntu: ltdl-dev
+* on RHEL/Fedora/Arch: libtool-ltdl-devel
+* on MacOS: https://brewformulas.org/Libltdl
+
 Then download and build autograph:
 ```bash
 $ go get go.mozilla.org/autograph

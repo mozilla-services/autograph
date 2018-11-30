@@ -21,10 +21,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/DataDog/datadog-go/statsd"
 )
 
 // RSACacheConfig is a config for the RSAKeyCache
@@ -242,7 +242,11 @@ func NewStatsClient(signerConfig Configuration, stats *statsd.Client) (*StatsCli
 	}
 	return &StatsClient{
 		stats: stats,
-		signerTags: []string{signerConfig.ID, signerConfig.Type, signerConfig.Mode},
+		signerTags: []string{
+			fmt.Sprintf("autograph-signer-id:%s", signerConfig.ID),
+			fmt.Sprintf("autograph-signer-type:%s", signerConfig.Type),
+			fmt.Sprintf("autograph-signer-mode:%s", signerConfig.Mode),
+		},
 	}, nil
 }
 
@@ -262,13 +266,14 @@ func (s *StatsClient) SendGauge(name string, value int) {
 
 // SendHistogram checks for a statsd client and when one is present
 // sends a statsd histogram with the given name, time.Duration value
-// cast to float64, tags for the signer, and sampling rate of 1
+// converted to ms, cast to float64, tags for the signer, and sampling
+// rate of 1
 func (s *StatsClient) SendHistogram(name string, value time.Duration) {
 	if s.stats == nil {
 		log.Warnf("xpi: statsd client is nil. Could not send histogram %s with value %s", name, value)
 		return
 	}
-	err := s.stats.Histogram(name, float64(value), s.signerTags, 1)
+	err := s.stats.Histogram(name, float64(value / time.Millisecond), s.signerTags, 1)
 	if err != nil {
 		log.Warnf("Error sending histogram %s: %s", name, err)
 	}
