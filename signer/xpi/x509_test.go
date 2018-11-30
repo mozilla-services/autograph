@@ -172,3 +172,32 @@ func TestRsaCacheExpiration(t *testing.T) {
 		t.Fatalf("expected key1 and key2 to have different values and pointers, but they match")
 	}
 }
+
+func TestRsaNoReuse(t *testing.T) {
+	t.Parallel()
+
+	// initialize a rsa signer
+	testcase := PASSINGTESTCASES[0]
+	// change key max age to 1s
+	testcase.RSACacheConfig.KeyMaxUsage = 0
+	s, err := New(testcase, nil)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	keySize := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
+
+	go s.populateRsaCache(keySize)
+	if os.Getenv("CI") == "true" {
+		// sleep longer when running in continuous integration
+		time.Sleep(30 * time.Second)
+	} else {
+		time.Sleep(10 * time.Second)
+	}
+	key1, _ := s.getRsaKey(keySize)
+	key2, _ := s.getRsaKey(keySize)
+
+	if bytes.Equal(key1.N.Bytes(), key2.N.Bytes()) ||
+		key1 == key2 {
+		t.Fatalf("expected key1 and key2 to have different values and pointers, but they match")
+	}
+}
