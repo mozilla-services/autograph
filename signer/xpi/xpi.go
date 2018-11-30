@@ -87,6 +87,10 @@ type XPISigner struct {
 	// used to sign addons
 	rsaKeyMaxUsage int
 
+	// currentRsaKey contains the RSA key currently in use which may be reused
+	// to sign multiple add-ons, as controlled by RSA caching configuration
+	currentRsaKey rsaKey
+
 	// stats is the statsd client for reporting metrics
 	stats *signer.StatsClient
 }
