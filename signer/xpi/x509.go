@@ -63,10 +63,10 @@ func (s *XPISigner) monitorRsaCacheSize() {
 }
 
 type rsaKey struct {
-	lock  sync.Mutex
-	age   time.Time
-	usage int
-	key   *rsa.PrivateKey
+	lock      sync.Mutex
+	createdAt time.Time
+	usage     int
+	key       *rsa.PrivateKey
 }
 
 // getRsaKey applies some intelligence to key management. It will return the
@@ -87,7 +87,7 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 
 	// see if we can reuse the current key
 	if s.currentRsaKey.key != nil &&
-		s.currentRsaKey.age.Add(s.rsaKeyMaxAge).After(time.Now()) && // if current key hasn't reached max lifetime
+		s.currentRsaKey.createdAt.Add(s.rsaKeyMaxAge).After(time.Now()) && // if current key hasn't reached max lifetime
 		s.currentRsaKey.usage < s.rsaKeyMaxUsage { // if current key hasn't reached max usage
 		s.currentRsaKey.usage++
 		return s.currentRsaKey.key, nil
@@ -97,7 +97,7 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 	// to avoid messing with the old one
 	start = time.Now()
 	s.currentRsaKey.key = new(rsa.PrivateKey)
-	s.currentRsaKey.age = time.Now()
+	s.currentRsaKey.createdAt = time.Now()
 	s.currentRsaKey.usage = 1
 	select {
 	case s.currentRsaKey.key = <-s.rsaCache:
