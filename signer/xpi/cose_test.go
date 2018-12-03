@@ -405,17 +405,21 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 	}
 
 	cases := []struct {
-		fin    signer.SignedFile
-		roots  *x509.CertPool
-		opts   Options
-		result string
+		fin     signer.SignedFile
+		roots   *x509.CertPool
+		opts    Options
+		results []string
 	}{
+		//0
 		{
-			fin:    nil,
-			roots:  nil,
-			opts:   Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
-			result: "xpi: failed to read META-INF/cose.manifest from signed zip: Error reading ZIP: zip: not a valid zip file",
+			fin:   nil,
+			roots: nil,
+			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
+			results: []string{
+				"xpi: failed to read META-INF/cose.manifest from signed zip: Error reading ZIP: zip: not a valid zip file",
+			},
 		},
+		//1
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -423,10 +427,13 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 					Body: []byte("foo"),
 				},
 			}),
-			roots:  nil,
-			opts:   Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
-			result: "xpi: failed to read META-INF/cose.sig from signed zip: failed to find META-INF/cose.sig in ZIP",
+			roots: nil,
+			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
+			results: []string{
+				"xpi: failed to read META-INF/cose.sig from signed zip: failed to find META-INF/cose.sig in ZIP",
+			},
 		},
+		//2
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -438,10 +445,13 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 					Body: []byte("foo"),
 				},
 			}),
-			roots:  nil,
-			opts:   Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
-			result: "xpi: failed to read META-INF/manifest.mf from signed zip: failed to find META-INF/manifest.mf in ZIP",
+			roots: nil,
+			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
+			results: []string{
+				"xpi: failed to read META-INF/manifest.mf from signed zip: failed to find META-INF/manifest.mf in ZIP",
+			},
 		},
+		//3
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -457,10 +467,13 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 					Body: []byte("foo"),
 				},
 			}),
-			roots:  nil,
-			opts:   Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
-			result: "xpi: pkcs7 manifest does not contain the line: Name: META-INF/cose.sig",
+			roots: nil,
+			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
+			results: []string{
+				"xpi: pkcs7 manifest does not contain the line: Name: META-INF/cose.sig",
+			},
 		},
+		//4
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -476,10 +489,13 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 					Body: []byte("Name: META-INF/cose.sig\nName: META-INF/cose.manifest"),
 				},
 			}),
-			roots:  nil,
-			opts:   Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
-			result: "xpi: cose manifest contains the line: Name: META-INF/cose.sig",
+			roots: nil,
+			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
+			results: []string{
+				"xpi: cose manifest contains the line: Name: META-INF/cose.sig",
+			},
 		},
+		//5
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -495,10 +511,13 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 					Body: []byte("Name: META-INF/cose.sig\nName: META-INF/cose.manifest"),
 				},
 			}),
-			roots:  nil,
-			opts:   Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
-			result: "xpi: error unmarshaling cose.sig: xpi.Unmarshal: failed to parse pkcs7 signature: ber2der: BER tag length is more than available data",
+			roots: nil,
+			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
+			results: []string{
+				"xpi: error unmarshaling cose.sig: xpi.Unmarshal: failed to parse pkcs7 signature: ber2der: BER tag length is more than available data",
+			},
 		},
+		//6
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -519,8 +538,11 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				ID:             "ffffffff-ffff-ffff-ffff-ffffffffffff",
 				COSEAlgorithms: []string{"ES256", "PS256"},
 			},
-			result: "xpi: cose.sig contains 1 signatures, but expected 2",
+			results: []string{
+				"xpi: cose.sig contains 1 signatures, but expected 2",
+			},
 		},
+		//7
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -541,8 +563,11 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				ID:             "ffffffff-ffff-ffff-ffff-ffffffffffff",
 				COSEAlgorithms: []string{"ES256"},
 			},
-			result: "xpi: cose.sig is not a valid COSE SignMessage: xpi: expected SignMessage payload to be nil, but got [98 108 97 104]",
+			results: []string{
+				"xpi: cose.sig is not a valid COSE SignMessage: xpi: expected SignMessage payload to be nil, but got [98 108 97 104]",
+			},
 		},
+		//8
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -563,8 +588,11 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				ID:             "foo",
 				COSEAlgorithms: []string{"ES256"},
 			},
-			result: "xpi: EECert 0: id foo does not match cert cn jid1-Kt2kYYgi32zPuw@jetpack",
+			results: []string{
+				"xpi: EECert 0: id foo does not match cert cn jid1-Kt2kYYgi32zPuw@jetpack",
+			},
 		},
+		//9
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -585,8 +613,12 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				ID:             "jid1-Kt2kYYgi32zPuw@jetpack",
 				COSEAlgorithms: []string{"ES256"},
 			},
-			result: "xpi: failed to verify EECert 0: x509: certificate is not valid for any names, but wanted to match a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
+			results: []string{
+				"xpi: failed to verify EECert 0: x509: certificate is valid for jid1-Kt2kYYgi32zPuw@jetpack, not a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
+				"xpi: failed to verify EECert 0: x509: certificate is not valid for any names, but wanted to match a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
+			},
 		},
+		//10
 		{
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
@@ -607,14 +639,22 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				ID:             "test-cn",
 				COSEAlgorithms: []string{"ES256"},
 			},
-			result: "xpi: failed to verify COSE SignMessage Signatures: verification failed ecdsa.Verify",
+			results: []string{
+				"xpi: failed to verify COSE SignMessage Signatures: verification failed ecdsa.Verify",
+			},
 		},
 	}
 
 	for i, testcase := range cases {
 		err := verifyCOSESignatures(testcase.fin, testcase.roots, testcase.opts)
-		if err.Error() != testcase.result {
-			t.Fatalf("verifyCOSESignatures case %d returned '%v' but expected: '%v'", i, err, testcase.result)
+		anyMatches := false
+		for _, result := range testcase.results {
+			if strings.HasPrefix(err.Error(), result) {
+				anyMatches = true
+			}
+		}
+		if !anyMatches {
+			t.Fatalf("verifyCOSESignatures case %d returned '%v'", i, err)
 		}
 	}
 }
