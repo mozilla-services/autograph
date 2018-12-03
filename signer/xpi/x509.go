@@ -12,8 +12,8 @@ import (
 	"math/big"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/cose"
 )
 
@@ -22,8 +22,8 @@ import (
 // full, and should be run as a goroutine
 func (s *XPISigner) populateRsaCache(size int) {
 	var (
-		err error
-		key *rsa.PrivateKey
+		err   error
+		key   *rsa.PrivateKey
 		start time.Time
 	)
 	for {
@@ -65,8 +65,8 @@ func (s *XPISigner) monitorRsaCacheSize() {
 // or if the size is wrong
 func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 	var (
-		err error
-		key *rsa.PrivateKey
+		err   error
+		key   *rsa.PrivateKey
 		start time.Time
 	)
 	start = time.Now()
@@ -113,6 +113,7 @@ func (s *XPISigner) makeTemplate(cn string) *x509.Certificate {
 		NotAfter:           time.Now().Add(8760 * time.Hour), // one year
 		SignatureAlgorithm: s.issuerCert.SignatureAlgorithm,
 		KeyUsage:           x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
 	}
 }
 
