@@ -1,6 +1,6 @@
 dist: trusty
 language: go
-go: '1.10'
+go: '1.11'
 python: '3.6'
 services:
 - docker
