@@ -1,14 +1,16 @@
+GO := GO111MODULE=on go
+
 build:
-	go build -o autograph-monitor *.go
+	$(GO) build -o autograph-monitor *.go
 	zip -r autograph-monitor.zip autograph-monitor monitor.autograph.yaml
 test:
-	go test go.mozilla.org/autograph/tools/autograph-monitor
+	$(GO) test go.mozilla.org/autograph/tools/autograph-monitor
 vendor:
-	govend -u
+	$(GO) get -u
 lint:
 	golint *.go
 vet:
-	go vet *.go
+	$(GO) vet *.go
 clean:
 	rm autograph-monitor autograph-monitor.zip
 .PHONY: vendor clean build
