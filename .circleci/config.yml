@@ -41,7 +41,7 @@ jobs:
           name: Test HSM signers
           command: |
               cd tools/autograph-monitor
-              go build -o autograph-monitor *.go
+              make build-binary
               while ! nc -z localhost 8000; do
                 echo -n "."
                 sleep 1 # wait for a sec before checking again
