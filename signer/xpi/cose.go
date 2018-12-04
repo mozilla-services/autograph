@@ -310,6 +310,8 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 			DNSName:       dnsName,
 			Roots:         truststore,
 			Intermediates: intermediates,
+			// EE cert must have the code signing ext key usage
+			KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
 		}
 		if _, err := eeCert.Verify(opts); err != nil {
 			return errors.Wrapf(err, "xpi: failed to verify EECert %d", i)
@@ -317,7 +319,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 
 		verifiers = append(verifiers, cose.Verifier{
 			PublicKey: eeCert.PublicKey,
-			Alg: algs[i],
+			Alg:       algs[i],
 		})
 	}
 
