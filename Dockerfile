@@ -2,6 +2,8 @@ FROM golang:1.11
 MAINTAINER Mozilla
 EXPOSE 8000
 
+ENV GO111MODULE on
+
 RUN addgroup --gid 10001 app && \
 
     adduser --gid 10001 --uid 10001 \
