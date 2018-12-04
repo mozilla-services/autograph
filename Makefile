@@ -89,7 +89,10 @@ showcoverage: test
 generate:
 	$(GO) generate
 
+gen-softhsm-keys:
+	$(GO) run tools/softhsm/genkeys.go
+
 dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
-.PHONY: all dummy-statsd test generate vendor
+.PHONY: all dummy-statsd test generate vendor gen-softhsm-keys
