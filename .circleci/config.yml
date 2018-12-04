@@ -25,13 +25,16 @@ jobs:
               softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
       - checkout
       - run:
+          name: Install autograph app
+          command: |
+              make install
+      - run:
           name: Generate keys in softhsm
           command: |
               go run tools/softhsm/genkeys.go
       - run:
           name: Run Autograph with SoftHSM configuration
           command: |
-              make install
               $GOPATH/bin/autograph -c autograph.softhsm.yaml
           background: true
       - run:
