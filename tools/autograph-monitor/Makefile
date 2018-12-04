@@ -15,4 +15,4 @@ vet:
 	$(GO) vet *.go
 clean:
 	rm autograph-monitor autograph-monitor.zip
-.PHONY: vendor clean build
+.PHONY: vendor clean build build-binary
