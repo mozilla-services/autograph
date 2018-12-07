@@ -142,6 +142,7 @@ func (s *XPISigner) makeTemplate(cn string) *x509.Certificate {
 		NotAfter:           time.Now().Add(8760 * time.Hour), // one year
 		SignatureAlgorithm: s.issuerCert.SignatureAlgorithm,
 		KeyUsage:           x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
 	}
 }
 
