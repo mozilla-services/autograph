@@ -1,0 +1,248 @@
+# cloud.google.com/go v0.26.0
+cloud.google.com/go/compute/metadata
+# contrib.go.opencensus.io/exporter/ocagent v0.3.0
+contrib.go.opencensus.io/exporter/ocagent
+# github.com/Azure/azure-sdk-for-go v23.0.0+incompatible
+github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault
+github.com/Azure/azure-sdk-for-go/services/keyvault/auth
+github.com/Azure/azure-sdk-for-go/version
+# github.com/Azure/go-autorest v11.2.8+incompatible
+github.com/Azure/go-autorest/autorest
+github.com/Azure/go-autorest/autorest/azure
+github.com/Azure/go-autorest/autorest/date
+github.com/Azure/go-autorest/autorest/to
+github.com/Azure/go-autorest/autorest/validation
+github.com/Azure/go-autorest/tracing
+github.com/Azure/go-autorest/autorest/azure/auth
+github.com/Azure/go-autorest/autorest/adal
+github.com/Azure/go-autorest/logger
+github.com/Azure/go-autorest/autorest/azure/cli
+# github.com/DataDog/datadog-go v0.0.0-20180822151419-281ae9f2d895
+github.com/DataDog/datadog-go/statsd
+# github.com/ThalesIgnite/crypto11 v0.0.0-20181112134833-73cd6a078290
+github.com/ThalesIgnite/crypto11
+# github.com/aws/aws-lambda-go v1.8.0
+github.com/aws/aws-lambda-go/lambda
+github.com/aws/aws-lambda-go/lambda/messages
+github.com/aws/aws-lambda-go/lambdacontext
+# github.com/aws/aws-sdk-go v1.15.89
+github.com/aws/aws-sdk-go/aws
+github.com/aws/aws-sdk-go/aws/session
+github.com/aws/aws-sdk-go/service/sns
+github.com/aws/aws-sdk-go/aws/awserr
+github.com/aws/aws-sdk-go/aws/credentials
+github.com/aws/aws-sdk-go/aws/endpoints
+github.com/aws/aws-sdk-go/internal/sdkio
+github.com/aws/aws-sdk-go/aws/client
+github.com/aws/aws-sdk-go/aws/corehandlers
+github.com/aws/aws-sdk-go/aws/credentials/stscreds
+github.com/aws/aws-sdk-go/aws/csm
+github.com/aws/aws-sdk-go/aws/defaults
+github.com/aws/aws-sdk-go/aws/request
+github.com/aws/aws-sdk-go/internal/ini
+github.com/aws/aws-sdk-go/internal/shareddefaults
+github.com/aws/aws-sdk-go/aws/awsutil
+github.com/aws/aws-sdk-go/aws/client/metadata
+github.com/aws/aws-sdk-go/aws/signer/v4
+github.com/aws/aws-sdk-go/private/protocol
+github.com/aws/aws-sdk-go/private/protocol/query
+github.com/aws/aws-sdk-go/internal/sdkrand
+github.com/aws/aws-sdk-go/service/sts
+github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds
+github.com/aws/aws-sdk-go/aws/credentials/endpointcreds
+github.com/aws/aws-sdk-go/aws/ec2metadata
+github.com/aws/aws-sdk-go/private/protocol/rest
+github.com/aws/aws-sdk-go/private/protocol/query/queryutil
+github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
+github.com/aws/aws-sdk-go/internal/sdkuri
+github.com/aws/aws-sdk-go/service/kms
+github.com/aws/aws-sdk-go/service/kms/kmsiface
+github.com/aws/aws-sdk-go/private/protocol/jsonrpc
+github.com/aws/aws-sdk-go/private/protocol/json/jsonutil
+# github.com/census-instrumentation/opencensus-proto v0.0.2-0.20180913191712-f303ae3f8d6a
+github.com/census-instrumentation/opencensus-proto/gen-go/agent/common/v1
+github.com/census-instrumentation/opencensus-proto/gen-go/agent/trace/v1
+github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1
+# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+github.com/dgrijalva/jwt-go
+# github.com/dimchansky/utfbom v1.0.0
+github.com/dimchansky/utfbom
+# github.com/fatih/color v1.7.0
+github.com/fatih/color
+# github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+github.com/golang/glog
+# github.com/golang/protobuf v1.2.0
+github.com/golang/protobuf/proto
+github.com/golang/protobuf/ptypes
+github.com/golang/protobuf/ptypes/any
+github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/timestamp
+github.com/golang/protobuf/ptypes/wrappers
+# github.com/goware/prefixer v0.0.0-20160118172347-395022866408
+github.com/goware/prefixer
+# github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c
+github.com/howeyc/gopass
+# github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
+github.com/jmespath/go-jmespath
+# github.com/konsorten/go-windows-terminal-sequences v1.0.1
+github.com/konsorten/go-windows-terminal-sequences
+# github.com/lib/pq v1.0.0
+github.com/lib/pq
+github.com/lib/pq/oid
+# github.com/mattn/go-colorable v0.0.9
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.4
+github.com/mattn/go-isatty
+# github.com/miekg/pkcs11 v0.0.0-20181204074848-79c216b7cb4d
+github.com/miekg/pkcs11
+# github.com/mitchellh/go-homedir v1.0.0
+github.com/mitchellh/go-homedir
+# github.com/mitchellh/go-wordwrap v1.0.0
+github.com/mitchellh/go-wordwrap
+# github.com/mozilla-services/yaml v0.0.0-20180922153656-28ffe5d0cafb
+github.com/mozilla-services/yaml
+# github.com/pkg/errors v0.8.0
+github.com/pkg/errors
+# github.com/sirupsen/logrus v1.2.0
+github.com/sirupsen/logrus
+# github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8
+github.com/ugorji/go/codec
+# github.com/youtube/vitess v2.1.1+incompatible
+github.com/youtube/vitess/go/pools
+github.com/youtube/vitess/go/sync2
+github.com/youtube/vitess/go/acl
+github.com/youtube/vitess/go/cache
+# go.mozilla.org/autograph v0.0.0-20181204154107-64cf686ab2ff
+go.mozilla.org/autograph/signer/apk
+go.mozilla.org/autograph/signer/contentsignature
+go.mozilla.org/autograph/signer/mar
+go.mozilla.org/autograph/signer/pgp
+go.mozilla.org/autograph/signer/xpi
+go.mozilla.org/autograph/signer
+# go.mozilla.org/cose v0.0.0-20180718182446-1eaf5a0651d7
+go.mozilla.org/cose
+# go.mozilla.org/gopgagent v0.0.0-20170926210634-4d7ea76ff71a
+go.mozilla.org/gopgagent
+# go.mozilla.org/hawk v0.0.0-20160602144717-b9704677ebef
+go.mozilla.org/hawk
+# go.mozilla.org/mar v0.0.0-20181114132738-e3bc898d8f19
+go.mozilla.org/mar
+# go.mozilla.org/pkcs7 v0.0.0-20181029144607-24857c352dd8
+go.mozilla.org/pkcs7
+# go.mozilla.org/sops v0.0.0-20181125154138-8fcd61e8a3d1
+go.mozilla.org/sops
+go.mozilla.org/sops/decrypt
+go.mozilla.org/sops/audit
+go.mozilla.org/sops/keys
+go.mozilla.org/sops/keyservice
+go.mozilla.org/sops/logging
+go.mozilla.org/sops/shamir
+go.mozilla.org/sops/aes
+go.mozilla.org/sops/stores/dotenv
+go.mozilla.org/sops/stores/json
+go.mozilla.org/sops/stores/yaml
+go.mozilla.org/sops/azkv
+go.mozilla.org/sops/gcpkms
+go.mozilla.org/sops/kms
+go.mozilla.org/sops/pgp
+go.mozilla.org/sops/stores
+# go.opencensus.io v0.18.0
+go.opencensus.io/plugin/ochttp
+go.opencensus.io/plugin/ochttp/propagation/tracecontext
+go.opencensus.io/stats/view
+go.opencensus.io/trace
+go.opencensus.io
+go.opencensus.io/trace/tracestate
+go.opencensus.io/plugin/ochttp/propagation/b3
+go.opencensus.io/stats
+go.opencensus.io/tag
+go.opencensus.io/trace/propagation
+go.opencensus.io/exemplar
+go.opencensus.io/internal/tagencoding
+go.opencensus.io/stats/internal
+go.opencensus.io/internal
+go.opencensus.io/trace/internal
+# golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
+golang.org/x/crypto/openpgp
+golang.org/x/crypto/openpgp/armor
+golang.org/x/crypto/openpgp/errors
+golang.org/x/crypto/openpgp/packet
+golang.org/x/crypto/openpgp/s2k
+golang.org/x/crypto/ssh/terminal
+golang.org/x/crypto/cast5
+golang.org/x/crypto/openpgp/elgamal
+golang.org/x/crypto/pkcs12
+golang.org/x/crypto/pkcs12/internal/rc2
+# golang.org/x/net v0.0.0-20181201002055-351d144fa1fc
+golang.org/x/net/context
+golang.org/x/net/trace
+golang.org/x/net/internal/timeseries
+golang.org/x/net/http2
+golang.org/x/net/http2/hpack
+golang.org/x/net/context/ctxhttp
+golang.org/x/net/http/httpguts
+golang.org/x/net/idna
+# golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890
+golang.org/x/oauth2/google
+golang.org/x/oauth2
+golang.org/x/oauth2/internal
+golang.org/x/oauth2/jws
+golang.org/x/oauth2/jwt
+# golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
+golang.org/x/sync/semaphore
+# golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+# golang.org/x/text v0.3.0
+golang.org/x/text/secure/bidirule
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+golang.org/x/text/transform
+# google.golang.org/api v0.0.0-20181203233308-6142e720c068
+google.golang.org/api/cloudkms/v1
+google.golang.org/api/gensupport
+google.golang.org/api/googleapi
+google.golang.org/api/googleapi/internal/uritemplates
+google.golang.org/api/support/bundler
+# google.golang.org/appengine v1.1.0
+google.golang.org/appengine
+google.golang.org/appengine/urlfetch
+google.golang.org/appengine/internal
+google.golang.org/appengine/internal/app_identity
+google.golang.org/appengine/internal/modules
+google.golang.org/appengine/internal/urlfetch
+google.golang.org/appengine/internal/base
+google.golang.org/appengine/internal/datastore
+google.golang.org/appengine/internal/log
+google.golang.org/appengine/internal/remote_api
+# google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
+google.golang.org/genproto/googleapis/rpc/status
+# google.golang.org/grpc v1.16.0
+google.golang.org/grpc
+google.golang.org/grpc/codes
+google.golang.org/grpc/status
+google.golang.org/grpc/balancer
+google.golang.org/grpc/balancer/roundrobin
+google.golang.org/grpc/connectivity
+google.golang.org/grpc/credentials
+google.golang.org/grpc/encoding
+google.golang.org/grpc/encoding/proto
+google.golang.org/grpc/grpclog
+google.golang.org/grpc/internal
+google.golang.org/grpc/internal/backoff
+google.golang.org/grpc/internal/channelz
+google.golang.org/grpc/internal/envconfig
+google.golang.org/grpc/internal/grpcrand
+google.golang.org/grpc/internal/transport
+google.golang.org/grpc/keepalive
+google.golang.org/grpc/metadata
+google.golang.org/grpc/naming
+google.golang.org/grpc/peer
+google.golang.org/grpc/resolver
+google.golang.org/grpc/resolver/dns
+google.golang.org/grpc/resolver/passthrough
+google.golang.org/grpc/stats
+google.golang.org/grpc/tap
+google.golang.org/grpc/balancer/base
+# gopkg.in/yaml.v2 v2.2.2
+gopkg.in/yaml.v2
