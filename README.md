@@ -28,7 +28,7 @@ $ mkdir $GOPATH
 Install ltdl:
 * on Ubuntu: ltdl-dev
 * on RHEL/Fedora/Arch: libtool-ltdl-devel
-* on MacOS: https://brewformulas.org/Libltdl
+* on MacOS: libtool (NB: this might require `brew unlink libtool && brew link libtool`)
 
 Then download and build autograph:
 ```bash
