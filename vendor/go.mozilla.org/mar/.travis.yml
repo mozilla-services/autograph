@@ -1,0 +1,20 @@
+dist: trusty
+language: go
+go: '1.11'
+go_import_path: go.mozilla.org/mar
+before_install:
+- sudo apt-get -y install libnss3-tools
+- go get golang.org/x/lint/golint
+- go get golang.org/x/tools/cmd/cover
+- go get github.com/mattn/goveralls
+script:
+- make getkeys
+- make
+- goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+- make getmarcorpus testmarcorpus
+# verify a mar signature with Firefox's signmar
+- |
+    crt="$(go run examples/sign.go /tmp/marworkdir/firefox-60.0esr-60.0.1esr.partial.mar /tmp/resigned.mar | grep 'rsa cert'|awk '{print $5}')"
+    mkdir /tmp/nssdb
+    certutil -d /tmp/nssdb -A -i "$crt" -n "testmar" -t ",,u"
+    LD_LIBRARY_PATH=tools/signmar/lib ./tools/signmar/signmar -d /tmp/nssdb -n testmar -v /tmp/resigned.mar

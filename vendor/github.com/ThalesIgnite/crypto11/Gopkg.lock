@@ -5,11 +5,33 @@
   branch = "master"
   name = "github.com/miekg/pkcs11"
   packages = ["."]
-  revision = "7283ca79f35edb89bc1b4ecae7f86a3680ce737f"
+  revision = "c6d6ee821fb161c8022ceb8ba93ce3b815d8d62e"
+
+[[projects]]
+  name = "github.com/youtube/vitess"
+  packages = ["go/pools"]
+  revision = "66e84fadcc1a7e956e7ffcebcaaba0b04132ca1f"
+  version = "v2.2"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/net"
+  packages = ["context"]
+  revision = "4dfa2610cdf3b287375bbba5b8f2a14d3b01d8de"
+
+[[projects]]
+  name = "vitess.io/vitess"
+  packages = [
+    "go/cache",
+    "go/sync2",
+    "go/timer"
+  ]
+  revision = "66e84fadcc1a7e956e7ffcebcaaba0b04132ca1f"
+  version = "v2.2"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "637fa76bf97d900f27feffdfb5bfc3a5d4fcdbe927f917bafa1bce2648c6fc21"
+  inputs-digest = "8cd1e283a543a5f16f1a28efc4432ba787658c62e70c42078f5910e9b21a3803"
   solver-name = "gps-cdcl"
   solver-version = 1
