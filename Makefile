@@ -88,7 +88,7 @@ showcoverage: test
 	$(GO) tool cover -html=coverage.out
 
 generate:
-	$(GO) generate
+	$(GO) generate -mod=vendor
 
 gen-softhsm-keys:
 	$(GO) run tools/softhsm/genkeys.go
