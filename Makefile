@@ -36,46 +36,46 @@ vet:
 	$(GO) vet go.mozilla.org/autograph/signer/pgp
 
 testautograph:
-	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
+	$(GO) test -mod=vendor -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
 
 showcoverageautograph: testautograph
 	$(GO) tool cover -html=coverage_autograph.out
 
 testsigner:
-	$(GO) test -v -covermode=count -coverprofile=coverage_signer.out go.mozilla.org/autograph/signer
+	$(GO) test -mod=vendor -v -covermode=count -coverprofile=coverage_signer.out go.mozilla.org/autograph/signer
 
 showcoveragesigner: testsigner
 	$(GO) tool cover -html=coverage_signer.out
 
 testcs:
-	$(GO) test -v -covermode=count -coverprofile=coverage_cs.out go.mozilla.org/autograph/signer/contentsignature
+	$(GO) test -mod=vendor -v -covermode=count -coverprofile=coverage_cs.out go.mozilla.org/autograph/signer/contentsignature
 
 testmonitor:
-	$(GO) test -v -covermode=count -coverprofile=coverage_monitor.out go.mozilla.org/autograph/tools/autograph-monitor
+	$(GO) test -mod=vendor -v -covermode=count -coverprofile=coverage_monitor.out go.mozilla.org/autograph/tools/autograph-monitor
 
 showcoveragecs: testcs
 	$(GO) tool cover -html=coverage_cs.out
 
 testxpi:
-	$(GO) test -v -covermode=count -coverprofile=coverage_xpi.out go.mozilla.org/autograph/signer/xpi
+	$(GO) test -mod=vendor -v -covermode=count -coverprofile=coverage_xpi.out go.mozilla.org/autograph/signer/xpi
 
 showcoveragexpi: testxpi
 	$(GO) tool cover -html=coverage_xpi.out
 
 testapk:
-	$(GO) test -v -covermode=count -coverprofile=coverage_apk.out go.mozilla.org/autograph/signer/apk
+	$(GO) test -mod=vendor -v -covermode=count -coverprofile=coverage_apk.out go.mozilla.org/autograph/signer/apk
 
 showcoverageapk: testapk
 	$(GO) tool cover -html=coverage_apk.out
 
 testmar:
-	$(GO) test -v -covermode=count -coverprofile=coverage_mar.out go.mozilla.org/autograph/signer/mar
+	$(GO) test -mod=vendor -v -covermode=count -coverprofile=coverage_mar.out go.mozilla.org/autograph/signer/mar
 
 showcoveragemar: testmar
 	$(GO) tool cover -html=coverage_mar.out
 
 testpgp:
-	$(GO) test -v -covermode=count -coverprofile=coverage_pgp.out go.mozilla.org/autograph/signer/pgp
+	$(GO) test -mod=vendor -v -covermode=count -coverprofile=coverage_pgp.out go.mozilla.org/autograph/signer/pgp
 
 showcoveragepgp: testpgp
 	$(GO) tool cover -html=coverage_pgp.out
