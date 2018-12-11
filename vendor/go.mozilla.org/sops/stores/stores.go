@@ -15,7 +15,6 @@ import (
 	"fmt"
 
 	"go.mozilla.org/sops"
-	"go.mozilla.org/sops/azkv"
 	"go.mozilla.org/sops/gcpkms"
 	"go.mozilla.org/sops/kms"
 	"go.mozilla.org/sops/pgp"
@@ -156,19 +155,7 @@ func gcpkmsKeysFromGroup(group sops.KeyGroup) (keys []gcpkmskey) {
 }
 
 func azkvKeysFromGroup(group sops.KeyGroup) (keys []azkvkey) {
-	for _, key := range group {
-		switch key := key.(type) {
-		case *azkv.MasterKey:
-			keys = append(keys, azkvkey{
-				VaultURL:         key.VaultURL,
-				Name:             key.Name,
-				Version:          key.Version,
-				CreatedAt:        key.CreationDate.Format(time.RFC3339),
-				EncryptedDataKey: key.EncryptedKey,
-			})
-		}
-	}
-	return
+	panic("azkv removed!")
 }
 
 // ToInternal converts a storage-appropriate Metadata struct to a SOPS internal representation
@@ -280,18 +267,8 @@ func (gcpKmsKey *gcpkmskey) toInternal() (*gcpkms.MasterKey, error) {
 	}, nil
 }
 
-func (azkvKey *azkvkey) toInternal() (*azkv.MasterKey, error) {
-	creationDate, err := time.Parse(time.RFC3339, azkvKey.CreatedAt)
-	if err != nil {
-		return nil, err
-	}
-	return &azkv.MasterKey{
-		VaultURL:     azkvKey.VaultURL,
-		Name:         azkvKey.Name,
-		Version:      azkvKey.Version,
-		EncryptedKey: azkvKey.EncryptedDataKey,
-		CreationDate: creationDate,
-	}, nil
+func (azkvKey *azkvkey) toInternal() (*pgp.MasterKey, error) {
+	panic("azkv removed!")
 }
 
 func (pgpKey *pgpkey) toInternal() (*pgp.MasterKey, error) {

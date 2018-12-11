@@ -3,7 +3,6 @@ package keyservice
 import (
 	"fmt"
 
-	"go.mozilla.org/sops/azkv"
 	"go.mozilla.org/sops/gcpkms"
 	"go.mozilla.org/sops/kms"
 	"go.mozilla.org/sops/pgp"
@@ -56,19 +55,6 @@ func (ks *Server) encryptWithGcpKms(key *GcpKmsKey, plaintext []byte) ([]byte, e
 	return []byte(gcpKmsKey.EncryptedKey), nil
 }
 
-func (ks *Server) encryptWithAzureKeyVault(key *AzureKeyVaultKey, plaintext []byte) ([]byte, error) {
-	azkvKey := azkv.MasterKey{
-		VaultURL: key.VaultUrl,
-		Name:     key.Name,
-		Version:  key.Version,
-	}
-	err := azkvKey.Encrypt(plaintext)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(azkvKey.EncryptedKey), nil
-}
-
 func (ks *Server) decryptWithPgp(key *PgpKey, ciphertext []byte) ([]byte, error) {
 	pgpKey := pgp.NewMasterKeyFromFingerprint(key.Fingerprint)
 	pgpKey.EncryptedKey = string(ciphertext)
@@ -101,14 +87,7 @@ func (ks *Server) decryptWithGcpKms(key *GcpKmsKey, ciphertext []byte) ([]byte, 
 }
 
 func (ks *Server) decryptWithAzureKeyVault(key *AzureKeyVaultKey, ciphertext []byte) ([]byte, error) {
-	azkvKey := azkv.MasterKey{
-		VaultURL: key.VaultUrl,
-		Name:     key.Name,
-		Version:  key.Version,
-	}
-	azkvKey.EncryptedKey = string(ciphertext)
-	plaintext, err := azkvKey.Decrypt()
-	return []byte(plaintext), err
+	panic("azkv removed!")
 }
 
 // Encrypt takes an encrypt request and encrypts the provided plaintext with the provided key, returning the encrypted
@@ -143,13 +122,7 @@ func (ks Server) Encrypt(ctx context.Context,
 			Ciphertext: ciphertext,
 		}
 	case *Key_AzureKeyvaultKey:
-		ciphertext, err := ks.encryptWithAzureKeyVault(k.AzureKeyvaultKey, req.Plaintext)
-		if err != nil {
-			return nil, err
-		}
-		response = &EncryptResponse{
-			Ciphertext: ciphertext,
-		}
+		panic("azkv removed!")
 	case nil:
 		return nil, status.Errorf(codes.NotFound, "Must provide a key")
 	default:
