@@ -6,7 +6,7 @@ GO := GO111MODULE=on go
 all: generate test vet lint install
 
 install:
-	$(GO) install go.mozilla.org/autograph
+	$(GO) install -mod=vendor go.mozilla.org/autograph
 
 vendor:
 	$(GO) mod vendor
