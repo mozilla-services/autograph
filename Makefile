@@ -9,7 +9,6 @@ install:
 	$(GO) install go.mozilla.org/autograph
 
 vendor:
-	$(GO) get -u
 	$(GO) mod vendor
 	git add vendor/
 
