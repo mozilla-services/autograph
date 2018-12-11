@@ -2,10 +2,7 @@ module go.mozilla.org/autograph
 
 require (
 	cloud.google.com/go v0.34.0 // indirect
-	contrib.go.opencensus.io/exporter/ocagent v0.4.0 // indirect
 	git.apache.org/thrift.git v0.0.0-20181211084444-2b7365c54f82 // indirect
-	github.com/Azure/azure-sdk-for-go v23.2.0+incompatible // indirect
-	github.com/Azure/go-autorest v11.2.8+incompatible // indirect
 	github.com/DataDog/datadog-go v0.0.0-20180822151419-281ae9f2d895
 	github.com/ThalesIgnite/crypto11 v0.0.0-20181112134833-73cd6a078290
 	github.com/aws/aws-lambda-go v1.8.0 // indirect
