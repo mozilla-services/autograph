@@ -20,6 +20,7 @@ type SignedData struct {
 	certs               []*x509.Certificate
 	data, messageDigest []byte
 	digestOid           asn1.ObjectIdentifier
+	encryptionOid       asn1.ObjectIdentifier
 }
 
 // NewSignedData takes data and initializes a PKCS7 SignedData struct that is
@@ -99,6 +100,13 @@ type issuerAndSerial struct {
 // This should be called before adding signers
 func (sd *SignedData) SetDigestAlgorithm(d asn1.ObjectIdentifier) {
 	sd.digestOid = d
+}
+
+// SetEncryptionAlgorithm sets the encryption algorithm to be used in the signing process.
+//
+// This should be called before adding signers
+func (sd *SignedData) SetEncryptionAlgorithm(d asn1.ObjectIdentifier) {
+	sd.encryptionOid = d
 }
 
 // AddSigner is a wrapper around AddSignerChain() that adds a signer without any parent.
@@ -191,9 +199,9 @@ func (sd *SignedData) AddSignerChain(ee *x509.Certificate, pkey crypto.PrivateKe
 // Unlike AddSigner/AddSignerChain, it calculates the digest on the data alone
 // and does not include any signed attributes like timestamp and so on.
 //
-// This function is needed to sign Android APKs with DSA private keys, something
-// you probably shouldn't do unless you're maintaining backward compatibility
-// for old applications.
+// This function is needed to sign old Android APKs, something you probably
+// shouldn't do unless you're maintaining backward compatibility for old
+// applications.
 func (sd *SignedData) SignWithoutAttr(ee *x509.Certificate, pkey crypto.PrivateKey, config SignerInfoConfig) error {
 	var signature []byte
 	sd.sd.DigestAlgorithmIdentifiers = append(sd.sd.DigestAlgorithmIdentifiers, pkix.AlgorithmIdentifier{Algorithm: sd.digestOid})
@@ -230,13 +238,17 @@ func (sd *SignedData) SignWithoutAttr(ee *x509.Certificate, pkey crypto.PrivateK
 	ias.SerialNumber = ee.SerialNumber
 	// no parent, the issue is the end-entity cert itself
 	ias.IssuerName = asn1.RawValue{FullBytes: ee.RawIssuer}
-	encryptionOid, err := getOIDForEncryptionAlgorithm(pkey, sd.digestOid)
+	if sd.encryptionOid == nil {
+		// if the encryption algorithm wasn't set by SetEncryptionAlgorithm,
+		// infer it from the digest algorithm
+		sd.encryptionOid, err = getOIDForEncryptionAlgorithm(pkey, sd.digestOid)
+	}
 	if err != nil {
 		return err
 	}
 	signer := signerInfo{
 		DigestAlgorithm:           pkix.AlgorithmIdentifier{Algorithm: sd.digestOid},
-		DigestEncryptionAlgorithm: pkix.AlgorithmIdentifier{Algorithm: encryptionOid},
+		DigestEncryptionAlgorithm: pkix.AlgorithmIdentifier{Algorithm: sd.encryptionOid},
 		IssuerAndSerialNumber:     ias,
 		EncryptedDigest:           signature,
 		Version:                   1,

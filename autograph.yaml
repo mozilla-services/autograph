@@ -288,6 +288,7 @@ signers:
           -----END PRIVATE KEY-----
 
     - id: apk_cert_with_dsa_sha1
+      nopkcs7signedattributes: true
       type: apk
       certificate: |
           -----BEGIN CERTIFICATE-----
