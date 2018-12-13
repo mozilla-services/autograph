@@ -227,6 +227,70 @@ func TestSignAndVerifyWithOpenSSL(t *testing.T) {
 	os.Remove(tmpIssuerCertFile.Name())
 }
 
+func TestSignLegacyAndVerifyWithOpenSSL(t *testing.T) {
+	t.Parallel()
+
+	input := []byte("foobarbaz1234abcd")
+
+	// init a signer
+	s, err := New(apksignerconf)
+	if err != nil {
+		t.Fatalf("failed to initialize signer: %v", err)
+	}
+
+	// ask the signer to use legacy signing and exclude attributes
+	s.noSignedAttr = true
+
+	// sign input data with bad option
+	sig, err := s.SignData(input, &Options{
+		ZIP:         ZIPMethodCompressPassthrough,
+		PKCS7Digest: "SHA1",
+	})
+	pkcs7Sig := sig.(*Signature).String()
+
+	// write the signature to a temp file
+	tmpSignatureFile, err := ioutil.TempFile("", "TestSignLegacyAndVerifyWithOpenSSL_signature")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ioutil.WriteFile(tmpSignatureFile.Name(), []byte(pkcs7Sig), 0755)
+
+	// write the input to a temp file
+	tmpContentFile, err := ioutil.TempFile("", "TestSignLegacyAndVerifyWithOpenSSL_input")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
+
+	// write the issuer cert to a temp file
+	tmpIssuerCertFile, err := ioutil.TempFile("", "TestSignLegacyAndVerifyWithOpenSSL_issuer")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fd, err := os.OpenFile(tmpIssuerCertFile.Name(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pem.Encode(fd, &pem.Block{Type: "CERTIFICATE", Bytes: s.signingCert.Raw})
+	fd.Close()
+
+	// call openssl to verify the signature on the content using the root
+	opensslCMD := exec.Command("openssl", "cms", "-verify", "-purpose", "any",
+		"-in", tmpSignatureFile.Name(), "-inform", "PEM",
+		"-content", tmpContentFile.Name(),
+		"-CAfile", tmpIssuerCertFile.Name())
+	out, err := opensslCMD.CombinedOutput()
+	if err != nil {
+		t.Fatalf("failed to verify pkcs7 signature with openssl: %s\n%s", err, out)
+	}
+	t.Logf("OpenSSL PKCS7 signature verification output:\n%s\n", out)
+
+	// clean up
+	os.Remove(tmpSignatureFile.Name())
+	os.Remove(tmpContentFile.Name())
+	os.Remove(tmpIssuerCertFile.Name())
+}
+
 func TestSignDsaAndVerifyWithOpenSSL(t *testing.T) {
 	t.Parallel()
 
@@ -409,8 +473,9 @@ zw097oFSo1ZF/8Qpe3cb3252I9MOWKSXWTJ1BP2iVlCp0jRteFCJj8SB2CAnay9F
 }
 
 var dsasignerconf = signer.Configuration{
-	ID:   "dsa apk",
-	Type: Type,
+	ID:                      "dsa apk",
+	Type:                    Type,
+	NoPKCS7SignedAttributes: true,
 	Certificate: `-----BEGIN CERTIFICATE-----
 MIIDNTCCAvOgAwIBAgIEPkN7ozALBgcqhkjOOAQDBQAwbDEQMA4GA1UEBhMHVW5r
 bm93bjEQMA4GA1UECBMHVW5rbm93bjEQMA4GA1UEBxMHVW5rbm93bjEQMA4GA1UE

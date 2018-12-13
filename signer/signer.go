@@ -52,14 +52,15 @@ type RSACacheConfig struct {
 
 // Configuration defines the parameters of a signer
 type Configuration struct {
-	ID             string         `json:"id"`
-	Type           string         `json:"type"`
-	Mode           string         `json:"mode"`
-	PrivateKey     string         `json:"privatekey,omitempty"`
-	PublicKey      string         `json:"publickey,omitempty"`
-	Certificate    string         `json:"certificate,omitempty"`
-	X5U            string         `json:"x5u,omitempty"`
-	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty"`
+	ID                      string         `json:"id"`
+	Type                    string         `json:"type"`
+	Mode                    string         `json:"mode"`
+	PrivateKey              string         `json:"privatekey,omitempty"`
+	PublicKey               string         `json:"publickey,omitempty"`
+	Certificate             string         `json:"certificate,omitempty"`
+	X5U                     string         `json:"x5u,omitempty"`
+	RSACacheConfig          RSACacheConfig `json:"rsacacheconfig,omitempty"`
+	NoPKCS7SignedAttributes bool           `json:"nopkcs7signedattributes,omitempty"`
 
 	isHsmAvailable bool
 }
@@ -265,7 +266,7 @@ func (s *StatsClient) SendHistogram(name string, value time.Duration) {
 		log.Warnf("xpi: statsd client is nil. Could not send histogram %s with value %s", name, value)
 		return
 	}
-	err := s.stats.Histogram(name, float64(value / time.Millisecond), s.signerTags, 1)
+	err := s.stats.Histogram(name, float64(value/time.Millisecond), s.signerTags, 1)
 	if err != nil {
 		log.Warnf("Error sending histogram %s: %s", name, err)
 	}

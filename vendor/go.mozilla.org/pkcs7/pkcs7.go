@@ -85,7 +85,8 @@ var (
 func getHashForOID(oid asn1.ObjectIdentifier) (crypto.Hash, error) {
 	switch {
 	case oid.Equal(OIDDigestAlgorithmSHA1), oid.Equal(OIDDigestAlgorithmECDSASHA1),
-		oid.Equal(OIDDigestAlgorithmDSA), oid.Equal(OIDDigestAlgorithmDSASHA1):
+		oid.Equal(OIDDigestAlgorithmDSA), oid.Equal(OIDDigestAlgorithmDSASHA1),
+		oid.Equal(OIDEncryptionAlgorithmRSA):
 		return crypto.SHA1, nil
 	case oid.Equal(OIDDigestAlgorithmSHA256), oid.Equal(OIDDigestAlgorithmECDSASHA256):
 		return crypto.SHA256, nil
@@ -120,6 +121,8 @@ func getOIDForEncryptionAlgorithm(pkey crypto.PrivateKey, OIDDigestAlg asn1.Obje
 	case *rsa.PrivateKey:
 		switch {
 		default:
+			return OIDEncryptionAlgorithmRSA, nil
+		case OIDDigestAlg.Equal(OIDEncryptionAlgorithmRSA):
 			return OIDEncryptionAlgorithmRSA, nil
 		case OIDDigestAlg.Equal(OIDDigestAlgorithmSHA1):
 			return OIDEncryptionAlgorithmRSASHA1, nil

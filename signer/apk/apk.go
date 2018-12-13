@@ -38,6 +38,7 @@ type APKSigner struct {
 	signingKey        crypto.PrivateKey
 	signingCert       *x509.Certificate
 	signatureFileName string
+	noSignedAttr      bool
 }
 
 // New initializes an apk signer using a configuration
@@ -82,6 +83,8 @@ func New(conf signer.Configuration) (s *APKSigner, err error) {
 	case *ecdsa.PrivateKey:
 		s.signatureFileName = "SIGNATURE.EC"
 	}
+	// if specified, don't sign with attributes
+	s.noSignedAttr = conf.NoPKCS7SignedAttributes
 	return
 }
 
@@ -168,14 +171,21 @@ func (s *APKSigner) signData(sigfile []byte, options interface{}) ([]byte, error
 		return nil, errors.Wrap(err, "apk: error parsing PK7 Digest")
 	}
 	toBeSigned.SetDigestAlgorithm(p7Digest)
-	switch s.signingKey.(type) {
-	case *dsa.PrivateKey:
-		// When signing with DSA, the attributes need to be removed from
-		// the PKCS7, otherwise android returns the
+	if s.noSignedAttr {
+		// special case for fennec: when signing legacy using RSA and SHA1,
+		// set the digest alg to 1.2.840.113549.1.1.1
+		// https://bugzilla.mozilla.org/show_bug.cgi?id=1513564
+		switch s.signingKey.(type) {
+		case *rsa.PrivateKey:
+			if p7Digest.Equal(pkcs7.OIDDigestAlgorithmSHA1) {
+				toBeSigned.SetEncryptionAlgorithm(pkcs7.OIDEncryptionAlgorithmRSA)
+			}
+		}
+		// old APKs don't support signed attributes, otherwise android returns
 		// java.security.SignatureException: APKs with Signed Attributes
 		// broken on platforms with API Level < 19
 		err = toBeSigned.SignWithoutAttr(s.signingCert, s.signingKey, pkcs7.SignerInfoConfig{})
-	default:
+	} else {
 		err = toBeSigned.AddSigner(s.signingCert, s.signingKey, pkcs7.SignerInfoConfig{})
 	}
 	if err != nil {
