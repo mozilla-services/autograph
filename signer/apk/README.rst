@@ -58,6 +58,11 @@ You can then place the certificate and private key in `autograph.yaml`:
 		  ...
           -----END PRIVATE KEY-----
 
+Signing legacy APKs
+~~~~~~~~~~~~~~~~~~~
+
+For very old APKs (eg. Firefox Fennec for Android), you need to set the parameter `nopkcs7signedattributes: true` in the signer configuration to tell autograph to sign without PKCS7 signed attributes.
+
 Signature request
 -----------------
 
