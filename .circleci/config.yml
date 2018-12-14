@@ -100,7 +100,7 @@ jobs:
       - run:
           name: Sign and Verify Fennec with RSA
           command: |
-              /tmp/cache/autograph-client -f aligned-two-files.apk -o aligned-two-files.rsa.apk -k apk_cert_with_ecdsa_sha256 -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
+              /tmp/cache/autograph-client -f aligned-two-files.apk -o aligned-two-files.rsa.apk -k testapp-android -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
               /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose aligned-two-files.rsa.apk
 
   build:
