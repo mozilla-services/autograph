@@ -73,6 +73,14 @@ type Configuration struct {
 	// attributes and use a legacy PKCS7 digest
 	NoPKCS7SignedAttributes bool `json:"nopkcs7signedattributes,omitempty"`
 
+	// KeyID is the fingerprint of the gpg key or subkey to use
+	// e.g. 0xA2B637F535A86009 for the pgpcli signer type
+	KeyID string `json:"keyid,omitempty"`
+
+	// Passphrase is the optional passphrase to use decrypt the
+	// gpg secret key for the pgpcli signer type
+	Passphrase string `json:"passphrase,omitempty"`
+
 	isHsmAvailable bool
 }
 
