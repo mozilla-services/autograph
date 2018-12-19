@@ -30,6 +30,7 @@ import (
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
+	"go.mozilla.org/autograph/signer/pgpcli"
 	"go.mozilla.org/autograph/signer/xpi"
 
 	"go.mozilla.org/sops"
@@ -297,6 +298,11 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 			}
 		case pgp.Type:
 			s, err = pgp.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case pgpcli.Type:
+			s, err = pgpcli.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
