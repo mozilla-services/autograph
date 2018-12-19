@@ -55,23 +55,23 @@ type RSACacheConfig struct {
 
 // Configuration defines the parameters of a signer
 type Configuration struct {
-	ID                      string         `json:"id"`
-	Type                    string         `json:"type"`
-	Mode                    string         `json:"mode"`
-	PrivateKey              string         `json:"privatekey,omitempty"`
-	PublicKey               string         `json:"publickey,omitempty"`
-	Certificate             string         `json:"certificate,omitempty"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Mode        string `json:"mode"`
+	PrivateKey  string `json:"privatekey,omitempty"`
+	PublicKey   string `json:"publickey,omitempty"`
+	Certificate string `json:"certificate,omitempty"`
 
 	// X5U (X.509 URL) is a URL that points to an X.509 public key
 	// certificate chain to validate a content signature
-	X5U                     string         `json:"x5u,omitempty"`
+	X5U string `json:"x5u,omitempty"`
 
 	// RSACacheConfig for XPI signers this specifies config for an
 	// RSA cache
-	RSACacheConfig          RSACacheConfig `json:"rsacacheconfig,omitempty"`
+	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty"`
 	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
 	// attributes and use a legacy PKCS7 digest
-	NoPKCS7SignedAttributes bool           `json:"nopkcs7signedattributes,omitempty"`
+	NoPKCS7SignedAttributes bool `json:"nopkcs7signedattributes,omitempty"`
 
 	isHsmAvailable bool
 }
