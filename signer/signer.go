@@ -61,8 +61,16 @@ type Configuration struct {
 	PrivateKey              string         `json:"privatekey,omitempty"`
 	PublicKey               string         `json:"publickey,omitempty"`
 	Certificate             string         `json:"certificate,omitempty"`
+
+	// X5U (X.509 URL) is a URL that points to an X.509 public key
+	// certificate chain to validate a content signature
 	X5U                     string         `json:"x5u,omitempty"`
+
+	// RSACacheConfig for XPI signers this specifies config for an
+	// RSA cache
 	RSACacheConfig          RSACacheConfig `json:"rsacacheconfig,omitempty"`
+	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
+	// attributes and use a legacy PKCS7 digest
 	NoPKCS7SignedAttributes bool           `json:"nopkcs7signedattributes,omitempty"`
 
 	isHsmAvailable bool
