@@ -261,9 +261,9 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 		}
 		sids[signerConf.ID] = true
 		var (
-			s   signer.Signer
+			s           signer.Signer
 			statsClient *signer.StatsClient
-			err error
+			err         error
 		)
 		if a.stats != nil {
 			statsClient, err = signer.NewStatsClient(signerConf, a.stats)
