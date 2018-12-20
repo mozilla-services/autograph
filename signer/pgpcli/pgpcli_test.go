@@ -1,4 +1,4 @@
-package pgpcli
+package gpg2
 
 import (
 	"bytes"
@@ -7,8 +7,8 @@ import (
 	"go.mozilla.org/autograph/signer"
 )
 
-func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *PGPCLISigner {
-	s, err := New(pgpclisignerconf)
+func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *GPG2Signer {
+	s, err := New(gpg2signerconf)
 	if s == nil {
 		t.Fatal("expected non-nil signer for valid conf, but got nil signer")
 	}
@@ -34,13 +34,13 @@ func TestNewSigner(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		t.Parallel()
 
-		_ = assertNewSignerWithConfOK(t, pgpclisignerconf)
+		_ = assertNewSignerWithConfOK(t, gpg2signerconf)
 	})
 
 	t.Run("invalid type", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := pgpclisignerconf
+		invalidConf := gpg2signerconf
 		invalidConf.Type = "badType"
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -48,7 +48,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid ID", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := pgpclisignerconf
+		invalidConf := gpg2signerconf
 		invalidConf.ID = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -56,7 +56,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid PrivateKey", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := pgpclisignerconf
+		invalidConf := gpg2signerconf
 		invalidConf.PrivateKey = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -64,7 +64,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid KeyID", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := pgpclisignerconf
+		invalidConf := gpg2signerconf
 		invalidConf.KeyID = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -73,23 +73,23 @@ func TestNewSigner(t *testing.T) {
 func TestConfig(t *testing.T) {
 	t.Parallel()
 
-	s := assertNewSignerWithConfOK(t, pgpclisignerconf)
+	s := assertNewSignerWithConfOK(t, gpg2signerconf)
 
-	if s.Config().Type != pgpclisignerconf.Type {
-		t.Fatalf("signer type %q does not match configuration %q", s.Config().Type, pgpclisignerconf.Type)
+	if s.Config().Type != gpg2signerconf.Type {
+		t.Fatalf("signer type %q does not match configuration %q", s.Config().Type, gpg2signerconf.Type)
 	}
-	if s.Config().ID != pgpclisignerconf.ID {
-		t.Fatalf("signer id %q does not match configuration %q", s.Config().ID, pgpclisignerconf.ID)
+	if s.Config().ID != gpg2signerconf.ID {
+		t.Fatalf("signer id %q does not match configuration %q", s.Config().ID, gpg2signerconf.ID)
 	}
-	if s.Config().PrivateKey != pgpclisignerconf.PrivateKey {
-		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, pgpclisignerconf.PrivateKey)
+	if s.Config().PrivateKey != gpg2signerconf.PrivateKey {
+		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, gpg2signerconf.PrivateKey)
 	}
 }
 
 func TestOptionsAreEmpty(t *testing.T) {
 	t.Parallel()
 
-	s := assertNewSignerWithConfOK(t, pgpclisignerconf)
+	s := assertNewSignerWithConfOK(t, gpg2signerconf)
 	defaultOpts := s.GetDefaultOptions()
 	expectedOpts := Options{}
 	if defaultOpts != expectedOpts {
@@ -97,10 +97,10 @@ func TestOptionsAreEmpty(t *testing.T) {
 	}
 }
 
-func TestSignDataAndMarshalRoundTrip(t *testing.T) {
+func TestSignData(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 	// initialize a signer
-	s := assertNewSignerWithConfOK(t, pgpclisignerconf)
+	s := assertNewSignerWithConfOK(t, gpg2signerconf)
 
 	// sign input data
 	sig, err := s.SignData(input, s.GetDefaultOptions())
@@ -108,26 +108,31 @@ func TestSignDataAndMarshalRoundTrip(t *testing.T) {
 		t.Fatalf("failed to sign data: %v", err)
 	}
 
-	// convert signature to string format
-	sigstr, err := sig.Marshal()
-	if err != nil {
-		t.Fatalf("failed to marshal signature: %v", err)
-	}
+	t.Run("MarshalRoundTrip", func(t *testing.T) {
+		t.Parallel()
 
-	// convert string format back to signature
-	sig2, err := Unmarshal(sigstr)
-	if err != nil {
-		t.Fatalf("failed to unmarshal signature: %v", err)
-	}
+		// convert signature to string format
+		sigstr, err := sig.Marshal()
+		if err != nil {
+			t.Fatalf("failed to marshal signature: %v", err)
+		}
 
-	if !bytes.Equal(sig.(*Signature).Data, sig2.(*Signature).Data) {
-		t.Fatalf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
-			sig.(*Signature).Data, sig2.(*Signature).Data)
-	}
+		// convert string format back to signature
+		sig2, err := Unmarshal(sigstr)
+		if err != nil {
+			t.Fatalf("failed to unmarshal signature: %v", err)
+		}
+
+		if !bytes.Equal(sig.(*Signature).Data, sig2.(*Signature).Data) {
+			t.Fatalf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
+				sig.(*Signature).Data, sig2.(*Signature).Data)
+		}
+	})
 }
 
-var pgpclisignerconf = signer.Configuration{
-	ID:         "pgpclitest",
+
+var gpg2signerconf = signer.Configuration{
+	ID:         "gpg2test",
 	Type:       Type,
 	KeyID:      "0xE09F6B4F9E6FDCCB",
 	Passphrase: "abcdef123",

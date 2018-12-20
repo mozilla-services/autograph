@@ -28,7 +28,7 @@ lint:
 	golint go.mozilla.org/autograph/signer/apk
 	golint go.mozilla.org/autograph/signer/mar
 	golint go.mozilla.org/autograph/signer/pgp
-	golint go.mozilla.org/autograph/signer/pgpcli
+	golint go.mozilla.org/autograph/signer/gpg2
 
 vet:
 	$(GO) vet go.mozilla.org/autograph
@@ -40,7 +40,7 @@ vet:
 	$(GO) vet go.mozilla.org/autograph/signer/apk
 	$(GO) vet go.mozilla.org/autograph/signer/mar
 	$(GO) vet go.mozilla.org/autograph/signer/pgp
-	$(GO) vet go.mozilla.org/autograph/signer/pgpcli
+	$(GO) vet go.mozilla.org/autograph/signer/gpg2
 
 testautograph:
 	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
@@ -87,13 +87,13 @@ testpgp:
 showcoveragepgp: testpgp
 	$(GO) tool cover -html=coverage_pgp.out
 
-testpgpcli:
-	$(GO) test -v -covermode=count -coverprofile=coverage_pgpcli.out go.mozilla.org/autograph/signer/pgpcli
+testgpg2:
+	$(GO) test -v -covermode=count -coverprofile=coverage_gpg2.out go.mozilla.org/autograph/signer/gpg2
 
-showcoveragepgpcli: testpgpcli
-	$(GO) tool cover -html=coverage_pgpcli.out
+showcoveragegpg2: testgpg2
+	$(GO) tool cover -html=coverage_gpg2.out
 
-test: testautograph testsigner testcs testxpi testapk testmar testpgp testpgpcli
+test: testautograph testsigner testcs testxpi testapk testmar testpgp testgpg2
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 
