@@ -2,6 +2,10 @@ package gpg2
 
 import (
 	"bytes"
+	"io/ioutil"
+	// "fmt"
+	"os"
+	"os/exec"
 	"testing"
 
 	"go.mozilla.org/autograph/signer"
@@ -116,14 +120,14 @@ func TestSignData(t *testing.T) {
 		t.Fatalf("failed to sign data: %v", err)
 	}
 
+	// convert signature to string format
+	sigstr, err := sig.Marshal()
+	if err != nil {
+		t.Fatalf("failed to marshal signature: %v", err)
+	}
+
 	t.Run("MarshalRoundTrip", func(t *testing.T) {
 		t.Parallel()
-
-		// convert signature to string format
-		sigstr, err := sig.Marshal()
-		if err != nil {
-			t.Fatalf("failed to marshal signature: %v", err)
-		}
 
 		// convert string format back to signature
 		sig2, err := Unmarshal(sigstr)
@@ -135,6 +139,60 @@ func TestSignData(t *testing.T) {
 			t.Fatalf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
 				sig.(*Signature).Data, sig2.(*Signature).Data)
 		}
+	})
+
+	t.Run("VerifyWithGnuPG", func(t *testing.T) {
+		t.Parallel()
+
+		// write the signature to a temp file
+		tmpSignatureFile, err := ioutil.TempFile("", "gpg2_TestSignPGPAndVerifyWithGnuPG_signature")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpSignatureFile.Name())
+		ioutil.WriteFile(tmpSignatureFile.Name(), []byte(sigstr), 0755)
+
+		// write the input to a temp file
+		tmpContentFile, err := ioutil.TempFile("", "gpg2_TestSignPGPAndVerifyWithGnuPG_input")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpContentFile.Name())
+		ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
+
+		// write the public key to a temp file
+		tmpPublicKeyFile, err := ioutil.TempFile("", "gpg2_TestSignPGPAndVerifyWithGnuPG_publickey")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(tmpPublicKeyFile.Name())
+		// fmt.Printf("loading %s\n", s.PublicKey)
+		ioutil.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
+
+		defer os.Remove("/tmp/autograph_test_gpg2_keyring.gpg")
+		defer os.Remove("/tmp/autograph_test_gpg2_secring.gpg")
+		defer os.Remove("/tmp/autograph_test_gpg2_keyring.gpg~")
+
+		// call gnupg to create a new keyring, load the key in it
+		gnupgCreateKeyring := exec.Command("gpg", "--no-default-keyring",
+			"--keyring", "/tmp/autograph_test_gpg2_keyring.gpg",
+			"--secret-keyring", "/tmp/autograph_test_gpg2_secring.gpg",
+			"--import", tmpPublicKeyFile.Name())
+		out, err := gnupgCreateKeyring.CombinedOutput()
+		if err != nil {
+			t.Fatalf("failed to load public key into keyring: %s\n%s", err, out)
+		}
+
+		// verify the signature
+		gnupgVerifySig := exec.Command("gpg", "--no-default-keyring",
+			"--keyring", "/tmp/autograph_test_gpg2_keyring.gpg",
+			"--secret-keyring", "/tmp/autograph_test_gpg2_secring.gpg",
+			"--verify", tmpSignatureFile.Name(), tmpContentFile.Name())
+		out, err = gnupgVerifySig.CombinedOutput()
+		if err != nil {
+			t.Fatalf("error verifying sig: %s\n%s", err, out)
+		}
+		t.Logf("GnuPG PGP signature verification output:\n%s\n", out)
 	})
 }
 
@@ -287,4 +345,91 @@ W8amj8pJ+5MoBN6BRkcI1HnBXv4DvRPzn/qxiZLgAHgdeTn9pu+RLYJuOmYJJhR2
 bWI=
 =J9W0
 -----END PGP PRIVATE KEY BLOCK-----`,
+	PublicKey: `-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mQINBFwaoDMBEAC0FVHFLTVYFSr8ZpCWOKyF+Xrpcr032pOr3p3rBH6Ld9ZTpaLS
+5Vsx/u+utJ2Ci3vYde0DG07MS7RBky+rGgf4E1qwTCJb08s5mP0N6sg+J1Jmk03K
+8jmXvnRO3208xMkbUdgIt7hbB7/2M85PwkQUaTsRdLM8WltDPl32fJS6HDk2jQsm
+CR6u4yt4eZiRIo7k7G70j006kRRBvWgZO6v7DuF/umu1blLmKJdH8bP8WwPwUY0c
+PRTVWYS3jFeqxqE95q5OFDsym8SkFUmZa0ftmSfqrvySRPC9HS09tkUHM2sIPPw2
+thE+7RPrTRtiUIL1rkiEiyCWUSMoI1wfms5MrYV1uFqcEHdNmU9wEvfZz+IEGqM6
+MhSjCJpXONOOefL9ovaMBoZrCm8W8LNvY8pYnwtYVcEeUq1aVS9JvWBzxzcijFSb
+Pmzg/GhPbNOccreQpYA1Apk2PTfSmOYutSEUsDjj0mNwnMW7QTWrGidFwl8bRnKK
+pPitNpLoLeWgikW9U6pHPX4Op5L2ptBq3PmWRoI7qPiYyaK5fv27aCVE7eWWODu/
+dxubwZAfbsZzmE25+HAZkhDHGHbRVIw0Tklmq/VQw6UjNqxZ7zeiKbc0mddfgbyg
+WnyNyROr/hlH3TOKU3S2TVUHoMevcxO2KvjzgCQ/9g1mtbs17vVMczrPIQARAQAB
+tD1hdXRvZ3JhcGggdGVzdCBzdWJrZXkgPGF1dG9ncmFwaF90ZXN0X3N1YmtleV9n
+cGdAZXhhbXBsZS5jb20+iQJOBBMBCgA4FiEEHQLULHwghjc+K32O0B7x+jPGuusF
+AlwaoDMCGwMFCwkIBwIGFQoJCAsCBBYCAwECHgECF4AACgkQ0B7x+jPGuus6vhAA
+ozEgbzhhANLp69YZGsS6cs1Z4PwG9o3dNTVpagg50s63KMwbPA/7LN5N9WelZ0hZ
+W3snSpTiCm2GY7VZpZ4TdQFfZaEPcYt5lhVcb2HbAcbl3aadH20cbdUnTNKMQv6D
+lUP48iODA8CQsiZNQJk1yTqfEKjP7rm1t8Jc/bv2cYmcqeZgBP8+QgG9v8ENJRc5
+ZYXNDxtJKz6kgFKxxEUgQCSBwcHFK3aJnY0LNeZB8+wAnJ5/em0dUu3dsG3Xy49j
+dFHx3I7KSR6qnOL0IuL+FJNMXtIe57LLsP2f8i6aCCySWWqhnU1HQ9vw8hrjqyZ0
+XU93odZymtFvMhjSJ8tyv2p86Lhm/ZpNVCiR/r7rR7iqBWE+VviXgXWUEQ8rLF/G
+tUImZw0zgJIO7rqftgClfX86TPVIq8DJ435nnOroYckgVOi5aRTwS4InUhhoiJ98
+7TqQvnhQnHey1MIxWWoEEAg3i2kHjJME1XKkowEyjm9zRn0+Iuxudc3Yp4f0/Hzt
+xkMUvtnzZ9PItbCd5DC63pm1dbF8K4pfAscYV3JR11pAO3/S7JtdQMdhT8GEPDPK
+y9qqpFktC6UhN7tJjsqVOMrz5sZAtD5pkFUlpwyj4z6W+7mm9nxsXB3nduSDhfNd
+fq2sYi3RaBIYETcxF3L8yDDyrDhh8hkR3bgdTyPbcYW5Ag0EXBqgMwEQAKfHtl6V
+buxXVMdpCluEfBbwGEYOGz4UjmM/iv39K7+XAkYtaYRlwYHREZDJ08M0NyU5PWr8
+4u1BkqF2KkdTm0GmhxiDNFdSOO4MTI/hEjcS6EX16RtP3ZiLuu85w2+1Kh9m87EG
+6MKz8N3d88Mc/nBsmMYn8h65FgmZZFttk5JU1RKQBoDRT2TTba+EPZmAmxplPSKt
+1Bnfc9vERQ2eCKrhNEHAtfCY/HMqHEfwLwo2NycR3aEDCFxGh2OQCIuChgzewOpY
+zhgN8q+WNo2XZad3J5cMefZNZI6rj1Ta2IVaiO2DJ1mbEtQzF3AzVrFvBiM3XaO4
++1f2puK2yCbdgzsgfsn3F/J2U0TW5Z0cps8LTSh7ODlsTvaSMxEexbZY8jlDajHn
+9UM0h4ILhvgOsLnuey+3FEIkr5WqniHzWCbyy0xF5uAveGP2hYltvRkvdyRs3+Cs
+N4b+iHyU53/pOf0Q5o8/96f+2gH3P263ncf92atfSOSXshzVfrVTb1ByEBmFEZE9
+Roya/YR5RuK0r8q6kPHUhn4VxvSPWnSZHg7uKqe+YTLEp1x7rIyem/We0cp1n3t7
+LL9FON9/8TwIM1HbSgxolyAtkzHHd4nH53I1nn3XGdeG310T6PEGvZ+Pd4XOIz0C
+HVvN4aJIKk9sLHlGDOq8iy2izPrQyhmZE0PrABEBAAGJAjYEGAEKACAWIQQdAtQs
+fCCGNz4rfY7QHvH6M8a66wUCXBqgMwIbDAAKCRDQHvH6M8a662G+D/0VOjTuXVtt
+cSxjU8tCNu9Rji/6QC8FRuHIJHVdA/Yy9be7IhDdsxI3lojMK2Y1J6pI1rUYQrsg
+noaWuRGeJ49LeWdGRNNtjSR82EtnxDcllm9XKKleaqbVqa+0X6Aqq9bb8Xm53sKA
+UWmokgpCV3yRcIDkRE44+iXqtkrQeYqba8vqPnEj0aU1PS6aODK3nzQAu6hymC9y
+hoUTQB9G4snQjZj2d7USbeYF9KQWjvxtl6HrGm4yS4gSZ0n1b9w8ZGSUfqk/k1yU
+NqtDybxpewpbAWyii4SZuvpsXYEZz9oDokUg3OA6hWinCqf6S5LmaMGBo2lX8zDL
+PWYn0IQEIROk6lvyW7cHL7BdappKWQVH4avjpZCy1XVDFzRZrxOoYsRWy8PV0dzF
+aff3hVAp8jovHRHAAeB84ga3c3RuDrVyE9t4OM5F+mXZ5/LhRrKmec/ZjwRclnKF
+MQV/OZfeVMDDahC9fyoG/gmH/SYisAtQ5gZZbwS/v8KaPhK/9KTChb+IdFsHph6w
+ik9aaOSW7nF13OSH/ozngaxr3FwL15yGqMl25IZfqrGfwPaVmMlM7/CkC6wm/7FR
+5j8xl6Xvpl1S+C7kUOvjGWHlbglWchNVm0oY+p6MHzKdlwE+nRiubKGGpeI6jUXp
+XsQIdRxkBDLwpOQivdxTR3K8kL5KHE4nc7kCDQRcGqDZARAAz7L0YdcqxsBh6Skh
+21HsH1N2hc9nYtK295JwCCLpcgM6z22JknDU4+5zwQhRrNUYxNrwkZTk2SHpEUbZ
+NfZbtdXbJTvxm8YHYJcCX+wJPEpTlgMBsDcM6QV8vhBvUysgXdvORB8LynLHgU8V
+OPpfQfCn3hLLbcycoDY17e9cgdLP9nnY5XGxXXefLUbFzih0n5/IWw7UgcNIoP7O
+O+CAsfwrbQXH4PeveNJn1AAR4YtjFSz+emwlThgWc4uJhDopXZUdb93G0Di+CpNs
+fk9vv4dtT/RCUD7uEAzMWWv/NVDdVyfL/fMb/HBE9gtpCC8XtOnc1dSog3OeOsEX
+/wWidsUNyP5CIAkTegbi8YAiV52xjicXtYqdnjisD08YCziEs6ze2itmCWCCd81s
+JRMGDlCcjsj/eO0K1KK3Vc9ET20dcg5AHtIpekEcvst77b8ZofN3JmgiaHQfRfGY
+C4ovnq0ePERJ0DtnulVPRhZgbkin36go2ASnrgHGA/vjNecoQlUiSW2F3cMPi6v9
+XW/v1VkeVWxk/91gGQ7xPdD5/RVKCqAWL6X0eVY/vmwmoi6+Bxj38Opy99D4zQZn
+YgRr6C1/EUns0CUu8QZYcht+iWpxN9jbjbH0BskuLm55Igdi3VqIK8SW4ddsCeN3
++WCDeCz4iLScyDQ9VWsvZelHPr0AEQEAAYkEbAQYAQoAIBYhBB0C1Cx8IIY3Pit9
+jtAe8fozxrrrBQJcGqDZAhsCAkAJENAe8fozxrrrwXQgBBkBCgAdFiEEQw+hF5tf
+sLeq16ge4J9rT55v3MsFAlwaoNkACgkQ4J9rT55v3Ms82Q//ZE1fAtJR8qCfFoqA
+53HECBvhGRnMbZWAjfwUVt6zN6x/rVJEg3HKNgk/R18EVFNJsNXLyShEYsvoVVE8
+Rjd3IE3J7jhlfvEObuEmMq2sOG8W0Uc5BC0wJ3gln2MRnhRXqwW6UqnCZ354l3eu
+09eU9q9qd86oPu3eVJWgLHCJIYLr4jEYR5p1/CrTmpDs8dzCTUMPQl3VRPsuk6E8
+c5NbOkSb+g45YeeWy+Yc8G4qCQJr6oa3SxGRFGbVTMf0Gem17u+BD3Of62bzP0ah
+v95atqWAJGhxx6ql1vbvBU8suRSKGTvMfZ5KjPvX4gsk7Xp/p/pmjnW26/Wk6dJr
+oRpgpU/Am38IvvOYvU/GvhFTF0SVaKt2s8W+DSN5iDvC896wzPy2d+V5R2y0las/
+4bw3LsYRjcEoNJGPgJglNCLlT0qb1VNEdrgi5BrhpYVW0Ez59U9wWYOKJZpt5/qT
+vvUyt+qDToMxyWTcY7sCiVKnFHwUfFm44M+8bbkREZjfhLzyR3K7eYnI4WCJVzbb
+C+Po0xANvj9P1l3izqjppkIQXBVVXlAGZZY7Xx0alG6DtzKy0XBeDkJCDOm1WKb5
+XmeJG+eLwXkfrVWtkETDj7iKFnwZxvT2mll/SsYoH5r5olg1ZLaBAidNysyf8wrS
+AsV5LIY/mBNg4rGj7jBZ22RFBEKjDBAAi6kjiSDnJYEWRfCkCuCiMl3mLh+F0J/U
+WI+1zE865d9X86nFPMUaxMvxWICU83FWWXqO7RVHj3eeX+UU7ngW7MTw4k2eDLN4
+IajSqyatX+ALcPesa+LgSv5sAiOJLaj29kd43aP/yRvNzQW8aojXcoUDmeUCVwZv
+nOKxCqDxkeEW58m3rLaq9cDqFjGXs5E4HLz73+6gKkN2DI0KC7z69AT7ECwal/0g
+6VFGt8cyGjwx0RThXEbsdqMvNIr+Vqh1w9amkLMzWwqAXXK3+fycU/KKd43/UPii
+hs/hI+7LYjxbms1omGkKWE1ajf15fm1p41d6v6tTA495kx6yalPhjmV4YDwbJx+o
+Ij2Jw8Lh+B9lKvQvqaveUaTW7qFBWTDSuWkN20ArgcdgdqlIsmFWWUUNBuuwx9WJ
+X7HVqYTfUHHQdTuvCPy8q+1NPhPvbfJM8ryM+rp8rsVZg4roCgM+jIaULE/y+9W3
+0ckHQOgAbxhaHAQSZucbZqvyUSvLnVRT/0TKgm2NSDUOgrweyq5BqiFOE2god3Of
+yXzryWWsW8amj8pJ+5MoBN6BRkcI1HnBXv4DvRPzn/qxiZLgAHgdeTn9pu+RLYJu
+OmYJJhR27YQ3SV4rdRRyiP7Ipobshhglh/xZWCcVXYQIXFF3vsKi2HTJvMo5MA+2
+gAAPg+05bWI=
+=459B
+-----END PGP PUBLIC KEY BLOCK-----`,
 }
