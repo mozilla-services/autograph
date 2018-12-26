@@ -61,6 +61,14 @@ func TestNewSigner(t *testing.T) {
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
 
+	t.Run("invalid PublicKey", func(t *testing.T) {
+		t.Parallel()
+
+		invalidConf := gpg2signerconf
+		invalidConf.PublicKey = ""
+		assertNewSignerWithConfErrs(t, invalidConf)
+	})
+
 	t.Run("invalid KeyID", func(t *testing.T) {
 		t.Parallel()
 
