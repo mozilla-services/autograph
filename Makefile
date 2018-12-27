@@ -50,6 +50,7 @@ lint:
 	golint go.mozilla.org/autograph/signer/mar
 	golint go.mozilla.org/autograph/signer/pgp
 	golint go.mozilla.org/autograph/signer/gpg2
+	golint go.mozilla.org/autograph/signer/widevine
 
 vet:
 	$(GO) vet go.mozilla.org/autograph
@@ -62,6 +63,7 @@ vet:
 	$(GO) vet go.mozilla.org/autograph/signer/mar
 	$(GO) vet go.mozilla.org/autograph/signer/pgp
 	$(GO) vet go.mozilla.org/autograph/signer/gpg2
+	$(GO) vet go.mozilla.org/autograph/signer/widevine
 
 testautograph:
 	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
@@ -114,7 +116,13 @@ testgpg2:
 showcoveragegpg2: testgpg2
 	$(GO) tool cover -html=coverage_gpg2.out
 
-test: testautograph testsigner testcs testxpi testapk testmar testpgp testgpg2
+testwidevine:
+	$(GO) test -v -covermode=count -coverprofile=coverage_widevine.out go.mozilla.org/autograph/signer/widevine
+
+showcoveragewidevine: testwidevine
+	$(GO) tool cover -html=coverage_widevine.out
+
+test: testautograph testsigner testcs testxpi testapk testmar testpgp testgpg2 testwidevine
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 
