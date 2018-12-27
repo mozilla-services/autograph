@@ -7,20 +7,22 @@ services:
 go_import_path: go.mozilla.org/autograph
 
 before_install:
-- go get golang.org/x/tools/cmd/cover
-- go get github.com/golang/lint/golint
-- go get github.com/mattn/goveralls
+- make install-dev-deps
 - sudo apt-get update
 - sudo apt-get install python3 python3-pip
 
 script:
+- make generate lint vet install
 - make dummy-statsd &
-- make all
+- make build-container
+- make test-container-ci
 - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
 
 # Run a synthetic monitoring test against the container
-- $GOPATH/bin/autograph &
+- make run-container
+
 - cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-monitor && make && ./autograph-monitor
+
 # Sign an add-on using the python3 sign-addon tool
 - |
     python3 -V && \

@@ -5,8 +5,29 @@ GO := go
 
 all: generate test vet lint install
 
+install-dev-deps:
+	$(GO) get golang.org/x/tools/cmd/cover
+	$(GO) get github.com/golang/lint/golint
+	$(GO) get github.com/mattn/goveralls
+
 install:
 	$(GO) install go.mozilla.org/autograph
+
+build-container: generate
+	docker build -t app:build .
+
+echo-coverage:
+	cat coverage.out
+
+test-container:
+	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph install-dev-deps test
+
+test-container-ci:
+	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph install-dev-deps test echo-coverage | tee test-container.out
+	grep -A10000 'cat coverage.out' test-container.out | tail -n +2 | head -n -1 > coverage.out
+
+run-container:
+	docker run --name autograph-dev --rm -d --net host app:build
 
 vendor:
 	govend -u --prune
