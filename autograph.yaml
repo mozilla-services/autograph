@@ -534,7 +534,7 @@ signers:
         -----END PGP PRIVATE KEY BLOCK-----
 
     - id: pgpsubkey
-      # a 4096-bit RSA public / dev / test signing subkey without master
+      # TEST 4096-bit RSA public / dev / signing subkey without master
       type: gpg2
       keyid: 0xE09F6B4F9E6FDCCB
       passphrase: abcdef123
