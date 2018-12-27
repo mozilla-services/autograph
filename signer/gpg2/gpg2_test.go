@@ -3,7 +3,6 @@ package gpg2
 import (
 	"bytes"
 	"io/ioutil"
-	// "fmt"
 	"os"
 	"os/exec"
 	"testing"
@@ -195,7 +194,6 @@ func TestSignData(t *testing.T) {
 		t.Logf("GnuPG PGP signature verification output:\n%s\n", out)
 	})
 }
-
 
 var gpg2signerconf = signer.Configuration{
 	ID:         "gpg2test",

@@ -1,18 +1,19 @@
 package gpg2
 
 import (
-	"log"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/autograph/signer"
 )
 
 // TODO: add tools/ client support
-// TODO: use signer ids in tmp file prefix
 
 const (
 	// Type of this signer is "gpg2" represents a signer that
@@ -22,6 +23,9 @@ const (
 	// or loading keys exported with gnu-dummy s2k encrypted
 	// passphrases https://github.com/golang/go/issues/13605
 	Type = "gpg2"
+
+	keyRingFilename = "autograph_gpg2_keyring.gpg"
+	secRingFilename = "autograph_gpg2_secring.gpg"
 )
 
 // GPG2Signer holds the configuration of the signer
@@ -35,6 +39,10 @@ type GPG2Signer struct {
 	// Passphrase is the optional passphrase to use decrypt the
 	// gpg secret key
 	Passphrase string
+
+	// tmpDir is the signer's temporary working directory. It
+	// holds the gpg sec and keyrings
+	tmpDir string
 }
 
 // New initializes a pgp signer using a configuration
@@ -67,7 +75,85 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 	s.KeyID = conf.KeyID
 
 	s.Passphrase = conf.Passphrase
+
+	s.tmpDir, err = createKeyRing(s)
+	if err != nil {
+		return nil, errors.Wrap(err, "gpg2: error creating keyring")
+	}
 	return
+}
+
+// createKeyRing creates a temporary gpg sec and keyrings, loads the
+// private and public keys for the signer, and returns the temporary
+// director holding the rings
+func createKeyRing(s *GPG2Signer) (string, error) {
+	// reuse keyring in tempdir
+	prefix := fmt.Sprintf("autograph_%s_%s", s.Type, s.KeyID)
+
+	dir, err := ioutil.TempDir("", prefix)
+	if err != nil {
+		return "", errors.Wrap(err, "gpg2: error creating tempdir for keyring")
+	}
+
+	// write the public key to a temp file in our signer's temp dir
+	tmpPublicKeyFile, err := ioutil.TempFile(dir, "gpg2_publickey")
+	if err != nil {
+		return "", errors.Wrap(err, "gpg2: error creating tempfile for public key")
+	}
+	defer os.Remove(tmpPublicKeyFile.Name())
+	err = ioutil.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
+	if err != nil {
+		return "", errors.Wrap(err, "gpg2: error writing public key to tempfile")
+	}
+
+	// write the private key to a temp file in our signer's temp dir
+	tmpPrivateKeyFile, err := ioutil.TempFile(dir, "gpg2_privatekey")
+	if err != nil {
+		return "", errors.Wrap(err, "gpg2: error creating tempfile for private key")
+	}
+	defer os.Remove(tmpPrivateKeyFile.Name())
+	err = ioutil.WriteFile(tmpPrivateKeyFile.Name(), []byte(s.PrivateKey), 0755)
+	if err != nil {
+		return "", errors.Wrap(err, "gpg2: error writing private key to tempfile")
+	}
+
+	keyRingPath := filepath.Join(dir, keyRingFilename)
+	secRingPath := filepath.Join(dir, secRingFilename)
+
+	// call gpg to create a new keyring and load the public key in it
+	gpgLoadPublicKey := exec.Command("gpg",
+		"--no-default-keyring",
+		"--keyring", keyRingPath,
+		"--secret-keyring", secRingPath,
+		"--no-tty",
+		"--batch",
+		"--yes",
+		"--import", tmpPublicKeyFile.Name(),
+	)
+	out, err := gpgLoadPublicKey.CombinedOutput()
+	if err != nil {
+		return "", errors.Wrapf(err, "gpg2: failed to load public key into keyring: %s\n%s", err, out)
+	} else {
+		log.Debugf(fmt.Sprintf("gpg2: loaded public key %s", string(out)))
+	}
+
+	// call gpg to load the private key in it
+	gpgLoadPrivateKey := exec.Command("gpg", "--no-default-keyring",
+		"--keyring", keyRingPath,
+		"--secret-keyring", secRingPath,
+		"--no-tty",
+		"--batch",
+		"--yes",
+		"--import", tmpPrivateKeyFile.Name())
+	out, err = gpgLoadPrivateKey.CombinedOutput()
+	if err != nil {
+		return "", errors.Wrapf(err, "gpg2: failed to load private key into keyring: %s\n%s", err, out)
+	} else {
+		log.Debugf(fmt.Sprintf("gpg2: loaded private key %s", string(out)))
+	}
+
+	return dir, nil
+
 }
 
 // Config returns the configuration of the current signer
@@ -82,70 +168,21 @@ func (s *GPG2Signer) Config() signer.Configuration {
 
 // SignData takes data and returns an armored signature with pgp header and footer
 func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signature, error) {
+	keyRingPath := filepath.Join(s.tmpDir, keyRingFilename)
+	secRingPath := filepath.Join(s.tmpDir, secRingFilename)
+
 	// write the input to a temp file
-	tmpContentFile, err := ioutil.TempFile("", "gpg2_input")
+	tmpContentFile, err := ioutil.TempFile(s.tmpDir, fmt.Sprintf("gpg2_%s_input", s.ID))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "gpg2: failed to create tempfile for input to sign")
 	}
 	defer os.Remove(tmpContentFile.Name())
 	ioutil.WriteFile(tmpContentFile.Name(), data, 0755)
 
-	// write the private key to a temp file
-	tmpPrivateKeyFile, err := ioutil.TempFile("", "gpg2_privatekey")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(tmpPrivateKeyFile.Name())
-	// fmt.Printf("loading %s\n", s.PrivateKey)
-	ioutil.WriteFile(tmpPrivateKeyFile.Name(), []byte(s.PrivateKey), 0755)
-
-	// call gnupg to create a new keyring, load the key in it
-	gnupgCreateKeyring := exec.Command("gpg", "--no-default-keyring",
-		"--keyring", "/tmp/autograph_gpg2_keyring.gpg",
-		"--secret-keyring", "/tmp/autograph_gpg2_secring.gpg",
-		"--no-tty",
-		"--batch",
-		"--yes",
-		"--import", tmpPrivateKeyFile.Name())
-	out, err := gnupgCreateKeyring.CombinedOutput()
-	if err != nil {
-		log.Fatalf("failed to load private key into keyring: %s\n%s", err, out)
-	} else {
-		log.Println(string(out))
-	}
-
-	// write the public key to a temp file
-	tmpPublicKeyFile, err := ioutil.TempFile("", "gpg2_publickey")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(tmpPublicKeyFile.Name())
-	// log.Printf("loading %s\n", s.PublicKey)
-	ioutil.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
-
-	// call gnupg to create a new keyring, load the key in it
-	gnupgCreateKeyring = exec.Command("gpg",
+	gpgVerifySig := exec.Command("gpg",
 		"--no-default-keyring",
-		"--keyring", "/tmp/autograph_gpg2_keyring.gpg",
-		"--secret-keyring", "/tmp/autograph_gpg2_secring.gpg",
-		"--no-tty",
-		"--batch",
-		"--yes",
-		"--import", tmpPublicKeyFile.Name(),
-	)
-	out, err = gnupgCreateKeyring.CombinedOutput()
-	log.Println(string(out))
-	if err != nil {
-		log.Fatalf("failed to load public key into keyring: %s\n%s", err, out)
-	}
-
-	defer os.Remove("/tmp/autograph_gpg2_keyring.gpg")
-	defer os.Remove("/tmp/autograph_gpg2_keyring.gpg~")
-	defer os.Remove("/tmp/autograph_gpg2_secring.gpg")
-
-	gnupgVerifySig := exec.Command("gpg", "--no-default-keyring",
-		"--keyring", "/tmp/autograph_gpg2_keyring.gpg",
-		"--secret-keyring", "/tmp/autograph_gpg2_secring.gpg",
+		"--keyring", keyRingPath,
+		"--secret-keyring", secRingPath,
 		"--armor",
 		"--no-tty",
 		"--batch",
@@ -156,19 +193,19 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 		"--passphrase-fd", "0",
 		"--detach-sign", tmpContentFile.Name(),
 	)
-	stdin, err := gnupgVerifySig.StdinPipe()
+	stdin, err := gpgVerifySig.StdinPipe()
 	if err != nil {
-		log.Fatalf("failed to create stdin pipe for sign cmd: %s\n", err)
+		return nil, errors.Wrap(err, "gpg2: failed to create stdin pipe for sign cmd")
 	}
 	go func() {
 		defer stdin.Close()
 		io.WriteString(stdin, s.Passphrase)
 	}()
-	out, err = gnupgVerifySig.CombinedOutput()
+	out, err := gpgVerifySig.CombinedOutput()
 	if err != nil {
-		log.Fatalf("failed to sign: %s\n%s", err, out)
+		return nil, errors.Wrapf(err, "gpg2: failed to sign input %s\n%s", err, out)
 	} else {
-		log.Printf("signed as:\n%s\n", string(out))
+		log.Debugf("signed as:\n%s\n", string(out))
 	}
 
 	sig := new(Signature)
