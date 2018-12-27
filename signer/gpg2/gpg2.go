@@ -13,8 +13,6 @@ import (
 	"go.mozilla.org/autograph/signer"
 )
 
-// TODO: add tools/ client support
-
 const (
 	// Type of this signer is "gpg2" represents a signer that
 	// shells out to gpg2 to sign artifacts since the golang "pgp"
