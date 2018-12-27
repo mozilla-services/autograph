@@ -33,6 +33,7 @@ import (
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
+	"go.mozilla.org/autograph/signer/widevine"
 	"go.mozilla.org/autograph/signer/xpi"
 
 	"go.mozilla.org/sops"
@@ -330,6 +331,11 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 			}
 		case gpg2.Type:
 			s, err = gpg2.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case widevine.Type:
+			s, err = widevine.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
