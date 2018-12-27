@@ -55,6 +55,7 @@ jobs:
               cp /root/go/bin/autograph /tmp/cache/
               cp /root/go/bin/autograph-client /tmp/cache/
               cp /root/go/src/go.mozilla.org/autograph/autograph.yaml /tmp/cache/
+              cp /root/go/src/go.mozilla.org/autograph/autograph.testsignapk.yaml /tmp/cache/
               chmod -R 777 /tmp/cache
       - save_cache:
           key: autograph-{{ .Branch }}-{{epoch}}
@@ -71,7 +72,7 @@ jobs:
       - run:
           name: Run Autograph
           command: |
-              /tmp/cache/autograph -c /tmp/cache/autograph.yaml
+              /tmp/cache/autograph -c /tmp/cache/autograph.testsignapk.yaml
           background: true
       - run:
           name: Sign Fennec Nightly APK
