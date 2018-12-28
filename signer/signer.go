@@ -94,6 +94,13 @@ type Signer interface {
 	Config() Configuration
 }
 
+// StatefulSigner is an interface to an issuer of digital signatures
+// that stores out of memory state (files, HSM or DB connections,
+// etc.) to clean up at exit
+type StatefulSigner interface {
+	AtExit() error
+}
+
 // HashSigner is an interface to a signer able to sign hashes
 type HashSigner interface {
 	SignHash(data []byte, options interface{}) (Signature, error)

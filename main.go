@@ -14,7 +14,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/pkg/errors"
@@ -28,9 +30,9 @@ import (
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
-	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/xpi"
 
 	"go.mozilla.org/sops"
@@ -171,6 +173,8 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 		os.Exit(0)
 	}
 
+	ag.startCleanupHandler()
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", handleHeartbeat).Methods("GET")
 	router.HandleFunc("/__lbheartbeat__", handleHeartbeat).Methods("GET")
@@ -247,6 +251,29 @@ func (a *autographer) enableDebug() {
 func (a *autographer) disableDebug() {
 	a.debug = false
 	return
+}
+
+// startCleanupHandler sets up a chan to catch int, kill, term
+// signals and run signer AtExit functions
+func (a *autographer) startCleanupHandler() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+	go func() {
+		sig := <-c
+		log.Infof("main: received signal %s; cleaning up signers", sig)
+		for _, s := range a.signers {
+			statefulSigner, ok := s.(signer.StatefulSigner)
+			if !ok {
+				continue
+			}
+			err := statefulSigner.AtExit()
+			if err != nil {
+				log.Errorf("main: error in signer %s AtExit fn: %s", s.Config().ID, err)
+			}
+		}
+		os.Exit(0)
+	}()
 }
 
 // addSigners initializes each signer specified in the configuration by parsing

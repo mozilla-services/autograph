@@ -6,9 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path/filepath"
-	"syscall"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -80,7 +78,6 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "gpg2: error creating keyring")
 	}
-	s.RegisterCleanupAndExit()
 	return
 }
 
@@ -157,16 +154,10 @@ func createKeyRing(s *GPG2Signer) (string, error) {
 
 }
 
-func (s *GPG2Signer) RegisterCleanupAndExit() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
-
-	go func() {
-		sig := <-c
-		os.RemoveAll(s.tmpDir)
-		log.Infof("gpg2: received signal %s; cleaned up %s and exiting", sig, s.tmpDir)
-		os.Exit(0)
-	}()
+func (s *GPG2Signer) AtExit() error {
+	os.RemoveAll(s.tmpDir)
+	log.Infof("gpg2: cleaned up %s in exit handler", s.tmpDir)
+	return nil
 }
 
 // Config returns the configuration of the current signer
