@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -339,6 +340,9 @@ examples:
 						log.Fatal(err)
 					}
 					log.Println("response written to", outfile)
+					if response.Type == apk.Type {
+						fmt.Fprintf(os.Stderr, "Don't forget to run 'zipalign -c -v 4 %s'\n", outfile)
+					}
 				}
 				if outkeyfile != "" {
 					err = ioutil.WriteFile(outkeyfile, []byte(response.PublicKey), 0644)
