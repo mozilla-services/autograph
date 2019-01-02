@@ -26,6 +26,10 @@ signers:
       type: mar
       # label of the key in the hsm
       privatekey: testecdsap384
+    - id: testcsp384
+      type: contentsignature
+      privatekey: testcsp384
+
 
 authorizations:
     - id: alice
@@ -34,5 +38,6 @@ authorizations:
           - testmar
           - testmar2
           - testmarecdsa
+          - testcsp384
 monitoring:
     key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs

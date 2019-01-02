@@ -50,4 +50,10 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("ECDSA Key: %+v\n", ecdsakey)
+
+	p384key, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], []byte("testcsp384"), []byte("testcsp384"), elliptic.P384())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("P384 Key: %+v\n", p384key)
 }

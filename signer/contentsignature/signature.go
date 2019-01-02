@@ -19,6 +19,11 @@ type ContentSignature struct {
 	Finished bool
 }
 
+// a private struct to unmarshal asn1 signatures produced by crypto.Signer
+type ecdsaAsn1Signature struct {
+	R, S *big.Int
+}
+
 func (sig *ContentSignature) storeHashName(alg string) {
 	sig.HashName = alg
 }

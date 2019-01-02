@@ -10,12 +10,15 @@ import (
 	"crypto"
 	"crypto/dsa"
 	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"math/big"
 	"regexp"
 	"strings"
@@ -100,6 +103,62 @@ type Signature interface {
 
 // SignedFile is an []bytes that contains file data
 type SignedFile []byte
+
+// GetKeysAndRand parses a configuration to retrieve the private and public key
+// of a signer, as well as a RNG and a marshalled public key. It knows to handle
+// HSMs as needed, and thus removes that complexity from individual signers.
+func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.PublicKey, rng io.Reader, publicKey string, err error) {
+	priv, err = cfg.GetPrivateKey()
+	if err != nil {
+		return
+	}
+
+	var publicKeyBytes []byte
+	switch priv.(type) {
+	case *rsa.PrivateKey:
+		pub = priv.(*rsa.PrivateKey).Public()
+		publicKeyBytes, err = x509.MarshalPKIXPublicKey(&priv.(*rsa.PrivateKey).PublicKey)
+		if err != nil {
+			err = errors.Wrap(err, "failed to asn1 marshal rsa public key")
+			return
+		}
+		rng = rand.Reader
+
+	case *ecdsa.PrivateKey:
+		pub = priv.(*ecdsa.PrivateKey).Public()
+		publicKeyBytes, err = x509.MarshalPKIXPublicKey(&priv.(*ecdsa.PrivateKey).PublicKey)
+		if err != nil {
+			err = errors.Wrap(err, "failed to asn1 marshal ecdsa public key")
+			return
+		}
+		rng = rand.Reader
+
+	case *crypto11.PKCS11PrivateKeyECDSA:
+		pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).Public()
+		publicKeyBytes, err = x509.MarshalPKIXPublicKey(priv.(*crypto11.PKCS11PrivateKeyECDSA).PubKey.(*ecdsa.PublicKey))
+		if err != nil {
+			err = errors.Wrap(err, "failed to asn1 marshal crypto11 ecdsa public key")
+			return
+		}
+		rng = new(crypto11.PKCS11RandReader)
+
+	case *crypto11.PKCS11PrivateKeyRSA:
+		pub = priv.(*crypto11.PKCS11PrivateKeyRSA).Public()
+		publicKeyBytes, err = x509.MarshalPKIXPublicKey(priv.(*crypto11.PKCS11PrivateKeyRSA).PubKey.(*rsa.PublicKey))
+		if err != nil {
+			err = errors.Wrap(err, "failed to asn1 marshal crypto11 rsa public key")
+			return
+		}
+		rng = new(crypto11.PKCS11RandReader)
+
+	default:
+		err = errors.Errorf("unsupported private key type %T", priv)
+		return
+	}
+	publicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
+
+	return
+}
 
 // GetPrivateKey uses a signer configuration to determine where a private
 // key should be accessed from. If it is in local configuration, it will
@@ -229,6 +288,7 @@ type StatsClient struct {
 	stats *statsd.Client
 }
 
+// NewStatsClient makes a new stats client
 func NewStatsClient(signerConfig Configuration, stats *statsd.Client) (*StatsClient, error) {
 	if stats == nil {
 		return nil, errors.Errorf("xpi: statsd client is nil. Could not create StatsClient for signer %s", signerConfig.ID)

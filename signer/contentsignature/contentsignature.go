@@ -1,13 +1,14 @@
 package contentsignature // import "go.mozilla.org/autograph/signer/contentsignature"
 
 import (
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
-	"crypto/x509"
-	"encoding/base64"
+	"encoding/asn1"
 	"hash"
+	"io"
 
 	"go.mozilla.org/autograph/signer"
 
@@ -43,7 +44,9 @@ const (
 // ContentSigner implements an issuer of content signatures
 type ContentSigner struct {
 	signer.Configuration
-	privKey *ecdsa.PrivateKey
+	priv crypto.PrivateKey
+	pub  crypto.PublicKey
+	rand io.Reader
 }
 
 // New initializes a ContentSigner using a signer configuration
@@ -62,21 +65,10 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if conf.PrivateKey == "" {
 		return nil, errors.New("contentsignature: missing private key in signer configuration")
 	}
-	privKey, err := signer.ParsePrivateKey([]byte(conf.PrivateKey))
+	s.priv, s.pub, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature: failed to parse private key")
+		return nil, errors.Wrap(err, "contentsignature: failed to retrieve signer")
 	}
-	switch privKey.(type) {
-	case *ecdsa.PrivateKey:
-		s.privKey = privKey.(*ecdsa.PrivateKey)
-	default:
-		return nil, errors.Errorf("contentsignature: invalid private key algorithm, must be ecdsa, not %T", s.privKey)
-	}
-	pubkeybytes, err := x509.MarshalPKIXPublicKey(s.privKey.Public())
-	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature: failed to unmarshal public key")
-	}
-	s.PublicKey = base64.StdEncoding.EncodeToString(pubkeybytes)
 	s.Mode = s.getModeFromCurve()
 	return
 }
@@ -144,10 +136,18 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 		X5U:  s.X5U,
 		ID:   s.ID,
 	}
-	csig.R, csig.S, err = ecdsa.Sign(rand.Reader, s.privKey, input)
+
+	asn1Sig, err := s.priv.(crypto.Signer).Sign(rand.Reader, input, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "contentsignature: failed to sign hash")
 	}
+	var ecdsaSig ecdsaAsn1Signature
+	_, err = asn1.Unmarshal(asn1Sig, &ecdsaSig)
+	if err != nil {
+		return nil, errors.Wrap(err, "contentsignature: failed to parse signature")
+	}
+	csig.R = ecdsaSig.R
+	csig.S = ecdsaSig.S
 	csig.Finished = true
 	return csig, nil
 }
@@ -186,7 +186,7 @@ func getSignatureHash(mode string) string {
 
 // getModeFromCurve returns a content signature algorithm name, or an empty string if the mode is unknown
 func (s *ContentSigner) getModeFromCurve() string {
-	switch s.privKey.Curve.Params().Name {
+	switch s.pub.(*ecdsa.PublicKey).Params().Name {
 	case "P-256":
 		return P256ECDSA
 	case "P-384":

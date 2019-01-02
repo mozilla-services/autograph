@@ -4,9 +4,7 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -51,41 +49,18 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 		return nil, errors.New("mar: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
-	s.signingKey, err = conf.GetPrivateKey()
+	s.signingKey, s.publicKey, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
 	if err != nil {
-		return nil, errors.Wrap(err, "mar: failed to parse private key")
+		return nil, errors.Wrap(err, "mar: failed to get keys and random io reader")
 	}
 
-	// do a bunch of type assertions to get the public key and default signature algorithm
-	// up front so we don't have to clutter the rest of the code with this
+	// select the default signature algorithm depending on the private key type
 	switch s.signingKey.(type) {
 	case *rsa.PrivateKey:
-		s.publicKey = s.signingKey.(*rsa.PrivateKey).Public()
-		publicKeyBytes, err := x509.MarshalPKIXPublicKey(&s.signingKey.(*rsa.PrivateKey).PublicKey)
-		if err != nil {
-			return nil, errors.Wrap(err, "mar: failed to asn1 marshal rsa public key")
-		}
-		s.PublicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
 		s.defaultSigAlg = margo.SigAlgRsaPkcs1Sha384
-		s.rand = rand.Reader
-
 	case *crypto11.PKCS11PrivateKeyRSA:
-		s.publicKey = s.signingKey.(*crypto11.PKCS11PrivateKeyRSA).Public()
-		publicKeyBytes, err := x509.MarshalPKIXPublicKey(s.signingKey.(*crypto11.PKCS11PrivateKeyRSA).PubKey.(*rsa.PublicKey))
-		if err != nil {
-			return nil, errors.Wrap(err, "mar: failed to asn1 marshal crypto11 rsa public key")
-		}
-		s.PublicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
 		s.defaultSigAlg = margo.SigAlgRsaPkcs1Sha384
-		s.rand = new(crypto11.PKCS11RandReader)
-
 	case *ecdsa.PrivateKey:
-		s.publicKey = s.signingKey.(*ecdsa.PrivateKey).Public()
-		publicKeyBytes, err := x509.MarshalPKIXPublicKey(&s.signingKey.(*ecdsa.PrivateKey).PublicKey)
-		if err != nil {
-			return nil, errors.Wrap(err, "mar: failed to asn1 marshal ecdsa public key")
-		}
-		s.PublicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
 		switch s.publicKey.(*ecdsa.PublicKey).Params().Name {
 		case elliptic.P256().Params().Name:
 			s.defaultSigAlg = margo.SigAlgEcdsaP256Sha256
@@ -94,15 +69,7 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 		default:
 			return nil, fmt.Errorf("mar: elliptic curve %q is not supported", s.publicKey.(*ecdsa.PublicKey).Params().Name)
 		}
-		s.rand = rand.Reader
-
 	case *crypto11.PKCS11PrivateKeyECDSA:
-		s.publicKey = s.signingKey.(*crypto11.PKCS11PrivateKeyECDSA).Public()
-		publicKeyBytes, err := x509.MarshalPKIXPublicKey(s.signingKey.(*crypto11.PKCS11PrivateKeyECDSA).PubKey.(*ecdsa.PublicKey))
-		if err != nil {
-			return nil, errors.Wrap(err, "mar: failed to asn1 marshal crypto11 ecdsa public key")
-		}
-		s.PublicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
 		switch s.publicKey.(*ecdsa.PublicKey).Params().Name {
 		case elliptic.P256().Params().Name:
 			s.defaultSigAlg = margo.SigAlgEcdsaP256Sha256
@@ -111,8 +78,6 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 		default:
 			return nil, fmt.Errorf("mar: elliptic curve %q is not supported", s.publicKey.(*ecdsa.PublicKey).Params().Name)
 		}
-		s.rand = new(crypto11.PKCS11RandReader)
-
 	default:
 		return nil, errors.Errorf("mar: unsupported public key type %T", s.signingKey)
 	}
