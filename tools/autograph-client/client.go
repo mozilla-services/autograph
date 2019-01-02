@@ -24,7 +24,7 @@ import (
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
-	"go.mozilla.org/autograph/signer/widevine"
+	"go.mozilla.org/autograph/signer/rsapss"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
@@ -79,7 +79,7 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, widevineHash, zipMethodOption string
+		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, rsapssHash, zipMethodOption string
 		iter, maxworkers, sa                                                                                                      int
 		debug                                                                                                                     bool
 		err                                                                                                                       error
@@ -133,8 +133,8 @@ examples:
 * sign some data with gpg2:
         $ go run client.go -d $(echo 'hello' | base64) -k pgpsubkey -o /tmp/testsig.pgp -ko /tmp/testkey.asc
 
-* sign SHA1 hashed data with widevine:
-        $ go run client.go -D -wa $(echo hi | sha1sum -b | cut -d ' ' -f 1 | xxd -r -p | base64) -k dummywidevine -o signed-hash.out -ko /tmp/testkey.pub
+* sign SHA1 hashed data with rsapss:
+        $ go run client.go -D -wa $(echo hi | sha1sum -b | cut -d ' ' -f 1 | xxd -r -p | base64) -k dummyrsapss -o signed-hash.out -ko /tmp/testkey.pub
 `)
 	}
 	flag.StringVar(&userid, "u", "alice", "User ID")
@@ -150,7 +150,7 @@ examples:
 	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
 	flag.StringVar(&cn, "cn", "", "when signing XPI, sets the CN to the add-on ID")
 	flag.IntVar(&sa, "sa", 0, "when signing MAR hashes, sets the Signature Algorithm")
-	flag.StringVar(&widevineHash, "wa", "base64(sha1(data))", "for widevine Base64 SHA1 hash to sign using the /sign/hash endpoint")
+	flag.StringVar(&rsapssHash, "wa", "base64(sha1(data))", "for RSA-PSS Base64 SHA1 hash to sign using the /sign/hash endpoint")
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
 	flag.StringVar(&pk7digest, "pk7digest", "", "an optional PK7 digest algorithm to use for XPI file signing, either 'sha1' (default) or 'sha256'.")
 	flag.StringVar(&zipMethodOption, "zip", "", "an optional param for APK file signing. Defaults to '' to compress all files (the other options are 'all' which does the same thing and 'passthrough' which doesn't change file compression")
@@ -166,10 +166,10 @@ examples:
 		log.Printf("signing hash %q", hash)
 		url = url + "/sign/hash"
 		data = hash
-	} else if widevineHash != "base64(sha1(data))" {
-		log.Printf("signing widevine hash %q", widevineHash)
+	} else if rsapssHash != "base64(sha1(data))" {
+		log.Printf("signing RSA-PSS hash %q", rsapssHash)
 		url = url + "/sign/hash"
-		data = widevineHash
+		data = rsapssHash
 	} else if infile != "/path/to/file" {
 		log.Printf("signing file %q", infile)
 		url = url + "/sign/file"
@@ -336,10 +336,10 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
-				case widevine.Type:
-					err = widevine.VerifySignatureFromB64(widevineHash, response.Signature, response.PublicKey)
+				case rsapss.Type:
+					err = rsapss.VerifySignatureFromB64(rsapssHash, response.Signature, response.PublicKey)
 					if err != nil {
-						log.Fatal("got error verifying widevine response: %s", err)
+						log.Fatal("got error verifying RSA-PSS response: %s", err)
 					}
 					sigStatus = true
 				case gpg2.Type, pgp.Type:

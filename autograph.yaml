@@ -770,9 +770,9 @@ signers:
         gAAPg+05bWI=
         =459B
         -----END PGP PUBLIC KEY BLOCK-----
-    - id: dummywidevine
+    - id: dummyrsapss
       # a test 2048-bit RSA key
-      type: widevine
+      type: rsapss
       privatekey: |
         -----BEGIN RSA PRIVATE KEY-----
         MIIEpAIBAAKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE
@@ -830,7 +830,7 @@ authorizations:
           - testmarecdsa
           - randompgp
           - pgpsubkey
-          - dummywidevine
+          - dummyrsapss
 
     - id: bob
       key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d

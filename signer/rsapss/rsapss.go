@@ -1,4 +1,4 @@
-package widevine
+package rsapss
 
 import (
 	"crypto"
@@ -15,12 +15,12 @@ import (
 )
 
 const (
-	// Type of this signer is "widevine"
-	Type = "widevine"
+	// Type of this signer is "rsapss"
+	Type = "rsapss"
 )
 
-// WidevineSigner holds the configuration of the signer
-type WidevineSigner struct {
+// RSAPSSSigner holds the configuration of the signer
+type RSAPSSSigner struct {
 	signer.Configuration
 
 	// key is the parsed RSA private key to sign hashes
@@ -28,35 +28,35 @@ type WidevineSigner struct {
 }
 
 // New initializes a pgp signer using a configuration
-func New(conf signer.Configuration) (s *WidevineSigner, err error) {
-	s = new(WidevineSigner)
+func New(conf signer.Configuration) (s *RSAPSSSigner, err error) {
+	s = new(RSAPSSSigner)
 
 	if conf.Type != Type {
-		return nil, errors.Errorf("widevine: invalid type %q, must be %q", conf.Type, Type)
+		return nil, errors.Errorf("rsapss: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, errors.New("widevine: missing signer ID in signer configuration")
+		return nil, errors.New("rsapss: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 
 	if conf.PublicKey == "" {
-		return nil, errors.New("widevine: missing public key in signer configuration")
+		return nil, errors.New("rsapss: missing public key in signer configuration")
 	}
 	s.PublicKey = base64.StdEncoding.EncodeToString([]byte(conf.PublicKey))
 
 	if conf.PrivateKey == "" {
-		return nil, errors.New("widevine: missing private key in signer configuration")
+		return nil, errors.New("rsapss: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
 	parsedPrivateKey, err := signer.ParsePrivateKey([]byte(conf.PrivateKey))
 	if err != nil {
-		return nil, errors.Wrap(err, "widevine: failed to parse private key")
+		return nil, errors.Wrap(err, "rsapss: failed to parse private key")
 	}
 	rsaKey, ok := parsedPrivateKey.(*rsa.PrivateKey)
 	if !ok {
-		return nil, errors.Errorf("widevine: parsed private key is not RSA")
+		return nil, errors.Errorf("rsapss: parsed private key is not RSA")
 	}
 	s.key = rsaKey
 
@@ -64,7 +64,7 @@ func New(conf signer.Configuration) (s *WidevineSigner, err error) {
 }
 
 // Config returns the configuration of the current signer
-func (s *WidevineSigner) Config() signer.Configuration {
+func (s *RSAPSSSigner) Config() signer.Configuration {
 	return signer.Configuration{
 		ID:         s.ID,
 		Type:       s.Type,
@@ -74,7 +74,7 @@ func (s *WidevineSigner) Config() signer.Configuration {
 }
 
 // SignData takes data hashes it and returns a signed base64 encoded hash
-func (s *WidevineSigner) SignData(data []byte, options interface{}) (signer.Signature, error) {
+func (s *RSAPSSSigner) SignData(data []byte, options interface{}) (signer.Signature, error) {
 	h := sha1.New()
 	h.Write(data)
 	digest := h.Sum(nil)
@@ -82,14 +82,14 @@ func (s *WidevineSigner) SignData(data []byte, options interface{}) (signer.Sign
 }
 
 // SignHash takes an input hash and returns a signed base64 encoded hash
-func (s *WidevineSigner) SignHash(digest []byte, options interface{}) (signer.Signature, error) {
+func (s *RSAPSSSigner) SignHash(digest []byte, options interface{}) (signer.Signature, error) {
 	if len(digest) != 20 {
-		return nil, errors.Errorf("widevine: refusing to sign input hash. Got length %d, expected 20.", len(digest))
+		return nil, errors.Errorf("rsapss: refusing to sign input hash. Got length %d, expected 20.", len(digest))
 	}
 
 	sigBytes, err := rsa.SignPSS(rand.Reader, s.key, crypto.SHA1, digest, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "widevine: error signing hash")
+		return nil, errors.Wrap(err, "rsapss: error signing hash")
 	}
 
 	sig := new(Signature)
@@ -97,7 +97,7 @@ func (s *WidevineSigner) SignHash(digest []byte, options interface{}) (signer.Si
 	return sig, nil
 }
 
-// Signature is a widevine signature
+// Signature is a rsapss signature
 type Signature struct {
 	Data []byte
 }
@@ -123,15 +123,15 @@ type Options struct {
 }
 
 // GetDefaultOptions returns default options of the signer
-func (s *WidevineSigner) GetDefaultOptions() interface{} {
+func (s *RSAPSSSigner) GetDefaultOptions() interface{} {
 	return Options{}
 }
 
-// VerifySignature verifies a widevine signature for the given SHA1
+// VerifySignature verifies a rsapss signature for the given SHA1
 // digest for the given RSA public and signature bytes
 func VerifySignature(pubKey *rsa.PublicKey, digest, sigBytes []byte) error {
 	err := rsa.VerifyPSS(pubKey, crypto.SHA1, digest, sigBytes, nil)
-	return errors.Wrapf(err, "widevine: failed to verify signature")
+	return errors.Wrapf(err, "rsapss: failed to verify signature")
 }
 
 // VerifySignatureFromB64 verifies a signature from base64 encoded

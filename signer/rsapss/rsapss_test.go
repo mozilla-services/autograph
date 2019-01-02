@@ -1,4 +1,4 @@
-package widevine
+package rsapss
 
 import (
 	"bytes"
@@ -10,8 +10,8 @@ import (
 	"go.mozilla.org/autograph/signer"
 )
 
-func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *WidevineSigner {
-	s, err := New(widevinesignerconf)
+func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *RSAPSSSigner {
+	s, err := New(rsapsssignerconf)
 	if s == nil {
 		t.Fatal("expected non-nil signer for valid conf, but got nil signer")
 	}
@@ -37,13 +37,13 @@ func TestNewSigner(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		t.Parallel()
 
-		_ = assertNewSignerWithConfOK(t, widevinesignerconf)
+		_ = assertNewSignerWithConfOK(t, rsapsssignerconf)
 	})
 
 	t.Run("invalid type", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := widevinesignerconf
+		invalidConf := rsapsssignerconf
 		invalidConf.Type = "badType"
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -51,7 +51,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid ID", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := widevinesignerconf
+		invalidConf := rsapsssignerconf
 		invalidConf.ID = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -59,7 +59,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid PrivateKey", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := widevinesignerconf
+		invalidConf := rsapsssignerconf
 		invalidConf.PrivateKey = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -67,7 +67,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid PublicKey", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := widevinesignerconf
+		invalidConf := rsapsssignerconf
 		invalidConf.PublicKey = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -75,7 +75,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid PEM PrivateKey", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := widevinesignerconf
+		invalidConf := rsapsssignerconf
 		invalidConf.PrivateKey = "NOT VALID PEM"
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -83,7 +83,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("non-RSA PrivateKey", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := widevinesignerconf
+		invalidConf := rsapsssignerconf
 		invalidConf.PrivateKey = nonRSAPrivateKey
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -92,23 +92,23 @@ func TestNewSigner(t *testing.T) {
 func TestConfig(t *testing.T) {
 	t.Parallel()
 
-	s := assertNewSignerWithConfOK(t, widevinesignerconf)
+	s := assertNewSignerWithConfOK(t, rsapsssignerconf)
 
-	if s.Config().Type != widevinesignerconf.Type {
-		t.Fatalf("signer type %q does not match configuration %q", s.Config().Type, widevinesignerconf.Type)
+	if s.Config().Type != rsapsssignerconf.Type {
+		t.Fatalf("signer type %q does not match configuration %q", s.Config().Type, rsapsssignerconf.Type)
 	}
-	if s.Config().ID != widevinesignerconf.ID {
-		t.Fatalf("signer id %q does not match configuration %q", s.Config().ID, widevinesignerconf.ID)
+	if s.Config().ID != rsapsssignerconf.ID {
+		t.Fatalf("signer id %q does not match configuration %q", s.Config().ID, rsapsssignerconf.ID)
 	}
-	if s.Config().PrivateKey != widevinesignerconf.PrivateKey {
-		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, widevinesignerconf.PrivateKey)
+	if s.Config().PrivateKey != rsapsssignerconf.PrivateKey {
+		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, rsapsssignerconf.PrivateKey)
 	}
 }
 
 func TestOptionsAreEmpty(t *testing.T) {
 	t.Parallel()
 
-	s := assertNewSignerWithConfOK(t, widevinesignerconf)
+	s := assertNewSignerWithConfOK(t, rsapsssignerconf)
 	defaultOpts := s.GetDefaultOptions()
 	expectedOpts := Options{}
 	if defaultOpts != expectedOpts {
@@ -131,7 +131,7 @@ func TestSignHash(t *testing.T) {
 	var digest []byte = shasum[:]
 
 	// initialize a signer
-	s := assertNewSignerWithConfOK(t, widevinesignerconf)
+	s := assertNewSignerWithConfOK(t, rsapsssignerconf)
 
 	// sign input data
 	sig, err := s.SignHash(digest, s.GetDefaultOptions())
@@ -187,7 +187,7 @@ func TestSignData(t *testing.T) {
 	var digest []byte = shasum[:]
 
 	// initialize a signer
-	s := assertNewSignerWithConfOK(t, widevinesignerconf)
+	s := assertNewSignerWithConfOK(t, rsapsssignerconf)
 
 	// sign input data
 	sig, err := s.SignData(input, s.GetDefaultOptions())
@@ -284,8 +284,8 @@ BkZWS5IjC+15Uqt3yOcCMdjIJpikiD1WjXRaeFe+b3ovcoBs4ToLK7d8y0qFlkgx
 /5Cp6z37rpp781N4haUOIauM14P4KUw=
 -----END EC PRIVATE KEY-----`
 
-var widevinesignerconf = signer.Configuration{
-	ID:   "widevinetest",
+var rsapsssignerconf = signer.Configuration{
+	ID:   "rsapsstest",
 	Type: Type,
 	PrivateKey: `-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE
