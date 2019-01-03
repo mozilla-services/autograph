@@ -34,9 +34,9 @@ type GPG2Signer struct {
 	// e.g. 0xA2B637F535A86009
 	KeyID string
 
-	// Passphrase is the optional passphrase to use decrypt the
+	// passphrase is the optional passphrase to use decrypt the
 	// gpg secret key
-	Passphrase string
+	passphrase string
 
 	// tmpDir is the signer's temporary working directory. It
 	// holds the gpg sec and keyrings
@@ -72,7 +72,7 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 	}
 	s.KeyID = conf.KeyID
 
-	s.Passphrase = conf.Passphrase
+	s.passphrase = conf.Passphrase
 
 	s.tmpDir, err = createKeyRing(s)
 	if err != nil {
@@ -203,7 +203,7 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	}
 	go func() {
 		defer stdin.Close()
-		io.WriteString(stdin, s.Passphrase)
+		io.WriteString(stdin, s.passphrase)
 	}()
 	out, err := gpgVerifySig.CombinedOutput()
 	if err != nil {
