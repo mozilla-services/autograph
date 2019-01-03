@@ -8,10 +8,15 @@ This signer implements the Pretty Good Privacy signature format. It
 accepts data on the `/sign/data` interface and returns armored
 detached signatures like the `pgp` signer.
 
-Unlike the `pgp` signer `gpg2` supports loading private keys with
-passphrases exported with the `unsupported and non-standard gnu-dummy
-S2K algorithm`_ and signing with subkeys. However, it does require
-that a gpg2 version > 2.1 be installed.
+**Try the `pgp` signer first since it keeps private keys in memory,
+ which is more secure.**
+
+Only use the this signer if the `pgp` signer doesn't understand your
+key format and you need to load private keys with passphrases exported
+with the `unsupported and non-standard gnu-dummy S2K algorithm`_ and
+sign with a subkey. Also prefer the `pgp` signer, since this signer 1)
+requires a the gpg2 binary with version >2.1, 2) writes private keys
+to keyrings on disk, and 3) shells out to the `gpg2` binary.
 
 .. _`unsupported and non-standard gnu-dummy S2K algorithm`: https://github.com/golang/go/issues/13605
 
