@@ -12,9 +12,9 @@ import (
 
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
-	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/xpi"
 	margo "go.mozilla.org/mar"
 )
