@@ -79,6 +79,14 @@ func TestNewSigner(t *testing.T) {
 		invalidConf.KeyID = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
+
+	t.Run("non-alphnumeric KeyID", func(t *testing.T) {
+		t.Parallel()
+
+		invalidConf := gpg2signerconf
+		invalidConf.KeyID = "!?;\\"
+		assertNewSignerWithConfErrs(t, invalidConf)
+	})
 }
 
 func TestConfig(t *testing.T) {

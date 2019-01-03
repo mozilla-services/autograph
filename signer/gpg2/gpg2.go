@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -25,6 +26,8 @@ const (
 	keyRingFilename = "autograph_gpg2_keyring.gpg"
 	secRingFilename = "autograph_gpg2_secring.gpg"
 )
+
+var isAlphanumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
 // GPG2Signer holds the configuration of the signer
 type GPG2Signer struct {
@@ -69,6 +72,11 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 
 	if conf.KeyID == "" {
 		return nil, errors.New("gpg2: missing gpg key ID in signer configuration")
+	}
+	// validate KeyID since it is injected into the temp dir
+	// prefix and could be used for command injection
+	if !isAlphanumeric(conf.KeyID) {
+		return nil, errors.New("gpg2: non-alphanumeric key ID in signer configuration")
 	}
 	s.KeyID = conf.KeyID
 
