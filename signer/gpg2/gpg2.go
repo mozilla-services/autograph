@@ -155,9 +155,11 @@ func createKeyRing(s *GPG2Signer) (string, error) {
 }
 
 func (s *GPG2Signer) AtExit() error {
-	os.RemoveAll(s.tmpDir)
-	log.Infof("gpg2: cleaned up %s in exit handler", s.tmpDir)
-	return nil
+	err := os.RemoveAll(s.tmpDir)
+	if err == nil {
+		log.Infof("gpg2: cleaned up %s in exit handler", s.tmpDir)
+	}
+	return err
 }
 
 // Config returns the configuration of the current signer
