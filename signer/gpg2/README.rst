@@ -68,7 +68,7 @@ For example:
         -----END PGP PRIVATE KEY BLOCK-----
       publickey: |
         -----BEGIN PGP PUBLIC KEY BLOCK-----
-	...
+        ...
         =459B
         -----END PGP PUBLIC KEY BLOCK-----
 
