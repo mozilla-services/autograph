@@ -160,7 +160,7 @@ func TestNewFailure(t *testing.T) {
 		{err: "contentsignature: invalid type", cfg: signer.Configuration{Type: ""}},
 		{err: "contentsignature: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
 		{err: "contentsignature: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
-		{err: "contentsignature: failed to parse private key", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+		{err: "contentsignature: failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
 		{err: "contentsignature: invalid private key algorithm, must be ecdsa", cfg: signer.Configuration{
 			Type: Type,
 			ID:   "abcd",

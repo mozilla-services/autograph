@@ -69,6 +69,11 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "contentsignature: failed to retrieve signer")
 	}
+	switch s.priv.(type) {
+	case *ecdsa.PrivateKey:
+	default:
+		return nil, errors.New("contentsignature: invalid private key algorithm, must be ecdsa")
+	}
 	s.Mode = s.getModeFromCurve()
 	return
 }
