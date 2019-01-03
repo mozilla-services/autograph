@@ -221,3 +221,17 @@ func TestUnmarshalBadBase64(t *testing.T) {
 		t.Fatalf("expected to fail with 'unknown signature length', but got %v", err)
 	}
 }
+
+func TestNoShortData(t *testing.T) {
+	s, err := New(PASSINGTESTCASES[0].cfg)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	_, err = s.SignData([]byte("a"), nil)
+	if err == nil {
+		t.Fatal("expected to fail with input data too short but succeeded")
+	}
+	if err.Error() != "contentsignature: refusing to sign input data shorter than 10 bytes" {
+		t.Fatalf("expected to fail with input data too short but failed with: %v", err)
+	}
+}
