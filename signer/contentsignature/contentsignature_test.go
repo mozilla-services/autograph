@@ -160,7 +160,7 @@ func TestNewFailure(t *testing.T) {
 		{err: "contentsignature: invalid type", cfg: signer.Configuration{Type: ""}},
 		{err: "contentsignature: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
 		{err: "contentsignature: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
-		{err: "contentsignature: failed to parse private key", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+		{err: "contentsignature: failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
 		{err: "contentsignature: invalid private key algorithm, must be ecdsa", cfg: signer.Configuration{
 			Type: Type,
 			ID:   "abcd",
@@ -219,5 +219,19 @@ func TestUnmarshalBadBase64(t *testing.T) {
 	_, err := Unmarshal("gZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaIgZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaI")
 	if err.Error() != "contentsignature: unknown signature length 192" {
 		t.Fatalf("expected to fail with 'unknown signature length', but got %v", err)
+	}
+}
+
+func TestNoShortData(t *testing.T) {
+	s, err := New(PASSINGTESTCASES[0].cfg)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	_, err = s.SignData([]byte("a"), nil)
+	if err == nil {
+		t.Fatal("expected to fail with input data too short but succeeded")
+	}
+	if err.Error() != "contentsignature: refusing to sign input data shorter than 10 bytes" {
+		t.Fatalf("expected to fail with input data too short but failed with: %v", err)
 	}
 }
