@@ -172,7 +172,7 @@ func TestSignHash(t *testing.T) {
 	t.Run("Verifies", func(t *testing.T) {
 		t.Parallel()
 
-		rsaKey := s.key
+		rsaKey := s.key.(*rsa.PrivateKey)
 		pubKey := rsaKey.Public()
 		err := VerifySignature(pubKey.(*rsa.PublicKey), digest, sig.(*Signature).Data)
 		if err != nil {
@@ -204,7 +204,7 @@ func TestSignData(t *testing.T) {
 	t.Run("Verifies", func(t *testing.T) {
 		t.Parallel()
 
-		rsaKey := s.key
+		rsaKey := s.key.(*rsa.PrivateKey)
 		pubKey := rsaKey.Public()
 		err := VerifySignature(pubKey.(*rsa.PublicKey), digest, sig.(*Signature).Data)
 		if err != nil {

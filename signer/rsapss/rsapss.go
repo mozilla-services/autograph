@@ -2,14 +2,15 @@ package rsapss
 
 import (
 	"crypto"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"io"
 
+	"github.com/ThalesIgnite/crypto11"
 	"github.com/pkg/errors"
 	"go.mozilla.org/autograph/signer"
 )
@@ -23,8 +24,11 @@ const (
 type RSAPSSSigner struct {
 	signer.Configuration
 
-	// key is the parsed RSA private key to sign hashes
-	key *rsa.PrivateKey
+	// key is the RSA private key to sign hashes
+	key crypto.PrivateKey
+
+	// rng is our random number generator
+	rng io.Reader
 }
 
 // New initializes a pgp signer using a configuration
@@ -41,24 +45,28 @@ func New(conf signer.Configuration) (s *RSAPSSSigner, err error) {
 	}
 	s.ID = conf.ID
 
+	if conf.PrivateKey == "" {
+		return nil, errors.New("rsapss: missing private key in signer configuration")
+	}
+	s.PrivateKey = conf.PrivateKey
+
 	if conf.PublicKey == "" {
 		return nil, errors.New("rsapss: missing public key in signer configuration")
 	}
 	s.PublicKey = base64.StdEncoding.EncodeToString([]byte(conf.PublicKey))
 
-	if conf.PrivateKey == "" {
-		return nil, errors.New("rsapss: missing private key in signer configuration")
-	}
-	s.PrivateKey = conf.PrivateKey
-	parsedPrivateKey, err := signer.ParsePrivateKey([]byte(conf.PrivateKey))
+	s.key, _, s.rng, s.PublicKey, err = conf.GetKeysAndRand()
 	if err != nil {
-		return nil, errors.Wrap(err, "rsapss: failed to parse private key")
+		return nil, errors.Wrapf(err, "rsapss: error fetching key and rand from signer configuration")
 	}
-	var ok bool
-	s.key, ok = parsedPrivateKey.(*rsa.PrivateKey)
-	if !ok {
-		return nil, errors.Errorf("rsapss: parsed private key is not RSA")
+
+	switch s.key.(type) {
+	case *rsa.PrivateKey, *crypto11.PKCS11PrivateKeyRSA:
+		// OK!
+	default:
+		return nil, errors.Errorf("rsapss: parsed private key is not a recognized RSA key type")
 	}
+
 	return s, nil
 }
 
@@ -86,7 +94,12 @@ func (s *RSAPSSSigner) SignHash(digest []byte, options interface{}) (signer.Sign
 		return nil, errors.Errorf("rsapss: refusing to sign input hash. Got length %d, expected 20.", len(digest))
 	}
 
-	sigBytes, err := rsa.SignPSS(rand.Reader, s.key, crypto.SHA1, digest, nil)
+	opts := &rsa.PSSOptions{
+		SaltLength: rsa.PSSSaltLengthAuto,
+		Hash:       crypto.SHA1,
+	}
+
+	sigBytes, err := s.key.(crypto.Signer).Sign(s.rng, digest, opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "rsapss: error signing hash")
 	}
