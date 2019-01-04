@@ -54,12 +54,11 @@ func New(conf signer.Configuration) (s *RSAPSSSigner, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "rsapss: failed to parse private key")
 	}
-	rsaKey, ok := parsedPrivateKey.(*rsa.PrivateKey)
+	var ok bool
+	s.key, ok = parsedPrivateKey.(*rsa.PrivateKey)
 	if !ok {
 		return nil, errors.Errorf("rsapss: parsed private key is not RSA")
 	}
-	s.key = rsaKey
-
 	return s, nil
 }
 
