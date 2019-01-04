@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	// Type of this signer is "pgp"
+	// Type of this signer is "pgp", which represents a signer
+	// that uses the native golang.org/x/crypto/openpgp to sign
+	// data
 	Type = "pgp"
 )
 

@@ -2,15 +2,16 @@ FROM golang:1.11
 MAINTAINER Mozilla
 EXPOSE 8000
 
-RUN addgroup --gid 10001 app && \
-
+RUN addgroup --gid 10001 app \
+    && \
     adduser --gid 10001 --uid 10001 \
     --home /app --shell /sbin/nologin \
-    --disabled-password app && \
-
+    --disabled-password app \
+    && \
     apt update && \
     apt -y upgrade && \
     apt -y install libltdl-dev && \
+    apt -y install gpg && \
     apt-get clean
 
 ADD . /go/src/go.mozilla.org/autograph

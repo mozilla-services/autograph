@@ -14,7 +14,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/pkg/errors"
@@ -28,6 +30,7 @@ import (
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
 	"go.mozilla.org/autograph/signer/xpi"
@@ -170,6 +173,8 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 		os.Exit(0)
 	}
 
+	ag.startCleanupHandler()
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", handleHeartbeat).Methods("GET")
 	router.HandleFunc("/__lbheartbeat__", handleHeartbeat).Methods("GET")
@@ -248,6 +253,29 @@ func (a *autographer) disableDebug() {
 	return
 }
 
+// startCleanupHandler sets up a chan to catch int, kill, term
+// signals and run signer AtExit functions
+func (a *autographer) startCleanupHandler() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+	go func() {
+		sig := <-c
+		log.Infof("main: received signal %s; cleaning up signers", sig)
+		for _, s := range a.signers {
+			statefulSigner, ok := s.(signer.StatefulSigner)
+			if !ok {
+				continue
+			}
+			err := statefulSigner.AtExit()
+			if err != nil {
+				log.Errorf("main: error in signer %s AtExit fn: %s", s.Config().ID, err)
+			}
+		}
+		os.Exit(0)
+	}()
+}
+
 // addSigners initializes each signer specified in the configuration by parsing
 // and loading their private keys. The signers are then copied over to the
 // autographer handler.
@@ -260,9 +288,9 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 		}
 		sids[signerConf.ID] = true
 		var (
-			s   signer.Signer
+			s           signer.Signer
 			statsClient *signer.StatsClient
-			err error
+			err         error
 		)
 		if a.stats != nil {
 			statsClient, err = signer.NewStatsClient(signerConf, a.stats)
@@ -297,6 +325,11 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 			}
 		case pgp.Type:
 			s, err = pgp.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case gpg2.Type:
+			s, err = gpg2.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}

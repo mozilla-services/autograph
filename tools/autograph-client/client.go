@@ -21,6 +21,7 @@ import (
 
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
 	"go.mozilla.org/autograph/signer/xpi"
@@ -127,6 +128,9 @@ examples:
 
 * sign an XPI file with one or more COSE signatures and verify against roots in roots.pem:
 	$ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -o signed.xpi -c ES384 -c PS256 -r roots.pem
+
+* sign some data with gpg2:
+        $ go run client.go -d $(echo 'hello' | base64) -k pgpsubkey -o /tmp/testsig.pgp -ko /tmp/testkey.asc
 `)
 	}
 	flag.StringVar(&userid, "u", "alice", "User ID")
@@ -323,7 +327,7 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
-				case pgp.Type:
+				case gpg2.Type, pgp.Type:
 					sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
 					sigData = []byte(response.Signature)
 				default:
