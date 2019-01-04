@@ -81,6 +81,25 @@ type Configuration struct {
 	// gpg secret key for the gpg2 signer type
 	Passphrase string `json:"passphrase,omitempty"`
 
+	// Validity is the lifetime of a end-entity certificate
+	Validity time.Duration `json:"validity,omitempty"`
+
+	// ClockSkewTolerance increase the lifetime of a certificate
+	// to account for clients with skewed clocks by adding days
+	// to the notbefore and notafter values. For example, a certificate
+	// with a validity of 30d and a clock skew tolerance of 10 days will
+	// have a total validity of 10+30+10=50 days.
+	ClockSkewTolerance time.Duration `json:"clock_skew_tolerance,omitempty"`
+
+	// ChainUploadLocation is the target a certificate chain should be
+	// uploaded to in order for clients to find it at the x5u location.
+	ChainUploadLocation string `json:"chain_upload_location,omitempty"`
+
+	// Chain is chain of issuers to a trusted root. This would typically
+	// contains the certificate of an intermediate and the certificate of
+	// a root.
+	Chain string `json:"chain,omitempty"`
+
 	isHsmAvailable bool
 }
 

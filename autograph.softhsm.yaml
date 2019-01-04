@@ -123,6 +123,47 @@ signers:
           wMlTLnlLg0nhVXAEq2SRaF7Tx/v4Ny9kuR7p5A==
           -----END CERTIFICATE-----
 
+    - id: normandy
+      type: contentsignaturepki
+      # rotate certs every 29.5 days, a lunar month
+      validity: 708h
+      # give +/- 30d of validity room for clients with bad clocks
+      clock_skew_tolerance: 720h
+      # upload cert chains to this location
+      chain_upload_location: s3://net-mozaws-dev-content-signature/chains/
+      x5u: https://content-signature.dev.mozaws.net/chains/
+      privatekey: csinter1546616454
+      # chain contains the public certs of the intermediate and root of the pki
+      chain: |
+        -----BEGIN CERTIFICATE-----
+        MIICNDCCAbqgAwIBAgIIFXaveKbiiWYwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+        VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+        EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTQ2NjE2NDU0MB4XDTE4MDEwNDE1
+        NDA1NFoXDTQ5MDEwNDE1NDA1NFowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+        MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+        VQQDExFjc2ludGVyMTU0NjYxNjQ1NDB2MBAGByqGSM49AgEGBSuBBAAiA2IABEIK
+        ywwkiozClqa9t4FKHJJTPrn+G70T29dUp2f2/OSN0s4Z15Bo9++hqfrQSj/bSdn8
+        HaPdxz3A0cZpgxKhRRQ4TRdQWRwcwBH5yP6GjhlXjIVb744VWW1YemaXloLSWaNC
+        MEAwDgYDVR0PAQH/BAQDAgKEMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcD
+        ATAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMDA2gAMGUCMGpVevvnSSIzHJQc
+        KBmxtaGCtxsOAlpBAPhqyOAcoR/EHTSmbO+kflbbKld9+CO2bQIxAIxnp63Nba0E
+        /GzOwu4W+ZNKsJuSFyXgBVcErnuRMBR03RcVsGt3Jq3yqOze7TxYOQ==
+        -----END CERTIFICATE-----
+        -----BEGIN CERTIFICATE-----
+        MIICMjCCAbmgAwIBAgIIFXaveKY8BoAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+        VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+        EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTQ2NjE2NDU0MB4XDTE4MDEwNDE1
+        NDA1NFoXDTQ5MDEwNDE1NDA1NFowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+        MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
+        VQQDExBjc3Jvb3QxNTQ2NjE2NDU0MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEN4x7
+        mRKCXM6PXHOGZNdUxSA0+bPqwfJ6t9o2YYxA9r94fxIR1u/jPW9Kf/InbqbI2Zhp
+        mEQDuyz4zKT1RFcRIFwcaBYNTvmb7Vn2TRkXJT6MA4getzJpYwtWNpB3OhUeo0Iw
+        QDAOBgNVHQ8BAf8EBAMCAoQwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB
+        MA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDZwAwZAIwAX015DkrCGiU/ONZ
+        OiCY6cPz1Lx4V4hURl4EWW6ItlH7733WBenjepo1iUDsFn4mAjB4hYXQTzye3UXy
+        K1aOtFTNDZKxHvhUzJEwTRdedaJ2Zymhe2trTPZcdyC36b4ycuQ=
+        -----END CERTIFICATE-----
+
 authorizations:
     - id: alice
       key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
