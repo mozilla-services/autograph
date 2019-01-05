@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"log"
 	"time"
 
 	"go.mozilla.org/autograph/signer"
@@ -72,53 +73,61 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "contentsignature-pki: failed to retrieve signer")
 	}
+	// if validity is undef, default to 30 days
+	if conf.Validity == 0 {
+		log.Printf("contentsignature-pki: no validity configured for signer %s, defaulting to 30 days", s.ID)
+		conf.Validity = 720 * time.Hour
+	}
 
-	if cfg.HSMIsAvailable {
-		// search the hsm for an end-entity private key that is still valid.
-		// start from today's date, and go back until we reach now() - validity.
-		// if none is found, a new key is created.
-		ts := time.Now()
-		keyName := fmt.Sprintf("%s-%s", s.ID, ts.Format("20060102"))
-		for {
-			eeCfg := conf
-			eeCfg.PrivateKey = keyName
-			s.eePriv, err = eeCfg.GetPrivateKey()
-			if err != nil {
-				if err.Error() == "no suitable key found" {
-					continue
-				}
-				return nil, errors.Wrap(err, "contentsignature-pki: failed to retrieve previous EE key from hsm")
+	switch s.caPub.(type) {
+	case *ecdsa.PublicKey:
+	default:
+		return nil, errors.New("contentsignature-pki: invalid key for CA cert, must be ecdsa")
+	}
+	s.Mode = s.getModeFromCurve()
+
+	// search the hsm for an end-entity private key that is still valid.
+	// start from today's date, and go back until we reach now() - validity.
+	// if none is found, a new key is created.
+	ts := time.Now().UTC()
+	keyName := fmt.Sprintf("%s-%s", s.ID, ts.Format("20060102"))
+	for {
+		eeCfg := conf
+		eeCfg.PrivateKey = keyName
+		s.eePriv, err = eeCfg.GetPrivateKey()
+		if err != nil {
+			if err.Error() == "no suitable key found" {
+				continue
 			}
-			if s.eePriv != nil {
-				// we got a key
-				break
-			}
-			// decrement date by one day and try again
-			ts = ts.AddDate(0, 0, -1)
-			// we stop when ts goes further back than the max validity,
-			// because we don't want to reuse any key older than that
-			if ts.Before(time.Now().Add(-eeCfg.Validity)) {
-				break
-			}
-			keyName := fmt.Sprintf("%s-%s", s.ID, ts.Format("20060102"))
+			return nil, errors.Wrap(err, "contentsignature-pki: failed to retrieve previous EE key from hsm")
 		}
+		if s.eePriv != nil {
+			// we got a key
+			break
+		}
+		// decrement date by one day and try again
+		ts = ts.AddDate(0, 0, -1)
+		// we stop when ts goes further back than the max validity,
+		// because we don't want to reuse any key older than that
+		if ts.Before(time.Now().Add(-eeCfg.Validity)) {
+			break
+		}
+		keyName = fmt.Sprintf("%s-%s", s.ID, ts.Format("20060102"))
 	}
 
 	if s.eePriv == nil {
 		// we didn't get a key, so it's time to generate a new one,
 		// get a cert issued and upload to s3
-
+		keyName := fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102"))
+		s.eePriv, s.eePub, err = conf.MakeKey(s.caPub, keyName)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to generate key for end entity")
+		}
 	}
 
 	// download and verify the public chain from the x5u location.
 	// if all checks out, we're ready to roll
 
-	switch s.eePub.(type) {
-	case *ecdsa.PublicKey:
-	default:
-		return nil, errors.New("contentsignature-pki: invalid private key algorithm, must be ecdsa")
-	}
-	s.Mode = s.getModeFromCurve()
 	return
 }
 
@@ -186,7 +195,7 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 		ID:   s.ID,
 	}
 
-	asn1Sig, err := s.priv.(crypto.Signer).Sign(rand.Reader, input, nil)
+	asn1Sig, err := s.caPriv.(crypto.Signer).Sign(rand.Reader, input, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "contentsignature-pki: failed to sign hash")
 	}
@@ -235,7 +244,7 @@ func getSignatureHash(mode string) string {
 
 // getModeFromCurve returns a content signature algorithm name, or an empty string if the mode is unknown
 func (s *ContentSigner) getModeFromCurve() string {
-	switch s.pub.(*ecdsa.PublicKey).Params().Name {
+	switch s.caPub.(*ecdsa.PublicKey).Params().Name {
 	case "P-256":
 		return P256ECDSA
 	case "P-384":

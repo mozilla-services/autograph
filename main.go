@@ -30,6 +30,7 @@ import (
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/contentsignaturepki"
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
@@ -133,7 +134,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 			// if we successfully initialized the crypto11 context,
 			// tell the signers they can try using the HSM
 			for i := range conf.Signers {
-				conf.Signers[i].HSMIsAvailable()
+				conf.Signers[i].HsmIsAvailable(tmpCtx)
 			}
 		}
 	}
@@ -299,6 +300,11 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		switch signerConf.Type {
 		case contentsignature.Type:
 			s, err = contentsignature.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case contentsignaturepki.Type:
+			s, err = contentsignaturepki.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}

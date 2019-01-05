@@ -4,7 +4,7 @@
 //
 // Contributor: Julien Vehent jvehent@mozilla.com [:ulfr]
 
-package contentsignature
+package contentsignaturepki
 
 import (
 	"crypto/ecdsa"

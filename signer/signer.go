@@ -26,6 +26,7 @@ import (
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
+	"github.com/miekg/pkcs11"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -101,11 +102,13 @@ type Configuration struct {
 	Chain string `json:"chain,omitempty"`
 
 	isHsmAvailable bool
+	hsmCtx         *pkcs11.Ctx
 }
 
-// HSMIsAvailable indicates that an HSM has been initialized
-func (cfg *Configuration) HSMIsAvailable() {
+// HsmIsAvailable indicates that an HSM has been initialized
+func (cfg *Configuration) HsmIsAvailable(ctx *pkcs11.Ctx) {
 	cfg.isHsmAvailable = true
+	cfg.hsmCtx = ctx
 }
 
 // Signer is an interface to a configurable issuer of digital signatures
@@ -318,6 +321,61 @@ func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
 		},
 		X: x,
 	}, nil
+}
+
+// MakeKey generates a new key of type keyTpl and returns the priv and public interfaces.
+// If an HSM is available, it is used to generate and store the key, in which case 'priv'
+// just points to the HSM handler and must be used via the crypto.Signer interface.
+func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv crypto.PrivateKey, pub crypto.PublicKey, err error) {
+	if cfg.isHsmAvailable {
+		var slots []uint
+		slots, err = cfg.hsmCtx.GetSlotList(true)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to list PKCS#11 Slots")
+		}
+		if len(slots) < 1 {
+			return nil, nil, errors.New("failed to find a usable slot in hsm context")
+		}
+		switch keyTpl.(type) {
+		case *ecdsa.PublicKey:
+			priv, err = crypto11.GenerateECDSAKeyPairOnSlot(slots[0], []byte(keyName), []byte(keyName), keyTpl.(*ecdsa.PublicKey))
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in hsm")
+			}
+			pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).Public()
+			return
+		case *rsa.PublicKey:
+			keySize := keyTpl.(*rsa.PublicKey).Size()
+			priv, err = crypto11.GenerateRSAKeyPairOnSlot(slots[0], []byte(keyName), []byte(keyName), keySize)
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "failed to generate rsa key in hsm")
+			}
+			pub = priv.(*crypto11.PKCS11PrivateKeyRSA).Public()
+			return
+		default:
+			return nil, nil, errors.Errorf("making key of type %T is not supported", keyTpl)
+		}
+	}
+	// no hsm, make keys in memory
+	switch keyTpl.(type) {
+	case *ecdsa.PublicKey:
+		priv, err = ecdsa.GenerateKey(keyTpl.(*ecdsa.PublicKey), rand.Reader)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in memory")
+		}
+		pub = priv.(*ecdsa.PrivateKey).Public()
+		return
+	case *rsa.PublicKey:
+		keySize := keyTpl.(*rsa.PublicKey).Size()
+		priv, err = rsa.GenerateKey(rand.Reader, keySize)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to generate rsa key in memory")
+		}
+		pub = priv.(*rsa.PrivateKey).Public()
+		return
+	default:
+		return nil, nil, errors.Errorf("making key of type %T is not supported", keyTpl)
+	}
 }
 
 // StatsClient is a helper for sending statsd stats with the relevant
