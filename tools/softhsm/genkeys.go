@@ -1,28 +1,23 @@
 // This code requires a configuration file to initialize the crypto11
-// library. Use the following config in crypto11.config:
+// library. Use the following config in a file named "crypto11.config"
 //      {
 //      "Path" : "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so",
 //      "TokenLabel": "cavium",
 //      "Pin" : "$CRYPTO_USER:$PASSWORD"
 //      }
-// then invoke the program with:
-// !CKNFAST_DEBUG=2 CRYPTO11_CONFIG_PATH=crypto11.config go run crypto11_genrsa.go
 package main
 
 import (
 	"crypto/elliptic"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/ThalesIgnite/crypto11"
 )
 
 func main() {
-	p11Ctx, err := crypto11.Configure(&crypto11.PKCS11Config{
-		Path:       "/usr/lib/softhsm/libsofthsm2.so",
-		TokenLabel: "test",
-		Pin:        "0000",
-	})
+	p11Ctx, err := crypto11.ConfigureFromFile("crypto11.config")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,27 +28,41 @@ func main() {
 	if len(slots) < 1 {
 		log.Fatal("No slot found")
 	}
-	rsakey, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], []byte("testrsa2048"), []byte("testrsa2048"), 2048)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("RSA Key: %+v\n", rsakey)
+	suffix := fmt.Sprintf("%d", time.Now().Unix())
 
-	rsakey2, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], []byte("testrsa4096"), []byte("testrsa4096"), 4096)
+	keyName := []byte("testrsa2048-" + suffix)
+	fmt.Printf("making %q: ", keyName)
+	rsakey, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], keyName, keyName, 2048)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("failed with %v\n", err)
+	} else {
+		fmt.Printf("%+v\n", rsakey)
 	}
-	fmt.Printf("RSA 4096 Key: %+v\n", rsakey2)
 
-	ecdsakey, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], []byte("testecdsap384"), []byte("testecdsap384"), elliptic.P384())
+	keyName = []byte("testrsa4096-" + suffix)
+	fmt.Printf("making %q: ", keyName)
+	rsakey2, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], keyName, keyName, 4096)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("failed with %v\n", err)
+	} else {
+		fmt.Printf("%+v\n", rsakey2)
 	}
-	fmt.Printf("ECDSA Key: %+v\n", ecdsakey)
 
-	p384key, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], []byte("testcsp384"), []byte("testcsp384"), elliptic.P384())
+	keyName = []byte("testecdsap256-" + suffix)
+	fmt.Printf("making %q: ", keyName)
+	ecdsakey, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], keyName, keyName, elliptic.P256())
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("failed with %v\n", err)
+	} else {
+		fmt.Printf("%+v\n", ecdsakey)
 	}
-	fmt.Printf("P384 Key: %+v\n", p384key)
+
+	keyName = []byte("testecdsap384-" + suffix)
+	fmt.Printf("making %q: ", keyName)
+	p384key, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], keyName, keyName, elliptic.P384())
+	if err != nil {
+		fmt.Printf("failed with %v\n", err)
+	} else {
+		fmt.Printf("%+v\n", p384key)
+	}
 }

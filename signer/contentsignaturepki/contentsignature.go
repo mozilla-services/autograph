@@ -10,13 +10,20 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	"log"
+	"strings"
 	"time"
 
 	"go.mozilla.org/autograph/signer"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"go.mozilla.org/mozlogrus"
 )
+
+func init() {
+	// initialize the logger
+	mozlogrus.Enable("autograph")
+}
 
 const (
 	// Type of this signer is 'contentsignaturepki'
@@ -42,14 +49,23 @@ const (
 
 	// SignaturePrefix is a string preprended to data prior to signing
 	SignaturePrefix = "Content-Signature:\x00"
+
+	// CSNameSpace is a string that contains the namespace on which
+	// content signature certificates are issued
+	CSNameSpace = ".content-signature.mozilla.org"
 )
 
 // ContentSigner implements an issuer of content signatures
 type ContentSigner struct {
 	signer.Configuration
-	caPriv, eePriv crypto.PrivateKey
-	caPub, eePub   crypto.PublicKey
-	rand           io.Reader
+	issuerPriv, eePriv  crypto.PrivateKey
+	issuerPub, eePub    crypto.PublicKey
+	rand                io.Reader
+	validity            time.Duration
+	clockSkewTolerance  time.Duration
+	chainUploadLocation string
+	chain               string
+	caCert              string
 }
 
 // New initializes a ContentSigner using a signer configuration
@@ -58,7 +74,12 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.ID = conf.ID
 	s.Type = conf.Type
 	s.PrivateKey = conf.PrivateKey
+	s.PublicKey = conf.PublicKey
 	s.X5U = conf.X5U
+	s.validity = conf.Validity
+	s.clockSkewTolerance = conf.ClockSkewTolerance
+	s.chainUploadLocation = conf.ChainUploadLocation
+	s.caCert = conf.CaCert
 
 	if conf.Type != Type {
 		return nil, errors.Errorf("contentsignature-pki: invalid type %q, must be %q", conf.Type, Type)
@@ -69,9 +90,9 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if conf.PrivateKey == "" {
 		return nil, errors.New("contentsignature-pki: missing private key in signer configuration")
 	}
-	s.caPriv, s.caPub, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
+	s.issuerPriv, s.issuerPub, s.rand, _, err = conf.GetKeysAndRand()
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature-pki: failed to retrieve signer")
+		return nil, errors.Wrapf(err, "contentsignature-pki: failed to retrieve signer %q", conf.PrivateKey)
 	}
 	// if validity is undef, default to 30 days
 	if conf.Validity == 0 {
@@ -79,7 +100,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 		conf.Validity = 720 * time.Hour
 	}
 
-	switch s.caPub.(type) {
+	switch s.issuerPub.(type) {
 	case *ecdsa.PublicKey:
 	default:
 		return nil, errors.New("contentsignature-pki: invalid key for CA cert, must be ecdsa")
@@ -96,15 +117,17 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 		eeCfg.PrivateKey = keyName
 		s.eePriv, err = eeCfg.GetPrivateKey()
 		if err != nil {
-			if err.Error() == "no suitable key found" {
-				continue
+			if err.Error() == "crypto11: could not find PKCS#11 key" {
+				goto nextKey
 			}
 			return nil, errors.Wrap(err, "contentsignature-pki: failed to retrieve previous EE key from hsm")
 		}
 		if s.eePriv != nil {
 			// we got a key
+			s.eePub = s.eePriv.(crypto.Signer).Public()
 			break
 		}
+	nextKey:
 		// decrement date by one day and try again
 		ts = ts.AddDate(0, 0, -1)
 		// we stop when ts goes further back than the max validity,
@@ -118,16 +141,38 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if s.eePriv == nil {
 		// we didn't get a key, so it's time to generate a new one,
 		// get a cert issued and upload to s3
+		log.Printf("content-signature: making new end-entity private key for signer %q", s.ID)
 		keyName := fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102"))
-		s.eePriv, s.eePub, err = conf.MakeKey(s.caPub, keyName)
+		s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, keyName)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to generate key for end entity")
 		}
 	}
-
-	// download and verify the public chain from the x5u location.
-	// if all checks out, we're ready to roll
-
+	// check if we already have a valid x5u, and if not make a new chain,
+	// upload it and reverify
+	err = verifyX5U(s.X5U)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "failed to retrieve x5u") {
+			// we have a key but no chain, so time to make one
+			log.Printf("content-signature: issuing and uploading new chain for signer %q", s.ID)
+			var fullChain, chainName string
+			fullChain, chainName, err = s.makeChain()
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to make chain")
+			}
+			err = s.upload(fullChain, chainName)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to upload chain")
+			}
+			err = verifyX5U(conf.X5U + chainName)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to download new chain")
+			}
+			s.X5U = conf.X5U + chainName
+			return
+		}
+		return nil, errors.Wrap(err, "failed to verify x5u")
+	}
 	return
 }
 
@@ -195,7 +240,7 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 		ID:   s.ID,
 	}
 
-	asn1Sig, err := s.caPriv.(crypto.Signer).Sign(rand.Reader, input, nil)
+	asn1Sig, err := s.issuerPriv.(crypto.Signer).Sign(rand.Reader, input, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "contentsignature-pki: failed to sign hash")
 	}
@@ -244,7 +289,7 @@ func getSignatureHash(mode string) string {
 
 // getModeFromCurve returns a content signature algorithm name, or an empty string if the mode is unknown
 func (s *ContentSigner) getModeFromCurve() string {
-	switch s.caPub.(*ecdsa.PublicKey).Params().Name {
+	switch s.issuerPub.(*ecdsa.PublicKey).Params().Name {
 	case "P-256":
 		return P256ECDSA
 	case "P-384":

@@ -128,40 +128,44 @@ signers:
       # rotate certs every 29.5 days, a lunar month
       validity: 708h
       # give +/- 30d of validity room for clients with bad clocks
-      clock_skew_tolerance: 720h
+      clockskewtolerance: 720h
       # upload cert chains to this location
-      chain_upload_location: s3://net-mozaws-dev-content-signature/chains/
-      x5u: https://content-signature.dev.mozaws.net/chains/
-      privatekey: csinter1546616454
+      chainuploadlocation: s3://net-mozaws-dev-content-signature/chains/
+      # x5u is the path to the public dir where chains are stored. This MUST end
+      # with a trailing slash because filenames will be appended to it.
+      x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
+      privatekey: csinter1547228576
       # chain contains the public certs of the intermediate and root of the pki
-      chain: |
+      publickey: |
         -----BEGIN CERTIFICATE-----
-        MIICNDCCAbqgAwIBAgIIFXaveKbiiWYwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+        MIICXTCCAeKgAwIBAgIIFXjcMUcmy4AwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
         VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-        EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTQ2NjE2NDU0MB4XDTE4MDEwNDE1
-        NDA1NFoXDTQ5MDEwNDE1NDA1NFowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+        EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTQ3MjI4NTc1MB4XDTE4MDExMTE3
+        NDI1NloXDTQ5MDExMTE3NDI1NlowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
         MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
-        VQQDExFjc2ludGVyMTU0NjYxNjQ1NDB2MBAGByqGSM49AgEGBSuBBAAiA2IABEIK
-        ywwkiozClqa9t4FKHJJTPrn+G70T29dUp2f2/OSN0s4Z15Bo9++hqfrQSj/bSdn8
-        HaPdxz3A0cZpgxKhRRQ4TRdQWRwcwBH5yP6GjhlXjIVb744VWW1YemaXloLSWaNC
-        MEAwDgYDVR0PAQH/BAQDAgKEMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcD
-        ATAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMDA2gAMGUCMGpVevvnSSIzHJQc
-        KBmxtaGCtxsOAlpBAPhqyOAcoR/EHTSmbO+kflbbKld9+CO2bQIxAIxnp63Nba0E
-        /GzOwu4W+ZNKsJuSFyXgBVcErnuRMBR03RcVsGt3Jq3yqOze7TxYOQ==
+        VQQDExFjc2ludGVyMTU0NzIyODU3NjB2MBAGByqGSM49AgEGBSuBBAAiA2IABLhy
+        UshnGFYUyNAFU9Svw/uQ0amfqfBt07hlyMIAXpu+24lNXHbzn8VWfphopNfBOmo1
+        T6riEqN5yHoPyUW3tAWdfWI2kX8uua+bfC4X5yyYSUsIWzI3tbNlk9qHiF2aU6Nq
+        MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+        /wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
+        b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNpADBmAjEAuFVCV+j7kjxNr7zfyitxKJ90
+        4UUn/y7pwyhEb9aN9mBTnjirzPrjiGVaEn5vNCyPAjEAskOFKu8DMQIyJP8+ZXrp
+        emcQyJmvcg8Ycdq7WkJxKGPPQKcSBZRpExl2vXYolBlE
         -----END CERTIFICATE-----
+      cacert: |
         -----BEGIN CERTIFICATE-----
-        MIICMjCCAbmgAwIBAgIIFXaveKY8BoAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+        MIICKTCCAa+gAwIBAgIIFXjcMT94R2AwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
         VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-        EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTQ2NjE2NDU0MB4XDTE4MDEwNDE1
-        NDA1NFoXDTQ5MDEwNDE1NDA1NFowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+        EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTQ3MjI4NTc1MB4XDTE4MDExMTE3
+        NDI1NloXDTQ5MDExMTE3NDI1NlowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
         MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
-        VQQDExBjc3Jvb3QxNTQ2NjE2NDU0MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEN4x7
-        mRKCXM6PXHOGZNdUxSA0+bPqwfJ6t9o2YYxA9r94fxIR1u/jPW9Kf/InbqbI2Zhp
-        mEQDuyz4zKT1RFcRIFwcaBYNTvmb7Vn2TRkXJT6MA4getzJpYwtWNpB3OhUeo0Iw
-        QDAOBgNVHQ8BAf8EBAMCAoQwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMB
-        MA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDZwAwZAIwAX015DkrCGiU/ONZ
-        OiCY6cPz1Lx4V4hURl4EWW6ItlH7733WBenjepo1iUDsFn4mAjB4hYXQTzye3UXy
-        K1aOtFTNDZKxHvhUzJEwTRdedaJ2Zymhe2trTPZcdyC36b4ycuQ=
+        VQQDExBjc3Jvb3QxNTQ3MjI4NTc1MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAESB8x
+        4tE5+2NA0pvDaofEMZNmdEpLPvRi3EiRoHM8DBbrV8lyH7VxF5wAl4BFIIdOHuCX
+        emeUid9KKAloTbFpbHX8Ph1jk9S+vnAJQYA0oSjMbJsjsl2mysh1nkrvciqEozgw
+        NjAOBgNVHQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/
+        BAUwAwEB/zAKBggqhkjOPQQDAwNoADBlAjEApLDBupGtz9O2fmaevgmGa8uakSjX
+        7PD0NscfF7WCstGvY1Igl0LUuMxEMRN374qqAjAmFuBYxcSO7ntxxnsgIFmT2dFn
+        IWFeFsgl2Os3ekeYoIxBfCEO9ZexyM9KpItbg6U=
         -----END CERTIFICATE-----
 
 authorizations:

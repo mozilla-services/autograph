@@ -96,10 +96,8 @@ type Configuration struct {
 	// uploaded to in order for clients to find it at the x5u location.
 	ChainUploadLocation string `json:"chain_upload_location,omitempty"`
 
-	// Chain is chain of issuers to a trusted root. This would typically
-	// contains the certificate of an intermediate and the certificate of
-	// a root.
-	Chain string `json:"chain,omitempty"`
+	// CaCert is the certificate of the root of the pki, when used
+	CaCert string `json:"cacert,omitempty"`
 
 	isHsmAvailable bool
 	hsmCtx         *pkcs11.Ctx

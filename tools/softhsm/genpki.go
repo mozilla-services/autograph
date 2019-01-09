@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ThalesIgnite/crypto11"
+	"github.com/pkg/errors"
 )
 
 func main() {
@@ -49,8 +50,8 @@ func main() {
 		NotAfter:              time.Now().AddDate(30, 0, 0),
 		SignatureAlgorithm:    x509.ECDSAWithSHA384,
 		IsCA:                  true,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
-		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
 		BasicConstraintsValid: true,
 	}
 	caTpl.SerialNumber = big.NewInt(time.Now().UnixNano())
@@ -75,13 +76,15 @@ func main() {
 	fmt.Printf("=== Root ===\nHSM key name: %s\n%s\n\n", rootKeyName, rootPem.Bytes())
 
 	interKeyName := []byte(fmt.Sprintf("csinter%d", time.Now().Unix()))
-	interPriv, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], []byte("csinter201901040900"), []byte("csroot201901040900"), elliptic.P384())
+	interPriv, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], interKeyName, interKeyName, elliptic.P384())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	caTpl.SerialNumber = big.NewInt(time.Now().UnixNano())
 	caTpl.Subject.CommonName = string(interKeyName)
+	caTpl.PermittedDNSDomainsCritical = true
+	caTpl.PermittedDNSDomains = []string{".content-signature.mozilla.org"}
 	interCertBytes, err := x509.CreateCertificate(rand.Reader, caTpl, rootCert, interPriv.Public(), rootPriv)
 	if err != nil {
 		log.Fatalf("create inter ca failed: %v", err)
@@ -94,4 +97,25 @@ func main() {
 	}
 
 	fmt.Printf("=== Intermediate ===\nHSM key name: %s\n%s\n", interKeyName, interPem.Bytes())
+
+	// verify the chain
+	roots := x509.NewCertPool()
+	ok := roots.AppendCertsFromPEM(rootPem.Bytes())
+	if !ok {
+		err = errors.New("failed to load root cert into truststore")
+		return
+	}
+	opts := x509.VerifyOptions{
+		Roots: roots,
+	}
+	inter, err := x509.ParseCertificate(interCertBytes)
+	if err != nil {
+		err = errors.Wrap(err, "failed to parse intermediate certificate")
+		return
+	}
+	_, err = inter.Verify(opts)
+	if err != nil {
+		err = errors.Wrap(err, "failed to verify intermediate chain to root")
+		return
+	}
 }
