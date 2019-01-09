@@ -19,6 +19,8 @@ import (
 	margo "go.mozilla.org/mar"
 )
 
+const inputdata string = "AUTOGRAPH MONITORING"
+
 func TestMonitorPass(t *testing.T) {
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
@@ -44,20 +46,20 @@ func TestMonitorPass(t *testing.T) {
 		switch response.Type {
 		case contentsignature.Type:
 			err = verifyContentSignature(
-				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+				base64.StdEncoding.EncodeToString([]byte(inputdata)),
 				"/__monitor__",
 				response.Signature,
 				response.PublicKey)
 		case xpi.Type:
 			err = verifyXPISignature(
-				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+				base64.StdEncoding.EncodeToString([]byte(inputdata)),
 				response.Signature)
 		case apk.Type:
 			err = verifyAPKManifestSignature(
-				base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+				base64.StdEncoding.EncodeToString([]byte(inputdata)),
 				response.Signature)
 		case mar.Type:
-			err = verifyMARSignature(base64.StdEncoding.EncodeToString([]byte("AUTOGRAPH MONITORING")),
+			err = verifyMARSignature(base64.StdEncoding.EncodeToString([]byte(inputdata)),
 				response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
 		case pgp.Type, gpg2.Type:
 			// we don't verify pgp signatures. I don't feel good about this, but the openpgp
