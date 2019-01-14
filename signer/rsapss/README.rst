@@ -48,18 +48,18 @@ For example:
 Signature response
 ------------------
 
-Returns base64-encoded public key and signature. The public key is
-from the config.
+Returns base64-encoded public key (DER) and signature (hex). The
+public key is from the config.
 
 .. code:: json
 
     [
       {
-        "ref": "1rvr84djhxxg11mmyk4imt9ekv",
+        "ref": "29cfra8jxug9r3mzjapmlbjlp5",
         "type": "rsapss",
         "mode": "",
-        "signer_id": "some-rsapss-rsa-key",
-        "public_key": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF0RU0vVmRmZDRWbDl3bWVWZENZdQpXWW5RbDBaYzlSVzVoTEU0aEZBK2MyNzdxYW5FOFhDSythcC9jNXNvODdYbmdMTGZhY0IzelpoR3hJT3V0LzRTCmxFQk9BVW1WTkNmblRPK1lrUmszQThPeUo0WE5xZG4rL292NzhaYnNzR2YrMHp3czJCY3daWXdodHVUdnJvM3kKaTYyRlE3VDFUcFQ1Vmpsakg3c0hXL2lablMvUktpWTREd3FBTjc5OWdrQitHd292dHJvYWJoMnc1T1gwUCtQWQp5VWJKTEZRZW81dWlBUThjQVhUbEhxQ2tqMTFHWWdVNHR0VkR1RkdvdEtSeWFSbjFGK3lLeEU0TFFjQVVMeDdzCjBLenZTMzVtTlUrTW95d0xXank5YTRUY2pLMG5xK0Jqc3BLWDRVa053VnN0dkgxOGhRV3VuN0UrZHhUaTU5Y1IKbXdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==",
-        "signature": "oOYuyidOjDC/Y7ADLGJM6L9NkJxpvX32OoLQpWulUT+oxETNj81VwRiF+FxXL8ds0Mc6ZMxtMqGbTw9PDVu0svt3Kp7ifdmNecyIuRKGF7dxSWQlbSrgJF+yF7GzaAyy/HybxOr6cjFrU7mY60019bnqqM77sWZMeox+LbdaHWefDYbityzNBcf11qHIN3edxvaVsIFm91AR6yWxlhCpcy2agX5IWsOjzV6kCyD2smuRp+QUH+ABjHkWP6DSYeV34T++fiH0Fh4/A8WQrQhwolxf0DBOihlEceMdVtHzi/ovIU+LidWM3PgxEBlM8c2Gnh5jJYN47Z4bGUxm+swLfA=="
+        "signer_id": "dummy-rsapss",
+        "public_key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4SlEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3yi62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PYyUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cRmwIDAQAB",
+        "signature": "S81qc/poBLToOIXVd8eOS6/CxXdhdsM/0Uz0q4cJWdmSKf9Iv8Eboz94xfuMgl81ybtPrEWDuZRLgY1qr4GxhShwa1Yb7rBtGxyJlseYfstnf24T7B6s4aeW3Zo5lfF2SCONbI0hLSHHyFzPPsnCHxvA2Ji5F+vDeBLpSrXhFn+mn14AGhz6smtU4k/iLPrfhocvBGscZv+7h7PI0vPs3MEckVZeSP8i0CkK4ev1QV88wrIa8estHCbiT4STu5zBHYb0LkkowEyCMW0KrQu5M2HO8yL4SSK9LHNR4WOS8BxBvKIXjmG5bjcH+g0gEK0RFSuJ3sLCNoRETGhRykufJA=="
       }
     ]
