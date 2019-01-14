@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/rsa"
 	"crypto/sha1"
+	"crypto/x509"
+
 	"encoding/base64"
 	"testing"
 
@@ -102,6 +104,20 @@ func TestConfig(t *testing.T) {
 	}
 	if s.Config().PrivateKey != rsapsssignerconf.PrivateKey {
 		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, rsapsssignerconf.PrivateKey)
+	}
+
+	// decode public key
+	keyBytes, err := base64.StdEncoding.DecodeString(s.Config().PublicKey)
+	if err != nil {
+		t.Fatalf("failed to parse public key: %v", err)
+	}
+	keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
+	if err != nil {
+		t.Fatalf("failed to parse public key DER: %v", err)
+	}
+	_, ok := keyInterface.(*rsa.PublicKey)
+	if !ok {
+		t.Fatal("parsed public key was not rsa")
 	}
 }
 
@@ -219,10 +235,10 @@ func TestVerifySignatureFromB64(t *testing.T) {
 	var (
 		b64Input  = "VcpihuPk9Pul0ESDM/qZ/FpASnM="
 		b64Sig    = `cAlDreA8vt0La8NW2PNb0GhjgsZiJzxHDbLa/1Nuh48a5R3YjZc9nfdUwPTauB87fA4BEFrENXDrSrW+ApDK0xU1iAGeyYudCCWGhKBJBoiQgPhgSqQ2AGQjunnFNsZlMOtKzhsVmXJl0aZg/ebFLxIKQnohiD2vram9zaRsyYsUF2p8ZA96BiM2MuxE1W9rC4zRJnQtd0uGWxQpUZh4HdCqyrEpAwn8jJLD7FGCExUzp/zbOYQLumUgkKfN2HDpnS5d2jK53puRXE0WG1lbHW84zmnJRgcK0UcMhsTSEyDqI0CaiKD0JgsdG4E6xiiAwmXh8YCODG/xWcnZx30sFw==`
-		b64PubKey = `LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF0RU0vVmRmZDRWbDl3bWVWZENZdQpXWW5RbDBaYzlSVzVoTEU0aEZBK2MyNzdxYW5FOFhDSythcC9jNXNvODdYbmdMTGZhY0IzelpoR3hJT3V0LzRTCmxFQk9BVW1WTkNmblRPK1lrUmszQThPeUo0WE5xZG4rL292NzhaYnNzR2YrMHp3czJCY3daWXdodHVUdnJvM3kKaTYyRlE3VDFUcFQ1Vmpsakg3c0hXL2lablMvUktpWTREd3FBTjc5OWdrQitHd292dHJvYWJoMnc1T1gwUCtQWQp5VWJKTEZRZW81dWlBUThjQVhUbEhxQ2tqMTFHWWdVNHR0VkR1RkdvdEtSeWFSbjFGK3lLeEU0TFFjQVVMeDdzCjBLenZTMzVtTlUrTW95d0xXank5YTRUY2pLMG5xK0Jqc3BLWDRVa053VnN0dkgxOGhRV3VuN0UrZHhUaTU5Y1IKbXdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==`
+		b64PubKey = `MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4SlEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3yi62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PYyUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cRmwIDAQAB`
 	)
 
-	t.Run("Verifies valid input", func(t *testing.T) {
+	t.Run("verifies valid input", func(t *testing.T) {
 		t.Parallel()
 
 		err := VerifySignatureFromB64(b64Input, b64Sig, b64PubKey)

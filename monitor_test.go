@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -15,6 +16,7 @@ import (
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
+	"go.mozilla.org/autograph/signer/rsapss"
 	"go.mozilla.org/autograph/signer/xpi"
 	margo "go.mozilla.org/mar"
 )
@@ -61,6 +63,8 @@ func TestMonitorPass(t *testing.T) {
 		case mar.Type:
 			err = verifyMARSignature(base64.StdEncoding.EncodeToString([]byte(inputdata)),
 				response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
+		case rsapss.Type:
+			err = verifyRsapssSignature(response.Signature, response.PublicKey)
 		case pgp.Type, gpg2.Type:
 			// we don't verify pgp signatures. I don't feel good about this, but the openpgp
 			// package is very much a pain to deal with and requires putting the public key
@@ -74,6 +78,12 @@ func TestMonitorPass(t *testing.T) {
 			t.Fatalf("verification of monitoring response %d failed: %v", i, err)
 		}
 	}
+}
+
+func verifyRsapssSignature(b64Sig, b64Key string) error {
+	shasum := sha1.Sum([]byte(inputdata))
+	digest := base64.StdEncoding.EncodeToString(shasum[:])
+	return rsapss.VerifySignatureFromB64(digest, b64Sig, b64Key)
 }
 
 func TestMonitorHasSignerParameters(t *testing.T) {

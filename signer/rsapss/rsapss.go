@@ -6,7 +6,6 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/pem"
 	"fmt"
 	"io"
 
@@ -53,8 +52,6 @@ func New(conf signer.Configuration) (s *RSAPSSSigner, err error) {
 	if conf.PublicKey == "" {
 		return nil, errors.New("rsapss: missing public key in signer configuration")
 	}
-	s.PublicKey = base64.StdEncoding.EncodeToString([]byte(conf.PublicKey))
-
 	s.key, _, s.rng, s.PublicKey, err = conf.GetKeysAndRand()
 	if err != nil {
 		return nil, errors.Wrapf(err, "rsapss: error fetching key and rand from signer configuration")
@@ -164,11 +161,7 @@ func VerifySignatureFromB64(b64Input, b64Signature, b64PubKey string) error {
 	if err != nil {
 		return err
 	}
-	block, _ := pem.Decode(rawKey)
-	if block == nil {
-		return fmt.Errorf("failed to parse public key PEM")
-	}
-	pubKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	pubKey, err := x509.ParsePKIXPublicKey(rawKey)
 	rsaKey, ok := pubKey.(*rsa.PublicKey)
 	if !ok {
 		return fmt.Errorf("expected rsa.PublicKey, but got pub key type %T", pubKey)
