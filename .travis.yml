@@ -7,7 +7,6 @@ go_import_path: go.mozilla.org/autograph
 
 before_install:
 - make install-dev-deps
-- sudo apt-get update
 
 script:
 - make generate lint vet install
