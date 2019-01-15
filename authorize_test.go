@@ -186,8 +186,8 @@ func TestHawkTimestampSkewFail(t *testing.T) {
 	tmpag.addSigners(conf.Signers)
 	tmpag.addAuthorizations([]authorization{
 		{
-			ID:  "alice",
-			Key: "1862300e9bd18eafab2eb8d6",
+			ID:                    "alice",
+			Key:                   "1862300e9bd18eafab2eb8d6",
 			HawkTimestampValidity: "2s",
 			Signers:               []string{"appkey1"},
 		}})
