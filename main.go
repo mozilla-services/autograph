@@ -48,6 +48,9 @@ type configuration struct {
 	Server struct {
 		Listen         string
 		NonceCacheSize int
+		IdleTimeout    time.Duration
+		ReadTimeout    time.Duration
+		WriteTimeout   time.Duration
 	}
 	Statsd struct {
 		Addr      string
@@ -176,8 +179,9 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
 
 	server := &http.Server{
-		ReadTimeout:  60 * time.Second,
-		WriteTimeout: 60 * time.Second,
+		IdleTimeout:  conf.Server.IdleTimeout,
+		ReadTimeout:  conf.Server.ReadTimeout,
+		WriteTimeout: conf.Server.WriteTimeout,
 		Addr:         listen,
 		Handler: handleMiddlewares(
 			router,
@@ -187,7 +191,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 			logRequest(),
 		),
 	}
-	log.Println("starting autograph on", listen)
+	log.Infof("starting autograph on %s with timeouts: idle %s read %s write %s", listen, conf.Server.IdleTimeout, conf.Server.ReadTimeout, conf.Server.WriteTimeout)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
