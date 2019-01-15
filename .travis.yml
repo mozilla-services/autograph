@@ -23,11 +23,9 @@ script:
 
 - cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-monitor && make && ./autograph-monitor
 
-# Sign an add-on using the python3 sign-addon tool
+# Sign an add-on
 - |
-    python3 -V && \
-    python3 -m pip install --user virtualenv && \
-    cd $GOPATH/src/go.mozilla.org/autograph/tools/sign-addon && \
-    python3 -m virtualenv venv && source venv/bin/activate && \
-    python3 -m pip install -r requirements.txt && \
-    python3 sign.py -t http://localhost:8000/sign/data -s webextensions-rsa -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu test-addon.xpi
+    wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && \
+    cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-client && \
+    CONFIG=ci SIGNER_ID=webextensions-rsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" ./build_test_xpi.sh pomodoro_clock-1.1.1-an+fx-windows.xpi
+
