@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ThalesIgnite/crypto11"
 	"github.com/pkg/errors"
 	"go.mozilla.org/autograph/signer"
 )
@@ -57,10 +56,8 @@ func New(conf signer.Configuration) (s *RSAPSSSigner, err error) {
 		return nil, errors.Wrapf(err, "rsapss: error fetching key and rand from signer configuration")
 	}
 
-	switch s.key.(type) {
-	case *rsa.PrivateKey, *crypto11.PKCS11PrivateKeyRSA:
-		// OK!
-	default:
+	_, ok := s.key.(*rsa.PrivateKey)
+	if !ok {
 		return nil, errors.Errorf("rsapss: parsed private key is not a recognized RSA key type")
 	}
 
