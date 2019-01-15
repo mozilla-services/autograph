@@ -27,4 +27,4 @@ script:
 - |
     cd $GOPATH/src/go.mozilla.org/autograph/tools/autograph-client && \
     wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && \
-    CONFIG=ci SIGNER_ID=webextensions-rsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi
+    CONFIG=ci SIGNER_ID=webextensions-rsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" TRUST_ROOTS=dev-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi
