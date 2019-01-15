@@ -58,7 +58,6 @@ type configuration struct {
 	Signers        []signer.Configuration
 	Authorizations []authorization
 	Monitoring     authorization
-	isHsmEnabled   bool
 }
 
 // An autographer is a running instance of an autograph service,
@@ -86,7 +85,6 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 		cfgFile string
 		port    string
 		err     error
-		skipHSM bool
 		fset    = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
 	)
 
@@ -94,7 +92,6 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	fset.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
 	fset.BoolVar(&debug, "D", false, "Print debug logs")
-	fset.BoolVar(&skipHSM, "skip-hsm", false, "Skip loading HSM config and signers")
 	fset.Parse(args)
 
 	err = conf.loadFromFile(cfgFile)
@@ -110,13 +107,6 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 		listen = conf.Server.Listen
 	}
 
-	if skipHSM {
-		conf.isHsmEnabled = false
-		log.Info("Skipping loading the HSM config")
-	} else {
-		conf.isHsmEnabled = true
-	}
-
 	return
 }
 
@@ -130,8 +120,8 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	// and store them into the autographer handler
 	ag = newAutographer(conf.Server.NonceCacheSize)
 
-	// initialize the hsm if enabled and a configuration is defined
-	if conf.isHsmEnabled && conf.HSM.Path != "" {
+	// initialize the hsm if defined in configuration
+	if conf.HSM.Path != "" {
 		tmpCtx, err := crypto11.Configure(&conf.HSM)
 		if err != nil {
 			log.Fatal(err)
@@ -152,7 +142,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 		}
 	}
 
-	err = ag.addSigners(conf.Signers, conf.isHsmEnabled)
+	err = ag.addSigners(conf.Signers)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -280,7 +270,7 @@ func (a *autographer) startCleanupHandler() {
 // addSigners initializes each signer specified in the configuration by parsing
 // and loading their private keys. The signers are then copied over to the
 // autographer handler.
-func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnabled bool) error {
+func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 	sids := make(map[string]bool)
 	for _, signerConf := range signerConfs {
 		// forbid signers with the same ID
@@ -318,7 +308,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 			}
 		case mar.Type:
 			s, err = mar.New(signerConf)
-			if !isHsmEnabled && err != nil && strings.HasPrefix(err.Error(), "mar: failed to parse private key: no suitable key found") {
+			if err != nil && strings.HasPrefix(err.Error(), "mar: failed to parse private key: no suitable key found") {
 				log.Infof("Skipping signer %q from HSM", signerConf.ID)
 				continue
 			} else if err != nil {

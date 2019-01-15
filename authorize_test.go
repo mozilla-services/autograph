@@ -174,7 +174,7 @@ func TestAddDuplicateAuthorization(t *testing.T) {
 		}
 	}()
 	tmpag := newAutographer(1)
-	tmpag.addSigners(conf.Signers, false)
+	tmpag.addSigners(conf.Signers)
 	tmpag.addAuthorizations(authorizations)
 }
 
@@ -183,11 +183,11 @@ func TestAddDuplicateAuthorization(t *testing.T) {
 func TestHawkTimestampSkewFail(t *testing.T) {
 	t.Parallel()
 	tmpag := newAutographer(1)
-	tmpag.addSigners(conf.Signers, false)
+	tmpag.addSigners(conf.Signers)
 	tmpag.addAuthorizations([]authorization{
 		{
-			ID:  "alice",
-			Key: "1862300e9bd18eafab2eb8d6",
+			ID:                    "alice",
+			Key:                   "1862300e9bd18eafab2eb8d6",
 			HawkTimestampValidity: "2s",
 			Signers:               []string{"appkey1"},
 		}})
