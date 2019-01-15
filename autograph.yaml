@@ -770,6 +770,47 @@ signers:
         gAAPg+05bWI=
         =459B
         -----END PGP PUBLIC KEY BLOCK-----
+    - id: dummyrsapss
+      # a test 2048-bit RSA key
+      type: rsapss
+      privatekey: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEpAIBAAKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE
+        8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4SlEBOAUmVNCfnTO+YkRk3A8OyJ4XN
+        qdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3yi62FQ7T1TpT5VjljH7sHW/iZnS/R
+        KiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PYyUbJLFQeo5uiAQ8cAXTlHqCkj11G
+        YgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s0KzvS35mNU+MoywLWjy9a4TcjK0n
+        q+BjspKX4UkNwVstvH18hQWun7E+dxTi59cRmwIDAQABAoIBAEKpi8aHKfqoSaWX
+        AOIPLJzYJleLId1Qx2aW0zu7IR03McIwkjBnWj2yG6f4/VADOTWS8KP/FU7mvWT2
+        /an1P5Grpi07tP2wtAzzngwqsvmlaUDMbp4di/s+cVGKasVh8A7V9g+Do9Yp2F32
+        k9yNieC1rs63IPCKjxqf5lRZqgMMcL1QYSlJI98riSVGm0m29u1v3pN6qDVNto2d
+        l6m6D8UT6vx1lfVZFV+Td3FmYHnuYyVwbgJ8dFRBQFpe2tsccK955+lapFe9MA/o
+        Xa5VfAWJ7YoLcgfssxF7atpHt2wcpvEj6NfIHfeDdExQ+Vd9T8vQGh88wd32QcTa
+        w1RiQUECgYEA7OFpsduOHqgqVSf1nIH6RPLytzzoXXd8Bs1aXWCxy45xg7lkKG+x
+        8Fa4aUFDII9RR4N7YFfUh8LwKF56BwFePbP4wwCuhz9v2E24I6/EfLD2GuRSv+B/
+        gNRG+suE5yCmeGlRC0uhASLr3ZzmGs16Mus/ytL5XPl8CJCmsVMjPHMCgYEAws/1
+        Sm2KOoYFY1+7ACMF89FyesOpTpqLvND79soNPC4Tl1PrPw4bsNA6p2BD1N2SPFiH
+        0yo7msNqh5o90wdnYA7i1uDWhcvrFnbg4e8+RhghcG/dJW33Lm5d5knST4NQxnAO
+        z/0zXgB9PSnsgFzNgm6LE++/KBZs/CbxQUPb9DkCgYEAk58eiVK0TPKr/wm6DOEL
+        oLBvBjaU8Lqntm1/ZTX/V0XcBCUi//grwgWpQx8CwGXQV2rfFnll331iwSWvknIN
+        0xI3cv8XxP2JrBkzKjo9jx+RH80urJkxnI2t9lmi5473b47ijNGC8vxaVW+UDxwC
+        jX0B8lpsQL7Rx1yuJVAUY3UCgYEAtG8gZZsnWCUhgHT+IpZNwRHQ0lu+yIrjujJl
+        7KIfuAmFI7gaPwC2LQHwEW5b5SCDfVkSFEcdha5RUN9PO9GzsYiYGSWOC8ZfKyNY
+        DmskZo+bCSTS0wQS2PJoDg95tyONAP5w+bsuhHY3iRr3bbyGq7PvJLv9dQewUatP
+        8H8FjiECgYBt93fZADyyOoqeYxMc8b38F8sf1FLTOAUfB1ik5R4yNVKDaCanYhYc
+        poTajMUVdoBcEV1g5Vds8objUIeNNlMPKyUnf/lCiPvp43wYbC3y60JqzXX3bfAS
+        TDd4Me4PP+sTZeJ3RKvArDiMzEncDeMGZZnd4dBdi3LjzCNGTANAGw==
+        -----END RSA PRIVATE KEY-----
+      publickey: |
+        -----BEGIN PUBLIC KEY-----
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYu
+        WYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4S
+        lEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3y
+        i62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PY
+        yUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s
+        0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cR
+        mwIDAQAB
+        -----END PUBLIC KEY-----
 
 authorizations:
     - id: alice
@@ -789,6 +830,7 @@ authorizations:
           - testmarecdsa
           - randompgp
           - pgpsubkey
+          - dummyrsapss
 
     - id: bob
       key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d
