@@ -12,8 +12,6 @@ script:
 - make generate install
 - make dummy-statsd &
 - make build-container
-- make test-container-ci
-- goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
 
 # Run a synthetic monitoring test against the container
 - make run-container
