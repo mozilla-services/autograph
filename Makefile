@@ -75,6 +75,9 @@ vet:
 fmt-diff:
 	gofmt -d *.go signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
 
+fmt-fix:
+	gofmt -w *.go signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
+
 testautograph:
 	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
 
