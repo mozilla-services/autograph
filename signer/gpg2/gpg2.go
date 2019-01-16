@@ -139,9 +139,8 @@ func createKeyRing(s *GPG2Signer) (string, error) {
 	out, err := gpgLoadPublicKey.CombinedOutput()
 	if err != nil {
 		return "", errors.Wrapf(err, "gpg2: failed to load public key into keyring: %s\n%s", err, out)
-	} else {
-		log.Debugf(fmt.Sprintf("gpg2: loaded public key %s", string(out)))
 	}
+	log.Debugf(fmt.Sprintf("gpg2: loaded public key %s", string(out)))
 
 	// call gpg to load the private key in it
 	gpgLoadPrivateKey := exec.Command("gpg", "--no-default-keyring",
@@ -154,14 +153,15 @@ func createKeyRing(s *GPG2Signer) (string, error) {
 	out, err = gpgLoadPrivateKey.CombinedOutput()
 	if err != nil {
 		return "", errors.Wrapf(err, "gpg2: failed to load private key into keyring: %s\n%s", err, out)
-	} else {
-		log.Debugf(fmt.Sprintf("gpg2: loaded private key %s", string(out)))
 	}
+	log.Debugf(fmt.Sprintf("gpg2: loaded private key %s", string(out)))
 
 	return dir, nil
 
 }
 
+// AtExit removes the temp dir containing the signer key and sec rings
+// when the app is shut down gracefully
 func (s *GPG2Signer) AtExit() error {
 	err := os.RemoveAll(s.tmpDir)
 	if err == nil {
@@ -218,9 +218,8 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	out, err := gpgVerifySig.CombinedOutput()
 	if err != nil {
 		return nil, errors.Wrapf(err, "gpg2: failed to sign input %s\n%s", err, out)
-	} else {
-		log.Debugf("signed as:\n%s\n", string(out))
 	}
+	log.Debugf("signed as:\n%s\n", string(out))
 
 	sig := new(Signature)
 	sig.Data = out

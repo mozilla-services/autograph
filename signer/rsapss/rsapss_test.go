@@ -144,7 +144,7 @@ func TestUnmarshal(t *testing.T) {
 func TestSignHash(t *testing.T) {
 	input := []byte("this is the sha1 input")
 	shasum := sha1.Sum(input)
-	var digest []byte = shasum[:]
+	digest := shasum[:]
 
 	// initialize a signer
 	s := assertNewSignerWithConfOK(t, rsapsssignerconf)
@@ -200,7 +200,7 @@ func TestSignHash(t *testing.T) {
 func TestSignData(t *testing.T) {
 	input := []byte("this is the sha1 input")
 	shasum := sha1.Sum(input)
-	var digest []byte = shasum[:]
+	digest := shasum[:]
 
 	// initialize a signer
 	s := assertNewSignerWithConfOK(t, rsapsssignerconf)

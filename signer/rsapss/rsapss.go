@@ -113,7 +113,7 @@ func (sig *Signature) Marshal() (string, error) {
 	return base64.StdEncoding.EncodeToString(sig.Data), nil
 }
 
-// Unmarshal
+// Unmarshal decodes a base64 signature string into a Signature
 func Unmarshal(sigstr string) (signer.Signature, error) {
 	sig := new(Signature)
 	sigBytes, err := base64.StdEncoding.DecodeString(sigstr)
