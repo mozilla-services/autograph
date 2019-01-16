@@ -6,10 +6,16 @@ GOLINT := golint -set_exit_status
 
 all: generate test vet lint install
 
-install-dev-deps:
+install-golint:
+	$(GO) get golang.org/x/lint/golint
+
+install-cover:
 	$(GO) get golang.org/x/tools/cmd/cover
-	$(GO) get github.com/golang/lint/golint
+
+install-goveralls:
 	$(GO) get github.com/mattn/goveralls
+
+install-dev-deps: install-golint install-cover install-goveralls
 
 install:
 	$(GO) install go.mozilla.org/autograph
