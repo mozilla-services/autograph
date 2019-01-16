@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 GO := go
+GOLINT := golint -set_exit_status
 
 all: generate test vet lint install
 
@@ -42,15 +43,15 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	golint go.mozilla.org/autograph
-	golint go.mozilla.org/autograph/signer
-	golint go.mozilla.org/autograph/signer/contentsignature
-	golint go.mozilla.org/autograph/signer/xpi
-	golint go.mozilla.org/autograph/signer/apk
-	golint go.mozilla.org/autograph/signer/mar
-	golint go.mozilla.org/autograph/signer/pgp
-	golint go.mozilla.org/autograph/signer/gpg2
-	golint go.mozilla.org/autograph/signer/rsapss
+	$(GOLINT) go.mozilla.org/autograph \
+		go.mozilla.org/autograph/signer \
+		go.mozilla.org/autograph/signer/contentsignature \
+		go.mozilla.org/autograph/signer/xpi \
+		go.mozilla.org/autograph/signer/apk \
+		go.mozilla.org/autograph/signer/mar \
+		go.mozilla.org/autograph/signer/pgp \
+		go.mozilla.org/autograph/signer/gpg2 \
+		go.mozilla.org/autograph/signer/rsapss
 
 vet:
 	$(GO) vet go.mozilla.org/autograph
