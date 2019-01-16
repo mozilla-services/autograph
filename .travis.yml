@@ -9,7 +9,7 @@ before_install:
 - make install-dev-deps
 
 script:
-- make generate lint vet install
+- make generate install
 - make dummy-statsd &
 - make build-container
 - make test-container-ci
