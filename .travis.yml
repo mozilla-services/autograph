@@ -1,15 +1,12 @@
 dist: xenial
 language: go
 go: '1.11'
-python: '3.6'
 services:
 - docker
 go_import_path: go.mozilla.org/autograph
 
 before_install:
 - make install-dev-deps
-- sudo apt-get update
-- sudo apt-get install python3 python3-pip
 
 script:
 - make generate lint vet install
