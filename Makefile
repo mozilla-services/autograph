@@ -23,8 +23,6 @@ install:
 build-container: generate
 	docker build -t app:build .
 
-echo-coverage:
-	cat coverage.out
 
 test-container:
 	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph install-dev-deps test
