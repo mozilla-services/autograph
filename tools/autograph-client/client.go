@@ -80,11 +80,11 @@ func urlToRequestType(url string) requestType {
 func main() {
 	var (
 		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, rsapssHash, zipMethodOption string
-		iter, maxworkers, sa                                                                                                      int
-		debug                                                                                                                     bool
-		err                                                                                                                       error
-		requests                                                                                                                  []signaturerequest
-		algs                                                                                                                      coseAlgs
+		iter, maxworkers, sa                                                                                                    int
+		debug                                                                                                                   bool
+		err                                                                                                                     error
+		requests                                                                                                                []signaturerequest
+		algs                                                                                                                    coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")

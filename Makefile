@@ -2,13 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 GO := go
+GOLINT := golint -set_exit_status
 
 all: generate test vet lint install
 
-install-dev-deps:
+install-golint:
+	$(GO) get golang.org/x/lint/golint
+
+install-cover:
 	$(GO) get golang.org/x/tools/cmd/cover
-	$(GO) get github.com/golang/lint/golint
+
+install-goveralls:
 	$(GO) get github.com/mattn/goveralls
+
+install-dev-deps: install-golint install-cover install-goveralls
 
 install:
 	$(GO) install go.mozilla.org/autograph
@@ -42,15 +49,15 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	golint go.mozilla.org/autograph
-	golint go.mozilla.org/autograph/signer
-	golint go.mozilla.org/autograph/signer/contentsignature
-	golint go.mozilla.org/autograph/signer/xpi
-	golint go.mozilla.org/autograph/signer/apk
-	golint go.mozilla.org/autograph/signer/mar
-	golint go.mozilla.org/autograph/signer/pgp
-	golint go.mozilla.org/autograph/signer/gpg2
-	golint go.mozilla.org/autograph/signer/rsapss
+	$(GOLINT) go.mozilla.org/autograph \
+		go.mozilla.org/autograph/signer \
+		go.mozilla.org/autograph/signer/contentsignature \
+		go.mozilla.org/autograph/signer/xpi \
+		go.mozilla.org/autograph/signer/apk \
+		go.mozilla.org/autograph/signer/mar \
+		go.mozilla.org/autograph/signer/pgp \
+		go.mozilla.org/autograph/signer/gpg2 \
+		go.mozilla.org/autograph/signer/rsapss
 
 vet:
 	$(GO) vet go.mozilla.org/autograph
@@ -64,6 +71,12 @@ vet:
 	$(GO) vet go.mozilla.org/autograph/signer/pgp
 	$(GO) vet go.mozilla.org/autograph/signer/gpg2
 	$(GO) vet go.mozilla.org/autograph/signer/rsapss
+
+fmt-diff:
+	gofmt -d *.go signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
+
+fmt-fix:
+	gofmt -w *.go signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
 
 testautograph:
 	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph

@@ -28,7 +28,7 @@ func TestSignFile(t *testing.T) {
 		NumGenerators:          2,
 		GeneratorSleepDuration: time.Minute,
 		FetchTimeout:           100 * time.Millisecond,
-		StatsSampleRate:      10 * time.Second,
+		StatsSampleRate:        10 * time.Second,
 	}
 
 	statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
