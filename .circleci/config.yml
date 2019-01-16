@@ -140,7 +140,7 @@ jobs:
           command: make generate
       - run:
           name: Build Docker image
-          command: docker build -t app:build .
+          command: make build-container
 
       # save the built docker container to CircleCI's cache since
       # CircleCI Workflows do not have the same remote docker
