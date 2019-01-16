@@ -29,9 +29,6 @@ echo-coverage:
 test-container:
 	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph install-dev-deps test
 
-test-container-ci:
-	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph install-dev-deps test echo-coverage | tee test-container.out
-	grep -A10000 'cat coverage.out' test-container.out | tail -n +2 | head -n -1 > coverage.out
 
 run-container:
 	docker run --name autograph-dev --rm -d --net host app:build
