@@ -194,22 +194,13 @@ workflows:
     jobs:
       - lint-vet-fmt
 
-      - test:
-          filters:
-            tags:
-              only: /.*/
+      - test
 
       - testsignapk:
           requires:
             - test
-          filters:
-            tags:
-              only: /.*/
 
-      - build:
-          filters:
-            tags:
-              only: /.*/
+      - build
 
       - deploy:
           requires:
