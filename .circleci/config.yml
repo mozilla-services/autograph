@@ -6,6 +6,29 @@
 #
 version: 2
 jobs:
+  lint-vet-fmt:
+    docker:
+      - image: golang:1.11
+    working_directory: /usr/local/go/src/go.mozilla.org/autograph
+    steps:
+      - checkout
+      - run:
+          name: run golint
+          command: make install-golint lint || true
+      - run:
+          name: run gofmt
+          command: |
+              make -s fmt-diff | tee fmt.diff
+              test -z "$(cat fmt.diff)"
+      - run:
+          name: install packages for crypto11 headers for go vet
+          command: |
+              apt-get update
+              apt-get install -y libltdl-dev
+      - run:
+          name: run got vet
+          command: make vet
+
   test:
     docker:
       - image: golang:latest
@@ -175,6 +198,8 @@ workflows:
   version: 2
   test-sign-build-deploy:
     jobs:
+      - lint-vet-fmt
+
       - test:
           filters:
             tags:
