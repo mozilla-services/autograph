@@ -6,142 +6,235 @@
 #
 version: 2
 jobs:
-  test:
+  build:
     docker:
-      - image: golang:latest
+      - image: circleci/golang:1.11.4
+    working_directory: /go/src/go.mozilla.org/autograph
+    environment:
+        GOPATH: "/go"
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: create version.json and build Docker images
+          command: make generate build-app-container build-monitor-container build-softhsm-container
+      # save the built docker container into CircleCI's cache. This is
+      # required since Workflows do not have the same remote docker
+      # instance. Use /go/src/app since we don't have permissions to
+      # make directories in other locations
+      - run:
+          name: docker save app:build
+          command: |
+              mkdir -p /go/src/app/cache
+              docker save -o /go/src/app/cache/docker.tar "app:build" "monitor:build" "softhsm-build"
+      - save_cache:
+          key: v1-docker-{{ .Branch }}-{{ epoch }}
+          paths:
+            - /go/src/app/cache/docker.tar
+
+  fmt-diff:
+    docker:
+      - image: golang:1.11
+    working_directory: /usr/local/go/src/go.mozilla.org/autograph
+    steps:
+      - checkout
+      - run:
+          name: run gofmt -d
+          command: make fmt-diff
+
+  lint:
+    docker:
+      - image: golang:1.11
+    working_directory: /usr/local/go/src/go.mozilla.org/autograph
+    steps:
+      - checkout
+      - run:
+          name: run golint
+          command: make install-golint lint
+
+  vet:
+    docker:
+      - image: golang:1.11
+    working_directory: /usr/local/go/src/go.mozilla.org/autograph
+    steps:
+      - run:
+          name: Install packages for crypto11 headers
+          command: |
+              apt-get update
+              apt-get install -y libltdl-dev
+      - checkout
+      - run:
+          name: run vet
+          command: make vet
+
+  unit-test:
+    docker:
+      - image: docker:18.02.0-ce
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - restore_cache:
+          key: v1-docker-{{.Branch}}
+      - run:
+          name: Restore Docker image cache
+          command: docker load -i /go/src/app/cache/docker.tar
+      - run:
+          name: Run unit tests in built app
+          command: |
+             docker run --name autograph-unit-test -u 0 -p 8000:8000 --workdir /go/src/go.mozilla.org/autograph app:build make test
+      - run:
+          name: cp unit test coverage.out to cache dir
+          command: |
+             mkdir -p /cache/coverage/
+             docker cp autograph-unit-test:/go/src/go.mozilla.org/autograph/coverage.out /cache/coverage/unit-test-coverage.out
+             cat /cache/coverage/unit-test-coverage.out
+      - save_cache:
+          key: v1-coverage-{{ .Branch }}-{{ .BuildNum }}
+          paths:
+            - /cache/coverage/unit-test-coverage.out
+
+  report-coverage:
+    docker:
+      - image: golang:1.11
     working_directory: /root/go/src/go.mozilla.org/autograph
     environment:
         GOPATH: "/root/go"
     steps:
-      - run:
-          name: Install packages
-          command: |
-              apt-get update
-              apt-get install -y git ssh softhsm2 libltdl-dev netcat
-      - run:
-          name: Setup SoftHSM
-          command: |
-              mkdir /var/lib/softhsm/tokens
-              softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
       - checkout
+      - restore_cache:
+          key: v1-coverage-{{ .Branch }}-{{ .BuildNum }}
       - run:
-          name: Generate keys in softhsm
+          name: install goveralls
           command: |
-              go run tools/softhsm/genkeys.go
+            make install-goveralls
       - run:
-          name: Run Autograph with SoftHSM configuration
+          name: run goveralls
           command: |
-              make install
-              $GOPATH/bin/autograph -c autograph.softhsm.yaml
+            cat /cache/coverage/unit-test-coverage.out
+            $GOPATH/bin/goveralls -coverprofile=/cache/coverage/unit-test-coverage.out -service circle-ci -repotoken $COVERALLS_TOKEN
+
+  test-monitor:
+    docker:
+      - image: docker:18.02.0-ce
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - restore_cache:
+          key: v1-docker-{{.Branch}}
+      - run:
+          name: Restore Docker image cache
+          command: docker load -i /go/src/app/cache/docker.tar
+      - run:
+          name: Run Autograph with default configuration
+          command: |
+             docker run -d --name autograph-app -p 8000:8000 app:build
           background: true
       - run:
-          name: Test HSM signers
+          name: Run autograph with hsm configuration
           command: |
-              cd tools/autograph-monitor
-              go build -o autograph-monitor *.go
-              while ! nc -z localhost 8000; do
-                echo -n "."
-                sleep 1 # wait for a sec before checking again
-              done
-              ./autograph-monitor
+              docker run --name autograph-app-hsm --volumes-from softhsm-build app:build /go/bin/autograph -c /go/src/go.mozilla.org/autograph/autograph.softhsm.yaml
+          background: true
       - run:
-          name: Build autograph-client
+          name: Run synthetic monitoring tests against the app containers
           command: |
-              go build -o $GOPATH/bin/autograph-client $GOPATH/src/go.mozilla.org/autograph/tools/autograph-client/client.go
-      - run:
-          name: Prepare cache
-          command: |
-              mkdir /tmp/cache
-              cp /root/go/bin/autograph /tmp/cache/
-              cp /root/go/bin/autograph-client /tmp/cache/
-              cp /root/go/src/go.mozilla.org/autograph/autograph.yaml /tmp/cache/
-              cp /root/go/src/go.mozilla.org/autograph/autograph.testsignapk.yaml /tmp/cache/
-              chmod -R 777 /tmp/cache
-      - save_cache:
-          key: autograph-{{ .Branch }}-{{epoch}}
-          paths:
-            - /tmp/cache
+              docker run --network container:autograph-app --restart on-failure:5 monitor:build
+              docker run --network container:autograph-app-hsm --restart on-failure:5 monitor:build
 
-  testsignapk:
+  test-sign-xpi:
+    docker:
+      - image: docker:18.02.0-ce
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - restore_cache:
+          key: v1-docker-{{.Branch}}
+      - run:
+          name: Restore Docker image cache
+          command: docker load -i /go/src/app/cache/docker.tar
+      - run:
+          name: Run Autograph with default configuration
+          command: |
+             docker run -d --name autograph-app app:build
+          background: true
+      - run:
+          name: Run test XPI signing against the app container
+          # HSM testing blocked on https://github.com/mozilla-services/autograph/issues/210
+          # docker run --network container:autograph-app-hsm -u 0  -u 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && CONFIG=ci SIGNER_ID=webextensions-rsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" TRUST_ROOTS=dev-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
+          command: |
+              docker run --network container:autograph-app -u 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && CONFIG=ci SIGNER_ID=webextensions-rsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" TRUST_ROOTS=dev-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
+
+  test-sign-apk:
+    docker:
+      - image: docker:18.02.0-ce
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - restore_cache:
+          key: v1-docker-{{.Branch}}
+      - run:
+          name: Restore Docker image cache
+          command: docker load -i /go/src/app/cache/docker.tar
+      - run:
+          name: Run Autograph with default configuration
+          command: |
+             docker run -d --name autograph-app app:build
+          background: true
+      - run:
+          name: Sign Fennec Nightly APK
+          command: |
+              docker run --name autograph-apk-sign-fennec-nightly --network container:autograph-app -u 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://archive.mozilla.org/pub/mobile/nightly/2018/10/2018-10-01-10-01-42-mozilla-central-android-api-16/fennec-64.0a1.multi.android-arm.apk && go run client.go -f fennec-64.0a1.multi.android-arm.apk -o fennec-64.0a1.multi.android-arm.resigned.apk -k apk_cert_with_dsa_sha1 -pk7digest sha1 -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu"
+              docker cp autograph-apk-sign-fennec-nightly:/go/src/go.mozilla.org/autograph/tools/autograph-client/fennec-64.0a1.multi.android-arm.resigned.apk /go/src/app/cache/
+      - run:
+          name: Sign Fennec Beta APK
+          command: |
+              docker run --name autograph-apk-sign-fennec-beta --network container:autograph-app -u 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://archive.mozilla.org/pub/mobile/releases/64.0b9/android-api-16/en-US/fennec-64.0b9.en-US.android-arm.apk && go run client.go -f fennec-64.0b9.en-US.android-arm.apk -o fennec-64.0b9.en-US.android-arm.resigned.apk -k legacy_apk_with_rsa -pk7digest sha1 -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu"
+              docker cp autograph-apk-sign-fennec-beta:/go/src/go.mozilla.org/autograph/tools/autograph-client/fennec-64.0b9.en-US.android-arm.resigned.apk /go/src/app/cache/
+      - run:
+          name: Sign with ECDSA
+          command: |
+              docker run --name autograph-apk-sign-ecdsa --network container:autograph-app -u 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://raw.githubusercontent.com/mozilla-services/autograph/master/signer/apk/aligned-two-files.apk && go run client.go -f aligned-two-files.apk -o aligned-two-files.resigned.apk -k apk_cert_with_ecdsa_sha256 -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu"
+              docker cp autograph-apk-sign-ecdsa:/go/src/go.mozilla.org/autograph/tools/autograph-client/aligned-two-files.resigned.apk /go/src/app/cache/
+      - run:
+          name: Sign Fennec with RSA
+          command: |
+              docker run --name autograph-apk-sign-rsa --network container:autograph-app -u 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "go run client.go -f aligned-two-files.apk -o aligned-two-files.rsa.apk -k testapp-android -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu"
+              docker cp autograph-apk-sign-rsa:/go/src/go.mozilla.org/autograph/tools/autograph-client/aligned-two-files.rsa.apk /go/src/app/cache/
+      - save_cache:
+          key: v1-apk-{{ .Branch }}-{{ .BuildNum }}
+          paths:
+            - /go/src/app/cache/fennec-64.0a1.multi.android-arm.resigned.apk
+            - /go/src/app/cache/fennec-64.0b9.en-US.android-arm.resigned.apk
+            - /go/src/app/cache/aligned-two-files.resigned.apk
+            - /go/src/app/cache/aligned-two-files.rsa.apk
+
+  test-verify-apk:
     working_directory: ~/
     docker:
       - image: circleci/android:api-25-node8-alpha
     steps:
       - restore_cache:
-          key: autograph-{{ .Branch }}
+          key: v1-apk-{{ .Branch }}-{{ .BuildNum }}
       - run:
-          name: Run Autograph
-          command: |
-              /tmp/cache/autograph -c /tmp/cache/autograph.testsignapk.yaml
-          background: true
-      - run:
-          name: Sign Fennec Nightly APK
-          command: |
-              sleep 5
-              wget https://archive.mozilla.org/pub/mobile/nightly/2018/10/2018-10-01-10-01-42-mozilla-central-android-api-16/fennec-64.0a1.multi.android-arm.apk
-              /tmp/cache/autograph-client -f fennec-64.0a1.multi.android-arm.apk -o fennec-64.0a1.multi.android-arm.resigned.apk -k apk_cert_with_dsa_sha1 -pk7digest sha1 -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
-      - run:
-          name: Verify Fennec Nightly APK
+          name: install android SDK
           command: |
               sudo apt update
               sudo apt install -y android-sdk-build-tools
-              /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose fennec-64.0a1.multi.android-arm.resigned.apk
       - run:
-          name: Sign and Verify Fennec Beta APK
+          name: Verify Fennec Nightly APK
           command: |
-              wget https://archive.mozilla.org/pub/mobile/releases/64.0b9/android-api-16/en-US/fennec-64.0b9.en-US.android-arm.apk
-              /tmp/cache/autograph-client -f fennec-64.0b9.en-US.android-arm.apk -o fennec-64.0b9.en-US.android-arm.resigned.apk -k legacy_apk_with_rsa -pk7digest sha1 -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
-              /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose fennec-64.0b9.en-US.android-arm.resigned.apk
+              /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose /go/src/app/cache/fennec-64.0a1.multi.android-arm.resigned.apk
       - run:
-          name: Sign and Verify with ECDSA
+          name: Verify Fennec Beta APK
           command: |
-              wget https://raw.githubusercontent.com/mozilla-services/autograph/master/signer/apk/aligned-two-files.apk
-              /tmp/cache/autograph-client -f aligned-two-files.apk -o aligned-two-files.resigned.apk -k apk_cert_with_ecdsa_sha256 -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
-              /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose fennec-64.0b9.en-US.android-arm.resigned.apk
+              /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose /go/src/app/cache/fennec-64.0b9.en-US.android-arm.resigned.apk
       - run:
-          name: Sign and Verify Fennec with RSA
+          name: Verify with ECDSA
           command: |
-              /tmp/cache/autograph-client -f aligned-two-files.apk -o aligned-two-files.rsa.apk -k testapp-android -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
-              /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose aligned-two-files.rsa.apk
-
-  build:
-    docker:
-      - image: docker:18.02.0-ce
-    working_directory: /dockerflow
-    steps:
+              /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose /go/src/app/cache/fennec-64.0b9.en-US.android-arm.resigned.apk
       - run:
-          name: Install git
+          name: Verify Fennec with RSA
           command: |
-              apk update
-              apk add git openssh
-
-      - checkout
-      - setup_remote_docker
-
-      - run:
-          name: Create a version.json
-          command: |
-            # create a version.json per https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
-            printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
-            "$CIRCLE_SHA1" \
-            "$CIRCLE_TAG" \
-            "$CIRCLE_PROJECT_USERNAME" \
-            "$CIRCLE_PROJECT_REPONAME" \
-            "$CIRCLE_BUILD_URL" > version.json
-
-      - run:
-          name: Build Docker image
-          command: docker build -t app:build .
-
-      # save the built docker container into CircleCI's cache. This is
-      # required since Workflows do not have the same remote docker instance.
-      - run:
-          name: docker save app:build
-          command: mkdir -p /cache; docker save -o /cache/docker.tar "app:build"
-      - save_cache:
-          key: v1-{{ .Branch }}-{{epoch}}
-          paths:
-            - /cache/docker.tar
+              /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose /go/src/app/cache/aligned-two-files.rsa.apk
 
   deploy:
     docker:
@@ -149,7 +242,7 @@ jobs:
     steps:
       - setup_remote_docker
       - restore_cache:
-          key: v1-{{.Branch}}
+          key: v1-docker-{{.Branch}}
       - run:
           name: Restore Docker image cache
           command: docker load -i /cache/docker.tar
@@ -175,27 +268,41 @@ workflows:
   version: 2
   test-sign-build-deploy:
     jobs:
-      - test:
-          filters:
-            tags:
-              only: /.*/
+      - build
+      - fmt-diff
+      - lint
+      - vet
 
-      - testsignapk:
+      - unit-test:
           requires:
-            - test
-          filters:
-            tags:
-              only: /.*/
+            - build
 
-      - build:
-          filters:
-            tags:
-              only: /.*/
+      - report-coverage:
+          requires:
+            - unit-test
+
+      - test-monitor:
+          requires:
+            - build
+
+      - test-sign-apk:
+          requires:
+            - build
+
+      - test-verify-apk:
+          requires:
+            - test-sign-apk
+
+      - test-sign-xpi:
+          requires:
+            - build
 
       - deploy:
           requires:
             - build
-            - testsignapk
+            - test-monitor
+            - test-verify-apk
+            - test-sign-xpi
           filters:
             tags:
               # only upload the docker container on semver tags

@@ -3,6 +3,11 @@
 set -e
 
 cd "$(dirname "$0")"
-printf '{"commit":"%s","version":"%s","source":"https://go.mozilla.org/autograph","build":"https://travis-ci.org/mozilla-services/autograph"}\n' \
-    "$(git rev-parse HEAD)" \
-    "$(git describe --abbrev=0)" > version.json
+
+# create a version.json per https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
+printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
+"$CIRCLE_SHA1" \
+"$CIRCLE_TAG" \
+"$CIRCLE_PROJECT_USERNAME" \
+"$CIRCLE_PROJECT_REPONAME" \
+"$CIRCLE_BUILD_URL" > version.json
