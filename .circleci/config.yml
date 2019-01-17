@@ -162,6 +162,8 @@ jobs:
     docker:
       - image: circleci/golang:1.11.4
     working_directory: /go/src/go.mozilla.org/autograph
+    environment:
+        GOPATH: "/go"
     steps:
       - checkout
       - setup_remote_docker
