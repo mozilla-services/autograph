@@ -20,9 +20,11 @@ install-dev-deps: install-golint install-cover install-goveralls
 install:
 	$(GO) install go.mozilla.org/autograph
 
-build-container: generate
+build-app-container: generate
 	docker build -t app:build .
 
+build-monitor-container: build-app-container
+	cd tools/autograph-monitor && docker build -t monitor:build .
 
 test-container:
 	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph install-dev-deps test

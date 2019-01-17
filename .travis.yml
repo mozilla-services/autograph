@@ -11,7 +11,7 @@ before_install:
 script:
 - make generate install
 - make dummy-statsd &
-- make build-container
+- make build-app-container
 
 # Run a synthetic monitoring test against the container
 - make run-container
