@@ -287,7 +287,7 @@ func TestStartMain(t *testing.T) {
 	go main()
 	if os.Getenv("CI") == "true" {
 		// sleep longer when running in continuous integration
-		time.Sleep(3 * time.Second)
+		time.Sleep(30 * time.Second)
 	} else {
 		time.Sleep(200 * time.Millisecond)
 	}
