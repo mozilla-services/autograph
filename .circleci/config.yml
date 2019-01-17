@@ -189,6 +189,28 @@ jobs:
              cd $GOPATH/src/go.mozilla.org/autograph
              $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci -repotoken $COVERALLS_TOKEN
 
+  test-sign-xpi:
+    docker:
+      - image: docker:18.02.0-ce
+    steps:
+      - setup_remote_docker
+      - restore_cache:
+          key: v2-{{.Branch}}
+      - run:
+          name: Restore Docker image cache
+          command: docker load -i /go/src/app/cache/docker.tar
+      - run:
+          name: Run Autograph with default configuration
+          command: |
+             docker run -d --name autograph-app app:build
+          background: true
+      - run:
+          name: Run test XPI signing against the app container
+          # TODO: test against HSM after resolving https://github.com/mozilla-services/autograph/issues/210
+          # docker run --network container:autograph-app-hsm -u 0  -u 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && CONFIG=ci SIGNER_ID=webextensions-rsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" TRUST_ROOTS=dev-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
+          command: |
+              docker run --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && CONFIG=ci SIGNER_ID=webextensions-rsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" TRUST_ROOTS=dev-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
+
   deploy:
     docker:
       - image: docker:18.02.0-ce
@@ -232,6 +254,10 @@ workflows:
       - build
 
       - unit-test:
+          requires:
+            - build
+
+      - test-sign-xpi:
           requires:
             - build
 
