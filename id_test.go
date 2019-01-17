@@ -9,11 +9,15 @@ package main
 import "testing"
 
 func TestId(t *testing.T) {
+	const (
+		minSize = 20
+		maxSize = 27
+	)
 	x, y, z := id(), id(), id()
 	if x == y || x == z || y == z {
 		t.Fatalf("found identical ids, randomness fail")
 	}
-	if len(x) < 24 || len(x) > 27 || len(y) < 24 || len(y) > 27 || len(z) < 24 || len(z) > 27 {
+	if len(x) < minSize || len(x) > maxSize || len(y) < minSize || len(y) > maxSize || len(z) < minSize || len(z) > maxSize {
 		t.Fatalf("ids have wrong length, should be 25/26, got: %s:%d, %s:%d, %s:%d",
 			x, len(x), y, len(y), z, len(z))
 	}

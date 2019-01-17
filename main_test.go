@@ -11,10 +11,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"testing"
-	"time"
 )
 
 var (
@@ -278,40 +276,19 @@ func TestConfigLoadFileNotExist(t *testing.T) {
 	}
 }
 
-func TestStartMain(t *testing.T) {
-	// save args since main parses os.Args[1:] but we don't want
-	// to pass test ... when running with go test
-	oldArgs := os.Args
+func TestDefaultPort(t *testing.T) {
+	t.Parallel()
 
-	os.Args = []string{"test-autograph", "-D"}
-	go main()
-	if os.Getenv("CI") == "true" {
-		// sleep longer when running in continuous integration
-		time.Sleep(30 * time.Second)
-	} else {
-		time.Sleep(200 * time.Millisecond)
+	expected := "0.0.0.0:8000"
+	_, listen, _, _ := parseArgsAndLoadConfig([]string{})
+	if listen != expected {
+		t.Errorf("expected listen %s got %s", expected, listen)
 	}
-	resp, err := http.Get("http://localhost:8000/__heartbeat__")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if fmt.Sprintf("%s", body) != "ohai" {
-		t.Fatalf("expected heartbeat message 'ohai', got %q", body)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected response code %d, got %d", http.StatusOK, resp.StatusCode)
-	}
-
-	// restore os.Args
-	os.Args = oldArgs
 }
 
 func TestPortOverride(t *testing.T) {
+	t.Parallel()
+
 	expected := "0.0.0.0:8080"
 	_, listen, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
 	if listen != expected {
