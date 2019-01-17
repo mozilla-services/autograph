@@ -149,10 +149,10 @@ jobs:
       # Use /go/src/app since we don't have permissions to make
       # directories in other locations
       - run:
-          name: docker save app:build
+          name: docker save built images
           command: |
               mkdir -p /go/src/app/cache
-              docker save -o /go/src/app/cache/docker.tar "app:build"
+              docker save -o /go/src/app/cache/docker.tar "app:build" "monitor:build"
       - save_cache:
           key: v2-{{ .Branch }}-{{ epoch }}
           paths:
@@ -188,6 +188,37 @@ jobs:
              pwd
              cd $GOPATH/src/go.mozilla.org/autograph
              $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci -repotoken $COVERALLS_TOKEN
+
+  test-monitor:
+    docker:
+      - image: docker:18.02.0-ce
+    steps:
+      - setup_remote_docker
+      - restore_cache:
+          key: v2-{{ .Branch }}
+      - run:
+          name: Restore Docker image cache
+          command: docker load -i /go/src/app/cache/docker.tar
+      - run:
+          name: Run Autograph with default configuration
+          command: |
+             docker run -d --name autograph-app app:build
+          background: true
+      # - run:
+      #     name: Run autograph with hsm configuration
+      #     command: |
+      #         docker run --name autograph-app-hsm --volumes-from softhsm-build app:build /go/bin/autograph -c /go/src/go.mozilla.org/autograph/autograph.softhsm.yaml
+      #     background: true
+      - run:
+          name: check monitor endpoint works
+          command: |
+             while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
+               echo -n "."
+               sleep 1 # wait before checking again
+             done
+             sleep 5
+             docker run --network container:autograph-app monitor:build
+             # docker run --network container:autograph-app-hsm monitor:build
 
   test-sign-xpi:
     docker:
@@ -258,6 +289,10 @@ workflows:
             - build
 
       - test-sign-xpi:
+          requires:
+            - build
+
+      - test-monitor:
           requires:
             - build
 
