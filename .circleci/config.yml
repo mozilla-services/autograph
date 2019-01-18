@@ -140,8 +140,7 @@ jobs:
           command: make generate
       - run:
           name: build docker images
-          command: make build-app-container build-monitor-container
-
+          command: make build-app-container build-monitor-container build-softhsm-container
       # save the built docker container to CircleCI's cache since
       # CircleCI Workflows do not have the same remote docker
       # instance.
@@ -152,7 +151,7 @@ jobs:
           name: docker save built images
           command: |
               mkdir -p /go/src/app/cache
-              docker save -o /go/src/app/cache/docker.tar "app:build" "monitor:build"
+              docker save -o /go/src/app/cache/docker.tar "app:build" "monitor:build" "softhsm:build"
       - save_cache:
           key: v2-{{ .Branch }}-{{ epoch }}
           paths:
