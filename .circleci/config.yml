@@ -203,11 +203,11 @@ jobs:
           command: |
              docker run -d --name autograph-app app:build
           background: true
-      # - run:
-      #     name: Run autograph with hsm configuration
-      #     command: |
-      #         docker run --name autograph-app-hsm --volumes-from softhsm-build app:build /go/bin/autograph -c /go/src/go.mozilla.org/autograph/autograph.softhsm.yaml
-      #     background: true
+      - run:
+          name: Run autograph with hsm configuration
+          command: |
+              docker run -d --name autograph-app-hsm softhsm:build
+          background: true
       - run:
           name: check monitor endpoint works
           command: |
@@ -215,9 +215,14 @@ jobs:
                echo -n "."
                sleep 1 # wait before checking again
              done
-             sleep 5
+             sleep 5  # wait for server to listen
              docker run --network container:autograph-app monitor:build
-             # docker run --network container:autograph-app-hsm monitor:build
+
+             while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"; do
+               echo -n "."
+               sleep 1 # wait before checking again
+             done
+             docker run --network container:autograph-app-hsm monitor:build
 
   test-sign-xpi:
     docker:
