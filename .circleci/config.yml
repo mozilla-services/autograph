@@ -52,21 +52,9 @@ jobs:
           command: |
               go run tools/softhsm/genkeys.go
       - run:
-          name: Run Autograph with SoftHSM configuration
+          name: Build autograph
           command: |
               make install
-              $GOPATH/bin/autograph -c autograph.softhsm.yaml
-          background: true
-      - run:
-          name: Test HSM signers
-          command: |
-              cd tools/autograph-monitor
-              go build -o autograph-monitor *.go
-              while ! nc -z localhost 8000; do
-                echo -n "."
-                sleep 1 # wait for a sec before checking again
-              done
-              ./autograph-monitor
       - run:
           name: Build autograph-client
           command: |
@@ -77,7 +65,6 @@ jobs:
               mkdir /tmp/cache
               cp /root/go/bin/autograph /tmp/cache/
               cp /root/go/bin/autograph-client /tmp/cache/
-              cp /root/go/src/go.mozilla.org/autograph/autograph.yaml /tmp/cache/
               cp /root/go/src/go.mozilla.org/autograph/autograph.testsignapk.yaml /tmp/cache/
               chmod -R 777 /tmp/cache
       - save_cache:
