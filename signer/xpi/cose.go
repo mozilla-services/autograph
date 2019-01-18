@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/ecdsa"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
@@ -383,7 +382,7 @@ func (s *XPISigner) issueCOSESignature(cn string, manifest []byte, algs []*cose.
 	}
 
 	// external_aad data must be nil and not byte("")
-	err = msg.Sign(rand.Reader, nil, coseSigners)
+	err = msg.Sign(s.rand, nil, coseSigners)
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: COSE signing failed")
 	}
