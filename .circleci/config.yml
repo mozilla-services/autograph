@@ -300,6 +300,8 @@ workflows:
           requires:
             - build
             - testsignapk
+            - test-monitor
+            - test-sign-xpi
           filters:
             tags:
               # only upload the docker container on semver tags
