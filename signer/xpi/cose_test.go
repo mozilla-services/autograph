@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/hex"
 	"strings"
@@ -93,9 +94,28 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 	if _, ok := s.issuerKey.(*ecdsa.PrivateKey); !ok {
 		t.Fatalf("Failed to generate an ecdsa privateKey to test COSEKeyPair generation")
 	}
-	_, _, err = s.generateCOSEKeyPair(cose.PS256)
+	eeKey, _, err := s.generateCOSEKeyPair(cose.ES256)
 	if err != nil {
-		t.Fatalf("failed to generate RSA key pair from ESCDSA issuer got: %v instead", err)
+		t.Fatalf("failed to generate ECDSA EE key pair from ECDSA issuer got: %v instead", err)
+	}
+	if _, ok := eeKey.(*ecdsa.PrivateKey); !ok {
+		t.Fatalf("failed to generate ECDSA EE key pair from ECDSA issuer got type: %T instead", eeKey)
+	}
+
+	coseSigner, err = cose.NewSigner(cose.PS256, nil)
+	if err != nil {
+		t.Fatalf("failed to generate PS256 key got error: %v", err)
+	}
+	s.issuerKey = coseSigner.PrivateKey
+	if _, ok := s.issuerKey.(*rsa.PrivateKey); !ok {
+		t.Fatalf("Failed to generate an RSA privateKey to test COSEKeyPair generation")
+	}
+	eeKey, _, err = s.generateCOSEKeyPair(cose.PS256)
+	if err != nil {
+		t.Fatalf("failed to generate RSA EE key pair from RSA issuer got: %v instead", err)
+	}
+	if _, ok := eeKey.(*rsa.PrivateKey); !ok {
+		t.Fatalf("failed to generate RSA EE key pair from RSA issuer got type: %T instead", eeKey)
 	}
 }
 

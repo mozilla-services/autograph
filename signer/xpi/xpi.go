@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"io"
 	"strings"
 	"time"
 
@@ -63,6 +64,9 @@ type XPISigner struct {
 	// signature, but for hotfix signers, it is set to a specific value.
 	EndEntityCN string
 
+	// rand is the CSPRNG to use from the HSM or crypto/rand
+	rand io.Reader
+
 	// rsa cache is used to pre-generate RSA private keys and speed up
 	// the signing process
 	rsaCache chan *rsa.PrivateKey
@@ -98,10 +102,12 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		return nil, errors.New("xpi: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
-	s.issuerKey, err = signer.ParsePrivateKey([]byte(conf.PrivateKey))
+
+	s.issuerKey, _, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: failed to parse private key")
+		return nil, errors.Wrap(err, "xpi: GetKeysAndRand failed to retrieve signer")
 	}
+
 	block, _ := pem.Decode([]byte(conf.Certificate))
 	if block == nil {
 		return nil, errors.New("xpi: failed to parse certificate PEM")

@@ -12,7 +12,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ThalesIgnite/crypto11"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/cose"
 )
@@ -65,41 +67,47 @@ func intToCOSEAlg(i int) (v *cose.Algorithm) {
 func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
 	var signer *cose.Signer
 
+	switch key := s.issuerKey.(type) {
+	case *rsa.PrivateKey, *ecdsa.PrivateKey, *crypto11.PKCS11PrivateKeyRSA, *crypto11.PKCS11PrivateKeyECDSA:
+		// ok
+	default:
+		err = errors.Errorf("xpi: Cannot generate COSEKeypair for issuerKey type %T", key)
+		return
+	}
+
 	switch coseAlg {
-	case nil:
-		err = errors.New("Cannot generate private key for nil cose Algorithm")
 	case cose.PS256:
 		var size = 2048
 		switch key := s.issuerKey.(type) {
-		case *ecdsa.PrivateKey:
-			if key.D.BitLen() > size {
-				size = key.D.BitLen()
-			}
 		case *rsa.PrivateKey:
 			if key.N.BitLen() > size {
 				size = key.N.BitLen()
 			}
-		case nil:
-			err = errors.New("Cannot generate COSE key pair with nil issuerKey")
-			return
+		case *crypto11.PKCS11PrivateKeyRSA:
+			if key.PubKey.(*rsa.PublicKey).N.BitLen() > size {
+				size = key.PubKey.(*rsa.PublicKey).N.BitLen()
+			}
 		default:
-			err = errors.New("Unrecognized issuer key type")
-			return
+			log.Infof("xpi: using default RSA key size %d since issuer key type %T is not RSA", size, key)
 		}
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {
-			err = errors.Wrapf(err, "failed to generate rsa private key of size %d", size)
+			err = errors.Wrapf(err, "xpi: failed to generate rsa private key of size %d", size)
 			return
 		}
 		eePublicKey = eeKey.(*rsa.PrivateKey).Public()
 	case cose.ES256, cose.ES384, cose.ES512:
 		signer, err = cose.NewSigner(coseAlg, nil)
 		if err != nil {
-			err = errors.Wrapf(err, "failed to generate private key")
+			err = errors.Wrapf(err, "xpi: failed to generate private key")
 			return
 		}
 		eeKey = signer.PrivateKey
 		eePublicKey = eeKey.(*ecdsa.PrivateKey).Public()
+	case nil:
+		err = errors.New("xpi: cannot generate private key for nil cose Algorithm")
+	default:
+		err = errors.Errorf("xpi: cannot generate private key for unsupported cose Algorithm %s", coseAlg.Name)
 	}
 	return
 }

@@ -12,6 +12,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ThalesIgnite/crypto11"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/cose"
@@ -139,6 +140,24 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 			return
 		}
 		eePublicKey = newKey.Public()
+	case *crypto11.PKCS11PrivateKeyRSA:
+		size := issuerKey.PubKey.(*rsa.PublicKey).N.BitLen()
+		eeKey, err = s.getRsaKey(size)
+		if err != nil {
+			err = errors.Wrapf(err, "xpi: failed to generate rsa private key of size %d", size)
+			return
+		}
+		if eeKey == nil {
+			err = errors.Wrapf(err, "xpi: failed to get rsa private key of size %d", size)
+			return
+		}
+
+		newKey, ok := eeKey.(*rsa.PrivateKey)
+		if !ok {
+			err = errors.Wrapf(err, "xpi: failed to cast generated key of size %d to *rsa.PrivateKey", size)
+			return
+		}
+		eePublicKey = newKey.Public()
 	case *ecdsa.PrivateKey:
 		eeKey, err = ecdsa.GenerateKey(issuerKey.Curve, rand.Reader)
 		if err != nil {
@@ -148,6 +167,19 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		newKey, ok := eeKey.(*ecdsa.PrivateKey)
 		if !ok {
 			err = errors.Wrapf(err, "xpi: failed to cast generated key on curve %s to *ecdsa.PrivateKey", issuerKey.Curve.Params().Name)
+			return
+		}
+		eePublicKey = newKey.Public()
+	case *crypto11.PKCS11PrivateKeyECDSA:
+		curve := issuerKey.PubKey.(*ecdsa.PublicKey).Curve
+		eeKey, err = ecdsa.GenerateKey(curve, s.rand)
+		if err != nil {
+			err = errors.Wrapf(err, "xpi: failed to generate ecdsa private key on curve %s", curve.Params().Name)
+			return
+		}
+		newKey, ok := eeKey.(*ecdsa.PrivateKey)
+		if !ok {
+			err = errors.Wrapf(err, "xpi: failed to cast generated key on curve %s to *ecdsa.PrivateKey", curve.Params().Name)
 			return
 		}
 		eePublicKey = newKey.Public()
