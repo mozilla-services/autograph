@@ -151,6 +151,9 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 			return
 		}
 		eePublicKey = newKey.Public()
+	default:
+		err = errors.Errorf("xpi: unrecognized issuer key type for EE: %T", issuerKey)
+		return
 	}
 	return
 }
