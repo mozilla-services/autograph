@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+set -e
+
 # produces signed XPIs with various params for testing using the
 # autograph go client
 #
