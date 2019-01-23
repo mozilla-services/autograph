@@ -2,6 +2,9 @@ server:
     listen: "0.0.0.0:8000"
     # cache 500k nonces to protect from authorization replay attacks
     noncecachesize: 524288
+    idletimeout: 60s
+    readtimeout: 60s
+    writetimeout: 60s
 
 # SoftHSM test configuration
 hsm:

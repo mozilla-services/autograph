@@ -39,7 +39,7 @@ func main() {
 	}
 	fmt.Printf("RSA Key: %+v\n", rsakey)
 
-	rsakey2, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], []byte("testrsa2048"), []byte("testrsa4096"), 4096)
+	rsakey2, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], []byte("testrsa4096"), []byte("testrsa4096"), 4096)
 	if err != nil {
 		log.Fatal(err)
 	}

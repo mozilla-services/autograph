@@ -26,6 +26,9 @@ build-app-container: generate
 build-monitor-container: build-app-container
 	cd tools/autograph-monitor && docker build -t monitor:build .
 
+build-softhsm-container:
+	cd tools/softhsm && docker build -t softhsm:build .
+
 test-container:
 	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph test
 

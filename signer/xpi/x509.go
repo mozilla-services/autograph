@@ -120,9 +120,9 @@ func (s *XPISigner) makeTemplate(cn string) *x509.Certificate {
 // generateIssuerEEKeyPair returns a public and private key pair
 // matching the issuer XPISigner issuerKey size and type
 func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
-	switch s.issuerKey.(type) {
+	switch issuerKey := s.issuerKey.(type) {
 	case *rsa.PrivateKey:
-		size := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
+		size := issuerKey.N.BitLen()
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {
 			err = errors.Wrapf(err, "xpi: failed to generate rsa private key of size %d", size)
@@ -140,18 +140,20 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		}
 		eePublicKey = newKey.Public()
 	case *ecdsa.PrivateKey:
-		curve := s.issuerKey.(*ecdsa.PrivateKey).Curve
-		eeKey, err = ecdsa.GenerateKey(curve, rand.Reader)
+		eeKey, err = ecdsa.GenerateKey(issuerKey.Curve, rand.Reader)
 		if err != nil {
-			err = errors.Wrapf(err, "xpi: failed to generate ecdsa private key on curve %s", curve.Params().Name)
+			err = errors.Wrapf(err, "xpi: failed to generate ecdsa private key on curve %s", issuerKey.Curve.Params().Name)
 			return
 		}
 		newKey, ok := eeKey.(*ecdsa.PrivateKey)
 		if !ok {
-			err = errors.Wrapf(err, "xpi: failed to cast generated key on curve %s to *ecdsa.PrivateKey", curve)
+			err = errors.Wrapf(err, "xpi: failed to cast generated key on curve %s to *ecdsa.PrivateKey", issuerKey.Curve.Params().Name)
 			return
 		}
 		eePublicKey = newKey.Public()
+	default:
+		err = errors.Errorf("xpi: unrecognized issuer key type for EE: %T", issuerKey)
+		return
 	}
 	return
 }
