@@ -155,8 +155,12 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to generate RSA EE key pair from RSA issuer got: %v instead", err)
 		}
-		if _, ok := eeKey.(*rsa.PrivateKey); !ok {
+		rsaKey, ok := eeKey.(*rsa.PrivateKey)
+		if !ok {
 			t.Fatalf("failed to generate RSA EE key pair from RSA issuer got type: %T instead", eeKey)
+		}
+		if rsaKey.N.BitLen() != s.issuerKey.(*rsa.PrivateKey).N.BitLen() {
+			t.Fatalf("EE key bitlen does not match signer issuerKey. expected %d, got %d", s.issuerKey.(*rsa.PrivateKey).N.BitLen(), rsaKey.N.BitLen())
 		}
 	})
 }
