@@ -151,7 +151,7 @@ jobs:
               chmod -R 777 /go/src/app/cache/
               ls -lh /go/src/app/cache/
       - save_cache:
-          key: v2-apk-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-apk-{{ .Branch }}-{{ .Revision }}
           paths:
             - /go/src/app/cache/resigned-apks.tgz
 
@@ -162,7 +162,7 @@ jobs:
         user: root
     steps:
       - restore_cache:
-          key: v2-apk-{{ .Branch }}-{{ .BuildNum }}
+          key: v2-apk-{{ .Branch }}-{{ .Revision }}
       - run:
           name: install android SDK
           command: |
