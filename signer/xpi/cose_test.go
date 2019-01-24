@@ -163,6 +163,32 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 			t.Fatalf("EE key bitlen does not match signer issuerKey. expected %d, got %d", s.issuerKey.(*rsa.PrivateKey).N.BitLen(), rsaKey.N.BitLen())
 		}
 	})
+
+	t.Run("should generate PS256 EE key of default size for ECDSA intermediate", func(t *testing.T) {
+		t.Parallel()
+
+		coseSigner, err := cose.NewSigner(cose.ES256, nil)
+		if err != nil {
+			t.Fatalf("failed to generate ES256 key got error: %v", err)
+		}
+
+		s := initSigner(t)
+		s.issuerKey = coseSigner.PrivateKey
+		if _, ok := s.issuerKey.(*ecdsa.PrivateKey); !ok {
+			t.Fatalf("Failed to generate an ECDSA privateKey to test COSEKeyPair generation")
+		}
+		eeKey, _, err := s.generateCOSEKeyPair(cose.PS256)
+		if err != nil {
+			t.Fatalf("failed to generate RSA EE key pair from ECDSA issuer got: %v instead", err)
+		}
+		rsaKey, ok := eeKey.(*rsa.PrivateKey)
+		if !ok {
+			t.Fatalf("failed to generate RSA EE key pair from ECDSA issuer got type: %T instead", eeKey)
+		}
+		if rsaKey.N.BitLen() != rsaKeyMinSize {
+			t.Fatalf("EE key bitlen does not match signer default bitlen. expected %d, got %d", rsaKeyMinSize, rsaKey.N.BitLen())
+		}
+	})
 }
 
 func TestIsValidCOSESignatureErrs(t *testing.T) {
