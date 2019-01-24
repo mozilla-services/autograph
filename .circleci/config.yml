@@ -175,7 +175,7 @@ jobs:
              cd $GOPATH/src/go.mozilla.org/autograph
              $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci -repotoken $COVERALLS_TOKEN
 
-  test-monitor:
+  integration-test:
     docker:
       - image: docker:18.02.0-ce
     steps:
@@ -196,46 +196,27 @@ jobs:
               docker run -d --name autograph-app-hsm softhsm:build
           background: true
       - run:
-          name: check monitor endpoint works
+          name: wait for apps to run
           command: |
              while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
                echo -n "."
                sleep 1 # wait before checking again
              done
-             sleep 5  # wait for server to listen
-             docker run --network container:autograph-app monitor:build
-
              while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"; do
                echo -n "."
                sleep 1 # wait before checking again
              done
-             docker run --network container:autograph-app-hsm monitor:build
-
-  test-sign-xpi:
-    docker:
-      - image: docker:18.02.0-ce
-    steps:
-      - setup_remote_docker
-      - restore_cache:
-          key: v2-{{.Branch}}
+             sleep 5  # wait for servers to listen
       - run:
-          name: Restore Docker image cache
-          command: docker load -i /go/src/app/cache/docker.tar
-      - run:
-          name: Run Autograph with default configuration
+          name: check monitor endpoint works
           command: |
-             docker run -d --name autograph-app app:build
-          background: true
+             docker run --rm --name autograph-monitor-test --network container:autograph-app monitor:build
+             docker run --rm --name autograph-monitor-test-hsm --rm --network container:autograph-app-hsm monitor:build
       - run:
-          name: Run Autograph with hsm configuration
+          name: check XPI signing works
           command: |
-             docker run -d --name autograph-app-hsm softhsm:build
-          background: true
-      - run:
-          name: Run test XPI signing against the app container
-          command: |
-              docker run --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && CONFIG=ci SIGNER_ID=webextensions-rsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
-              docker run --network container:autograph-app-hsm --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client softhsm:build /bin/sh -c 'wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && CONFIG=ci SIGNER_ID=hsm-webextensions-rsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && CONFIG=ci SIGNER_ID=hsm-extensions-ecdsa HAWK_USER=alice HAWK_SECRET=fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu CN="testaddon@allizom" TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi'
+              docker run --rm --name autograph-sign-xpi-test --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
+              docker run --rm --name autograph-sign-xpi-test-hsm --network container:autograph-app-hsm --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client softhsm:build /bin/sh -c 'wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi'
 
   deploy:
     docker:
@@ -298,14 +279,13 @@ workflows:
             tags:
               only: /.*/
 
-      - test-sign-xpi:
+      - integration-test:
           requires:
             - build
           filters:
             tags:
               only: /.*/
 
-      - test-monitor:
           requires:
             - build
           filters:
@@ -316,8 +296,7 @@ workflows:
           requires:
             - build
             - testsignapk
-            - test-monitor
-            - test-sign-xpi
+            - integration-test
           filters:
             tags:
               # only upload the docker container on semver tags
