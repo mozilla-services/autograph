@@ -76,7 +76,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 
 	switch coseAlg {
 	case cose.PS256:
-		var size = 2048
+		var size = rsaKeyMinSize
 		switch key := s.issuerKey.(type) {
 		case *rsa.PrivateKey:
 			if key.N.BitLen() > size {

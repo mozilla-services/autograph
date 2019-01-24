@@ -45,6 +45,9 @@ const (
 	pkcs7ManifestPath      = "META-INF/manifest.mf"
 	pkcs7SignatureFilePath = "META-INF/mozilla.sf"
 	pkcs7SigPath           = "META-INF/mozilla.rsa"
+
+	// rsaKeyMinSize is the minimum RSA Key size for issuer keys and new EE RSA keys
+	rsaKeyMinSize = 2048
 )
 
 // An XPISigner is configured to issue detached PKCS7 and COSE
@@ -157,8 +160,8 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	// populates the rsa cache with private keys of the same
 	// length
 	if issuerPrivateKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {
-		if issuerPrivateKey.N.BitLen() < 2048 {
-			return nil, errors.Errorf("xpi: issuer RSA key must be at least 2048 bits")
+		if issuerPrivateKey.N.BitLen() < rsaKeyMinSize {
+			return nil, errors.Errorf("xpi: issuer RSA key must be at least %d bits", rsaKeyMinSize)
 		}
 		if conf.RSACacheConfig.StatsSampleRate < 5*time.Second {
 			log.Warnf("xpi: sampling rsa cache as rate of %s (less than 5s)", conf.RSACacheConfig.StatsSampleRate)
