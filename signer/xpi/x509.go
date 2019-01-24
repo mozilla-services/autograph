@@ -129,9 +129,9 @@ func (s *XPISigner) getIssuerPubKey() (pubKey crypto.PublicKey, err error) {
 	case *ecdsa.PrivateKey:
 		pubKey = issuerKey.Public()
 	case *crypto11.PKCS11PrivateKeyRSA:
-		pubKey = issuerKey.PubKey
+		pubKey = issuerKey.Public()
 	case *crypto11.PKCS11PrivateKeyECDSA:
-		pubKey = issuerKey.PubKey
+		pubKey = issuerKey.Public()
 	default:
 		err = errors.Errorf("xpi: cannot get public key for issuer key type %T", issuerKey)
 	}
