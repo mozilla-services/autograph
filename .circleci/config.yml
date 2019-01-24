@@ -51,6 +51,7 @@ jobs:
       # directories in other locations
       - run:
           name: docker save built images
+          no_output_timeout: 30m
           command: |
               mkdir -p /go/src/app/cache
               docker save "app:build" | gzip -c > /go/src/app/cache/docker-app-build.tgz
