@@ -507,6 +507,24 @@ func TestRsaCaching(t *testing.T) {
 	}
 }
 
+func TestRSACacheSizeMonitor(t *testing.T) {
+
+	t.Run("runs without statsd", func(t *testing.T) {
+		t.Parallel()
+
+		// initialize an RSA signer with cache
+		testcase := PASSINGTESTCASES[0]
+		s, err := New(testcase, nil)
+		if err != nil {
+			t.Fatalf("signer initialization failed with: %v", err)
+		}
+
+		s.stats = nil
+		// this should not panic
+		s.monitorRsaCacheSize()
+	})
+}
+
 func TestSignFileWithCOSESignatures(t *testing.T) {
 	t.Parallel()
 
