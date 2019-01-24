@@ -13,6 +13,10 @@ INPUT_FILE=$1
 
 OUTPUT_BASENAME=autograph-$(git rev-parse --short HEAD)-$CONFIG-$(basename $INPUT_FILE '.zip')-PKCS7
 
+HAWK_USER=${HAWK_USER:-alice}
+HAWK_SECRET=${HAWK_SECRET:-fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu}
+CN=${CN:-testaddon@allizom}
+
 # only PKCS7 SHA1
 go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1.zip
 
