@@ -237,6 +237,7 @@ workflows:
       - deploy:
           requires:
             - build
+            - unit-test
             - integration-test
             - verify-apk
           filters:
