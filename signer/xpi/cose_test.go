@@ -61,62 +61,104 @@ func TestIntToCOSEAlg(t *testing.T) {
 }
 
 func TestGenerateCOSEKeyPair(t *testing.T) {
-	t.Parallel()
-
-	// initialize a signer
-	testcase := PASSINGTESTCASES[0]
-	s, err := New(testcase, nil)
-	if err != nil {
-		t.Fatalf("signer initialization failed with: %v", err)
+	// returns an initialized XPI signer
+	initSigner := func(t *testing.T) *XPISigner {
+		testcase := PASSINGTESTCASES[0]
+		s, err := New(testcase, nil)
+		if err != nil {
+			t.Fatalf("signer initialization failed with: %v", err)
+		}
+		return s
 	}
 
-	_, _, err = s.generateCOSEKeyPair(nil)
-	if err == nil {
-		t.Fatalf("didn't error generating keypair for nil COSE Algorithm got: %v instead", err)
-	}
+	t.Run("should error for nil COSE algorithm", func(t *testing.T) {
+		t.Parallel()
 
-	s.issuerKey = nil
-	_, _, err = s.generateCOSEKeyPair(cose.PS256)
-	if err == nil {
-		t.Fatalf("didn't error generating key pair nil signer.issuerKey got: %v instead", err)
-	}
-	s.issuerKey = "bad non-nil key type"
-	_, _, err = s.generateCOSEKeyPair(cose.PS256)
-	if err == nil {
-		t.Fatalf("didn't error generating RSA key pair from string issuer")
-	}
+		s := initSigner(t)
+		_, _, err := s.generateCOSEKeyPair(nil)
+		if err == nil {
+			t.Fatalf("didn't error generating keypair for nil COSE Algorithm got: %v instead", err)
+		}
+	})
 
-	coseSigner, err := cose.NewSigner(cose.ES256, nil)
-	if err != nil {
-		t.Fatalf("failed to generate ES256 key got error: %v", err)
-	}
-	s.issuerKey = coseSigner.PrivateKey
-	if _, ok := s.issuerKey.(*ecdsa.PrivateKey); !ok {
-		t.Fatalf("Failed to generate an ecdsa privateKey to test COSEKeyPair generation")
-	}
-	eeKey, _, err := s.generateCOSEKeyPair(cose.ES256)
-	if err != nil {
-		t.Fatalf("failed to generate ECDSA EE key pair from ECDSA issuer got: %v instead", err)
-	}
-	if _, ok := eeKey.(*ecdsa.PrivateKey); !ok {
-		t.Fatalf("failed to generate ECDSA EE key pair from ECDSA issuer got type: %T instead", eeKey)
-	}
+	t.Run("should error for valid but unsupported COSE algorithm", func(t *testing.T) {
+		t.Parallel()
 
-	coseSigner, err = cose.NewSigner(cose.PS256, nil)
-	if err != nil {
-		t.Fatalf("failed to generate PS256 key got error: %v", err)
-	}
-	s.issuerKey = coseSigner.PrivateKey
-	if _, ok := s.issuerKey.(*rsa.PrivateKey); !ok {
-		t.Fatalf("Failed to generate an RSA privateKey to test COSEKeyPair generation")
-	}
-	eeKey, _, err = s.generateCOSEKeyPair(cose.PS256)
-	if err != nil {
-		t.Fatalf("failed to generate RSA EE key pair from RSA issuer got: %v instead", err)
-	}
-	if _, ok := eeKey.(*rsa.PrivateKey); !ok {
-		t.Fatalf("failed to generate RSA EE key pair from RSA issuer got type: %T instead", eeKey)
-	}
+		s := initSigner(t)
+		_, _, err := s.generateCOSEKeyPair(&cose.Algorithm{
+			Name:  "EdDSA", // EdDSA from [RFC8152]
+			Value: -8,
+		})
+		if err == nil {
+			t.Fatalf("didn't error generating keypair for nil COSE Algorithm got: %v instead", err)
+		}
+	})
+
+	t.Run("should error for nil issuer key", func(t *testing.T) {
+		t.Parallel()
+
+		s := initSigner(t)
+		s.issuerKey = nil
+		_, _, err := s.generateCOSEKeyPair(cose.PS256)
+		if err == nil {
+			t.Fatalf("didn't error generating key pair nil signer.issuerKey got: %v instead", err)
+		}
+	})
+
+	t.Run("should error for string issuer key", func(t *testing.T) {
+		t.Parallel()
+
+		s := initSigner(t)
+		s.issuerKey = "bad non-nil key type"
+		_, _, err := s.generateCOSEKeyPair(cose.PS256)
+		if err == nil {
+			t.Fatalf("didn't error generating RSA key pair from string issuer")
+		}
+	})
+
+	t.Run("should generate ES256 EE key for ECDSA intermediate", func(t *testing.T) {
+		t.Parallel()
+
+		coseSigner, err := cose.NewSigner(cose.ES256, nil)
+		if err != nil {
+			t.Fatalf("failed to generate ES256 key got error: %v", err)
+		}
+
+		s := initSigner(t)
+		s.issuerKey = coseSigner.PrivateKey
+		if _, ok := s.issuerKey.(*ecdsa.PrivateKey); !ok {
+			t.Fatalf("Failed to generate an ecdsa privateKey to test COSEKeyPair generation")
+		}
+		eeKey, _, err := s.generateCOSEKeyPair(cose.ES256)
+		if err != nil {
+			t.Fatalf("failed to generate ECDSA EE key pair from ECDSA issuer got: %v instead", err)
+		}
+		if _, ok := eeKey.(*ecdsa.PrivateKey); !ok {
+			t.Fatalf("failed to generate ECDSA EE key pair from ECDSA issuer got type: %T instead", eeKey)
+		}
+	})
+
+	t.Run("should generate PS256 EE key for RSA intermediate", func(t *testing.T) {
+		t.Parallel()
+
+		coseSigner, err := cose.NewSigner(cose.PS256, nil)
+		if err != nil {
+			t.Fatalf("failed to generate PS256 key got error: %v", err)
+		}
+
+		s := initSigner(t)
+		s.issuerKey = coseSigner.PrivateKey
+		if _, ok := s.issuerKey.(*rsa.PrivateKey); !ok {
+			t.Fatalf("Failed to generate an RSA privateKey to test COSEKeyPair generation")
+		}
+		eeKey, _, err := s.generateCOSEKeyPair(cose.PS256)
+		if err != nil {
+			t.Fatalf("failed to generate RSA EE key pair from RSA issuer got: %v instead", err)
+		}
+		if _, ok := eeKey.(*rsa.PrivateKey); !ok {
+			t.Fatalf("failed to generate RSA EE key pair from RSA issuer got type: %T instead", eeKey)
+		}
+	})
 }
 
 func TestIsValidCOSESignatureErrs(t *testing.T) {
