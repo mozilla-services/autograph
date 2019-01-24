@@ -53,11 +53,15 @@ jobs:
           name: docker save built images
           command: |
               mkdir -p /go/src/app/cache
-              docker save -o /go/src/app/cache/docker.tar "app:build" "monitor:build" "softhsm:build"
+              docker save "app:build" | gzip -c > /go/src/app/cache/docker-app-build.tgz
+              docker save "monitor:build" | gzip -c > /go/src/app/cache/docker-monitor-build.tgz
+              docker save "softhsm:build" | gzip -c > /go/src/app/cache/docker-softhsm-build.tgz
       - save_cache:
           key: v2-{{ .Branch }}-{{ epoch }}
           paths:
-            - /go/src/app/cache/docker.tar
+            - /go/src/app/cache/docker-app-build.tgz
+            - /go/src/app/cache/docker-monitor-build.tgz
+            - /go/src/app/cache/docker-softhsm-build.tgz
 
   unit-test:
     docker:
@@ -72,7 +76,7 @@ jobs:
           key: v2-{{ .Branch }}
       - run:
           name: Restore Docker image cache
-          command: docker load -i /go/src/app/cache/docker.tar
+          command: gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
       - run:
           name: Run unit tests in built app
           command: |
@@ -99,7 +103,10 @@ jobs:
           key: v2-{{ .Branch }}
       - run:
           name: Restore Docker image cache
-          command: docker load -i /go/src/app/cache/docker.tar
+          command: |
+              gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
+              gunzip -c /go/src/app/cache/docker-monitor-build.tgz | docker load
+              gunzip -c /go/src/app/cache/docker-softhsm-build.tgz | docker load
       - run:
           name: Run Autograph with default configuration
           command: |
@@ -179,7 +186,7 @@ jobs:
           key: v2-{{.Branch}}
       - run:
           name: Restore Docker image cache
-          command: docker load -i /go/src/app/cache/docker.tar
+          command: gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
 
       - run:
           name: Deploy to Dockerhub
