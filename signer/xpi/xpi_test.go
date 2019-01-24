@@ -445,13 +445,38 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 func TestRsaCaching(t *testing.T) {
 	t.Parallel()
 
-	// initialize a rsa signer
+	// initialize an RSA signer with cache
 	testcase := PASSINGTESTCASES[0]
+	testcase.RSACacheConfig.NumKeys = 2
+	testcase.RSACacheConfig.NumGenerators = 0 // we'll run populateRsaCache directly
 	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
 	keySize := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
+
+	// should drop cached key with an invalid size and generate a new one
+	smallKey, err := rsa.GenerateKey(s.rand, 512)
+	if err != nil {
+		t.Fatalf("generating test key failed with: %v", err)
+	}
+	go func() { s.rsaCache <- smallKey }()
+	if os.Getenv("CI") == "true" {
+		// sleep longer when running in continuous integration
+		time.Sleep(30 * time.Second)
+	} else {
+		time.Sleep(10 * time.Second)
+	}
+	if len(s.rsaCache) != 1 {
+		t.Fatalf("have an unexpected number of keys in chan wanted 1 got: %d", len(s.rsaCache))
+	}
+	key, err := s.getRsaKey(keySize)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	if key.N.BitLen() != keySize {
+		t.Fatalf("key bitlen does not match. expected %d, got %d", keySize, key.N.BitLen())
+	}
 
 	go s.populateRsaCache(keySize)
 	if os.Getenv("CI") == "true" {
@@ -462,7 +487,7 @@ func TestRsaCaching(t *testing.T) {
 	}
 	// retrieving a rsa key should be really fast now
 	start := time.Now()
-	key, err := s.getRsaKey(keySize)
+	key, err = s.getRsaKey(keySize)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
