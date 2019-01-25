@@ -208,13 +208,15 @@ jobs:
 
 workflows:
   version: 2
-  test-sign-build-deploy:
+  check-code-quality:
     jobs:
       - lint-vet-fmt:
           filters:
             tags:
               only: /.*/
 
+  test-sign-build-deploy:
+    jobs:
       - build:
           filters:
             tags:
