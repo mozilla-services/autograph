@@ -265,27 +265,48 @@ workflows:
   version: 2
   test-sign-build-deploy:
     jobs:
-      - lint-vet-fmt
+      - lint-vet-fmt:
+          filters:
+            tags:
+              only: /.*/
 
-      - test
+      - test:
+          filters:
+            tags:
+              only: /.*/
 
       - testsignapk:
           requires:
             - test
+          filters:
+            tags:
+              only: /.*/
 
-      - build
+      - build:
+          filters:
+            tags:
+              only: /.*/
 
       - unit-test:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
 
       - test-sign-xpi:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
 
       - test-monitor:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
 
       - deploy:
           requires:
