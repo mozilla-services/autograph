@@ -46,6 +46,15 @@ func TestFormatFilenameInvalidUTF8(t *testing.T) {
 	}
 }
 
+func TestFormatFilenameTooLong(t *testing.T) {
+	t.Parallel()
+
+	_, err := formatFilename(make([]byte, maxHeaderBytes+1))
+	if err == nil {
+		t.Fatal("format filename did not error for excessively long line")
+	}
+}
+
 func TestFormatFilenameLonger(t *testing.T) {
 	t.Parallel()
 
