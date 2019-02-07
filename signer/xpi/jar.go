@@ -17,7 +17,8 @@ import (
 // consts and vars for formatFilename
 const (
 	maxLineByteLen      = 72
-	maxContinuedByteLen = 70 // -1 for leading space and -1 for trailing \n newline
+	maxContinuedByteLen = 70    // -1 for leading space and -1 for trailing \n newline
+	maxHeaderBytes      = 65535 // max length for wrapped / multiline headers is 2 << 15 - 1
 )
 
 var maxFirstLineByteLen = maxLineByteLen - (len([]byte("Name: ")) + 1) // + 1 for a \n newline
@@ -40,6 +41,10 @@ func formatFilename(filename []byte) (formatted []byte, err error) {
 		filenameLen      = len(filename)
 		writtenFileBytes = 0 // number of bytes of the filename we've written
 	)
+	if filenameLen > maxHeaderBytes {
+		err = errors.Errorf("xpi: filename length %d exceeds the wrappable limit %d", filenameLen, maxHeaderBytes)
+		return
+	}
 	if filenameLen <= maxFirstLineByteLen {
 		formatted = filename
 		return
