@@ -33,7 +33,7 @@ var maxFirstLineByteLen = maxLineByteLen - (len([]byte("Name: ")) + 1) // + 1 fo
 // refed from: https://source.android.com/security/apksigning/#v1
 func formatFilename(filename []byte) (formatted []byte, err error) {
 	if !utf8.Valid(filename) {
-		err = errors.Errorf("apk: invalid UTF8 in filename %s", filename)
+		err = errors.Errorf("xpi: invalid UTF8 in filename %s", filename)
 		return
 	}
 	var (
