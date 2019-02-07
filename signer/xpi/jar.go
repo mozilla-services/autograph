@@ -135,13 +135,20 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 		if err != nil {
 			return manifest, err
 		}
-		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\n", f.Name)
+
+		filename, err := formatFilename([]byte(f.Name))
+		if err != nil {
+			return manifest, err
+		}
 		h1 := sha1.New()
 		h1.Write(data)
-		fmt.Fprintf(mw, "SHA1-Digest: %s\n", base64.StdEncoding.EncodeToString(h1.Sum(nil)))
 		h2 := sha256.New()
 		h2.Write(data)
-		fmt.Fprintf(mw, "SHA256-Digest: %s\n\n", base64.StdEncoding.EncodeToString(h2.Sum(nil)))
+
+		fmt.Fprintf(mw, "Name: %s\nDigest-Algorithms: SHA1 SHA256\nSHA1-Digest: %s\nSHA256-Digest: %s\n\n",
+			filename,
+			base64.StdEncoding.EncodeToString(h1.Sum(nil)),
+			base64.StdEncoding.EncodeToString(h2.Sum(nil)))
 	}
 	manifestBody := mw.Bytes()
 	manifest = append(manifest, manifestBody...)
