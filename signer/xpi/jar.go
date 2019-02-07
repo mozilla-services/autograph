@@ -11,7 +11,56 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
+	"unicode/utf8"
 )
+
+// consts and vars for formatFilename
+const (
+	maxLineByteLen      = 72
+	maxContinuedByteLen = 70 // -1 for leading space and -1 for trailing \n newline
+)
+
+var maxFirstLineByteLen = maxLineByteLen - (len([]byte("Name: ")) + 1) // + 1 for a \n newline
+
+// formatFilename formats filename lines to satisfy:
+//
+// No line may be longer than 72 bytes (not characters), in its
+// UTF8-encoded form. If a value would make the initial line longer
+// than this, it should be continued on extra lines (each starting
+// with a single SPACE).
+//
+// https://docs.oracle.com/javase/8/docs/technotes/guides/jar/jar.html#Signed_JAR_File
+// refed from: https://source.android.com/security/apksigning/#v1
+func formatFilename(filename []byte) (formatted []byte, err error) {
+	if !utf8.Valid(filename) {
+		err = errors.Errorf("apk: invalid UTF8 in filename %s", filename)
+		return
+	}
+	var (
+		filenameLen      = len(filename)
+		writtenFileBytes = 0 // number of bytes of the filename we've written
+	)
+	if filenameLen <= maxFirstLineByteLen {
+		formatted = filename
+		return
+	}
+	formatted = append(formatted, filename[:maxFirstLineByteLen]...)
+	writtenFileBytes += maxFirstLineByteLen
+	for {
+		if filenameLen-writtenFileBytes <= 0 {
+			break
+		} else if filenameLen-writtenFileBytes < maxContinuedByteLen {
+			formatted = append(formatted, []byte("\n ")...)
+			formatted = append(formatted, filename[writtenFileBytes:]...)
+			break
+		} else {
+			formatted = append(formatted, []byte("\n ")...)
+			formatted = append(formatted, filename[writtenFileBytes:writtenFileBytes+maxContinuedByteLen]...)
+			writtenFileBytes += maxContinuedByteLen
+		}
+	}
+	return
+}
 
 func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err error) {
 	for _, f := range metafiles {
