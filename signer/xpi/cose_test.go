@@ -94,11 +94,11 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 		}
 	})
 
-	t.Run("should error for nil issuer key", func(t *testing.T) {
+	t.Run("should error for nil issuerPublicKey", func(t *testing.T) {
 		t.Parallel()
 
 		s := initSigner(t)
-		s.issuerKey = nil
+		s.issuerPublicKey = nil
 		_, _, err := s.generateCOSEKeyPair(cose.PS256)
 		if err == nil {
 			t.Fatalf("didn't error generating key pair nil signer.issuerKey got: %v instead", err)
@@ -109,7 +109,7 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 		t.Parallel()
 
 		s := initSigner(t)
-		s.issuerKey = "bad non-nil key type"
+		s.issuerPublicKey = "bad non-nil key type"
 		_, _, err := s.generateCOSEKeyPair(cose.PS256)
 		if err == nil {
 			t.Fatalf("didn't error generating RSA key pair from string issuer")
@@ -159,8 +159,12 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 		if !ok {
 			t.Fatalf("failed to generate RSA EE key pair from RSA issuer got type: %T instead", eeKey)
 		}
-		if rsaKey.N.BitLen() != s.issuerKey.(*rsa.PrivateKey).N.BitLen() {
-			t.Fatalf("EE key bitlen does not match signer issuerKey. expected %d, got %d", s.issuerKey.(*rsa.PrivateKey).N.BitLen(), rsaKey.N.BitLen())
+		issuerKeySize, err := s.getIssuerRSAKeySize()
+		if err != nil {
+			t.Fatalf("failed to get issuer RSA key size: %s", err)
+		}
+		if rsaKey.N.BitLen() < issuerKeySize {
+			t.Fatalf("EE key %d is smaller than signer issuer key %d", rsaKey.N.BitLen(), issuerKeySize)
 		}
 	})
 
@@ -177,6 +181,7 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 		if _, ok := s.issuerKey.(*ecdsa.PrivateKey); !ok {
 			t.Fatalf("Failed to generate an ECDSA privateKey to test COSEKeyPair generation")
 		}
+		s.issuerPublicKey = coseSigner.PrivateKey.(*ecdsa.PrivateKey).Public()
 		eeKey, _, err := s.generateCOSEKeyPair(cose.PS256)
 		if err != nil {
 			t.Fatalf("failed to generate RSA EE key pair from ECDSA issuer got: %v instead", err)
@@ -185,8 +190,8 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 		if !ok {
 			t.Fatalf("failed to generate RSA EE key pair from ECDSA issuer got type: %T instead", eeKey)
 		}
-		if rsaKey.N.BitLen() != rsaKeyMinSize {
-			t.Fatalf("EE key bitlen does not match signer default bitlen. expected %d, got %d", rsaKeyMinSize, rsaKey.N.BitLen())
+		if rsaKey.N.BitLen() < rsaKeyMinSize {
+			t.Fatalf("EE key %d is smaller than default key size %d", rsaKey.N.BitLen(), rsaKeyMinSize)
 		}
 	})
 }

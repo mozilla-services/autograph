@@ -54,8 +54,9 @@ const (
 // signatures for Firefox Add-ons of various types.
 type XPISigner struct {
 	signer.Configuration
-	issuerKey  crypto.PrivateKey
-	issuerCert *x509.Certificate
+	issuerKey       crypto.PrivateKey
+	issuerPublicKey crypto.PublicKey
+	issuerCert      *x509.Certificate
 
 	// OU is the organizational unit of the end-entity certificate
 	// generated for each operation performed by this signer
@@ -106,7 +107,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	}
 	s.PrivateKey = conf.PrivateKey
 
-	s.issuerKey, _, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
+	s.issuerKey, s.issuerPublicKey, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: GetKeysAndRand failed to retrieve signer")
 	}
@@ -159,8 +160,8 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	// If the private key is rsa, launch go routines that
 	// populates the rsa cache with private keys of the same
 	// length
-	if issuerPrivateKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {
-		if issuerPrivateKey.N.BitLen() < rsaKeyMinSize {
+	if issuerKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {
+		if issuerKey.N.BitLen() < rsaKeyMinSize {
 			return nil, errors.Errorf("xpi: issuer RSA key must be at least %d bits", rsaKeyMinSize)
 		}
 		if conf.RSACacheConfig.StatsSampleRate < 5*time.Second {
@@ -172,7 +173,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 
 		s.rsaCache = make(chan *rsa.PrivateKey, conf.RSACacheConfig.NumKeys)
 		for i := 0; i < int(conf.RSACacheConfig.NumGenerators); i++ {
-			go s.populateRsaCache(issuerPrivateKey.N.BitLen())
+			go s.populateRsaCache(issuerKey.N.BitLen())
 		}
 
 		log.Infof("xpi: %d RSA key cache started with %d generators running every %s\n and a %s timeout", conf.RSACacheConfig.NumKeys, conf.RSACacheConfig.NumGenerators, s.rsaCacheGeneratorSleepDuration, s.rsaCacheFetchTimeout)

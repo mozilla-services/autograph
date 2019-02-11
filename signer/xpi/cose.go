@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ThalesIgnite/crypto11"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/autograph/signer"
@@ -66,8 +65,8 @@ func intToCOSEAlg(i int) (v *cose.Algorithm) {
 func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
 	var signer *cose.Signer
 
-	switch key := s.issuerKey.(type) {
-	case *rsa.PrivateKey, *ecdsa.PrivateKey, *crypto11.PKCS11PrivateKeyRSA, *crypto11.PKCS11PrivateKeyECDSA:
+	switch key := s.issuerPublicKey.(type) {
+	case *rsa.PublicKey, *ecdsa.PublicKey:
 		// ok
 	default:
 		err = errors.Errorf("xpi: Cannot generate COSEKeypair for issuerKey type %T", key)
@@ -77,14 +76,15 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 	switch coseAlg {
 	case cose.PS256:
 		var size = rsaKeyMinSize
-		switch key := s.issuerKey.(type) {
-		case *rsa.PrivateKey:
-			if key.N.BitLen() > size {
-				size = key.N.BitLen()
+		switch key := s.issuerPublicKey.(type) {
+		case *rsa.PublicKey:
+			pubKeySize, getKeySizeErr := s.getIssuerRSAKeySize()
+			if err != nil { // should never occur since we just checked it's type *rsa.PublicKey
+				err = errors.Wrapf(getKeySizeErr, "xpi: error determining issuerPublicKey rsa key size for key type %T", key)
+				return
 			}
-		case *crypto11.PKCS11PrivateKeyRSA:
-			if key.PubKey.(*rsa.PublicKey).N.BitLen() > size {
-				size = key.PubKey.(*rsa.PublicKey).N.BitLen()
+			if pubKeySize > size {
+				size = pubKeySize
 			}
 		default:
 			log.Infof("xpi: using default RSA key size %d since issuer key type %T is not RSA", size, key)

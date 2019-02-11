@@ -12,7 +12,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ThalesIgnite/crypto11"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/cose"
@@ -118,35 +117,9 @@ func (s *XPISigner) makeTemplate(cn string) *x509.Certificate {
 	}
 }
 
-// getIssuerPubKey returns the public key for ECDSA or RSA keys from
-// the crypto stdlib or crypto11
-func (s *XPISigner) getIssuerPubKey() (pubKey crypto.PublicKey, err error) {
-	switch issuerKey := s.issuerKey.(type) {
-	// NB: when these two cases aren't separate golang treats them
-	// as crypto.PrivateKey (which doesn't have a .Public method)
-	case *rsa.PrivateKey:
-		pubKey = issuerKey.Public()
-	case *ecdsa.PrivateKey:
-		pubKey = issuerKey.Public()
-	case *crypto11.PKCS11PrivateKeyRSA:
-		pubKey = issuerKey.Public()
-	case *crypto11.PKCS11PrivateKeyECDSA:
-		pubKey = issuerKey.Public()
-	default:
-		err = errors.Errorf("xpi: cannot get public key for issuer key type %T", issuerKey)
-	}
-	return
-}
-
-// getIssuerRSAKeySize returns the rsa key size in bits for crypto or
-// crypto11 issuer keys
+// getIssuerRSAKeySize returns the rsa key size in bits for the issuer public key
 func (s *XPISigner) getIssuerRSAKeySize() (size int, err error) {
-	pubKey, err := s.getIssuerPubKey()
-	if err != nil {
-		err = errors.Errorf("xpi: failed to public key to get rsa key size")
-		return
-	}
-	rsaKey, ok := pubKey.(*rsa.PublicKey)
+	rsaKey, ok := s.issuerPublicKey.(*rsa.PublicKey)
 	if !ok {
 		err = errors.Errorf("xpi: failed to cast public key to *rsa.PublicKey to get rsa key size")
 		return
@@ -154,15 +127,9 @@ func (s *XPISigner) getIssuerRSAKeySize() (size int, err error) {
 	return rsaKey.N.BitLen(), nil
 }
 
-// getIssuerECDSACurve returns the ecdsa curve for crypto or crypto11
-// issuer keys
+// getIssuerECDSACurve returns the ecdsa curve for the issuer public key
 func (s *XPISigner) getIssuerECDSACurve() (curve elliptic.Curve, err error) {
-	pubKey, err := s.getIssuerPubKey()
-	if err != nil {
-		err = errors.Errorf("xpi: failed to public key to get ecdsa curve")
-		return
-	}
-	ecKey, ok := pubKey.(*ecdsa.PublicKey)
+	ecKey, ok := s.issuerPublicKey.(*ecdsa.PublicKey)
 	if !ok {
 		err = errors.Errorf("xpi: failed to cast public key to *ecdsa.PublicKey to get curve")
 		return
@@ -173,8 +140,8 @@ func (s *XPISigner) getIssuerECDSACurve() (curve elliptic.Curve, err error) {
 // generateIssuerEEKeyPair returns a public and private key pair
 // matching the issuer XPISigner issuerKey size and type
 func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublicKey crypto.PublicKey, err error) {
-	switch issuerKey := s.issuerKey.(type) {
-	case *rsa.PrivateKey, *crypto11.PKCS11PrivateKeyRSA:
+	switch issuerKey := s.issuerPublicKey.(type) {
+	case *rsa.PublicKey:
 		var size int
 		size, err = s.getIssuerRSAKeySize()
 		if err != nil {
@@ -197,7 +164,7 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 			return
 		}
 		eePublicKey = newKey.Public()
-	case *ecdsa.PrivateKey, *crypto11.PKCS11PrivateKeyECDSA:
+	case *ecdsa.PublicKey:
 		var curve elliptic.Curve
 		curve, err = s.getIssuerECDSACurve()
 		if err != nil {
