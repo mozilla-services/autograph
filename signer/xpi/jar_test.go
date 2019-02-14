@@ -7,6 +7,84 @@ import (
 	"testing"
 )
 
+func TestFormatFilenameShort(t *testing.T) {
+	t.Parallel()
+
+	fn := []byte("LocalizedFormats_fr.properties")
+	expected := []byte("LocalizedFormats_fr.properties")
+
+	formatted, err := formatFilename(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(formatted, expected) {
+		t.Fatalf("manifest filename mismatch Expected:\n%s\nGot:\n%s", expected, formatted)
+	}
+}
+
+func TestFormatFilenameLong(t *testing.T) {
+	t.Parallel()
+
+	fn := []byte("assets/org/apache/commons/math3/exception/util/LocalizedFormats_fr.properties")
+	expected := []byte("assets/org/apache/commons/math3/exception/util/LocalizedFormats_f\n r.properties")
+
+	formatted, err := formatFilename(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(formatted, expected) {
+		t.Fatalf("manifest filename mismatch Expected:\n%s\nGot:\n%s", expected, formatted)
+	}
+}
+
+func TestFormatFilenameInvalidUTF8(t *testing.T) {
+	t.Parallel()
+
+	_, err := formatFilename([]byte{0xff, 0xfe, 0xfd})
+	if err == nil {
+		t.Fatal("format filename did not error for invalid UTF8")
+	}
+}
+
+func TestFormatFilenameTooLong(t *testing.T) {
+	t.Parallel()
+
+	_, err := formatFilename(make([]byte, maxHeaderBytes+1))
+	if err == nil {
+		t.Fatal("format filename did not error for excessively long line")
+	}
+}
+
+func TestFormatFilenameLonger(t *testing.T) {
+	t.Parallel()
+
+	fn := []byte("assets/org/apache/commons/math3/exception/assets/org/apache/commons/math3/exception/util/assets/org/apache/commons/math3/exception/util/LocalizedFormats_fr.properties")
+	expected := []byte("assets/org/apache/commons/math3/exception/assets/org/apache/commo\n ns/math3/exception/util/assets/org/apache/commons/math3/exception/util\n /LocalizedFormats_fr.properties")
+
+	formatted, err := formatFilename(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(formatted, expected) {
+		t.Fatalf("manifest filename mismatch Expected:\n%s\nGot:\n%s", expected, formatted)
+	}
+}
+
+func TestFormatFilenameExact(t *testing.T) {
+	t.Parallel()
+
+	fn := []byte("assets/org/apache/commons/math3/exception/assets/org/apache/commons/math3/exception/util/assets/org/apache/commons/math3/exception/util")
+	expected := []byte("assets/org/apache/commons/math3/exception/assets/org/apache/commo\n ns/math3/exception/util/assets/org/apache/commons/math3/exception/util")
+
+	formatted, err := formatFilename(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(formatted, expected) {
+		t.Fatalf("manifest filename mismatch Expected:\n%+v\nGot:\n%+v", expected, formatted)
+	}
+}
+
 func TestMakingJarManifest(t *testing.T) {
 	manifest, sigfile, err := makeJARManifestAndSignatureFile(unsignedBootstrap)
 	if err != nil {
