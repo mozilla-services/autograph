@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"go.mozilla.org/autograph/database"
+
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
 	"github.com/miekg/pkcs11"
@@ -56,12 +58,13 @@ type RSACacheConfig struct {
 
 // Configuration defines the parameters of a signer
 type Configuration struct {
-	ID          string `json:"id"`
-	Type        string `json:"type"`
-	Mode        string `json:"mode"`
-	PrivateKey  string `json:"privatekey,omitempty"`
-	PublicKey   string `json:"publickey,omitempty"`
-	Certificate string `json:"certificate,omitempty"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Mode        string            `json:"mode"`
+	PrivateKey  string            `json:"privatekey,omitempty"`
+	PublicKey   string            `json:"publickey,omitempty"`
+	Certificate string            `json:"certificate,omitempty"`
+	DB          *database.Handler `json:"-"`
 
 	// X5U (X.509 URL) is a URL that points to an X.509 public key
 	// certificate chain to validate a content signature
