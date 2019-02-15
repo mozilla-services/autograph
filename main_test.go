@@ -11,10 +11,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"testing"
-	"time"
 )
 
 var (
@@ -31,7 +29,7 @@ func TestMain(m *testing.M) {
 	}
 	log.Printf("configuration: %+v\n", conf)
 	ag = newAutographer(1)
-	err = ag.addSigners(conf.Signers, false)
+	err = ag.addSigners(conf.Signers)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -200,7 +198,7 @@ signers:
 	// initialize signers from the configuration
 	// and store them into the autographer handler
 	dupag := newAutographer(conf.Server.NonceCacheSize)
-	err = dupag.addSigners(conf.Signers, false)
+	err = dupag.addSigners(conf.Signers)
 	if err == nil {
 		t.Fatalf("should have failed with duplicate signers but didn't")
 	}
@@ -260,7 +258,7 @@ authorizations:
 	// initialize signers from the configuration
 	// and store them into the autographer handler
 	dupag := newAutographer(conf.Server.NonceCacheSize)
-	err = dupag.addSigners(conf.Signers, false)
+	err = dupag.addSigners(conf.Signers)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -278,59 +276,22 @@ func TestConfigLoadFileNotExist(t *testing.T) {
 	}
 }
 
-func TestStartMain(t *testing.T) {
-	// save args since main parses os.Args[1:] but we don't want
-	// to pass test ... when running with go test
-	oldArgs := os.Args
+func TestDefaultPort(t *testing.T) {
+	t.Parallel()
 
-	os.Args = []string{"test-autograph", "-D"}
-	go main()
-	if os.Getenv("CI") == "true" {
-		// sleep longer when running in continuous integration
-		time.Sleep(3 * time.Second)
-	} else {
-		time.Sleep(200 * time.Millisecond)
-	}
-	resp, err := http.Get("http://localhost:8000/__heartbeat__")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if fmt.Sprintf("%s", body) != "ohai" {
-		t.Fatalf("expected heartbeat message 'ohai', got %q", body)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected response code %d, got %d", http.StatusOK, resp.StatusCode)
-	}
-
-	// restore os.Args
-	os.Args = oldArgs
-}
-
-func TestPortOverride(t *testing.T) {
-	expected := "0.0.0.0:8080"
-	_, listen, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
+	expected := "0.0.0.0:8000"
+	_, listen, _, _ := parseArgsAndLoadConfig([]string{})
 	if listen != expected {
 		t.Errorf("expected listen %s got %s", expected, listen)
 	}
 }
 
-func TestSkipHSMDefault(t *testing.T) {
-	expected := true
-	conf, _, _, _ := parseArgsAndLoadConfig([]string{})
-	if conf.isHsmEnabled != expected {
-		t.Errorf("expected skipHSM %v got %v", expected, conf.isHsmEnabled)
-	}
-}
+func TestPortOverride(t *testing.T) {
+	t.Parallel()
 
-func TestSkipHSMOverride(t *testing.T) {
-	expected := false
-	conf, _, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080", "--skip-hsm"})
-	if conf.isHsmEnabled != expected {
-		t.Errorf("expected skipHSM %v got %v", expected, conf.isHsmEnabled)
+	expected := "0.0.0.0:8080"
+	_, listen, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
+	if listen != expected {
+		t.Errorf("expected listen %s got %s", expected, listen)
 	}
 }

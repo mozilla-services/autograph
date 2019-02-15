@@ -28,7 +28,7 @@ func TestSignFile(t *testing.T) {
 		NumGenerators:          2,
 		GeneratorSleepDuration: time.Minute,
 		FetchTimeout:           100 * time.Millisecond,
-		StatsSampleRate:      10 * time.Second,
+		StatsSampleRate:        10 * time.Second,
 	}
 
 	statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
@@ -445,13 +445,38 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 func TestRsaCaching(t *testing.T) {
 	t.Parallel()
 
-	// initialize a rsa signer
+	// initialize an RSA signer with cache
 	testcase := PASSINGTESTCASES[0]
+	testcase.RSACacheConfig.NumKeys = 2
+	testcase.RSACacheConfig.NumGenerators = 0 // we'll run populateRsaCache directly
 	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
 	keySize := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
+
+	// should drop cached key with an invalid size and generate a new one
+	smallKey, err := rsa.GenerateKey(s.rand, 512)
+	if err != nil {
+		t.Fatalf("generating test key failed with: %v", err)
+	}
+	go func() { s.rsaCache <- smallKey }()
+	if os.Getenv("CI") == "true" {
+		// sleep longer when running in continuous integration
+		time.Sleep(30 * time.Second)
+	} else {
+		time.Sleep(10 * time.Second)
+	}
+	if len(s.rsaCache) != 1 {
+		t.Fatalf("have an unexpected number of keys in chan wanted 1 got: %d", len(s.rsaCache))
+	}
+	key, err := s.getRsaKey(keySize)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
+	if key.N.BitLen() != keySize {
+		t.Fatalf("key bitlen does not match. expected %d, got %d", keySize, key.N.BitLen())
+	}
 
 	go s.populateRsaCache(keySize)
 	if os.Getenv("CI") == "true" {
@@ -462,7 +487,7 @@ func TestRsaCaching(t *testing.T) {
 	}
 	// retrieving a rsa key should be really fast now
 	start := time.Now()
-	key, err := s.getRsaKey(keySize)
+	key, err = s.getRsaKey(keySize)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
@@ -480,6 +505,24 @@ func TestRsaCaching(t *testing.T) {
 	if key.N.BitLen() != keySize {
 		t.Fatalf("key bitlen does not match. expected %d, got %d", keySize, key.N.BitLen())
 	}
+}
+
+func TestRSACacheSizeMonitor(t *testing.T) {
+
+	t.Run("runs without statsd", func(t *testing.T) {
+		t.Parallel()
+
+		// initialize an RSA signer with cache
+		testcase := PASSINGTESTCASES[0]
+		s, err := New(testcase, nil)
+		if err != nil {
+			t.Fatalf("signer initialization failed with: %v", err)
+		}
+
+		s.stats = nil
+		// this should not panic
+		s.monitorRsaCacheSize()
+	})
 }
 
 func TestSignFileWithCOSESignatures(t *testing.T) {
@@ -1013,7 +1056,7 @@ var FAILINGTESTCASES = []struct {
 	{err: "xpi: invalid type", cfg: signer.Configuration{Type: ""}},
 	{err: "xpi: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
 	{err: "xpi: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
-	{err: "xpi: failed to parse private key", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+	{err: "xpi: GetKeysAndRand failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
 	{err: "xpi: failed to parse certificate PEM", cfg: signer.Configuration{
 		Type:        Type,
 		ID:          "abcd",
@@ -1225,5 +1268,159 @@ g03HjWTltS8Bgt6u0KFTGJKEUcfwvWKZtjk5Fc1heZ49zh1nU3zo9C/h8iiijTy2
 s/YksP6cxveae4b7soN4rD/vnfsmKcG+DnTf6B8Zbm6tI2TneYOfFSCryp+yDnaJ
 PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 -----END PRIVATE KEY-----`,
+	}},
+	{err: "xpi: issuer RSA key must be at least 2048 bits", cfg: signer.Configuration{
+		ID:   "short-rsa-1024-addon",
+		Type: Type,
+		Mode: ModeAddOn,
+		Certificate: `-----BEGIN CERTIFICATE-----
+MIICnTCCAgagAwIBAgIJAPCQ7jTBYG+LMA0GCSqGSIb3DQEBCwUAMHUxCzAJBgNV
+BAYTAlVTMQswCQYDVQQIDAJDQTEWMBQGA1UEBwwNTW91bnRhaW4gVmlldzEXMBUG
+A1UECgwOTW96aWxsYSBBZGRvbnMxEjAQBgNVBAsMCVVuaXQgVGVzdDEUMBIGA1UE
+AwwLZXhhbXBsZS5jb20wHhcNMTkwMTI1MTU0NzEyWhcNMjAwMTI1MTU0NzEyWjB1
+MQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExFjAUBgNVBAcMDU1vdW50YWluIFZp
+ZXcxFzAVBgNVBAoMDk1vemlsbGEgQWRkb25zMRIwEAYDVQQLDAlVbml0IFRlc3Qx
+FDASBgNVBAMMC2V4YW1wbGUuY29tMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKB
+gQCpSCdBwUVjljE4rKuVDI/tjpdKSK9cmKDH+eMK9tMKLgjK/UeCR9kerMnO+H5M
+I4AnvmdwJtw+9oVDFyUFIjQjC/leQenD1c2O4ZrcDmDLR6KfO1L/Kczd2mMwQCqT
+QzYvsEpArJ7WJc21vrd1uKfHKgmqAC8uZ34H+uWeG3fnZQIDAQABozUwMzALBgNV
+HQ8EBAMCAoQwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/BAUwAwEB/zAN
+BgkqhkiG9w0BAQsFAAOBgQBdVGBOEGbmQ9ua4HHEIT4fEDgXU9s3fEnlv36vWNXL
+4ix8aUjpOtYp3pcp1hLwaRq1KZMGRWjIqwk9Uag3PWLfnqZr1oefKxjuvqtyKu86
+FA2d8sW+mrxE6SUR8igV2sFVDxbThJnfpNvRQh+6dUp40Vemdh+ZwhevlzBE8Ike
+iw==
+-----END CERTIFICATE-----
+`,
+		PrivateKey: `-----BEGIN PRIVATE KEY-----
+MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAKlIJ0HBRWOWMTis
+q5UMj+2Ol0pIr1yYoMf54wr20wouCMr9R4JH2R6syc74fkwjgCe+Z3Am3D72hUMX
+JQUiNCML+V5B6cPVzY7hmtwOYMtHop87Uv8pzN3aYzBAKpNDNi+wSkCsntYlzbW+
+t3W4p8cqCaoALy5nfgf65Z4bd+dlAgMBAAECgYBmQsYkPMLUJBjb6cNFKO+RTEAs
+ibgVscX+x//V0cEvNxvstBCMrSaGF09aDlcNW6zBVY5a+7608msSWlrsvPrM7U6I
+SNvBSvi7KwubjoUn+bZevYbc+4ApRln/XwetC1ORa5v73dY2sjkqIB87mxEdiYRc
+1rE1omSjYF9cutMyyQJBANq9frbcBQ6ygnUzqDoBKFosVr0YvxZ02os09BfzXc3Z
+mdT6sfzKfegPI0zymbYAzOnKxACjZ1ADLVMdd/cwGK8CQQDGHfMtwgl8BOGXnmUM
+0dCWOs2sWPzZinHkbVJhqxI18wm2PKqSEjXqVI/FoLpEcs2+9aVn/TGyhs4n8E91
+xN4rAkAX83fUffLv0QwH2UgqUcYhWYmF2xfRVao4Y+v2U2eKCrGVaH3kuCdhKYcr
+/cRm8V9+mf0sNLgzQqXL3AYuws1xAkBergGBZLHTqyGErBXuwnbE1OVl8EEmVZuI
+ZxZvxqm1TqjdhrCdjkZl7nOnJuDdxV++Wvbpc39EqlfrjlTrG2JxAkBnVraQ3ZVH
+HrYqtoo1xl/h/sOXXPm9PQ7VYgZCpOzasC9ZAYUO7lHmNK+zwmmudFGY+aPM4c/b
+a05oGDnmq7R+
+-----END PRIVATE KEY-----
+`,
+	}},
+	{err: "xpi: signer certificate does not have code signing EKU", cfg: signer.Configuration{
+		ID:   "rsa-no-eku-addon",
+		Type: Type,
+		Mode: ModeAddOn,
+		Certificate: `-----BEGIN CERTIFICATE-----
+MIIDjTCCAnWgAwIBAgIJAPzn72+kKJ31MA0GCSqGSIb3DQEBCwUAMHUxCzAJBgNV
+BAYTAlVTMQswCQYDVQQIDAJDQTEWMBQGA1UEBwwNTW91bnRhaW4gVmlldzEXMBUG
+A1UECgwOTW96aWxsYSBBZGRvbnMxEjAQBgNVBAsMCVVuaXQgVGVzdDEUMBIGA1UE
+AwwLZXhhbXBsZS5jb20wHhcNMTkwMTI1MTU1NjM5WhcNMjAwMTI1MTU1NjM5WjB1
+MQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExFjAUBgNVBAcMDU1vdW50YWluIFZp
+ZXcxFzAVBgNVBAoMDk1vemlsbGEgQWRkb25zMRIwEAYDVQQLDAlVbml0IFRlc3Qx
+FDASBgNVBAMMC2V4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+CgKCAQEAvbcWtHXLwcr7ZDFXUjAV/dqTWfWY/QKLwTyHb+n8u9hpaEtAUUjKoqZc
+aoFVbeQZgAyQdLU7fvWLu/H6IgrNMCCmGmVjlD/ZoWB4gTmzaOxf/rMiOwsMMcmo
+s375pSxz+tRIReFEaBEAjHVKU36U0TDhOHYc030b2QWMEf1WgHyt9DqNAX5kMAFc
+jfi8iZbuituXwZUJc3oHi2+77oSck9Xrfm7Kj8DfpyaNezTVZu5xV+uyGHUNT90w
+RDyvD6+VjkcDkSAst1bWMmvhiTA0e5DhtOdWifKfTtJHMbgwlcgfIiGsqXr941d3
+XsOx2pKmmoR2ZNSJlw3SxkdNXOKZ0QIDAQABoyAwHjALBgNVHQ8EBAMCAoQwDwYD
+VR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAfyLFUkjm2zOnSyNWIbXL
+/1kY17M2Gf+WizEKwa+CEMCFZYpITnYUrHzOHjJ6bTiV+FCAIR5hXTSLiGKiPiAD
+2f1Jpc+k8celNVkPrJLIb9X99Q2orKFNwJHHUbCRpMIzCQfI4Rl/6KAWhZOZxebl
+dXG4ZZAKSOupUN1l3zxW/RSCfiI3iiVisWLMaqrc1vR9bO7Hf9WncS2b7tEf41Dp
+N2sWUdmtHZbRKFHEEWBZmUwFXH9TyOw+Fn39O1Jn/Mri33aarT86W1TI6+/xpTNi
+dCD+qXTlu5XEl2ftuSFrpPrPh7pp9FGfIz/ae7Fgt6wbMsjwYwwHdjbrM5Sde8EY
+zQ==
+-----END CERTIFICATE-----
+`,
+		PrivateKey: `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC9txa0dcvByvtk
+MVdSMBX92pNZ9Zj9AovBPIdv6fy72GloS0BRSMqiplxqgVVt5BmADJB0tTt+9Yu7
+8foiCs0wIKYaZWOUP9mhYHiBObNo7F/+syI7CwwxyaizfvmlLHP61EhF4URoEQCM
+dUpTfpTRMOE4dhzTfRvZBYwR/VaAfK30Oo0BfmQwAVyN+LyJlu6K25fBlQlzegeL
+b7vuhJyT1et+bsqPwN+nJo17NNVm7nFX67IYdQ1P3TBEPK8Pr5WORwORICy3VtYy
+a+GJMDR7kOG051aJ8p9O0kcxuDCVyB8iIaypev3jV3dew7HakqaahHZk1ImXDdLG
+R01c4pnRAgMBAAECggEAbxZRVjQPrpdT4tQ9hGOhzPZ7B9cW0Tf3a5ws1ixWEAxl
+lGtT6wTLmrf9L2QyCNni0KcKwzwH7YyMWO4VAHAAvCix+ozZ5UoJ/kPF7C1ET7Dx
+eOudpKMQberePNSiC8Te2MYK19hTPPiPsK9RaViafW+4wV3v/Sqp7scfwLzuNOdK
+fqQrAyUVe40nTpsac407RZ9G8SJC8PPfc4muB45YH6C5GpQNkpFPlX1TVZ54gRgC
+f/N9EvZz5pcnWg7kjAiPRaEx6S5eZ1OCKICk3V8Xt54L3P9TiIUGwPcC9eOhToGm
+KKKhEgpK1pBuNmqHKWxjPv4VEwg0ru2NL3SXQmCC/QKBgQDmj6GXfbV1Ox5yeC6t
+RwMAbFt5hYTtsHutUNGHmP8Y31y+mjN8Rz8iQV5NfHiw7IH9WBDidp6diGN1JD4x
+/FKFlY+azK1M0qeHcRBbEKMGtkfZorsFn4H25Hhw4nDbjOtSS/FFenPLDcA6bySm
+VkDGGCJGex94k37K5/Uc0zhrTwKBgQDSpbxIyyhKlCOfx0Fj53Xs1SYn4M8PFdlH
+afs1NoupHb4unFLkuvm108thPmXOMsKeXFCkFLBcA0EKhZypLZz9F2FFAh0Z/Ip5
+SG1BHnWz8lRbDtzvJzWQclFTT8088CIkDuhMTvQBw2rKY55XNpDHt6EdRfqUjU6M
+SbZj26jg3wKBgEV2pqe+rwn32s+AGAgKqgPZoaG2MXtvPYPVIpuo48p5mTavvK1H
+xeSrLx9HThF34B4VB1lDhbxOmDB1z+s9axtmGRL5cYkAuoqa7OOS2psuFe2jEpe6
+G+znnsXb40ayaT+tM67MGtDlfrHcRH185R0JrmHvvGaWgY/eXMHnfUsPAoGBAIje
+hYuq7YAf51HPL07Ru07qZENvEDsWEDsVwtMdoPt+xu8URcw3LT+W4URLPe0QEGLD
+SuaCRuFSf/VtQZCvgZz1jw8+w1f6PqN1iv/P4dzNbUBJVQbTrDsx/GOsq4eX5CcX
+xJqohmWK6x2cQusaGlKan0YdDSdu9YWz853IwV9zAoGAIIGzQAX581j6ziBgJx78
+ilZoRcK4IdDhPIji2rEhUWiudboAWq6ljtNcva7tFcdK1UmgBSosuApG0enly1UK
+3MZJzZyW4HoGmLYI+FellWJhjm4l6oEOcvb7m0ksZUkcuJcIdZVoLWq77kZ87ofN
+eT6Q43/gPKpGi5Sq1heGugQ=
+-----END PRIVATE KEY-----
+`,
+	}},
+	// rsa-no-eku-addon with the second line of the cert removed
+	{err: "xpi: could not parse X.509 certificate:", cfg: signer.Configuration{
+		ID:   "rsa-bad-x509",
+		Type: Type,
+		Mode: ModeAddOn,
+		Certificate: `-----BEGIN CERTIFICATE-----
+BAYTAlVTMQswCQYDVQQIDAJDQTEWMBQGA1UEBwwNTW91bnRhaW4gVmlldzEXMBUG
+A1UECgwOTW96aWxsYSBBZGRvbnMxEjAQBgNVBAsMCVVuaXQgVGVzdDEUMBIGA1UE
+AwwLZXhhbXBsZS5jb20wHhcNMTkwMTI1MTU1NjM5WhcNMjAwMTI1MTU1NjM5WjB1
+MQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExFjAUBgNVBAcMDU1vdW50YWluIFZp
+ZXcxFzAVBgNVBAoMDk1vemlsbGEgQWRkb25zMRIwEAYDVQQLDAlVbml0IFRlc3Qx
+FDASBgNVBAMMC2V4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+CgKCAQEAvbcWtHXLwcr7ZDFXUjAV/dqTWfWY/QKLwTyHb+n8u9hpaEtAUUjKoqZc
+aoFVbeQZgAyQdLU7fvWLu/H6IgrNMCCmGmVjlD/ZoWB4gTmzaOxf/rMiOwsMMcmo
+s375pSxz+tRIReFEaBEAjHVKU36U0TDhOHYc030b2QWMEf1WgHyt9DqNAX5kMAFc
+jfi8iZbuituXwZUJc3oHi2+77oSck9Xrfm7Kj8DfpyaNezTVZu5xV+uyGHUNT90w
+RDyvD6+VjkcDkSAst1bWMmvhiTA0e5DhtOdWifKfTtJHMbgwlcgfIiGsqXr941d3
+XsOx2pKmmoR2ZNSJlw3SxkdNXOKZ0QIDAQABoyAwHjALBgNVHQ8EBAMCAoQwDwYD
+VR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAfyLFUkjm2zOnSyNWIbXL
+/1kY17M2Gf+WizEKwa+CEMCFZYpITnYUrHzOHjJ6bTiV+FCAIR5hXTSLiGKiPiAD
+2f1Jpc+k8celNVkPrJLIb9X99Q2orKFNwJHHUbCRpMIzCQfI4Rl/6KAWhZOZxebl
+dXG4ZZAKSOupUN1l3zxW/RSCfiI3iiVisWLMaqrc1vR9bO7Hf9WncS2b7tEf41Dp
+N2sWUdmtHZbRKFHEEWBZmUwFXH9TyOw+Fn39O1Jn/Mri33aarT86W1TI6+/xpTNi
+dCD+qXTlu5XEl2ftuSFrpPrPh7pp9FGfIz/ae7Fgt6wbMsjwYwwHdjbrM5Sde8EY
+zQ==
+-----END CERTIFICATE-----
+`,
+		PrivateKey: `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC9txa0dcvByvtk
+MVdSMBX92pNZ9Zj9AovBPIdv6fy72GloS0BRSMqiplxqgVVt5BmADJB0tTt+9Yu7
+8foiCs0wIKYaZWOUP9mhYHiBObNo7F/+syI7CwwxyaizfvmlLHP61EhF4URoEQCM
+dUpTfpTRMOE4dhzTfRvZBYwR/VaAfK30Oo0BfmQwAVyN+LyJlu6K25fBlQlzegeL
+b7vuhJyT1et+bsqPwN+nJo17NNVm7nFX67IYdQ1P3TBEPK8Pr5WORwORICy3VtYy
+a+GJMDR7kOG051aJ8p9O0kcxuDCVyB8iIaypev3jV3dew7HakqaahHZk1ImXDdLG
+R01c4pnRAgMBAAECggEAbxZRVjQPrpdT4tQ9hGOhzPZ7B9cW0Tf3a5ws1ixWEAxl
+lGtT6wTLmrf9L2QyCNni0KcKwzwH7YyMWO4VAHAAvCix+ozZ5UoJ/kPF7C1ET7Dx
+eOudpKMQberePNSiC8Te2MYK19hTPPiPsK9RaViafW+4wV3v/Sqp7scfwLzuNOdK
+fqQrAyUVe40nTpsac407RZ9G8SJC8PPfc4muB45YH6C5GpQNkpFPlX1TVZ54gRgC
+f/N9EvZz5pcnWg7kjAiPRaEx6S5eZ1OCKICk3V8Xt54L3P9TiIUGwPcC9eOhToGm
+KKKhEgpK1pBuNmqHKWxjPv4VEwg0ru2NL3SXQmCC/QKBgQDmj6GXfbV1Ox5yeC6t
+RwMAbFt5hYTtsHutUNGHmP8Y31y+mjN8Rz8iQV5NfHiw7IH9WBDidp6diGN1JD4x
+/FKFlY+azK1M0qeHcRBbEKMGtkfZorsFn4H25Hhw4nDbjOtSS/FFenPLDcA6bySm
+VkDGGCJGex94k37K5/Uc0zhrTwKBgQDSpbxIyyhKlCOfx0Fj53Xs1SYn4M8PFdlH
+afs1NoupHb4unFLkuvm108thPmXOMsKeXFCkFLBcA0EKhZypLZz9F2FFAh0Z/Ip5
+SG1BHnWz8lRbDtzvJzWQclFTT8088CIkDuhMTvQBw2rKY55XNpDHt6EdRfqUjU6M
+SbZj26jg3wKBgEV2pqe+rwn32s+AGAgKqgPZoaG2MXtvPYPVIpuo48p5mTavvK1H
+xeSrLx9HThF34B4VB1lDhbxOmDB1z+s9axtmGRL5cYkAuoqa7OOS2psuFe2jEpe6
+G+znnsXb40ayaT+tM67MGtDlfrHcRH185R0JrmHvvGaWgY/eXMHnfUsPAoGBAIje
+hYuq7YAf51HPL07Ru07qZENvEDsWEDsVwtMdoPt+xu8URcw3LT+W4URLPe0QEGLD
+SuaCRuFSf/VtQZCvgZz1jw8+w1f6PqN1iv/P4dzNbUBJVQbTrDsx/GOsq4eX5CcX
+xJqohmWK6x2cQusaGlKan0YdDSdu9YWz853IwV9zAoGAIIGzQAX581j6ziBgJx78
+ilZoRcK4IdDhPIji2rEhUWiudboAWq6ljtNcva7tFcdK1UmgBSosuApG0enly1UK
+3MZJzZyW4HoGmLYI+FellWJhjm4l6oEOcvb7m0ksZUkcuJcIdZVoLWq77kZ87ofN
+eT6Q43/gPKpGi5Sq1heGugQ=
+-----END PRIVATE KEY-----
+`,
 	}},
 }

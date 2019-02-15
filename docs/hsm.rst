@@ -60,7 +60,7 @@ it will be located under /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
 Setting up SoftHSM
 ------------------
 
-* On Ubuntu Xenial, install `softhsm` and create `mkdir /var/lib/softhsm/tokens`
+* On Ubuntu Xenial, install `softhsm2` and create `mkdir /var/lib/softhsm/tokens`
 * On ArchLinux, install `softhsm` from AUR
 * Then create a token with `$ softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000`
 

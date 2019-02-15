@@ -2,11 +2,39 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 GO := go
+GOLINT := golint -set_exit_status
 
 all: generate test vet lint install
 
+install-golint:
+	$(GO) get golang.org/x/lint/golint
+
+install-cover:
+	$(GO) get golang.org/x/tools/cmd/cover
+
+install-goveralls:
+	$(GO) get github.com/mattn/goveralls
+
+install-dev-deps: install-golint install-cover install-goveralls
+
 install:
 	$(GO) install go.mozilla.org/autograph
+
+build-app-container: generate
+	docker build -t app:build .
+
+build-monitor-container: build-app-container
+	cd tools/autograph-monitor && docker build -t monitor:build .
+
+build-softhsm-container:
+	cd tools/softhsm && docker build -t softhsm:build .
+
+test-container:
+	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph test
+
+
+run-container:
+	docker run --name autograph-dev --rm -d --net host app:build
 
 vendor:
 	govend -u --prune
@@ -21,13 +49,15 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	golint go.mozilla.org/autograph
-	golint go.mozilla.org/autograph/signer
-	golint go.mozilla.org/autograph/signer/contentsignature
-	golint go.mozilla.org/autograph/signer/xpi
-	golint go.mozilla.org/autograph/signer/apk
-	golint go.mozilla.org/autograph/signer/mar
-	golint go.mozilla.org/autograph/signer/pgp
+	$(GOLINT) go.mozilla.org/autograph \
+		go.mozilla.org/autograph/signer \
+		go.mozilla.org/autograph/signer/contentsignature \
+		go.mozilla.org/autograph/signer/xpi \
+		go.mozilla.org/autograph/signer/apk \
+		go.mozilla.org/autograph/signer/mar \
+		go.mozilla.org/autograph/signer/pgp \
+		go.mozilla.org/autograph/signer/gpg2 \
+		go.mozilla.org/autograph/signer/rsapss
 
 vet:
 	$(GO) vet go.mozilla.org/autograph
@@ -39,6 +69,14 @@ vet:
 	$(GO) vet go.mozilla.org/autograph/signer/apk
 	$(GO) vet go.mozilla.org/autograph/signer/mar
 	$(GO) vet go.mozilla.org/autograph/signer/pgp
+	$(GO) vet go.mozilla.org/autograph/signer/gpg2
+	$(GO) vet go.mozilla.org/autograph/signer/rsapss
+
+fmt-diff:
+	gofmt -d *.go signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
+
+fmt-fix:
+	gofmt -w *.go signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
 
 testautograph:
 	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
@@ -85,7 +123,19 @@ testpgp:
 showcoveragepgp: testpgp
 	$(GO) tool cover -html=coverage_pgp.out
 
-test: testautograph testsigner testcs testxpi testapk testmar testpgp
+testgpg2:
+	$(GO) test -v -covermode=count -coverprofile=coverage_gpg2.out go.mozilla.org/autograph/signer/gpg2
+
+showcoveragegpg2: testgpg2
+	$(GO) tool cover -html=coverage_gpg2.out
+
+testrsapss:
+	$(GO) test -v -covermode=count -coverprofile=coverage_rsapss.out go.mozilla.org/autograph/signer/rsapss
+
+showcoveragersapss: testrsapss
+	$(GO) tool cover -html=coverage_rsapss.out
+
+test: testautograph testsigner testcs testxpi testapk testmar testpgp testgpg2 testrsapss
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 

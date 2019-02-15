@@ -55,15 +55,31 @@ type RSACacheConfig struct {
 
 // Configuration defines the parameters of a signer
 type Configuration struct {
-	ID                      string         `json:"id"`
-	Type                    string         `json:"type"`
-	Mode                    string         `json:"mode"`
-	PrivateKey              string         `json:"privatekey,omitempty"`
-	PublicKey               string         `json:"publickey,omitempty"`
-	Certificate             string         `json:"certificate,omitempty"`
-	X5U                     string         `json:"x5u,omitempty"`
-	RSACacheConfig          RSACacheConfig `json:"rsacacheconfig,omitempty"`
-	NoPKCS7SignedAttributes bool           `json:"nopkcs7signedattributes,omitempty"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	Mode        string `json:"mode"`
+	PrivateKey  string `json:"privatekey,omitempty"`
+	PublicKey   string `json:"publickey,omitempty"`
+	Certificate string `json:"certificate,omitempty"`
+
+	// X5U (X.509 URL) is a URL that points to an X.509 public key
+	// certificate chain to validate a content signature
+	X5U string `json:"x5u,omitempty"`
+
+	// RSACacheConfig for XPI signers this specifies config for an
+	// RSA cache
+	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty"`
+	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
+	// attributes and use a legacy PKCS7 digest
+	NoPKCS7SignedAttributes bool `json:"nopkcs7signedattributes,omitempty"`
+
+	// KeyID is the fingerprint of the gpg key or subkey to use
+	// e.g. 0xA2B637F535A86009 for the gpg2 signer type
+	KeyID string `json:"keyid,omitempty"`
+
+	// Passphrase is the optional passphrase to use decrypt the
+	// gpg secret key for the gpg2 signer type
+	Passphrase string `json:"passphrase,omitempty"`
 
 	isHsmAvailable bool
 }
@@ -76,6 +92,13 @@ func (cfg *Configuration) HSMIsAvailable() {
 // Signer is an interface to a configurable issuer of digital signatures
 type Signer interface {
 	Config() Configuration
+}
+
+// StatefulSigner is an interface to an issuer of digital signatures
+// that stores out of memory state (files, HSM or DB connections,
+// etc.) to clean up at exit
+type StatefulSigner interface {
+	AtExit() error
 }
 
 // HashSigner is an interface to a signer able to sign hashes

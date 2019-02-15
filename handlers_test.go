@@ -411,7 +411,7 @@ func TestAuthWithoutSigner(t *testing.T) {
 		},
 	}
 	tmpag := newAutographer(1)
-	tmpag.addSigners(conf.Signers, false)
+	tmpag.addSigners(conf.Signers)
 	tmpag.addAuthorizations(authorizations)
 	tmpag.makeSignerIndex()
 	if _, ok := tmpag.signerIndex[authorizations[0].ID+"+"]; ok {

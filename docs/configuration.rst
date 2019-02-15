@@ -20,12 +20,12 @@ HAWK nonce cache size to prevent replay attacks:
 	server:
 		listen: "192.168.1.28:8000"
 		noncecachesize: 524288
+		idletimeout: 60s
+		readtimeout: 60s
+		writetimeout: 60s
 
 Use flag `-p` to provide an alternate port and override any port
 specified in the config.
-
-Use flag `--skip-hsm` to ignore "key not found" errors loading a
-config. Use to test locally without an HSM.
 
 Statsd
 ------

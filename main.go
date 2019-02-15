@@ -14,7 +14,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/pkg/errors"
@@ -28,8 +30,10 @@ import (
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
+	"go.mozilla.org/autograph/signer/rsapss"
 	"go.mozilla.org/autograph/signer/xpi"
 
 	"go.mozilla.org/sops"
@@ -44,6 +48,9 @@ type configuration struct {
 	Server struct {
 		Listen         string
 		NonceCacheSize int
+		IdleTimeout    time.Duration
+		ReadTimeout    time.Duration
+		WriteTimeout   time.Duration
 	}
 	Statsd struct {
 		Addr      string
@@ -54,7 +61,6 @@ type configuration struct {
 	Signers        []signer.Configuration
 	Authorizations []authorization
 	Monitoring     authorization
-	isHsmEnabled   bool
 }
 
 // An autographer is a running instance of an autograph service,
@@ -82,7 +88,6 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 		cfgFile string
 		port    string
 		err     error
-		skipHSM bool
 		fset    = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
 	)
 
@@ -90,7 +95,6 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	fset.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
 	fset.BoolVar(&debug, "D", false, "Print debug logs")
-	fset.BoolVar(&skipHSM, "skip-hsm", false, "Skip loading HSM config and signers")
 	fset.Parse(args)
 
 	err = conf.loadFromFile(cfgFile)
@@ -106,13 +110,6 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 		listen = conf.Server.Listen
 	}
 
-	if skipHSM {
-		conf.isHsmEnabled = false
-		log.Info("Skipping loading the HSM config")
-	} else {
-		conf.isHsmEnabled = true
-	}
-
 	return
 }
 
@@ -126,8 +123,8 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	// and store them into the autographer handler
 	ag = newAutographer(conf.Server.NonceCacheSize)
 
-	// initialize the hsm if enabled and a configuration is defined
-	if conf.isHsmEnabled && conf.HSM.Path != "" {
+	// initialize the hsm if defined in configuration
+	if conf.HSM.Path != "" {
 		tmpCtx, err := crypto11.Configure(&conf.HSM)
 		if err != nil {
 			log.Fatal(err)
@@ -148,7 +145,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 		}
 	}
 
-	err = ag.addSigners(conf.Signers, conf.isHsmEnabled)
+	err = ag.addSigners(conf.Signers)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -170,6 +167,8 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 		os.Exit(0)
 	}
 
+	ag.startCleanupHandler()
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", handleHeartbeat).Methods("GET")
 	router.HandleFunc("/__lbheartbeat__", handleHeartbeat).Methods("GET")
@@ -180,7 +179,10 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
 
 	server := &http.Server{
-		Addr: listen,
+		IdleTimeout:  conf.Server.IdleTimeout,
+		ReadTimeout:  conf.Server.ReadTimeout,
+		WriteTimeout: conf.Server.WriteTimeout,
+		Addr:         listen,
 		Handler: handleMiddlewares(
 			router,
 			setRequestID(),
@@ -189,7 +191,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 			logRequest(),
 		),
 	}
-	log.Println("starting autograph on", listen)
+	log.Infof("starting autograph on %s with timeouts: idle %s read %s write %s", listen, conf.Server.IdleTimeout, conf.Server.ReadTimeout, conf.Server.WriteTimeout)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
@@ -248,10 +250,33 @@ func (a *autographer) disableDebug() {
 	return
 }
 
+// startCleanupHandler sets up a chan to catch int, kill, term
+// signals and run signer AtExit functions
+func (a *autographer) startCleanupHandler() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+	go func() {
+		sig := <-c
+		log.Infof("main: received signal %s; cleaning up signers", sig)
+		for _, s := range a.signers {
+			statefulSigner, ok := s.(signer.StatefulSigner)
+			if !ok {
+				continue
+			}
+			err := statefulSigner.AtExit()
+			if err != nil {
+				log.Errorf("main: error in signer %s AtExit fn: %s", s.Config().ID, err)
+			}
+		}
+		os.Exit(0)
+	}()
+}
+
 // addSigners initializes each signer specified in the configuration by parsing
 // and loading their private keys. The signers are then copied over to the
 // autographer handler.
-func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnabled bool) error {
+func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 	sids := make(map[string]bool)
 	for _, signerConf := range signerConfs {
 		// forbid signers with the same ID
@@ -260,9 +285,9 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 		}
 		sids[signerConf.ID] = true
 		var (
-			s   signer.Signer
+			s           signer.Signer
 			statsClient *signer.StatsClient
-			err error
+			err         error
 		)
 		if a.stats != nil {
 			statsClient, err = signer.NewStatsClient(signerConf, a.stats)
@@ -289,7 +314,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 			}
 		case mar.Type:
 			s, err = mar.New(signerConf)
-			if !isHsmEnabled && err != nil && strings.HasPrefix(err.Error(), "mar: failed to parse private key: no suitable key found") {
+			if err != nil && strings.HasPrefix(err.Error(), "mar: failed to parse private key: no suitable key found") {
 				log.Infof("Skipping signer %q from HSM", signerConf.ID)
 				continue
 			} else if err != nil {
@@ -297,6 +322,16 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration, isHsmEnable
 			}
 		case pgp.Type:
 			s, err = pgp.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case gpg2.Type:
+			s, err = gpg2.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case rsapss.Type:
+			s, err = rsapss.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
