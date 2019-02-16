@@ -10,10 +10,17 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Handler handles a database connection
 type Handler struct {
 	*sql.DB
 }
 
+// Transaction owns a sql transaction
+type Transaction struct {
+	*sql.Tx
+}
+
+// Config holds the parameters to connect to a database
 type Config struct {
 	Name         string
 	User         string

@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"database/sql"
 	"encoding/pem"
 	"fmt"
 	"math/big"
@@ -48,50 +47,12 @@ func (s *ContentSigner) findEE(conf signer.Configuration) (err error) {
 // keyTpl is used to decide which key type should be made. In practice, the issuer's
 // public key is passed in that variable such that the end-entity is of the same type.
 func (s *ContentSigner) makeEE(conf signer.Configuration, keyTpl interface{}) (err error) {
-	// we didn't get a key, let's make a new one
-	var tx *sql.Tx
-	if s.db != nil {
-		// if a db is present, first create a db transaction to lock the row for update
-		tx, err = s.db.Begin()
-		if err != nil {
-			err = errors.Wrapf(err, "failed to create transaction to update end entity for signer %q", s.ID)
-		}
-		// lock the table
-		_, err = tx.Exec("SELECT * FROM endentities FOR UPDATE")
-		if err != nil {
-			err = errors.Wrap(err, "failed to lock endentities table for update")
-		}
-	}
 	// create a label and generate the key
 	s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102"))
 	s.eePriv, s.eePub, err = conf.MakeKey(keyTpl, s.eeLabel)
 	if err != nil {
 		err = errors.Wrap(err, "failed to generate key for end entity")
 		return
-	}
-	if s.db != nil {
-		// if a db is present, insert the label into a new row of the endentities table
-		_, err = tx.Exec(`INSERT INTO endentities(label, signer_id, is_current, created_at)
-					VALUES ($1, $2, $3, $4)`, s.eeLabel, s.ID, true, time.Now().UTC())
-		if err != nil {
-			tx.Rollback()
-			err = errors.Wrap(err, "failed to insert key into database")
-			return
-		}
-		// mark all other keys for this signer as no longer current
-		_, err = tx.Exec("UPDATE endentities SET is_current=FALSE WHERE signer_id=$1 and label!=$2",
-			s.ID, s.eeLabel)
-		if err != nil {
-			err = errors.Wrap(err, "failed to update is_current status of other keys in database")
-			tx.Rollback()
-			return
-		}
-		err = tx.Commit()
-		if err != nil {
-			err = errors.Wrap(err, "failed to commit transaction in database")
-			tx.Rollback()
-			return
-		}
 	}
 	return
 }
@@ -113,7 +74,6 @@ func (s *ContentSigner) makeChainAndX5U() (err error) {
 	if err != nil {
 		return errors.Wrap(err, "failed to download new chain")
 	}
-	s.db.UpdateX5U(newX5U, s.eeLabel, s.ID)
 	s.X5U = newX5U
 	return
 }

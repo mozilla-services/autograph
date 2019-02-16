@@ -9,7 +9,6 @@ import (
 	"encoding/asn1"
 	"hash"
 	"io"
-	"strings"
 	"time"
 
 	"go.mozilla.org/autograph/database"
@@ -112,9 +111,17 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 
 	// the end-entity key is not stored in configuration but may already
 	// exist in an hsm, if present. Try to retrieve it, or make a new one.
+	var tx *database.Transaction
+	if s.db != nil {
+		tx, err = s.db.BeginEndEntityOperations()
+		if err != nil {
+			return nil, errors.Wrap(err, "contentsignaturepki: failed to lookup end-entity in database")
+		}
+	}
 	err = s.findEE(conf)
 	if err != nil {
 		if err == database.ErrNoSuitableEEFound {
+			log.Printf("contentsignaturepki: making new end-entity for signer %q", s.ID)
 			err = s.makeEE(conf, s.issuerPub)
 			if err != nil {
 				return nil, errors.Wrap(err, "contentsignaturepki: failed to make suitable end-entity")
@@ -122,6 +129,13 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 			err = s.makeChainAndX5U()
 			if err != nil {
 				return nil, errors.Wrap(err, "contentsignaturepki: failed to make chain and x5u for end-entity")
+			}
+			if tx != nil {
+				hsmHandle := signer.GetPrivKeyHandle(s.eePriv)
+				err = tx.InsertEE(s.X5U, s.eeLabel, s.ID, hsmHandle)
+				if err != nil {
+					return nil, errors.Wrap(err, "contentsignaturepki: failed to insert new EE into database")
+				}
 			}
 		} else {
 			return nil, errors.Wrap(err, "contentsignaturepki: failed to find suitable end-entity")
@@ -132,13 +146,12 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	// upload it and re-verify
 	err = verifyX5U(s.X5U)
 	if err != nil {
-		if strings.HasPrefix(err.Error(), "failed to retrieve x5u") {
-			err = s.makeChainAndX5U()
-			if err != nil {
-				return nil, errors.Wrap(err, "contentsignaturepki: failed to make chain and x5u for end-entity")
-			}
-		} else {
-			return nil, errors.Wrap(err, "contentsignaturepki: failed to verify x5u")
+		return nil, errors.Wrap(err, "contentsignaturepki: failed to verify x5u")
+	}
+	if tx != nil {
+		err = tx.End()
+		if err != nil {
+			return nil, errors.Wrap(err, "contentsignaturepki: failed to commit end-entity operations in database")
 		}
 	}
 	return
