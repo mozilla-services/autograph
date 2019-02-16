@@ -116,10 +116,10 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if s.db != nil {
 		tx, err = s.db.BeginEndEntityOperations()
 		if err != nil {
-			return nil, errors.Wrap(err, "contentsignaturepki: failed to lookup end-entity in database")
+			return nil, errors.Wrap(err, "contentsignaturepki: failed to begin end-entity db operations")
 		}
 	}
-	err = s.findEE(conf)
+	err = s.findEE(conf, tx)
 	if err != nil {
 		if err == database.ErrNoSuitableEEFound {
 			log.Printf("contentsignaturepki: making new end-entity for signer %q", s.ID)

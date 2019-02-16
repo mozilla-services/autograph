@@ -1,4 +1,4 @@
-package database
+package database // import "go.mozilla.org/autograph/database"
 
 import (
 	"database/sql"
@@ -6,6 +6,9 @@ import (
 	"log"
 	"net/url"
 	"time"
+
+	// lib/pq is the postgres driver
+	_ "github.com/lib/pq"
 
 	"github.com/pkg/errors"
 )
@@ -40,7 +43,7 @@ func Connect(config Config) (*Handler, error) {
 	url := fmt.Sprintf("postgres://%s@%s/%s?sslmode=%s", userPass.String(), config.Host, config.Name, config.SSLMode)
 	dbfd, err := sql.Open("postgres", url)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to open database connection")
+		return nil, errors.Wrap(err, "failed to open database connection")
 	}
 	if config.MaxOpenConns > 0 {
 		dbfd.SetMaxOpenConns(config.MaxOpenConns)

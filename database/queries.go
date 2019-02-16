@@ -1,4 +1,4 @@
-package database
+package database // import "go.mozilla.org/autograph/database"
 
 import (
 	"database/sql"
@@ -11,25 +11,6 @@ var (
 	// ErrNoSuitableEEFound is returned when no suitable key is found in database
 	ErrNoSuitableEEFound = errors.New("no suitable key found in database")
 )
-
-// GetLabelOfLatestEE returns the label of the latest end-entity for the specified signer
-// that is no older than a given duration
-func (db *Handler) GetLabelOfLatestEE(signerID string, youngerThan time.Duration) (label, x5u string, err error) {
-	var nullableX5U sql.NullString
-	maxAge := time.Now().Add(-youngerThan)
-	err = db.QueryRow(`SELECT label, x5u FROM endentities
-				WHERE is_current=TRUE AND signer_id=$1 AND created_at > $2
-				ORDER BY created_at DESC LIMIT 1`,
-		signerID, maxAge).Scan(&label, &nullableX5U)
-	if err == sql.ErrNoRows {
-		return "", "", ErrNoSuitableEEFound
-	}
-	x5uValue, err := nullableX5U.Value()
-	if x5uValue != nil {
-		x5u = x5uValue.(string)
-	}
-	return
-}
 
 // BeginEndEntityOperations creates a database transaction that locks the endentities table,
 // this should be called before doing any lookup or generation operation with endentities.
@@ -46,13 +27,32 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 		return nil, err
 	}
 	// lock the table
-	_, err = tx.Exec("LOCK TABLE endentities IN ROW EXCLUSIVE MODE")
+	_, err = tx.Exec("LOCK TABLE endentities IN SHARE MODE")
 	if err != nil {
 		err = errors.Wrap(err, "failed to lock endentities table")
 		tx.Rollback()
 		return nil, err
 	}
 	return &Transaction{tx}, nil
+}
+
+// GetLabelOfLatestEE returns the label of the latest end-entity for the specified signer
+// that is no older than a given duration
+func (tx *Transaction) GetLabelOfLatestEE(signerID string, youngerThan time.Duration) (label, x5u string, err error) {
+	var nullableX5U sql.NullString
+	maxAge := time.Now().Add(-youngerThan)
+	err = tx.QueryRow(`SELECT label, x5u FROM endentities
+				WHERE is_current=TRUE AND signer_id=$1 AND created_at > $2
+				ORDER BY created_at DESC LIMIT 1`,
+		signerID, maxAge).Scan(&label, &nullableX5U)
+	if err == sql.ErrNoRows {
+		return "", "", ErrNoSuitableEEFound
+	}
+	x5uValue, err := nullableX5U.Value()
+	if x5uValue != nil {
+		x5u = x5uValue.(string)
+	}
+	return
 }
 
 // InsertEE uses an existing transaction to insert an end-entity in database

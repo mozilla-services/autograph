@@ -18,14 +18,14 @@ import (
 
 // findEE searches the database for an end-entity key that is currently
 // valid for this signer and is not older than cfg.Validity days
-func (s *ContentSigner) findEE(conf signer.Configuration) (err error) {
+func (s *ContentSigner) findEE(conf signer.Configuration, tx *database.Transaction) (err error) {
 	var tmpX5U string
 	if s.db == nil {
 		// no database, no chance to find an existing key
 		return database.ErrNoSuitableEEFound
 	}
 	// search the database for the label of an end-entity private key that is still valid.
-	s.eeLabel, tmpX5U, err = s.db.GetLabelOfLatestEE(s.ID, s.validity)
+	s.eeLabel, tmpX5U, err = tx.GetLabelOfLatestEE(s.ID, s.validity)
 	if err != nil {
 		return
 	}
