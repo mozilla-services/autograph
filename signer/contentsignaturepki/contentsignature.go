@@ -125,7 +125,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 			log.Printf("contentsignaturepki: making new end-entity for signer %q", s.ID)
 			// create a label and generate the key
 			s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102"))
-			s.eePriv, s.eePub, err = conf.MakeKey(keyTpl, s.eeLabel)
+			s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, s.eeLabel)
 			if err != nil {
 				err = errors.Wrap(err, "failed to generate key for end entity")
 				return
