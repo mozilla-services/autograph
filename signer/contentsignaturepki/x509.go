@@ -42,21 +42,6 @@ func (s *ContentSigner) findEE(conf signer.Configuration) (err error) {
 	return
 }
 
-// makeEE generates an end-entity key pair, either in memory, or in HSM & database if those are available.
-//
-// keyTpl is used to decide which key type should be made. In practice, the issuer's
-// public key is passed in that variable such that the end-entity is of the same type.
-func (s *ContentSigner) makeEE(conf signer.Configuration, keyTpl interface{}) (err error) {
-	// create a label and generate the key
-	s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102"))
-	s.eePriv, s.eePub, err = conf.MakeKey(keyTpl, s.eeLabel)
-	if err != nil {
-		err = errors.Wrap(err, "failed to generate key for end entity")
-		return
-	}
-	return
-}
-
 // makeChainAndX5U makes a certificate using the end-entity public key,
 // uploads the chain to its destination and creates an X5U download URL
 func (s *ContentSigner) makeChainAndX5U() (err error) {

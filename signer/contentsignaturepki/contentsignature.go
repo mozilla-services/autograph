@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/asn1"
+	"fmt"
 	"hash"
 	"io"
 	"time"
@@ -122,15 +123,20 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if err != nil {
 		if err == database.ErrNoSuitableEEFound {
 			log.Printf("contentsignaturepki: making new end-entity for signer %q", s.ID)
-			err = s.makeEE(conf, s.issuerPub)
+			// create a label and generate the key
+			s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102"))
+			s.eePriv, s.eePub, err = conf.MakeKey(keyTpl, s.eeLabel)
 			if err != nil {
-				return nil, errors.Wrap(err, "contentsignaturepki: failed to make suitable end-entity")
+				err = errors.Wrap(err, "failed to generate key for end entity")
+				return
 			}
+			// make the certificate and upload the chain
 			err = s.makeChainAndX5U()
 			if err != nil {
 				return nil, errors.Wrap(err, "contentsignaturepki: failed to make chain and x5u for end-entity")
 			}
 			if tx != nil {
+				// insert it in database
 				hsmHandle := signer.GetPrivKeyHandle(s.eePriv)
 				err = tx.InsertEE(s.X5U, s.eeLabel, s.ID, hsmHandle)
 				if err != nil {
