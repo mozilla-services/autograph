@@ -98,7 +98,11 @@ jobs:
   integration-test:
     docker:
       - image: docker:18.02.0-ce
+      - image: circleci/postgres:10
+        environment:
+          POSTGRES_DB: autograph
     steps:
+      - checkout
       - setup_remote_docker
       - restore_cache:
           key: v2-{{ .Branch }}
@@ -108,6 +112,19 @@ jobs:
               gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
               gunzip -c /go/src/app/cache/docker-monitor-build.tgz | docker load
               gunzip -c /go/src/app/cache/docker-softhsm-build.tgz | docker load
+      - run:
+        name: Waiting for Postgres to be ready
+        command: |
+          for i in `seq 1 10`;
+          do
+            nc -z localhost 5432 && echo Success && exit 0
+            echo -n .
+            sleep 1
+          done
+          echo Failed waiting for Postgres && exit 1
+      - run:
+          name: configuring Postgres
+          command: psql -U postgres -d autograph -a -f database/schema.sql
       - run:
           name: Run Autograph with default configuration
           command: |
