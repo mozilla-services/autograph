@@ -20,8 +20,7 @@ RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 --id 12345678 --import /go/src/go.mozilla.org/autograph/tools/softhsm/extensions-ecdsa-pk8.pem
 
 # genkeys
-RUN cd /go/src/go.mozilla.org/autograph/ && \
-    go run tools/softhsm/genkeys.go
+RUN cd /go/src/go.mozilla.org/autograph/tools/softhsm/ && go run genkeys.go
 
 RUN cp /go/src/go.mozilla.org/autograph/autograph.softhsm.yaml /app/autograph.softhsm.yaml
 
