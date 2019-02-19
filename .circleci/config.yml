@@ -134,7 +134,7 @@ jobs:
           name: check monitor endpoint works
           command: |
              docker run --rm --name autograph-monitor-test --network container:autograph-app monitor:build
-             docker run --rm --name autograph-monitor-test-hsm --rm --network container:autograph-app-hsm monitor:build
+             docker run --rm --name autograph-monitor-test-hsm --network container:autograph-app-hsm monitor:build
       - run:
           name: check XPI signing works
           command: |
