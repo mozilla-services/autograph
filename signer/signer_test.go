@@ -158,7 +158,7 @@ func TestParseEmptyPrivateKey(t *testing.T) {
 
 func TestEnableHSM(t *testing.T) {
 	tcfg := new(Configuration)
-	tcfg.HSMIsAvailable()
+	tcfg.HsmIsAvailable(nil)
 	if !tcfg.isHsmAvailable {
 		t.Fatal("expected isHsmAvailable to be set to true but still false")
 	}
@@ -189,7 +189,7 @@ func TestHSMNotAvailable(t *testing.T) {
 		}
 	}()
 	tcfg := new(Configuration)
-	tcfg.HSMIsAvailable()
+	tcfg.HsmIsAvailable(nil)
 	tcfg.GetPrivateKey()
 }
 
