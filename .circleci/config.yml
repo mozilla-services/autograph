@@ -98,9 +98,6 @@ jobs:
   integration-test:
     docker:
       - image: docker:18.02.0-ce
-      - image: circleci/postgres:10
-        environment:
-          POSTGRES_DB: autograph
     steps:
       - checkout
       - setup_remote_docker
@@ -115,6 +112,8 @@ jobs:
       - run:
           name: Waiting for Postgres to be ready
           command: |
+            docker pull postgres:10
+            docker run -p 5432:5432 -e POSTGRES_DB=autograph -d --name postgres postgres:10
             for i in `seq 1 10`;
             do
               nc -z localhost 5432 && echo Success && exit 0
@@ -124,7 +123,9 @@ jobs:
             echo Failed waiting for Postgres && exit 1
       - run:
           name: configuring Postgres
-          command: psql -U postgres -d autograph -a -f database/schema.sql
+          command: |
+            apk --update add postgresql-client
+            psql -U postgres -h localhost -p 5432 -d autograph -a -f /root/project/database/schema.sql
       - run:
           name: Run Autograph with default configuration
           command: |
@@ -133,7 +134,7 @@ jobs:
       - run:
           name: Run autograph with hsm configuration
           command: |
-              docker run -d --name autograph-app-hsm softhsm:build
+              docker run -d --name autograph-app-hsm --network postgres softhsm:build
           background: true
       - run:
           name: wait for apps to run
@@ -151,12 +152,12 @@ jobs:
           name: check monitor endpoint works
           command: |
              docker run --rm --name autograph-monitor-test --network container:autograph-app monitor:build
-             docker run --rm --name autograph-monitor-test-hsm --network container:autograph-app-hsm monitor:build
+             docker run --rm --name autograph-monitor-test-hsm --network container:postgres monitor:build
       - run:
           name: check XPI signing works
           command: |
               docker run --rm --name autograph-sign-xpi-test --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
-              docker run --rm --name autograph-sign-xpi-test-hsm --network container:autograph-app-hsm --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client softhsm:build /bin/sh -c 'wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi'
+              docker run --rm --name autograph-sign-xpi-test-hsm --network container:postgres --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client softhsm:build /bin/sh -c 'wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi'
       - run:
           name: check APK signing works
           command: |
