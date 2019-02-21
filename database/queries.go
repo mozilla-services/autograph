@@ -23,17 +23,25 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 	tx, err := db.Begin()
 	if err != nil {
 		err = errors.Wrap(err, "failed to create transaction")
-		tx.Rollback()
 		return nil, err
 	}
 	// lock the table
-	_, err = tx.Exec("LOCK TABLE endentities IN SHARE MODE")
+	_, err = tx.Exec("LOCK TABLE endentities_lock IN SHARE MODE")
 	if err != nil {
 		err = errors.Wrap(err, "failed to lock endentities table")
 		tx.Rollback()
 		return nil, err
 	}
-	return &Transaction{tx}, nil
+	var id uint64
+	err = tx.QueryRow(`INSERT INTO endentities_lock(id, is_locked, created_at)
+				VALUES (DEFAULT, $1, $2) RETURNING id`,
+		true, time.Now().UTC()).Scan(&id)
+	if err != nil {
+		tx.Rollback()
+		err = errors.Wrap(err, "failed to lock endentities table")
+		return nil, err
+	}
+	return &Transaction{tx, id}, nil
 }
 
 // GetLabelOfLatestEE returns the label of the latest end-entity for the specified signer
@@ -77,7 +85,14 @@ func (tx *Transaction) InsertEE(x5u, label, signerID string, hsmHandle uint) (er
 
 // End commits a transaction
 func (tx *Transaction) End() error {
-	err := tx.Commit()
+	_, err := tx.Exec("UPDATE endentities_lock SET is_locked=FALSE, freed_at=$1 WHERE id=$2",
+		time.Now().UTC(), tx.ID)
+	if err != nil {
+		err = errors.Wrap(err, "failed to update is_current status of keys in database")
+		tx.Rollback()
+		return err
+	}
+	err = tx.Commit()
 	if err != nil {
 		err = errors.Wrap(err, "failed to commit transaction in database")
 		tx.Rollback()

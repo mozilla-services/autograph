@@ -11,7 +11,6 @@ import (
 	"crypto/elliptic"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/ThalesIgnite/crypto11"
 )
@@ -28,9 +27,8 @@ func main() {
 	if len(slots) < 1 {
 		log.Fatal("No slot found")
 	}
-	suffix := fmt.Sprintf("%d", time.Now().Unix())
 
-	keyName := []byte("testrsa2048-" + suffix)
+	keyName := []byte("testrsa2048")
 	fmt.Printf("making %q: ", keyName)
 	rsakey, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], keyName, keyName, 2048)
 	if err != nil {
@@ -39,7 +37,7 @@ func main() {
 		fmt.Printf("%+v\n", rsakey)
 	}
 
-	keyName = []byte("testrsa4096-" + suffix)
+	keyName = []byte("testrsa4096")
 	fmt.Printf("making %q: ", keyName)
 	rsakey2, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], keyName, keyName, 4096)
 	if err != nil {
@@ -48,7 +46,7 @@ func main() {
 		fmt.Printf("%+v\n", rsakey2)
 	}
 
-	keyName = []byte("testecdsap256-" + suffix)
+	keyName = []byte("testecdsap256")
 	fmt.Printf("making %q: ", keyName)
 	ecdsakey, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], keyName, keyName, elliptic.P256())
 	if err != nil {
@@ -57,7 +55,7 @@ func main() {
 		fmt.Printf("%+v\n", ecdsakey)
 	}
 
-	keyName = []byte("testecdsap384-" + suffix)
+	keyName = []byte("testecdsap384")
 	fmt.Printf("making %q: ", keyName)
 	p384key, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], keyName, keyName, elliptic.P384())
 	if err != nil {

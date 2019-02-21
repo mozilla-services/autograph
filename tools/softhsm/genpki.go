@@ -8,6 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"time"
@@ -73,8 +74,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("=== Root ===\nHSM key name: %s\n%s\n\n", rootKeyName, rootPem.Bytes())
-
 	interKeyName := []byte(fmt.Sprintf("csinter%d", time.Now().Unix()))
 	interPriv, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], interKeyName, interKeyName, elliptic.P384())
 	if err != nil {
@@ -96,26 +95,47 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("=== Intermediate ===\nHSM key name: %s\n%s\n", interKeyName, interPem.Bytes())
-
 	// verify the chain
 	roots := x509.NewCertPool()
 	ok := roots.AppendCertsFromPEM(rootPem.Bytes())
 	if !ok {
-		err = errors.New("failed to load root cert into truststore")
-		return
+		log.Fatal("failed to load root cert into truststore")
 	}
 	opts := x509.VerifyOptions{
-		Roots: roots,
+		Roots:     roots,
+		KeyUsages: caTpl.ExtKeyUsage,
 	}
 	inter, err := x509.ParseCertificate(interCertBytes)
 	if err != nil {
-		err = errors.Wrap(err, "failed to parse intermediate certificate")
-		return
+		log.Fatal(errors.Wrap(err, "failed to parse intermediate certificate"))
 	}
 	_, err = inter.Verify(opts)
 	if err != nil {
-		err = errors.Wrap(err, "failed to verify intermediate chain to root")
-		return
+		log.Fatal(errors.Wrap(err, "failed to verify intermediate chain to root"))
 	}
+
+	rootTmpfile, err := ioutil.TempFile("", "csroot")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if _, err := rootTmpfile.Write(rootPem.Bytes()); err != nil {
+		log.Fatal(err)
+	}
+	if err := rootTmpfile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	interTmpfile, err := ioutil.TempFile("", "csinter")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if _, err := interTmpfile.Write(interPem.Bytes()); err != nil {
+		log.Fatal(err)
+	}
+	if err := interTmpfile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("root key name: %s\nroot cert path: %s\ninter key name: %s\ninter cert path: %s\n",
+		rootKeyName, rootTmpfile.Name(), interKeyName, interTmpfile.Name())
 }

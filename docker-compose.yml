@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  db:
+    container_name: autograph_db
+    image: autograph:db
+    build:
+      context: database/
+      dockerfile: postgres.Dockerfile
+    environment:
+      - POSTGRES_DB=autograph
+    ports:
+      - "5432:5432"
+
+  app:
+    image: app:build
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=disable
+    links:
+      - db
+    ports:
+      - "8000:8000"
+    command: autograph -c /app/autograph.yaml
+
+  app-hsm:
+    image: softhsm:build
+    build:
+      context: tools/softhsm/
+      dockerfile: Dockerfile
+    environment:
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=disable
+    links:
+      - db
+    ports:
+      - "8001:8001"
+    command: autograph -c /app/autograph.softhsm.yaml -p 8001

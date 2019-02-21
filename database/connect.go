@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 	"time"
 
 	// lib/pq is the postgres driver
@@ -21,6 +22,7 @@ type Handler struct {
 // Transaction owns a sql transaction
 type Transaction struct {
 	*sql.Tx
+	ID uint64
 }
 
 // Config holds the parameters to connect to a database
@@ -36,12 +38,18 @@ type Config struct {
 
 // Connect creates a database connection and returns a handler
 func Connect(config Config) (*Handler, error) {
-	userPass := url.UserPassword(config.User, config.Password)
-	if config.SSLMode == "" {
-		config.SSLMode = "disable"
+	var dsn string
+	if os.Getenv("AUTOGRAPH_DB_DSN") != "" {
+		dsn = os.Getenv("AUTOGRAPH_DB_DSN")
+	} else {
+		userPass := url.UserPassword(config.User, config.Password)
+		if config.SSLMode == "" {
+			config.SSLMode = "disable"
+		}
+		dsn = fmt.Sprintf("postgres://%s@%s/%s?sslmode=%s",
+			userPass.String(), config.Host, config.Name, config.SSLMode)
 	}
-	url := fmt.Sprintf("postgres://%s@%s/%s?sslmode=%s", userPass.String(), config.Host, config.Name, config.SSLMode)
-	dbfd, err := sql.Open("postgres", url)
+	dbfd, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open database connection")
 	}

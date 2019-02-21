@@ -143,7 +143,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 		// start a monitoring function that panics if
 		// the db becomes inaccessible
 		go ag.db.Monitor()
-		log.Printf("database connection to %s/%s established", conf.Database.Host, conf.Database.Name)
+		log.Print("database connection established")
 	}
 
 	// initialize the hsm if a configuration is defined
