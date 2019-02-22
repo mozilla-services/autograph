@@ -32,9 +32,11 @@ build-softhsm-container:
 test-container:
 	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph test
 
-
 run-container:
 	docker run --name autograph-dev --rm -d --net host app:build
+
+compose:
+	docker-compose up --build
 
 vendor:
 	govend -u --prune
@@ -48,8 +50,10 @@ tag: all
 
 lint:
 	$(GOLINT) go.mozilla.org/autograph \
+		go.mozilla.org/autograph/database \
 		go.mozilla.org/autograph/signer \
 		go.mozilla.org/autograph/signer/contentsignature \
+		go.mozilla.org/autograph/signer/contentsignaturepki \
 		go.mozilla.org/autograph/signer/xpi \
 		go.mozilla.org/autograph/signer/apk \
 		go.mozilla.org/autograph/signer/mar \
@@ -59,9 +63,11 @@ lint:
 
 vet:
 	$(GO) vet go.mozilla.org/autograph
+	$(GO) vet go.mozilla.org/autograph/database
 	$(GO) vet go.mozilla.org/autograph/signer
 	$(GO) vet go.mozilla.org/autograph/signer/apk
 	$(GO) vet go.mozilla.org/autograph/signer/contentsignature
+	$(GO) vet go.mozilla.org/autograph/signer/contentsignaturepki
 	$(GO) vet go.mozilla.org/autograph/signer/mar
 	$(GO) vet go.mozilla.org/autograph/signer/xpi
 	$(GO) vet go.mozilla.org/autograph/signer/apk
@@ -71,10 +77,10 @@ vet:
 	$(GO) vet go.mozilla.org/autograph/signer/rsapss
 
 fmt-diff:
-	gofmt -d *.go signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
+	gofmt -d *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
 
 fmt-fix:
-	gofmt -w *.go signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
+	gofmt -w *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
 
 testautograph:
 	$(GO) test -v -covermode=count -coverprofile=coverage_autograph.out go.mozilla.org/autograph
@@ -88,14 +94,20 @@ testsigner:
 showcoveragesigner: testsigner
 	$(GO) tool cover -html=coverage_signer.out
 
-testcs:
-	$(GO) test -v -covermode=count -coverprofile=coverage_cs.out go.mozilla.org/autograph/signer/contentsignature
-
 testmonitor:
 	$(GO) test -v -covermode=count -coverprofile=coverage_monitor.out go.mozilla.org/autograph/tools/autograph-monitor
 
+testcs:
+	$(GO) test -v -covermode=count -coverprofile=coverage_cs.out go.mozilla.org/autograph/signer/contentsignature
+
 showcoveragecs: testcs
 	$(GO) tool cover -html=coverage_cs.out
+
+testcspki:
+	$(GO) test -v -covermode=count -coverprofile=coverage_cs.out go.mozilla.org/autograph/signer/contentsignaturepki
+
+showcoveragecspki: testcspki
+	$(GO) tool cover -html=coverage_cspki.out
 
 testxpi:
 	$(GO) test -v -covermode=count -coverprofile=coverage_xpi.out go.mozilla.org/autograph/signer/xpi
@@ -133,7 +145,7 @@ testrsapss:
 showcoveragersapss: testrsapss
 	$(GO) tool cover -html=coverage_rsapss.out
 
-test: testautograph testsigner testcs testxpi testapk testmar testpgp testgpg2 testrsapss
+test: testautograph testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testrsapss
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 

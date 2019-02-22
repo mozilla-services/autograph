@@ -10,6 +10,7 @@ import (
 	"crypto"
 	"crypto/dsa"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -360,7 +361,15 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 	// no hsm, make keys in memory
 	switch keyTpl.(type) {
 	case *ecdsa.PublicKey:
-		priv, err = ecdsa.GenerateKey(keyTpl.(*ecdsa.PublicKey), rand.Reader)
+		switch keyTpl.(*ecdsa.PublicKey).Params().Name {
+		case "P-256":
+			priv, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		case "P-384":
+			priv, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+		default:
+			return nil, nil, fmt.Errorf("unsupported curve %q",
+				keyTpl.(*ecdsa.PublicKey).Params().Name)
+		}
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in memory")
 		}

@@ -95,18 +95,18 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	}
 	s.issuerPriv, s.issuerPub, s.rand, _, err = conf.GetKeysAndRand()
 	if err != nil {
-		return nil, errors.Wrapf(err, "contentsignaturepki: failed to retrieve signer %q", conf.PrivateKey)
+		return nil, errors.Wrapf(err, "contentsignaturepki: failed to get keys and rand for signer %q", conf.ID)
 	}
 	// if validity is undef, default to 30 days
-	if conf.Validity == 0 {
+	if s.validity == 0 {
 		log.Printf("contentsignaturepki: no validity configured for signer %s, defaulting to 30 days", s.ID)
-		conf.Validity = 720 * time.Hour
+		s.validity = 720 * time.Hour
 	}
 
 	switch s.issuerPub.(type) {
 	case *ecdsa.PublicKey:
 	default:
-		return nil, errors.New("contentsignaturepki: invalid key for CA cert, must be ecdsa")
+		return nil, errors.New("contentsignaturepki: invalid public key type for issuer, must be ecdsa")
 	}
 	s.Mode = s.getModeFromCurve()
 

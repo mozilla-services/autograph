@@ -7,9 +7,6 @@
 package contentsignaturepki
 
 import (
-	"crypto/ecdsa"
-	"crypto/x509"
-	"encoding/base64"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -34,8 +31,8 @@ func TestSign(t *testing.T) {
 		if s.PrivateKey != testcase.cfg.PrivateKey {
 			t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.PrivateKey, testcase.cfg.PrivateKey)
 		}
-		if s.Mode != testcase.cfg.ID {
-			t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.Mode, testcase.cfg.ID)
+		if s.Mode != testcase.cfg.Mode {
+			t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.Mode, testcase.cfg.Mode)
 		}
 
 		// compare configs
@@ -86,21 +83,6 @@ func TestSign(t *testing.T) {
 			t.Fatalf("testcase %d expected curve name %q, got %q", i, s.Mode, cs.Mode)
 		}
 
-		// decode public key
-		keyBytes, err := base64.StdEncoding.DecodeString(s.PublicKey)
-		if err != nil {
-			t.Fatalf("testcase %d ailed to parse public key: %v", i, err)
-		}
-		keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
-		if err != nil {
-			t.Fatalf("testcase %d failed to parse public key DER: %v", i, err)
-		}
-		pubkey := keyInterface.(*ecdsa.PublicKey)
-
-		// verify signature on input data
-		if !cs.VerifyData(input, pubkey) {
-			t.Fatalf("testcase %d failed to verify content signature", i)
-		}
 	}
 }
 
@@ -108,47 +90,49 @@ var PASSINGTESTCASES = []struct {
 	cfg signer.Configuration
 }{
 	{cfg: signer.Configuration{
-		Type: Type,
-		ID:   P256ECDSA,
-		X5U:  "https://foo.bar/chain.pem",
+		Type:                Type,
+		ID:                  "testsigner0",
+		Mode:                P384ECDSA,
+		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
+		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
 		PrivateKey: `
------BEGIN EC PARAMETERS-----
-BggqhkjOPQMBBw==
------END EC PARAMETERS-----
 -----BEGIN EC PRIVATE KEY-----
-MHcCAQEEII+Is30aP9wrB/H6AkKrJjMG8EVY2WseSFHTfWGCIk7voAoGCCqGSM49
-AwEHoUQDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq
-3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==
+MIGkAgEBBDBcwxsHPTSHIVY1qLobCqBtnjRe0UZWOro1xtg2oV4rkypbkkgHHnSA
+s8p0PlGIknKgBwYFK4EEACKhZANiAAQMBfcDj4r/9aAXcUsjjun3vCpBSQoskcdi
+iF4bE+AcFmPABh6AnwTZv0sHYPjkovk3R3RfuXlKyoqhuD73VqBhkuK7R6mN2snh
+fRkWmi6SzHWZIXPzFScoCaHnJrFzNjs=
 -----END EC PRIVATE KEY-----`,
-	}},
-	{cfg: signer.Configuration{
-		Type: Type,
-		ID:   P384ECDSA,
-		PrivateKey: `
------BEGIN EC PARAMETERS-----
-BgUrgQQAIg==
------END EC PARAMETERS-----
------BEGIN EC PRIVATE KEY-----
-MIGkAgEBBDART/nn3fKlhyENdc2u3klbvRJ5+odP0kWzt9p+v5hDyggbtVA4M1Mb
-fL9KoaiAAv2gBwYFK4EEACKhZANiAATugz97A6HPqq0fJCGom9PdKJ58Y9aobARQ
-BkZWS5IjC+15Uqt3yOcCMdjIJpikiD1WjXRaeFe+b3ovcoBs4ToLK7d8y0qFlkgx
-/5Cp6z37rpp781N4haUOIauM14P4KUw=
------END EC PRIVATE KEY-----`,
-	}},
-	{cfg: signer.Configuration{
-		Type: Type,
-		ID:   P521ECDSA,
-		PrivateKey: `
------BEGIN EC PARAMETERS-----
-BgUrgQQAIw==
------END EC PARAMETERS-----
------BEGIN EC PRIVATE KEY-----
-MIHcAgEBBEIBb+JY2KAiKqVOycgfvf9wH4onO93x6Dy/3bHuzj6wmW4rSAmuNHPq
-yzdZSKDGPG5RxqdhgukMGwwrBgPfFJv5nDGgBwYFK4EEACOhgYkDgYYABAAVXz2h
-oKyWlpcSecUoJgrvljyu/bSD7Z+onU7vT/FUFFaMK8fgwv3LVWQR8xgoAVWLiiiu
-hB8RHyT8OaePachoHAFNFqVcGFkGZOLj2m60HH9tNTb1tBMDE08FBtcE7wImRn94
-b/r392628ghQ8x7A4JzUvp0InWipIV0g+tJ4tw0hWw==
------END EC PRIVATE KEY-----`,
+		PublicKey: `
+-----BEGIN CERTIFICATE-----
+MIICXDCCAeKgAwIBAgIIFYW6xg9HrnAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODUxMDA2MB4XDTE4MTIyMTE1
+NTY0NloXDTI5MDIyMjE1NTY0NlowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTU1MDg1MTAwNjB2MBAGByqGSM49AgEGBSuBBAAiA2IABAwF
+9wOPiv/1oBdxSyOO6fe8KkFJCiyRx2KIXhsT4BwWY8AGHoCfBNm/Swdg+OSi+TdH
+dF+5eUrKiqG4PvdWoGGS4rtHqY3ayeF9GRaaLpLMdZkhc/MVJygJoecmsXM2O6Nq
+MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+/wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
+b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjBss+GLdMdLT2Y/g73OE9x0WyUG
+vqzO7klt20yytmhaYMIPT/zRnWsHZbqEijHMzGsCMQDEoKetuWkyBkzAytS6l+ss
+mYigBlwySY+gTqsjuIrydWlKaOv1GU+PXbwX0cQuaN8=
+-----END CERTIFICATE-----`,
+		CaCert: `
+-----BEGIN CERTIFICATE-----
+MIICKTCCAa+gAwIBAgIIFYW6xg2sw4QwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODUxMDA2MB4XDTE4MTIyMDE1
+NTY0NloXDTQ5MDIyMjE1NTY0NlowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
+VQQDExBjc3Jvb3QxNTUwODUxMDA2MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAENrUI
+9GJFild/ZVNwh7885643BhJlqTqZSas8mAUkYRDKv9lXk/r+CpLPclrwz/Po21xn
+5SlibnOTXaOZdMlDcWCCKqNNGRyi1xPHJIfvtF6+CswJnrkthpy6dimqd0Tyozgw
+NjAOBgNVHQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/
+BAUwAwEB/zAKBggqhkjOPQQDAwNoADBlAjB3fOCz2SQvxNZ65juSotQNRvXhB4TZ
+nsbYLErV5grBhN+UxzmY9YwlOl6j6CoBiNkCMQCVBh9UBkWNkUfMUGImrCNDLvlw
+//Vb8kLBsJmLQjZNbXt+ikjYkWGqppp2pVwwgf4=
+-----END CERTIFICATE-----`,
 	}},
 }
 
@@ -157,11 +141,11 @@ func TestNewFailure(t *testing.T) {
 		err string
 		cfg signer.Configuration
 	}{
-		{err: "contentsignature: invalid type", cfg: signer.Configuration{Type: ""}},
-		{err: "contentsignature: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
-		{err: "contentsignature: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
-		{err: "contentsignature: failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
-		{err: "contentsignature: invalid private key algorithm, must be ecdsa", cfg: signer.Configuration{
+		{err: "contentsignaturepki: invalid type", cfg: signer.Configuration{Type: ""}},
+		{err: "contentsignaturepki: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
+		{err: "contentsignaturepki: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
+		{err: "contentsignaturepki: failed to get keys and rand for signer \"bob\"", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+		{err: "contentsignaturepki: invalid public key type for issuer, must be ecdsa", cfg: signer.Configuration{
 			Type: Type,
 			ID:   "abcd",
 			PrivateKey: `
@@ -179,7 +163,7 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 	for _, testcase := range TESTCASES {
 		_, err := New(testcase.cfg)
 		if !strings.Contains(err.Error(), testcase.err) {
-			t.Fatalf("expected to fail with '%v' but failed with '%v' instead", testcase.err, err)
+			t.Fatalf("expected to fail with '%s' but failed with '%s' instead", testcase.err, err)
 		}
 		if err == nil {
 			t.Fatalf("expected to fail with '%v' but succeeded", testcase.err)
@@ -231,7 +215,7 @@ func TestNoShortData(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected to fail with input data too short but succeeded")
 	}
-	if err.Error() != "contentsignature: refusing to sign input data shorter than 10 bytes" {
+	if err.Error() != "contentsignaturepki: refusing to sign input data shorter than 10 bytes" {
 		t.Fatalf("expected to fail with input data too short but failed with: %v", err)
 	}
 }

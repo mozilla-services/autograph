@@ -52,7 +52,7 @@ func writeLocalFile(data, name string, target *url.URL) error {
 	if err != nil {
 		if strings.Contains(err.Error(), "no such file or directory") {
 			// create the target directory
-			err = os.Mkdir(target.Path, 0700)
+			err = os.MkdirAll(target.Path, 0700)
 			if err != nil {
 				return errors.Wrap(err, "failed to make directory")
 			}

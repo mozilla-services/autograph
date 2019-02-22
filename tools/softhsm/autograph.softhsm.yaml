@@ -190,6 +190,7 @@ authorizations:
       - testcsp384
       - hsm-webextensions-rsa
       - hsm-extensions-ecdsa
+      - normandy
 
 monitoring:
   key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs

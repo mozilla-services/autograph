@@ -87,7 +87,6 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 		err = errors.Wrap(err, "failed to parse issuer certificate from chain")
 		return
 	}
-
 	crtTpl := &x509.Certificate{
 		SerialNumber: big.NewInt(time.Now().UnixNano()),
 		Subject: pkix.Name{
