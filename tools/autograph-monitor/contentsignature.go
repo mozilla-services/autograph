@@ -77,7 +77,11 @@ func verifyContentSignature(response signatureresponse) error {
 
 func getX5U(x5u string) (certs []*x509.Certificate, err error) {
 	log.Printf("Retrieving X5U %q", x5u)
-	resp, err := http.Get(x5u)
+	c := &http.Client{}
+	t := &http.Transport{}
+	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
+	c.Transport = t
+	resp, err := c.Get(x5u)
 	if err != nil {
 		return certs, fmt.Errorf("Failed to retrieve X5U %s: %v", x5u, err)
 	}

@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/contentsignaturepki"
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
@@ -123,7 +124,7 @@ func Handler() (err error) {
 	var failures []error
 	for i, response := range responses {
 		switch response.Type {
-		case contentsignature.Type:
+		case contentsignature.Type, contentsignaturepki.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
 			err = verifyContentSignature(response)
 		case xpi.Type:
