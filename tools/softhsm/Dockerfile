@@ -25,7 +25,7 @@ RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 -
 RUN cd /go/src/go.mozilla.org/autograph/tools/softhsm/ && go run genkeys.go
 
 # make a pki in softhsm then update the config
-RUN cd /go/src/go.mozilla.org/autograph/tools/softhsm/ && \
+RUN cd /go/src/go.mozilla.org/autograph/tools/genpki/ && \
       go run genpki.go > /app/genpki.out && \
       cd /go/src/go.mozilla.org/autograph/tools/configurator && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
@@ -34,5 +34,8 @@ RUN cd /go/src/go.mozilla.org/autograph/tools/softhsm/ && \
       -p publickey -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
       -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')"
+
+RUN curl -o /app/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
+      chmod +x /app/wait-for-it.sh
 
 CMD /go/bin/autograph -c /app/autograph.softhsm.yaml

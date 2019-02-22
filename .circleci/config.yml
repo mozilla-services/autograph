@@ -18,13 +18,13 @@ jobs:
       - run:
           name: run gofmt
           command: |
-              make -s fmt-diff | tee fmt.diff
-              test -z "$(cat fmt.diff)"
+            make -s fmt-diff | tee fmt.diff
+            test -z "$(cat fmt.diff)"
       - run:
           name: install packages for crypto11 headers for go vet
           command: |
-              apt-get update
-              apt-get install -y libltdl-dev
+            apt-get update
+            apt-get install -y libltdl-dev
       - run:
           name: run got vet
           command: make vet
@@ -53,10 +53,10 @@ jobs:
           name: docker save built images
           no_output_timeout: 30m
           command: |
-              mkdir -p /go/src/app/cache
-              docker save "app:build" | gzip -c > /go/src/app/cache/docker-app-build.tgz
-              docker save "monitor:build" | gzip -c > /go/src/app/cache/docker-monitor-build.tgz
-              docker save "softhsm:build" | gzip -c > /go/src/app/cache/docker-softhsm-build.tgz
+            mkdir -p /go/src/app/cache
+            docker save "app:build" | gzip -c > /go/src/app/cache/docker-app-build.tgz
+            docker save "monitor:build" | gzip -c > /go/src/app/cache/docker-monitor-build.tgz
+            docker save "softhsm:build" | gzip -c > /go/src/app/cache/docker-softhsm-build.tgz
       - save_cache:
           key: v2-{{ .Branch }}-{{ epoch }}
           paths:
@@ -69,7 +69,7 @@ jobs:
       - image: circleci/golang:1.11.4
     working_directory: /go/src/go.mozilla.org/autograph
     environment:
-        GOPATH: "/go"
+      GOPATH: "/go"
     steps:
       - checkout
       - setup_remote_docker
@@ -81,7 +81,7 @@ jobs:
       - run:
           name: Run unit tests in built app
           command: |
-             docker run --name autograph-unit-test -u 0 -p 8000:8000 --workdir /go/src/go.mozilla.org/autograph app:build make test
+            docker run --name autograph-unit-test -u 0 -p 8000:8000 --workdir /go/src/go.mozilla.org/autograph app:build make test
       - run:
           name: install goveralls and cover
           command: |
@@ -89,85 +89,68 @@ jobs:
       - run:
           name: report coverage
           command: |
-             docker cp autograph-unit-test:/go/src/go.mozilla.org/autograph/coverage.out coverage.out
-             ls -lh coverage.out
-             pwd
-             cd $GOPATH/src/go.mozilla.org/autograph
-             $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci -repotoken $COVERALLS_TOKEN
+            docker cp autograph-unit-test:/go/src/go.mozilla.org/autograph/coverage.out coverage.out
+            ls -lh coverage.out
+            pwd
+            cd $GOPATH/src/go.mozilla.org/autograph
+            $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci -repotoken $COVERALLS_TOKEN
 
   integration-test:
     docker:
       - image: docker:18.02.0-ce
     steps:
-      - checkout
       - setup_remote_docker
       - restore_cache:
           key: v2-{{ .Branch }}
       - run:
           name: Restore Docker image cache
           command: |
-              gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
-              gunzip -c /go/src/app/cache/docker-monitor-build.tgz | docker load
-              gunzip -c /go/src/app/cache/docker-softhsm-build.tgz | docker load
+            gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
+            gunzip -c /go/src/app/cache/docker-monitor-build.tgz | docker load
+            gunzip -c /go/src/app/cache/docker-softhsm-build.tgz | docker load
       - run:
-          name: Waiting for Postgres to be ready
+          name: Install Docker Compose
           command: |
-            docker pull postgres:10
-            docker run -p 5432:5432 -e POSTGRES_DB=autograph -d --name postgres postgres:10
-            for i in `seq 1 10`;
-            do
-              nc -z localhost 5432 && echo Success && exit 0
-              echo -n .
-              sleep 1
-            done
-            echo Failed waiting for Postgres && exit 1
+            curl -L https://github.com/docker/compose/releases/download/1.23.2/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
+            chmod +x ~/docker-compose
+            sudo mv ~/docker-compose /usr/local/bin/docker-compose
       - run:
-          name: configuring Postgres
+          name: Start autograph stack with docker-compose
           command: |
-            apk --update add postgresql-client
-            psql -U postgres -h localhost -p 5432 -d autograph -a -f /root/project/database/schema.sql
-      - run:
-          name: Run Autograph with default configuration
-          command: |
-             docker run -d --name autograph-app app:build
-          background: true
-      - run:
-          name: Run autograph with hsm configuration
-          command: |
-              docker run -d --name autograph-app-hsm --network postgres softhsm:build
+            docker-compose up
           background: true
       - run:
           name: wait for apps to run
           command: |
-             while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
-               echo -n "."
-               sleep 1 # wait before checking again
-             done
-             while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"; do
-               echo -n "."
-               sleep 1 # wait before checking again
-             done
-             sleep 5  # wait for servers to listen
+            while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
+              echo -n "."
+              sleep 1 # wait before checking again
+            done
+            while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"; do
+              echo -n "."
+              sleep 1 # wait before checking again
+            done
+            sleep 5  # wait for servers to listen
       - run:
           name: check monitor endpoint works
           command: |
-             docker run --rm --name autograph-monitor-test --network container:autograph-app monitor:build
-             docker run --rm --name autograph-monitor-test-hsm --network container:postgres monitor:build
+            docker run --rm --name autograph-monitor-test --network autograph_default monitor:build
+            docker run --rm --name autograph-monitor-test-hsm --network autograph_default monitor:build
       - run:
           name: check XPI signing works
           command: |
-              docker run --rm --name autograph-sign-xpi-test --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
-              docker run --rm --name autograph-sign-xpi-test-hsm --network container:postgres --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client softhsm:build /bin/sh -c 'wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi'
+            docker run --rm --name autograph-sign-xpi-test --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
+            docker run --rm --name autograph-sign-xpi-test-hsm --network container:postgres --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client softhsm:build /bin/sh -c 'wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi'
       - run:
           name: check APK signing works
           command: |
-              # TODO: HSM support for APK signing keys and test here
-              docker run --name autograph-sign-apk-test --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "./build_test_apks.sh"
-              docker cp autograph-sign-apk-test:/go/src/go.mozilla.org/autograph/tools/autograph-client/resigned-apks.tgz /go/src/app/cache/
-              docker stop autograph-sign-apk-test || true
-              docker rm -f autograph-sign-apk-test || true
-              chmod -R 777 /go/src/app/cache/
-              ls -lh /go/src/app/cache/
+            # TODO: HSM support for APK signing keys and test here
+            docker run --name autograph-sign-apk-test --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "./build_test_apks.sh"
+            docker cp autograph-sign-apk-test:/go/src/go.mozilla.org/autograph/tools/autograph-client/resigned-apks.tgz /go/src/app/cache/
+            docker stop autograph-sign-apk-test || true
+            docker rm -f autograph-sign-apk-test || true
+            chmod -R 777 /go/src/app/cache/
+            ls -lh /go/src/app/cache/
       - save_cache:
           key: v2-apk-{{ .Branch }}-{{ .Revision }}
           paths:
@@ -184,17 +167,17 @@ jobs:
       - run:
           name: install android SDK
           command: |
-              sudo apt update
-              sudo apt install -y android-sdk-build-tools
+            sudo apt update
+            sudo apt install -y android-sdk-build-tools
       - run:
           name: Verify APKs
           command: |
-              ls -lh /go/src/app/cache/
-              cd /tmp/
-              tar xvzf /go/src/app/cache/resigned-apks.tgz
-              for apk in $(ls *.resigned.apk); do
-                  /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose $apk
-              done
+            ls -lh /go/src/app/cache/
+            cd /tmp/
+            tar xvzf /go/src/app/cache/resigned-apks.tgz
+            for apk in $(ls *.resigned.apk); do
+                /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose $apk
+            done
 
   deploy:
     docker:

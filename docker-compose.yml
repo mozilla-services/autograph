@@ -1,5 +1,4 @@
-version: '3'
-
+version: "3"
 services:
   db:
     container_name: autograph_db
@@ -12,7 +11,7 @@ services:
     ports:
       - "5432:5432"
 
-  app:
+  autograph-app:
     image: app:build
     build:
       context: .
@@ -25,7 +24,7 @@ services:
       - "8000:8000"
     command: autograph -c /app/autograph.yaml
 
-  app-hsm:
+  autograph-app-hsm:
     image: softhsm:build
     build:
       context: tools/softhsm/
@@ -36,4 +35,12 @@ services:
       - db
     ports:
       - "8001:8001"
-    command: autograph -c /app/autograph.softhsm.yaml -p 8001
+    command:
+      [
+        "/app/wait-for-it.sh",
+        "db:5432",
+        "--",
+        "autograph",
+        "-c",
+        "/app/autograph.softhsm.yaml",
+      ]

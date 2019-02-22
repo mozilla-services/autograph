@@ -1,5 +1,5 @@
 server:
-  listen: "0.0.0.0:8000"
+  listen: "0.0.0.0:8001"
   # cache 500k nonces to protect from authorization replay attacks
   noncecachesize: 524288
   idletimeout: 60s
@@ -138,7 +138,7 @@ signers:
     # rotate certs every 29.5 days, a lunar month
     validity: 708h
     # give +/- 30d of validity room for clients with bad clocks
-    clockskewtolerance: 720h
+    clockskewtolerance: 10m
     # upload cert chains to this location
     #chainuploadlocation: s3://net-mozaws-dev-content-signature/chains/
     chainuploadlocation: file:///tmp/chains/
@@ -146,38 +146,38 @@ signers:
     # with a trailing slash because filenames will be appended to it.
     # x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
     x5u: file:///tmp/chains/
-    privatekey: csinter1550796180
+    privatekey: csinter1550858489
     # chain contains the public certs of the intermediate and root of the pki
     publickey: |
       -----BEGIN CERTIFICATE-----
-      MIICXDCCAeKgAwIBAgIIFYWI6NxCaQwwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+      MIICXDCCAeKgAwIBAgIIFYXBlGIHbWAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
       VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-      EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwNzk2MTgwMB4XDTE4MDIyMjAw
-      NDMwMFoXDTQ5MDIyMjAwNDMwMFowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+      EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU4NDg5MB4XDTE4MTIyMTE4
+      MDEyOVoXDTI5MDIyMjE4MDEyOVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
       MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
-      VQQDExFjc2ludGVyMTU1MDc5NjE4MDB2MBAGByqGSM49AgEGBSuBBAAiA2IABD4j
-      R463aycxJBHe3qAq8QABjmulBJZXRgjLNrXzE0qo7v4RdhRMk7Vr3K58dLFOkclx
-      twKRcXYxnaJqXoO/aiUo+S4nAlq31+9zbqm24nfa9CqkYo9Gh0UM3ogbL6ULJqNq
+      VQQDExFjc2ludGVyMTU1MDg1ODQ4OTB2MBAGByqGSM49AgEGBSuBBAAiA2IABLW8
+      5oxfe3iBBaw/tvb/DrBfzCL3i3fHxngkahC2LASsEfUhKPQEwE88pOyREcAjCXCo
+      FSrv34Cx7H9FiItOpu837Z5d+Qax1tWHJg2qrNTm3A5VL0F14RbHbc665H0WQaNq
       MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
       /wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
-      b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjAQgolyGEjy2phW1Lbb21NFGoSr
-      uzzdNhQegVd851GotRvuZCLTW/CIL3EHsrjjs50CMQClT9cJVxqHs3oe2yX1v5sO
-      iSRTuLSDz1RafDdOeGOjJrsjvDwj/Q85vXIP3rFBv6g=
+      b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjAyFx5dWkW1CMmAAatNH3tlFMuv
+      UqjZk9QGiisGU7LGpsEs2GFK4k7Qs1fFNVVzHicCMQCX5GfEa/zBc7fJL+IP+XIZ
+      AhaDpVhf9tReXSzilurgSy4u4gAE6nwdUFezm9iOsFg=
       -----END CERTIFICATE-----
     cacert: |
       -----BEGIN CERTIFICATE-----
-      MIICKjCCAa+gAwIBAgIIFYWI6NrENhQwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+      MIICKDCCAa+gAwIBAgIIFYXBlGCX7CAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
       VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-      EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwNzk2MTgwMB4XDTE4MDIyMjAw
-      NDMwMFoXDTQ5MDIyMjAwNDMwMFowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+      EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU4NDg5MB4XDTE4MTIyMDE4
+      MDEyOVoXDTQ5MDIyMjE4MDEyOVowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
       MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
-      VQQDExBjc3Jvb3QxNTUwNzk2MTgwMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEIk9C
-      ze/ekOzjY0LMbJZpzURVAiwQFIVCEABlzardT5R3X2aMp1BVBWBxdSqI9ozpefYJ
-      XccIBQHMeTrvn48Zd2Aa5eU80mcmy6qmgGGnqlByZjjNqLs+HMqKmvmGIAV+ozgw
+      VQQDExBjc3Jvb3QxNTUwODU4NDg5MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVtXP
+      Dx+XtUydct/YtvcOZDtndtLGu5kQtelIOS9TNISxbFbeJpa2dwuDQ+fvQ1Q1WNMY
+      BHiOgWIoTKc+387yp6uijDxZBXAppIWUsMamdHKDiAyVHzFXpAiaXp69+Gvzozgw
       NjAOBgNVHQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/
-      BAUwAwEB/zAKBggqhkjOPQQDAwNpADBmAjEAzFF6iKx6ESJa/c9xiqvGCQiiZmuV
-      Y8Vq7elJqJ+qAgGkW/SNx7COA84Q82dJSq7JAjEAp+t11th+ZDANI1vdE4QKdWZe
-      W+Jgy5w9y13PerVIrrjuk42YY3JqaQSRmlJZNLaU
+      BAUwAwEB/zAKBggqhkjOPQQDAwNnADBkAjAuO8xbda+w4dq8iATflp4H5/0ubUcr
+      9F24ABbpLdWtoMfyBJWeWPO61Qn0W+dNmqoCMHwSYgZMDvZK+uy9nqIyf+1h2eA4
+      2OqlM2hZQeI/FpHm2ZevdMYcyqmQD0uBE1DTcg==
       -----END CERTIFICATE-----
 
 authorizations:
