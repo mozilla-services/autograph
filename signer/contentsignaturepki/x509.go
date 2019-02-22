@@ -77,8 +77,11 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	// valid for longer than that to account for clock skew
 	notAfter := time.Now().UTC().Add(s.validity + s.clockSkewTolerance)
 
-	// the issuer is the first cert in the chain
 	block, _ := pem.Decode([]byte(s.PublicKey))
+	if block == nil {
+		err = errors.New("no pem block found in signer public key configuration")
+		return
+	}
 	issuer, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		err = errors.Wrap(err, "failed to parse issuer certificate from chain")

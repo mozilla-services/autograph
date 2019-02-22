@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,6 +25,8 @@ func (s *ContentSigner) upload(data, name string) error {
 	switch parsedURL.Scheme {
 	case "s3":
 		return uploadToS3(data, name, parsedURL)
+	case "file":
+		return writeLocalFile(data, name, parsedURL)
 	default:
 		return errors.New("unsupported upload scheme " + parsedURL.Scheme)
 	}
@@ -43,9 +46,37 @@ func uploadToS3(data, name string, target *url.URL) error {
 	return err
 }
 
+func writeLocalFile(data, name string, target *url.URL) error {
+	// upload dir may not exist yet
+	_, err := os.Stat(target.Path)
+	if err != nil {
+		if strings.Contains(err.Error(), "no such file or directory") {
+			// create the target directory
+			err = os.Mkdir(target.Path, 0700)
+			if err != nil {
+				return errors.Wrap(err, "failed to make directory")
+			}
+		} else {
+			return err
+		}
+	}
+	// write the file into the target dir
+	return ioutil.WriteFile(target.Path+name, []byte(data), 0700)
+}
+
+// retrieve file from upload location and verify chain
 func verifyX5U(x5u string) error {
-	// retrieve file from upload location and verify chain
-	resp, err := http.Get(x5u)
+	parsedURL, err := url.Parse(x5u)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse chain upload location")
+	}
+	c := &http.Client{}
+	if parsedURL.Scheme == "file" {
+		t := &http.Transport{}
+		t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
+		c.Transport = t
+	}
+	resp, err := c.Get(x5u)
 	if err != nil {
 		return errors.Wrap(err, "failed to retrieve x5u")
 	}

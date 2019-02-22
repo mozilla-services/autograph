@@ -140,42 +140,44 @@ signers:
     # give +/- 30d of validity room for clients with bad clocks
     clockskewtolerance: 720h
     # upload cert chains to this location
-    chainuploadlocation: s3://net-mozaws-dev-content-signature/chains/
+    #chainuploadlocation: s3://net-mozaws-dev-content-signature/chains/
+    chainuploadlocation: file:///tmp/chains/
     # x5u is the path to the public dir where chains are stored. This MUST end
     # with a trailing slash because filenames will be appended to it.
-    x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
-    privatekey: csintermediate2019
+    # x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
+    x5u: file:///tmp/chains/
+    privatekey: csinter1550796180
     # chain contains the public certs of the intermediate and root of the pki
     publickey: |
       -----BEGIN CERTIFICATE-----
-      MIICXTCCAeKgAwIBAgIIFXjcMUcmy4AwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+      MIICXDCCAeKgAwIBAgIIFYWI6NxCaQwwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
       VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-      EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTQ3MjI4NTc1MB4XDTE4MDExMTE3
-      NDI1NloXDTQ5MDExMTE3NDI1NlowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+      EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwNzk2MTgwMB4XDTE4MDIyMjAw
+      NDMwMFoXDTQ5MDIyMjAwNDMwMFowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
       MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
-      VQQDExFjc2ludGVyMTU0NzIyODU3NjB2MBAGByqGSM49AgEGBSuBBAAiA2IABLhy
-      UshnGFYUyNAFU9Svw/uQ0amfqfBt07hlyMIAXpu+24lNXHbzn8VWfphopNfBOmo1
-      T6riEqN5yHoPyUW3tAWdfWI2kX8uua+bfC4X5yyYSUsIWzI3tbNlk9qHiF2aU6Nq
+      VQQDExFjc2ludGVyMTU1MDc5NjE4MDB2MBAGByqGSM49AgEGBSuBBAAiA2IABD4j
+      R463aycxJBHe3qAq8QABjmulBJZXRgjLNrXzE0qo7v4RdhRMk7Vr3K58dLFOkclx
+      twKRcXYxnaJqXoO/aiUo+S4nAlq31+9zbqm24nfa9CqkYo9Gh0UM3ogbL6ULJqNq
       MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
       /wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
-      b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNpADBmAjEAuFVCV+j7kjxNr7zfyitxKJ90
-      4UUn/y7pwyhEb9aN9mBTnjirzPrjiGVaEn5vNCyPAjEAskOFKu8DMQIyJP8+ZXrp
-      emcQyJmvcg8Ycdq7WkJxKGPPQKcSBZRpExl2vXYolBlE
+      b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjAQgolyGEjy2phW1Lbb21NFGoSr
+      uzzdNhQegVd851GotRvuZCLTW/CIL3EHsrjjs50CMQClT9cJVxqHs3oe2yX1v5sO
+      iSRTuLSDz1RafDdOeGOjJrsjvDwj/Q85vXIP3rFBv6g=
       -----END CERTIFICATE-----
     cacert: |
       -----BEGIN CERTIFICATE-----
-      MIICKTCCAa+gAwIBAgIIFXjcMT94R2AwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+      MIICKjCCAa+gAwIBAgIIFYWI6NrENhQwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
       VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-      EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTQ3MjI4NTc1MB4XDTE4MDExMTE3
-      NDI1NloXDTQ5MDExMTE3NDI1NlowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+      EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwNzk2MTgwMB4XDTE4MDIyMjAw
+      NDMwMFoXDTQ5MDIyMjAwNDMwMFowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
       MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
-      VQQDExBjc3Jvb3QxNTQ3MjI4NTc1MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAESB8x
-      4tE5+2NA0pvDaofEMZNmdEpLPvRi3EiRoHM8DBbrV8lyH7VxF5wAl4BFIIdOHuCX
-      emeUid9KKAloTbFpbHX8Ph1jk9S+vnAJQYA0oSjMbJsjsl2mysh1nkrvciqEozgw
+      VQQDExBjc3Jvb3QxNTUwNzk2MTgwMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEIk9C
+      ze/ekOzjY0LMbJZpzURVAiwQFIVCEABlzardT5R3X2aMp1BVBWBxdSqI9ozpefYJ
+      XccIBQHMeTrvn48Zd2Aa5eU80mcmy6qmgGGnqlByZjjNqLs+HMqKmvmGIAV+ozgw
       NjAOBgNVHQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/
-      BAUwAwEB/zAKBggqhkjOPQQDAwNoADBlAjEApLDBupGtz9O2fmaevgmGa8uakSjX
-      7PD0NscfF7WCstGvY1Igl0LUuMxEMRN374qqAjAmFuBYxcSO7ntxxnsgIFmT2dFn
-      IWFeFsgl2Os3ekeYoIxBfCEO9ZexyM9KpItbg6U=
+      BAUwAwEB/zAKBggqhkjOPQQDAwNpADBmAjEAzFF6iKx6ESJa/c9xiqvGCQiiZmuV
+      Y8Vq7elJqJ+qAgGkW/SNx7COA84Q82dJSq7JAjEAp+t11th+ZDANI1vdE4QKdWZe
+      W+Jgy5w9y13PerVIrrjuk42YY3JqaQSRmlJZNLaU
       -----END CERTIFICATE-----
 
 authorizations:
