@@ -45,7 +45,7 @@ func (sig *ContentSignature) Marshal() (str string, err error) {
 	if !sig.Finished {
 		return "", fmt.Errorf("contentsignature.Marshal: unfinished cannot be encoded")
 	}
-	if sig.Len != P256ECDSABYTESIZE && sig.Len != P384ECDSABYTESIZE && sig.Len != P521ECDSABYTESIZE {
+	if sig.Len != P256ECDSABYTESIZE && sig.Len != P384ECDSABYTESIZE {
 		return "", fmt.Errorf("contentsignature.Marshal: invalid signature length %d", sig.Len)
 	}
 	// write R and S into a slice of len
@@ -83,8 +83,6 @@ func Unmarshal(signature string) (sig *ContentSignature, err error) {
 		sig.Mode = P256ECDSA
 	case P384ECDSABYTESIZE:
 		sig.Mode = P384ECDSA
-	case P521ECDSABYTESIZE:
-		sig.Mode = P521ECDSA
 	default:
 		return nil, errors.Errorf("contentsignature: unknown signature length %d", len(data))
 	}

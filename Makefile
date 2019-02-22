@@ -104,7 +104,7 @@ showcoveragecs: testcs
 	$(GO) tool cover -html=coverage_cs.out
 
 testcspki:
-	$(GO) test -v -covermode=count -coverprofile=coverage_cs.out go.mozilla.org/autograph/signer/contentsignaturepki
+	$(GO) test -v -covermode=count -coverprofile=coverage_cspki.out go.mozilla.org/autograph/signer/contentsignaturepki
 
 showcoveragecspki: testcspki
 	$(GO) tool cover -html=coverage_cspki.out

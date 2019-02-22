@@ -41,12 +41,6 @@ const (
 	// P384ECDSABYTESIZE defines the bytes length of a P384ECDSA signature
 	P384ECDSABYTESIZE = 96
 
-	// P521ECDSA defines an ecdsa content signature on the P-521 curve
-	P521ECDSA = "p521ecdsa"
-
-	// P521ECDSABYTESIZE defines the bytes length of a P521ECDSA signature
-	P521ECDSABYTESIZE = 132
-
 	// SignaturePrefix is a string preprended to data prior to signing
 	SignaturePrefix = "Content-Signature:\x00"
 
@@ -150,7 +144,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 
 	// check if we already have a valid x5u, and if not make a new chain,
 	// upload it and re-verify
-	err = verifyX5U(s.X5U)
+	_, err = GetX5U(s.X5U)
 	if err != nil {
 		return nil, errors.Wrap(err, "contentsignaturepki: failed to verify x5u")
 	}
@@ -166,12 +160,16 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 // Config returns the configuration of the current signer
 func (s *ContentSigner) Config() signer.Configuration {
 	return signer.Configuration{
-		ID:         s.ID,
-		Type:       s.Type,
-		Mode:       s.Mode,
-		PrivateKey: s.PrivateKey,
-		PublicKey:  s.PublicKey,
-		X5U:        s.X5U,
+		ID:                  s.ID,
+		Type:                s.Type,
+		Mode:                s.Mode,
+		PrivateKey:          s.PrivateKey,
+		PublicKey:           s.PublicKey,
+		X5U:                 s.X5U,
+		Validity:            s.validity,
+		ClockSkewTolerance:  s.clockSkewTolerance,
+		ChainUploadLocation: s.chainUploadLocation,
+		CaCert:              s.caCert,
 	}
 }
 
@@ -201,9 +199,6 @@ func makeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
 	case P384ECDSA:
 		md = sha512.New384()
 		alg = "sha384"
-	case P521ECDSA:
-		md = sha512.New()
-		alg = "sha512"
 	default:
 		md = sha256.New()
 		alg = "sha256"
@@ -227,7 +222,7 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 		ID:   s.ID,
 	}
 
-	asn1Sig, err := s.issuerPriv.(crypto.Signer).Sign(rand.Reader, input, nil)
+	asn1Sig, err := s.eePriv.(crypto.Signer).Sign(rand.Reader, input, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "contentsignaturepki: failed to sign hash")
 	}
@@ -254,8 +249,6 @@ func getSignatureLen(mode string) int {
 		return P256ECDSABYTESIZE
 	case P384ECDSA:
 		return P384ECDSABYTESIZE
-	case P521ECDSA:
-		return P521ECDSABYTESIZE
 	}
 	return -1
 }
@@ -268,8 +261,6 @@ func getSignatureHash(mode string) string {
 		return "sha256"
 	case P384ECDSA:
 		return "sha384"
-	case P521ECDSA:
-		return "sha512"
 	}
 	return ""
 }
@@ -281,8 +272,6 @@ func (s *ContentSigner) getModeFromCurve() string {
 		return P256ECDSA
 	case "P-384":
 		return P384ECDSA
-	case "P-521":
-		return P521ECDSA
 	default:
 		return ""
 	}

@@ -3,6 +3,7 @@ package contentsignaturepki
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -64,11 +65,13 @@ func writeLocalFile(data, name string, target *url.URL) error {
 	return ioutil.WriteFile(target.Path+name, []byte(data), 0700)
 }
 
-// retrieve file from upload location and verify chain
-func verifyX5U(x5u string) error {
+// GetX5U retrieves a chain of certs from upload location, parses and verifies it,
+// then returns the slice of parsed certificates.
+func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 	parsedURL, err := url.Parse(x5u)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse chain upload location")
+		err = errors.Wrap(err, "failed to parse chain upload location")
+		return
 	}
 	c := &http.Client{}
 	if parsedURL.Scheme == "file" {
@@ -78,36 +81,65 @@ func verifyX5U(x5u string) error {
 	}
 	resp, err := c.Get(x5u)
 	if err != nil {
-		return errors.Wrap(err, "failed to retrieve x5u")
+		err = errors.Wrap(err, "failed to retrieve x5u")
+		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("failed to retrieve x5u from %s: %s", x5u, resp.Status)
+		err = errors.Errorf("failed to retrieve x5u from %s: %s", x5u, resp.Status)
+		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse x5u body")
+		err = errors.Wrap(err, "failed to parse x5u body")
+		return
 	}
-	// verify the chain. the first cert is the end entity, then the intermediate and the root
+	// verify the chain
+	// the first cert is the end entity, then the intermediate and the root
 	block, rest := pem.Decode(body)
 	ee, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse ee certificate from chain")
+		err = errors.Wrap(err, "failed to parse ee certificate from chain")
+		return
+	}
+	certs = append(certs, ee)
+
+	// the second cert is the intermediate
+	block, rest = pem.Decode(rest)
+	inter, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		err = errors.Wrap(err, "failed to parse intermediate issuer certificate from chain")
+		return
+	}
+	inters := x509.NewCertPool()
+	inters.AddCert(inter)
+	certs = append(certs, inter)
+
+	// the third and last cert is the root
+	block, rest = pem.Decode(rest)
+	root, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		err = errors.Wrap(err, "failed to parse root certificate from chain")
+		return
+	}
+	if len(rest) != 0 {
+		err = fmt.Errorf("trailing data after root certificate in chain")
+		return
 	}
 	roots := x509.NewCertPool()
-	ok := roots.AppendCertsFromPEM(rest)
-	if !ok {
-		return errors.New("failed to parse issuer chain")
-	}
+	roots.AddCert(root)
+	certs = append(certs, root)
+
 	opts := x509.VerifyOptions{
 		Roots:         roots,
-		Intermediates: roots,
-		KeyUsages:     ee.ExtKeyUsage,
+		Intermediates: inters,
+		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
 	}
 	_, err = ee.Verify(opts)
 	if err != nil {
-		return errors.Wrap(err, "failed to verify certificate chain")
+		err = errors.Wrap(err, "failed to verify certificate chain")
+		return
 	}
 
-	return nil
+	return
 }

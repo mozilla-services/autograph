@@ -21,9 +21,9 @@ import (
 // we don't want to alert on those.
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1466523
 var ignoredCerts = map[string]bool{
-	"fingerprinting-defenses.content-signature.mozilla.org": true,
-	"fennec-dlc.content-signature.mozilla.org":              true,
-	"focus-experiments.content-signature.mozilla.org":       true,
+	// "fingerprinting-defenses.content-signature.mozilla.org": true,
+	// "fennec-dlc.content-signature.mozilla.org":              true,
+	// "focus-experiments.content-signature.mozilla.org":       true,
 }
 
 // validate the signature and certificate chain of a content signature response
