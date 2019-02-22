@@ -26,7 +26,7 @@ jobs:
             apt-get update
             apt-get install -y libltdl-dev
       - run:
-          name: run got vet
+          name: run go vet
           command: make vet
 
   build:
@@ -66,7 +66,7 @@ jobs:
 
   unit-test:
     docker:
-      - image: circleci/golang:1.11.4
+      - image: circleci/golang:1.11
     working_directory: /go/src/go.mozilla.org/autograph
     environment:
       GOPATH: "/go"
@@ -97,8 +97,9 @@ jobs:
 
   integration-test:
     docker:
-      - image: docker:18.02.0-ce
+      - image: circleci/golang
     steps:
+      - checkout
       - setup_remote_docker
       - restore_cache:
           key: v2-{{ .Branch }}
@@ -109,12 +110,6 @@ jobs:
             gunzip -c /go/src/app/cache/docker-monitor-build.tgz | docker load
             gunzip -c /go/src/app/cache/docker-softhsm-build.tgz | docker load
       - run:
-          name: Install Docker Compose
-          command: |
-            curl -L https://github.com/docker/compose/releases/download/1.23.2/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
-            chmod +x ~/docker-compose
-            sudo mv ~/docker-compose /usr/local/bin/docker-compose
-      - run:
           name: Start autograph stack with docker-compose
           command: |
             docker-compose up
@@ -122,11 +117,11 @@ jobs:
       - run:
           name: wait for apps to run
           command: |
-            while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
+            while test "true" != "$(docker inspect -f {{.State.Running}} project_autograph-app_1)"; do
               echo -n "."
               sleep 1 # wait before checking again
             done
-            while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"; do
+            while test "true" != "$(docker inspect -f {{.State.Running}} project_autograph-app-hsm_1)"; do
               echo -n "."
               sleep 1 # wait before checking again
             done
@@ -134,8 +129,8 @@ jobs:
       - run:
           name: check monitor endpoint works
           command: |
-            docker run --rm --name autograph-monitor-test --network autograph_default monitor:build
-            docker run --rm --name autograph-monitor-test-hsm --network autograph_default monitor:build
+            docker run --rm --name autograph-monitor-test --network project_default monitor:build
+            docker run --rm --name autograph-monitor-test-hsm --network project_default monitor:build
       - run:
           name: check XPI signing works
           command: |
