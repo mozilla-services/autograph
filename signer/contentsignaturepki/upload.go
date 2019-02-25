@@ -53,7 +53,7 @@ func writeLocalFile(data, name string, target *url.URL) error {
 	if err != nil {
 		if strings.Contains(err.Error(), "no such file or directory") {
 			// create the target directory
-			err = os.MkdirAll(target.Path, 0700)
+			err = os.MkdirAll(target.Path, 0755)
 			if err != nil {
 				return errors.Wrap(err, "failed to make directory")
 			}
@@ -62,7 +62,7 @@ func writeLocalFile(data, name string, target *url.URL) error {
 		}
 	}
 	// write the file into the target dir
-	return ioutil.WriteFile(target.Path+name, []byte(data), 0700)
+	return ioutil.WriteFile(target.Path+name, []byte(data), 0755)
 }
 
 // GetX5U retrieves a chain of certs from upload location, parses and verifies it,

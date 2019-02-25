@@ -38,4 +38,7 @@ RUN cd /go/src/go.mozilla.org/autograph/tools/genpki/ && \
 RUN curl -o /app/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
       chmod +x /app/wait-for-it.sh
 
+# in docker-compose, the monitor job will mount /tmp to get the generated config
+RUN cp /app/autograph.softhsm.yaml /tmp/
+
 CMD /go/bin/autograph -c /app/autograph.softhsm.yaml

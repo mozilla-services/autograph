@@ -117,30 +117,30 @@ jobs:
       - run:
           name: wait for apps to run
           command: |
-            while test "true" != "$(docker inspect -f {{.State.Running}} project_autograph-app_1)"; do
+            while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
               echo -n "."
               sleep 1 # wait before checking again
             done
-            while test "true" != "$(docker inspect -f {{.State.Running}} project_autograph-app-hsm_1)"; do
+            while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"; do
               echo -n "."
               sleep 1 # wait before checking again
             done
-            sleep 5  # wait for servers to listen
+            sleep 10  # wait for servers to listen and monitoring to start
       - run:
-          name: check monitor endpoint works
+          name: check monitoring works
           command: |
-            docker run --rm --name autograph-monitor-test --network project_default monitor:build
-            docker run --rm --name autograph-monitor-test-hsm --network project_default monitor:build
+            if [ "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor)" ]; then echo "Monitor is failing"; exit 1; fi
+            if [ "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-hsm)" ]; then echo "Monitor is failing"; exit 1; fi
       - run:
           name: check XPI signing works
           command: |
-            docker run --rm --name autograph-sign-xpi-test --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
+            docker run --rm --name autograph-sign-xpi-test --network project_default --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi"
             docker run --rm --name autograph-sign-xpi-test-hsm --network container:postgres --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client softhsm:build /bin/sh -c 'wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-webextensions-rsa TRUST_ROOTS=dev-webext-rsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi && SIGNER_ID=hsm-extensions-ecdsa TRUST_ROOTS=dev-ext-ecdsa-root.pem ./build_test_xpis.sh pomodoro_clock-1.1.1-an+fx-windows.xpi'
       - run:
           name: check APK signing works
           command: |
             # TODO: HSM support for APK signing keys and test here
-            docker run --name autograph-sign-apk-test --network container:autograph-app --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "./build_test_apks.sh"
+            docker run --name autograph-sign-apk-test --network project_default --user 0 --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/sh -c "./build_test_apks.sh"
             docker cp autograph-sign-apk-test:/go/src/go.mozilla.org/autograph/tools/autograph-client/resigned-apks.tgz /go/src/app/cache/
             docker stop autograph-sign-apk-test || true
             docker rm -f autograph-sign-apk-test || true

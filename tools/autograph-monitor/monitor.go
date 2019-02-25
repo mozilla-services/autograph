@@ -66,10 +66,14 @@ func main() {
 		// we are inside a lambda environment so run as lambda
 		lambda.Start(Handler)
 	} else {
-		err := Handler()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
+		// on the command line, run in a loop every 10s
+		for {
+			err := Handler()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error: %v\n", err)
+				os.Exit(1)
+			}
+			time.Sleep(60 * time.Second)
 		}
 	}
 }
@@ -85,12 +89,18 @@ func Handler() (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %v", err)
 	}
-	envUrl := os.Getenv("AUTOGRAPH_URL")
-	if envUrl != "" {
-		log.Printf("Overriding conf.URL %s with env var URL %s\n", conf.URL, envUrl)
-		conf.URL = envUrl
+	if os.Getenv("AUTOGRAPH_URL") != "" {
+		log.Printf("Overriding conf.URL %s with env var URL %s\n", conf.URL, os.Getenv("AUTOGRAPH_URL"))
+		conf.URL = os.Getenv("AUTOGRAPH_URL")
 	}
-
+	if os.Getenv("AUTOGRAPH_KEY") != "" {
+		log.Print("Overriding conf.MonitoringKey with env var")
+		conf.MonitoringKey = os.Getenv("AUTOGRAPH_KEY")
+	}
+	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
+		log.Print("Overriding conf.RootHash with env var")
+		conf.RootHash = os.Getenv("AUTOGRAPH_ROOT_HASH")
+	}
 	log.Println("Retrieving monitoring data from", conf.URL)
 	req, err := http.NewRequest("GET", conf.URL+"__monitor__", nil)
 	if err != nil {
