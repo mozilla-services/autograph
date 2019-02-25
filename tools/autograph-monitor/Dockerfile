@@ -15,6 +15,7 @@ RUN curl -o /app/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait
 
 ADD monitor.autograph.yaml /app
 ADD run-monitor-with-root-hash.sh /app
+RUN chmod +x /app/run-monitor-with-root-hash.sh
 
 USER app
 

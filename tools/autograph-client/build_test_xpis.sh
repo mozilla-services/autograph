@@ -17,41 +17,43 @@ HAWK_USER=${HAWK_USER:-alice}
 HAWK_SECRET=${HAWK_SECRET:-fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu}
 CN=${CN:-testaddon@allizom}
 
+TARGET=${TARGET:-'http://127.0.0.1:8000'}
+
 # only PKCS7 SHA1
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1.zip
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1.zip
 
 # PKCS7 SHA1 with COSE ES256
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-ES256.zip -c ES256
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-ES256.zip -c ES256
 
 # PKCS7 SHA1 with COSE ES512
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-ES256.zip -c ES512
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-ES256.zip -c ES512
 
 # PKCS7 SHA1 with COSE PS256
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-PS256.zip -c PS256
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-PS256.zip -c PS256
 
 # PKCS7 SHA1 with COSE ES256 ES384 ES512 (multiple recognized)
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-ES256-ES384-ES512.zip -c ES256 -c ES384 -c ES512
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-ES256-ES384-ES512.zip -c ES256 -c ES384 -c ES512
 
 # PKCS7 SHA1 with COSE ES256 PS256 (multiple one Fx recognizes ES256 and another unrecognized PS256)
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-ES256-PS256.zip -c ES256 -c PS256
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha1 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA1-ES256-PS256.zip -c ES256 -c PS256
 
 
 # only PKCS7 SHA256
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256.zip
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256.zip
 
 # PKCS7 SHA256 with COSE ES256
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-ES256.zip -c ES256
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-ES256.zip -c ES256
 
 # PKCS7 SHA256 with COSE ES512
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-ES256.zip -c ES512
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-ES256.zip -c ES512
 
 # PKCS7 SHA256 with COSE PS256
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-PS256.zip -c PS256
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-PS256.zip -c PS256
 
 # PKCS7 SHA256 with COSE ES256 ES384 ES512 (multiple recognized)
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-ES256-ES384-ES512.zip -c ES256 -c ES384 -c ES512
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-ES256-ES384-ES512.zip -c ES256 -c ES384 -c ES512
 
 # PKCS7 SHA256 with COSE ES256 PS256 (multiple one Fx recognizes ES256 and another unrecognized PS256)
-go run client.go -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-ES256-PS256.zip -c ES256 -c PS256
+go run client.go -t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -pk7digest sha256 -k $SIGNER_ID -r $TRUST_ROOTS -o ${OUTPUT_BASENAME}-SHA256-ES256-PS256.zip -c ES256 -c PS256
 
 tar cvzf ${OUTPUT_BASENAME}.tgz ${OUTPUT_BASENAME}*.zip
