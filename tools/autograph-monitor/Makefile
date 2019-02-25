@@ -3,8 +3,6 @@ build:
 	zip -r autograph-monitor.zip autograph-monitor monitor.autograph.yaml
 test:
 	go test go.mozilla.org/autograph/tools/autograph-monitor
-vendor:
-	govend -u
 lint:
 	golint *.go
 vet:
