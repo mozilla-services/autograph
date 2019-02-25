@@ -112,7 +112,7 @@ jobs:
       - run:
           name: Start autograph stack with docker-compose
           command: |
-            docker-compose up
+            docker-compose up -d
           background: true
       - run:
           name: wait for apps to run
