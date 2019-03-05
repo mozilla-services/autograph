@@ -88,6 +88,12 @@ testautograph:
 showcoverageautograph: testautograph
 	$(GO) tool cover -html=coverage_autograph.out
 
+testautographdb:
+	$(GO) test -v -covermode=count -count=1 -coverprofile=coverage_db.out go.mozilla.org/autograph/database
+
+showcoverageautographdb: testautographdb
+	$(GO) tool cover -html=coverage_db.out
+
 testsigner:
 	$(GO) test -v -covermode=count -coverprofile=coverage_signer.out go.mozilla.org/autograph/signer
 
@@ -145,7 +151,7 @@ testrsapss:
 showcoveragersapss: testrsapss
 	$(GO) tool cover -html=coverage_rsapss.out
 
-test: testautograph testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testrsapss
+test: testautograph testautographdb testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testrsapss
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 

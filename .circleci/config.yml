@@ -67,21 +67,33 @@ jobs:
   unit-test:
     docker:
       - image: circleci/golang:1.11
+      - image: circleci/postgres:11
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: autograph
     working_directory: /go/src/go.mozilla.org/autograph
     environment:
       GOPATH: "/go"
     steps:
       - checkout
-      - setup_remote_docker
-      - restore_cache:
-          key: v2-{{ .Branch }}
       - run:
-          name: Restore Docker image cache
-          command: gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
-      - run:
-          name: Run unit tests in built app
+          name: Waiting for Postgres to be ready
           command: |
-            docker run --name autograph-unit-test -u 0 -p 8000:8000 --workdir /go/src/go.mozilla.org/autograph app:build make test
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+      - run:
+          name: Configure database
+          command: |
+            psql -U postgres -d autograph -f database/schema.sql
+      - run:
+          name: Run unit tests
+          command: |
+            make test
       - run:
           name: install goveralls and cover
           command: |
@@ -89,9 +101,6 @@ jobs:
       - run:
           name: report coverage
           command: |
-            docker cp autograph-unit-test:/go/src/go.mozilla.org/autograph/coverage.out coverage.out
-            ls -lh coverage.out
-            pwd
             cd $GOPATH/src/go.mozilla.org/autograph
             $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci -repotoken $COVERALLS_TOKEN
 
