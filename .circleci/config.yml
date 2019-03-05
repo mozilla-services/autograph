@@ -69,13 +69,18 @@ jobs:
       - image: circleci/golang:1.11
       - image: circleci/postgres:11
         environment:
-          POSTGRES_USER: postgres
+          POSTGRES_USER: root
           POSTGRES_DB: autograph
     working_directory: /go/src/go.mozilla.org/autograph
     environment:
       GOPATH: "/go"
     steps:
       - checkout
+      - run:
+          name: Install packages
+          command: |
+            sudo apt-get -y install libltdl-dev gpg postgresql-client
+            make install-goveralls install-cover
       - run:
           name: Waiting for Postgres to be ready
           command: |
@@ -89,17 +94,17 @@ jobs:
       - run:
           name: Configure database
           command: |
-            psql -U postgres -d autograph -f database/schema.sql
+            psql -U root -d autograph -h localhost -p 5432 -f database/schema.sql
+      - run:
+          name: Run a dummy statsd in the background
+          command: make dummy-statsd
+          background: true
       - run:
           name: Run unit tests
           command: |
             make test
       - run:
-          name: install goveralls and cover
-          command: |
-            make install-goveralls install-cover
-      - run:
-          name: report coverage
+          name: Report coverage
           command: |
             cd $GOPATH/src/go.mozilla.org/autograph
             $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci -repotoken $COVERALLS_TOKEN
@@ -267,16 +272,14 @@ workflows:
             tags:
               only: /.*/
 
-  test-sign-build-deploy:
-    jobs:
-      - build:
+      - unit-test:
           filters:
             tags:
               only: /.*/
 
-      - unit-test:
-          requires:
-            - build
+  build-test-verify-deploy:
+    jobs:
+      - build:
           filters:
             tags:
               only: /.*/
