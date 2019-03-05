@@ -26,7 +26,7 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 		return nil, err
 	}
 	// lock the table
-	_, err = tx.Exec("LOCK TABLE endentities_lock IN SHARE MODE")
+	_, err = tx.Exec("LOCK TABLE endentities_lock IN ACCESS EXCLUSIVE MODE")
 	if err != nil {
 		err = errors.Wrap(err, "failed to lock endentities table")
 		tx.Rollback()
