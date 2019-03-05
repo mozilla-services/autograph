@@ -33,6 +33,12 @@ RUN cd /go/src/go.mozilla.org/autograph/tools/genpki/ && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
       -p publickey -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
+      -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')" && \
+      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
+      -p privatekey -v "$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" && \
+      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
+      -p publickey -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
+      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
       -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')"
 
 RUN curl -o /app/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
