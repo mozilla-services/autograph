@@ -15,6 +15,9 @@ SIGNER_CONFIG_PARAMS = ["type", "mode", "privatekey", "publickey",
                         "chain_upload_location", "cacert"]
 
 
+__doc__ = """Helper to set or modify values in Autograph configuration files"""
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     optional = parser._action_groups.pop()

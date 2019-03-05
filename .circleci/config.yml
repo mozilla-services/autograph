@@ -177,7 +177,7 @@ jobs:
             pomodoro_clock-1.1.1-an+fx-windows.xpi'
 
       - run:
-          name: check APK signing works against AUtograph
+          name: check APK signing works against Autograph
           command: |
             # TODO: HSM support for APK signing keys and test here
             docker run --name autograph-sign-apk-test --network project_default --user 0 \

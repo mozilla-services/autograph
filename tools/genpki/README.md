@@ -12,7 +12,23 @@ Example
 SoftHSM
 ~~~~~~~
 
-With the HSM, genpki outputs the label of the root and intermediate keys in the HSM, and writes their public certificates to temp files.
+First initialize a softhsm environment with
+
+```bash
+mkdir -p /var/lib/softhsm/tokens
+softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
+```      
+
+The configuration for how to talk to softhsm is kept in genpki.go
+```go
+p11Ctx, err := crypto11.Configure(&crypto11.PKCS11Config{
+    Path:       "/usr/lib/softhsm/libsofthsm2.so",
+    TokenLabel: "test",
+    Pin:        "0000",
+})
+```
+
+Then run the `genpki` tool. Genpki outputs the label of the root and intermediate keys in the HSM, and writes their public certificates to temp files.
 
 ```bash
 $ go run genpki.go
