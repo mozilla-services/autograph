@@ -1,7 +1,7 @@
 SOPS: Secrets OPerationS
 ========================
 
-**sops** is an editor of encrypted files that supports YAML, JSON and BINARY
+**sops** is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY
 formats and encrypts with AWS KMS, GCP KMS, Azure Key Vault and PGP.
 (`demo <https://www.youtube.com/watch?v=YTEVyLXFiq0>`_)
 
@@ -45,7 +45,7 @@ Or whatever variation of the above fits your system and shell.
 
 To use **sops** as a library, take a look at the `decrypt package <https://godoc.org/go.mozilla.org/sops/decrypt>`_.
 
-**Questions?** ping "ulfr" in ``#security`` on `irc.mozilla.org <https://wiki.mozilla.org/IRC>`_
+**Questions?** ping "ulfr" and "autrilla" in ``#security`` on `irc.mozilla.org <https://wiki.mozilla.org/IRC>`_
 (use a web client like `mibbit <https://chat.mibbit.com>`_ ).
 
 **What happened to Python Sops?** We rewrote Sops in Go to solve a number of
@@ -59,6 +59,11 @@ but we strongly recommend you use the Go version instead.
 Usage
 -----
 
+For a quick presentation of Sops, check out this Youtube tutorial:
+
+.. image:: https://img.youtube.com/vi/V2PRhxphH2w/0.jpg
+   :target: https://www.youtube.com/watch?v=V2PRhxphH2w
+   
 If you're using AWS KMS, create one or multiple master keys in the IAM console
 and export them, comma separated, in the **SOPS_KMS_ARN** env variable. It is
 recommended to use at least two master keys in different regions.
@@ -325,6 +330,23 @@ the file.
 When removing keys, it is recommended to rotate the data key using ``-r``,
 otherwise owners of the removed key may have add access to the data key in the
 past.
+
+KMS AWS Profiles
+~~~~~~~~~~~~~~~~
+
+If you want to use a specific profile, you can do so with `aws_profile`:
+
+.. code:: yaml
+
+	sops:
+	    kms:
+	    -	arn: arn:aws:kms:us-east-1:656532927350:key/920aff2e-c5f1-4040-943a-047fa387b27e
+            aws_profile: foo
+
+If no AWS profile is set, default credentials will be used.
+
+Similarly the `--aws-profile` flag can be set with the command line with any of the KMS commands.
+
 
 Assuming roles and using KMS in various AWS accounts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -734,7 +756,7 @@ YAML and JSON type extensions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``sops`` uses the file extension to decide which encryption method to use on the file
-content. ``YAML`` and ``JSON`` files are treated as trees of data, and key/values are
+content. ``YAML``, ``JSON``, ``ENV``, and ``INI`` files are treated as trees of data, and key/values are
 extracted from the files to only encrypt the leaf values. The tree structure is also
 used to check the integrity of the file.
 
@@ -1320,7 +1342,7 @@ By commit count:
 Credits
 -------
 
-`sops` is inspired by `hiera-eyaml <https://github.com/TomPoulton/hiera-eyaml>`_,
+`sops` was inspired by `hiera-eyaml <https://github.com/TomPoulton/hiera-eyaml>`_,
 `credstash <https://github.com/LuminalOSS/credstash>`_ ,
 `sneaker <https://github.com/codahale/sneaker>`_,
 `password store <http://www.passwordstore.org/>`_ and too many years managing

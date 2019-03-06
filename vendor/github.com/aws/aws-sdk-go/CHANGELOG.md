@@ -1,3 +1,421 @@
+Release v1.17.11 (2019-03-05)
+===
+
+### Service Client Updates
+* `service/codedeploy`: Updates service documentation
+  * Documentation updates for codedeploy
+* `service/medialive`: Updates service API and documentation
+  * This release adds support for pausing and unpausing one or both pipelines at scheduled times.
+* `service/storagegateway`: Updates service API and documentation
+  * ActivateGateway, CreateNFSFileShare and CreateSMBFileShare APIs support a new parameter: Tags (to be attached to the created resource). Output for DescribeNFSFileShare, DescribeSMBFileShare and DescribeGatewayInformation APIs now also list the Tags associated with the resource. Minimum length of a KMSKey is now 7 characters.
+* `service/textract`: Adds new service
+
+Release v1.17.10 (2019-03-04)
+===
+
+### Service Client Updates
+* `service/mediapackage`: Updates service API and documentation
+  * This release adds support for user-defined tagging of MediaPackage resources. Users may now call operations to list, add and remove tags from channels and origin-endpoints. Users can also specify tags to be attached to these resources during their creation. Describe and list operations on these resources will now additionally return any tags associated with them.
+* `service/ssm`: Updates service API and documentation
+  * This release updates AWS Systems Manager APIs to support service settings for AWS customers.  A service setting is a key-value pair that defines how a user interacts with or uses an AWS service, and is typically created and consumed by the AWS service team. AWS customers can read a service setting via GetServiceSetting API and update the setting via UpdateServiceSetting API or ResetServiceSetting API, which are introduced in this release. For example, if an AWS service charges money to the account based on a feature or service usage, then the AWS service team might create a setting with the default value of "false".   This means the user can't use this feature unless they update the setting to "true" and  intentionally opt in for a paid feature.
+
+Release v1.17.9 (2019-03-01)
+===
+
+### Service Client Updates
+* `service/autoscaling-plans`: Updates service documentation
+* `service/ec2`: Updates service API and documentation
+  * This release adds support for modifying instance event start time which allows users to reschedule EC2 events.
+
+### SDK Enhancements
+* `example/service/s3`: Add example of S3 download with progress ([#2456](https://github.com/aws/aws-sdk-go/pull/2456))
+  * Adds a new example to the S3 service's examples. This example shows how you could use the S3's GetObject API call in conjunction with a custom writer keeping track of progress.
+  * Related to [#1868](https://github.com/aws/aws-sdk-go/pull/1868), [#2468](https://github.com/aws/aws-sdk-go/pull/2468)
+
+### SDK Bugs
+* `aws/session`: Allow HTTP Proxy with custom CA bundle ([#2343](https://github.com/aws/aws-sdk-go/pull/2343))
+  * Ensures Go HTTP Client's  `ProxyFromEnvironment` functionality is still enabled when  custom CA bundles are used with the SDK.
+  * Fix [#2287](https://github.com/aws/aws-sdk-go/pull/2287)
+Release v1.17.8 (2019-02-28)
+===
+
+### Service Client Updates
+* `service/alexaforbusiness`: Updates service API and documentation
+* `service/apigatewayv2`: Updates service API and documentation
+* `service/application-autoscaling`: Updates service documentation
+* `service/ssm`: Updates service API and documentation
+
+Release v1.17.7 (2019-02-28)
+===
+
+### Service Client Updates
+* `service/waf`: Updates service documentation
+  * Documentation updates for waf
+* `service/waf-regional`: Updates service documentation
+
+### SDK Bugs
+* `aws/request`: Fix RequestUserAgent tests to be stable ([#2462](https://github.com/aws/aws-sdk-go/pull/2462))
+  * Fixes the request User-Agent unit tests to be stable across all platforms and environments.
+  * Fixes [#2366](https://github.com/aws/aws-sdk-go/issues/2366)
+* `aws/ec2metadata`: Fix EC2 Metadata client panic with debug logging ([#2461](https://github.com/aws/aws-sdk-go/pull/2461))
+  * Fixes a panic that could occur witihin the EC2 Metadata client when both `AWS_EC2_METADATA_DISABLED` env var is set and log level is LogDebugWithHTTPBody.
+* `private/protocol/rest`: Trim space in header key and value ([#2460](https://github.com/aws/aws-sdk-go/pull/2460))
+  * Updates the REST protocol marshaler to trip leading and trailing space from header keys and values before setting the HTTP request header. Fixes a bug when using S3 metadata where metadata values with leading spaces would trigger request signature validation errors when the request is received by the service.
+  * Fixes [#2448](https://github.com/aws/aws-sdk-go/issues/2448)
+Release v1.17.6 (2019-02-26)
+===
+
+### Service Client Updates
+* `service/cur`: Updates service API, documentation, and examples
+  * Adding support for Athena and new report preferences to the Cost and Usage Report API.
+* `service/discovery`: Updates service documentation
+  * Documentation updates for discovery
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/mediaconvert`: Updates service API and documentation
+  * AWS Elemental MediaConvert SDK has added several features including support for: auto-rotation or user-specified rotation of 0, 90, 180, or 270 degrees; multiple output groups with DRM; ESAM XML documents to specify ad insertion points; Offline Apple HLS FairPlay content protection.
+* `service/opsworkscm`: Updates service documentation
+  * Documentation updates for opsworkscm
+* `service/organizations`: Updates service documentation
+  * Documentation updates for AWS Organizations
+* `service/pinpoint`: Updates service API and documentation
+  * This release adds support for the Amazon Resource Groups Tagging API to Amazon Pinpoint, which means that you can now add and manage tags for Amazon Pinpoint projects (apps), campaigns, and segments. A tag is a label that you optionally define and associate with Amazon Pinpoint resource. Tags can help you categorize and manage these types of resources in different ways, such as by purpose, owner, environment, or other criteria. For example, you can use tags to apply policies or automation, or to identify resources that are subject to certain compliance requirements. A project, campaign, or segment can have as many as 50 tags. For more information about using and managing tags in Amazon Pinpoint, see the Amazon Pinpoint Developer Guide at https://docs.aws.amazon.com/pinpoint/latest/developerguide/welcome.html. For more information about the Amazon Resource Group Tagging API, see the Amazon Resource Group Tagging API Reference at https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/Welcome.html.
+* `service/resource-groups`: Updates service documentation
+
+Release v1.17.5 (2019-02-25)
+===
+
+### Service Client Updates
+* `service/autoscaling`: Updates service API and documentation
+  * Added support for passing an empty SpotMaxPrice parameter to remove a value previously set when updating an Amazon EC2 Auto Scaling group.
+* `service/ce`: Updates service documentation
+* `service/elasticloadbalancingv2`: Updates service API and documentation
+* `service/mediastore`: Updates service API and documentation
+  * This release adds support for access logging, which provides detailed records for the requests that are made to objects in a container.
+
+Release v1.17.4 (2019-02-22)
+===
+
+### Service Client Updates
+* `service/athena`: Updates service API and documentation
+  * This release adds tagging support for Workgroups to Amazon Athena. Use these APIs to add, remove, or list tags on Workgroups, and leverage the tags for various authorization and billing scenarios.
+* `service/cloud9`: Updates service API and documentation
+  * Adding EnvironmentLifecycle to the Environment data type.
+* `service/glue`: Updates service API, documentation, and paginators
+  * AWS Glue adds support for assigning AWS resource tags to jobs, triggers, development endpoints, and crawlers. Each tag consists of a key and an optional value, both of which you define. With this capacity, customers can use tags in AWS Glue to easily organize and identify your resources, create cost allocation reports, and control access to resources.
+* `service/states`: Updates service API and documentation
+  * This release adds support for tag-on-create. You can now add tags when you create AWS Step Functions activity and state machine resources. For more information about tagging, see AWS Tagging Strategies.
+
+Release v1.17.3 (2019-02-21)
+===
+
+### Service Client Updates
+* `service/codebuild`: Updates service API and documentation
+  * Add support for CodeBuild local caching feature
+* `service/kinesis-video-archived-media`: Updates service API and documentation
+* `service/kinesis-video-media`: Updates service documentation
+* `service/kinesisvideo`: Updates service documentation
+  * Documentation updates for Kinesis Video Streams
+* `service/monitoring`: Updates service documentation
+  * Documentation updates for monitoring
+* `service/organizations`: Updates service documentation
+  * Documentation updates for organizations
+* `service/transfer`: Updates service API and documentation
+  * Bug fix: increased the max length allowed for request parameter NextToken when paginating List operations
+* `service/workdocs`: Updates service documentation
+  * Documentation updates for workdocs
+
+Release v1.17.2 (2019-02-20)
+===
+
+### Service Client Updates
+* `service/codecommit`: Updates service API and documentation
+  * This release adds an API for adding / updating / deleting / copying / moving / setting file modes for one or more files directly to an AWS CodeCommit repository without requiring a Git client.
+* `service/directconnect`: Updates service API and documentation
+  * Documentation updates for AWS Direct Connect
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/medialive`: Updates service API and documentation
+  * This release adds support for VPC inputs, allowing you to push content from your Amazon VPC directly to MediaLive.
+
+Release v1.17.1 (2019-02-19)
+===
+
+### Service Client Updates
+* `service/ds`: Updates service API and documentation
+  * This release adds support for tags during directory creation (CreateDirectory, CreateMicrosoftAd, ConnectDirectory).
+* `service/elasticfilesystem`: Updates service API, documentation, and examples
+  * Amazon EFS now supports adding tags to file system resources as part of the CreateFileSystem API . Using this capability, customers can now more easily enforce tag-based authorization for EFS file system resources.
+* `service/iot`: Updates service API and documentation
+  * AWS IoT - AWS IoT Device Defender adds support for configuring behaviors in a security profile with statistical thresholds. Device Defender also adds support for configuring multiple data-point evaluations before a violation is either created or cleared.
+* `service/ssm`: Updates service API and documentation
+  * AWS Systems Manager now supports adding tags when creating Activations, Patch Baselines, Documents, Parameters, and Maintenance Windows
+
+Release v1.17.0 (2019-02-18)
+===
+
+### Service Client Updates
+* `service/athena`: Updates service API, documentation, and paginators
+  * This release adds support for Workgroups to Amazon Athena. Use Workgroups to isolate users, teams, applications or workloads in the same account, control costs by setting up query limits and creating Amazon SNS alarms, and publish query-related metrics to Amazon CloudWatch.
+* `service/secretsmanager`: Updates service API and documentation
+  * This release increases the maximum allowed size of SecretString or SecretBinary from 4KB to 7KB in the CreateSecret, UpdateSecret, PutSecretValue and GetSecretValue APIs.
+
+### SDK Features
+* `service/s3/s3manager`: Update S3 Upload Multipart location ([#2453](https://github.com/aws/aws-sdk-go/pull/2453))
+  * Updates the Location returned value of S3 Upload's Multipart UploadOutput type to be consistent with single part upload URL. This update also brings the multipart upload Location inline with the S3 object URLs created by the SDK
+  * Fix [#1385](https://github.com/aws/aws-sdk-go/issues/1385)
+
+### SDK Enhancements
+* `service/s3`: Update BucketRegionError message to include more information ([#2451](https://github.com/aws/aws-sdk-go/pull/2451))
+  * Updates the BucketRegionError error message to include information about the endpoint and actual region the bucket is in if known. This error message is created by the SDK, but could produce a confusing error message if the user provided a region that doesn't match the endpoint.
+  * Fix [#2426](https://github.com/aws/aws-sdk-go/pull/2451)
+
+Release v1.16.36 (2019-02-15)
+===
+
+### Service Client Updates
+* `service/application-autoscaling`: Updates service API and documentation
+* `service/chime`: Updates service documentation
+  * Documentation updates for Amazon Chime
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/iot`: Updates service API and documentation
+  * In this release, IoT Device Defender introduces support for tagging Scheduled Audit resources.
+
+Release v1.16.35 (2019-02-14)
+===
+
+### Service Client Updates
+* `service/ec2`: Updates service API and documentation
+  * This release adds tagging and ARN support for AWS Client VPN Endpoints.You can now run bare metal workloads on EC2 M5 and M5d instances. m5.metal and m5d.metal instances are powered by custom Intel Xeon Scalable Processors with a sustained all core frequency of up to 3.1 GHz. m5.metal and m5d.metal offer 96 vCPUs and 384 GiB of memory. With m5d.metal, you also have access to 3.6 TB of NVMe SSD-backed instance storage. m5.metal and m5d.metal instances deliver 25 Gbps of aggregate network bandwidth using Elastic Network Adapter (ENA)-based Enhanced Networking, as well as 14 Gbps of bandwidth to EBS.You can now run bare metal workloads on EC2 z1d instances. z1d.metal instances are powered by custom Intel Xeon Scalable Processors with a sustained all core frequency of up to 4.0 GHz. z1d.metal offers 48 vCPUs, 384 GiB of memory, and 1.8 TB of NVMe SSD-backed instance storage. z1d.metal instances deliver 25 Gbps of aggregate network bandwidth using Elastic Network Adapter (ENA)-based Enhanced Networking, as well as 14 Gbps of bandwidth to EBS.
+* `service/kinesisvideo`: Updates service API and documentation
+  * Adds support for Tag-On-Create for Kinesis Video Streams. A list of tags associated with the stream can be created at the same time as the stream creation.
+
+Release v1.16.34 (2019-02-13)
+===
+
+### Service Client Updates
+* `service/elasticfilesystem`: Updates service API and documentation
+  * Customers can now use the EFS Infrequent Access (IA) storage class to more cost-effectively store larger amounts of data in their file systems. EFS IA is cost-optimized storage for files that are not accessed every day. You can create a new file system and enable Lifecycle Management to automatically move files that have not been accessed for 30 days from the Standard storage class to the IA storage class.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/mediatailor`: Updates service API and documentation
+* `service/rekognition`: Updates service API and documentation
+  * GetContentModeration now returns the version of the moderation detection model used to detect unsafe content.
+
+Release v1.16.33 (2019-02-12)
+===
+
+### Service Client Updates
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/lambda`: Updates service documentation
+  * Documentation updates for AWS Lambda
+
+Release v1.16.32 (2019-02-11)
+===
+
+### Service Client Updates
+* `service/appstream`: Updates service API and documentation
+  * This update enables customers to find the start time, max expiration time, and connection status associated with AppStream streaming session.
+* `service/codebuild`: Updates service API and documentation
+  * Add customized webhook filter support
+* `service/mediapackage`: Updates service API and documentation
+  * Adds optional configuration for DASH to compact the manifest by combining duplicate SegmentTemplate tags. Adds optional configuration for DASH SegmentTemplate format to refer to segments by "Number" (default) or by "Time".
+
+Release v1.16.31 (2019-02-08)
+===
+
+### Service Client Updates
+* `service/discovery`: Updates service documentation
+  * Documentation updates for the AWS Application Discovery Service.
+* `service/dlm`: Updates service API and documentation
+* `service/ecs`: Updates service API, documentation, and examples
+  * Amazon ECS introduces the PutAccountSettingDefault API, an API that allows a user to set the default ARN/ID format opt-in status for all the roles and users in the account. Previously, setting the account's default opt-in status required the use of the root user with the PutAccountSetting API.
+
+Release v1.16.30 (2019-02-07)
+===
+
+### Service Client Updates
+* `service/es`: Updates service API and documentation
+  * Feature: Support for three Availability Zone deployments
+* `service/gamelift`: Updates service API and documentation
+  * This release delivers a new API action for deleting unused matchmaking rule sets. More details are available at https://aws.amazon.com/releasenotes/?tag=releasenotes%23keywords%23amazon-gamelift.
+* `service/medialive`: Updates service API and documentation
+  * This release adds tagging of channels, inputs, and input security groups.
+* `service/robomaker`: Updates service API and documentation
+
+Release v1.16.29 (2019-02-06)
+===
+
+### Service Client Updates
+* `service/ec2`: Updates service API and documentation
+  * Add Linux with SQL Server Standard, Linux with SQL Server Web, and Linux with SQL Server Enterprise to the list of allowed instance platforms for On-Demand Capacity Reservations.
+* `service/fsx`: Updates service API and documentation
+
+Release v1.16.28 (2019-02-05)
+===
+
+### Service Client Updates
+* `service/ec2`: Updates service API and documentation
+  * ec2.DescribeVpcPeeringConnections pagination support
+* `service/servicecatalog`: Updates service documentation
+  * Service Catalog Documentation Update for ProvisionedProductDetail
+* `service/shield`: Updates service API and documentation
+  * The DescribeProtection request now accepts resource ARN as valid parameter.
+
+Release v1.16.27 (2019-02-04)
+===
+
+### Service Client Updates
+* `service/application-autoscaling`: Updates service documentation
+* `service/codecommit`: Updates service API
+  * This release supports a more graceful handling of the error case when a repository is not associated with a pull request ID in a merge request in AWS CodeCommit.
+* `service/ecs`: Updates service API and documentation
+  * This release of Amazon Elastic Container Service (Amazon ECS) introduces support for GPU workloads by enabling you to create clusters with GPU-enabled container instances.
+* `service/workspaces`: Updates service API
+  * This release sets ClientProperties as a required parameter.
+
+Release v1.16.26 (2019-01-25)
+===
+
+### Service Client Updates
+* `service/codecommit`: Updates service API and documentation
+  * The PutFile API will now throw new exception FilePathConflictsWithSubmodulePathException when a submodule exists at the input file path; PutFile API will also throw FolderContentSizeLimitExceededException when the total size of any folder on the path exceeds the limit as a result of the operation.
+* `service/devicefarm`: Updates service API and documentation
+  * Introduces a new rule in Device Pools - "Availability". Customers can now ensure they pick devices that are available (i.e., not being used by other customers).
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/mediaconnect`: Updates service API and documentation
+* `service/medialive`: Updates service API and documentation
+  * This release adds support for Frame Capture output groups and for I-frame only manifests (playlists) in HLS output groups.
+
+Release v1.16.25 (2019-01-24)
+===
+
+### Service Client Updates
+* `service/codebuild`: Updates service API and documentation
+  * This release adds support for cross-account ECR images and private registry authentication.
+* `service/ecr`: Updates service API
+  * Amazon ECR updated the default endpoint URL to support AWS Private Link.
+* `service/elasticloadbalancingv2`: Updates service API and documentation
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/logs`: Updates service documentation
+  * Documentation updates for CloudWatch Logs
+* `service/rds`: Updates service API and documentation
+  * The Amazon RDS API allows you to add or remove Identity and Access Management (IAM) role associated with a specific feature name with an RDS database instance. This helps with capabilities such as invoking Lambda functions from within a trigger in the database, load data from Amazon S3 and so on
+* `service/sms-voice`: Updates service API and documentation
+
+Release v1.16.24 (2019-01-23)
+===
+
+### Service Client Updates
+* `service/acm-pca`: Updates service API, documentation, and waiters
+* `service/apigatewaymanagementapi`: Updates service API
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/worklink`: Adds new service
+
+### SDK Enhancements
+* `aws`: Update Context to be an alias of context.Context for Go 1.9 ([#2412](https://github.com/aws/aws-sdk-go/pull/2412))
+  * Updates aws.Context interface to be an alias of the standard libraries context.Context type instead of redefining the interface. This will allow IDEs and utilities to interpret the aws.Context as the exactly same type as the standard libraries context.Context.
+
+Release v1.16.23 (2019-01-21)
+===
+
+### Service Client Updates
+* `service/appstream`: Updates service API and documentation
+  * This API update includes support for tagging Stack, Fleet, and ImageBuilder resources at creation time.
+* `service/discovery`: Updates service API, documentation, and paginators
+  * The Application Discovery Service's import APIs allow you to import information about your on-premises servers and applications into ADS so that you can track the status of your migrations through the Migration Hub console.
+* `service/dms`: Updates service waiters
+  * Update for DMS TestConnectionSucceeds waiter
+* `service/fms`: Updates service API and documentation
+* `service/ssm`: Updates service API and documentation
+  * AWS Systems Manager State Manager now supports configuration management of all AWS resources through integration with Automation.
+
+Release v1.16.22 (2019-01-18)
+===
+
+### Service Client Updates
+* `service/ec2`: Updates service API
+  * Adjust EC2's available instance types.
+* `service/glue`: Updates service API and documentation
+  * AllocatedCapacity field is being deprecated and replaced with MaxCapacity field
+
+Release v1.16.21 (2019-01-17)
+===
+
+### Service Client Updates
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/lambda`: Updates service documentation and examples
+  * Documentation updates for AWS Lambda
+* `service/lightsail`: Updates service API and documentation
+  * This release adds functionality to the CreateDiskSnapshot API that allows users to snapshot instance root volumes. It also adds various documentation updates.
+* `service/pinpoint`: Updates service API and documentation
+  * This release updates the PutEvents operation. AppPackageName, AppTitle, AppVersionCode, SdkName fields will now be accepted as a part of the event when submitting events.
+* `service/rekognition`: Updates service API and documentation
+  * GetLabelDetection now returns bounding box information for common objects and a hierarchical taxonomy of detected labels. The version of the model used for video label detection is also returned. DetectModerationLabels now returns the version of the model used for detecting unsafe content.
+
+### SDK Enhancements
+* `aws/request: Improve error handling in shouldRetryCancel ([#2298](https://github.com/aws/aws-sdk-go/pull/2298))
+  * Simplifies and improves SDK's detection of HTTP request errors that should be retried. Previously the SDK would incorrectly attempt to retry `EHOSTDOWN` connection errors. This change fixes this, by using the `Temporary` interface when available.
+
+Release v1.16.20 (2019-01-16)
+===
+
+### Service Client Updates
+* `service/backup`: Adds new service
+* `service/ce`: Updates service documentation
+* `service/dynamodb`: Updates service API and documentation
+  * Amazon DynamoDB now integrates with AWS Backup, a centralized backup service that makes it easy for customers to configure and audit the AWS resources they want to backup, automate backup scheduling, set retention policies, and monitor all recent backup and restore activity. AWS Backup provides a fully managed, policy-based backup solution, simplifying your backup management, and helping you meet your business and regulatory backup compliance requirements. For more information, see the Amazon DynamoDB Developer Guide.
+
+Release v1.16.19 (2019-01-14)
+===
+
+### Service Client Updates
+* `service/mediaconvert`: Updates service API and documentation
+  * IMF decode from a Composition Playlist for IMF specializations App #2 and App #2e; up to 99 input clippings; caption channel selection for MXF; and updated rate control for CBR jobs. Added support for acceleration in preview
+* `service/storagegateway`: Updates service API and documentation
+  * JoinDomain API supports two more  parameters: organizational unit(OU) and domain controllers.  Two new APIs are introduced: DetachVolume and AttachVolume.
+
+### SDK Enhancements
+* `aws/endpoints`: Add customization for AWS GovCloud (US) Application Autoscalling ([#2395](https://github.com/aws/aws-sdk-go/pull/2395))
+  * Adds workaround to correct the endpoint for Application Autoscaling running in AWS GovCloud (US).
+  * Fixes [#2391](https://github.com/aws/aws-sdk-go/issues/2391)
+
+Release v1.16.18 (2019-01-11)
+===
+
+### Service Client Updates
+* `service/elasticmapreduce`: Updates service API and documentation
+  * Documentation updates for Amazon EMR
+* `service/rds-data`: Updates service API, documentation, paginators, and examples
+
+Release v1.16.17 (2019-01-10)
+===
+
+### Service Client Updates
+* `service/codedeploy`: Updates service documentation
+  * Documentation updates for codedeploy
+* `service/ec2`: Updates service API and documentation
+  * EC2 Spot: a) CreateFleet support for Single AvailabilityZone requests and b) support for paginated DescribeSpotInstanceRequests.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/iot`: Updates service API and documentation
+  * This release adds tagging support for rules of AWS IoT Rules Engine. Tags enable you to categorize your rules in different ways, for example, by purpose, owner, or environment. For more information about tagging, see AWS Tagging Strategies (https://aws.amazon.com/answers/account-management/aws-tagging-strategies/). For technical documentation, look for the tagging operations in the AWS IoT Core API reference or User Guide (https://docs.aws.amazon.com/iot/latest/developerguide/tagging-iot.html).
+* `service/sagemaker`: Updates service API and documentation
+  * SageMaker Training Jobs now support Inter-Container traffic encryption.
+
+Release v1.16.16 (2019-01-09)
+===
+
+### Service Client Updates
+* `service/docdb`: Adds new service
+  * Amazon DocumentDB (with MongoDB compatibility) is a fast, reliable, and fully-managed database service. Amazon DocumentDB makes it easy for developers to set up, run, and scale MongoDB-compatible databases in the cloud.
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+* `service/redshift`: Updates service API and documentation
+  * DescribeSnapshotSchedules returns a list of snapshot schedules. With this release, this API will have a list of clusters and number of clusters associated with the schedule.
+
+Release v1.16.15 (2019-01-07)
+===
+
+### Service Client Updates
+* `service/appmesh`: Updates service API and documentation
+* `aws/endpoints`: Updated Regions and Endpoints metadata.
+
 Release v1.16.14 (2019-01-04)
 ===
 
