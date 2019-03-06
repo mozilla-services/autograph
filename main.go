@@ -47,8 +47,6 @@ import (
 	"github.com/ThalesIgnite/crypto11"
 )
 
-var signerIDFormat = `^[a-zA-Z0-9-_]{1,64}$`
-
 // configuration loads a yaml file that contains the configuration of Autograph
 type configuration struct {
 	Server struct {
@@ -302,9 +300,9 @@ func (a *autographer) startCleanupHandler() {
 func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 	sids := make(map[string]bool)
 	for _, signerConf := range signerConfs {
-		if !regexp.MustCompile(signerIDFormat).MatchString(signerConf.ID) {
+		if !regexp.MustCompile(signer.IDFormat).MatchString(signerConf.ID) {
 			return fmt.Errorf("signer ID %q does not match the permitted format %q",
-				signerConf.ID, signerIDFormat)
+				signerConf.ID, signer.IDFormat)
 		}
 		// forbid signers with the same ID
 		if _, exists := sids[signerConf.ID]; exists {

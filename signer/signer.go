@@ -34,6 +34,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+
+// IDs must follow this representation
+const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
+
 // RSACacheConfig is a config for the RSAKeyCache
 type RSACacheConfig struct {
 	// NumKeys is the number of RSA keys matching the issuer size
