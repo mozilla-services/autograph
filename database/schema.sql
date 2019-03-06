@@ -8,7 +8,7 @@ CREATE TABLE endentities(
       signer_id   VARCHAR NOT NULL,
       is_current  BOOLEAN NOT NULL,
       x5u         VARCHAR NULL,
-      created_at  TIMESTAMP WITH TIME ZONE NOT NULL
+      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 CREATE INDEX endentities_latest_idx ON endentities(label, signer_id, is_current);
 ALTER TABLE endentities ADD CONSTRAINT endentities_unique_label UNIQUE (label);
@@ -19,7 +19,7 @@ GRANT USAGE ON endentities_id_seq TO myautographdbuser;
 CREATE TABLE endentities_lock(
       id          SERIAL PRIMARY KEY,
       is_locked   BOOLEAN NOT NULL,
-      created_at  TIMESTAMP WITH TIME ZONE NOT NULL,
+      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       freed_at    TIMESTAMP WITH TIME ZONE
 
 );

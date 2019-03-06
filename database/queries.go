@@ -33,9 +33,9 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 		return nil, err
 	}
 	var id uint64
-	err = tx.QueryRow(`INSERT INTO endentities_lock(id, is_locked, created_at)
-				VALUES (DEFAULT, $1, $2) RETURNING id`,
-		true, time.Now().UTC()).Scan(&id)
+	err = tx.QueryRow(`INSERT INTO endentities_lock(is_locked)
+				VALUES ($1) RETURNING id`,
+		true).Scan(&id)
 	if err != nil {
 		tx.Rollback()
 		err = errors.Wrap(err, "failed to lock endentities table")
@@ -65,8 +65,8 @@ func (tx *Transaction) GetLabelOfLatestEE(signerID string, youngerThan time.Dura
 
 // InsertEE uses an existing transaction to insert an end-entity in database
 func (tx *Transaction) InsertEE(x5u, label, signerID string, hsmHandle uint) (err error) {
-	_, err = tx.Exec(`INSERT INTO endentities(x5u, label, signer_id, hsm_handle, is_current, created_at)
-				VALUES ($1, $2, $3, $4, $5, $6)`, x5u, label, signerID, hsmHandle, true, time.Now().UTC())
+	_, err = tx.Exec(`INSERT INTO endentities(x5u, label, signer_id, hsm_handle, is_current)
+				VALUES ($1, $2, $3, $4, $5)`, x5u, label, signerID, hsmHandle, true)
 	if err != nil {
 		tx.Rollback()
 		err = errors.Wrap(err, "failed to insert new key in database")
@@ -85,8 +85,7 @@ func (tx *Transaction) InsertEE(x5u, label, signerID string, hsmHandle uint) (er
 
 // End commits a transaction
 func (tx *Transaction) End() error {
-	_, err := tx.Exec("UPDATE endentities_lock SET is_locked=FALSE, freed_at=$1 WHERE id=$2",
-		time.Now().UTC(), tx.ID)
+	_, err := tx.Exec("UPDATE endentities_lock SET is_locked=FALSE, freed_at=NOW() WHERE id=$1", tx.ID)
 	if err != nil {
 		err = errors.Wrap(err, "failed to update is_current status of keys in database")
 		tx.Rollback()
