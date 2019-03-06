@@ -34,7 +34,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-
 // IDs must follow this representation
 const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 
