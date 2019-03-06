@@ -3,16 +3,23 @@ package database // import "go.mozilla.org/autograph/database"
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"go.mozilla.org/mozlogrus"
 
 	// lib/pq is the postgres driver
 	_ "github.com/lib/pq"
 
 	"github.com/pkg/errors"
 )
+
+func init() {
+	// initialize the logger
+	mozlogrus.Enable("autograph")
+}
 
 // Handler handles a database connection
 type Handler struct {
