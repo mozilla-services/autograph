@@ -113,7 +113,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 			return nil, errors.Wrap(err, "contentsignaturepki: failed to begin end-entity db operations")
 		}
 	}
-	err = s.findEE(conf, tx)
+	err = s.findAndSetEE(conf, tx)
 	if err != nil {
 		if err == database.ErrNoSuitableEEFound {
 			log.Printf("contentsignaturepki: making new end-entity for signer %q", s.ID)
@@ -125,7 +125,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 				return
 			}
 			// make the certificate and upload the chain
-			err = s.makeChainAndX5U()
+			err = s.makeAndUploadChain()
 			if err != nil {
 				return nil, errors.Wrap(err, "contentsignaturepki: failed to make chain and x5u for end-entity")
 			}

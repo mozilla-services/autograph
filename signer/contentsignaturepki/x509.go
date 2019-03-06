@@ -16,9 +16,9 @@ import (
 	"go.mozilla.org/autograph/signer"
 )
 
-// findEE searches the database for an end-entity key that is currently
+// findAndSetEE searches the database for an end-entity key that is currently
 // valid for this signer and is not older than cfg.Validity days
-func (s *ContentSigner) findEE(conf signer.Configuration, tx *database.Transaction) (err error) {
+func (s *ContentSigner) findAndSetEE(conf signer.Configuration, tx *database.Transaction) (err error) {
 	var tmpX5U string
 	if s.db == nil {
 		// no database, no chance to find an existing key
@@ -42,9 +42,9 @@ func (s *ContentSigner) findEE(conf signer.Configuration, tx *database.Transacti
 	return
 }
 
-// makeChainAndX5U makes a certificate using the end-entity public key,
+// makeAndUploadChain makes a certificate using the end-entity public key,
 // uploads the chain to its destination and creates an X5U download URL
-func (s *ContentSigner) makeChainAndX5U() (err error) {
+func (s *ContentSigner) makeAndUploadChain() (err error) {
 	var fullChain, chainName string
 	fullChain, chainName, err = s.makeChain()
 	if err != nil {
