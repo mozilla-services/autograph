@@ -1,0 +1,99 @@
+version: "3"
+volumes:
+  tmpdir:
+services:
+  db:
+    container_name: autograph-db
+    image: autograph:db
+    build:
+      context: database/
+    environment:
+      - POSTGRES_DB=autograph
+    ports:
+      - "5432:5432"
+
+  autograph-app:
+    container_name: autograph-app
+    image: app:build
+    build:
+      context: .
+    environment:
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=disable
+    links:
+      - db
+    ports:
+      - "8000:8000"
+    command: autograph -c /app/autograph.yaml
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/__heartbeat__"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  autograph-app-hsm:
+    container_name: autograph-app-hsm
+    image: softhsm:build
+    build:
+      context: tools/softhsm/
+    environment:
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=disable
+    links:
+      - db
+    ports:
+      - "8001:8001"
+    volumes:
+      - tmpdir:/tmp/
+    command:
+      [
+        "/app/wait-for-it.sh",
+        "db:5432",
+        "--",
+        "autograph",
+        "-c",
+        "/app/autograph.softhsm.yaml",
+      ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/__heartbeat__"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  autograph-monitor:
+    container_name: autograph-monitor
+    image: monitor:build
+    build:
+      context: tools/autograph-monitor/
+    environment:
+      - AUTOGRAPH_URL=http://autograph-app:8000/
+    links:
+      - autograph-app
+    volumes:
+      - tmpdir:/tmp/
+    command:
+      [
+        "/app/wait-for-it.sh",
+        "autograph-app-hsm:8001",
+        "--",
+        "/go/bin/autograph-monitor",
+      ]
+
+  autograph-monitor-hsm:
+    container_name: autograph-monitor-hsm
+    image: monitor:build
+    build:
+      context: tools/autograph-monitor/
+    environment:
+      - AUTOGRAPH_URL=http://autograph-app-hsm:8001/
+    links:
+      - autograph-app-hsm
+    volumes:
+      - tmpdir:/tmp/
+    command:
+      [
+        "/app/wait-for-it.sh",
+        "autograph-app-hsm:8001",
+        "--",
+        "/app/run-monitor-with-root-hash.sh",
+        "/tmp/autograph.softhsm.yaml",
+        "normandy",
+      ]

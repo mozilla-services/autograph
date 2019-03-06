@@ -19,6 +19,16 @@ statsd:
 #     tokenlabel: cavium
 #     pin:        ulfr:e2deea623796eecd
 
+# When using a postgres database, set the config below:
+# database: 
+#    name: autograph
+#    user: myautographdbuser
+#    password: myautographdbpassword
+#    host: 127.0.0.1:5432
+#    sslmode: enabled
+#    maxopenconns: 100
+#    maxidleconns: 10
+
 # The keys below are testing keys that do not grant any power
 signers:
     # a p384 key, the standard

@@ -43,17 +43,49 @@ Optionally, configure statsd with:
 		namespace: "autograph."
 		buflen: 1
 
+Database
+--------
+
+Optionally, configure postgres using the sample below.
+Use the schema in database/schema.sql to initialize the db.
+Make sure to set a user with limited grants in the configuration.
+
+.. code:: yaml
+
+	database: 
+		name: autograph
+		user: myautographdbuser
+		password: myautographdbpassword
+		host: 127.0.0.1:5432
+		sslmode: enabled
+		maxopenconns: 100
+		maxidleconns: 10
+
+Hardware Security Module (HSM)
+------------------------------
+
+Several signers support key operations using an HSM.
+To configure it globally, set the following config where:
+
+* *path* is the file system path to a pkcs11 library
+* *tokenlabel* is set by the type of hsm (cavium for cloudhsm)
+* *pin* is the credentials to use the hsm ($user:$pass for cloudhsm)
+
+.. code:: yaml
+
+	hsm:
+		# sample config for cloudhsm
+		path:       /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
+		tokenlabel: cavium
+		pin:        ulfr:e2deea623796eecd
+
+Refer to each signer's configuration doc to know how they each make use of the HSM.
+
 Signers
 -------
 
-The configuration for each signer is described in their respective README.
-
-* `Content-Signature`_
-* `XPI`_
-
-.. _`Content-Signature`: https://github.com/mozilla-services/autograph/blob/master/signer/contentsignature/README.rst
-
-.. _`XPI`: https://github.com/mozilla-services/autograph/blob/master/signer/xpi/README.rst
+The configuration for each signer is described in their
+respective README under the *signer/* directory.
 
 Authorizations
 --------------

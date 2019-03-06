@@ -11,6 +11,7 @@ import (
 
 	"go.mozilla.org/sops"
 	"go.mozilla.org/sops/aes"
+	sopsdotenv "go.mozilla.org/sops/stores/dotenv"
 	sopsjson "go.mozilla.org/sops/stores/json"
 	sopsyaml "go.mozilla.org/sops/stores/yaml"
 )
@@ -28,7 +29,7 @@ func File(path, format string) (cleartext []byte, err error) {
 
 // Data is a helper that takes encrypted data and a format string,
 // decrypts the data and returns its cleartext in an []byte.
-// The format string can be `json`, `yaml` or `binary`.
+// The format string can be `json`, `yaml`, `dotenv` or `binary`.
 // If the format string is empty, binary format is assumed.
 func Data(data []byte, format string) (cleartext []byte, err error) {
 	// Initialize a Sops JSON store
@@ -38,6 +39,8 @@ func Data(data []byte, format string) (cleartext []byte, err error) {
 		store = &sopsjson.Store{}
 	case "yaml":
 		store = &sopsyaml.Store{}
+	case "dotenv":
+		store = &sopsdotenv.Store{}
 	default:
 		store = &sopsjson.BinaryStore{}
 	}
@@ -70,5 +73,5 @@ func Data(data []byte, format string) (cleartext []byte, err error) {
 		return nil, fmt.Errorf("Failed to verify data integrity. expected mac %q, got %q", originalMac, mac)
 	}
 
-	return store.EmitPlainFile(tree.Branch)
+	return store.EmitPlainFile(tree.Branches)
 }

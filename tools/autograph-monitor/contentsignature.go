@@ -21,9 +21,9 @@ import (
 // we don't want to alert on those.
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1466523
 var ignoredCerts = map[string]bool{
-	"fingerprinting-defenses.content-signature.mozilla.org": true,
-	"fennec-dlc.content-signature.mozilla.org":              true,
-	"focus-experiments.content-signature.mozilla.org":       true,
+	// "fingerprinting-defenses.content-signature.mozilla.org": true,
+	// "fennec-dlc.content-signature.mozilla.org":              true,
+	// "focus-experiments.content-signature.mozilla.org":       true,
 }
 
 // validate the signature and certificate chain of a content signature response
@@ -77,7 +77,11 @@ func verifyContentSignature(response signatureresponse) error {
 
 func getX5U(x5u string) (certs []*x509.Certificate, err error) {
 	log.Printf("Retrieving X5U %q", x5u)
-	resp, err := http.Get(x5u)
+	c := &http.Client{}
+	t := &http.Transport{}
+	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
+	c.Transport = t
+	resp, err := c.Get(x5u)
 	if err != nil {
 		return certs, fmt.Errorf("Failed to retrieve X5U %s: %v", x5u, err)
 	}

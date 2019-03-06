@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -27,9 +28,12 @@ import (
 
 	"github.com/mozilla-services/yaml"
 
+	"go.mozilla.org/autograph/database"
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+
+	"go.mozilla.org/autograph/signer/contentsignaturepki"
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
@@ -58,6 +62,7 @@ type configuration struct {
 		Buflen    int
 	}
 	HSM            crypto11.PKCS11Config
+	Database       database.Config
 	Signers        []signer.Configuration
 	Authorizations []authorization
 	Monitoring     authorization
@@ -66,6 +71,7 @@ type configuration struct {
 // An autographer is a running instance of an autograph service,
 // with all signers and permissions configured
 type autographer struct {
+	db          *database.Handler
 	stats       *statsd.Client
 	signers     []signer.Signer
 	auths       map[string]authorization
@@ -123,7 +129,22 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	// and store them into the autographer handler
 	ag = newAutographer(conf.Server.NonceCacheSize)
 
-	// initialize the hsm if defined in configuration
+	// connect to the database
+	if conf.Database.Name != "" {
+		ag.db, err = database.Connect(conf.Database)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if ag.db == nil {
+			log.Fatal("failed to initialize database connection, unknown error")
+		}
+		// start a monitoring function that panics if
+		// the db becomes inaccessible
+		go ag.db.Monitor()
+		log.Print("database connection established")
+	}
+
+	// initialize the hsm if a configuration is defined
 	if conf.HSM.Path != "" {
 		tmpCtx, err := crypto11.Configure(&conf.HSM)
 		if err != nil {
@@ -133,7 +154,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 			// if we successfully initialized the crypto11 context,
 			// tell the signers they can try using the HSM
 			for i := range conf.Signers {
-				conf.Signers[i].HSMIsAvailable()
+				conf.Signers[i].HsmIsAvailable(tmpCtx)
 			}
 		}
 	}
@@ -279,6 +300,10 @@ func (a *autographer) startCleanupHandler() {
 func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 	sids := make(map[string]bool)
 	for _, signerConf := range signerConfs {
+		if !regexp.MustCompile(signer.IDFormat).MatchString(signerConf.ID) {
+			return fmt.Errorf("signer ID %q does not match the permitted format %q",
+				signerConf.ID, signer.IDFormat)
+		}
 		// forbid signers with the same ID
 		if _, exists := sids[signerConf.ID]; exists {
 			return fmt.Errorf("duplicate signer ID %q is not permitted", signerConf.ID)
@@ -295,10 +320,18 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 				return errors.Wrapf(err, "failed to add signer stats client %q or got back nil statsClient", signerConf.ID)
 			}
 		}
-
+		// give the database handler to the signer configuration
+		if a.db != nil {
+			signerConf.DB = a.db
+		}
 		switch signerConf.Type {
 		case contentsignature.Type:
 			s, err = contentsignature.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case contentsignaturepki.Type:
+			s, err = contentsignaturepki.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}

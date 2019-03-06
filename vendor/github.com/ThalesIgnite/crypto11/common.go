@@ -5,15 +5,16 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"errors"
-	pkcs11 "github.com/miekg/pkcs11"
 	"math/big"
 	"unsafe"
+
+	pkcs11 "github.com/miekg/pkcs11"
 )
 
 // ErrMalformedDER represents a failure to decode an ASN.1-encoded message
 var ErrMalformedDER = errors.New("crypto11: malformed DER message")
 
-// ErrMalformedDER represents a failure to decode a signature.  This
+// ErrMalformedSignature represents a failure to decode a signature.  This
 // means the PKCS#11 library has returned an empty or odd-length byte
 // string.
 var ErrMalformedSignature = errors.New("crypto11xo: malformed signature")
@@ -71,30 +72,34 @@ func (sig *dsaSignature) marshalDER() ([]byte, error) {
 	return asn1.Marshal(*sig)
 }
 
-// Compute *DSA signature and marshal the result in DER fform
+// Compute *DSA signature and marshal the result in DER form
 func dsaGeneric(slot uint, key pkcs11.ObjectHandle, mechanism uint, digest []byte) ([]byte, error) {
 	var err error
 	var sigBytes []byte
 	var sig dsaSignature
 	mech := []*pkcs11.Mechanism{pkcs11.NewMechanism(mechanism, nil)}
-	err = withSession(slot, func(session pkcs11.SessionHandle) error {
-		if err = libHandle.SignInit(session, mech, key); err != nil {
+	err = withSession(slot, func(session *PKCS11Session) error {
+		if err = instance.ctx.SignInit(session.Handle, mech, key); err != nil {
 			return err
 		}
-		sigBytes, err = libHandle.Sign(session, digest)
+		sigBytes, err = instance.ctx.Sign(session.Handle, digest)
 		return err
 	})
 	if err != nil {
 		return nil, err
 	}
-	sig.unmarshalBytes(sigBytes)
+	err = sig.unmarshalBytes(sigBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	return sig.marshalDER()
 }
 
 // Pick a random label for a key
 func generateKeyLabel() ([]byte, error) {
-	const label_size = 32
-	rawLabel := make([]byte, label_size)
+	const labelSize = 32
+	rawLabel := make([]byte, labelSize)
 	var rand PKCS11RandReader
 	sz, err := rand.Read(rawLabel)
 	if err != nil {
@@ -103,7 +108,7 @@ func generateKeyLabel() ([]byte, error) {
 	if sz < len(rawLabel) {
 		return nil, ErrCannotGetRandomData
 	}
-	label := make([]byte, 2*label_size)
+	label := make([]byte, 2*labelSize)
 	base64.URLEncoding.Encode(label, rawLabel)
 	return label, nil
 }

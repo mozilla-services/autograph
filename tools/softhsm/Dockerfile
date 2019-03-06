@@ -1,15 +1,17 @@
 FROM app:build
-MAINTAINER Mozilla
 
 USER root
 RUN apt update && \
-    apt -y upgrade && \
-    apt -y install softhsm2 && \
-    apt-get clean
+      apt -y upgrade && \
+      apt -y install softhsm2 python3 python3-ruamel.yaml && \
+      apt-get clean
+
+# copy the config
+ADD autograph.softhsm.yaml /app/
 
 # Setup SoftHSM
 RUN mkdir -p /var/lib/softhsm/tokens && \
-    softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
+      softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
 
 # load dev keys
 ADD webextensions-rsa.pem /go/src/go.mozilla.org/autograph/tools/softhsm/
@@ -20,9 +22,29 @@ RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 --id 12345678 --import /go/src/go.mozilla.org/autograph/tools/softhsm/extensions-ecdsa-pk8.pem
 
 # genkeys
-RUN cd /go/src/go.mozilla.org/autograph/ && \
-    go run tools/softhsm/genkeys.go
+RUN cd /go/src/go.mozilla.org/autograph/tools/softhsm/ && go run genkeys.go
 
-RUN cp /go/src/go.mozilla.org/autograph/autograph.softhsm.yaml /app/autograph.softhsm.yaml
+# make a pki in softhsm then update the config
+RUN cd /go/src/go.mozilla.org/autograph/tools/genpki/ && \
+      go run genpki.go > /app/genpki.out && \
+      cd /go/src/go.mozilla.org/autograph/tools/configurator && \
+      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
+      -p privatekey -v "$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" && \
+      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
+      -p publickey -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
+      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
+      -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')" && \
+      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
+      -p privatekey -v "$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" && \
+      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
+      -p publickey -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
+      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
+      -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')"
+
+RUN curl -o /app/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
+      chmod +x /app/wait-for-it.sh
+
+# in docker-compose, the monitor job will mount /tmp to get the generated config
+RUN cp /app/autograph.softhsm.yaml /tmp/
 
 CMD /go/bin/autograph -c /app/autograph.softhsm.yaml

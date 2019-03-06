@@ -1,6 +1,9 @@
 Crypto11
 ========
 
+[![GoDoc](https://godoc.org/github.com/ThalesIgnite/crypto11?status.svg)](https://godoc.org/github.com/ThalesIgnite/crypto11)
+[![Build Status](https://travis-ci.com/ThalesIgnite/crypto11.svg?branch=master)](https://travis-ci.com/ThalesIgnite/crypto11)
+
 This is an implementation of the standard Golang hardware crypto interface that
 uses [PKCS#11](http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/errata01/os/pkcs11-base-v2.40-errata01-os-complete.html) as a backend. The supported features are:
 
@@ -12,6 +15,8 @@ uses [PKCS#11](http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/errata01/os/p
 * ECDSA signing.
 * DSA signing.
 * Random number generation.
+* (Experimental) AES and DES3 encryption and decryption.
+* (Experimental) HMAC support.
 
 Signing is done through the
 [crypto.Signer](https://golang.org/pkg/crypto/#Signer) interface and
@@ -38,14 +43,14 @@ crypto11 manages it's dependencies via `dep`.  To Install `dep` run:
 
 Clone, ensure deps, and build:
 
-    go get github.com/thalesignite/crypto11
-    cd $GOPATH/src/github.com/thalesignite/crypto11
+    go get github.com/ThalesIgnite/crypto11
+    cd $GOPATH/src/github.com/ThalesIgnite/crypto11
     dep ensure
     go build
 
 Edit `config` to taste, and then run the test program:
 
-    go test
+    go test  -count=1
 
 Testing Guidance
 ================
@@ -87,6 +92,8 @@ To protect keys with the module only, use the 'accelerator' token:
       "Pin" : "password"
     }
 
+(At time of writing) GCM is not implemented, so expect test skips.
+
 Testing with SoftHSM
 --------------------
 
@@ -122,7 +129,7 @@ Testing with SoftHSM2
 To set up a slot:
 
     $ cat softhsm2.conf
-    directories.tokendir = /home/rjk/go/src/github.com/thalesignite/crypto11/tokens
+    directories.tokendir = /home/rjk/go/src/github.com/ThalesIgnite/crypto11/tokens
     objectstore.backend = file
     log.level = INFO
     $ mkdir tokens
@@ -145,7 +152,21 @@ The configuration looks like this:
       "Pin" : "password"
     }
 
-(At time of writing) PSS and OAEP aren't supported so expect test failures.
+(At time of writing) OAEP is only partial and HMAC is unsupported, so expect test skips.
+
+Limitations
+===========
+
+ * The [PKCS1v15DecryptOptions SessionKeyLen](https://golang.org/pkg/crypto/rsa/#PKCS1v15DecryptOptions) field
+is not implemented and an error is returned if it is nonzero.
+The reason for this is that it is not possible for crypto11 to guarantee the constant-time behavior in the specification.
+See [issue #5](https://github.com/ThalesIgnite/crypto11/issues/5) for further discussion.
+ * Symmetric crypto support via [cipher.Block](https://golang.org/pkg/crypto/cipher/#Block) is very slow.
+You can use the `BlockModeCloser` API
+(over 400 times as fast on my computer)
+but you must call the Close()
+interface (not found in [cipher.BlockMode](https://golang.org/pkg/crypto/cipher/#BlockMode)).
+See [issue #6](https://github.com/ThalesIgnite/crypto11/issues/6) for further discussion.
 
 Wishlist
 ========
@@ -158,7 +179,7 @@ Copyright
 
 MIT License.
 
-Copyright 2016, 2017 Thales e-Security, Inc
+Copyright 2016-2018 Thales e-Security, Inc
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

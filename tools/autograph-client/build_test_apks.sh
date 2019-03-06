@@ -12,17 +12,18 @@ wget -t 5 $FENNEC_NIGHTLY_URL $FENNEC_BETA_URL $ALIGNED_URL
 
 HAWK_USER=${HAWK_USER:-alice}
 HAWK_SECRET=${HAWK_SECRET:-fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu}
+TARGET=${TARGET:-'http://127.0.0.1:8000'}
 
 # Sign Fennec Nightly
-go run client.go -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0a1.multi.android-arm.apk -o fennec-64.0a1.multi.android-arm.resigned.apk -k apk_cert_with_dsa_sha1 -pk7digest sha1
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0a1.multi.android-arm.apk -o fennec-64.0a1.multi.android-arm.resigned.apk -k apk_cert_with_dsa_sha1 -pk7digest sha1
 
 # Sign Fennec Beta
-go run client.go -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0b9.en-US.android-arm.apk -o fennec-64.0b9.en-US.android-arm.resigned.apk -k legacy_apk_with_rsa -pk7digest sha1
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0b9.en-US.android-arm.apk -o fennec-64.0b9.en-US.android-arm.resigned.apk -k legacy_apk_with_rsa -pk7digest sha1
 
 # Sign with ECDSA
-go run client.go -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.ecdsa.resigned.apk -k apk_cert_with_ecdsa_sha256
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.ecdsa.resigned.apk -k apk_cert_with_ecdsa_sha256
 
 # Sign with RSA
-go run client.go -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.rsa.resigned.apk -k testapp-android
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.rsa.resigned.apk -k testapp-android
 
 tar cvzf resigned-apks.tgz *.resigned.apk

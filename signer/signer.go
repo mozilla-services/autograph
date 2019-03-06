@@ -10,6 +10,7 @@ import (
 	"crypto"
 	"crypto/dsa"
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -24,11 +25,17 @@ import (
 	"strings"
 	"time"
 
+	"go.mozilla.org/autograph/database"
+
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
+	"github.com/miekg/pkcs11"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
+
+// IDs must follow this representation
+const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 
 // RSACacheConfig is a config for the RSAKeyCache
 type RSACacheConfig struct {
@@ -55,12 +62,13 @@ type RSACacheConfig struct {
 
 // Configuration defines the parameters of a signer
 type Configuration struct {
-	ID          string `json:"id"`
-	Type        string `json:"type"`
-	Mode        string `json:"mode"`
-	PrivateKey  string `json:"privatekey,omitempty"`
-	PublicKey   string `json:"publickey,omitempty"`
-	Certificate string `json:"certificate,omitempty"`
+	ID          string            `json:"id"`
+	Type        string            `json:"type"`
+	Mode        string            `json:"mode"`
+	PrivateKey  string            `json:"privatekey,omitempty"`
+	PublicKey   string            `json:"publickey,omitempty"`
+	Certificate string            `json:"certificate,omitempty"`
+	DB          *database.Handler `json:"-"`
 
 	// X5U (X.509 URL) is a URL that points to an X.509 public key
 	// certificate chain to validate a content signature
@@ -81,12 +89,31 @@ type Configuration struct {
 	// gpg secret key for the gpg2 signer type
 	Passphrase string `json:"passphrase,omitempty"`
 
+	// Validity is the lifetime of a end-entity certificate
+	Validity time.Duration `json:"validity,omitempty"`
+
+	// ClockSkewTolerance increase the lifetime of a certificate
+	// to account for clients with skewed clocks by adding days
+	// to the notbefore and notafter values. For example, a certificate
+	// with a validity of 30d and a clock skew tolerance of 10 days will
+	// have a total validity of 10+30+10=50 days.
+	ClockSkewTolerance time.Duration `json:"clock_skew_tolerance,omitempty"`
+
+	// ChainUploadLocation is the target a certificate chain should be
+	// uploaded to in order for clients to find it at the x5u location.
+	ChainUploadLocation string `json:"chain_upload_location,omitempty"`
+
+	// CaCert is the certificate of the root of the pki, when used
+	CaCert string `json:"cacert,omitempty"`
+
 	isHsmAvailable bool
+	hsmCtx         *pkcs11.Ctx
 }
 
-// HSMIsAvailable indicates that an HSM has been initialized
-func (cfg *Configuration) HSMIsAvailable() {
+// HsmIsAvailable indicates that an HSM has been initialized
+func (cfg *Configuration) HsmIsAvailable(ctx *pkcs11.Ctx) {
 	cfg.isHsmAvailable = true
+	cfg.hsmCtx = ctx
 }
 
 // Signer is an interface to a configurable issuer of digital signatures
@@ -299,6 +326,81 @@ func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
 		},
 		X: x,
 	}, nil
+}
+
+// MakeKey generates a new key of type keyTpl and returns the priv and public interfaces.
+// If an HSM is available, it is used to generate and store the key, in which case 'priv'
+// just points to the HSM handler and must be used via the crypto.Signer interface.
+func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv crypto.PrivateKey, pub crypto.PublicKey, err error) {
+	if cfg.isHsmAvailable {
+		var slots []uint
+		slots, err = cfg.hsmCtx.GetSlotList(true)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to list PKCS#11 Slots")
+		}
+		if len(slots) < 1 {
+			return nil, nil, errors.New("failed to find a usable slot in hsm context")
+		}
+		switch keyTpl.(type) {
+		case *ecdsa.PublicKey:
+			priv, err = crypto11.GenerateECDSAKeyPairOnSlot(slots[0], []byte(keyName), []byte(keyName), keyTpl.(*ecdsa.PublicKey))
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in hsm")
+			}
+			pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).Public()
+			return
+		case *rsa.PublicKey:
+			keySize := keyTpl.(*rsa.PublicKey).Size()
+			priv, err = crypto11.GenerateRSAKeyPairOnSlot(slots[0], []byte(keyName), []byte(keyName), keySize)
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "failed to generate rsa key in hsm")
+			}
+			pub = priv.(*crypto11.PKCS11PrivateKeyRSA).Public()
+			return
+		default:
+			return nil, nil, errors.Errorf("making key of type %T is not supported", keyTpl)
+		}
+	}
+	// no hsm, make keys in memory
+	switch keyTpl.(type) {
+	case *ecdsa.PublicKey:
+		switch keyTpl.(*ecdsa.PublicKey).Params().Name {
+		case "P-256":
+			priv, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		case "P-384":
+			priv, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+		default:
+			return nil, nil, fmt.Errorf("unsupported curve %q",
+				keyTpl.(*ecdsa.PublicKey).Params().Name)
+		}
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in memory")
+		}
+		pub = priv.(*ecdsa.PrivateKey).Public()
+		return
+	case *rsa.PublicKey:
+		keySize := keyTpl.(*rsa.PublicKey).Size()
+		priv, err = rsa.GenerateKey(rand.Reader, keySize)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to generate rsa key in memory")
+		}
+		pub = priv.(*rsa.PrivateKey).Public()
+		return
+	default:
+		return nil, nil, errors.Errorf("making key of type %T is not supported", keyTpl)
+	}
+}
+
+// GetPrivKeyHandle returns the hsm handler object id of a key stored in the hsm,
+// or 0 if the key is not stored in the hsm
+func GetPrivKeyHandle(priv crypto.PrivateKey) uint {
+	switch priv.(type) {
+	case *crypto11.PKCS11PrivateKeyECDSA:
+		return uint(priv.(*crypto11.PKCS11PrivateKeyECDSA).Handle)
+	case *crypto11.PKCS11PrivateKeyRSA:
+		return uint(priv.(*crypto11.PKCS11PrivateKeyRSA).Handle)
+	}
+	return 0
 }
 
 // StatsClient is a helper for sending statsd stats with the relevant

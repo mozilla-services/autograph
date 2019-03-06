@@ -8,6 +8,7 @@ package signer
 
 import (
 	"crypto/rsa"
+	"fmt"
 	"testing"
 )
 
@@ -158,7 +159,7 @@ func TestParseEmptyPrivateKey(t *testing.T) {
 
 func TestEnableHSM(t *testing.T) {
 	tcfg := new(Configuration)
-	tcfg.HSMIsAvailable()
+	tcfg.HsmIsAvailable(nil)
 	if !tcfg.isHsmAvailable {
 		t.Fatal("expected isHsmAvailable to be set to true but still false")
 	}
@@ -189,7 +190,7 @@ func TestHSMNotAvailable(t *testing.T) {
 		}
 	}()
 	tcfg := new(Configuration)
-	tcfg.HSMIsAvailable()
+	tcfg.HsmIsAvailable(nil)
 	tcfg.GetPrivateKey()
 }
 
@@ -202,4 +203,73 @@ func TestNoSuitableKeyFound(t *testing.T) {
 	if err.Error() != "no suitable key found" {
 		t.Fatalf("expected to fail with no suitable key found but failed with: %v", err)
 	}
+}
+
+func TestMakeKey(t *testing.T) {
+	for i, testcase := range PASSINGTESTCASES {
+		_, keyTpl, _, _, err := testcase.cfg.GetKeysAndRand()
+		if err != nil {
+			t.Fatalf("testcase %d failed to load signer configuration: %v", i, err)
+		}
+		priv, pub, err := testcase.cfg.MakeKey(keyTpl, "test")
+		if err != nil {
+			t.Fatalf("testcase %d failed to make %T key from signer configuration: %v", i, keyTpl, err)
+		}
+		keyTplType := fmt.Sprintf("%T", keyTpl)
+		pubType := fmt.Sprintf("%T", pub)
+		if keyTplType != pubType {
+			t.Fatalf("testcase %d failed, expected public key of type %q but got %q", i, keyTplType, keyTplType)
+		}
+		if GetPrivKeyHandle(priv) != 0 {
+			t.Fatalf("testcase %d failed, expected public key handle 0 but got %d", i, GetPrivKeyHandle(priv))
+		}
+	}
+}
+
+var PASSINGTESTCASES = []struct {
+	cfg Configuration
+}{
+	{cfg: Configuration{
+		//p-384
+		PrivateKey: `
+-----BEGIN EC PARAMETERS-----
+BgUrgQQAIg==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDDNUOCI9Jxy+v8f/aB5IWIY8A2IdMMEkbR0qTwPpoktAlZvci1e/5/S
+1zV5TLA5SkKgBwYFK4EEACKhZANiAASi4qvgd/865yGf6yzg9J+LSt/TsbtxH4+K
+twf3ayo9dfTh8J47RIkJqmonF8oiCrecjHMsjCNzR+74HFKlK7zFZKcXg+Me2djq
+wTLpwBkQetKDa4mvSLxBNlUH9mLW2l8=
+-----END EC PRIVATE KEY-----`,
+	}},
+	{cfg: Configuration{
+		// p-256
+		PrivateKey: `
+-----BEGIN EC PARAMETERS-----
+BggqhkjOPQMBBw==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEII+Is30aP9wrB/H6AkKrJjMG8EVY2WseSFHTfWGCIk7voAoGCCqGSM49
+AwEHoUQDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq
+3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==
+-----END EC PRIVATE KEY-----`,
+	}},
+	{cfg: Configuration{
+		PrivateKey: `
+-----BEGIN RSA PRIVATE KEY-----
+MIICXAIBAAKBgQDYU0DX8fqlyaJqha6D0DvHAtde8o3xIxXYX8ONwVbUIJMur+42
+rsXZk8vQkeSzQ9evIAlara5X9aSvCo0O4Lg7VzHjRd5Ip2RwWAknJY942XCBF+CO
+M9NTwjQRlBjNrRK9Qm3gRHLkCsw5mqDkzXXPkKXw5jeiveAsQIES40YgIwIDAQAB
+AoGAESQfqjzRWJuuk/Q9zNIOOom+GRbtKmNWUsvbyfq875gZMYTdQlX89W2ho8g7
+r/y7NXQ7aYUDoJKlVv1mCfzCfEPsl+AppNzRWf7Dsvgv4OHLCMP6pzliSWz+Teh3
+eybe17v8OtmrWWRZpf+mBdIBZ1AUFh9ET9hHsil5I7s2VjkCQQD049sKsFdltnqJ
+nfkFhyxWomNhmY4f37iUOl562gcP71Dqg+IeB7mTaqxc2KwErZYPb0H+ov8NxNLJ
+GPva6FB1AkEA4iOlgES3aIPeoYYoqKRrYxx4kOO0s2cRxlEbt+nbDgdxIjsxeS29
+Fz/p9GCsutHrpAwIBDNrgmG5V0yfE06bNwJBAI7hBmLFIijQ/8udJLaJ+F+PnUZL
+jjWglRO+vnMVFDvC2EYLrnjw7uBIw8nkDPEpyjy1IB8OQJtq88Sq0/8TviUCQH0s
+Jgvd/XeIps7Zp9/RQu/Vbpcks30qbBhOBP3EIFCfpevAwB3HR4d7BVETwgiW8cwY
+LMfGfpfo5+J+sv7I3/kCQEvkxSGguHckNzqV7nZgwskbFfvTVLqMaPy9EVfu2od+
+ZkJ9hRz+l4ZVOsgNPHXPEi0AXWnDV6zrRQBpDYyiGhY=
+-----END RSA PRIVATE KEY-----`,
+	}},
 }
