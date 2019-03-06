@@ -146,8 +146,9 @@ signers:
     # with a trailing slash because filenames will be appended to it.
     # x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
     x5u: file:///tmp/chains/
+    # label of the intermediate private key in the HSM
     privatekey: csinter1550858489
-    # chain contains the public certs of the intermediate and root of the pki
+    # public certificate of the intermediate
     publickey: |
       -----BEGIN CERTIFICATE-----
       MIICXDCCAeKgAwIBAgIIFYXBlGIHbWAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
@@ -164,6 +165,7 @@ signers:
       UqjZk9QGiisGU7LGpsEs2GFK4k7Qs1fFNVVzHicCMQCX5GfEa/zBc7fJL+IP+XIZ
       AhaDpVhf9tReXSzilurgSy4u4gAE6nwdUFezm9iOsFg=
       -----END CERTIFICATE-----
+    # public certificate of the root CA
     cacert: |
       -----BEGIN CERTIFICATE-----
       MIICKDCCAa+gAwIBAgIIFYXBlGCX7CAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
