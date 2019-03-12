@@ -7,7 +7,8 @@ RSA-PSS Signing
 This signer implements RSA-PSS signing for Widevine and possibly other
 signature types in the future. It accepts 20-byte SHA1 hashes on
 `/sign/hash` and data to be hashed on `/sign/data`. Both endpoints
-return base64-encoded RSA-PSS signatures of the hashed data.
+return base64-encoded RSA-PSS signatures of the hashed data using
+`rsa.PSSSaltLengthEqualsHash` padding.
 
 Example Usage:
 

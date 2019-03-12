@@ -232,18 +232,47 @@ func TestSignData(t *testing.T) {
 func TestVerifySignatureFromB64(t *testing.T) {
 	t.Parallel()
 
+	// initialize a signer and compute base64 args
 	var (
-		b64Input  = "VcpihuPk9Pul0ESDM/qZ/FpASnM="
-		b64Sig    = `cAlDreA8vt0La8NW2PNb0GhjgsZiJzxHDbLa/1Nuh48a5R3YjZc9nfdUwPTauB87fA4BEFrENXDrSrW+ApDK0xU1iAGeyYudCCWGhKBJBoiQgPhgSqQ2AGQjunnFNsZlMOtKzhsVmXJl0aZg/ebFLxIKQnohiD2vram9zaRsyYsUF2p8ZA96BiM2MuxE1W9rC4zRJnQtd0uGWxQpUZh4HdCqyrEpAwn8jJLD7FGCExUzp/zbOYQLumUgkKfN2HDpnS5d2jK53puRXE0WG1lbHW84zmnJRgcK0UcMhsTSEyDqI0CaiKD0JgsdG4E6xiiAwmXh8YCODG/xWcnZx30sFw==`
-		b64PubKey = `MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4SlEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3yi62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PYyUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cRmwIDAQAB`
+		_input  = []byte("this is the sha1 input")
+		_shasum = sha1.Sum(_input)
+		_digest = _shasum[:]
+		_s      = assertNewSignerWithConfOK(t, rsapsssignerconf)
+		_b64Sig string
+	)
+
+	_sig, err := _s.SignData(_input, _s.GetDefaultOptions())
+	if err != nil {
+		t.Fatalf("failed to sign data: %v", err)
+	}
+
+	// convert signature to base64 string
+	_b64Sig, err = _sig.Marshal()
+	if err != nil {
+		t.Fatalf("failed to marshal signature: %v", err)
+	}
+
+	// args to VerifySignatureFromB64
+	var (
+		b64Digest = base64.StdEncoding.EncodeToString(_digest)
+		b64PubKey = _s.PublicKey // base64 encoded in signer GetKeysAndRand
+		b64Sig    = _b64Sig
 	)
 
 	t.Run("verifies valid input", func(t *testing.T) {
 		t.Parallel()
 
-		err := VerifySignatureFromB64(b64Input, b64Sig, b64PubKey)
+		// unencoded verification should pass
+		rsaKey := _s.key.(*rsa.PrivateKey)
+		pubKey := rsaKey.Public()
+		err := VerifySignature(pubKey.(*rsa.PublicKey), _digest, _sig.(*Signature).Data)
 		if err != nil {
-			t.Fatal("failed to verify valid input")
+			t.Fatalf("failed to verify signature: %v", err)
+		}
+
+		err = VerifySignatureFromB64(b64Digest, b64Sig, b64PubKey)
+		if err != nil {
+			t.Fatalf("failed to verify valid input: %s", err)
 		}
 	})
 
@@ -259,7 +288,7 @@ func TestVerifySignatureFromB64(t *testing.T) {
 	t.Run("fails for invalid b64 sig", func(t *testing.T) {
 		t.Parallel()
 
-		err := VerifySignatureFromB64(b64Input, "aieeee", b64PubKey)
+		err := VerifySignatureFromB64(b64Digest, "aieeee", b64PubKey)
 		if err == nil {
 			t.Fatal("did not to fail for invalid sig")
 		}
@@ -268,7 +297,7 @@ func TestVerifySignatureFromB64(t *testing.T) {
 	t.Run("fails for invalid b64 pubkey", func(t *testing.T) {
 		t.Parallel()
 
-		err := VerifySignatureFromB64(b64Input, b64Sig, "aieeee")
+		err := VerifySignatureFromB64(b64Digest, b64Sig, "aieeee")
 		if err == nil {
 			t.Fatal("did not to fail for invalid pubkey")
 		}
@@ -277,7 +306,7 @@ func TestVerifySignatureFromB64(t *testing.T) {
 	t.Run("fails for invalid pubkey pem", func(t *testing.T) {
 		t.Parallel()
 
-		err := VerifySignatureFromB64(b64Input, b64Sig, "")
+		err := VerifySignatureFromB64(b64Digest, b64Sig, "")
 		if err == nil {
 			t.Fatal("did not to fail for invalid pub key PEM block")
 		}
@@ -286,7 +315,7 @@ func TestVerifySignatureFromB64(t *testing.T) {
 	t.Run("fails for invalid pubkey type", func(t *testing.T) {
 		t.Parallel()
 
-		err := VerifySignatureFromB64(b64Input, b64Sig, base64.StdEncoding.EncodeToString([]byte(nonRSAPrivateKey)))
+		err := VerifySignatureFromB64(b64Digest, b64Sig, base64.StdEncoding.EncodeToString([]byte(nonRSAPrivateKey)))
 		if err == nil {
 			t.Fatal("did not to fail for bad pem key type")
 		}

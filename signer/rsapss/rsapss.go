@@ -89,7 +89,7 @@ func (s *RSAPSSSigner) SignHash(digest []byte, options interface{}) (signer.Sign
 	}
 
 	opts := &rsa.PSSOptions{
-		SaltLength: rsa.PSSSaltLengthAuto,
+		SaltLength: rsa.PSSSaltLengthEqualsHash,
 		Hash:       crypto.SHA1,
 	}
 
@@ -136,15 +136,18 @@ func (s *RSAPSSSigner) GetDefaultOptions() interface{} {
 // VerifySignature verifies a rsapss signature for the given SHA1
 // digest for the given RSA public and signature bytes
 func VerifySignature(pubKey *rsa.PublicKey, digest, sigBytes []byte) error {
-	err := rsa.VerifyPSS(pubKey, crypto.SHA1, digest, sigBytes, nil)
+	err := rsa.VerifyPSS(pubKey, crypto.SHA1, digest, sigBytes, &rsa.PSSOptions{
+		SaltLength: rsa.PSSSaltLengthEqualsHash,
+		Hash:       crypto.SHA1,
+	})
 	return errors.Wrapf(err, "rsapss: failed to verify signature")
 }
 
 // VerifySignatureFromB64 verifies a signature from base64 encoded
 // digest, signature, and public key as autograph returns from its API
 // used in the client and monitor
-func VerifySignatureFromB64(b64Input, b64Signature, b64PubKey string) error {
-	digest, err := base64.StdEncoding.DecodeString(b64Input)
+func VerifySignatureFromB64(b64Digest, b64Signature, b64PubKey string) error {
+	digest, err := base64.StdEncoding.DecodeString(b64Digest)
 	if err != nil {
 		return err
 	}
@@ -159,6 +162,9 @@ func VerifySignatureFromB64(b64Input, b64Signature, b64PubKey string) error {
 		return err
 	}
 	pubKey, err := x509.ParsePKIXPublicKey(rawKey)
+	if err != nil {
+		return err
+	}
 	rsaKey, ok := pubKey.(*rsa.PublicKey)
 	if !ok {
 		return fmt.Errorf("expected rsa.PublicKey, but got pub key type %T", pubKey)
