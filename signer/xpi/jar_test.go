@@ -110,6 +110,8 @@ func TestMakingJarManifest(t *testing.T) {
 }
 
 func TestRepack(t *testing.T) {
+	t.Parallel()
+
 	repackedZip, err := repackJAR(unsignedBootstrap, unsignedBootstrapManifest, unsignedBootstrapSignatureFile, unsignedBootstrapSignature)
 	if err != nil {
 		t.Fatal(err)
@@ -166,6 +168,62 @@ func TestRepack(t *testing.T) {
 	if !hasSignature {
 		t.Fatal("signature not found in zip archive")
 	}
+}
+
+func TestRepackEmptyCOSE(t *testing.T) {
+	t.Parallel()
+
+	repackedZip, err := repackJARWithMetafiles(unsignedEmptyCOSE, []Metafile{
+		{coseManifestPath, unsignedEmptyCOSEManifest},
+		{coseSigPath, unsignedEmptyCOSESig},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	zipReader := bytes.NewReader(repackedZip)
+	r, err := zip.NewReader(zipReader, int64(len(repackedZip)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var hasManifest, hasSignature bool
+	var fileCount int
+	for _, f := range r.File {
+		rc, err := f.Open()
+		defer rc.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		data, err := ioutil.ReadAll(rc)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		switch f.Name {
+		case "META-INF/cose.manifest":
+			if !bytes.Equal(data, unsignedEmptyCOSEManifest) {
+				t.Fatalf("manifest mismatch. Expect:\n%s\nGot:\n%s", unsignedEmptyCOSEManifest, data)
+			}
+			hasManifest = true
+		case "META-INF/cose.sig":
+			if !bytes.Equal(data, unsignedEmptyCOSESig) {
+				t.Fatalf("signature mismatch. Expect:\n%x\nGot:\n%x", unsignedEmptyCOSESig, data)
+			}
+			hasSignature = true
+		default:
+			t.Fatalf("found unknown file in zip archive: %s", f.Name)
+		}
+	}
+	if fileCount != 0 {
+		t.Fatalf("found %d data files in zip archive, expected 0", fileCount)
+	}
+	if !hasManifest {
+		t.Fatal("manifest file not found in zip archive")
+	}
+	if !hasSignature {
+		t.Fatal("signature not found in zip archive")
+	}
+
 }
 
 func TestIsCOSESignatureFile(t *testing.T) {
@@ -426,3 +484,4 @@ var unsignedEmptyCOSE = []byte("\x50\x4B\x03\x04\x0A\x00\x00\x00\x00\x00\x04\x73
 	"\x00\x03\x00\x03\x00\x02\x01\x00\x00\xF7\x00\x00\x00\x00\x00")
 
 var unsignedEmptyCOSEManifest = []byte("Manifest-Version: 1.0\n\n")
+var unsignedEmptyCOSESig = []byte("dummy signature")

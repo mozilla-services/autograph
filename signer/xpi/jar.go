@@ -217,7 +217,11 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 	// Iterate through the files in the archive,
 	for _, f := range r.File {
 		// skip signature files, we have new ones we'll add at the end
-		if isJARSignatureFile(f.Name) {
+		if isJARSignatureFile(f.Name) || isCOSESignatureFile(f.Name) {
+			continue
+		}
+		if f.FileInfo().IsDir() {
+			// directories do not get included
 			continue
 		}
 		rc, err = f.Open()
