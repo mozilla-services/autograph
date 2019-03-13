@@ -344,3 +344,156 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 	}
 	return nil, errors.Errorf("failed to find %s in ZIP", filename)
 }
+
+// readXPIContentsToMap reads XPI file contents into memory into a
+// filenameToContents hashmap
+func readXPIContentsToMap(signedXPI []byte) (map[string][]byte, error) {
+	var (
+		ok                 bool
+		err                error
+		filenameToContents = make(map[string][]byte)
+	)
+
+	zipReader := bytes.NewReader(signedXPI)
+	r, err := zip.NewReader(zipReader, int64(len(signedXPI)))
+	if err != nil {
+		return nil, errors.Wrap(err, "Error reading ZIP")
+	}
+
+	for _, f := range r.File {
+		rc, err := f.Open()
+		defer rc.Close()
+		if err != nil {
+			return nil, errors.Wrapf(err, "Error opening file %s in ZIP", f.Name)
+		}
+		data, err := ioutil.ReadAll(rc)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Error reading file %s in ZIP", f.Name)
+		}
+		if _, ok = filenameToContents[f.Name]; ok {
+			return nil, errors.Errorf("%s occurs twice in ZIP", f.Name)
+		}
+		filenameToContents[f.Name] = data
+	}
+
+	return filenameToContents, nil
+}
+
+// parseManifestEntry parses name, sha1, and sha256 digests from JAR
+// manifest files with entries in the format:
+//
+// Name: test.txt
+// Digest-Algorithms: SHA1 SHA256
+// SHA1-Digest: 8mPWZnQPS9arW9Tu/vmC+JHgnYA=
+// SHA256-Digest: 8usFS0xIHQV5njGLlVZofDfPreYQP4+qWMMvYF5fvNw=
+//
+func parseManifestEntry(entry []byte) (filename string, fileSHA1, fileSHA256 []byte, err error) {
+	// unwrap long lines (TODO: use ReplaceAll after upgrading to 1.12)
+	entry = bytes.Replace(entry, []byte("\n "), []byte(""), -1)
+
+	for i, line := range bytes.Split(entry, []byte("\n")) {
+		switch i {
+		case 0:
+			tmp := bytes.Split(line, []byte("Name: "))
+			if len(tmp) != 2 {
+				return "", nil, nil, errors.Errorf("unexpected name line: %s", line)
+			}
+			filename = string(tmp[1])
+		case 1:
+			if !bytes.Equal(line, []byte("Digest-Algorithms: SHA1 SHA256")) {
+				return "", nil, nil, errors.Errorf("unexpected digest algs: %s", line)
+			}
+		case 2:
+			tmp := bytes.Split(line, []byte("SHA1-Digest: "))
+			if len(tmp) != 2 {
+				return "", nil, nil, errors.Errorf("unexpected SHA1 line: %s", line)
+			}
+			fileSHA1 = tmp[1]
+		case 3:
+			tmp := bytes.Split(line, []byte("SHA256-Digest: "))
+			if len(tmp) != 2 {
+				return "", nil, nil, errors.Errorf("unexpected SHA256 line: %s", line)
+			}
+			fileSHA256 = tmp[1]
+		default:
+			return "", nil, nil, errors.Errorf("unexpected manifest line: %s", line)
+		}
+	}
+	return filename, fileSHA1, fileSHA256, nil
+}
+
+// checkSHAsums
+func checkSHAsums(data, sha1sum, sha256sum []byte) error {
+	h1 := sha1.New()
+	h1.Write(data)
+	h2 := sha256.New()
+	h2.Write(data)
+	computedSHA1 := []byte(base64.StdEncoding.EncodeToString(h1.Sum(nil)))
+	computedSHA256 := []byte(base64.StdEncoding.EncodeToString(h2.Sum(nil)))
+
+	if !bytes.Equal(sha1sum, computedSHA1) {
+		return errors.Errorf("SHA1 mismatch got %s but computed %s", sha1sum, computedSHA1)
+	}
+	if !bytes.Equal(sha256sum, computedSHA256) {
+		return errors.Errorf("SHA2 mismatch got %s but computed %s", sha256sum, computedSHA256)
+	}
+	return nil
+}
+
+// verifyAndCountManifest reads an XPI, parses a manifest and checks:
+//
+// * for duplicate XPI filenames
+// * for duplicate manifest entries
+// * all manifest entries have a matching XPI filename
+// * shasums match between manifest entry and XPI contents
+//
+// Returns the number of entries in the zip file and manifest or an error.
+func verifyAndCountManifest(signedXPI []byte, manifestPath string) (int, int, error) {
+	var (
+		ok                 bool
+		err                error
+		filenameToContents map[string][]byte
+		manifestBytes      []byte
+		manifestEntryNames = make(map[string]bool)
+	)
+
+	filenameToContents, err = readXPIContentsToMap(signedXPI)
+	if err != nil {
+		return -1, -1, errors.Wrapf(err, "error reading XPI contents to map")
+	}
+	if manifestBytes, ok = filenameToContents[manifestPath]; !ok {
+		return -1, -1, errors.Wrapf(err, "did not find manifest %s in zip", manifestPath)
+	}
+
+	for _, entry := range bytes.Split(manifestBytes, []byte("\n\n")) {
+		// skip 'Manifest-Version: 1.0' line at start of file and empty line
+		// and \n\n at EOF
+		if bytes.Equal(entry, []byte("Manifest-Version: 1.0")) || bytes.Equal(entry, []byte("")) {
+			continue
+		}
+		filename, fileSHA1, fileSHA256, err := parseManifestEntry(entry)
+		if err != nil {
+			return -1, -1, errors.Wrapf(err, "failed to parse manifest entry: %s", entry)
+		}
+		if filename == "" || fileSHA1 == nil || fileSHA256 == nil {
+			return -1, -1, errors.Errorf("failed to parse manifest entry: %s", entry)
+		}
+
+		if _, ok = manifestEntryNames[filename]; ok {
+			return -1, -1, errors.Errorf("duplicate entries for file %s in manifest", filename)
+		}
+		manifestEntryNames[filename] = true
+
+		var contents []byte
+		if contents, ok = filenameToContents[string(filename)]; !ok {
+			return -1, -1, errors.Errorf("file %s in manifest but not XPI", filename)
+		}
+
+		err = checkSHAsums(contents, fileSHA1, fileSHA256)
+		if err != nil {
+			return -1, -1, errors.Wrapf(err, "file %s hash mistmatch between manifest and computed", filename)
+		}
+
+	}
+	return len(filenameToContents), len(manifestEntryNames), nil
+}

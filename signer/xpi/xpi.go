@@ -513,17 +513,58 @@ func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x50
 	return nil
 }
 
+// verifyPKCS7Manifest checks all files occur once in the manifest and
+// match their hashes
+func verifyPKCS7Manifest(signedXPI signer.SignedFile) error {
+	numZippedFiles, numManifestEntries, err := verifyAndCountManifest(signedXPI, pkcs7ManifestPath)
+	if err != nil {
+		return errors.Wrapf(err, "error validating PK7 manifest")
+	}
+
+	// 3 from PK7 sig, manifest, and sigFile
+	if !(numZippedFiles > numManifestEntries && numZippedFiles-numManifestEntries == 3) {
+		return errors.Errorf("mismatch in # manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
+	}
+	return nil
+}
+
+// verifyCOSEManifest checks each file occurs once in the manifest and
+// its hashes match
+func verifyCOSEManifest(signedXPI signer.SignedFile) error {
+	numZippedFiles, numManifestEntries, err := verifyAndCountManifest(signedXPI, coseManifestPath)
+	if err != nil {
+		return errors.Wrapf(err, "error validating COSE manifest")
+	}
+
+	// 5 from PK7 sig, manifest, and sigFile; and COSE sig and manifest
+	if !(numZippedFiles > numManifestEntries && numZippedFiles-numManifestEntries == 5) {
+		return errors.Errorf("mismatch in # manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
+	}
+	return nil
+}
+
 // VerifySignedFile checks the XPI's PKCS7 signature and COSE
 // signatures if present
 func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, opts Options) error {
-	err := verifyPKCS7SignatureRoundTrip(signedFile, truststore)
+	var err error
+	err = verifyPKCS7Manifest(signedFile)
+	if err != nil {
+		return errors.Wrap(err, "xpi: error verifying PKCS7 manifest for signed file")
+	}
+	err = verifyPKCS7SignatureRoundTrip(signedFile, truststore)
 	if err != nil {
 		return errors.Wrap(err, "xpi: error verifying PKCS7 signature for signed file")
 	}
 
 	if len(opts.COSEAlgorithms) > 0 {
+		err = verifyCOSEManifest(signedFile)
+		if err != nil {
+			return errors.Wrap(err, "xpi: error verifying COSE manifest for signed file")
+		}
 		err = verifyCOSESignatures(signedFile, truststore, opts)
-		return errors.Wrap(err, "xpi: error verifying COSE signatures for signed file")
+		if err != nil {
+			return errors.Wrap(err, "xpi: error verifying COSE signatures for signed file")
+		}
 	}
 
 	return nil
