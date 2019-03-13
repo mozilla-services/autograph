@@ -124,7 +124,7 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 	manifest = []byte(fmt.Sprintf("Manifest-Version: 1.0\n\n"))
 
 	for _, f := range r.File {
-		if isJARSignatureFile(f.Name) {
+		if isJARSignatureFile(f.Name) || isCOSESignatureFile(f.Name) {
 			// reserved signature files do not get included in the manifest
 			continue
 		}
