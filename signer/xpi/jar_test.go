@@ -157,6 +157,40 @@ func TestRepack(t *testing.T) {
 	}
 }
 
+func TestIsCOSESignatureFile(t *testing.T) {
+	var testcases = []struct {
+		expect   bool
+		filename string
+	}{
+		{true, "META-INF/COSE.SIG"},
+		{true, "META-INF/cose.sig"},
+		{true, "META-INF/CoSe.sig"},
+		{true, "META-INF/CoSe.sIg"},
+		{true, "META-INF/CoSe.SIG"},
+		{true, "META-INF/COSE.MANIFEST"},
+		{true, "META-INF/cose.manifest"},
+		{true, "META-INF/CoSe.manifest"},
+		{true, "META-INF/CoSe.mAnifest"},
+		{true, "META-INF/CoSe.MANIFEST"},
+		{false, "META-INF/manifest.mf"},
+		{false, "META-INF/mozilla.sf"},
+		{false, "META-INF/mozilla.SF"},
+		{false, "META-INF/SIG-foo"},
+		{false, "META-INF/sig-bar"},
+		{false, "META-INF/foo.bar"},
+		{false, "META-INF/foo.rsa.bar"},
+		{false, "META-INF/foo.RSA.bar"},
+		{false, "META-INF/.mf.foo"},
+		{false, "meta-inf/cose.sig"},
+	}
+	for i, testcase := range testcases {
+		if isCOSESignatureFile(testcase.filename) != testcase.expect {
+			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
+				i, testcase.filename, isCOSESignatureFile(testcase.filename), testcase.expect)
+		}
+	}
+}
+
 func TestIsSignatureFile(t *testing.T) {
 	var testcases = []struct {
 		expect   bool

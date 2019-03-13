@@ -302,6 +302,20 @@ func isJARSignatureFile(name string) bool {
 	return false
 }
 
+// The XPI format reserves a couple number signature files stored under the META-INF directory
+// META-INF/COSE.SIG
+// META-INF/COSE.MANIFEST
+// and their lower and mixed case variants
+func isCOSESignatureFile(name string) bool {
+	if strings.HasPrefix(name, "META-INF/") {
+		name = strings.ToLower(strings.TrimPrefix(name, "META-INF/"))
+		if name == "cose.manifest" || name == "cose.sig" {
+			return true
+		}
+	}
+	return false
+}
+
 // readFileFromZIP reads a given filename out of a ZIP and returns it or an error
 func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 	zipReader := bytes.NewReader(signedXPI)
