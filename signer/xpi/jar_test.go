@@ -86,6 +86,17 @@ func TestFormatFilenameExact(t *testing.T) {
 }
 
 func TestMakingJarManifest(t *testing.T) {
+	t.Parallel()
+
+	// should not include user-provided COSE signature files in manifest
+	manifest, err := makeJARManifest(unsignedEmptyCOSE)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(unsignedEmptyCOSEManifest, manifest) {
+		t.Fatalf("manifest mismatch. Expect:\n%+v\nGot:\n%+v", unsignedEmptyCOSEManifest, manifest)
+	}
+
 	manifest, sigfile, err := makeJARManifestAndSignatureFile(unsignedBootstrap)
 	if err != nil {
 		t.Fatal(err)
@@ -99,6 +110,8 @@ func TestMakingJarManifest(t *testing.T) {
 }
 
 func TestRepack(t *testing.T) {
+	t.Parallel()
+
 	repackedZip, err := repackJAR(unsignedBootstrap, unsignedBootstrapManifest, unsignedBootstrapSignatureFile, unsignedBootstrapSignature)
 	if err != nil {
 		t.Fatal(err)
@@ -154,6 +167,96 @@ func TestRepack(t *testing.T) {
 	}
 	if !hasSignature {
 		t.Fatal("signature not found in zip archive")
+	}
+}
+
+func TestRepackEmptyCOSE(t *testing.T) {
+	t.Parallel()
+
+	repackedZip, err := repackJARWithMetafiles(unsignedEmptyCOSE, []Metafile{
+		{coseManifestPath, unsignedEmptyCOSEManifest},
+		{coseSigPath, unsignedEmptyCOSESig},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	zipReader := bytes.NewReader(repackedZip)
+	r, err := zip.NewReader(zipReader, int64(len(repackedZip)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var hasManifest, hasSignature bool
+	var fileCount int
+	for _, f := range r.File {
+		rc, err := f.Open()
+		defer rc.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		data, err := ioutil.ReadAll(rc)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		switch f.Name {
+		case "META-INF/cose.manifest":
+			if !bytes.Equal(data, unsignedEmptyCOSEManifest) {
+				t.Fatalf("manifest mismatch. Expect:\n%s\nGot:\n%s", unsignedEmptyCOSEManifest, data)
+			}
+			hasManifest = true
+		case "META-INF/cose.sig":
+			if !bytes.Equal(data, unsignedEmptyCOSESig) {
+				t.Fatalf("signature mismatch. Expect:\n%x\nGot:\n%x", unsignedEmptyCOSESig, data)
+			}
+			hasSignature = true
+		default:
+			t.Fatalf("found unknown file in zip archive: %s", f.Name)
+		}
+	}
+	if fileCount != 0 {
+		t.Fatalf("found %d data files in zip archive, expected 0", fileCount)
+	}
+	if !hasManifest {
+		t.Fatal("manifest file not found in zip archive")
+	}
+	if !hasSignature {
+		t.Fatal("signature not found in zip archive")
+	}
+
+}
+
+func TestIsCOSESignatureFile(t *testing.T) {
+	var testcases = []struct {
+		expect   bool
+		filename string
+	}{
+		{true, "META-INF/COSE.SIG"},
+		{true, "META-INF/cose.sig"},
+		{true, "META-INF/CoSe.sig"},
+		{true, "META-INF/CoSe.sIg"},
+		{true, "META-INF/CoSe.SIG"},
+		{true, "META-INF/COSE.MANIFEST"},
+		{true, "META-INF/cose.manifest"},
+		{true, "META-INF/CoSe.manifest"},
+		{true, "META-INF/CoSe.mAnifest"},
+		{true, "META-INF/CoSe.MANIFEST"},
+		{false, "META-INF/manifest.mf"},
+		{false, "META-INF/mozilla.sf"},
+		{false, "META-INF/mozilla.SF"},
+		{false, "META-INF/SIG-foo"},
+		{false, "META-INF/sig-bar"},
+		{false, "META-INF/foo.bar"},
+		{false, "META-INF/foo.rsa.bar"},
+		{false, "META-INF/foo.RSA.bar"},
+		{false, "META-INF/.mf.foo"},
+		{false, "meta-inf/cose.sig"},
+	}
+	for i, testcase := range testcases {
+		if isCOSESignatureFile(testcase.filename) != testcase.expect {
+			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
+				i, testcase.filename, isCOSESignatureFile(testcase.filename), testcase.expect)
+		}
 	}
 }
 
@@ -329,3 +432,56 @@ SHA256-Digest-Manifest: DEeZKUfwfIdRBxyA9IkCXkUaYaTn6mWnljQtELTy4cg=
 `)
 
 var unsignedBootstrapSignature = []byte("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+
+// a zip file containing only reserved COSE sig files
+//
+// $ cat META-INF/cose.manifest
+// bad manifest
+// $ cat META-INF/cose.sig
+// invalid sig
+// $ unzip -l cose-empty.zip
+// Archive:  cose-empty.zip
+//   Length      Date    Time    Name
+// ---------  ---------- -----   ----
+//         0  2019-03-13 14:24   META-INF/
+//        13  2019-03-13 13:58   META-INF/cose.manifest
+//        12  2019-03-13 13:58   META-INF/cose.sig
+// ---------                     -------
+//        25                     3 files
+//
+var unsignedEmptyCOSE = []byte("\x50\x4B\x03\x04\x0A\x00\x00\x00\x00\x00\x04\x73\x6D\x4E\x00\x00" +
+	"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x09\x00\x1C\x00\x4D\x45" +
+	"\x54\x41\x2D\x49\x4E\x46\x2F\x55\x54\x09\x00\x03\xC7\x4A\x89\x5C" +
+	"\xC8\x4A\x89\x5C\x75\x78\x0B\x00\x01\x04\xE8\x03\x00\x00\x04\xE8" +
+	"\x03\x00\x00\x50\x4B\x03\x04\x0A\x00\x00\x00\x00\x00\x4A\x6F\x6D" +
+	"\x4E\x5F\x46\xD8\xDF\x0D\x00\x00\x00\x0D\x00\x00\x00\x16\x00\x1C" +
+	"\x00\x4D\x45\x54\x41\x2D\x49\x4E\x46\x2F\x63\x6F\x73\x65\x2E\x6D" +
+	"\x61\x6E\x69\x66\x65\x73\x74\x55\x54\x09\x00\x03\xBB\x44\x89\x5C" +
+	"\xFC\x44\x89\x5C\x75\x78\x0B\x00\x01\x04\xE8\x03\x00\x00\x04\xE8" +
+	"\x03\x00\x00\x62\x61\x64\x20\x6D\x61\x6E\x69\x66\x65\x73\x74\x0A" +
+	"\x50\x4B\x03\x04\x0A\x00\x00\x00\x00\x00\x4F\x6F\x6D\x4E\xD9\x78" +
+	"\xE8\x43\x0C\x00\x00\x00\x0C\x00\x00\x00\x11\x00\x1C\x00\x4D\x45" +
+	"\x54\x41\x2D\x49\x4E\x46\x2F\x63\x6F\x73\x65\x2E\x73\x69\x67\x55" +
+	"\x54\x09\x00\x03\xC5\x44\x89\x5C\xFC\x44\x89\x5C\x75\x78\x0B\x00" +
+	"\x01\x04\xE8\x03\x00\x00\x04\xE8\x03\x00\x00\x69\x6E\x76\x61\x6C" +
+	"\x69\x64\x20\x73\x69\x67\x0A\x50\x4B\x01\x02\x1E\x03\x0A\x00\x00" +
+	"\x00\x00\x00\x04\x73\x6D\x4E\x00\x00\x00\x00\x00\x00\x00\x00\x00" +
+	"\x00\x00\x00\x09\x00\x18\x00\x00\x00\x00\x00\x00\x00\x10\x00\xFD" +
+	"\x41\x00\x00\x00\x00\x4D\x45\x54\x41\x2D\x49\x4E\x46\x2F\x55\x54" +
+	"\x05\x00\x03\xC7\x4A\x89\x5C\x75\x78\x0B\x00\x01\x04\xE8\x03\x00" +
+	"\x00\x04\xE8\x03\x00\x00\x50\x4B\x01\x02\x1E\x03\x0A\x00\x00\x00" +
+	"\x00\x00\x4A\x6F\x6D\x4E\x5F\x46\xD8\xDF\x0D\x00\x00\x00\x0D\x00" +
+	"\x00\x00\x16\x00\x18\x00\x00\x00\x00\x00\x01\x00\x00\x00\xB4\x81" +
+	"\x43\x00\x00\x00\x4D\x45\x54\x41\x2D\x49\x4E\x46\x2F\x63\x6F\x73" +
+	"\x65\x2E\x6D\x61\x6E\x69\x66\x65\x73\x74\x55\x54\x05\x00\x03\xBB" +
+	"\x44\x89\x5C\x75\x78\x0B\x00\x01\x04\xE8\x03\x00\x00\x04\xE8\x03" +
+	"\x00\x00\x50\x4B\x01\x02\x1E\x03\x0A\x00\x00\x00\x00\x00\x4F\x6F" +
+	"\x6D\x4E\xD9\x78\xE8\x43\x0C\x00\x00\x00\x0C\x00\x00\x00\x11\x00" +
+	"\x18\x00\x00\x00\x00\x00\x01\x00\x00\x00\xB4\x81\xA0\x00\x00\x00" +
+	"\x4D\x45\x54\x41\x2D\x49\x4E\x46\x2F\x63\x6F\x73\x65\x2E\x73\x69" +
+	"\x67\x55\x54\x05\x00\x03\xC5\x44\x89\x5C\x75\x78\x0B\x00\x01\x04" +
+	"\xE8\x03\x00\x00\x04\xE8\x03\x00\x00\x50\x4B\x05\x06\x00\x00\x00" +
+	"\x00\x03\x00\x03\x00\x02\x01\x00\x00\xF7\x00\x00\x00\x00\x00")
+
+var unsignedEmptyCOSEManifest = []byte("Manifest-Version: 1.0\n\n")
+var unsignedEmptyCOSESig = []byte("dummy signature")
