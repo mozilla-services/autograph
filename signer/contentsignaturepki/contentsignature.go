@@ -179,18 +179,18 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	if len(input) < 10 {
 		return nil, errors.Errorf("contentsignaturepki: refusing to sign input data shorter than 10 bytes")
 	}
-	alg, hash := makeTemplatedHash(input, s.Mode)
+	alg, hash := MakeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
 	sig.(*ContentSignature).storeHashName(alg)
 	return sig, err
 }
 
-// hash returns the templated sha384 of the input data. The template adds
+// MakeTemplatedHash returns the templated sha384 of the input data. The template adds
 // the string "Content-Signature:\x00" before the input data prior to
 // calculating the sha384.
 //
 // The name of the hash function is returned, followed by the hash bytes
-func makeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
+func MakeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
 	templated := make([]byte, len(SignaturePrefix)+len(data))
 	copy(templated[:len(SignaturePrefix)], []byte(SignaturePrefix))
 	copy(templated[len(SignaturePrefix):], data)
