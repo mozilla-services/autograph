@@ -72,7 +72,7 @@ jobs:
           name: Report coverage
           command: |
             cd $GOPATH/src/go.mozilla.org/autograph
-            $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci -repotoken $COVERALLS_TOKEN
+            $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci
 
   build:
     # based on the official golang image with more docker stuff
