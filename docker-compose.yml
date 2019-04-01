@@ -72,7 +72,7 @@ services:
     command:
       [
         "/app/wait-for-it.sh",
-        "autograph-app-hsm:8001",
+        "autograph-app:8001",
         "--",
         "/go/bin/autograph-monitor",
       ]
