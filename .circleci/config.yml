@@ -103,7 +103,7 @@ jobs:
             docker save "monitor:build" | gzip -c > /go/src/app/cache/docker-monitor-build.tgz
             docker save "softhsm:build" | gzip -c > /go/src/app/cache/docker-softhsm-build.tgz
       - save_cache:
-          key: v3-{{ .Branch }}-{{ epoch }}
+          key: v4-{{ .Branch }}-{{ epoch }}
           paths:
             - /go/src/app/cache/docker-app-build.tgz
             - /go/src/app/cache/docker-monitor-build.tgz
@@ -116,7 +116,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - restore_cache:
-          key: v3-{{ .Branch }}
+          key: v4-{{ .Branch }}
       - run:
           name: Restore Docker image cache
           command: |
@@ -208,7 +208,7 @@ jobs:
             ls -lh /go/src/app/cache/
 
       - save_cache:
-          key: v3-apk-{{ .Branch }}-{{ .Revision }}
+          key: v4-apk-{{ .Branch }}-{{ .Revision }}
           paths:
             - /go/src/app/cache/resigned-apks.tgz
 
@@ -219,7 +219,7 @@ jobs:
         user: root
     steps:
       - restore_cache:
-          key: v3-apk-{{ .Branch }}-{{ .Revision }}
+          key: v4-apk-{{ .Branch }}-{{ .Revision }}
       - run:
           name: install android SDK
           command: |
@@ -241,7 +241,7 @@ jobs:
     steps:
       - setup_remote_docker
       - restore_cache:
-          key: v3-{{.Branch}}
+          key: v4-{{.Branch}}
       - run:
           name: Restore Docker image cache
           command: gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
