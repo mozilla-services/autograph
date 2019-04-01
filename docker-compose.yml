@@ -11,6 +11,7 @@ services:
       - POSTGRES_DB=autograph
     ports:
       - "5432:5432"
+    command: postgres -c 'ssl=on' -c 'ssl_cert_file=/opt/server.crt' -c 'ssl_key_file=/opt/server.key'
 
   autograph-app:
     container_name: autograph-app
@@ -31,7 +32,7 @@ services:
     build:
       context: tools/softhsm/
     environment:
-      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=disable
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
     links:
       - db
     ports:

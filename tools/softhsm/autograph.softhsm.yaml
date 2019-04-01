@@ -19,10 +19,11 @@ database:
   name: autograph
   user: myautographdbuser
   password: myautographdbpassword
-  host: 127.0.0.1:5432
-  #sslmode: enabled
-  #maxopenconns: 100
-  #maxidleconns: 10
+  host: db:5432
+  sslmode: verify-full
+  sslrootcert: /opt/db-root.crt
+  maxopenconns: 100
+  maxidleconns: 10
 
 # The keys below are testing keys that do not grant any power
 signers:
