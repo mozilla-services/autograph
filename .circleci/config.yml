@@ -99,7 +99,7 @@ jobs:
           no_output_timeout: 30m
           command: |
             mkdir -p /go/src/app/cache
-            docker save "app:build" "monitor:build" "softhsm:build" | gzip -c > /go/src/app/cache/docker.tgz
+            docker save "autograph-app" "autograph-monitor" "autograph-app-hsm" | gzip -c > /go/src/app/cache/docker.tgz
       - save_cache:
           key: v4-{{ .Branch }}-{{ epoch }}
           paths:
@@ -149,7 +149,7 @@ jobs:
           name: check XPI signing works against Autograph
           command: |
             docker run --rm --name autograph-sign-xpi-test --network project_default --user 0 \
-            --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build /bin/bash \
+            --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client autograph-app /bin/bash \
             -c \
             "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && \
 
@@ -169,7 +169,7 @@ jobs:
           name: check XPI signing works against Autograph HSM
           command: |
             docker run --rm --name autograph-sign-xpi-test-hsm --network project_default --user 0 \
-            --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client softhsm:build /bin/bash \
+            --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client autograph-app-hsm /bin/bash \
             -c 'wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && \
 
             SIGNER_ID=hsm-webextensions-rsa \
@@ -189,7 +189,7 @@ jobs:
           command: |
             # TODO: HSM support for APK signing keys and test here
             docker run --name autograph-sign-apk-test --network project_default --user 0 \
-            --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client app:build \
+            --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client autograph-app \
             /bin/bash -c "TARGET="http://autograph-app:8000" ./build_test_apks.sh"
 
             docker cp \
@@ -246,13 +246,13 @@ jobs:
             # deploy master
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker login -u $DOCKER_USER -p $DOCKER_PASS
-              docker tag app:build ${DOCKERHUB_REPO}:latest
+              docker tag autograph-app ${DOCKERHUB_REPO}:latest
               docker push ${DOCKERHUB_REPO}:latest
             elif  [ ! -z "${CIRCLE_TAG}" ]; then
             # deploy a release tag...
               docker login -u $DOCKER_USER -p $DOCKER_PASS
               echo "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
-              docker tag app:build "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
+              docker tag autograph-app "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
               docker images
               docker push "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
             fi

@@ -1,4 +1,4 @@
-FROM app:build
+FROM autograph-app
 
 USER root
 RUN apt update && \

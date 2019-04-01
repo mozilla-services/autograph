@@ -14,7 +14,7 @@ services:
 
   autograph-app:
     container_name: autograph-app
-    image: app:build
+    image: autograph-app
     build:
       context: .
     ports:
@@ -27,7 +27,7 @@ services:
 
   autograph-app-hsm:
     container_name: autograph-app-hsm
-    image: softhsm:build
+    image: autograph-app-hsm
     build:
       context: tools/softhsm/
     environment:
@@ -55,7 +55,7 @@ services:
 
   autograph-monitor:
     container_name: autograph-monitor
-    image: monitor:build
+    image: autograph-monitor
     build:
       context: tools/autograph-monitor/
     environment:
@@ -74,7 +74,7 @@ services:
 
   autograph-monitor-hsm:
     container_name: autograph-monitor-hsm
-    image: monitor:build
+    image: autograph-monitor
     build:
       context: tools/autograph-monitor/
     environment:
