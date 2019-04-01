@@ -99,15 +99,11 @@ jobs:
           no_output_timeout: 30m
           command: |
             mkdir -p /go/src/app/cache
-            docker save "app:build" | gzip -c > /go/src/app/cache/docker-app-build.tgz
-            docker save "monitor:build" | gzip -c > /go/src/app/cache/docker-monitor-build.tgz
-            docker save "softhsm:build" | gzip -c > /go/src/app/cache/docker-softhsm-build.tgz
+            docker save "app:build" "monitor:build" "softhsm:build" | gzip -c > /go/src/app/cache/docker.tgz
       - save_cache:
           key: v4-{{ .Branch }}-{{ epoch }}
           paths:
-            - /go/src/app/cache/docker-app-build.tgz
-            - /go/src/app/cache/docker-monitor-build.tgz
-            - /go/src/app/cache/docker-softhsm-build.tgz
+            - /go/src/app/cache/docker.tgz
 
   integrationtest:
     docker:
@@ -120,9 +116,7 @@ jobs:
       - run:
           name: Restore Docker image cache
           command: |
-            gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
-            gunzip -c /go/src/app/cache/docker-monitor-build.tgz | docker load
-            gunzip -c /go/src/app/cache/docker-softhsm-build.tgz | docker load
+            gunzip -c /go/src/app/cache/docker.tgz | docker load
 
       - run:
           name: Start autograph stack with docker-compose
@@ -244,7 +238,7 @@ jobs:
           key: v4-{{.Branch}}
       - run:
           name: Restore Docker image cache
-          command: gunzip -c /go/src/app/cache/docker-app-build.tgz | docker load
+          command: gunzip -c /go/src/app/cache/docker.tgz | docker load
 
       - run:
           name: Deploy to Dockerhub
