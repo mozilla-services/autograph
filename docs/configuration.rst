@@ -52,12 +52,13 @@ Make sure to set a user with limited grants in the configuration.
 
 .. code:: yaml
 
-	database: 
+	database:
 		name: autograph
 		user: myautographdbuser
 		password: myautographdbpassword
 		host: 127.0.0.1:5432
-		sslmode: enabled
+		sslmode: full-verify
+		sslrootcert: /etc/ssl/certs/db-root.crt
 		maxopenconns: 100
 		maxidleconns: 10
 
