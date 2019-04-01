@@ -17,13 +17,8 @@ services:
     image: app:build
     build:
       context: .
-    environment:
-      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=disable
-    links:
-      - db
     ports:
       - "8000:8000"
-    command: autograph -c /app/autograph.yaml
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/__heartbeat__"]
       interval: 60s
