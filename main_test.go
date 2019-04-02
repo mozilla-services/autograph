@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 )
 
 var (
@@ -27,7 +28,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("configuration: %+v\n", conf)
 	ag = newAutographer(1)
 	err = ag.addSigners(conf.Signers)
 	if err != nil {
@@ -48,7 +48,10 @@ func TestMain(m *testing.M) {
 		}
 	}
 	ag.makeSignerIndex()
-	log.Printf("autographer: %+v\n", ag)
+	// ok this is lame but the contentsignaturepki signer will upload a file dated
+	// at the given second so we don't want anything else to run at the same second
+	// otherwise that file may get rewritten. Easiest way to solve it? Sleep.
+	time.Sleep(time.Second)
 	// run the tests and exit
 	r := m.Run()
 	os.Exit(r)
@@ -279,8 +282,6 @@ func TestConfigLoadFileNotExist(t *testing.T) {
 }
 
 func TestDefaultPort(t *testing.T) {
-	t.Parallel()
-
 	expected := "0.0.0.0:8000"
 	_, listen, _, _ := parseArgsAndLoadConfig([]string{})
 	if listen != expected {
@@ -289,8 +290,6 @@ func TestDefaultPort(t *testing.T) {
 }
 
 func TestPortOverride(t *testing.T) {
-	t.Parallel()
-
 	expected := "0.0.0.0:8080"
 	_, listen, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
 	if listen != expected {
