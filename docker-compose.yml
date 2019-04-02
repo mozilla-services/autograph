@@ -11,19 +11,15 @@ services:
       - POSTGRES_DB=autograph
     ports:
       - "5432:5432"
+    command: postgres -c 'ssl=on' -c 'ssl_cert_file=/opt/server.crt' -c 'ssl_key_file=/opt/server.key'
 
   autograph-app:
     container_name: autograph-app
-    image: app:build
+    image: autograph-app
     build:
       context: .
-    environment:
-      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=disable
-    links:
-      - db
     ports:
       - "8000:8000"
-    command: autograph -c /app/autograph.yaml
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/__heartbeat__"]
       interval: 60s
@@ -32,11 +28,11 @@ services:
 
   autograph-app-hsm:
     container_name: autograph-app-hsm
-    image: softhsm:build
+    image: autograph-app-hsm
     build:
       context: tools/softhsm/
     environment:
-      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=disable
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
     links:
       - db
     ports:
@@ -60,7 +56,7 @@ services:
 
   autograph-monitor:
     container_name: autograph-monitor
-    image: monitor:build
+    image: autograph-monitor
     build:
       context: tools/autograph-monitor/
     environment:
@@ -72,14 +68,14 @@ services:
     command:
       [
         "/app/wait-for-it.sh",
-        "autograph-app-hsm:8001",
+        "autograph-app:8001",
         "--",
         "/go/bin/autograph-monitor",
       ]
 
   autograph-monitor-hsm:
     container_name: autograph-monitor-hsm
-    image: monitor:build
+    image: autograph-monitor
     build:
       context: tools/autograph-monitor/
     environment:

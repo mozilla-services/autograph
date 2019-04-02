@@ -21,19 +21,19 @@ install:
 	$(GO) install go.mozilla.org/autograph
 
 build-app-container: generate
-	docker build -t app:build .
+	docker-compose build autograph-app
 
 build-monitor-container: build-app-container
-	cd tools/autograph-monitor && docker build -t monitor:build .
+	docker-compose build autograph-monitor
 
 build-softhsm-container:
-	cd tools/softhsm && docker build -t softhsm:build .
+	docker-compose build autograph-app-hsm
 
 test-container:
-	docker run --name autograph-dev --rm -u 0 --net host app:build make -C /go/src/go.mozilla.org/autograph test
+	docker run --name autograph-dev --rm -u 0 --net host autograph-app make -C /go/src/go.mozilla.org/autograph test
 
 run-container:
-	docker run --name autograph-dev --rm -d --net host app:build
+	docker run --name autograph-dev --rm -d --net host autograph-app
 
 compose:
 	docker-compose up --build
