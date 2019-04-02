@@ -1,6 +1,6 @@
 url: http://127.0.0.1:8000/
 monitoringkey: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
-security.content.signature.root_hash: 4C35B1C3E312D955E778EDD0A7E78A388304EF01BFFA0329B2469F3CC5EC3604
+security.content.signature.root_hash: 5E36F214DE823F8B299689235F0341ACAFA075AF82CB4CD4307C3DB343392AFE
 #rootcert: |
 #    -----BEGIN CERTIFICATE-----
 #    MIIHYzCCBUugAwIBAgIBATANBgkqhkiG9w0BAQwFADCBqDELMAkGA1UEBhMCVVMx

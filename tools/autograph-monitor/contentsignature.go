@@ -1,20 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/pem"
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
-	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/contentsignaturepki"
 )
 
 // Certificates no longer in use but not yet removed from the autograph config.
@@ -38,13 +35,12 @@ func verifyContentSignature(response signatureresponse) error {
 		err   error
 		certs []*x509.Certificate
 	)
-	sig, err := contentsignature.Unmarshal(response.Signature)
+	sig, err := contentsignaturepki.Unmarshal(response.Signature)
 	if err != nil {
 		log.Fatal(err)
 	}
-	sig.X5U = response.X5U
-	if sig.X5U != "" {
-		certs, err = getX5U(sig.X5U)
+	if response.X5U != "" {
+		certs, err = contentsignaturepki.GetX5U(response.X5U)
 		if err != nil {
 			return err
 		}
@@ -73,48 +69,6 @@ func verifyContentSignature(response signatureresponse) error {
 		}
 	}
 	return nil
-}
-
-func getX5U(x5u string) (certs []*x509.Certificate, err error) {
-	log.Printf("Retrieving X5U %q", x5u)
-	c := &http.Client{}
-	t := &http.Transport{}
-	t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
-	c.Transport = t
-	resp, err := c.Get(x5u)
-	if err != nil {
-		return certs, fmt.Errorf("Failed to retrieve X5U %s: %v", x5u, err)
-	}
-	defer resp.Body.Close()
-	scanner := bufio.NewScanner(resp.Body)
-	// the first row must contain BEGIN CERT for the end entity
-	scanner.Scan()
-	if scanner.Text() != "-----BEGIN CERTIFICATE-----" {
-		return certs, fmt.Errorf("Invalid X5U format for %s: first row isn't BEGIN CERTIFICATE", x5u)
-	}
-	var certPEM []byte
-	certPEM = append(certPEM, scanner.Bytes()...)
-	certPEM = append(certPEM, byte('\n'))
-	for scanner.Scan() {
-		certPEM = append(certPEM, scanner.Bytes()...)
-		certPEM = append(certPEM, byte('\n'))
-		if scanner.Text() == "-----END CERTIFICATE-----" {
-			// end of the current cert. Parse it, store it
-			// and move on to next cert
-			block, _ := pem.Decode(certPEM)
-			if block == nil {
-				return certs, fmt.Errorf("Failed to parse certificate PEM")
-			}
-			certX509, err := x509.ParseCertificate(block.Bytes)
-			if err != nil {
-				return certs, fmt.Errorf("Could not parse X.509 certificate: %v", err)
-			}
-			log.Printf("Retrieved certificate CN=%q", certX509.Subject.CommonName)
-			certs = append(certs, certX509)
-			certPEM = nil
-		}
-	}
-	return certs, nil
 }
 
 func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error) {

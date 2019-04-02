@@ -41,9 +41,11 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ag.addStats(conf)
-	if err != nil {
-		log.Fatal(err)
+	if conf.Statsd.Addr != "" {
+		err = ag.addStats(conf)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	ag.makeSignerIndex()
 	log.Printf("autographer: %+v\n", ag)

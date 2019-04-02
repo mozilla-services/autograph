@@ -2,12 +2,10 @@ package main
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -23,8 +21,6 @@ import (
 	"go.mozilla.org/autograph/signer/xpi"
 	margo "go.mozilla.org/mar"
 )
-
-const inputdata string = "AUTOGRAPH MONITORING"
 
 func TestMonitorPass(t *testing.T) {
 	var empty []byte
@@ -51,22 +47,22 @@ func TestMonitorPass(t *testing.T) {
 		switch response.Type {
 		case contentsignature.Type:
 			err = verifyContentSignature(
-				base64.StdEncoding.EncodeToString([]byte(inputdata)),
+				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				"/__monitor__",
 				response.Signature,
 				response.PublicKey)
 		case contentsignaturepki.Type:
-			err = verifyContentSignaturePki(response.X5U, response.Signature, inputdata)
+			err = contentsignaturepki.Verify(response.X5U, response.Signature, MonitoringInputData)
 		case xpi.Type:
 			err = verifyXPISignature(
-				base64.StdEncoding.EncodeToString([]byte(inputdata)),
+				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature)
 		case apk.Type:
 			err = verifyAPKManifestSignature(
-				base64.StdEncoding.EncodeToString([]byte(inputdata)),
+				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature)
 		case mar.Type:
-			err = verifyMARSignature(base64.StdEncoding.EncodeToString([]byte(inputdata)),
+			err = verifyMARSignature(base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
 		case rsapss.Type:
 			err = verifyRsapssSignature(response.Signature, response.PublicKey)
@@ -86,32 +82,9 @@ func TestMonitorPass(t *testing.T) {
 }
 
 func verifyRsapssSignature(b64Sig, b64Key string) error {
-	shasum := sha1.Sum([]byte(inputdata))
+	shasum := sha1.Sum(MonitoringInputData)
 	digest := base64.StdEncoding.EncodeToString(shasum[:])
 	return rsapss.VerifySignatureFromB64(digest, b64Sig, b64Key)
-}
-
-func verifyContentSignaturePki(x5u, signature, input string) error {
-	// GetX5U will retrieve the chain from the local file:// and verify
-	// it so we don't have to. the first cert in the returned slice is
-	// the end entity we need to verify the signature with.
-	certs, err := contentsignaturepki.GetX5U(x5u)
-	if err != nil {
-		return err
-	}
-	// Get the public key from the end-entity
-	eePubKey := certs[0].PublicKey.(*ecdsa.PublicKey)
-	// parse the json signature
-	sig, err := contentsignaturepki.Unmarshal(signature)
-	if err != nil {
-		return err
-	}
-	// make a templated hash
-	_, inputHash := contentsignaturepki.MakeTemplatedHash([]byte(input), sig.Mode)
-	if !ecdsa.Verify(eePubKey, inputHash, sig.R, sig.S) {
-		return fmt.Errorf("ecdsa signature verification failed")
-	}
-	return nil
 }
 
 func TestMonitorHasSignerParameters(t *testing.T) {

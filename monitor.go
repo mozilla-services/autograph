@@ -11,6 +11,9 @@ import (
 	"go.mozilla.org/autograph/signer"
 )
 
+// MonitoringInputData is the data signed by the monitoring handler
+var MonitoringInputData = []byte(`AUTOGRAPH MONITORING`)
+
 func (a *autographer) addMonitoring(monitoring authorization) error {
 	if monitoring.Key == "" {
 		return nil
@@ -42,7 +45,7 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// base64 of the string 'AUTOGRAPH MONITORING'
-		sig, err := s.(signer.DataSigner).SignData([]byte("AUTOGRAPH MONITORING"), s.(signer.DataSigner).GetDefaultOptions())
+		sig, err := s.(signer.DataSigner).SignData(MonitoringInputData, s.(signer.DataSigner).GetDefaultOptions())
 		if err != nil {
 			httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
 			return

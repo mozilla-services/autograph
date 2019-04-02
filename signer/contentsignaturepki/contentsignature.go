@@ -281,3 +281,29 @@ func (s *ContentSigner) getModeFromCurve() string {
 func (s *ContentSigner) GetDefaultOptions() interface{} {
 	return nil
 }
+
+// Verify takes the location of a cert chain (x5u), a signature in its
+// raw base64_url format and input data. It then performs a verification
+// of the signature on the input data using the end-entity certificate
+// of the chain, and returns a boolean indicating validity.
+func Verify(x5u, signature string, input []byte) error {
+	certs, err := GetX5U(x5u)
+	if err != nil {
+		return err
+	}
+	// Get the public key from the end-entity
+	if len(certs) < 1 {
+		return fmt.Errorf("no certificate found in x5u")
+	}
+	key := certs[0].PublicKey.(*ecdsa.PublicKey)
+	// parse the json signature
+	sig, err := Unmarshal(signature)
+	if err != nil {
+		return err
+	}
+	// make a templated hash
+	if !sig.VerifyData(input, key) {
+		return fmt.Errorf("ecdsa signature verification failed")
+	}
+	return nil
+}
