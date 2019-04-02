@@ -204,6 +204,7 @@ jobs:
       - save_cache:
           key: v4-apk-{{ .Branch }}-{{ .Revision }}
           paths:
+            - /go/src/app/cache/docker.tgz
             - /go/src/app/cache/resigned-apks.tgz
 
   verify:
