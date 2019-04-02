@@ -3,7 +3,7 @@ This directory contains:
 
 * golang source and test files for connecting and querying a postgresql DB
 * a Dockerfile to setup a test database for CI and local development
-* key, CSR, and cert files for the development docker DB root CA and server
+* key and cert files for the development docker DB root CA and server
 
 The key, CSR, and cert files were generated per the "To create a server certificate whose identity can be validated by clients, first create a certificate signing request (CSR) and a public/private key file:" section of https://www.postgresql.org/docs/11/ssl-tcp.html#SSL-CERTIFICATE-CREATION with the docker-compose CN of `db` i.e.
 
