@@ -20,12 +20,13 @@ statsd:
 #     pin:        ulfr:e2deea623796eecd
 
 # When using a postgres database, set the config below:
-# database: 
+# database:
 #    name: autograph
 #    user: myautographdbuser
 #    password: myautographdbpassword
-#    host: 127.0.0.1:5432
-#    sslmode: enabled
+#    host: db:5432
+#    sslmode: verify-full
+#    sslrootcert: /etc/ssl/certs/db-root.crt
 #    maxopenconns: 100
 #    maxidleconns: 10
 

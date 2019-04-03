@@ -39,6 +39,7 @@ type Config struct {
 	Password     string
 	Host         string
 	SSLMode      string
+	SSLRootCert  string
 	MaxOpenConns int
 	MaxIdleConns int
 }
@@ -53,8 +54,8 @@ func Connect(config Config) (*Handler, error) {
 		if config.SSLMode == "" {
 			config.SSLMode = "disable"
 		}
-		dsn = fmt.Sprintf("postgres://%s@%s/%s?sslmode=%s",
-			userPass.String(), config.Host, config.Name, config.SSLMode)
+		dsn = fmt.Sprintf("postgres://%s@%s/%s?sslmode=%s&sslrootcert=%s",
+			userPass.String(), config.Host, config.Name, config.SSLMode, config.SSLRootCert)
 	}
 	dbfd, err := sql.Open("postgres", dsn)
 	if err != nil {

@@ -1,4 +1,4 @@
-FROM app:build
+FROM autograph-app
 MAINTAINER Mozilla
 
 USER root
