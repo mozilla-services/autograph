@@ -106,6 +106,12 @@ func Handler() (err error) {
 	if err != nil {
 		return
 	}
+
+	// For client requests, setting this field prevents re-use of
+	// TCP connections between requests to the same hosts, as if
+	// Transport.DisableKeepAlives were set.
+	req.Close = true
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", makeAuthHeader(req, "monitor", conf.MonitoringKey))
 	cli := &http.Client{}
