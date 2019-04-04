@@ -58,6 +58,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestConfigLoad(t *testing.T) {
+	t.Parallel()
+
 	testcases := []struct {
 		pass bool
 		data []byte
@@ -162,6 +164,8 @@ authorizations:
 }
 
 func TestDuplicateSigners(t *testing.T) {
+	t.Parallel()
+
 	var conf configuration
 	// write conf file to /tmp and read it back
 	fd, err := ioutil.TempFile("", "autographtestconf")
@@ -211,6 +215,8 @@ signers:
 }
 
 func TestDuplicateAuthorization(t *testing.T) {
+	t.Parallel()
+
 	var conf configuration
 	// write conf file to /tmp and read it back
 	fd, err := ioutil.TempFile("", "autographtestconf")
@@ -274,6 +280,8 @@ authorizations:
 	os.Remove(filename)
 }
 func TestConfigLoadFileNotExist(t *testing.T) {
+	t.Parallel()
+
 	var conf configuration
 	err := conf.loadFromFile("/tmp/a/b/c/d/e/f/e/d/c/b/a/oned97fy2qoelfahd018oehfa9we8ohf219")
 	if err == nil {
@@ -282,6 +290,8 @@ func TestConfigLoadFileNotExist(t *testing.T) {
 }
 
 func TestDefaultPort(t *testing.T) {
+	t.Parallel()
+
 	expected := "0.0.0.0:8000"
 	_, listen, _, _ := parseArgsAndLoadConfig([]string{})
 	if listen != expected {
@@ -290,6 +300,8 @@ func TestDefaultPort(t *testing.T) {
 }
 
 func TestPortOverride(t *testing.T) {
+	t.Parallel()
+
 	expected := "0.0.0.0:8080"
 	_, listen, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
 	if listen != expected {

@@ -23,6 +23,8 @@ import (
 )
 
 func TestMonitorPass(t *testing.T) {
+	t.Parallel()
+
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
 	if err != nil {
@@ -88,6 +90,8 @@ func verifyRsapssSignature(b64Sig, b64Key string) error {
 }
 
 func TestMonitorHasSignerParameters(t *testing.T) {
+	t.Parallel()
+
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
 	if err != nil {
@@ -136,6 +140,8 @@ func TestMonitorHasSignerParameters(t *testing.T) {
 }
 
 func TestMonitorNoConfig(t *testing.T) {
+	t.Parallel()
+
 	tmpag := newAutographer(1)
 	var nomonitor configuration
 	tmpag.addMonitoring(nomonitor.Monitoring)
@@ -145,6 +151,8 @@ func TestMonitorNoConfig(t *testing.T) {
 }
 
 func TestMonitorAddDuplicate(t *testing.T) {
+	t.Parallel()
+
 	tmpag := newAutographer(1)
 	var monitorconf configuration
 	monitorconf.Monitoring.Key = "xxxxxxx"
@@ -162,6 +170,8 @@ func TestMonitorAddDuplicate(t *testing.T) {
 }
 
 func TestMonitorBadRequest(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []struct {
 		user     string
 		key      string

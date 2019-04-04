@@ -17,6 +17,8 @@ import (
 )
 
 func TestMissingAuthorization(t *testing.T) {
+	t.Parallel()
+
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
 	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
@@ -33,6 +35,8 @@ func TestMissingAuthorization(t *testing.T) {
 }
 
 func TestBogusAuthorization(t *testing.T) {
+	t.Parallel()
+
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
 	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
@@ -50,6 +54,8 @@ func TestBogusAuthorization(t *testing.T) {
 }
 
 func TestBadPayload(t *testing.T) {
+	t.Parallel()
+
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
 	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
@@ -68,6 +74,8 @@ func TestBadPayload(t *testing.T) {
 }
 
 func TestExpiredAuth(t *testing.T) {
+	t.Parallel()
+
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
 	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
@@ -109,6 +117,8 @@ func TestDuplicateNonce(t *testing.T) {
 }
 
 func TestNonceFromLRU(t *testing.T) {
+	t.Parallel()
+
 	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -143,6 +153,8 @@ func TestNonceFromLRU(t *testing.T) {
 }
 
 func TestSignerNotFound(t *testing.T) {
+	t.Parallel()
+
 	pos, err := ag.getSignerID(`unknown018qoegdxc`, `unkown093ytid`)
 	if err == nil || pos != -1 {
 		t.Errorf("expected to fail lookup up a signer but succeeded")
@@ -150,6 +162,8 @@ func TestSignerNotFound(t *testing.T) {
 }
 
 func TestDefaultSignerNotFound(t *testing.T) {
+	t.Parallel()
+
 	pos, err := ag.getSignerID(`unknown018qoegdxc`, ``)
 	if err == nil || pos != -1 {
 		t.Errorf("expected to fail lookup up a signer but succeeded")
@@ -158,6 +172,8 @@ func TestDefaultSignerNotFound(t *testing.T) {
 
 // Two authorizations sharing the same ID should fail
 func TestAddDuplicateAuthorization(t *testing.T) {
+	t.Parallel()
+
 	var authorizations = []authorization{
 		{
 			ID: "alice",
@@ -182,6 +198,7 @@ func TestAddDuplicateAuthorization(t *testing.T) {
 // to trigger the hawk skew error
 func TestHawkTimestampSkewFail(t *testing.T) {
 	t.Parallel()
+
 	tmpag := newAutographer(1)
 	tmpag.addSigners(conf.Signers)
 	tmpag.addAuthorizations([]authorization{
