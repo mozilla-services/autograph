@@ -8,9 +8,14 @@ Autograph Architecture
 Overview
 --------
 
-Autograph is a web service designed to issue digital signatures based on data
+Autograph exists to consolidate the storage and operations of cryptographic key
+inside a high-security service, and avoid having individual services implement
+and operate their own crypto.
+
+Autograph is a web service designed to issue digital signatures for files, data
 or hashes submitted to its API endpoints. It supports a variety of signature
-formats, or signers, and exposes them through a standard set of JSON endpoints.
+formats, called signers, and exposes them through a JSON API that requires strong
+authentication of incoming requests.
 
 Clients connect to the autograph service via HTTP and authenticate using a
 Hawk Authorization header. The signing request contains the data to be signed,
@@ -23,6 +28,9 @@ request is then passed over to a signer that implements a given type, such as
 "Content Signature" or "XPI". The signer uses its private key to calculate the
 signature, which is returned to the client in the HTTP response.
 
+Some signers use HSMs to store cryptographic keys, in which cases the signer
+asks the HSM to run the crypto operation instead of doing it itself.
+
  ::
     
     Autograph                        +---------------------------------------------------------+
@@ -32,18 +40,17 @@ signature, which is returned to the client in the HTTP response.
     +-----------+                    |                    |  +--------+              +-------+ |
     |           +------data--------->+  +--------------+  |  |Signer B|                        |
     |  client   |   HTTP POST        +-->authentication+--+  +--------+                        |
-    |           <----signature-------+  +--------------+     +--------+                        |
-    +-----------+                    |      |      |         |Signer C|                        |
-                                     |      |      |         +--------+                        |
+    |           <----signature-------+  +--------------+     +--------+    +---+  +-------+    |
+    +-----------+                    |      |      |         |Signer C|---->HSM--->PrivKey|    |
+                                     |      |      |         +--------+    +---+  +-------+    |
                                      | +----v--+ +-v---+     +--------+                        |
                                      | |authori| |nonce|     |Signer D|                        |
                                      | |zations| |check|     +--------+                        |
                                      | +-------+ +-----+                                       |
                                      +---------------------------------------------------------+
 
-Autograph is completely stateless and does not require a database to operate,
-which means that multiple instances of autograph running concurrently will
-not share their nonce databases, thus allowing for limited replay attacks.
+Autograph is stateless, but some signers rely on a Postgres database to
+manage their configurations.
 
 Implementation
 --------------
@@ -51,14 +58,14 @@ Implementation
 Autograph is written in Go because it is a clean and safe language, its crypto
 standard library is top-notch, and we have in-house expertise.
 
-Autograph exposes two functional routes (**/sign/data** and **/sign/hash**),
-plus a handful of technical ones. When a request arrives, it is processed by a
-gorilla/mux router and sent to the signature handler.
+Autograph exposes three functional routes (**/sign/file**, **/sign/data** and
+**/sign/hash**), plus a handful of technical ones. When a request arrives, it
+is processed by a gorilla/mux router and sent to the signature handler.
 
-Due to the similarity of signing data and hashes, the same handler takes care of
-processing both requests. The handler verifies the hawk authentication token,
-passes the signing request to the identified signer, and returns the encoded
-signature back to the client.
+Due to the similarity of signing files, data and hashes, the same handler takes
+care of processing all requests. The handler verifies the hawk authentication
+token, passes the signing request to the identified signer, and returns the
+encoded signature back to the client.
 
 The authentication/authorization model is probably the most complex part of the
 autograph core. Clients are required to provide a Hawk authorization with payload
@@ -74,7 +81,7 @@ the signing request is passed along to a signer.
 
 Signers are separate Go packages defined under the
 `go.mozilla.org/autograph/signer/...` package. Each signer implements a specific
-type of signing:
+type of signing, for example:
 
 * **go.mozilla.org/autograph/signer/contentsignature** implements a signing
   protocol inspired by `http-miser`_ and used to sign data sent from backend
@@ -98,12 +105,13 @@ type of signing:
 
 .. _`xpi signer's README`: https://github.com/mozilla-services/autograph/blob/master/signer/xpi/README.rst
 
-Signers can implement two interfaces: `DataSigner` and `HashSigner`, which
-correspond to the endpoints `/sign/data` and `/sign/hash` respectively. When a
-signing request is received, autograph checks if the requested signer implements
-the interface for the type of signature requested. If the requested signer
-doesn't support a given mode (eg. the xpi signer doesn't support the HashSigner
-interface), then an error is returned to the client.
+Signers can implement three interfaces: `FileSigner`, `DataSigner` and
+`HashSigner`, which correspond to the endpoints `/sign/file`, `/sign/data` and
+`/sign/hash` respectively. When a signing request is received, autograph checks
+if the requested signer implements the interface for the type of signature
+requested. If the requested signer doesn't support a given mode (eg. the xpi
+signer doesn't support the HashSigner interface), then an error is returned to
+the client.
 
 Threat Model
 ------------
@@ -114,10 +122,10 @@ Threat Model
   responsibility falls into the relying application.
 
 * An attacker who is in position to compromise the physical infrastructure where
-  Autograph is operated can dump key material from memory. Autograph does not
-  utilize HSMs but limits the exposure of key material to memory accesses
-  (configurations are encrypted on disk and decrypted in memory).
+  Autograph is operated can dump key material from memory. Signers that utilize
+  an HSM a protected against this attack.
 
 * An attacker who gains access to encrypted configurations and is in a position
-  to access the decryption service (AWS KMS and PGP) can steal key material without
-  having to compromise the autograph service.
+  to access the decryption service (which uses Sops) can steal key material without
+  having to compromise the autograph service. Again, signers that use an HSM are
+  protected.
