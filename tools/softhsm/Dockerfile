@@ -1,4 +1,4 @@
-FROM app:build
+FROM autograph-app
 
 USER root
 RUN apt update && \
@@ -8,6 +8,11 @@ RUN apt update && \
 
 # copy the config
 ADD autograph.softhsm.yaml /app/
+
+# give app access to dev db root cert
+ADD db-root.crt /opt/db-root.crt
+RUN chgrp -vR app /opt
+RUN chmod -vR 0444 /opt/db-root.crt
 
 # Setup SoftHSM
 RUN mkdir -p /var/lib/softhsm/tokens && \
