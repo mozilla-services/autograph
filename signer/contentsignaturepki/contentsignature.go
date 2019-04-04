@@ -285,7 +285,7 @@ func (s *ContentSigner) GetDefaultOptions() interface{} {
 // Verify takes the location of a cert chain (x5u), a signature in its
 // raw base64_url format and input data. It then performs a verification
 // of the signature on the input data using the end-entity certificate
-// of the chain, and returns a boolean indicating validity.
+// of the chain, and returns an error if it fails, or nil on success.
 func Verify(x5u, signature string, input []byte) error {
 	certs, err := GetX5U(x5u)
 	if err != nil {
