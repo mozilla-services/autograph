@@ -339,14 +339,14 @@ examples:
 				case rsapss.Type:
 					err = rsapss.VerifySignatureFromB64(rsapssHash, response.Signature, response.PublicKey)
 					if err != nil {
-						log.Fatal("got error verifying RSA-PSS response: %s", err)
+						log.Fatalf("got error verifying RSA-PSS response: %s", err)
 					}
 					sigStatus = true
 				case gpg2.Type, pgp.Type:
 					sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
 					sigData = []byte(response.Signature)
 				default:
-					log.Fatal("unsupported signature type", response.Type)
+					log.Fatalf("unsupported signature type: %s", response.Type)
 				}
 				if sigStatus {
 					log.Printf("signature %d from signer %q passes", i, response.SignerID)

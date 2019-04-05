@@ -140,9 +140,12 @@ func Handler() (err error) {
 	var failures []error
 	for i, response := range responses {
 		switch response.Type {
-		case contentsignature.Type, contentsignaturepki.Type:
+		case contentsignature.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
 			err = verifyContentSignature(response)
+		case contentsignaturepki.Type:
+			log.Printf("Verifying content signature pki from signer %q", response.SignerID)
+			err = contentsignaturepki.Verify(response.X5U, response.Signature, []byte(inputdata))
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature, conf.truststore)

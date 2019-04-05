@@ -147,6 +147,6 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 
 	// return a chain with the EE cert first then the issuers
 	chain = certPem.String() + s.PublicKey + s.caCert
-	name = fmt.Sprintf("%s-%s.chain", cert.Subject.CommonName, cert.NotAfter.Format("20060102"))
+	name = fmt.Sprintf("%s-%s.chain", cert.Subject.CommonName, cert.NotAfter.Format("2006-01-02-15-04-05"))
 	return
 }

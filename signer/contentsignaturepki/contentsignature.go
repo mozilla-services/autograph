@@ -118,7 +118,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 		if err == database.ErrNoSuitableEEFound {
 			log.Printf("contentsignaturepki: making new end-entity for signer %q", s.ID)
 			// create a label and generate the key
-			s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102"))
+			s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102150405"))
 			s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, s.eeLabel)
 			if err != nil {
 				err = errors.Wrap(err, "failed to generate key for end entity")
@@ -179,18 +179,18 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	if len(input) < 10 {
 		return nil, errors.Errorf("contentsignaturepki: refusing to sign input data shorter than 10 bytes")
 	}
-	alg, hash := makeTemplatedHash(input, s.Mode)
+	alg, hash := MakeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
 	sig.(*ContentSignature).storeHashName(alg)
 	return sig, err
 }
 
-// hash returns the templated sha384 of the input data. The template adds
+// MakeTemplatedHash returns the templated sha384 of the input data. The template adds
 // the string "Content-Signature:\x00" before the input data prior to
 // calculating the sha384.
 //
 // The name of the hash function is returned, followed by the hash bytes
-func makeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
+func MakeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
 	templated := make([]byte, len(SignaturePrefix)+len(data))
 	copy(templated[:len(SignaturePrefix)], []byte(SignaturePrefix))
 	copy(templated[len(SignaturePrefix):], data)
@@ -279,5 +279,31 @@ func (s *ContentSigner) getModeFromCurve() string {
 
 // GetDefaultOptions returns nil because this signer has no option
 func (s *ContentSigner) GetDefaultOptions() interface{} {
+	return nil
+}
+
+// Verify takes the location of a cert chain (x5u), a signature in its
+// raw base64_url format and input data. It then performs a verification
+// of the signature on the input data using the end-entity certificate
+// of the chain, and returns an error if it fails, or nil on success.
+func Verify(x5u, signature string, input []byte) error {
+	certs, err := GetX5U(x5u)
+	if err != nil {
+		return err
+	}
+	// Get the public key from the end-entity
+	if len(certs) < 1 {
+		return fmt.Errorf("no certificate found in x5u")
+	}
+	key := certs[0].PublicKey.(*ecdsa.PublicKey)
+	// parse the json signature
+	sig, err := Unmarshal(signature)
+	if err != nil {
+		return err
+	}
+	// make a templated hash
+	if !sig.VerifyData(input, key) {
+		return fmt.Errorf("ecdsa signature verification failed")
+	}
 	return nil
 }

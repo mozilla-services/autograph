@@ -30,7 +30,7 @@ func (sig *ContentSignature) storeHashName(alg string) {
 
 // VerifyData verifies a signatures on its raw, untemplated, input using a public key
 func (sig *ContentSignature) VerifyData(input []byte, pubKey *ecdsa.PublicKey) bool {
-	_, hash := makeTemplatedHash(input, sig.Mode)
+	_, hash := MakeTemplatedHash(input, sig.Mode)
 	return sig.VerifyHash(hash, pubKey)
 }
 

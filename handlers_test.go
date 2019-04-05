@@ -34,6 +34,8 @@ import (
 )
 
 func TestSignaturePass(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []struct {
 		endpoint          string
 		signaturerequests []signaturerequest
@@ -82,10 +84,6 @@ func TestSignaturePass(t *testing.T) {
 				signaturerequest{
 					Input: "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
 					KeyID: "appkey2",
-				},
-				signaturerequest{
-					Input: "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
-					KeyID: "appkey3",
 				},
 			},
 		},
@@ -230,6 +228,8 @@ func TestSignaturePass(t *testing.T) {
 }
 
 func TestBadRequest(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []struct {
 		endpoint string
 		method   string
@@ -273,6 +273,8 @@ func TestBadRequest(t *testing.T) {
 }
 
 func TestRequestTooLarge(t *testing.T) {
+	t.Parallel()
+
 	blob := strings.Repeat("foobar", 200)
 	body := strings.NewReader(blob)
 	req, err := http.NewRequest("GET", "http://foo.bar/sign/data", body)
@@ -295,6 +297,8 @@ func TestRequestTooLarge(t *testing.T) {
 }
 
 func TestBadContentType(t *testing.T) {
+	t.Parallel()
+
 	blob := "foofoofoofoofoofoofoofoofoofoofoofoofoofoo"
 	body := strings.NewReader(blob)
 	req, err := http.NewRequest("GET", "http://foo.bar/sign/data", body)
@@ -317,6 +321,8 @@ func TestBadContentType(t *testing.T) {
 }
 
 func TestAuthFail(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []struct {
 		user        string
 		token       string
@@ -355,6 +361,8 @@ func TestAuthFail(t *testing.T) {
 }
 
 func TestHeartbeat(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []struct {
 		expect int
 		method string
@@ -379,6 +387,8 @@ func TestHeartbeat(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []struct {
 		expect int
 		method string
@@ -405,6 +415,8 @@ func TestVersion(t *testing.T) {
 // An authorization without at least one signer configured should not have
 // a default signer configured in the signerIndex
 func TestAuthWithoutSigner(t *testing.T) {
+	t.Parallel()
+
 	var authorizations = []authorization{
 		authorization{
 			ID: "alice",
@@ -424,6 +436,8 @@ func TestAuthWithoutSigner(t *testing.T) {
 // * `appkey1` and `appkey2` for `alice`
 // * `appkey2` only for `bob`
 func TestSignerAuthorized(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []struct {
 		userid string
 		sgs    []signaturerequest
@@ -507,6 +521,8 @@ func TestSignerAuthorized(t *testing.T) {
 
 // verify that user `bob` is not allowed to sign with `appkey1`
 func TestSignerUnauthorized(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []signaturerequest{
 		// request signature that need to prepend the content-signature:\x00 header
 		signaturerequest{
@@ -540,6 +556,8 @@ func TestSignerUnauthorized(t *testing.T) {
 }
 
 func TestContentType(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []signaturerequest{
 		signaturerequest{
 			Input: "Y2FyaWJvdXZpbmRpZXV4Cg==",
