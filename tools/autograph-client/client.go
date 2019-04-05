@@ -312,7 +312,7 @@ examples:
 					sigStr += sig.Mode + "=" + response.Signature + "\n"
 					sigData = []byte(sigStr)
 				case xpi.Type:
-					sigStatus = verifyXPI(input, request, response, reqType, roots)
+					sigStatus = verifyXPI(input, response, reqType, roots)
 					switch reqType {
 					case requestTypeData:
 						sigData, err = base64.StdEncoding.DecodeString(response.Signature)
@@ -434,7 +434,7 @@ func verifyContentSignature(input []byte, resp signatureresponse, endpoint strin
 	return ecdsa.Verify(pubKey, input, sig.R, sig.S)
 }
 
-func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqType requestType, roots *x509.CertPool) bool {
+func verifyXPI(input []byte, resp signatureresponse, reqType requestType, roots *x509.CertPool) bool {
 	switch reqType {
 	case requestTypeData:
 		sig, err := xpi.Unmarshal(resp.Signature, input)
@@ -451,7 +451,7 @@ func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqTy
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = xpi.VerifySignedFile(signedFile, roots, req.Options.(xpi.Options))
+		err = xpi.VerifySignedFile(signedFile, roots)
 		if err != nil {
 			log.Fatal(err)
 		}

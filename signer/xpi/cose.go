@@ -311,7 +311,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 
 	for i, eeCert := range eeCerts {
 		if signOptions.ID != eeCert.Subject.CommonName {
-			return errors.Errorf("xpi: EECert %d: id %s does not match cert cn %s", i, signOptions.ID, eeCert.Subject.CommonName)
+			return errors.Errorf("xpi: EECert %d: id %q does not match cert cn %q", i, signOptions.ID, eeCert.Subject.CommonName)
 		}
 		opts := x509.VerifyOptions{
 			DNSName:       dnsName,

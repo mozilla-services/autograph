@@ -9,7 +9,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -543,9 +545,8 @@ func verifyCOSEManifest(signedXPI signer.SignedFile) error {
 	return nil
 }
 
-// VerifySignedFile checks the XPI's PKCS7 signature and COSE
-// signatures if present
-func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, opts Options) error {
+// VerifySignedFile checks the XPI's PKCS7 and COSE signatures if present
+func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool) error {
 	var err error
 	err = verifyPKCS7Manifest(signedFile)
 	if err != nil {
@@ -556,16 +557,70 @@ func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, o
 		return errors.Wrap(err, "xpi: error verifying PKCS7 signature for signed file")
 	}
 
-	if len(opts.COSEAlgorithms) > 0 {
-		err = verifyCOSEManifest(signedFile)
-		if err != nil {
-			return errors.Wrap(err, "xpi: error verifying COSE manifest for signed file")
+	coseSig, err := readFileFromZIP(signedFile, coseSigPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "xpi: no COSE signature found, skipping")
+		return nil
+	}
+	extId, err := GetXpiID(signedFile)
+	if err != nil {
+		return errors.Wrap(err, "xpi: failed to get extension id from signed file")
+	}
+	opts := Options{ID: extId}
+	msg, err := cose.Unmarshal(coseSig)
+	if err != nil {
+		return errors.Wrap(err, "xpi: error reading COSE signature")
+	}
+	for _, sig := range msg.(cose.SignMessage).Signatures {
+		if _, ok := sig.Headers.Protected[algHeaderValue]; ok {
+			var alg *cose.Algorithm
+			algValue, ok := sig.Headers.Protected[algHeaderValue]
+			if !ok {
+				return errors.Errorf("xpi: missing expected alg in Protected Headers")
+			}
+			if algInt, ok := algValue.(int); ok {
+				alg = intToCOSEAlg(algInt)
+			}
+			if alg == nil {
+				return errors.Errorf("xpi: alg %v is not supported", algValue)
+			}
+			opts.COSEAlgorithms = append(opts.COSEAlgorithms, alg.Name)
 		}
-		err = verifyCOSESignatures(signedFile, truststore, opts)
-		if err != nil {
-			return errors.Wrap(err, "xpi: error verifying COSE signatures for signed file")
-		}
+	}
+	if len(opts.COSEAlgorithms) < 1 {
+		return errors.Errorf("xpi: COSE signature exists but no valid algorithm could be found")
+	}
+	err = verifyCOSEManifest(signedFile)
+	if err != nil {
+		return errors.Wrap(err, "xpi: error verifying COSE manifest for signed file")
+	}
+	err = verifyCOSESignatures(signedFile, truststore, opts)
+	if err != nil {
+		return errors.Wrap(err, "xpi: error verifying COSE signatures for signed file")
 	}
 
 	return nil
+}
+
+// XpiManifest represent parts of the structure of an extension manifest
+type XpiManifest struct {
+	BrowserSpecificSettings struct {
+		Gecko struct {
+			ID string `json:"id"`
+		} `json:"gecko"`
+	} `json:"browser_specific_settings"`
+}
+
+// GetXpiID returns the string ID of an extension from its manifest
+func GetXpiID(xpiFile signer.SignedFile) (string, error) {
+	manifestData, err := readFileFromZIP(xpiFile, "manifest.json")
+	if err != nil {
+		return "", errors.Wrap(err, "xpi: no manifest found")
+	}
+	var manifest XpiManifest
+	err = json.Unmarshal(manifestData, &manifest)
+	if err != nil {
+		return "", errors.Wrap(err, "xpi: failed to parse json manifest")
+	}
+	return manifest.BrowserSpecificSettings.Gecko.ID, nil
 }

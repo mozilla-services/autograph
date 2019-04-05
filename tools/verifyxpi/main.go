@@ -28,7 +28,7 @@ func main() {
 	if !ok {
 		log.Fatalf("failed to add root certs to pool")
 	}
-	err = xpi.VerifySignedFile(signer.SignedFile(data), roots, xpi.Options{})
+	err = xpi.VerifySignedFile(signer.SignedFile(data), roots)
 	if err != nil {
 		log.Fatal(err)
 	}
