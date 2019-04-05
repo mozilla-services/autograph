@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 )
 
 var (
@@ -27,7 +28,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("configuration: %+v\n", conf)
 	ag = newAutographer(1)
 	err = ag.addSigners(conf.Signers)
 	if err != nil {
@@ -41,18 +41,25 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ag.addStats(conf)
-	if err != nil {
-		log.Fatal(err)
+	if conf.Statsd.Addr != "" {
+		err = ag.addStats(conf)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	ag.makeSignerIndex()
-	log.Printf("autographer: %+v\n", ag)
+	// ok this is lame but the contentsignaturepki signer will upload a file dated
+	// at the given second so we don't want anything else to run at the same second
+	// otherwise that file may get rewritten. Easiest way to solve it? Sleep.
+	time.Sleep(time.Second)
 	// run the tests and exit
 	r := m.Run()
 	os.Exit(r)
 }
 
 func TestConfigLoad(t *testing.T) {
+	t.Parallel()
+
 	testcases := []struct {
 		pass bool
 		data []byte
@@ -157,6 +164,8 @@ authorizations:
 }
 
 func TestDuplicateSigners(t *testing.T) {
+	t.Parallel()
+
 	var conf configuration
 	// write conf file to /tmp and read it back
 	fd, err := ioutil.TempFile("", "autographtestconf")
@@ -206,6 +215,8 @@ signers:
 }
 
 func TestDuplicateAuthorization(t *testing.T) {
+	t.Parallel()
+
 	var conf configuration
 	// write conf file to /tmp and read it back
 	fd, err := ioutil.TempFile("", "autographtestconf")
@@ -269,6 +280,8 @@ authorizations:
 	os.Remove(filename)
 }
 func TestConfigLoadFileNotExist(t *testing.T) {
+	t.Parallel()
+
 	var conf configuration
 	err := conf.loadFromFile("/tmp/a/b/c/d/e/f/e/d/c/b/a/oned97fy2qoelfahd018oehfa9we8ohf219")
 	if err == nil {

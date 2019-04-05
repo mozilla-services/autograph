@@ -13,6 +13,7 @@ import (
 
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/contentsignaturepki"
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
@@ -21,9 +22,9 @@ import (
 	margo "go.mozilla.org/mar"
 )
 
-const inputdata string = "AUTOGRAPH MONITORING"
-
 func TestMonitorPass(t *testing.T) {
+	t.Parallel()
+
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
 	if err != nil {
@@ -48,20 +49,22 @@ func TestMonitorPass(t *testing.T) {
 		switch response.Type {
 		case contentsignature.Type:
 			err = verifyContentSignature(
-				base64.StdEncoding.EncodeToString([]byte(inputdata)),
+				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				"/__monitor__",
 				response.Signature,
 				response.PublicKey)
+		case contentsignaturepki.Type:
+			err = contentsignaturepki.Verify(response.X5U, response.Signature, MonitoringInputData)
 		case xpi.Type:
 			err = verifyXPISignature(
-				base64.StdEncoding.EncodeToString([]byte(inputdata)),
+				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature)
 		case apk.Type:
 			err = verifyAPKManifestSignature(
-				base64.StdEncoding.EncodeToString([]byte(inputdata)),
+				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature)
 		case mar.Type:
-			err = verifyMARSignature(base64.StdEncoding.EncodeToString([]byte(inputdata)),
+			err = verifyMARSignature(base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
 		case rsapss.Type:
 			err = verifyRsapssSignature(response.Signature, response.PublicKey)
@@ -81,12 +84,14 @@ func TestMonitorPass(t *testing.T) {
 }
 
 func verifyRsapssSignature(b64Sig, b64Key string) error {
-	shasum := sha1.Sum([]byte(inputdata))
+	shasum := sha1.Sum(MonitoringInputData)
 	digest := base64.StdEncoding.EncodeToString(shasum[:])
 	return rsapss.VerifySignatureFromB64(digest, b64Sig, b64Key)
 }
 
 func TestMonitorHasSignerParameters(t *testing.T) {
+	t.Parallel()
+
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
 	if err != nil {
@@ -135,6 +140,8 @@ func TestMonitorHasSignerParameters(t *testing.T) {
 }
 
 func TestMonitorNoConfig(t *testing.T) {
+	t.Parallel()
+
 	tmpag := newAutographer(1)
 	var nomonitor configuration
 	tmpag.addMonitoring(nomonitor.Monitoring)
@@ -144,6 +151,8 @@ func TestMonitorNoConfig(t *testing.T) {
 }
 
 func TestMonitorAddDuplicate(t *testing.T) {
+	t.Parallel()
+
 	tmpag := newAutographer(1)
 	var monitorconf configuration
 	monitorconf.Monitoring.Key = "xxxxxxx"
@@ -161,6 +170,8 @@ func TestMonitorAddDuplicate(t *testing.T) {
 }
 
 func TestMonitorBadRequest(t *testing.T) {
+	t.Parallel()
+
 	var TESTCASES = []struct {
 		user     string
 		key      string

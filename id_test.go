@@ -9,6 +9,8 @@ package main
 import "testing"
 
 func TestId(t *testing.T) {
+	t.Parallel()
+
 	const (
 		minSize = 20
 		maxSize = 27
