@@ -123,7 +123,7 @@ Threat Model
 
 * An attacker who is in position to compromise the physical infrastructure where
   Autograph is operated can dump key material from memory. Signers that utilize
-  an HSM a protected against this attack.
+  an HSM are protected against this attack.
 
 * An attacker who gains access to encrypted configurations and is in a position
   to access the decryption service (which uses Sops) can steal key material without
