@@ -87,7 +87,7 @@ func Handler() (err error) {
 	// load the local configuration file
 	conf, err = loadConf(confdir + "/monitor.autograph.yaml")
 	if err != nil {
-		return fmt.Errorf("failed to load configuration: %v", err)
+		return fmt.Errorf("failed to load configuration: %s", err.Error())
 	}
 	if os.Getenv("AUTOGRAPH_URL") != "" {
 		log.Printf("Overriding conf.URL %s with env var URL %s\n", conf.URL, os.Getenv("AUTOGRAPH_URL"))
