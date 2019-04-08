@@ -39,8 +39,8 @@ func TestVerifyExpiredCertChain(t *testing.T) {
 		log.Fatal(http.ListenAndServe(":64321", nil))
 	}()
 	chain, err := contentsignaturepki.GetX5U("http://localhost:64321/expiredcertchain")
-	if err != nil {
-		t.Fatalf("Failed to retrieved certificate chain: %v", err)
+	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
+		t.Fatalf("Failed to retrieve certificate chain: %v", err)
 	}
 	err = verifyCertChain(chain)
 	if err == nil {
