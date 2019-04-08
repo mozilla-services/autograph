@@ -556,40 +556,20 @@ func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool) e
 	if err != nil {
 		return errors.Wrap(err, "xpi: error verifying PKCS7 signature for signed file")
 	}
-
-	coseSig, err := readFileFromZIP(signedFile, coseSigPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "xpi: no COSE signature found, skipping")
-		return nil
-	}
 	extId, err := GetXpiID(signedFile)
 	if err != nil {
 		return errors.Wrap(err, "xpi: failed to get extension id from signed file")
 	}
 	opts := Options{ID: extId}
-	msg, err := cose.Unmarshal(coseSig)
+	opts.COSEAlgorithms, err = ReadCOSEAlgsFromSig(signedFile)
 	if err != nil {
-		return errors.Wrap(err, "xpi: error reading COSE signature")
+		// FIXME: we just started signing firefox extensions with COSE so this is non-fatal
+		// but soon enough we'll require COSE in Firefox, at which point this function
+		// should fail when no COSE signature is present (and we can also remove pkcs7 \o/)
+		fmt.Fprintf(os.Stderr, "xpi: failed to retrieve COSE algorithms: %v", err)
+		return nil
 	}
-	for _, sig := range msg.(cose.SignMessage).Signatures {
-		if _, ok := sig.Headers.Protected[algHeaderValue]; ok {
-			var alg *cose.Algorithm
-			algValue, ok := sig.Headers.Protected[algHeaderValue]
-			if !ok {
-				return errors.Errorf("xpi: missing expected alg in Protected Headers")
-			}
-			if algInt, ok := algValue.(int); ok {
-				alg = intToCOSEAlg(algInt)
-			}
-			if alg == nil {
-				return errors.Errorf("xpi: alg %v is not supported", algValue)
-			}
-			opts.COSEAlgorithms = append(opts.COSEAlgorithms, alg.Name)
-		}
-	}
-	if len(opts.COSEAlgorithms) < 1 {
-		return errors.Errorf("xpi: COSE signature exists but no valid algorithm could be found")
-	}
+	// if we do find cose algorithms, the associated COSE signatures MUST be valid
 	err = verifyCOSEManifest(signedFile)
 	if err != nil {
 		return errors.Wrap(err, "xpi: error verifying COSE manifest for signed file")

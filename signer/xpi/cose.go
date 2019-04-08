@@ -396,3 +396,40 @@ func (s *XPISigner) issueCOSESignature(cn string, manifest []byte, algs []*cose.
 
 	return
 }
+
+// ReadCOSEAlgsFromSig returns a list of COSE algorithms from a given signed file
+func ReadCOSEAlgsFromSig(signedFile signer.SignedFile) (algs []string, err error) {
+	coseSig, err := readFileFromZIP(signedFile, coseSigPath)
+	if err != nil {
+		err = errors.Errorf("xpi: no COSE signature found, skipping")
+		return
+	}
+	msg, err := cose.Unmarshal(coseSig)
+	if err != nil {
+		err = errors.Wrap(err, "xpi: error reading COSE signature")
+		return
+	}
+	for _, sig := range msg.(cose.SignMessage).Signatures {
+		if _, ok := sig.Headers.Protected[algHeaderValue]; ok {
+			var alg *cose.Algorithm
+			algValue, ok := sig.Headers.Protected[algHeaderValue]
+			if !ok {
+				err = errors.Errorf("xpi: missing expected alg in Protected Headers")
+				return
+			}
+			if algInt, ok := algValue.(int); ok {
+				alg = intToCOSEAlg(algInt)
+			}
+			if alg == nil {
+				err = errors.Errorf("xpi: alg %v is not supported", algValue)
+				return
+			}
+			algs = append(algs, alg.Name)
+		}
+	}
+	if len(algs) < 1 {
+		err = errors.Errorf("xpi: COSE signature exists but no valid algorithm could be found")
+		return
+	}
+	return
+}
