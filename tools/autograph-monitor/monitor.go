@@ -84,6 +84,14 @@ func Handler() (err error) {
 		confdir = os.Getenv("LAMBDA_TASK_ROOT")
 	}
 
+	out, err := decrypt.File("monitor.autograph.yaml", "yaml")
+	fmt.Printf("decrypted output is %d bytes", len(out))
+	fmt.Println(err)
+	if err != nil {
+		userError := err.(sops.UserError)
+		fmt.Println(userError.UserError())
+	}
+
 	// load the local configuration file
 	conf, err = loadConf(confdir + "/monitor.autograph.yaml")
 	if err != nil {
