@@ -19,6 +19,9 @@
         },
         "https://www.googleapis.com/auth/analytics.readonly": {
           "description": "View your Google Analytics data"
+        },
+        "https://www.googleapis.com/auth/analytics.user.deletion": {
+          "description": "Manage Google Analytics user deletion requests"
         }
       }
     }
@@ -29,7 +32,7 @@
   "description": "Views and manages your Google Analytics data.",
   "discoveryVersion": "v1",
   "documentationLink": "https://developers.google.com/analytics/",
-  "etag": "\"-iA1DTNe4s-I6JZXPt1t1Ypy8IU/pZyXISvfodVzorQpGHmIl5L61w8\"",
+  "etag": "\"J3WqvAcMk4eQjJXvfSI4Yr8VouA/EwvGv8Qj93Dt7K3RwZo3AIm1iu8\"",
   "icons": {
     "x16": "https://www.google.com/images/icons/product/analytics-16.png",
     "x32": "https://www.google.com/images/icons/product/analytics-32.png"
@@ -74,12 +77,12 @@
       "type": "boolean"
     },
     "quotaUser": {
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters. Overrides userIp if both are provided.",
+      "description": "An opaque string that represents a user for quota purposes. Must not exceed 40 characters.",
       "location": "query",
       "type": "string"
     },
     "userIp": {
-      "description": "IP address of the site where the request originates. Use this if you want to enforce per-user limits.",
+      "description": "Deprecated. Please use quotaUser instead.",
       "location": "query",
       "type": "string"
     }
@@ -560,6 +563,26 @@
               },
               "scopes": [
                 "https://www.googleapis.com/auth/analytics",
+                "https://www.googleapis.com/auth/analytics.edit",
+                "https://www.googleapis.com/auth/analytics.readonly"
+              ]
+            }
+          }
+        },
+        "clientId": {
+          "methods": {
+            "hashClientId": {
+              "description": "Hashes the given Client ID.",
+              "httpMethod": "POST",
+              "id": "analytics.management.clientId.hashClientId",
+              "path": "management/clientId:hashClientId",
+              "request": {
+                "$ref": "HashClientIdRequest"
+              },
+              "response": {
+                "$ref": "HashClientIdResponse"
+              },
+              "scopes": [
                 "https://www.googleapis.com/auth/analytics.edit",
                 "https://www.googleapis.com/auth/analytics.readonly"
               ]
@@ -3135,7 +3158,7 @@
         "webPropertyAdWordsLinks": {
           "methods": {
             "delete": {
-              "description": "Deletes a web property-AdWords link.",
+              "description": "Deletes a web property-Google Ads link.",
               "httpMethod": "DELETE",
               "id": "analytics.management.webPropertyAdWordsLinks.delete",
               "parameterOrder": [
@@ -3151,13 +3174,13 @@
                   "type": "string"
                 },
                 "webPropertyAdWordsLinkId": {
-                  "description": "Web property AdWords link ID.",
+                  "description": "Web property Google Ads link ID.",
                   "location": "path",
                   "required": true,
                   "type": "string"
                 },
                 "webPropertyId": {
-                  "description": "Web property ID to delete the AdWords link for.",
+                  "description": "Web property ID to delete the Google Ads link for.",
                   "location": "path",
                   "required": true,
                   "type": "string"
@@ -3169,7 +3192,7 @@
               ]
             },
             "get": {
-              "description": "Returns a web property-AdWords link to which the user has access.",
+              "description": "Returns a web property-Google Ads link to which the user has access.",
               "httpMethod": "GET",
               "id": "analytics.management.webPropertyAdWordsLinks.get",
               "parameterOrder": [
@@ -3185,13 +3208,13 @@
                   "type": "string"
                 },
                 "webPropertyAdWordsLinkId": {
-                  "description": "Web property-AdWords link ID.",
+                  "description": "Web property-Google Ads link ID.",
                   "location": "path",
                   "required": true,
                   "type": "string"
                 },
                 "webPropertyId": {
-                  "description": "Web property ID to retrieve the AdWords link for.",
+                  "description": "Web property ID to retrieve the Google Ads link for.",
                   "location": "path",
                   "required": true,
                   "type": "string"
@@ -3207,7 +3230,7 @@
               ]
             },
             "insert": {
-              "description": "Creates a webProperty-AdWords link.",
+              "description": "Creates a webProperty-Google Ads link.",
               "httpMethod": "POST",
               "id": "analytics.management.webPropertyAdWordsLinks.insert",
               "parameterOrder": [
@@ -3240,7 +3263,7 @@
               ]
             },
             "list": {
-              "description": "Lists webProperty-AdWords links for a given web property.",
+              "description": "Lists webProperty-Google Ads links for a given web property.",
               "httpMethod": "GET",
               "id": "analytics.management.webPropertyAdWordsLinks.list",
               "parameterOrder": [
@@ -3256,20 +3279,20 @@
                   "type": "string"
                 },
                 "max-results": {
-                  "description": "The maximum number of webProperty-AdWords links to include in this response.",
+                  "description": "The maximum number of webProperty-Google Ads links to include in this response.",
                   "format": "int32",
                   "location": "query",
                   "type": "integer"
                 },
                 "start-index": {
-                  "description": "An index of the first webProperty-AdWords link to retrieve. Use this parameter as a pagination mechanism along with the max-results parameter.",
+                  "description": "An index of the first webProperty-Google Ads link to retrieve. Use this parameter as a pagination mechanism along with the max-results parameter.",
                   "format": "int32",
                   "location": "query",
                   "minimum": "1",
                   "type": "integer"
                 },
                 "webPropertyId": {
-                  "description": "Web property ID to retrieve the AdWords links for.",
+                  "description": "Web property ID to retrieve the Google Ads links for.",
                   "location": "path",
                   "required": true,
                   "type": "string"
@@ -3285,7 +3308,7 @@
               ]
             },
             "patch": {
-              "description": "Updates an existing webProperty-AdWords link. This method supports patch semantics.",
+              "description": "Updates an existing webProperty-Google Ads link. This method supports patch semantics.",
               "httpMethod": "PATCH",
               "id": "analytics.management.webPropertyAdWordsLinks.patch",
               "parameterOrder": [
@@ -3301,13 +3324,13 @@
                   "type": "string"
                 },
                 "webPropertyAdWordsLinkId": {
-                  "description": "Web property-AdWords link ID.",
+                  "description": "Web property-Google Ads link ID.",
                   "location": "path",
                   "required": true,
                   "type": "string"
                 },
                 "webPropertyId": {
-                  "description": "Web property ID to retrieve the AdWords link for.",
+                  "description": "Web property ID to retrieve the Google Ads link for.",
                   "location": "path",
                   "required": true,
                   "type": "string"
@@ -3325,7 +3348,7 @@
               ]
             },
             "update": {
-              "description": "Updates an existing webProperty-AdWords link.",
+              "description": "Updates an existing webProperty-Google Ads link.",
               "httpMethod": "PUT",
               "id": "analytics.management.webPropertyAdWordsLinks.update",
               "parameterOrder": [
@@ -3341,13 +3364,13 @@
                   "type": "string"
                 },
                 "webPropertyAdWordsLinkId": {
-                  "description": "Web property-AdWords link ID.",
+                  "description": "Web property-Google Ads link ID.",
                   "location": "path",
                   "required": true,
                   "type": "string"
                 },
                 "webPropertyId": {
-                  "description": "Web property ID to retrieve the AdWords link for.",
+                  "description": "Web property ID to retrieve the Google Ads link for.",
                   "location": "path",
                   "required": true,
                   "type": "string"
@@ -3757,9 +3780,32 @@
           ]
         }
       }
+    },
+    "userDeletion": {
+      "resources": {
+        "userDeletionRequest": {
+          "methods": {
+            "upsert": {
+              "description": "Insert or update a user deletion requests.",
+              "httpMethod": "POST",
+              "id": "analytics.userDeletion.userDeletionRequest.upsert",
+              "path": "userDeletion/userDeletionRequests:upsert",
+              "request": {
+                "$ref": "UserDeletionRequest"
+              },
+              "response": {
+                "$ref": "UserDeletionRequest"
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/analytics.user.deletion"
+              ]
+            }
+          }
+        }
+      }
     }
   },
-  "revision": "20180309",
+  "revision": "20180730",
   "rootUrl": "https://www.googleapis.com/",
   "schemas": {
     "Account": {
@@ -3974,29 +4020,6 @@
           },
           "type": "string"
         },
-        "accountSettings": {
-          "properties": {
-            "admobReporting": {
-              "type": "boolean"
-            },
-            "sharingWithGoogleAnySales": {
-              "type": "boolean"
-            },
-            "sharingWithGoogleProducts": {
-              "type": "boolean"
-            },
-            "sharingWithGoogleSales": {
-              "type": "boolean"
-            },
-            "sharingWithGoogleSupport": {
-              "type": "boolean"
-            },
-            "sharingWithOthers": {
-              "type": "boolean"
-            }
-          },
-          "type": "object"
-        },
         "kind": {
           "default": "analytics#accountTreeRequest",
           "description": "Resource type for account ticket.",
@@ -4044,29 +4067,6 @@
         "account": {
           "$ref": "Account",
           "description": "The account created."
-        },
-        "accountSettings": {
-          "properties": {
-            "admobReporting": {
-              "type": "boolean"
-            },
-            "sharingWithGoogleAnySales": {
-              "type": "boolean"
-            },
-            "sharingWithGoogleProducts": {
-              "type": "boolean"
-            },
-            "sharingWithGoogleSales": {
-              "type": "boolean"
-            },
-            "sharingWithGoogleSupport": {
-              "type": "boolean"
-            },
-            "sharingWithOthers": {
-              "type": "boolean"
-            }
-          },
-          "type": "object"
         },
         "kind": {
           "default": "analytics#accountTreeResponse",
@@ -4131,11 +4131,11 @@
       "type": "object"
     },
     "AdWordsAccount": {
-      "description": "JSON template for an AdWords account.",
+      "description": "JSON template for an Google Ads account.",
       "id": "AdWordsAccount",
       "properties": {
         "autoTaggingEnabled": {
-          "description": "True if auto-tagging is enabled on the AdWords account. Read-only after the insert operation.",
+          "description": "True if auto-tagging is enabled on the Google Ads account. Read-only after the insert operation.",
           "type": "boolean"
         },
         "customerId": {
@@ -4145,12 +4145,12 @@
               "analytics.management.webPropertyAdWordsLinks.update"
             ]
           },
-          "description": "Customer ID. This field is required when creating an AdWords link.",
+          "description": "Customer ID. This field is required when creating a Google Ads link.",
           "type": "string"
         },
         "kind": {
           "default": "analytics#adWordsAccount",
-          "description": "Resource type for AdWords account.",
+          "description": "Resource type for Google Ads account.",
           "type": "string"
         }
       },
@@ -4629,7 +4629,7 @@
       "type": "object"
     },
     "EntityAdWordsLink": {
-      "description": "JSON template for Analytics Entity AdWords Link.",
+      "description": "JSON template for Analytics Entity Google Ads Link.",
       "id": "EntityAdWordsLink",
       "properties": {
         "adWordsAccounts": {
@@ -4639,7 +4639,7 @@
               "analytics.management.webPropertyAdWordsLinks.update"
             ]
           },
-          "description": "A list of AdWords client accounts. These cannot be MCC accounts. This field is required when creating an AdWords link. It cannot be empty.",
+          "description": "A list of Google Ads client accounts. These cannot be MCC accounts. This field is required when creating a Google Ads link. It cannot be empty.",
           "items": {
             "$ref": "AdWordsAccount"
           },
@@ -4655,12 +4655,12 @@
           "type": "object"
         },
         "id": {
-          "description": "Entity AdWords link ID",
+          "description": "Entity Google Ads link ID",
           "type": "string"
         },
         "kind": {
           "default": "analytics#entityAdWordsLink",
-          "description": "Resource type for entity AdWords link.",
+          "description": "Resource type for entity Google Ads link.",
           "type": "string"
         },
         "name": {
@@ -4670,7 +4670,7 @@
               "analytics.management.webPropertyAdWordsLinks.update"
             ]
           },
-          "description": "Name of the link. This field is required when creating an AdWords link.",
+          "description": "Name of the link. This field is required when creating a Google Ads link.",
           "type": "string"
         },
         "profileIds": {
@@ -4681,18 +4681,18 @@
           "type": "array"
         },
         "selfLink": {
-          "description": "URL link for this Google Analytics - Google AdWords link.",
+          "description": "URL link for this Google Analytics - Google Ads link.",
           "type": "string"
         }
       },
       "type": "object"
     },
     "EntityAdWordsLinks": {
-      "description": "An entity AdWords link collection provides a list of GA-AdWords links Each resource in this collection corresponds to a single link.",
+      "description": "An entity Google Ads link collection provides a list of GA-Google Ads links Each resource in this collection corresponds to a single link.",
       "id": "EntityAdWordsLinks",
       "properties": {
         "items": {
-          "description": "A list of entity AdWords links.",
+          "description": "A list of entity Google Ads links.",
           "items": {
             "$ref": "EntityAdWordsLink"
           },
@@ -4709,11 +4709,11 @@
           "type": "string"
         },
         "nextLink": {
-          "description": "Next link for this AdWords link collection.",
+          "description": "Next link for this Google Ads link collection.",
           "type": "string"
         },
         "previousLink": {
-          "description": "Previous link for this AdWords link collection.",
+          "description": "Previous link for this Google Ads link collection.",
           "type": "string"
         },
         "startIndex": {
@@ -5844,6 +5844,43 @@
       },
       "type": "object"
     },
+    "HashClientIdRequest": {
+      "description": "JSON template for a hash Client Id request resource.",
+      "id": "HashClientIdRequest",
+      "properties": {
+        "clientId": {
+          "type": "string"
+        },
+        "kind": {
+          "default": "analytics#hashClientIdRequest",
+          "type": "string"
+        },
+        "webPropertyId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "HashClientIdResponse": {
+      "description": "JSON template for a hash Client Id response resource.",
+      "id": "HashClientIdResponse",
+      "properties": {
+        "clientId": {
+          "type": "string"
+        },
+        "hashedClientId": {
+          "type": "string"
+        },
+        "kind": {
+          "default": "analytics#hashClientIdResponse",
+          "type": "string"
+        },
+        "webPropertyId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "IncludeConditions": {
       "description": "JSON template for an Analytics Remarketing Include Conditions.",
       "id": "IncludeConditions",
@@ -5902,7 +5939,7 @@
           "type": "string"
         },
         "linkedAccountId": {
-          "description": "The foreign account ID. For example the an AdWords `linkedAccountId` has the following format XXX-XXX-XXXX.",
+          "description": "The foreign account ID. For example the an Google Ads `linkedAccountId` has the following format XXX-XXX-XXXX.",
           "type": "string"
         },
         "remarketingAudienceId": {
@@ -7104,6 +7141,46 @@
       },
       "type": "object"
     },
+    "UserDeletionRequest": {
+      "description": "JSON template for a user deletion request resource.",
+      "id": "UserDeletionRequest",
+      "properties": {
+        "deletionRequestTime": {
+          "description": "This marks the point in time for which all user data before should be deleted",
+          "format": "date-time",
+          "readOnly": true,
+          "type": "string"
+        },
+        "firebaseProjectId": {
+          "description": "Firebase Project Id",
+          "type": "string"
+        },
+        "id": {
+          "description": "User ID.",
+          "properties": {
+            "type": {
+              "description": "Type of user",
+              "type": "string"
+            },
+            "userId": {
+              "description": "The User's id",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "kind": {
+          "default": "analytics#userDeletionRequest",
+          "description": "Value is \"analytics#userDeletionRequest\".",
+          "type": "string"
+        },
+        "webPropertyId": {
+          "description": "Web property ID of the form UA-XXXXX-YY.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "UserRef": {
       "description": "JSON template for a user reference.",
       "id": "UserRef",
@@ -7271,6 +7348,14 @@
           "description": "Time this web property was created.",
           "format": "date-time",
           "readOnly": true,
+          "type": "string"
+        },
+        "dataRetentionResetOnNewActivity": {
+          "description": "Set to true to reset the retention period of the user identifier with each new event from that user (thus setting the expiration date to current time plus retention period).\nSet to false to delete data associated with the user identifer automatically after the rentention period.\nThis property cannot be set on insert.",
+          "type": "boolean"
+        },
+        "dataRetentionTtl": {
+          "description": "The length of time for which user and event data is retained.\nThis property cannot be set on insert.",
           "type": "string"
         },
         "defaultProfileId": {

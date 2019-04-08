@@ -90,13 +90,21 @@ func getKeyFromKeyServer(keyserver string, fingerprint string) (openpgp.Entity, 
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return openpgp.Entity{}, fmt.Errorf("keyserver returned non-200 status code %d", resp.Status)
+		return openpgp.Entity{}, fmt.Errorf("keyserver returned non-200 status code %s", resp.Status)
 	}
 	ents, err := openpgp.ReadArmoredKeyRing(resp.Body)
 	if err != nil {
 		return openpgp.Entity{}, fmt.Errorf("could not read entities: %s", err)
 	}
 	return *ents[0], nil
+}
+
+func gpgKeyServer() string {
+	keyServer := "gpg.mozilla.org"
+	if envKeyServer := os.Getenv("SOPS_GPG_KEYSERVER"); envKeyServer != "" {
+		keyServer = envKeyServer
+	}
+	return keyServer
 }
 
 func (key *MasterKey) getPubKey() (openpgp.Entity, error) {
@@ -108,7 +116,8 @@ func (key *MasterKey) getPubKey() (openpgp.Entity, error) {
 			return entity, nil
 		}
 	}
-	entity, err := getKeyFromKeyServer("gpg.mozilla.org", key.Fingerprint)
+	keyServer := gpgKeyServer()
+	entity, err := getKeyFromKeyServer(keyServer, key.Fingerprint)
 	if err != nil {
 		return openpgp.Entity{},
 			fmt.Errorf("key with fingerprint %s is not available "+
@@ -246,7 +255,7 @@ func (key *MasterKey) gpgHome() string {
 	if dir == "" {
 		usr, err := user.Current()
 		if err != nil {
-			return "~/.gnupg"
+			return path.Join(os.Getenv("HOME"), "/.gnupg")
 		}
 		return path.Join(usr.HomeDir, ".gnupg")
 	}

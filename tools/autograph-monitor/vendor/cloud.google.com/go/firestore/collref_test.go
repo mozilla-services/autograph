@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,22 +15,21 @@
 package firestore
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
-
-	pb "google.golang.org/genproto/googleapis/firestore/v1beta1"
-
-	"golang.org/x/net/context"
+	pb "google.golang.org/genproto/googleapis/firestore/v1"
 )
 
 func TestDoc(t *testing.T) {
 	coll := testClient.Collection("C")
 	got := coll.Doc("d")
 	want := &DocumentRef{
-		Parent: coll,
-		ID:     "d",
-		Path:   "projects/projectID/databases/(default)/documents/C/d",
+		Parent:    coll,
+		ID:        "d",
+		Path:      "projects/projectID/databases/(default)/documents/C/d",
+		shortPath: "C/d",
 	}
 	if !testEqual(got, want) {
 		t.Errorf("got %+v, want %+v", got, want)

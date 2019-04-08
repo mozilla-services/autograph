@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2014 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
 package datastore
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"reflect"
 	"sort"
@@ -31,7 +31,6 @@ import (
 
 	"cloud.google.com/go/internal/testutil"
 	"cloud.google.com/go/rpcreplay"
-	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
@@ -74,7 +73,7 @@ func testMain(m *testing.M) int {
 		if *record {
 			log.Fatal("cannot combine -short and -record")
 		}
-		if _, err := os.Stat(replayFilename); err == nil {
+		if testutil.CanReplay(replayFilename) {
 			initReplay()
 		}
 	} else if *record {
@@ -119,7 +118,7 @@ func initReplay() {
 	}
 	timeNow = ri.Time.In(time.Local)
 
-	conn, err := replayConn(rep)
+	conn, err := rep.Connection()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -131,27 +130,6 @@ func initReplay() {
 		return client
 	}
 	log.Printf("replaying from %s", replayFilename)
-}
-
-func replayConn(rep *rpcreplay.Replayer) (*grpc.ClientConn, error) {
-	// If we make a real connection we need creds from somewhere, and they
-	// might not be available, for instance on Travis.
-	// Replaying doesn't require a connection live at all, but we need
-	// something to attach gRPC interceptors to.
-	// So we start a local listener and connect to it, then close them down.
-	// TODO(jba): build something like this into the replayer?
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return nil, err
-	}
-	conn, err := grpc.Dial(l.Addr().String(),
-		append([]grpc.DialOption{grpc.WithInsecure()}, rep.DialOptions()...)...)
-	if err != nil {
-		return nil, err
-	}
-	conn.Close()
-	l.Close()
-	return conn, nil
 }
 
 func newClient(ctx context.Context, t *testing.T, dialOpts []grpc.DialOption) *Client {
@@ -394,7 +372,7 @@ type SQTestCase struct {
 	wantSum   int
 }
 
-func testSmallQueries(t *testing.T, ctx context.Context, client *Client, parent *Key, children []*SQChild,
+func testSmallQueries(ctx context.Context, t *testing.T, client *Client, parent *Key, children []*SQChild,
 	testCases []SQTestCase, extraTests ...func()) {
 	keys := make([]*Key, len(children))
 	for i := range keys {
@@ -462,7 +440,7 @@ func TestFilters(t *testing.T) {
 		{I: 7, T: now, U: now},
 	}
 	baseQuery := NewQuery("SQChild").Ancestor(parent).Filter("T=", now)
-	testSmallQueries(t, ctx, client, parent, children, []SQTestCase{
+	testSmallQueries(ctx, t, client, parent, children, []SQTestCase{
 		{
 			"I>1",
 			baseQuery.Filter("I>", 1),
@@ -708,7 +686,7 @@ func TestEventualConsistency(t *testing.T) {
 		{I: 2, T: now, U: now},
 	}
 	query := NewQuery("SQChild").Ancestor(parent).Filter("T =", now).EventualConsistency()
-	testSmallQueries(t, ctx, client, parent, children, nil, func() {
+	testSmallQueries(ctx, t, client, parent, children, nil, func() {
 		got, err := client.Count(ctx, query)
 		if err != nil {
 			t.Fatalf("Count: %v", err)
@@ -734,7 +712,7 @@ func TestProjection(t *testing.T) {
 		{I: 1 << 4, J: 300, T: now, U: now},
 	}
 	baseQuery := NewQuery("SQChild").Ancestor(parent).Filter("T=", now).Filter("J>", 150)
-	testSmallQueries(t, ctx, client, parent, children, []SQTestCase{
+	testSmallQueries(ctx, t, client, parent, children, []SQTestCase{
 		{
 			"project",
 			baseQuery.Project("J"),
@@ -1024,7 +1002,7 @@ func TestTransaction(t *testing.T) {
 			}
 
 			if tt.causeConflict[attempts-1] {
-				c.N += 1
+				c.N++
 				if _, err := client.Put(ctx, key, &c); err != nil {
 					return err
 				}
@@ -1262,6 +1240,9 @@ func testMutate(t *testing.T, mutate func(ctx context.Context, client *Client, m
 		NewUpdate(keys[0], &T{3}),
 		NewDelete(keys[1]),
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 	check(keys[0], 3)
 	check(keys[1], ErrNoSuchEntity)
 
@@ -1273,5 +1254,29 @@ func testMutate(t *testing.T, mutate func(ctx context.Context, client *Client, m
 	_, err = mutate(ctx, client, NewUpdate(keys[1], &T{4}))
 	if got, want := status.Code(err), codes.NotFound; got != want {
 		t.Errorf("Update non-existing key: got %s, want %s", got, want)
+	}
+}
+
+func TestDetectProjectID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Integration tests skipped in short mode")
+	}
+	ctx := context.Background()
+
+	creds := testutil.Credentials(ctx, ScopeDatastore)
+	if creds == nil {
+		t.Skip("Integration tests skipped. See CONTRIBUTING.md for details")
+	}
+
+	// Use creds with project ID.
+	if _, err := NewClient(ctx, DetectProjectID, option.WithCredentials(creds)); err != nil {
+		t.Errorf("NewClient: %v", err)
+	}
+
+	ts := testutil.ErroringTokenSource{}
+	// Try to use creds without project ID.
+	_, err := NewClient(ctx, DetectProjectID, option.WithTokenSource(ts))
+	if err == nil || err.Error() != "datastore: see the docs on DetectProjectID" {
+		t.Errorf("expected an error while using TokenSource that does not have a project ID")
 	}
 }

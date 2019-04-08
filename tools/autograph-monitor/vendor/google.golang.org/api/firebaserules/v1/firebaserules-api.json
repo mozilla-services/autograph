@@ -21,6 +21,7 @@
   "description": "Creates and manages rules that determine when a Firebase Rules-enabled service should permit a request.\n",
   "discoveryVersion": "v1",
   "documentationLink": "https://firebase.google.com/docs/storage/security",
+  "fullyEncodeReservedExpansion": true,
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
@@ -65,11 +66,6 @@
       "location": "query",
       "type": "string"
     },
-    "bearer_token": {
-      "description": "OAuth bearer token.",
-      "location": "query",
-      "type": "string"
-    },
     "callback": {
       "description": "JSONP",
       "location": "query",
@@ -89,12 +85,6 @@
       "description": "OAuth 2.0 token for the current user.",
       "location": "query",
       "type": "string"
-    },
-    "pp": {
-      "default": "true",
-      "description": "Pretty-print response.",
-      "location": "query",
-      "type": "boolean"
     },
     "prettyPrint": {
       "default": "true",
@@ -248,7 +238,7 @@
               ],
               "parameters": {
                 "executableVersion": {
-                  "description": "The requested runtime executable version.\nDefaults to FIREBASE_RULES_EXECUTABLE_V1",
+                  "description": "The requested runtime executable version.\nDefaults to FIREBASE_RULES_EXECUTABLE_V1.",
                   "enum": [
                     "RELEASE_EXECUTABLE_VERSION_UNSPECIFIED",
                     "FIREBASE_RULES_EXECUTABLE_V1",
@@ -443,7 +433,7 @@
               ],
               "parameters": {
                 "filter": {
-                  "description": "`Ruleset` filter. The list method supports filters with restrictions on\n`Ruleset.name`.\n\nFilters on `Ruleset.create_time` should use the `date` function which\nparses strings that conform to the RFC 3339 date/time specifications.\n\nExample: `create_time \u003e date(\"2017-01-01\") AND name=UUID-*`",
+                  "description": "`Ruleset` filter. The list method supports filters with restrictions on\n`Ruleset.name`.\n\nFilters on `Ruleset.create_time` should use the `date` function which\nparses strings that conform to the RFC 3339 date/time specifications.\n\nExample: `create_time \u003e date(\"2017-01-01T00:00:00Z\") AND name=UUID-*`",
                   "location": "query",
                   "type": "string"
                 },
@@ -481,7 +471,7 @@
       }
     }
   },
-  "revision": "20180124",
+  "revision": "20190319",
   "rootUrl": "https://firebaserules.googleapis.com/",
   "schemas": {
     "Arg": {
@@ -604,6 +594,11 @@
         },
         "rulesetName": {
           "description": "`Ruleset` name associated with the `Release` executable.",
+          "type": "string"
+        },
+        "syncTime": {
+          "description": "Optional, indicates the freshness of the result. The response is\nguaranteed to be the latest within an interval up to the\nsync_time (inclusive).",
+          "format": "google-datetime",
           "type": "string"
         },
         "updateTime": {
@@ -847,6 +842,13 @@
             "Test is a failure."
           ],
           "type": "string"
+        },
+        "visitedExpressions": {
+          "description": "The set of visited expressions for a given test. This returns positions\nand evaluation results of all visited expressions.",
+          "items": {
+            "$ref": "VisitedExpression"
+          },
+          "type": "array"
         }
       },
       "type": "object"
@@ -913,6 +915,21 @@
           "description": "Specifies which fields to update.",
           "format": "google-fieldmask",
           "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "VisitedExpression": {
+      "description": "Store the position and access outcome for an expression visited in rules.",
+      "id": "VisitedExpression",
+      "properties": {
+        "sourcePosition": {
+          "$ref": "SourcePosition",
+          "description": "Position in the `Source` or `Ruleset` where an expression was visited."
+        },
+        "value": {
+          "description": "The evaluated value for the visited expression, e.g. true/false",
+          "type": "any"
         }
       },
       "type": "object"

@@ -219,22 +219,47 @@ func TestEncodeSimpleJSON(t *testing.T) {
 	assert.Equal(t, expected, branch)
 }
 
-func TestEncodeJSONArrayOfObjects(t *testing.T) {
+func TestEncodeJSONWithEscaping(t *testing.T) {
 	branch := sops.TreeBranch{
 		sops.TreeItem{
-			Key: "foo",
-			Value: []interface{}{
-				sops.TreeBranch{
-					sops.TreeItem{
-						Key:   "foo",
-						Value: 3,
-					},
-					sops.TreeItem{
-						Key:   "bar",
-						Value: false,
+			Key:   "foo\\bar",
+			Value: "value",
+		},
+		sops.TreeItem{
+			Key:   "a_key_with\"quotes\"",
+			Value: 4.0,
+		},
+		sops.TreeItem{
+			Key:   "baz\\\\foo",
+			Value: 2.0,
+		},
+	}
+	out, err := Store{}.jsonFromTreeBranch(branch)
+	assert.Nil(t, err)
+	expected, _ := Store{}.treeBranchFromJSON(out)
+	assert.Equal(t, expected, branch)
+}
+
+func TestEncodeJSONArrayOfObjects(t *testing.T) {
+	tree := sops.Tree{
+		Branches: sops.TreeBranches{
+			sops.TreeBranch{
+				sops.TreeItem{
+					Key: "foo",
+					Value: []interface{}{
+						sops.TreeBranch{
+							sops.TreeItem{
+								Key:   "foo",
+								Value: 3,
+							},
+							sops.TreeItem{
+								Key:   "bar",
+								Value: false,
+							},
+						},
+						2,
 					},
 				},
-				2,
 			},
 		},
 	}
@@ -247,13 +272,31 @@ func TestEncodeJSONArrayOfObjects(t *testing.T) {
 		2
 	]
 }`
-	out, err := Store{}.Marshal(branch)
+	store := Store{}
+	out, err := store.EmitPlainFile(tree.Branches)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, string(out))
 }
 
 func TestUnmarshalMetadataFromNonSOPSFile(t *testing.T) {
 	data := []byte(`{"hello": 2}`)
-	_, err := Store{}.UnmarshalMetadata(data)
+	store := Store{}
+	_, err := store.LoadEncryptedFile(data)
 	assert.Equal(t, sops.MetadataNotFound, err)
+}
+
+func TestLoadJSONFormattedBinaryFile(t *testing.T) {
+	// This is JSON data, but we want SOPS to interpret it as binary,
+	// e.g. because the --input-type binary flag was provided.
+	data := []byte(`{"hello": 2}`)
+	store := BinaryStore{}
+	branches, err := store.LoadPlainFile(data)
+	assert.Nil(t, err)
+	assert.Equal(t, "data", branches[0][0].Key)
+}
+
+func TestEmitValueString(t *testing.T) {
+	bytes, err := (&Store{}).EmitValue("hello")
+	assert.Nil(t, err)
+	assert.Equal(t, []byte("\"hello\""), bytes)
 }

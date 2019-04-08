@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package profiler
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -29,14 +30,15 @@ import (
 	"testing"
 	"time"
 
+	gcemd "cloud.google.com/go/compute/metadata"
 	"cloud.google.com/go/internal/testutil"
 	"cloud.google.com/go/profiler/mocks"
+	"cloud.google.com/go/profiler/testdata"
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/pprof/profile"
-	gax "github.com/googleapis/gax-go"
-	"golang.org/x/net/context"
+	gax "github.com/googleapis/gax-go/v2"
 	gtransport "google.golang.org/api/transport/grpc"
 	pb "google.golang.org/genproto/googleapis/devtools/cloudprofiler/v2"
 	edpb "google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -49,7 +51,6 @@ const (
 	testProjectID       = "test-project-ID"
 	testInstance        = "test-instance"
 	testZone            = "test-zone"
-	testTarget          = "test-target"
 	testService         = "test-service"
 	testSvcVersion      = "test-service-version"
 	testProfileDuration = time.Second * 10
@@ -94,6 +95,7 @@ func TestCreateProfile(t *testing.T) {
 	a := createTestAgent(mpc)
 	p := &pb.Profile{Name: "test_profile"}
 	wantRequest := pb.CreateProfileRequest{
+		Parent:      "projects/" + a.deployment.ProjectId,
 		Deployment:  a.deployment,
 		ProfileType: a.profileTypes,
 	}
@@ -116,6 +118,22 @@ func TestProfileAndUpload(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
+	var heapCollected1, heapCollected2, heapUploaded, allocUploaded bytes.Buffer
+	testdata.HeapProfileCollected1.Write(&heapCollected1)
+	testdata.HeapProfileCollected2.Write(&heapCollected2)
+	testdata.HeapProfileUploaded.Write(&heapUploaded)
+	testdata.AllocProfileUploaded.Write(&allocUploaded)
+	callCount := 0
+	writeTwoHeapFunc := func(w io.Writer) error {
+		callCount++
+		if callCount%2 == 1 {
+			w.Write(heapCollected1.Bytes())
+			return nil
+		}
+		w.Write(heapCollected2.Bytes())
+		return nil
+	}
 
 	errFunc := func(io.Writer) error { return errors.New("") }
 	testDuration := time.Second * 5
@@ -158,10 +176,17 @@ func TestProfileAndUpload(t *testing.T) {
 			profileType:         pb.ProfileType_HEAP,
 			startCPUProfileFunc: errFunc,
 			writeHeapProfileFunc: func(w io.Writer) error {
-				w.Write([]byte{4})
+				w.Write(heapCollected1.Bytes())
 				return nil
 			},
-			wantBytes: []byte{4},
+			wantBytes: heapUploaded.Bytes(),
+		},
+		{
+			profileType:          pb.ProfileType_HEAP_ALLOC,
+			startCPUProfileFunc:  errFunc,
+			writeHeapProfileFunc: writeTwoHeapFunc,
+			duration:             &testDuration,
+			wantBytes:            allocUploaded.Bytes(),
 		},
 		{
 			profileType:          pb.ProfileType_HEAP,
@@ -175,10 +200,10 @@ func TestProfileAndUpload(t *testing.T) {
 				return nil
 			},
 			writeHeapProfileFunc: func(w io.Writer) error {
-				w.Write([]byte{6})
+				w.Write(heapCollected1.Bytes())
 				return nil
 			},
-			wantBytes: []byte{6},
+			wantBytes: heapUploaded.Bytes(),
 		},
 		{
 			profileType: pb.ProfileType_PROFILE_TYPE_UNSPECIFIED,
@@ -187,7 +212,7 @@ func TestProfileAndUpload(t *testing.T) {
 				return nil
 			},
 			writeHeapProfileFunc: func(w io.Writer) error {
-				w.Write([]byte{8})
+				w.Write(heapCollected1.Bytes())
 				return nil
 			},
 		},
@@ -350,59 +375,59 @@ func TestInitializeAgent(t *testing.T) {
 		wantProfileLabels    map[string]string
 	}{
 		{
-			config:               Config{ServiceVersion: testSvcVersion, zone: testZone},
-			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS},
-			wantDeploymentLabels: map[string]string{zoneNameLabel: testZone, versionLabel: testSvcVersion},
+			config:               Config{ServiceVersion: testSvcVersion, Zone: testZone},
+			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS, pb.ProfileType_HEAP_ALLOC},
+			wantDeploymentLabels: map[string]string{zoneNameLabel: testZone, versionLabel: testSvcVersion, languageLabel: "go"},
 			wantProfileLabels:    map[string]string{},
 		},
 		{
-			config:               Config{zone: testZone},
-			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS},
-			wantDeploymentLabels: map[string]string{zoneNameLabel: testZone},
+			config:               Config{Zone: testZone},
+			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS, pb.ProfileType_HEAP_ALLOC},
+			wantDeploymentLabels: map[string]string{zoneNameLabel: testZone, languageLabel: "go"},
 			wantProfileLabels:    map[string]string{},
 		},
 		{
 			config:               Config{ServiceVersion: testSvcVersion},
-			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS},
-			wantDeploymentLabels: map[string]string{versionLabel: testSvcVersion},
+			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS, pb.ProfileType_HEAP_ALLOC},
+			wantDeploymentLabels: map[string]string{versionLabel: testSvcVersion, languageLabel: "go"},
 			wantProfileLabels:    map[string]string{},
 		},
 		{
-			config:               Config{instance: testInstance},
-			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS},
-			wantDeploymentLabels: map[string]string{},
+			config:               Config{Instance: testInstance},
+			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS, pb.ProfileType_HEAP_ALLOC},
+			wantDeploymentLabels: map[string]string{languageLabel: "go"},
 			wantProfileLabels:    map[string]string{instanceLabel: testInstance},
 		},
 		{
-			config:               Config{instance: testInstance},
+			config:               Config{Instance: testInstance},
 			enableMutex:          true,
-			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS, pb.ProfileType_CONTENTION},
-			wantDeploymentLabels: map[string]string{},
+			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_HEAP, pb.ProfileType_THREADS, pb.ProfileType_HEAP_ALLOC, pb.ProfileType_CONTENTION},
+			wantDeploymentLabels: map[string]string{languageLabel: "go"},
 			wantProfileLabels:    map[string]string{instanceLabel: testInstance},
 		},
 		{
 			config:               Config{NoHeapProfiling: true},
-			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_THREADS},
-			wantDeploymentLabels: map[string]string{},
+			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU, pb.ProfileType_THREADS, pb.ProfileType_HEAP_ALLOC},
+			wantDeploymentLabels: map[string]string{languageLabel: "go"},
 			wantProfileLabels:    map[string]string{},
 		},
 		{
-			config:               Config{NoHeapProfiling: true, NoGoroutineProfiling: true},
+			config:               Config{NoHeapProfiling: true, NoGoroutineProfiling: true, NoAllocProfiling: true},
 			wantProfileTypes:     []pb.ProfileType{pb.ProfileType_CPU},
-			wantDeploymentLabels: map[string]string{},
+			wantDeploymentLabels: map[string]string{languageLabel: "go"},
 			wantProfileLabels:    map[string]string{},
 		},
 	} {
 
 		config = tt.config
 		config.ProjectID = testProjectID
-		config.Target = testTarget
+		config.Service = testService
 		mutexEnabled = tt.enableMutex
 		a := initializeAgent(nil)
 
 		wantDeployment := &pb.Deployment{
 			ProjectId: testProjectID,
-			Target:    testTarget,
+			Target:    testService,
 			Labels:    tt.wantDeploymentLabels,
 		}
 		if !testutil.Equal(a.deployment, wantDeployment) {
@@ -418,13 +443,19 @@ func TestInitializeAgent(t *testing.T) {
 }
 
 func TestInitializeConfig(t *testing.T) {
-	oldConfig, oldService, oldVersion, oldEnvProjectID, oldGetProjectID, oldGetInstanceName, oldGetZone, oldOnGCE := config, os.Getenv("GAE_SERVICE"), os.Getenv("GAE_VERSION"), os.Getenv("GOOGLE_CLOUD_PROJECT"), getProjectID, getInstanceName, getZone, onGCE
+	oldConfig, oldGAEService, oldGAEVersion, oldKnativeService, oldKnativeVersion, oldEnvProjectID, oldGetProjectID, oldGetInstanceName, oldGetZone, oldOnGCE := config, os.Getenv("GAE_SERVICE"), os.Getenv("GAE_VERSION"), os.Getenv("K_SERVICE"), os.Getenv("K_REVISION"), os.Getenv("GOOGLE_CLOUD_PROJECT"), getProjectID, getInstanceName, getZone, onGCE
 	defer func() {
 		config, getProjectID, getInstanceName, getZone, onGCE = oldConfig, oldGetProjectID, oldGetInstanceName, oldGetZone, oldOnGCE
-		if err := os.Setenv("GAE_SERVICE", oldService); err != nil {
+		if err := os.Setenv("GAE_SERVICE", oldGAEService); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.Setenv("GAE_VERSION", oldVersion); err != nil {
+		if err := os.Setenv("GAE_VERSION", oldGAEVersion); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Setenv("K_SERVICE", oldKnativeService); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Setenv("K_REVISION", oldKnativeVersion); err != nil {
 			t.Fatal(err)
 		}
 		if err := os.Setenv("GOOGLE_CLOUD_PROJECT", oldEnvProjectID); err != nil {
@@ -432,10 +463,12 @@ func TestInitializeConfig(t *testing.T) {
 		}
 	}()
 	const (
-		testGAEService   = "test-gae-service"
-		testGAEVersion   = "test-gae-version"
-		testGCEProjectID = "test-gce-project-id"
-		testEnvProjectID = "test-env-project-id"
+		testGAEService     = "test-gae-service"
+		testGAEVersion     = "test-gae-version"
+		testKnativeService = "test-knative-service"
+		testKnativeVersion = "test-knative-version"
+		testGCEProjectID   = "test-gce-project-id"
+		testEnvProjectID   = "test-env-project-id"
 	)
 	for _, tt := range []struct {
 		desc            string
@@ -443,23 +476,16 @@ func TestInitializeConfig(t *testing.T) {
 		wantConfig      Config
 		wantErrorString string
 		onGAE           bool
+		onKnative       bool
 		onGCE           bool
 		envProjectID    bool
 	}{
 		{
 			"accepts service name",
 			Config{Service: testService},
-			Config{Target: testService, ProjectID: testGCEProjectID, zone: testZone, instance: testInstance},
+			Config{Service: testService, ProjectID: testGCEProjectID, Zone: testZone, Instance: testInstance},
 			"",
 			false,
-			true,
-			false,
-		},
-		{
-			"accepts target name",
-			Config{Target: testTarget},
-			Config{Target: testTarget, ProjectID: testGCEProjectID, zone: testZone, instance: testInstance},
-			"",
 			false,
 			true,
 			false,
@@ -467,8 +493,9 @@ func TestInitializeConfig(t *testing.T) {
 		{
 			"env project overrides GCE project",
 			Config{Service: testService},
-			Config{Target: testService, ProjectID: testEnvProjectID, zone: testZone, instance: testInstance},
+			Config{Service: testService, ProjectID: testEnvProjectID, Zone: testZone, Instance: testInstance},
 			"",
+			false,
 			false,
 			true,
 			true,
@@ -477,7 +504,18 @@ func TestInitializeConfig(t *testing.T) {
 			"requires service name",
 			Config{},
 			Config{},
-			"service name must be specified in the configuration",
+			"service name must be configured",
+			false,
+			false,
+			true,
+			false,
+		},
+		{
+			"requires valid service name",
+			Config{Service: "Service"},
+			Config{Service: "Service"},
+			"service name \"Service\" does not match regular expression ^[a-z]([-a-z0-9_.]{0,253}[a-z0-9])?$",
+			false,
 			false,
 			true,
 			false,
@@ -485,26 +523,29 @@ func TestInitializeConfig(t *testing.T) {
 		{
 			"accepts service name from config and service version from GAE",
 			Config{Service: testService},
-			Config{Target: testService, ServiceVersion: testGAEVersion, ProjectID: testGCEProjectID, zone: testZone, instance: testInstance},
+			Config{Service: testService, ServiceVersion: testGAEVersion, ProjectID: testGCEProjectID, Zone: testZone, Instance: testInstance},
 			"",
-			true,
 			true,
 			false,
-		},
-		{
-			"accepts target name from config and service version from GAE",
-			Config{Target: testTarget},
-			Config{Target: testTarget, ServiceVersion: testGAEVersion, ProjectID: testGCEProjectID, zone: testZone, instance: testInstance},
-			"",
-			true,
 			true,
 			false,
 		},
 		{
 			"reads both service name and version from GAE env vars",
 			Config{},
-			Config{Target: testGAEService, ServiceVersion: testGAEVersion, ProjectID: testGCEProjectID, zone: testZone, instance: testInstance},
+			Config{Service: testGAEService, ServiceVersion: testGAEVersion, ProjectID: testGCEProjectID, Zone: testZone, Instance: testInstance},
 			"",
+			true,
+			false,
+			true,
+			false,
+		},
+		{
+			"reads both service name and version from Knative env vars",
+			Config{},
+			Config{Service: testKnativeService, ServiceVersion: testKnativeVersion, ProjectID: testGCEProjectID, Zone: testZone, Instance: testInstance},
+			"",
+			false,
 			true,
 			true,
 			false,
@@ -512,8 +553,9 @@ func TestInitializeConfig(t *testing.T) {
 		{
 			"accepts service version from config",
 			Config{Service: testService, ServiceVersion: testSvcVersion},
-			Config{Target: testService, ServiceVersion: testSvcVersion, ProjectID: testGCEProjectID, zone: testZone, instance: testInstance},
+			Config{Service: testService, ServiceVersion: testSvcVersion, ProjectID: testGCEProjectID, Zone: testZone, Instance: testInstance},
 			"",
+			false,
 			false,
 			true,
 			false,
@@ -521,8 +563,29 @@ func TestInitializeConfig(t *testing.T) {
 		{
 			"configured version has priority over GAE-provided version",
 			Config{Service: testService, ServiceVersion: testSvcVersion},
-			Config{Target: testService, ServiceVersion: testSvcVersion, ProjectID: testGCEProjectID, zone: testZone, instance: testInstance},
+			Config{Service: testService, ServiceVersion: testSvcVersion, ProjectID: testGCEProjectID, Zone: testZone, Instance: testInstance},
 			"",
+			true,
+			false,
+			true,
+			false,
+		},
+		{
+			"configured version has priority over Knative-provided version",
+			Config{Service: testService, ServiceVersion: testSvcVersion},
+			Config{Service: testService, ServiceVersion: testSvcVersion, ProjectID: testGCEProjectID, Zone: testZone, Instance: testInstance},
+			"",
+			false,
+			true,
+			true,
+			false,
+		},
+		{
+			"GAE version has priority over Knative-provided version",
+			Config{},
+			Config{Service: testGAEService, ServiceVersion: testGAEVersion, ProjectID: testGCEProjectID, Zone: testZone, Instance: testInstance},
+			"",
+			true,
 			true,
 			true,
 			false,
@@ -530,8 +593,9 @@ func TestInitializeConfig(t *testing.T) {
 		{
 			"configured project ID has priority over metadata-provided project ID",
 			Config{Service: testService, ProjectID: testProjectID},
-			Config{Target: testService, ProjectID: testProjectID, zone: testZone, instance: testInstance},
+			Config{Service: testService, ProjectID: testProjectID, Zone: testZone, Instance: testInstance},
 			"",
+			false,
 			false,
 			true,
 			false,
@@ -539,8 +603,9 @@ func TestInitializeConfig(t *testing.T) {
 		{
 			"configured project ID has priority over environment project ID",
 			Config{Service: testService, ProjectID: testProjectID},
-			Config{Target: testService, ProjectID: testProjectID},
+			Config{Service: testService, ProjectID: testProjectID},
 			"",
+			false,
 			false,
 			false,
 			true,
@@ -548,22 +613,53 @@ func TestInitializeConfig(t *testing.T) {
 		{
 			"requires project ID if not on GCE",
 			Config{Service: testService},
-			Config{Target: testService},
+			Config{Service: testService},
 			"project ID must be specified in the configuration if running outside of GCP",
 			false,
 			false,
 			false,
+			false,
+		},
+		{
+			"configured zone has priority over metadata-provided zone",
+			Config{Service: testService, ProjectID: testProjectID, Zone: testZone + "-override"},
+			Config{Service: testService, ProjectID: testProjectID, Zone: testZone + "-override", Instance: testInstance},
+			"",
+			false,
+			false,
+			true,
+			false,
+		},
+		{
+			"configured instance has priority over metadata-provided instance",
+			Config{Service: testService, ProjectID: testProjectID, Instance: testInstance + "-override"},
+			Config{Service: testService, ProjectID: testProjectID, Zone: testZone, Instance: testInstance + "-override"},
+			"",
+			false,
+			false,
+			true,
+			false,
 		},
 	} {
 		t.Logf("Running test: %s", tt.desc)
-		envService, envVersion := "", ""
+		gaeEnvService, gaeEnvVersion := "", ""
 		if tt.onGAE {
-			envService, envVersion = testGAEService, testGAEVersion
+			gaeEnvService, gaeEnvVersion = testGAEService, testGAEVersion
 		}
-		if err := os.Setenv("GAE_SERVICE", envService); err != nil {
+		if err := os.Setenv("GAE_SERVICE", gaeEnvService); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.Setenv("GAE_VERSION", envVersion); err != nil {
+		if err := os.Setenv("GAE_VERSION", gaeEnvVersion); err != nil {
+			t.Fatal(err)
+		}
+		knEnvService, knEnvVersion := "", ""
+		if tt.onKnative {
+			knEnvService, knEnvVersion = testKnativeService, testKnativeVersion
+		}
+		if err := os.Setenv("K_SERVICE", knEnvService); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Setenv("K_REVISION", knEnvVersion); err != nil {
 			t.Fatal(err)
 		}
 		if tt.onGCE {
@@ -596,62 +692,50 @@ func TestInitializeConfig(t *testing.T) {
 		if tt.wantErrorString == "" {
 			tt.wantConfig.APIAddr = apiAddress
 		}
-		tt.wantConfig.Service = tt.config.Service
 		if config != tt.wantConfig {
 			t.Errorf("initializeConfig(%v) got: %v, want %v", tt.config, config, tt.wantConfig)
 		}
 	}
 
 	for _, tt := range []struct {
-		wantErrorString   string
-		getProjectIDError bool
-		getZoneError      bool
-		getInstanceError  bool
+		desc              string
+		wantErr           bool
+		getProjectIDError error
+		getZoneError      error
+		getInstanceError  error
 	}{
 		{
-			wantErrorString:   "failed to get the project ID from Compute Engine:",
-			getProjectIDError: true,
+			desc:              "metadata returns error for project ID",
+			wantErr:           true,
+			getProjectIDError: errors.New("fake get project ID error"),
 		},
 		{
-			wantErrorString: "failed to get zone from Compute Engine:",
-			getZoneError:    true,
+			desc:         "metadata returns error for zone",
+			wantErr:      true,
+			getZoneError: errors.New("fake get zone error"),
 		},
 		{
-			wantErrorString:  "failed to get instance from Compute Engine:",
-			getInstanceError: true,
+			desc:             "metadata returns error for instance",
+			wantErr:          true,
+			getInstanceError: errors.New("fake get instance error"),
+		},
+		{
+			desc:             "metadata returns NotDefinedError for instance",
+			getInstanceError: gcemd.NotDefinedError("fake GCE metadata NotDefinedError error"),
 		},
 	} {
 		onGCE = func() bool { return true }
-		if tt.getProjectIDError {
-			getProjectID = func() (string, error) { return "", fmt.Errorf("test get project ID error") }
-		} else {
-			getProjectID = func() (string, error) { return testGCEProjectID, nil }
-		}
+		getProjectID = func() (string, error) { return testGCEProjectID, tt.getProjectIDError }
+		getZone = func() (string, error) { return testZone, tt.getZoneError }
+		getInstanceName = func() (string, error) { return testInstance, tt.getInstanceError }
 
-		if tt.getZoneError {
-			getZone = func() (string, error) { return "", fmt.Errorf("test get zone error") }
-		} else {
-			getZone = func() (string, error) { return testZone, nil }
-		}
-
-		if tt.getInstanceError {
-			getInstanceName = func() (string, error) { return "", fmt.Errorf("test get instance error") }
-		} else {
-			getInstanceName = func() (string, error) { return testInstance, nil }
-		}
-		errorString := ""
-		if err := initializeConfig(Config{Service: testService}); err != nil {
-			errorString = err.Error()
-		}
-
-		if !strings.Contains(errorString, tt.wantErrorString) {
-			t.Errorf("initializeConfig() got error: %v, want contain %v", errorString, tt.wantErrorString)
+		if err := initializeConfig(Config{Service: testService}); (err != nil) != tt.wantErr {
+			t.Errorf("%s: initializeConfig() got error: %v, want error %t", tt.desc, err, tt.wantErr)
 		}
 	}
 }
 
 type fakeProfilerServer struct {
-	pb.ProfilerServiceServer
 	count       int
 	gotProfiles map[string][]byte
 	done        chan bool
@@ -679,6 +763,10 @@ func (fs *fakeProfilerServer) UpdateProfile(ctx context.Context, in *pb.UpdatePr
 	}
 
 	return in.Profile, nil
+}
+
+func (fs *fakeProfilerServer) CreateOfflineProfile(_ context.Context, _ *pb.CreateOfflineProfileRequest) (*pb.Profile, error) {
+	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func profileeLoop(quit chan bool) {
@@ -847,11 +935,11 @@ func TestAgentWithServer(t *testing.T) {
 
 	dialGRPC = gtransport.DialInsecure
 	if err := Start(Config{
-		Target:    testTarget,
+		Service:   testService,
 		ProjectID: testProjectID,
 		APIAddr:   srv.Addr,
-		instance:  testInstance,
-		zone:      testZone,
+		Instance:  testInstance,
+		Zone:      testZone,
 	}); err != nil {
 		t.Fatalf("Start(): %v", err)
 	}

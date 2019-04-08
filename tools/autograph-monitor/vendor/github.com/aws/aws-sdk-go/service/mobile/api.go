@@ -14,8 +14,8 @@ const opCreateProject = "CreateProject"
 
 // CreateProjectRequest generates a "aws/request.Request" representing the
 // client's request for the CreateProject operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -118,8 +118,8 @@ const opDeleteProject = "DeleteProject"
 
 // DeleteProjectRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteProject operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -212,8 +212,8 @@ const opDescribeBundle = "DescribeBundle"
 
 // DescribeBundleRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeBundle operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -310,8 +310,8 @@ const opDescribeProject = "DescribeProject"
 
 // DescribeProjectRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeProject operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -408,8 +408,8 @@ const opExportBundle = "ExportBundle"
 
 // ExportBundleRequest generates a "aws/request.Request" representing the
 // client's request for the ExportBundle operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -507,8 +507,8 @@ const opExportProject = "ExportProject"
 
 // ExportProjectRequest generates a "aws/request.Request" representing the
 // client's request for the ExportProject operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -607,8 +607,8 @@ const opListBundles = "ListBundles"
 
 // ListBundlesRequest generates a "aws/request.Request" representing the
 // client's request for the ListBundles operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -758,8 +758,8 @@ const opListProjects = "ListProjects"
 
 // ListProjectsRequest generates a "aws/request.Request" representing the
 // client's request for the ListProjects operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -909,8 +909,8 @@ const opUpdateProject = "UpdateProject"
 
 // UpdateProjectRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateProject operation. The "output" return
-// value will be populated with the request's response once the request complets
-// successfuly.
+// value will be populated with the request's response once the request completes
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1185,6 +1185,9 @@ func (s *DeleteProjectInput) Validate() error {
 	if s.ProjectId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ProjectId"))
 	}
+	if s.ProjectId != nil && len(*s.ProjectId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProjectId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1257,6 +1260,9 @@ func (s *DescribeBundleInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeBundleInput"}
 	if s.BundleId == nil {
 		invalidParams.Add(request.NewErrParamRequired("BundleId"))
+	}
+	if s.BundleId != nil && len(*s.BundleId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BundleId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -1402,6 +1408,9 @@ func (s *ExportBundleInput) Validate() error {
 	if s.BundleId == nil {
 		invalidParams.Add(request.NewErrParamRequired("BundleId"))
 	}
+	if s.BundleId != nil && len(*s.BundleId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BundleId", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1480,6 +1489,9 @@ func (s *ExportProjectInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ExportProjectInput"}
 	if s.ProjectId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ProjectId"))
+	}
+	if s.ProjectId != nil && len(*s.ProjectId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProjectId", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -1689,10 +1701,10 @@ type ProjectDetails struct {
 	ConsoleUrl *string `locationName:"consoleUrl" type:"string"`
 
 	// Date the project was created.
-	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"unix"`
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
 	// Date of the last modification of the project.
-	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp" timestampFormat:"unix"`
+	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
 	// Name of the project.
 	Name *string `locationName:"name" type:"string"`

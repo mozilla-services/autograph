@@ -340,6 +340,10 @@ type CognitoIdentityProviderAPI interface {
 	ListResourceServersWithContext(aws.Context, *cognitoidentityprovider.ListResourceServersInput, ...request.Option) (*cognitoidentityprovider.ListResourceServersOutput, error)
 	ListResourceServersRequest(*cognitoidentityprovider.ListResourceServersInput) (*request.Request, *cognitoidentityprovider.ListResourceServersOutput)
 
+	ListTagsForResource(*cognitoidentityprovider.ListTagsForResourceInput) (*cognitoidentityprovider.ListTagsForResourceOutput, error)
+	ListTagsForResourceWithContext(aws.Context, *cognitoidentityprovider.ListTagsForResourceInput, ...request.Option) (*cognitoidentityprovider.ListTagsForResourceOutput, error)
+	ListTagsForResourceRequest(*cognitoidentityprovider.ListTagsForResourceInput) (*request.Request, *cognitoidentityprovider.ListTagsForResourceOutput)
+
 	ListUserImportJobs(*cognitoidentityprovider.ListUserImportJobsInput) (*cognitoidentityprovider.ListUserImportJobsOutput, error)
 	ListUserImportJobsWithContext(aws.Context, *cognitoidentityprovider.ListUserImportJobsInput, ...request.Option) (*cognitoidentityprovider.ListUserImportJobsOutput, error)
 	ListUserImportJobsRequest(*cognitoidentityprovider.ListUserImportJobsInput) (*request.Request, *cognitoidentityprovider.ListUserImportJobsOutput)
@@ -400,6 +404,14 @@ type CognitoIdentityProviderAPI interface {
 	StopUserImportJobWithContext(aws.Context, *cognitoidentityprovider.StopUserImportJobInput, ...request.Option) (*cognitoidentityprovider.StopUserImportJobOutput, error)
 	StopUserImportJobRequest(*cognitoidentityprovider.StopUserImportJobInput) (*request.Request, *cognitoidentityprovider.StopUserImportJobOutput)
 
+	TagResource(*cognitoidentityprovider.TagResourceInput) (*cognitoidentityprovider.TagResourceOutput, error)
+	TagResourceWithContext(aws.Context, *cognitoidentityprovider.TagResourceInput, ...request.Option) (*cognitoidentityprovider.TagResourceOutput, error)
+	TagResourceRequest(*cognitoidentityprovider.TagResourceInput) (*request.Request, *cognitoidentityprovider.TagResourceOutput)
+
+	UntagResource(*cognitoidentityprovider.UntagResourceInput) (*cognitoidentityprovider.UntagResourceOutput, error)
+	UntagResourceWithContext(aws.Context, *cognitoidentityprovider.UntagResourceInput, ...request.Option) (*cognitoidentityprovider.UntagResourceOutput, error)
+	UntagResourceRequest(*cognitoidentityprovider.UntagResourceInput) (*request.Request, *cognitoidentityprovider.UntagResourceOutput)
+
 	UpdateAuthEventFeedback(*cognitoidentityprovider.UpdateAuthEventFeedbackInput) (*cognitoidentityprovider.UpdateAuthEventFeedbackOutput, error)
 	UpdateAuthEventFeedbackWithContext(aws.Context, *cognitoidentityprovider.UpdateAuthEventFeedbackInput, ...request.Option) (*cognitoidentityprovider.UpdateAuthEventFeedbackOutput, error)
 	UpdateAuthEventFeedbackRequest(*cognitoidentityprovider.UpdateAuthEventFeedbackInput) (*request.Request, *cognitoidentityprovider.UpdateAuthEventFeedbackOutput)
@@ -431,6 +443,10 @@ type CognitoIdentityProviderAPI interface {
 	UpdateUserPoolClient(*cognitoidentityprovider.UpdateUserPoolClientInput) (*cognitoidentityprovider.UpdateUserPoolClientOutput, error)
 	UpdateUserPoolClientWithContext(aws.Context, *cognitoidentityprovider.UpdateUserPoolClientInput, ...request.Option) (*cognitoidentityprovider.UpdateUserPoolClientOutput, error)
 	UpdateUserPoolClientRequest(*cognitoidentityprovider.UpdateUserPoolClientInput) (*request.Request, *cognitoidentityprovider.UpdateUserPoolClientOutput)
+
+	UpdateUserPoolDomain(*cognitoidentityprovider.UpdateUserPoolDomainInput) (*cognitoidentityprovider.UpdateUserPoolDomainOutput, error)
+	UpdateUserPoolDomainWithContext(aws.Context, *cognitoidentityprovider.UpdateUserPoolDomainInput, ...request.Option) (*cognitoidentityprovider.UpdateUserPoolDomainOutput, error)
+	UpdateUserPoolDomainRequest(*cognitoidentityprovider.UpdateUserPoolDomainInput) (*request.Request, *cognitoidentityprovider.UpdateUserPoolDomainOutput)
 
 	VerifySoftwareToken(*cognitoidentityprovider.VerifySoftwareTokenInput) (*cognitoidentityprovider.VerifySoftwareTokenOutput, error)
 	VerifySoftwareTokenWithContext(aws.Context, *cognitoidentityprovider.VerifySoftwareTokenInput, ...request.Option) (*cognitoidentityprovider.VerifySoftwareTokenOutput, error)

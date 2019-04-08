@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2014 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
 package datastore_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"cloud.google.com/go/datastore"
-	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
 )
 
@@ -167,6 +167,29 @@ func ExampleClient_GetMulti() {
 	}
 }
 
+func ExampleMultiError() {
+	ctx := context.Background()
+	client, err := datastore.NewClient(ctx, "project-id")
+	if err != nil {
+		// TODO: Handle error.
+	}
+
+	keys := []*datastore.Key{
+		datastore.NameKey("bad-key", "bad-key", nil),
+	}
+	posts := make([]Post, 1)
+	if err := client.GetMulti(ctx, keys, posts); err != nil {
+		if merr, ok := err.(datastore.MultiError); ok {
+			for _, err := range merr {
+				// TODO: Handle error.
+				_ = err
+			}
+		} else {
+			// TODO: Handle error.
+		}
+	}
+}
+
 func ExampleClient_PutMulti_slice() {
 	ctx := context.Background()
 	client, err := datastore.NewClient(ctx, "project-id")
@@ -218,7 +241,7 @@ func ExampleNewQuery() {
 }
 
 func ExampleNewQuery_options() {
-	// Query to order the posts by the number of comments they have recieved.
+	// Query to order the posts by the number of comments they have received.
 	q := datastore.NewQuery("Post").Order("-Comments")
 	// Start listing from an offset and limit the results.
 	q = q.Offset(20).Limit(10)
@@ -390,6 +413,9 @@ func ExampleClient_GetAll() {
 	}
 	var posts []*Post
 	keys, err := client.GetAll(ctx, datastore.NewQuery("Post"), &posts)
+	if err != nil {
+		// TODO: Handle error.
+	}
 	for i, key := range keys {
 		fmt.Println(key)
 		fmt.Println(posts[i])

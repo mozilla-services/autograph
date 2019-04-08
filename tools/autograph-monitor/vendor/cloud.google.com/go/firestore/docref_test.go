@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
 package firestore
 
 import (
+	"context"
 	"reflect"
 	"sort"
 	"testing"
 	"time"
 
-	pb "google.golang.org/genproto/googleapis/firestore/v1beta1"
-
-	"golang.org/x/net/context"
+	pb "google.golang.org/genproto/googleapis/firestore/v1"
 	"google.golang.org/genproto/googleapis/type/latlng"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -89,7 +88,7 @@ func TestDocGet(t *testing.T) {
 }
 
 func TestDocSet(t *testing.T) {
-	// Most tests for Set are in the cross-language tests.
+	// Most tests for Set are in the conformance tests.
 	ctx := context.Background()
 	c, srv := newMock(t)
 
@@ -134,7 +133,7 @@ func TestDocSet(t *testing.T) {
 func TestDocCreate(t *testing.T) {
 	// Verify creation with structs. In particular, make sure zero values
 	// are handled well.
-	// Other tests for Create are handled by the cross-language tests.
+	// Other tests for Create are handled by the conformance tests.
 	ctx := context.Background()
 	c, srv := newMock(t)
 
@@ -199,7 +198,7 @@ var (
 	testFields = map[string]*pb.Value{"a": intval(1)}
 )
 
-// Update is tested by the cross-language tests.
+// Update is tested by the conformance tests.
 
 func TestFPVsFromData(t *testing.T) {
 	type S struct{ X int }

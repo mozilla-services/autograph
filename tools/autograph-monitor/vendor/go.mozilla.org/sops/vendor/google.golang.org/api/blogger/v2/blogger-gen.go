@@ -201,8 +201,8 @@ type Blog struct {
 }
 
 func (s *Blog) MarshalJSON() ([]byte, error) {
-	type noMethod Blog
-	raw := noMethod(*s)
+	type NoMethod Blog
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -235,8 +235,8 @@ type BlogLocale struct {
 }
 
 func (s *BlogLocale) MarshalJSON() ([]byte, error) {
-	type noMethod BlogLocale
-	raw := noMethod(*s)
+	type NoMethod BlogLocale
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -266,8 +266,8 @@ type BlogPages struct {
 }
 
 func (s *BlogPages) MarshalJSON() ([]byte, error) {
-	type noMethod BlogPages
-	raw := noMethod(*s)
+	type NoMethod BlogPages
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -297,8 +297,8 @@ type BlogPosts struct {
 }
 
 func (s *BlogPosts) MarshalJSON() ([]byte, error) {
-	type noMethod BlogPosts
-	raw := noMethod(*s)
+	type NoMethod BlogPosts
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -332,8 +332,8 @@ type BlogList struct {
 }
 
 func (s *BlogList) MarshalJSON() ([]byte, error) {
-	type noMethod BlogList
-	raw := noMethod(*s)
+	type NoMethod BlogList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -390,8 +390,8 @@ type Comment struct {
 }
 
 func (s *Comment) MarshalJSON() ([]byte, error) {
-	type noMethod Comment
-	raw := noMethod(*s)
+	type NoMethod Comment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -427,8 +427,8 @@ type CommentAuthor struct {
 }
 
 func (s *CommentAuthor) MarshalJSON() ([]byte, error) {
-	type noMethod CommentAuthor
-	raw := noMethod(*s)
+	type NoMethod CommentAuthor
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -455,8 +455,8 @@ type CommentAuthorImage struct {
 }
 
 func (s *CommentAuthorImage) MarshalJSON() ([]byte, error) {
-	type noMethod CommentAuthorImage
-	raw := noMethod(*s)
+	type NoMethod CommentAuthorImage
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -483,8 +483,8 @@ type CommentBlog struct {
 }
 
 func (s *CommentBlog) MarshalJSON() ([]byte, error) {
-	type noMethod CommentBlog
-	raw := noMethod(*s)
+	type NoMethod CommentBlog
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -511,8 +511,8 @@ type CommentInReplyTo struct {
 }
 
 func (s *CommentInReplyTo) MarshalJSON() ([]byte, error) {
-	type noMethod CommentInReplyTo
-	raw := noMethod(*s)
+	type NoMethod CommentInReplyTo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -539,8 +539,8 @@ type CommentPost struct {
 }
 
 func (s *CommentPost) MarshalJSON() ([]byte, error) {
-	type noMethod CommentPost
-	raw := noMethod(*s)
+	type NoMethod CommentPost
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -581,8 +581,8 @@ type CommentList struct {
 }
 
 func (s *CommentList) MarshalJSON() ([]byte, error) {
-	type noMethod CommentList
-	raw := noMethod(*s)
+	type NoMethod CommentList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -640,8 +640,8 @@ type Page struct {
 }
 
 func (s *Page) MarshalJSON() ([]byte, error) {
-	type noMethod Page
-	raw := noMethod(*s)
+	type NoMethod Page
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -677,8 +677,8 @@ type PageAuthor struct {
 }
 
 func (s *PageAuthor) MarshalJSON() ([]byte, error) {
-	type noMethod PageAuthor
-	raw := noMethod(*s)
+	type NoMethod PageAuthor
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -705,8 +705,8 @@ type PageAuthorImage struct {
 }
 
 func (s *PageAuthorImage) MarshalJSON() ([]byte, error) {
-	type noMethod PageAuthorImage
-	raw := noMethod(*s)
+	type NoMethod PageAuthorImage
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -733,8 +733,8 @@ type PageBlog struct {
 }
 
 func (s *PageBlog) MarshalJSON() ([]byte, error) {
-	type noMethod PageBlog
-	raw := noMethod(*s)
+	type NoMethod PageBlog
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -767,8 +767,8 @@ type PageList struct {
 }
 
 func (s *PageList) MarshalJSON() ([]byte, error) {
-	type noMethod PageList
-	raw := noMethod(*s)
+	type NoMethod PageList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -831,8 +831,8 @@ type Post struct {
 }
 
 func (s *Post) MarshalJSON() ([]byte, error) {
-	type noMethod Post
-	raw := noMethod(*s)
+	type NoMethod Post
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -868,8 +868,8 @@ type PostAuthor struct {
 }
 
 func (s *PostAuthor) MarshalJSON() ([]byte, error) {
-	type noMethod PostAuthor
-	raw := noMethod(*s)
+	type NoMethod PostAuthor
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -896,8 +896,8 @@ type PostAuthorImage struct {
 }
 
 func (s *PostAuthorImage) MarshalJSON() ([]byte, error) {
-	type noMethod PostAuthorImage
-	raw := noMethod(*s)
+	type NoMethod PostAuthorImage
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -924,8 +924,8 @@ type PostBlog struct {
 }
 
 func (s *PostBlog) MarshalJSON() ([]byte, error) {
-	type noMethod PostBlog
-	raw := noMethod(*s)
+	type NoMethod PostBlog
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -955,8 +955,8 @@ type PostReplies struct {
 }
 
 func (s *PostReplies) MarshalJSON() ([]byte, error) {
-	type noMethod PostReplies
-	raw := noMethod(*s)
+	type NoMethod PostReplies
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -997,8 +997,8 @@ type PostList struct {
 }
 
 func (s *PostList) MarshalJSON() ([]byte, error) {
-	type noMethod PostList
-	raw := noMethod(*s)
+	type NoMethod PostList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1053,8 +1053,8 @@ type User struct {
 }
 
 func (s *User) MarshalJSON() ([]byte, error) {
-	type noMethod User
-	raw := noMethod(*s)
+	type NoMethod User
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1081,8 +1081,8 @@ type UserBlogs struct {
 }
 
 func (s *UserBlogs) MarshalJSON() ([]byte, error) {
-	type noMethod UserBlogs
-	raw := noMethod(*s)
+	type NoMethod UserBlogs
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1115,8 +1115,8 @@ type UserLocale struct {
 }
 
 func (s *UserLocale) MarshalJSON() ([]byte, error) {
-	type noMethod UserLocale
-	raw := noMethod(*s)
+	type NoMethod UserLocale
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1184,6 +1184,7 @@ func (c *BlogsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "blogs/{blogId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1227,7 +1228,7 @@ func (c *BlogsGetCall) Do(opts ...googleapi.CallOption) (*Blog, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1325,6 +1326,7 @@ func (c *CommentsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "blogs/{blogId}/posts/{postId}/comments/{commentId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1370,7 +1372,7 @@ func (c *CommentsGetCall) Do(opts ...googleapi.CallOption) (*Comment, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1508,6 +1510,7 @@ func (c *CommentsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "blogs/{blogId}/posts/{postId}/comments")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1552,7 +1555,7 @@ func (c *CommentsListCall) Do(opts ...googleapi.CallOption) (*CommentList, error
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1698,6 +1701,7 @@ func (c *PagesGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "blogs/{blogId}/pages/{pageId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1742,7 +1746,7 @@ func (c *PagesGetCall) Do(opts ...googleapi.CallOption) (*Page, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1850,6 +1854,7 @@ func (c *PagesListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "blogs/{blogId}/pages")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -1893,7 +1898,7 @@ func (c *PagesListCall) Do(opts ...googleapi.CallOption) (*PageList, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1994,6 +1999,7 @@ func (c *PostsGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "blogs/{blogId}/posts/{postId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2038,7 +2044,7 @@ func (c *PostsGetCall) Do(opts ...googleapi.CallOption) (*Post, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2167,6 +2173,7 @@ func (c *PostsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "blogs/{blogId}/posts")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2210,7 +2217,7 @@ func (c *PostsListCall) Do(opts ...googleapi.CallOption) (*PostList, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2347,6 +2354,7 @@ func (c *UsersGetCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/{userId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2390,7 +2398,7 @@ func (c *UsersGetCall) Do(opts ...googleapi.CallOption) (*User, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2484,6 +2492,7 @@ func (c *UsersBlogsListCall) doRequest(alt string) (*http.Response, error) {
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "users/{userId}/blogs")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -2527,7 +2536,7 @@ func (c *UsersBlogsListCall) Do(opts ...googleapi.CallOption) (*BlogList, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

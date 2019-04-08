@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package translate
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -26,8 +27,6 @@ import (
 	"testing"
 
 	"cloud.google.com/go/internal/testutil"
-
-	"golang.org/x/net/context"
 	"golang.org/x/text/language"
 	"google.golang.org/api/option"
 )

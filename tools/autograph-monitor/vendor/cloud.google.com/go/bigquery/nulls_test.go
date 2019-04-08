@@ -1,4 +1,4 @@
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2015 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ func TestNullsJSON(t *testing.T) {
 		{&NullFloat64{Valid: true, Float64: 3.14}, `3.14`},
 		{&NullBool{Valid: true, Bool: true}, `true`},
 		{&NullString{Valid: true, StringVal: "foo"}, `"foo"`},
+		{&NullGeography{Valid: true, GeographyVal: "ST_GEOPOINT(47.649154, -122.350220)"}, `"ST_GEOPOINT(47.649154, -122.350220)"`},
 		{&NullTimestamp{Valid: true, Timestamp: testTimestamp}, `"2016-11-05T07:50:22.000000008Z"`},
 		{&NullDate{Valid: true, Date: testDate}, `"2016-11-05"`},
 		{&NullTime{Valid: true, Time: nullsTestTime}, `"07:50:22.000001"`},
@@ -46,6 +47,7 @@ func TestNullsJSON(t *testing.T) {
 		{&NullFloat64{}, `null`},
 		{&NullBool{}, `null`},
 		{&NullString{}, `null`},
+		{&NullGeography{}, `null`},
 		{&NullTimestamp{}, `null`},
 		{&NullDate{}, `null`},
 		{&NullTime{}, `null`},

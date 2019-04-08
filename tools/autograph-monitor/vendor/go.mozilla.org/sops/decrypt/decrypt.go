@@ -11,6 +11,7 @@ import (
 
 	"go.mozilla.org/sops"
 	"go.mozilla.org/sops/aes"
+	sopsdotenv "go.mozilla.org/sops/stores/dotenv"
 	sopsjson "go.mozilla.org/sops/stores/json"
 	sopsyaml "go.mozilla.org/sops/stores/yaml"
 )
@@ -28,7 +29,7 @@ func File(path, format string) (cleartext []byte, err error) {
 
 // Data is a helper that takes encrypted data and a format string,
 // decrypts the data and returns its cleartext in an []byte.
-// The format string can be `json`, `yaml` or `binary`.
+// The format string can be `json`, `yaml`, `dotenv` or `binary`.
 // If the format string is empty, binary format is assumed.
 func Data(data []byte, format string) (cleartext []byte, err error) {
 	// Initialize a Sops JSON store
@@ -38,26 +39,20 @@ func Data(data []byte, format string) (cleartext []byte, err error) {
 		store = &sopsjson.Store{}
 	case "yaml":
 		store = &sopsyaml.Store{}
+	case "dotenv":
+		store = &sopsdotenv.Store{}
 	default:
 		store = &sopsjson.BinaryStore{}
 	}
-	// Load Sops metadata from the document and access the data key
-	metadata, err := store.UnmarshalMetadata(data)
+	// Load SOPS file and access the data key
+	tree, err := store.LoadEncryptedFile(data)
 	if err != nil {
 		return nil, err
 	}
-	key, err := metadata.GetDataKey()
+	key, err := tree.Metadata.GetDataKey()
 	if err != nil {
 		return nil, err
 	}
-
-	// Load the encrypted document and create a tree structure
-	// with the encrypted content and metadata
-	branch, err := store.Unmarshal(data)
-	if err != nil {
-		return nil, err
-	}
-	tree := sops.Tree{Branch: branch, Metadata: metadata}
 
 	// Decrypt the tree
 	cipher := aes.NewCipher()
@@ -70,13 +65,13 @@ func Data(data []byte, format string) (cleartext []byte, err error) {
 	// the one that was stored in the document. If they match,
 	// integrity was preserved
 	originalMac, err := cipher.Decrypt(
-		metadata.MessageAuthenticationCode,
+		tree.Metadata.MessageAuthenticationCode,
 		key,
-		metadata.LastModified.Format(time.RFC3339),
+		tree.Metadata.LastModified.Format(time.RFC3339),
 	)
 	if originalMac != mac {
 		return nil, fmt.Errorf("Failed to verify data integrity. expected mac %q, got %q", originalMac, mac)
 	}
 
-	return store.Marshal(tree.Branch)
+	return store.EmitPlainFile(tree.Branches)
 }

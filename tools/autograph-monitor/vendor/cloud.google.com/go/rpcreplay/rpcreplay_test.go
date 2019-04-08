@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,14 +16,17 @@ package rpcreplay
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"io"
+	"strings"
 	"testing"
 
 	"cloud.google.com/go/internal/testutil"
 	ipb "cloud.google.com/go/rpcreplay/proto/intstore"
 	rpb "cloud.google.com/go/rpcreplay/proto/rpcreplay"
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
+	"github.com/google/go-cmp/cmp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -252,7 +255,11 @@ func TestReplay(t *testing.T) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
 	// Replay the test.
-	testService(t, srv.Addr, rep.DialOptions())
+	conn, err := rep.Connection()
+	if err != nil {
+		t.Fatal(err)
+	}
+	testService(t, conn)
 }
 
 func record(t *testing.T, srv *intStoreServer) *bytes.Buffer {
@@ -261,20 +268,20 @@ func record(t *testing.T, srv *intStoreServer) *bytes.Buffer {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testService(t, srv.Addr, rec.DialOptions())
+	conn, err := grpc.Dial(srv.Addr,
+		append([]grpc.DialOption{grpc.WithInsecure()}, rec.DialOptions()...)...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	testService(t, conn)
 	if err := rec.Close(); err != nil {
 		t.Fatal(err)
 	}
 	return buf
 }
 
-func testService(t *testing.T, addr string, opts []grpc.DialOption) {
-	conn, err := grpc.Dial(addr,
-		append([]grpc.DialOption{grpc.WithInsecure()}, opts...)...)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.Close()
+func testService(t *testing.T, conn *grpc.ClientConn) {
 	client := ipb.NewIntStoreClient(conn)
 	ctx := context.Background()
 	item := &ipb.Item{Name: "a", Value: 1}
@@ -358,5 +365,204 @@ func testService(t *testing.T, addr string, opts []grpc.DialOption) {
 	must(chatc.CloseSend())
 	if _, err := chatc.Recv(); err != io.EOF {
 		t.Fatalf("got %v, want EOF", err)
+	}
+}
+
+func TestRecorderBeforeFunc(t *testing.T) {
+	var tests = []struct {
+		name                           string
+		msg, wantRespMsg, wantEntryMsg *ipb.Item
+		f                              func(string, proto.Message) error
+		wantErr                        bool
+	}{
+		{
+			name:         "BeforeFunc should modify messages saved, but not alter what is sent/received to/from services",
+			msg:          &ipb.Item{Name: "foo", Value: 1},
+			wantEntryMsg: &ipb.Item{Name: "bar", Value: 2},
+			wantRespMsg:  &ipb.Item{Name: "foo", Value: 1},
+			f: func(method string, m proto.Message) error {
+				// This callback only runs when Set is called.
+				if !strings.HasSuffix(method, "Set") {
+					return nil
+				}
+				if _, ok := m.(*ipb.Item); !ok {
+					return nil
+				}
+
+				item := m.(*ipb.Item)
+				item.Name = "bar"
+				item.Value = 2
+				return nil
+			},
+		},
+		{
+			name:        "BeforeFunc should not be able to alter returned responses",
+			msg:         &ipb.Item{Name: "foo", Value: 1},
+			wantRespMsg: &ipb.Item{Name: "foo", Value: 1},
+			f: func(method string, m proto.Message) error {
+				// This callback only runs when Get is called.
+				if !strings.HasSuffix(method, "Get") {
+					return nil
+				}
+				if _, ok := m.(*ipb.Item); !ok {
+					return nil
+				}
+
+				item := m.(*ipb.Item)
+				item.Value = 2
+				return nil
+			},
+		},
+		{
+			name: "Errors should cause the RPC send to fail",
+			msg:  &ipb.Item{},
+			f: func(_ string, _ proto.Message) error {
+				return errors.New("err")
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		// Wrap test cases in a func so defers execute correctly.
+		func() {
+			srv := newIntStoreServer()
+			defer srv.stop()
+
+			var b bytes.Buffer
+			r, err := NewRecorderWriter(&b, nil)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			r.BeforeFunc = tc.f
+			ctx := context.Background()
+			conn, err := grpc.DialContext(ctx, srv.Addr, append([]grpc.DialOption{grpc.WithInsecure()}, r.DialOptions()...)...)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			defer conn.Close()
+
+			client := ipb.NewIntStoreClient(conn)
+			_, err = client.Set(ctx, tc.msg)
+			switch {
+			case err != nil && !tc.wantErr:
+				t.Error(err)
+				return
+			case err == nil && tc.wantErr:
+				t.Errorf("got nil; want error")
+				return
+			case err != nil:
+				// Error found as expected, don't check Get().
+				return
+			}
+
+			if tc.wantRespMsg != nil {
+				got, err := client.Get(ctx, &ipb.GetRequest{Name: tc.msg.GetName()})
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				if !cmp.Equal(got, tc.wantRespMsg) {
+					t.Errorf("got %+v; want %+v", got, tc.wantRespMsg)
+				}
+			}
+
+			r.Close()
+
+			if tc.wantEntryMsg != nil {
+				_, _ = readHeader(&b)
+				e, err := readEntry(&b)
+				if err != nil {
+					t.Error(err)
+					return
+				}
+				got := e.msg.msg.(*ipb.Item)
+				if !cmp.Equal(got, tc.wantEntryMsg) {
+					t.Errorf("got %v; want %v", got, tc.wantEntryMsg)
+				}
+			}
+		}()
+	}
+}
+
+func TestReplayerBeforeFunc(t *testing.T) {
+	var tests = []struct {
+		name        string
+		msg, reqMsg *ipb.Item
+		f           func(string, proto.Message) error
+		wantErr     bool
+	}{
+		{
+			name:   "BeforeFunc should modify messages sent before they are passed to the replayer",
+			msg:    &ipb.Item{Name: "foo", Value: 1},
+			reqMsg: &ipb.Item{Name: "bar", Value: 1},
+			f: func(method string, m proto.Message) error {
+				item := m.(*ipb.Item)
+				item.Name = "foo"
+				return nil
+			},
+		},
+		{
+			name: "Errors should cause the RPC send to fail",
+			msg:  &ipb.Item{},
+			f: func(_ string, _ proto.Message) error {
+				return errors.New("err")
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		// Wrap test cases in a func so defers execute correctly.
+		func() {
+			srv := newIntStoreServer()
+			defer srv.stop()
+
+			var b bytes.Buffer
+			rec, err := NewRecorderWriter(&b, nil)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			ctx := context.Background()
+			conn, err := grpc.DialContext(ctx, srv.Addr, append([]grpc.DialOption{grpc.WithInsecure()}, rec.DialOptions()...)...)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			defer conn.Close()
+
+			client := ipb.NewIntStoreClient(conn)
+			_, err = client.Set(ctx, tc.msg)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			rec.Close()
+
+			rep, err := NewReplayerReader(&b)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			rep.BeforeFunc = tc.f
+			conn, err = grpc.DialContext(ctx, srv.Addr, append([]grpc.DialOption{grpc.WithInsecure()}, rep.DialOptions()...)...)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			defer conn.Close()
+
+			client = ipb.NewIntStoreClient(conn)
+			_, err = client.Set(ctx, tc.reqMsg)
+			switch {
+			case err != nil && !tc.wantErr:
+				t.Error(err)
+			case err == nil && tc.wantErr:
+				t.Errorf("got nil; want error")
+			}
+		}()
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2014 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ var (
 	typeOfTime      = reflect.TypeOf(time.Time{})
 	typeOfGeoPoint  = reflect.TypeOf(GeoPoint{})
 	typeOfKeyPtr    = reflect.TypeOf(&Key{})
-	typeOfEntityPtr = reflect.TypeOf(&Entity{})
 )
 
 // typeMismatchReason returns a string explaining why the property p could not
@@ -135,6 +134,19 @@ func (l *propertyLoader) loadOneElement(codec fields.List, structValue reflect.V
 		}
 		if ok {
 			return ""
+		}
+
+		if field.Type.Kind() == reflect.Ptr && field.Type.Elem().Kind() == reflect.Struct {
+			codec, err = structCache.Fields(field.Type.Elem())
+			if err != nil {
+				return err.Error()
+			}
+
+			// Init value if its nil
+			if v.IsNil() {
+				v.Set(reflect.New(field.Type.Elem()))
+			}
+			structValue = v.Elem()
 		}
 
 		if field.Type.Kind() == reflect.Struct {
@@ -412,18 +424,15 @@ func loadEntityToStruct(dst interface{}, ent *Entity) error {
 	if err != nil {
 		return err
 	}
-	// Load properties.
-	err = pls.Load(ent.Properties)
-	if err != nil {
-		return err
-	}
-	// Load key.
+
+	// Try and load key.
 	keyField := pls.codec.Match(keyFieldName)
 	if keyField != nil && ent.Key != nil {
 		pls.v.FieldByIndex(keyField.Index).Set(reflect.ValueOf(ent.Key))
 	}
 
-	return nil
+	// Load properties.
+	return pls.Load(ent.Properties)
 }
 
 func (s structPLS) Load(props []Property) error {

@@ -12,7 +12,7 @@
   "baseUrl": "https://abusiveexperiencereport.googleapis.com/",
   "batchPath": "batch",
   "canonicalName": "Abusive Experience Report",
-  "description": "View Abusive Experience Report data, and get a list of sites that have a significant number of abusive experiences.",
+  "description": "Views Abusive Experience Report data, and gets a list of sites that have a significant number of abusive experiences.",
   "discoveryVersion": "v1",
   "documentationLink": "https://developers.google.com/abusive-experience-report/",
   "fullyEncodeReservedExpansion": true,
@@ -60,11 +60,6 @@
       "location": "query",
       "type": "string"
     },
-    "bearer_token": {
-      "description": "OAuth bearer token.",
-      "location": "query",
-      "type": "string"
-    },
     "callback": {
       "description": "JSONP",
       "location": "query",
@@ -84,12 +79,6 @@
       "description": "OAuth 2.0 token for the current user.",
       "location": "query",
       "type": "string"
-    },
-    "pp": {
-      "default": "true",
-      "description": "Pretty-print response.",
-      "location": "query",
-      "type": "boolean"
     },
     "prettyPrint": {
       "default": "true",
@@ -164,7 +153,7 @@
       }
     }
   },
-  "revision": "20180129",
+  "revision": "20181017",
   "rootUrl": "https://abusiveexperiencereport.googleapis.com/",
   "schemas": {
     "SiteSummaryResponse": {
@@ -244,7 +233,7 @@
     }
   },
   "servicePath": "",
-  "title": "Google Abusive Experience Report API",
+  "title": "Abusive Experience Report API",
   "version": "v1",
   "version_module": true
 }

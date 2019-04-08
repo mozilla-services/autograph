@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,12 @@
 package pubsub
 
 import (
-	"net"
-	"reflect"
+	"fmt"
 	"testing"
 	"time"
+
+	"cloud.google.com/go/internal/testutil"
+	"google.golang.org/grpc/status"
 
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
@@ -28,45 +30,17 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-type topicListService struct {
-	service
-	topics []string
-	err    error
-	t      *testing.T // for error logging.
-}
-
-func (s *topicListService) newNextStringFunc() nextStringFunc {
-	return func() (string, error) {
-		if len(s.topics) == 0 {
-			return "", iterator.Done
-		}
-		tn := s.topics[0]
-		s.topics = s.topics[1:]
-		return tn, s.err
-	}
-}
-
-func (s *topicListService) listProjectTopics(ctx context.Context, projName string) nextStringFunc {
-	if projName != "projects/projid" {
-		s.t.Fatalf("unexpected call: projName: %q", projName)
-		return nil
-	}
-	return s.newNextStringFunc()
-}
-
-func checkTopicListing(t *testing.T, want []string) {
-	s := &topicListService{topics: want, t: t}
-	c := &Client{projectID: "projid", s: s}
+func checkTopicListing(t *testing.T, c *Client, want []string) {
 	topics, err := slurpTopics(c.Topics(context.Background()))
 	if err != nil {
-		t.Errorf("error listing topics: %v", err)
+		t.Fatalf("error listing topics: %v", err)
 	}
-	got := topicNames(topics)
-	if !reflect.DeepEqual(got, want) {
+	var got []string
+	for _, topic := range topics {
+		got = append(got, topic.ID())
+	}
+	if !testutil.Equal(got, want) {
 		t.Errorf("topic list: got: %v, want: %v", got, want)
-	}
-	if len(s.topics) != 0 {
-		t.Errorf("outstanding topics: %v", s.topics)
 	}
 }
 
@@ -87,38 +61,27 @@ func slurpTopics(it *TopicIterator) ([]*Topic, error) {
 
 func TestTopicID(t *testing.T) {
 	const id = "id"
-	serv := &topicListService{
-		topics: []string{"projects/projid/topics/t1", "projects/projid/topics/t2"},
-		t:      t,
-	}
-	c := &Client{projectID: "projid", s: serv}
+	c, _ := newFake(t)
 	s := c.Topic(id)
 	if got, want := s.ID(), id; got != want {
 		t.Errorf("Token.ID() = %q; want %q", got, want)
 	}
-	want := []string{"t1", "t2"}
-	topics, err := slurpTopics(c.Topics(context.Background()))
-	if err != nil {
-		t.Errorf("error listing topics: %v", err)
-	}
-	for i, topic := range topics {
-		if got, want := topic.ID(), want[i]; got != want {
-			t.Errorf("Token.ID() = %q; want %q", got, want)
-		}
-	}
 }
 
 func TestListTopics(t *testing.T) {
-	checkTopicListing(t, []string{
-		"projects/projid/topics/t1",
-		"projects/projid/topics/t2",
-		"projects/projid/topics/t3",
-		"projects/projid/topics/t4"})
+	c, _ := newFake(t)
+	var ids []string
+	for i := 1; i <= 4; i++ {
+		id := fmt.Sprintf("t%d", i)
+		ids = append(ids, id)
+		mustCreateTopic(t, c, id)
+	}
+	checkTopicListing(t, c, ids)
 }
 
 func TestListCompletelyEmptyTopics(t *testing.T) {
-	var want []string
-	checkTopicListing(t, want)
+	c, _ := newFake(t)
+	checkTopicListing(t, c, nil)
 }
 
 func TestStopPublishOrder(t *testing.T) {
@@ -137,22 +100,19 @@ func TestStopPublishOrder(t *testing.T) {
 
 func TestPublishTimeout(t *testing.T) {
 	ctx := context.Background()
-	serv := grpc.NewServer()
-	pubsubpb.RegisterPublisherServer(serv, &alwaysFailPublish{})
-	lis, err := net.Listen("tcp", "localhost:0")
+	serv, err := testutil.NewServer()
 	if err != nil {
 		t.Fatal(err)
 	}
-	go serv.Serve(lis)
-	conn, err := grpc.Dial(lis.Addr().String(), grpc.WithInsecure())
+	pubsubpb.RegisterPublisherServer(serv.Gsrv, &alwaysFailPublish{})
+	conn, err := grpc.Dial(serv.Addr, grpc.WithInsecure())
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := newPubSubService(context.Background(), []option.ClientOption{option.WithGRPCConn(conn)})
+	c, err := NewClient(ctx, "projectID", option.WithGRPCConn(conn))
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := &Client{s: s}
 	topic := c.Topic("t")
 	topic.PublishSettings.Timeout = 3 * time.Second
 	r := topic.Publish(ctx, &Message{})
@@ -168,20 +128,59 @@ func TestPublishTimeout(t *testing.T) {
 	}
 }
 
+func TestUpdateTopic(t *testing.T) {
+	ctx := context.Background()
+	client, _ := newFake(t)
+	defer client.Close()
+
+	topic := mustCreateTopic(t, client, "T")
+	config, err := topic.Config(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := TopicConfig{}
+	if !testutil.Equal(config, want) {
+		t.Errorf("got %+v, want %+v", config, want)
+	}
+
+	// replace labels
+	labels := map[string]string{"label": "value"}
+	config2, err := topic.Update(ctx, TopicConfigToUpdate{Labels: labels})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = TopicConfig{
+		Labels:               labels,
+		MessageStoragePolicy: MessageStoragePolicy{[]string{"US"}},
+	}
+	if !testutil.Equal(config2, want) {
+		t.Errorf("got %+v, want %+v", config2, want)
+	}
+
+	// delete all labels
+	labels = map[string]string{}
+	config3, err := topic.Update(ctx, TopicConfigToUpdate{Labels: labels})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want.Labels = nil
+	if !testutil.Equal(config3, want) {
+		t.Errorf("got %+v, want %+v", config3, want)
+	}
+}
+
 type alwaysFailPublish struct {
 	pubsubpb.PublisherServer
 }
 
 func (s *alwaysFailPublish) Publish(ctx context.Context, req *pubsubpb.PublishRequest) (*pubsubpb.PublishResponse, error) {
-	return nil, grpc.Errorf(codes.Unavailable, "try again")
+	return nil, status.Errorf(codes.Unavailable, "try again")
 }
 
-func topicNames(topics []*Topic) []string {
-	var names []string
-
-	for _, topic := range topics {
-		names = append(names, topic.name)
-
+func mustCreateTopic(t *testing.T, c *Client, id string) *Topic {
+	topic, err := c.CreateTopic(context.Background(), id)
+	if err != nil {
+		t.Fatal(err)
 	}
-	return names
+	return topic
 }

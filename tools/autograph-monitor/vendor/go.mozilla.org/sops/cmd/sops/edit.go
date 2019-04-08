@@ -15,18 +15,19 @@ import (
 	"bufio"
 	"bytes"
 
+	"path/filepath"
+
 	"github.com/google/shlex"
 	"go.mozilla.org/sops"
 	"go.mozilla.org/sops/cmd/sops/codes"
 	"go.mozilla.org/sops/cmd/sops/common"
 	"go.mozilla.org/sops/keyservice"
-	"go.mozilla.org/sops/stores/json"
 )
 
 type editOpts struct {
 	Cipher         sops.Cipher
-	InputStore     sops.Store
-	OutputStore    sops.Store
+	InputStore     common.Store
+	OutputStore    common.Store
 	InputPath      string
 	IgnoreMAC      bool
 	KeyServices    []keyservice.KeyServiceClient
@@ -36,34 +37,9 @@ type editOpts struct {
 type editExampleOpts struct {
 	editOpts
 	UnencryptedSuffix string
+	EncryptedSuffix   string
 	KeyGroups         []sops.KeyGroup
 	GroupThreshold    int
-}
-
-var exampleTree = sops.TreeBranch{
-	sops.TreeItem{
-		Key:   "hello",
-		Value: `Welcome to SOPS! Edit this file as you please!`,
-	},
-	sops.TreeItem{
-		Key:   "example_key",
-		Value: "example_value",
-	},
-	sops.TreeItem{
-		Key: "example_array",
-		Value: []interface{}{
-			"example_value1",
-			"example_value2",
-		},
-	},
-	sops.TreeItem{
-		Key:   "example_number",
-		Value: 1234.56789,
-	},
-	sops.TreeItem{
-		Key:   "example_booleans",
-		Value: []interface{}{true, false},
-	},
 }
 
 type runEditorUntilOkOpts struct {
@@ -75,29 +51,25 @@ type runEditorUntilOkOpts struct {
 }
 
 func editExample(opts editExampleOpts) ([]byte, error) {
-	// Load the example file
-	var fileBytes []byte
-	if _, ok := opts.InputStore.(*json.BinaryStore); ok {
-		// Get the value under the first key
-		fileBytes = []byte(exampleTree[0].Value.(string))
-	} else {
-		var err error
-		fileBytes, err = opts.InputStore.Marshal(exampleTree)
-		if err != nil {
-			return nil, err
-		}
-	}
-	var tree sops.Tree
-	branch, err := opts.InputStore.Unmarshal(fileBytes)
+	fileBytes := opts.InputStore.EmitExample()
+	branches, err := opts.InputStore.LoadPlainFile(fileBytes)
 	if err != nil {
 		return nil, common.NewExitError(fmt.Sprintf("Error unmarshalling file: %s", err), codes.CouldNotReadInputFile)
 	}
-	tree.Branch = branch
-	tree.Metadata = sops.Metadata{
-		KeyGroups:         opts.KeyGroups,
-		UnencryptedSuffix: opts.UnencryptedSuffix,
-		Version:           version,
-		ShamirThreshold:   opts.GroupThreshold,
+	path, err := filepath.Abs(opts.InputPath)
+	if err != nil {
+		return nil, err
+	}
+	tree := sops.Tree{
+		Branches: branches,
+		Metadata: sops.Metadata{
+			KeyGroups:         opts.KeyGroups,
+			UnencryptedSuffix: opts.UnencryptedSuffix,
+			EncryptedSuffix:   opts.EncryptedSuffix,
+			Version:           version,
+			ShamirThreshold:   opts.GroupThreshold,
+		},
+		FilePath: path,
 	}
 
 	// Generate a data key
@@ -141,9 +113,9 @@ func editTree(opts editOpts, tree *sops.Tree, dataKey []byte) ([]byte, error) {
 	// Write to temporary file
 	var out []byte
 	if opts.ShowMasterKeys {
-		out, err = opts.OutputStore.MarshalWithMetadata(tree.Branch, tree.Metadata)
+		out, err = opts.OutputStore.EmitEncryptedFile(*tree)
 	} else {
-		out, err = opts.OutputStore.Marshal(tree.Branch)
+		out, err = opts.OutputStore.EmitPlainFile(tree.Branches)
 	}
 	if err != nil {
 		return nil, common.NewExitError(fmt.Sprintf("Could not marshal tree: %s", err), codes.ErrorDumpingTree)
@@ -176,7 +148,7 @@ func editTree(opts editOpts, tree *sops.Tree, dataKey []byte) ([]byte, error) {
 	}
 
 	// Output the file
-	encryptedFile, err := opts.OutputStore.MarshalWithMetadata(tree.Branch, tree.Metadata)
+	encryptedFile, err := opts.OutputStore.EmitEncryptedFile(*tree)
 	if err != nil {
 		return nil, common.NewExitError(fmt.Sprintf("Could not marshal tree: %s", err), codes.ErrorDumpingTree)
 	}
@@ -200,7 +172,7 @@ func runEditorUntilOk(opts runEditorUntilOkOpts) error {
 		if err != nil {
 			return common.NewExitError(fmt.Sprintf("Could not read edited file: %s", err), codes.CouldNotReadInputFile)
 		}
-		newBranch, err := opts.InputStore.Unmarshal(edited)
+		newBranches, err := opts.InputStore.LoadPlainFile(edited)
 		if err != nil {
 			log.WithField(
 				"error",
@@ -212,7 +184,9 @@ func runEditorUntilOk(opts runEditorUntilOkOpts) error {
 			continue
 		}
 		if opts.ShowMasterKeys {
-			metadata, err := opts.InputStore.UnmarshalMetadata(edited)
+			// The file is not actually encrypted, but it contains SOPS
+			// metadata
+			t, err := opts.InputStore.LoadEncryptedFile(edited)
 			if err != nil {
 				log.WithField(
 					"error",
@@ -222,9 +196,11 @@ func runEditorUntilOk(opts runEditorUntilOkOpts) error {
 				bufio.NewReader(os.Stdin).ReadByte()
 				continue
 			}
-			opts.Tree.Metadata = metadata
+			// Replace the whole tree, because otherwise newBranches would
+			// contain the SOPS metadata
+			opts.Tree = &t
 		}
-		opts.Tree.Branch = newBranch
+		opts.Tree.Branches = newBranches
 		needVersionUpdated, err := AIsNewerThanB(version, opts.Tree.Metadata.Version)
 		if err != nil {
 			return common.NewExitError(fmt.Sprintf("Failed to compare document version %q with program version %q: %v", opts.Tree.Metadata.Version, version, err), codes.FailedToCompareVersions)
@@ -262,16 +238,15 @@ func runEditor(path string) error {
 	editor := os.Getenv("EDITOR")
 	var cmd *exec.Cmd
 	if editor == "" {
-		cmd = exec.Command("which", "vim", "nano")
-		out, err := cmd.Output()
+		editor, err := lookupAnyEditor("vim", "nano", "vi")
 		if err != nil {
-			panic("Could not find any editors")
+			return err
 		}
-		cmd = exec.Command(strings.Split(string(out), "\n")[0], path)
+		cmd = exec.Command(editor, path)
 	} else {
 		parts, err := shlex.Split(editor)
 		if err != nil {
-			return fmt.Errorf("Invalid $EDITOR: %s", editor)
+			return fmt.Errorf("invalid $EDITOR: %s", editor)
 		}
 		parts = append(parts, path)
 		cmd = exec.Command(parts[0], parts[1:]...)
@@ -281,4 +256,14 @@ func runEditor(path string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+func lookupAnyEditor(editorNames ...string) (editorPath string, err error) {
+	for _, editorName := range editorNames {
+		editorPath, err = exec.LookPath(editorName)
+		if err == nil {
+			return editorPath, nil
+		}
+	}
+	return "", fmt.Errorf("no editor available: sops attempts to use the editor defined in the EDITOR environment variable, and if that's not set defaults to any of %s, but none of them could be found", strings.Join(editorNames, ", "))
 }

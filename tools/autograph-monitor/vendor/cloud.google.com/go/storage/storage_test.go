@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2014 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package storage
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -32,9 +33,6 @@ import (
 
 	"cloud.google.com/go/iam"
 	"cloud.google.com/go/internal/testutil"
-
-	"golang.org/x/net/context"
-	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	raw "google.golang.org/api/storage/v1"
@@ -264,44 +262,6 @@ func dummyKey(kind string) []byte {
 	return slurp
 }
 
-func TestCopyToMissingFields(t *testing.T) {
-	t.Parallel()
-	var tests = []struct {
-		srcBucket, srcName, destBucket, destName string
-		errMsg                                   string
-	}{
-		{
-			"mybucket", "", "mybucket", "destname",
-			"name is empty",
-		},
-		{
-			"mybucket", "srcname", "mybucket", "",
-			"name is empty",
-		},
-		{
-			"", "srcfile", "mybucket", "destname",
-			"name is empty",
-		},
-		{
-			"mybucket", "srcfile", "", "destname",
-			"name is empty",
-		},
-	}
-	ctx := context.Background()
-	client, err := NewClient(ctx, option.WithHTTPClient(&http.Client{Transport: &fakeTransport{}}))
-	if err != nil {
-		panic(err)
-	}
-	for i, test := range tests {
-		src := client.Bucket(test.srcBucket).Object(test.srcName)
-		dst := client.Bucket(test.destBucket).Object(test.destName)
-		_, err := dst.CopierFrom(src).Run(ctx)
-		if !strings.Contains(err.Error(), test.errMsg) {
-			t.Errorf("CopyTo test #%v:\ngot err  %q\nwant err %q", i, err, test.errMsg)
-		}
-	}
-}
-
 func TestObjectNames(t *testing.T) {
 	t.Parallel()
 	// Naming requirements: https://cloud.google.com/storage/docs/bucket-naming
@@ -404,68 +364,92 @@ func TestCondition(t *testing.T) {
 	obj := c.Bucket("buck").Object("obj")
 	dst := c.Bucket("dstbuck").Object("dst")
 	tests := []struct {
-		fn   func()
+		fn   func() error
 		want string
 	}{
 		{
-			func() { obj.Generation(1234).NewReader(ctx) },
+			func() error {
+				_, err := obj.Generation(1234).NewReader(ctx)
+				return err
+			},
 			"GET /buck/obj?generation=1234",
 		},
 		{
-			func() { obj.If(Conditions{GenerationMatch: 1234}).NewReader(ctx) },
+			func() error {
+				_, err := obj.If(Conditions{GenerationMatch: 1234}).NewReader(ctx)
+				return err
+			},
 			"GET /buck/obj?ifGenerationMatch=1234",
 		},
 		{
-			func() { obj.If(Conditions{GenerationNotMatch: 1234}).NewReader(ctx) },
+			func() error {
+				_, err := obj.If(Conditions{GenerationNotMatch: 1234}).NewReader(ctx)
+				return err
+			},
 			"GET /buck/obj?ifGenerationNotMatch=1234",
 		},
 		{
-			func() { obj.If(Conditions{MetagenerationMatch: 1234}).NewReader(ctx) },
+			func() error {
+				_, err := obj.If(Conditions{MetagenerationMatch: 1234}).NewReader(ctx)
+				return err
+			},
 			"GET /buck/obj?ifMetagenerationMatch=1234",
 		},
 		{
-			func() { obj.If(Conditions{MetagenerationNotMatch: 1234}).NewReader(ctx) },
+			func() error {
+				_, err := obj.If(Conditions{MetagenerationNotMatch: 1234}).NewReader(ctx)
+				return err
+			},
 			"GET /buck/obj?ifMetagenerationNotMatch=1234",
 		},
 		{
-			func() { obj.If(Conditions{MetagenerationNotMatch: 1234}).Attrs(ctx) },
-			"GET /storage/v1/b/buck/o/obj?alt=json&ifMetagenerationNotMatch=1234&projection=full",
-		},
-
-		{
-			func() { obj.If(Conditions{MetagenerationMatch: 1234}).Update(ctx, ObjectAttrsToUpdate{}) },
-			"PATCH /storage/v1/b/buck/o/obj?alt=json&ifMetagenerationMatch=1234&projection=full",
+			func() error {
+				_, err := obj.If(Conditions{MetagenerationNotMatch: 1234}).Attrs(ctx)
+				return err
+			},
+			"GET /storage/v1/b/buck/o/obj?alt=json&ifMetagenerationNotMatch=1234&prettyPrint=false&projection=full",
 		},
 		{
-			func() { obj.Generation(1234).Delete(ctx) },
-			"DELETE /storage/v1/b/buck/o/obj?alt=json&generation=1234",
+			func() error {
+				_, err := obj.If(Conditions{MetagenerationMatch: 1234}).Update(ctx, ObjectAttrsToUpdate{})
+				return err
+			},
+			"PATCH /storage/v1/b/buck/o/obj?alt=json&ifMetagenerationMatch=1234&prettyPrint=false&projection=full",
 		},
 		{
-			func() {
+			func() error { return obj.Generation(1234).Delete(ctx) },
+			"DELETE /storage/v1/b/buck/o/obj?alt=json&generation=1234&prettyPrint=false",
+		},
+		{
+			func() error {
 				w := obj.If(Conditions{GenerationMatch: 1234}).NewWriter(ctx)
 				w.ContentType = "text/plain"
-				w.Close()
+				return w.Close()
 			},
-			"POST /upload/storage/v1/b/buck/o?alt=json&ifGenerationMatch=1234&projection=full&uploadType=multipart",
+			"POST /upload/storage/v1/b/buck/o?alt=json&ifGenerationMatch=1234&prettyPrint=false&projection=full&uploadType=multipart",
 		},
 		{
-			func() {
+			func() error {
 				w := obj.If(Conditions{DoesNotExist: true}).NewWriter(ctx)
 				w.ContentType = "text/plain"
-				w.Close()
+				return w.Close()
 			},
-			"POST /upload/storage/v1/b/buck/o?alt=json&ifGenerationMatch=0&projection=full&uploadType=multipart",
+			"POST /upload/storage/v1/b/buck/o?alt=json&ifGenerationMatch=0&prettyPrint=false&projection=full&uploadType=multipart",
 		},
 		{
-			func() {
-				dst.If(Conditions{MetagenerationMatch: 5678}).CopierFrom(obj.If(Conditions{GenerationMatch: 1234})).Run(ctx)
+			func() error {
+				_, err := dst.If(Conditions{MetagenerationMatch: 5678}).CopierFrom(obj.If(Conditions{GenerationMatch: 1234})).Run(ctx)
+				return err
 			},
-			"POST /storage/v1/b/buck/o/obj/rewriteTo/b/dstbuck/o/dst?alt=json&ifMetagenerationMatch=5678&ifSourceGenerationMatch=1234&projection=full",
+			"POST /storage/v1/b/buck/o/obj/rewriteTo/b/dstbuck/o/dst?alt=json&ifMetagenerationMatch=5678&ifSourceGenerationMatch=1234&prettyPrint=false&projection=full",
 		},
 	}
 
 	for i, tt := range tests {
-		tt.fn()
+		if err := tt.fn(); err != nil && err != io.EOF {
+			t.Error(err)
+			continue
+		}
 		select {
 		case r := <-gotReq:
 			got := r.Method + " " + r.RequestURI
@@ -536,7 +520,7 @@ func TestObjectCompose(t *testing.T) {
 				c.Bucket("foo").Object("baz"),
 				c.Bucket("foo").Object("quux"),
 			},
-			wantURL: "/storage/v1/b/foo/o/bar/compose?alt=json",
+			wantURL: "/storage/v1/b/foo/o/bar/compose?alt=json&prettyPrint=false",
 			wantReq: raw.ComposeRequest{
 				Destination: &raw.Object{Bucket: "foo"},
 				SourceObjects: []*raw.ComposeRequestSourceObjects{
@@ -556,7 +540,7 @@ func TestObjectCompose(t *testing.T) {
 				Name:        "not-bar",
 				ContentType: "application/json",
 			},
-			wantURL: "/storage/v1/b/foo/o/bar/compose?alt=json",
+			wantURL: "/storage/v1/b/foo/o/bar/compose?alt=json&prettyPrint=false",
 			wantReq: raw.ComposeRequest{
 				Destination: &raw.Object{
 					Bucket:      "foo",
@@ -579,7 +563,7 @@ func TestObjectCompose(t *testing.T) {
 				c.Bucket("foo").Object("baz").Generation(56),
 				c.Bucket("foo").Object("quux").If(Conditions{GenerationMatch: 78}),
 			},
-			wantURL: "/storage/v1/b/foo/o/bar/compose?alt=json&ifGenerationMatch=12&ifMetagenerationMatch=34",
+			wantURL: "/storage/v1/b/foo/o/bar/compose?alt=json&ifGenerationMatch=12&ifMetagenerationMatch=34&prettyPrint=false",
 			wantReq: raw.ComposeRequest{
 				Destination: &raw.Object{Bucket: "foo"},
 				SourceObjects: []*raw.ComposeRequestSourceObjects{
@@ -737,88 +721,6 @@ func TestCodecUint32(t *testing.T) {
 	}
 }
 
-func TestBucketAttrs(t *testing.T) {
-	for _, c := range []struct {
-		attrs BucketAttrs
-		raw   raw.Bucket
-	}{{
-		attrs: BucketAttrs{
-			Lifecycle: Lifecycle{
-				Rules: []LifecycleRule{{
-					Action: LifecycleAction{
-						Type:         SetStorageClassAction,
-						StorageClass: "NEARLINE",
-					},
-					Condition: LifecycleCondition{
-						AgeInDays:             10,
-						Liveness:              Live,
-						CreatedBefore:         time.Date(2017, 1, 2, 3, 4, 5, 6, time.UTC),
-						MatchesStorageClasses: []string{"MULTI_REGIONAL", "REGIONAL", "STANDARD"},
-						NumNewerVersions:      3,
-					},
-				}, {
-					Action: LifecycleAction{
-						Type: DeleteAction,
-					},
-					Condition: LifecycleCondition{
-						AgeInDays:             30,
-						Liveness:              Live,
-						CreatedBefore:         time.Date(2017, 1, 2, 3, 4, 5, 6, time.UTC),
-						MatchesStorageClasses: []string{"NEARLINE"},
-						NumNewerVersions:      10,
-					},
-				}, {
-					Action: LifecycleAction{
-						Type: DeleteAction,
-					},
-					Condition: LifecycleCondition{
-						Liveness: Archived,
-					},
-				}},
-			},
-		},
-		raw: raw.Bucket{
-			Lifecycle: &raw.BucketLifecycle{
-				Rule: []*raw.BucketLifecycleRule{{
-					Action: &raw.BucketLifecycleRuleAction{
-						Type:         SetStorageClassAction,
-						StorageClass: "NEARLINE",
-					},
-					Condition: &raw.BucketLifecycleRuleCondition{
-						Age:                 10,
-						IsLive:              googleapi.Bool(true),
-						CreatedBefore:       "2017-01-02",
-						MatchesStorageClass: []string{"MULTI_REGIONAL", "REGIONAL", "STANDARD"},
-						NumNewerVersions:    3,
-					},
-				}, {
-					Action: &raw.BucketLifecycleRuleAction{
-						Type: DeleteAction,
-					},
-					Condition: &raw.BucketLifecycleRuleCondition{
-						Age:                 30,
-						IsLive:              googleapi.Bool(true),
-						CreatedBefore:       "2017-01-02",
-						MatchesStorageClass: []string{"NEARLINE"},
-						NumNewerVersions:    10,
-					},
-				}, {
-					Action: &raw.BucketLifecycleRuleAction{
-						Type: DeleteAction,
-					},
-					Condition: &raw.BucketLifecycleRuleCondition{
-						IsLive: googleapi.Bool(false),
-					},
-				}},
-			},
-		},
-	}} {
-		if got := c.attrs.toRawBucket(); !testutil.Equal(*got, c.raw) {
-			t.Errorf("toRawBucket: got %v, want %v", *got, c.raw)
-		}
-	}
-}
-
 func TestUserProject(t *testing.T) {
 	// Verify that the userProject query param is sent.
 	t.Parallel()
@@ -908,5 +810,100 @@ func newTestServer(handler func(w http.ResponseWriter, r *http.Request)) (*http.
 	return &http.Client{Transport: tr}, func() {
 		tr.CloseIdleConnections()
 		ts.Close()
+	}
+}
+
+func TestRawObjectToObjectAttrs(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		in   *raw.Object
+		want *ObjectAttrs
+	}{
+		{in: nil, want: nil},
+		{
+			in: &raw.Object{
+				Bucket:                  "Test",
+				ContentLanguage:         "en-us",
+				ContentType:             "video/mpeg",
+				EventBasedHold:          false,
+				Etag:                    "Zkyw9ACJZUvcYmlFaKGChzhmtnE/dt1zHSfweiWpwzdGsqXwuJZqiD0",
+				Generation:              7,
+				Md5Hash:                 "MTQ2ODNjYmE0NDRkYmNjNmRiMjk3NjQ1ZTY4M2Y1YzE=",
+				Name:                    "foo.mp4",
+				RetentionExpirationTime: "2019-03-31T19:33:36Z",
+				Size:                    1 << 20,
+				TimeCreated:             "2019-03-31T19:32:10Z",
+				TimeDeleted:             "2019-03-31T19:33:39Z",
+				TemporaryHold:           true,
+			},
+			want: &ObjectAttrs{
+				Bucket:                  "Test",
+				Created:                 time.Date(2019, 3, 31, 19, 32, 10, 0, time.UTC),
+				ContentLanguage:         "en-us",
+				ContentType:             "video/mpeg",
+				Deleted:                 time.Date(2019, 3, 31, 19, 33, 39, 0, time.UTC),
+				EventBasedHold:          false,
+				Etag:                    "Zkyw9ACJZUvcYmlFaKGChzhmtnE/dt1zHSfweiWpwzdGsqXwuJZqiD0",
+				Generation:              7,
+				MD5:                     []byte("14683cba444dbcc6db297645e683f5c1"),
+				Name:                    "foo.mp4",
+				RetentionExpirationTime: time.Date(2019, 3, 31, 19, 33, 36, 0, time.UTC),
+				Size:                    1 << 20,
+				TemporaryHold:           true,
+			},
+		},
+	}
+
+	for i, tt := range tests {
+		got := newObject(tt.in)
+		if diff := testutil.Diff(got, tt.want); diff != "" {
+			t.Errorf("#%d: newObject mismatches:\ngot=-, want=+:\n%s", i, diff)
+		}
+	}
+}
+
+func TestObjectAttrsToRawObject(t *testing.T) {
+	t.Parallel()
+	bucketName := "the-bucket"
+	tests := []struct {
+		in   *ObjectAttrs
+		want *raw.Object
+	}{
+		{
+
+			in: &ObjectAttrs{
+				Bucket:                  "Test",
+				Created:                 time.Date(2019, 3, 31, 19, 32, 10, 0, time.UTC),
+				ContentLanguage:         "en-us",
+				ContentType:             "video/mpeg",
+				Deleted:                 time.Date(2019, 3, 31, 19, 33, 39, 0, time.UTC),
+				EventBasedHold:          false,
+				Etag:                    "Zkyw9ACJZUvcYmlFaKGChzhmtnE/dt1zHSfweiWpwzdGsqXwuJZqiD0",
+				Generation:              7,
+				MD5:                     []byte("14683cba444dbcc6db297645e683f5c1"),
+				Name:                    "foo.mp4",
+				RetentionExpirationTime: time.Date(2019, 3, 31, 19, 33, 36, 0, time.UTC),
+				Size:                    1 << 20,
+				TemporaryHold:           true,
+			},
+			want: &raw.Object{
+				Bucket:                  bucketName,
+				ContentLanguage:         "en-us",
+				ContentType:             "video/mpeg",
+				EventBasedHold:          false,
+				Name:                    "foo.mp4",
+				RetentionExpirationTime: "2019-03-31T19:33:36Z",
+				TemporaryHold:           true,
+			},
+		},
+	}
+
+	for i, tt := range tests {
+		got := tt.in.toRawObject(bucketName)
+		if !testutil.Equal(got, tt.want) {
+			if diff := testutil.Diff(got, tt.want); diff != "" {
+				t.Errorf("#%d: toRawObject mismatches:\ngot=-, want=+:\n%s", i, diff)
+			}
+		}
 	}
 }

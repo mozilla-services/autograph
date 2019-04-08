@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	proto3 "github.com/golang/protobuf/ptypes/struct"
-
 	sppb "google.golang.org/genproto/googleapis/spanner/v1"
 )
 
@@ -62,7 +61,7 @@ func TestMutationToProto(t *testing.T) {
 						Table:   "t_foo",
 						Columns: []string{"col1", "col2"},
 						Values: []*proto3.ListValue{
-							&proto3.ListValue{
+							{
 								Values: []*proto3.Value{intProto(1), intProto(2)},
 							},
 						},
@@ -79,7 +78,7 @@ func TestMutationToProto(t *testing.T) {
 						Table:   "t_foo",
 						Columns: []string{"col1", "col2"},
 						Values: []*proto3.ListValue{
-							&proto3.ListValue{
+							{
 								Values: []*proto3.Value{floatProto(1.0), floatProto(2.0)},
 							},
 						},
@@ -96,7 +95,7 @@ func TestMutationToProto(t *testing.T) {
 						Table:   "t_foo",
 						Columns: []string{"col1", "col2"},
 						Values: []*proto3.ListValue{
-							&proto3.ListValue{
+							{
 								Values: []*proto3.Value{stringProto("one"), floatProto(2.0)},
 							},
 						},
@@ -113,7 +112,7 @@ func TestMutationToProto(t *testing.T) {
 						Table:   "t_foo",
 						Columns: []string{"col1", "col2"},
 						Values: []*proto3.ListValue{
-							&proto3.ListValue{
+							{
 								Values: []*proto3.Value{stringProto("one"), nullProto()},
 							},
 						},
@@ -521,11 +520,11 @@ func TestEncodeMutationArray(t *testing.T) {
 		{
 			"Multiple Mutations",
 			[]*Mutation{
-				&Mutation{opDelete, "t_test", Key{"bar"}, nil, nil},
-				&Mutation{opInsertOrUpdate, "t_test", nil, []string{"key", "val"}, []interface{}{"foo", 1}},
+				{opDelete, "t_test", Key{"bar"}, nil, nil},
+				{opInsertOrUpdate, "t_test", nil, []string{"key", "val"}, []interface{}{"foo", 1}},
 			},
 			[]*sppb.Mutation{
-				&sppb.Mutation{
+				{
 					Operation: &sppb.Mutation_Delete_{
 						Delete: &sppb.Mutation_Delete{
 							Table: "t_test",
@@ -535,7 +534,7 @@ func TestEncodeMutationArray(t *testing.T) {
 						},
 					},
 				},
-				&sppb.Mutation{
+				{
 					Operation: &sppb.Mutation_InsertOrUpdate{
 						InsertOrUpdate: &sppb.Mutation_Write{
 							Table:   "t_test",
@@ -550,8 +549,8 @@ func TestEncodeMutationArray(t *testing.T) {
 		{
 			"Multiple Mutations - Bad Mutation",
 			[]*Mutation{
-				&Mutation{opDelete, "t_test", Key{"bar"}, nil, nil},
-				&Mutation{opInsertOrUpdate, "t_test", nil, []string{"key", "val"}, []interface{}{"foo", struct{}{}}},
+				{opDelete, "t_test", Key{"bar"}, nil, nil},
+				{opInsertOrUpdate, "t_test", nil, []string{"key", "val"}, []interface{}{"foo", struct{}{}}},
 			},
 			[]*sppb.Mutation{},
 			errEncoderUnsupportedType(struct{}{}),

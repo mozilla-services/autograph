@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,6 +50,13 @@ have to be as careful about the error returned from Close).
     defer rep.Close()
     conn, err := grpc.Dial(serverAddress, rep.DialOptions()...)
 
+Since a real connection isn't necessary for replay, you can get a fake
+one from the replayer instead of calling grpc.Dial:
+
+    rep, err := rpcreplay.NewReplayer("service.replay")
+    if err != nil { ... }
+    defer rep.Close()
+    conn, err := rep.Connection()
 
 Initial State
 
@@ -74,6 +81,44 @@ On replay, get the bytes from Replayer.Initial:
    err = timeNow.UnmarshalBinary(rep.Initial())
    if err != nil { ... }
 
+
+Callbacks
+
+Recorders and replayers have support for running callbacks before messages are
+written to or read from the replay file. A Recorder has a BeforeFunc that can modify
+a request or response before it is written to the replay file. The actual RPCs sent
+to the service during recording remain unaltered; only what is saved in the replay
+file can be changed. A Replayer has a BeforeFunc that can modify a request before it
+is sent for matching.
+
+Example uses for these callbacks include customized logging, or scrubbing data before
+RPCs are written to the replay file. If requests are modified by the callbacks during
+recording, it is important to perform the same modifications to the requests when
+replaying, or RPC matching on replay will fail.
+
+A common way to analyze and modify the various messages is to use a type switch.
+
+	// Assume these types implement proto.Message.
+	type Greeting struct {
+		line string
+	}
+
+	type Farewell struct {
+		line string
+	}
+
+	func sayings(method string, msg proto.Message) error {
+		switch m := msg.(type) {
+		case Greeting:
+			msg.line = "Hi!"
+			return nil
+		case Farewell:
+			msg.line = "Bye bye!"
+			return nil
+		default:
+			return fmt.Errorf("unknown message type")
+		}
+	}
 
 Nondeterminism
 

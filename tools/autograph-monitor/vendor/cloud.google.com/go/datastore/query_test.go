@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2014 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package datastore
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -22,10 +23,8 @@ import (
 	"testing"
 
 	"cloud.google.com/go/internal/testutil"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/net/context"
 	pb "google.golang.org/genproto/googleapis/datastore/v1"
 	"google.golang.org/grpc"
 )
@@ -475,6 +474,7 @@ func TestNamespaceQuery(t *testing.T) {
 
 	var gs []Gopher
 
+	// Ignore errors for the rest of this test.
 	client.GetAll(ctx, NewQuery("gopher"), &gs)
 	if got, want := <-gotNamespace, ""; got != want {
 		t.Errorf("GetAll: got namespace %q, want %q", got, want)
@@ -541,6 +541,29 @@ func TestReadOptions(t *testing.T) {
 	} {
 		req := &pb.RunQueryRequest{}
 		if err := q.toProto(req); err == nil {
+			t.Errorf("%+v: got nil, wanted error", q)
+		}
+	}
+}
+
+func TestInvalidFilters(t *testing.T) {
+	client := &Client{
+		client: &fakeClient{
+			queryFn: func(req *pb.RunQueryRequest) (*pb.RunQueryResponse, error) {
+				return fakeRunQuery(req)
+			},
+		},
+	}
+
+	// Used for an invalid type
+	type MyType int
+	var v MyType = 1
+
+	for _, q := range []*Query{
+		NewQuery("SomeKey").Filter("", 0),
+		NewQuery("SomeKey").Filter("fld=", v),
+	} {
+		if _, err := client.Count(context.Background(), q); err == nil {
 			t.Errorf("%+v: got nil, wanted error", q)
 		}
 	}

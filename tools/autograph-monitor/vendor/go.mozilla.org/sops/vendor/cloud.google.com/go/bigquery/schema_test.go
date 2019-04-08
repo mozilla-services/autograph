@@ -1,4 +1,4 @@
-// Copyright 2015 Google Inc. All Rights Reserved.
+// Copyright 2015 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package bigquery
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 	"testing"
 	"time"
@@ -159,6 +160,17 @@ func TestSchemaConversion(t *testing.T) {
 			},
 		},
 		{
+			// numeric
+			bqSchema: &bq.TableSchema{
+				Fields: []*bq.TableFieldSchema{
+					bqTableFieldSchema("desc", "n", "NUMERIC", ""),
+				},
+			},
+			schema: Schema{
+				fieldSchema("desc", "n", "NUMERIC", false, false),
+			},
+		},
+		{
 			// nested
 			bqSchema: &bq.TableSchema{
 				Fields: []*bq.TableFieldSchema{
@@ -179,7 +191,7 @@ func TestSchemaConversion(t *testing.T) {
 					Name:        "outer",
 					Required:    true,
 					Type:        "RECORD",
-					Schema: []*FieldSchema{
+					Schema: Schema{
 						{
 							Description: "inner field",
 							Name:        "inner",
@@ -190,14 +202,13 @@ func TestSchemaConversion(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tc := range testCases {
-		bqSchema := tc.schema.asTableSchema()
+		bqSchema := tc.schema.toBQ()
 		if !testutil.Equal(bqSchema, tc.bqSchema) {
 			t.Errorf("converting to TableSchema: got:\n%v\nwant:\n%v",
 				pretty.Value(bqSchema), pretty.Value(tc.bqSchema))
 		}
-		schema := convertTableSchema(tc.bqSchema)
+		schema := bqToSchema(tc.bqSchema)
 		if !testutil.Equal(schema, tc.schema) {
 			t.Errorf("converting to Schema: got:\n%v\nwant:\n%v", schema, tc.schema)
 		}
@@ -240,11 +251,23 @@ type allTime struct {
 	DateTime  civil.DateTime
 }
 
+type allNumeric struct {
+	Numeric *big.Rat
+}
+
 func reqField(name, typ string) *FieldSchema {
 	return &FieldSchema{
 		Name:     name,
 		Type:     FieldType(typ),
 		Required: true,
+	}
+}
+
+func optField(name, typ string) *FieldSchema {
+	return &FieldSchema{
+		Name:     name,
+		Type:     FieldType(typ),
+		Required: false,
 	}
 }
 
@@ -297,6 +320,12 @@ func TestSimpleInference(t *testing.T) {
 				reqField("Time", "TIME"),
 				reqField("Date", "DATE"),
 				reqField("DateTime", "DATETIME"),
+			},
+		},
+		{
+			in: &allNumeric{},
+			want: Schema{
+				reqField("Numeric", "NUMERIC"),
 			},
 		},
 		{
@@ -491,6 +520,37 @@ func TestRepeatedInference(t *testing.T) {
 	}
 }
 
+type allNulls struct {
+	A NullInt64
+	B NullFloat64
+	C NullBool
+	D NullString
+	E NullTimestamp
+	F NullTime
+	G NullDate
+	H NullDateTime
+}
+
+func TestNullInference(t *testing.T) {
+	got, err := InferSchema(allNulls{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := Schema{
+		optField("A", "INTEGER"),
+		optField("B", "FLOAT"),
+		optField("C", "BOOLEAN"),
+		optField("D", "STRING"),
+		optField("E", "TIMESTAMP"),
+		optField("F", "TIME"),
+		optField("G", "DATE"),
+		optField("H", "DATETIME"),
+	}
+	if diff := testutil.Diff(got, want); diff != "" {
+		t.Error(diff)
+	}
+}
+
 type Embedded struct {
 	Embedded int
 }
@@ -532,10 +592,12 @@ func TestRecursiveInference(t *testing.T) {
 
 type withTags struct {
 	NoTag         int
-	ExcludeTag    int `bigquery:"-"`
-	SimpleTag     int `bigquery:"simple_tag"`
-	UnderscoreTag int `bigquery:"_id"`
-	MixedCase     int `bigquery:"MIXEDcase"`
+	ExcludeTag    int      `bigquery:"-"`
+	SimpleTag     int      `bigquery:"simple_tag"`
+	UnderscoreTag int      `bigquery:"_id"`
+	MixedCase     int      `bigquery:"MIXEDcase"`
+	Nullable      []byte   `bigquery:",nullable"`
+	NullNumeric   *big.Rat `bigquery:",nullable"`
 }
 
 type withTagsNested struct {
@@ -544,6 +606,8 @@ type withTagsNested struct {
 		ExcludeTag int `bigquery:"-"`
 		Inside     int `bigquery:"inside"`
 	} `bigquery:"anon"`
+	PNested         *struct{ X int } // not nullable, for backwards compatibility
+	PNestedNullable *struct{ X int } `bigquery:",nullable"`
 }
 
 type withTagsRepeated struct {
@@ -563,6 +627,8 @@ var withTagsSchema = Schema{
 	reqField("simple_tag", "INTEGER"),
 	reqField("_id", "INTEGER"),
 	reqField("MIXEDcase", "INTEGER"),
+	optField("Nullable", "BYTES"),
+	optField("NullNumeric", "NUMERIC"),
 }
 
 func TestTagInference(t *testing.T) {
@@ -588,6 +654,18 @@ func TestTagInference(t *testing.T) {
 					Required: true,
 					Type:     "RECORD",
 					Schema:   Schema{reqField("inside", "INTEGER")},
+				},
+				&FieldSchema{
+					Name:     "PNested",
+					Required: true,
+					Type:     "RECORD",
+					Schema:   Schema{reqField("X", "INTEGER")},
+				},
+				&FieldSchema{
+					Name:     "PNestedNullable",
+					Required: false,
+					Type:     "RECORD",
+					Schema:   Schema{reqField("X", "INTEGER")},
 				},
 			},
 		},
@@ -666,12 +744,6 @@ func TestTagInferenceErrors(t *testing.T) {
 			}{},
 			err: errInvalidFieldName,
 		},
-		{
-			in: struct {
-				OmitEmpty int `bigquery:"abc,omitempty"`
-			}{},
-			err: errInvalidFieldName,
-		},
 	}
 	for i, tc := range testCases {
 		want := tc.err
@@ -679,6 +751,13 @@ func TestTagInferenceErrors(t *testing.T) {
 		if got != want {
 			t.Errorf("%d: inferring TableSchema: got:\n%#v\nwant:\n%#v", i, got, want)
 		}
+	}
+
+	_, err := InferSchema(struct {
+		X int `bigquery:",optional"`
+	}{})
+	if err == nil {
+		t.Error("got nil, want error")
 	}
 }
 
@@ -721,7 +800,7 @@ func TestSchemaErrors(t *testing.T) {
 		},
 		{
 			in:  struct{ Ptr *int }{},
-			err: errNoStruct,
+			err: errUnsupportedFieldType,
 		},
 		{
 			in:  struct{ Interface interface{} }{},
@@ -736,11 +815,55 @@ func TestSchemaErrors(t *testing.T) {
 			err: errUnsupportedFieldType,
 		},
 		{
+			in:  struct{ SliceOfPointer []*int }{},
+			err: errUnsupportedFieldType,
+		},
+		{
+			in:  struct{ SliceOfNull []NullInt64 }{},
+			err: errUnsupportedFieldType,
+		},
+		{
 			in:  struct{ ChanSlice []chan bool }{},
 			err: errUnsupportedFieldType,
 		},
 		{
 			in:  struct{ NestedChan struct{ Chan []chan bool } }{},
+			err: errUnsupportedFieldType,
+		},
+		{
+			in: struct {
+				X int `bigquery:",nullable"`
+			}{},
+			err: errBadNullable,
+		},
+		{
+			in: struct {
+				X bool `bigquery:",nullable"`
+			}{},
+			err: errBadNullable,
+		},
+		{
+			in: struct {
+				X struct{ N int } `bigquery:",nullable"`
+			}{},
+			err: errBadNullable,
+		},
+		{
+			in: struct {
+				X []int `bigquery:",nullable"`
+			}{},
+			err: errBadNullable,
+		},
+		{
+			in:  struct{ X *[]byte }{},
+			err: errUnsupportedFieldType,
+		},
+		{
+			in:  struct{ X *[]int }{},
+			err: errUnsupportedFieldType,
+		},
+		{
+			in:  struct{ X *int }{},
 			err: errUnsupportedFieldType,
 		},
 	}
@@ -792,6 +915,141 @@ func TestHasRecursiveType(t *testing.T) {
 		}
 		if got != test.want {
 			t.Errorf("%T: got %t, want %t", test.in, got, test.want)
+		}
+	}
+}
+
+func TestSchemaFromJSON(t *testing.T) {
+	testCasesExpectingSuccess := []struct {
+		bqSchemaJSON   []byte
+		description    string
+		expectedSchema Schema
+	}{
+		{
+			description: "Flat table with a mixture of NULLABLE and REQUIRED fields",
+			bqSchemaJSON: []byte(`
+[
+	{"name":"flat_string","type":"STRING","mode":"NULLABLE","description":"Flat nullable string"},
+	{"name":"flat_bytes","type":"BYTES","mode":"REQUIRED","description":"Flat required BYTES"},
+	{"name":"flat_integer","type":"INTEGER","mode":"NULLABLE","description":"Flat nullable INTEGER"},
+	{"name":"flat_float","type":"FLOAT","mode":"REQUIRED","description":"Flat required FLOAT"},
+	{"name":"flat_boolean","type":"BOOLEAN","mode":"NULLABLE","description":"Flat nullable BOOLEAN"},
+	{"name":"flat_timestamp","type":"TIMESTAMP","mode":"REQUIRED","description":"Flat required TIMESTAMP"},
+	{"name":"flat_date","type":"DATE","mode":"NULLABLE","description":"Flat required DATE"},
+	{"name":"flat_time","type":"TIME","mode":"REQUIRED","description":"Flat nullable TIME"},
+	{"name":"flat_datetime","type":"DATETIME","mode":"NULLABLE","description":"Flat required DATETIME"},
+	{"name":"flat_numeric","type":"NUMERIC","mode":"REQUIRED","description":"Flat nullable NUMERIC"}
+]`),
+			expectedSchema: Schema{
+				fieldSchema("Flat nullable string", "flat_string", "STRING", false, false),
+				fieldSchema("Flat required BYTES", "flat_bytes", "BYTES", false, true),
+				fieldSchema("Flat nullable INTEGER", "flat_integer", "INTEGER", false, false),
+				fieldSchema("Flat required FLOAT", "flat_float", "FLOAT", false, true),
+				fieldSchema("Flat nullable BOOLEAN", "flat_boolean", "BOOLEAN", false, false),
+				fieldSchema("Flat required TIMESTAMP", "flat_timestamp", "TIMESTAMP", false, true),
+				fieldSchema("Flat required DATE", "flat_date", "DATE", false, false),
+				fieldSchema("Flat nullable TIME", "flat_time", "TIME", false, true),
+				fieldSchema("Flat required DATETIME", "flat_datetime", "DATETIME", false, false),
+				fieldSchema("Flat nullable NUMERIC", "flat_numeric", "NUMERIC", false, true),
+			},
+		},
+		{
+			description: "Table with a nested RECORD",
+			bqSchemaJSON: []byte(`
+[
+	{"name":"flat_string","type":"STRING","mode":"NULLABLE","description":"Flat nullable string"},
+	{"name":"nested_record","type":"RECORD","mode":"NULLABLE","description":"Nested nullable RECORD","fields":[{"name":"record_field_1","type":"STRING","mode":"NULLABLE","description":"First nested record field"},{"name":"record_field_2","type":"INTEGER","mode":"REQUIRED","description":"Second nested record field"}]}
+]`),
+			expectedSchema: Schema{
+				fieldSchema("Flat nullable string", "flat_string", "STRING", false, false),
+				&FieldSchema{
+					Description: "Nested nullable RECORD",
+					Name:        "nested_record",
+					Required:    false,
+					Type:        "RECORD",
+					Schema: Schema{
+						{
+							Description: "First nested record field",
+							Name:        "record_field_1",
+							Required:    false,
+							Type:        "STRING",
+						},
+						{
+							Description: "Second nested record field",
+							Name:        "record_field_2",
+							Required:    true,
+							Type:        "INTEGER",
+						},
+					},
+				},
+			},
+		},
+		{
+			description: "Table with a repeated RECORD",
+			bqSchemaJSON: []byte(`
+[
+	{"name":"flat_string","type":"STRING","mode":"NULLABLE","description":"Flat nullable string"},
+	{"name":"nested_record","type":"RECORD","mode":"REPEATED","description":"Nested nullable RECORD","fields":[{"name":"record_field_1","type":"STRING","mode":"NULLABLE","description":"First nested record field"},{"name":"record_field_2","type":"INTEGER","mode":"REQUIRED","description":"Second nested record field"}]}
+]`),
+			expectedSchema: Schema{
+				fieldSchema("Flat nullable string", "flat_string", "STRING", false, false),
+				&FieldSchema{
+					Description: "Nested nullable RECORD",
+					Name:        "nested_record",
+					Repeated:    true,
+					Required:    false,
+					Type:        "RECORD",
+					Schema: Schema{
+						{
+							Description: "First nested record field",
+							Name:        "record_field_1",
+							Required:    false,
+							Type:        "STRING",
+						},
+						{
+							Description: "Second nested record field",
+							Name:        "record_field_2",
+							Required:    true,
+							Type:        "INTEGER",
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range testCasesExpectingSuccess {
+		convertedSchema, err := SchemaFromJSON(tc.bqSchemaJSON)
+		if err != nil {
+			t.Errorf("encountered an error when converting JSON table schema (%s): %v", tc.description, err)
+			continue
+		}
+		if !testutil.Equal(convertedSchema, tc.expectedSchema) {
+			t.Errorf("generated JSON table schema (%s) differs from the expected schema", tc.description)
+		}
+	}
+
+	testCasesExpectingFailure := []struct {
+		bqSchemaJSON []byte
+		description  string
+	}{
+		{
+			description:  "Schema with invalid JSON",
+			bqSchemaJSON: []byte(`This is not JSON`),
+		},
+		{
+			description:  "Schema with unknown field type",
+			bqSchemaJSON: []byte(`[{"name":"strange_type","type":"STRANGE","description":"This type should not exist"}]`),
+		},
+		{
+			description:  "Schema with zero length",
+			bqSchemaJSON: []byte(``),
+		},
+	}
+	for _, tc := range testCasesExpectingFailure {
+		_, err := SchemaFromJSON(tc.bqSchemaJSON)
+		if err == nil {
+			t.Errorf("converting this schema should have returned an error (%s): %v", tc.description, err)
+			continue
 		}
 	}
 }

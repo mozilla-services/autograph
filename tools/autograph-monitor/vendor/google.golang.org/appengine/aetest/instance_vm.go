@@ -201,6 +201,9 @@ func (i *instance) startChild() (err error) {
 	if i.opts != nil && i.opts.StronglyConsistentDatastore {
 		appserverArgs = append(appserverArgs, "--datastore_consistency_policy=consistent")
 	}
+	if i.opts != nil && i.opts.SupportDatastoreEmulator != nil {
+		appserverArgs = append(appserverArgs, fmt.Sprintf("--support_datastore_emulator=%t", *i.opts.SupportDatastoreEmulator))
+	}
 	appserverArgs = append(appserverArgs, filepath.Join(i.appDir, "app"))
 
 	i.child = exec.Command(python,
@@ -212,7 +215,9 @@ func (i *instance) startChild() (err error) {
 	if err != nil {
 		return err
 	}
-	stderr = io.TeeReader(stderr, os.Stderr)
+	if !(i.opts != nil && i.opts.SuppressDevAppServerLog) {
+		stderr = io.TeeReader(stderr, os.Stderr)
+	}
 	if err = i.child.Start(); err != nil {
 		return err
 	}

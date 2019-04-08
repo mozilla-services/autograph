@@ -29,9 +29,9 @@ func main() {
 * For a longer tutorial, see the [Getting Started guide](https://github.com/google/google-api-go-client/blob/master/GettingStarted.md).
 * For examples, see the [examples directory](https://github.com/google/google-api-go-client/tree/master/examples).
 * For support, use the [golang-nuts](https://groups.google.com/group/golang-nuts) mailing list.
+* The code review instance may be found [here](https://code-review.googlesource.com).
 
 ## Status
-[![Build Status](https://travis-ci.org/google/google-api-go-client.png)](https://travis-ci.org/google/google-api-go-client)
 [![GoDoc](https://godoc.org/google.golang.org/api?status.svg)](https://godoc.org/google.golang.org/api)
 
 These are auto-generated Go libraries from the Google Discovery Service's JSON description files of the available "new style" Google APIs.
@@ -39,15 +39,11 @@ These are auto-generated Go libraries from the Google Discovery Service's JSON d
 Due to the auto-generated nature of this collection of libraries, complete APIs or specific versions can appear or go away without notice.
 As a result, you should always locally vendor any API(s) that your code relies upon.
 
-This client library is supported, but in maintenance mode only.
-We are fixing necessary bugs and adding essential features to ensure this
-library continues to meet your needs for accessing Google APIs.
-Non-critical issues will be closed.
-Any issue may be reopened if it is causing ongoing problems.
+These client libraries are officially supported by Google.  However, the libraries are considered complete and are in maintenance mode. This means that we will address critical bugs and security issues but will not add any new features.
 
 If you're working with Google Cloud Platform APIs such as Datastore or Pub/Sub,
 consider using the
-[Cloud Client Libraries for Go](https://github.com/GoogleCloudPlatform/google-cloud-go)
+[Cloud Client Libraries for Go](https://github.com/googleapis/google-cloud-go)
 instead. These are the new and
 idiomatic Go libraries targeted specifically at Google Cloud Platform Services.
 
@@ -75,7 +71,7 @@ Some credentials types require you to specify scopes, and service entry points m
 
 ```go
 import (
-        "golang.org/x/net/context"
+        "context"
         "golang.org/x/oauth2/google"
         "google.golang.org/api/compute/v1"
 )

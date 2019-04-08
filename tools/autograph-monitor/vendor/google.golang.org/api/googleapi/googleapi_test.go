@@ -118,6 +118,50 @@ func TestExpand(t *testing.T) {
 	}
 }
 
+func TestResolveRelative(t *testing.T) {
+	resolveRelativeTests := []struct {
+		basestr string
+		relstr  string
+		want    string
+	}{
+		{
+			"http://www.golang.org/", "topics/myproject/mytopic",
+			"http://www.golang.org/topics/myproject/mytopic",
+		},
+		{
+			"http://www.golang.org/", "topics/{+myproject}/{release}:build:test:deploy",
+			"http://www.golang.org/topics/{+myproject}/{release}:build:test:deploy",
+		},
+		{
+			"https://www.googleapis.com/admin/reports/v1/", "/admin/reports_v1/channels/stop",
+			"https://www.googleapis.com/admin/reports_v1/channels/stop",
+		},
+		{
+			"https://www.googleapis.com/admin/directory/v1/", "customer/{customerId}/orgunits{/orgUnitPath*}",
+			"https://www.googleapis.com/admin/directory/v1/customer/{customerId}/orgunits{/orgUnitPath*}",
+		},
+		{
+			"https://www.googleapis.com/tagmanager/v2/", "accounts",
+			"https://www.googleapis.com/tagmanager/v2/accounts",
+		},
+		{
+			"https://www.googleapis.com/tagmanager/v2/", "{+parent}/workspaces",
+			"https://www.googleapis.com/tagmanager/v2/{+parent}/workspaces",
+		},
+		{
+			"https://www.googleapis.com/tagmanager/v2/", "{+path}:create_version",
+			"https://www.googleapis.com/tagmanager/v2/{+path}:create_version",
+		},
+	}
+
+	for i, test := range resolveRelativeTests {
+		got := ResolveRelative(test.basestr, test.relstr)
+		if got != test.want {
+			t.Errorf("got %q expected %q in test %d", got, test.want, i+1)
+		}
+	}
+}
+
 type CheckResponseTest struct {
 	in       *http.Response
 	bodyText string
@@ -197,15 +241,15 @@ func TestCheckResponse(t *testing.T) {
 		g := CheckResponse(res)
 		if !reflect.DeepEqual(g, test.want) {
 			t.Errorf("CheckResponse: got %v, want %v", g, test.want)
-			gotJson, err := json.Marshal(g)
+			gotJSON, err := json.Marshal(g)
 			if err != nil {
 				t.Error(err)
 			}
-			wantJson, err := json.Marshal(test.want)
+			wantJSON, err := json.Marshal(test.want)
 			if err != nil {
 				t.Error(err)
 			}
-			t.Errorf("json(got):  %q\njson(want): %q", string(gotJson), string(wantJson))
+			t.Errorf("json(got):  %q\njson(want): %q", string(gotJSON), string(wantJSON))
 		}
 		if g != nil && g.Error() != test.errText {
 			t.Errorf("CheckResponse: unexpected error message.\nGot:  %q\nwant: %q", g, test.errText)

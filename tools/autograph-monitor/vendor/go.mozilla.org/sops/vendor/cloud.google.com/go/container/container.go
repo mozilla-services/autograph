@@ -1,4 +1,4 @@
-// Copyright 2014 Google Inc. All Rights Reserved.
+// Copyright 2014 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 // Package container contains a deprecated Google Container Engine client.
 //
-// Deprecated: Use google.golang.org/api/container instead.
+// Deprecated: Use cloud.google.com/go/container/apiv1 instead.
 package container // import "cloud.google.com/go/container"
 
 import (
@@ -227,12 +227,6 @@ func (c *Client) Cluster(ctx context.Context, zone, name string) (*Resource, err
 		return nil, err
 	}
 	return resourceFromRaw(resp), nil
-}
-
-// CreateCluster creates a new cluster with the provided metadata
-// in the specified zone.
-func (c *Client) CreateCluster(ctx context.Context, zone string, resource *Resource) (*Resource, error) {
-	panic("not implemented")
 }
 
 // DeleteCluster deletes a cluster.

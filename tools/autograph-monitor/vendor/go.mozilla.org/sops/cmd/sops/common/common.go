@@ -2,19 +2,30 @@ package common
 
 import (
 	"fmt"
-	"time"
-
 	"io/ioutil"
-
+	"path/filepath"
 	"strings"
+	"time"
 
 	"go.mozilla.org/sops"
 	"go.mozilla.org/sops/cmd/sops/codes"
 	"go.mozilla.org/sops/keyservice"
 	"go.mozilla.org/sops/stores/json"
 	"go.mozilla.org/sops/stores/yaml"
+	"go.mozilla.org/sops/stores/dotenv"
+	"go.mozilla.org/sops/stores/ini"
 	"gopkg.in/urfave/cli.v1"
 )
+
+type ExampleFileEmitter interface {
+	EmitExample() []byte
+}
+
+type Store interface {
+	sops.Store
+	ExampleFileEmitter
+}
+
 
 // DecryptTreeOpts are the options needed to decrypt a tree
 type DecryptTreeOpts struct {
@@ -76,24 +87,18 @@ func EncryptTree(opts EncryptTreeOpts) error {
 }
 
 // LoadEncryptedFile loads an encrypted SOPS file, returning a SOPS tree
-func LoadEncryptedFile(inputStore sops.Store, inputPath string) (*sops.Tree, error) {
+func LoadEncryptedFile(loader sops.EncryptedFileLoader, inputPath string) (*sops.Tree, error) {
 	fileBytes, err := ioutil.ReadFile(inputPath)
 	if err != nil {
 		return nil, NewExitError(fmt.Sprintf("Error reading file: %s", err), codes.CouldNotReadInputFile)
 	}
-	metadata, err := inputStore.UnmarshalMetadata(fileBytes)
+	path, err := filepath.Abs(inputPath)
 	if err != nil {
-		return nil, NewExitError(fmt.Sprintf("Error loading file metadata: %s", err), codes.CouldNotReadInputFile)
+		return nil, err
 	}
-	branch, err := inputStore.Unmarshal(fileBytes)
-	if err != nil {
-		return nil, NewExitError(fmt.Sprintf("Error loading file: %s", err), codes.CouldNotReadInputFile)
-	}
-	tree := sops.Tree{
-		Branch:   branch,
-		Metadata: metadata,
-	}
-	return &tree, nil
+	tree, err := loader.LoadEncryptedFile(fileBytes)
+	tree.FilePath = path
+	return &tree, err
 }
 
 func NewExitError(i interface{}, exitCode int) *cli.ExitError {
@@ -111,11 +116,23 @@ func IsJSONFile(path string) bool {
 	return strings.HasSuffix(path, ".json")
 }
 
-func DefaultStoreForPath(path string) sops.Store {
+func IsEnvFile(path string) bool {
+	return strings.HasSuffix(path, ".env")
+}
+
+func IsIniFile(path string) bool {
+	return strings.HasSuffix(path, ".ini")
+}
+
+func DefaultStoreForPath(path string) Store {
 	if IsYAMLFile(path) {
 		return &yaml.Store{}
 	} else if IsJSONFile(path) {
 		return &json.Store{}
+	} else if IsEnvFile(path) {
+		return &dotenv.Store{}
+	} else if IsIniFile(path) {
+		return &ini.Store{}
 	}
 	return &json.BinaryStore{}
 }

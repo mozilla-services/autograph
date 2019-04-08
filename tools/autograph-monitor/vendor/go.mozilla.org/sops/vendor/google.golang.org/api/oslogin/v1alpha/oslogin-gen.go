@@ -1,4 +1,6 @@
-// Package oslogin provides access to the Google Cloud OS Login API.
+// Package oslogin provides access to the Cloud OS Login API.
+//
+// This package is DEPRECATED. Use package cloud.google.com/go/oslogin/apiv1 instead.
 //
 // See https://cloud.google.com/compute/docs/oslogin/rest/
 //
@@ -86,6 +88,7 @@ func (s *Service) userAgent() string {
 
 func NewUsersService(s *Service) *UsersService {
 	rs := &UsersService{s: s}
+	rs.Projects = NewUsersProjectsService(s)
 	rs.SshPublicKeys = NewUsersSshPublicKeysService(s)
 	return rs
 }
@@ -93,7 +96,18 @@ func NewUsersService(s *Service) *UsersService {
 type UsersService struct {
 	s *Service
 
+	Projects *UsersProjectsService
+
 	SshPublicKeys *UsersSshPublicKeysService
+}
+
+func NewUsersProjectsService(s *Service) *UsersProjectsService {
+	rs := &UsersProjectsService{s: s}
+	return rs
+}
+
+type UsersProjectsService struct {
+	s *Service
 }
 
 func NewUsersSshPublicKeysService(s *Service) *UsersSshPublicKeysService {
@@ -123,7 +137,7 @@ type Empty struct {
 	googleapi.ServerResponse `json:"-"`
 }
 
-// ImportSshPublicKeyResponse: A response message for importing an SSH
+// ImportSshPublicKeyResponse: A response message from importing an SSH
 // public key.
 type ImportSshPublicKeyResponse struct {
 	// LoginProfile: The login profile information for the user.
@@ -151,28 +165,24 @@ type ImportSshPublicKeyResponse struct {
 }
 
 func (s *ImportSshPublicKeyResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ImportSshPublicKeyResponse
-	raw := noMethod(*s)
+	type NoMethod ImportSshPublicKeyResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// LoginProfile: The Directory API profile information used for logging
-// in to a virtual
-// machine on Google Compute Engine.
+// LoginProfile: The user profile information used for logging in to a
+// virtual machine on
+// Google Compute Engine.
 type LoginProfile struct {
-	// Name: A unique user ID for identifying the user.
+	// Name: A unique user ID.
 	Name string `json:"name,omitempty"`
 
-	// PosixAccounts: The list of POSIX accounts associated with the
-	// Directory API user.
+	// PosixAccounts: The list of POSIX accounts associated with the user.
 	PosixAccounts []*PosixAccount `json:"posixAccounts,omitempty"`
 
 	// SshPublicKeys: A map from SSH public key fingerprint to the
 	// associated key object.
 	SshPublicKeys map[string]SshPublicKey `json:"sshPublicKeys,omitempty"`
-
-	// Suspended: Indicates if the user is suspended.
-	Suspended bool `json:"suspended,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
@@ -196,14 +206,17 @@ type LoginProfile struct {
 }
 
 func (s *LoginProfile) MarshalJSON() ([]byte, error) {
-	type noMethod LoginProfile
-	raw := noMethod(*s)
+	type NoMethod LoginProfile
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// PosixAccount: The POSIX account information associated with a
-// Directory API User.
+// PosixAccount: The POSIX account information associated with a Google
+// account.
 type PosixAccount struct {
+	// AccountId: Output only. A POSIX account identifier.
+	AccountId string `json:"accountId,omitempty"`
+
 	// Gecos: The GECOS (user information) entry for this account.
 	Gecos string `json:"gecos,omitempty"`
 
@@ -212,6 +225,17 @@ type PosixAccount struct {
 
 	// HomeDirectory: The path to the home directory for this account.
 	HomeDirectory string `json:"homeDirectory,omitempty"`
+
+	// OperatingSystemType: The operating system type where this account
+	// applies.
+	//
+	// Possible values:
+	//   "OPERATING_SYSTEM_TYPE_UNSPECIFIED" - The operating system type
+	// associated with the user account information is
+	// unspecified.
+	//   "LINUX" - Linux user account information.
+	//   "WINDOWS" - Windows user account information.
+	OperatingSystemType string `json:"operatingSystemType,omitempty"`
 
 	// Primary: Only one POSIX account can be marked as primary.
 	Primary bool `json:"primary,omitempty"`
@@ -230,7 +254,7 @@ type PosixAccount struct {
 	// Username: The username of the POSIX account.
 	Username string `json:"username,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "Gecos") to
+	// ForceSendFields is a list of field names (e.g. "AccountId") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -238,8 +262,8 @@ type PosixAccount struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "Gecos") to include in API
-	// requests with the JSON null value. By default, fields with empty
+	// NullFields is a list of field names (e.g. "AccountId") to include in
+	// API requests with the JSON null value. By default, fields with empty
 	// values are omitted from API requests. However, any field with an
 	// empty value appearing in NullFields will be sent to the server as
 	// null. It is an error if a field in this list has a non-empty value.
@@ -248,19 +272,19 @@ type PosixAccount struct {
 }
 
 func (s *PosixAccount) MarshalJSON() ([]byte, error) {
-	type noMethod PosixAccount
-	raw := noMethod(*s)
+	type NoMethod PosixAccount
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// SshPublicKey: The SSH public key information associated with a
-// Directory API User.
+// SshPublicKey: The SSH public key information associated with a Google
+// account.
 type SshPublicKey struct {
 	// ExpirationTimeUsec: An expiration time in microseconds since epoch.
 	ExpirationTimeUsec int64 `json:"expirationTimeUsec,omitempty,string"`
 
-	// Fingerprint: The SHA-256 fingerprint of the SSH public key.
-	// Output only.
+	// Fingerprint: Output only. The SHA-256 fingerprint of the SSH public
+	// key.
 	Fingerprint string `json:"fingerprint,omitempty"`
 
 	// Key: Public key text in SSH format, defined by
@@ -292,8 +316,8 @@ type SshPublicKey struct {
 }
 
 func (s *SshPublicKey) MarshalJSON() ([]byte, error) {
-	type noMethod SshPublicKey
-	raw := noMethod(*s)
+	type NoMethod SshPublicKey
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -363,6 +387,7 @@ func (c *UsersGetLoginProfileCall) doRequest(alt string) (*http.Response, error)
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1alpha/{+name}/loginProfile")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -406,7 +431,7 @@ func (c *UsersGetLoginProfileCall) Do(opts ...googleapi.CallOption) (*LoginProfi
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -464,6 +489,13 @@ func (r *UsersService) ImportSshPublicKey(parent string, sshpublickey *SshPublic
 	return c
 }
 
+// ProjectId sets the optional parameter "projectId": The project ID of
+// the Google Cloud Platform project.
+func (c *UsersImportSshPublicKeyCall) ProjectId(projectId string) *UsersImportSshPublicKeyCall {
+	c.urlParams_.Set("projectId", projectId)
+	return c
+}
+
 // Fields allows partial responses to be retrieved. See
 // https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
 // for more information.
@@ -502,6 +534,7 @@ func (c *UsersImportSshPublicKeyCall) doRequest(alt string) (*http.Response, err
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1alpha/{+parent}:importSshPublicKey")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
@@ -545,7 +578,7 @@ func (c *UsersImportSshPublicKeyCall) Do(opts ...googleapi.CallOption) (*ImportS
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -564,6 +597,11 @@ func (c *UsersImportSshPublicKeyCall) Do(opts ...googleapi.CallOption) (*ImportS
 	//       "pattern": "^users/[^/]+$",
 	//       "required": true,
 	//       "type": "string"
+	//     },
+	//     "projectId": {
+	//       "description": "The project ID of the Google Cloud Platform project.",
+	//       "location": "query",
+	//       "type": "string"
 	//     }
 	//   },
 	//   "path": "v1alpha/{+parent}:importSshPublicKey",
@@ -572,6 +610,156 @@ func (c *UsersImportSshPublicKeyCall) Do(opts ...googleapi.CallOption) (*ImportS
 	//   },
 	//   "response": {
 	//     "$ref": "ImportSshPublicKeyResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform",
+	//     "https://www.googleapis.com/auth/compute"
+	//   ]
+	// }
+
+}
+
+// method id "oslogin.users.projects.delete":
+
+type UsersProjectsDeleteCall struct {
+	s          *Service
+	name       string
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Delete: Deletes a POSIX account.
+func (r *UsersProjectsService) Delete(name string) *UsersProjectsDeleteCall {
+	c := &UsersProjectsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// OperatingSystemType sets the optional parameter
+// "operatingSystemType": The type of operating system associated with
+// the account.
+//
+// Possible values:
+//   "OPERATING_SYSTEM_TYPE_UNSPECIFIED"
+//   "LINUX"
+//   "WINDOWS"
+func (c *UsersProjectsDeleteCall) OperatingSystemType(operatingSystemType string) *UsersProjectsDeleteCall {
+	c.urlParams_.Set("operatingSystemType", operatingSystemType)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *UsersProjectsDeleteCall) Fields(s ...googleapi.Field) *UsersProjectsDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *UsersProjectsDeleteCall) Context(ctx context.Context) *UsersProjectsDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *UsersProjectsDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *UsersProjectsDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v1alpha/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("DELETE", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "oslogin.users.projects.delete" call.
+// Exactly one of *Empty or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *Empty.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *UsersProjectsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &Empty{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Deletes a POSIX account.",
+	//   "flatPath": "v1alpha/users/{usersId}/projects/{projectsId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "oslogin.users.projects.delete",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "A reference to the POSIX account to update. POSIX accounts are identified\nby the project ID they are associated with. A reference to the POSIX\naccount is in format `users/{user}/projects/{project}`.",
+	//       "location": "path",
+	//       "pattern": "^users/[^/]+/projects/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "operatingSystemType": {
+	//       "description": "The type of operating system associated with the account.",
+	//       "enum": [
+	//         "OPERATING_SYSTEM_TYPE_UNSPECIFIED",
+	//         "LINUX",
+	//         "WINDOWS"
+	//       ],
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v1alpha/{+name}",
+	//   "response": {
+	//     "$ref": "Empty"
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/cloud-platform",
@@ -631,6 +819,7 @@ func (c *UsersSshPublicKeysDeleteCall) doRequest(alt string) (*http.Response, er
 	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1alpha/{+name}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
@@ -674,7 +863,7 @@ func (c *UsersSshPublicKeysDeleteCall) Do(opts ...googleapi.CallOption) (*Empty,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -771,6 +960,7 @@ func (c *UsersSshPublicKeysGetCall) doRequest(alt string) (*http.Response, error
 	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1alpha/{+name}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
@@ -814,7 +1004,7 @@ func (c *UsersSshPublicKeysGetCall) Do(opts ...googleapi.CallOption) (*SshPublic
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -913,6 +1103,7 @@ func (c *UsersSshPublicKeysPatchCall) doRequest(alt string) (*http.Response, err
 	}
 	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
 	urls := googleapi.ResolveRelative(c.s.BasePath, "v1alpha/{+name}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
@@ -956,7 +1147,7 @@ func (c *UsersSshPublicKeysPatchCall) Do(opts ...googleapi.CallOption) (*SshPubl
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

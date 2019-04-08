@@ -11,11 +11,20 @@ import (
 	"regexp"
 
 	"github.com/mozilla-services/yaml"
+	"github.com/sirupsen/logrus"
 	"go.mozilla.org/sops"
+	"go.mozilla.org/sops/azkv"
 	"go.mozilla.org/sops/gcpkms"
 	"go.mozilla.org/sops/kms"
+	"go.mozilla.org/sops/logging"
 	"go.mozilla.org/sops/pgp"
 )
+
+var log *logrus.Logger
+
+func init() {
+	log = logging.NewLogger("CONFIG")
+}
 
 type fileSystem interface {
 	Stat(name string) (os.FileInfo, error)
@@ -55,9 +64,10 @@ type configFile struct {
 }
 
 type keyGroup struct {
-	KMS    []kmsKey
-	GCPKMS []gcpKmsKey `yaml:"gcp_kms"`
-	PGP    []string
+	KMS     []kmsKey
+	GCPKMS  []gcpKmsKey  `yaml:"gcp_kms"`
+	AzureKV []azureKVKey `yaml:"azure_keyvault"`
+	PGP     []string
 }
 
 type gcpKmsKey struct {
@@ -65,18 +75,30 @@ type gcpKmsKey struct {
 }
 
 type kmsKey struct {
-	Arn     string             `yaml:"arn"`
-	Role    string             `yaml:"role,omitempty"`
-	Context map[string]*string `yaml:"context"`
+	Arn        string             `yaml:"arn"`
+	Role       string             `yaml:"role,omitempty"`
+	Context    map[string]*string `yaml:"context"`
+	AwsProfile string             `yaml:"aws_profile"`
+}
+
+type azureKVKey struct {
+	VaultURL string `yaml:"vaultUrl"`
+	Key      string `yaml:"key"`
+	Version  string `yaml:"version"`
 }
 
 type creationRule struct {
-	FilenameRegex   string `yaml:"filename_regex"`
-	KMS             string
-	PGP             string
-	GCPKMS          string     `yaml:"gcp_kms"`
-	KeyGroups       []keyGroup `yaml:"key_groups"`
-	ShamirThreshold int        `yaml:"shamir_threshold"`
+	FilenameRegex     string `yaml:"filename_regex"`
+	PathRegex         string `yaml:"path_regex"`
+	KMS               string
+	AwsProfile        string `yaml:"aws_profile"`
+	PGP               string
+	GCPKMS            string     `yaml:"gcp_kms"`
+	AzureKeyVault     string     `yaml:"azure_keyvault"`
+	KeyGroups         []keyGroup `yaml:"key_groups"`
+	ShamirThreshold   int        `yaml:"shamir_threshold"`
+	UnencryptedSuffix string     `yaml:"unencrypted_suffix"`
+	EncryptedSuffix   string     `yaml:"encrypted_suffix"`
 }
 
 // Load loads a sops config file into a temporary struct
@@ -90,8 +112,10 @@ func (f *configFile) load(bytes []byte) error {
 
 // Config is the configuration for a given SOPS file
 type Config struct {
-	KeyGroups       []sops.KeyGroup
-	ShamirThreshold int
+	KeyGroups         []sops.KeyGroup
+	ShamirThreshold   int
+	UnencryptedSuffix string
+	EncryptedSuffix   string
 }
 
 func loadForFileFromBytes(confBytes []byte, filePath string, kmsEncryptionContext map[string]*string) (*Config, error) {
@@ -103,14 +127,34 @@ func loadForFileFromBytes(confBytes []byte, filePath string, kmsEncryptionContex
 	var rule *creationRule
 
 	for _, r := range conf.CreationRules {
-		if match, _ := regexp.MatchString(r.FilenameRegex, filePath); match {
+		if r.PathRegex == "" && r.FilenameRegex == "" {
 			rule = &r
 			break
+		}
+		if r.PathRegex != "" && r.FilenameRegex != "" {
+			return nil, fmt.Errorf("error loading config: both filename_regex and path_regex were found, use only path_regex")
+		}
+		if r.FilenameRegex != "" {
+			if match, _ := regexp.MatchString(r.FilenameRegex, filePath); match {
+				log.Warn("The key: filename_regex will be removed in a future release. Instead use key: path_regex in your .sops.yaml file")
+				rule = &r
+				break
+			}
+		}
+		if r.PathRegex != "" {
+			if match, _ := regexp.MatchString(r.PathRegex, filePath); match {
+				rule = &r
+				break
+			}
 		}
 	}
 
 	if rule == nil {
 		return nil, fmt.Errorf("error loading config: no matching creation rules found")
+	}
+
+	if rule.UnencryptedSuffix != "" && rule.EncryptedSuffix != "" {
+		return nil, fmt.Errorf("error loading config: cannot use both encrypted_suffix and unencrypted_suffix for the same rule")
 	}
 
 	var groups []sops.KeyGroup
@@ -133,17 +177,26 @@ func loadForFileFromBytes(confBytes []byte, filePath string, kmsEncryptionContex
 		for _, k := range pgp.MasterKeysFromFingerprintString(rule.PGP) {
 			keyGroup = append(keyGroup, k)
 		}
-		for _, k := range kms.MasterKeysFromArnString(rule.KMS, kmsEncryptionContext) {
+		for _, k := range kms.MasterKeysFromArnString(rule.KMS, kmsEncryptionContext, rule.AwsProfile) {
 			keyGroup = append(keyGroup, k)
 		}
 		for _, k := range gcpkms.MasterKeysFromResourceIDString(rule.GCPKMS) {
 			keyGroup = append(keyGroup, k)
 		}
+		azureKeys, err := azkv.MasterKeysFromURLs(rule.AzureKeyVault)
+		if err != nil {
+			return nil, err
+		}
+		for _, k := range azureKeys {
+			keyGroup = append(keyGroup, k)
+		}
 		groups = append(groups, keyGroup)
 	}
 	return &Config{
-		KeyGroups:       groups,
-		ShamirThreshold: rule.ShamirThreshold,
+		KeyGroups:         groups,
+		ShamirThreshold:   rule.ShamirThreshold,
+		UnencryptedSuffix: rule.UnencryptedSuffix,
+		EncryptedSuffix:   rule.EncryptedSuffix,
 	}, nil
 }
 

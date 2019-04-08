@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,41 +12,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build integration,go1.7
-
 package profiler
 
 import (
 	"bytes"
-	"flag"
+	"context"
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
+	"strings"
 	"testing"
 	"text/template"
 	"time"
 
 	"cloud.google.com/go/profiler/proftest"
-	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	compute "google.golang.org/api/compute/v1"
-)
-
-var (
-	commit = flag.String("commit", "", "git commit to test")
-	runID  = time.Now().Unix()
 )
 
 const (
 	cloudScope        = "https://www.googleapis.com/auth/cloud-platform"
 	benchFinishString = "busybench finished profiling"
+	errorString       = "failed to set up or run the benchmark"
 )
 
 const startupTemplate = `
 #! /bin/bash
 
+# Signal any unexpected error.
+trap 'echo "{{.ErrorString}}"' ERR
+
+(
 # Shut down the VM in 5 minutes after this script exits
 # to stop accounting the VM for billing and cores quota.
 trap "sleep 300 && poweroff" EXIT
+
+retry() {
+  for i in {1..3}; do
+    "${@}" && return 0
+  done
+  return 1
+}
 
 # Fail on any error.
 set -eo pipefail
@@ -55,16 +62,27 @@ set -eo pipefail
 set -x
 
 # Install git
-apt-get update
-apt-get -y -q install git-all
+retry apt-get update >/dev/null
+retry apt-get -y -q install git >/dev/null
+
+# $GOCACHE is required from Go 1.12. See https://golang.org/doc/go1.11#gocache
+# $GOCACHE is explicitly set becasue $HOME is not set when this code runs
+mkdir -p /tmp/gocache
+export GOCACHE=/tmp/gocache
+
+# Install gcc, needed to install go master
+if [ "{{.GoVersion}}" = "master" ]
+then
+retry apt-get -y -q install gcc >/dev/null
+fi
 
 # Install desired Go version
 mkdir -p /tmp/bin
-curl -sL -o /tmp/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
+retry curl -sL -o /tmp/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
 chmod +x /tmp/bin/gimme
 export PATH=$PATH:/tmp/bin
 
-eval "$(gimme {{.GoVersion}})"
+retry eval "$(gimme {{.GoVersion}})"
 
 # Set $GOPATH
 export GOPATH="$HOME/go"
@@ -73,22 +91,20 @@ export GOCLOUD_HOME=$GOPATH/src/cloud.google.com/go
 mkdir -p $GOCLOUD_HOME
 
 # Install agent
-git clone https://code.googlesource.com/gocloud $GOCLOUD_HOME
+retry git clone https://code.googlesource.com/gocloud $GOCLOUD_HOME >/dev/null
+cd $GOCLOUD_HOME
+retry git fetch origin {{.Commit}}
+git reset --hard {{.Commit}}
 
 cd $GOCLOUD_HOME/profiler/busybench
-git reset --hard {{.Commit}}
-go get -v
+retry go get >/dev/null
 
 # Run benchmark with agent
 go run busybench.go --service="{{.Service}}" --mutex_profiling="{{.MutexProfiling}}"
-`
 
-const dockerfileFmt = `FROM golang
-RUN git clone https://code.googlesource.com/gocloud /go/src/cloud.google.com/go \
-    && cd /go/src/cloud.google.com/go/profiler/busybench && git reset --hard %s \
-    && go get -v && go install -v
-CMD ["busybench", "--service", "%s"]
- `
+# Write output to serial port 2 with timestamp.
+) 2>&1 | while read line; do echo "$(date): ${line}"; done >/dev/ttyS1
+`
 
 type goGCETestCase struct {
 	proftest.InstanceConfig
@@ -98,18 +114,20 @@ type goGCETestCase struct {
 	wantProfileTypes []string
 }
 
-func (tc *goGCETestCase) initializeStartupScript(template *template.Template) error {
+func (tc *goGCETestCase) initializeStartupScript(template *template.Template, commit string) error {
 	var buf bytes.Buffer
 	err := template.Execute(&buf,
 		struct {
 			Service        string
 			GoVersion      string
 			Commit         string
+			ErrorString    string
 			MutexProfiling bool
 		}{
 			Service:        tc.name,
 			GoVersion:      tc.goVersion,
-			Commit:         *commit,
+			Commit:         commit,
+			ErrorString:    errorString,
 			MutexProfiling: tc.mutexProfiling,
 		})
 	if err != nil {
@@ -120,19 +138,42 @@ func (tc *goGCETestCase) initializeStartupScript(template *template.Template) er
 }
 
 func TestAgentIntegration(t *testing.T) {
+	t.Skip("https://github.com/googleapis/google-cloud-go/issues/1366")
+
+	// Testing against master requires building go code and may take up to 10 minutes.
+	// Allow this test to run in parallel with other top level tests to avoid timeouts.
+	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping profiler integration test in short mode")
+	}
+
 	projectID := os.Getenv("GCLOUD_TESTS_GOLANG_PROJECT_ID")
 	if projectID == "" {
-		t.Fatalf("Getenv(GCLOUD_TESTS_GOLANG_PROJECT_ID) got empty string")
+		t.Skip("skipping profiler integration test when GCLOUD_TESTS_GOLANG_PROJECT_ID variable is not set")
 	}
 
-	zone := os.Getenv("GCLOUD_TESTS_GOLANG_ZONE")
+	zone := os.Getenv("GCLOUD_TESTS_GOLANG_PROFILER_ZONE")
 	if zone == "" {
-		t.Fatalf("Getenv(GCLOUD_TESTS_GOLANG_ZONE) got empty string")
+		t.Fatalf("GCLOUD_TESTS_GOLANG_PROFILER_ZONE environment variable must be set when integration test is requested")
 	}
 
-	if *commit == "" {
-		t.Fatal("commit flag is not set")
+	// Figure out the Git commit of the current directory. The source checkout in
+	// the test VM will run in the same commit. Note that any local changes to
+	// the profiler agent won't be tested in the integration test. This flow only
+	// works with code that has been committed and pushed to the public repo
+	// (either to master or to a branch).
+	output, err := exec.Command("git", "rev-parse", "HEAD").CombinedOutput()
+	if err != nil {
+		t.Fatalf("failed to gather the Git revision of the current source: %v", err)
 	}
+	commit := strings.Trim(string(output), "\n")
+	t.Logf("using Git commit %q for the profiler integration test", commit)
+
+	pst, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		t.Fatalf("failed to initiate PST location: %v", err)
+	}
+	runID := strings.Replace(time.Now().In(pst).Format("2006-01-02-15-04-05.000000-0700"), ".", "-", -1)
 
 	ctx := context.Background()
 
@@ -165,55 +206,58 @@ func TestAgentIntegration(t *testing.T) {
 			InstanceConfig: proftest.InstanceConfig{
 				ProjectID:   projectID,
 				Zone:        zone,
-				Name:        fmt.Sprintf("profiler-test-go19-%d", runID),
+				Name:        fmt.Sprintf("profiler-test-gomaster-%s", runID),
 				MachineType: "n1-standard-1",
 			},
-			name:             fmt.Sprintf("profiler-test-go19-%d-gce", runID),
-			wantProfileTypes: []string{"CPU", "HEAP", "THREADS", "CONTENTION"},
+			name:             fmt.Sprintf("profiler-test-gomaster-%s-gce", runID),
+			wantProfileTypes: []string{"CPU", "HEAP", "THREADS", "CONTENTION", "HEAP_ALLOC"},
+			goVersion:        "master",
+			mutexProfiling:   true,
+		},
+		{
+			InstanceConfig: proftest.InstanceConfig{
+				ProjectID:   projectID,
+				Zone:        zone,
+				Name:        fmt.Sprintf("profiler-test-go111-%s", runID),
+				MachineType: "n1-standard-1",
+			},
+			name:             fmt.Sprintf("profiler-test-go111-%s-gce", runID),
+			wantProfileTypes: []string{"CPU", "HEAP", "THREADS", "CONTENTION", "HEAP_ALLOC"},
+			goVersion:        "1.11",
+			mutexProfiling:   true,
+		},
+		{
+			InstanceConfig: proftest.InstanceConfig{
+				ProjectID:   projectID,
+				Zone:        zone,
+				Name:        fmt.Sprintf("profiler-test-go110-%s", runID),
+				MachineType: "n1-standard-1",
+			},
+			name:             fmt.Sprintf("profiler-test-go110-%s-gce", runID),
+			wantProfileTypes: []string{"CPU", "HEAP", "THREADS", "CONTENTION", "HEAP_ALLOC"},
+			goVersion:        "1.10",
+			mutexProfiling:   true,
+		},
+		{
+			InstanceConfig: proftest.InstanceConfig{
+				ProjectID:   projectID,
+				Zone:        zone,
+				Name:        fmt.Sprintf("profiler-test-go19-%s", runID),
+				MachineType: "n1-standard-1",
+			},
+			name:             fmt.Sprintf("profiler-test-go19-%s-gce", runID),
+			wantProfileTypes: []string{"CPU", "HEAP", "THREADS", "CONTENTION", "HEAP_ALLOC"},
 			goVersion:        "1.9",
 			mutexProfiling:   true,
 		},
-		{
-			InstanceConfig: proftest.InstanceConfig{
-				ProjectID:   projectID,
-				Zone:        zone,
-				Name:        fmt.Sprintf("profiler-test-go18-%d", runID),
-				MachineType: "n1-standard-1",
-			},
-			name:             fmt.Sprintf("profiler-test-go18-%d-gce", runID),
-			wantProfileTypes: []string{"CPU", "HEAP", "THREADS", "CONTENTION"},
-			goVersion:        "1.8",
-			mutexProfiling:   true,
-		},
-		{
-			InstanceConfig: proftest.InstanceConfig{
-				ProjectID:   projectID,
-				Zone:        zone,
-				Name:        fmt.Sprintf("profiler-test-go17-%d", runID),
-				MachineType: "n1-standard-1",
-			},
-			name:             fmt.Sprintf("profiler-test-go17-%d-gce", runID),
-			wantProfileTypes: []string{"CPU", "HEAP", "THREADS"},
-			goVersion:        "1.7",
-		},
-		{
-			InstanceConfig: proftest.InstanceConfig{
-				ProjectID:   projectID,
-				Zone:        zone,
-				Name:        fmt.Sprintf("profiler-test-go16-%d", runID),
-				MachineType: "n1-standard-1",
-			},
-			name:             fmt.Sprintf("profiler-test-go16-%d-gce", runID),
-			wantProfileTypes: []string{"CPU", "HEAP", "THREADS"},
-			goVersion:        "1.6",
-		},
 	}
-
+	// The number of tests run in parallel is the current value of GOMAXPROCS.
+	runtime.GOMAXPROCS(len(testcases))
 	for _, tc := range testcases {
 		tc := tc // capture range variable
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if err := tc.initializeStartupScript(template); err != nil {
+			if err := tc.initializeStartupScript(template, commit); err != nil {
 				t.Fatalf("failed to initialize startup script")
 			}
 
@@ -228,8 +272,8 @@ func TestAgentIntegration(t *testing.T) {
 
 			timeoutCtx, cancel := context.WithTimeout(ctx, time.Minute*25)
 			defer cancel()
-			if err := gceTr.PollForSerialOutput(timeoutCtx, &tc.InstanceConfig, benchFinishString); err != nil {
-				t.Fatal(err)
+			if err := gceTr.PollForSerialOutput(timeoutCtx, &tc.InstanceConfig, benchFinishString, errorString); err != nil {
+				t.Fatalf("PollForSerialOutput() got error: %v", err)
 			}
 
 			timeNow := time.Now()

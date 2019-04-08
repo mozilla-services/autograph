@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,13 @@
 package firestore
 
 import (
+	"context"
 	"testing"
 
-	pb "google.golang.org/genproto/googleapis/firestore/v1beta1"
-
-	"golang.org/x/net/context"
+	pb "google.golang.org/genproto/googleapis/firestore/v1"
 )
 
 func TestWriteBatch(t *testing.T) {
-	type update struct{ A int }
-
 	c, srv := newMock(t)
 	docPrefix := c.Collection("C").Path + "/"
 	srv.addRPC(
@@ -62,7 +59,7 @@ func TestWriteBatch(t *testing.T) {
 							Fields: map[string]*pb.Value{"*": intval(3)},
 						},
 					},
-					UpdateMask: &pb.DocumentMask{[]string{"`*`"}},
+					UpdateMask: &pb.DocumentMask{FieldPaths: []string{"`*`"}},
 					CurrentDocument: &pb.Precondition{
 						ConditionType: &pb.Precondition_Exists{true},
 					},

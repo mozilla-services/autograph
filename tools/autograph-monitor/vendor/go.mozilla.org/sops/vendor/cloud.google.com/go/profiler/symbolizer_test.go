@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@ package profiler
 
 import (
 	"bytes"
-	"reflect"
 	"testing"
 
+	"cloud.google.com/go/internal/testutil"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/pprof/profile"
 )
 
@@ -35,13 +36,16 @@ func (f *fakeFunc) FileLine(_ uintptr) (string, int) {
 	return f.file, f.lineno
 }
 
+var cmpOpt = cmpopts.IgnoreUnexported(profile.Profile{}, profile.Function{},
+	profile.Line{}, profile.Location{}, profile.Sample{}, profile.ValueType{})
+
 // TestRuntimeFunctionTrimming tests if symbolize trims runtime functions as intended.
 func TestRuntimeFunctionTrimming(t *testing.T) {
 	fakeFuncMap := map[uintptr]*fakeFunc{
-		0x10: &fakeFunc{"runtime.goexit", "runtime.go", 10},
-		0x20: &fakeFunc{"runtime.other", "runtime.go", 20},
-		0x30: &fakeFunc{"foo", "foo.go", 30},
-		0x40: &fakeFunc{"bar", "bar.go", 40},
+		0x10: {"runtime.goexit", "runtime.go", 10},
+		0x20: {"runtime.other", "runtime.go", 20},
+		0x30: {"foo", "foo.go", 30},
+		0x40: {"bar", "bar.go", 40},
 	}
 	backupFuncForPC := funcForPC
 	funcForPC = func(pc uintptr) function {
@@ -116,7 +120,7 @@ func TestRuntimeFunctionTrimming(t *testing.T) {
 	}
 	for i := 0; i < 2; i++ {
 		symbolize(testProfiles[i])
-		if !reflect.DeepEqual(testProfiles[i], wantProfiles[i]) {
+		if !testutil.Equal(testProfiles[i], wantProfiles[i], cmpOpt) {
 			t.Errorf("incorrect trimming (testcase = %d): got {%v}, want {%v}", i, testProfiles[i], wantProfiles[i])
 		}
 	}
@@ -126,8 +130,8 @@ func TestRuntimeFunctionTrimming(t *testing.T) {
 // profiles as intended.
 func TestParseAndSymbolize(t *testing.T) {
 	fakeFuncMap := map[uintptr]*fakeFunc{
-		0x10: &fakeFunc{"foo", "foo.go", 10},
-		0x20: &fakeFunc{"bar", "bar.go", 20},
+		0x10: {"foo", "foo.go", 10},
+		0x20: {"bar", "bar.go", 20},
 	}
 	backupFuncForPC := funcForPC
 	funcForPC = func(pc uintptr) function {
@@ -143,7 +147,7 @@ func TestParseAndSymbolize(t *testing.T) {
 	}
 	testProfile := &profile.Profile{
 		SampleType: []*profile.ValueType{
-			&profile.ValueType{Type: "cpu", Unit: "nanoseconds"},
+			{Type: "cpu", Unit: "nanoseconds"},
 		},
 		PeriodType: &profile.ValueType{Type: "cpu", Unit: "nanoseconds"},
 		Sample: []*profile.Sample{
@@ -166,7 +170,7 @@ func TestParseAndSymbolize(t *testing.T) {
 	}
 	wantProfile := &profile.Profile{
 		SampleType: []*profile.ValueType{
-			&profile.ValueType{Type: "cpu", Unit: "nanoseconds"},
+			{Type: "cpu", Unit: "nanoseconds"},
 		},
 		PeriodType: &profile.ValueType{Type: "cpu", Unit: "nanoseconds"},
 		Sample: []*profile.Sample{
@@ -195,7 +199,7 @@ func TestParseAndSymbolize(t *testing.T) {
 		if err != nil {
 			t.Errorf("parsing symbolized profile (testcase = %d) got err: %v, want no error", i, err)
 		}
-		if !reflect.DeepEqual(gotProfile, wantProfile) {
+		if !testutil.Equal(gotProfile, wantProfile, cmpOpt) {
 			t.Errorf("incorrect symbolization (testcase = %d): got {%v}, want {%v}", i, gotProfile, wantProfile)
 		}
 	}

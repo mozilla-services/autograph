@@ -1,3 +1,215 @@
+_February 26, 2018_
+
+*v0.19.0*
+
+- bigquery:
+  - Support customer-managed encryption keys.
+
+- bigtable:
+  - Improved emulator support.
+  - Support GetCluster.
+
+- datastore:
+  - Add general mutations.
+  - Support pointer struct fields.
+  - Support transaction options.
+
+- firestore:
+  - Add Transaction.GetAll.
+  - Support document cursors.
+
+- logging:
+  - Support concurrent RPCs to the service.
+  - Support per-entry resources.
+
+- profiler:
+  - Add config options to disable heap and thread profiling.
+  - Read the project ID from $GOOGLE_CLOUD_PROJECT when it's set.
+
+- pubsub:
+  - BEHAVIOR CHANGE: Release flow control after ack/nack (instead of after the
+    callback returns).
+  - Add SubscriptionInProject.
+  - Add OpenCensus instrumentation for streaming pull.
+
+- storage:
+  - Support CORS.
+
+
+_January 18, 2018_
+
+*v0.18.0*
+
+- bigquery:
+  - Marked stable.
+  - Schema inference of nullable fields supported.
+  - Added TimePartitioning to QueryConfig.
+
+- firestore: Data provided to DocumentRef.Set with a Merge option can contain
+  Delete sentinels.
+
+- logging: Clients can accept parent resources other than projects.
+
+- pubsub:
+  - pubsub/pstest: A lighweight fake for pubsub. Experimental; feedback welcome.
+  - Support updating more subscription metadata: AckDeadline,
+    RetainAckedMessages and RetentionDuration.
+
+- oslogin/apiv1beta: New client for the Cloud OS Login API.
+
+- rpcreplay: A package for recording and replaying gRPC traffic.
+
+- spanner:
+  - Add a ReadWithOptions that supports a row limit, as well as an index.
+  - Support query plan and execution statistics.
+  - Added [OpenCensus](http://opencensus.io) support.
+
+- storage: Clarify checksum validation for gzipped files (it is not validated
+  when the file is served uncompressed).
+
+
+_December 11, 2017_
+
+*v0.17.0*
+
+- firestore BREAKING CHANGES:
+  - Remove UpdateMap and UpdateStruct; rename UpdatePaths to Update.
+    Change
+        `docref.UpdateMap(ctx, map[string]interface{}{"a.b", 1})`
+    to
+        `docref.Update(ctx, []firestore.Update{{Path: "a.b", Value: 1}})`
+
+    Change
+        `docref.UpdateStruct(ctx, []string{"Field"}, aStruct)`
+    to
+        `docref.Update(ctx, []firestore.Update{{Path: "Field", Value: aStruct.Field}})`
+  - Rename MergePaths to Merge; require args to be FieldPaths
+  - A value stored as an integer can be read into a floating-point field, and vice versa.
+- bigtable/cmd/cbt:
+  - Support deleting a column.
+  - Add regex option for row read.
+- spanner: Mark stable.
+- storage:
+  - Add Reader.ContentEncoding method.
+  - Fix handling of SignedURL headers.
+- bigquery:
+  - If Uploader.Put is called with no rows, it returns nil without making a
+    call.
+  - Schema inference supports the "nullable" option in struct tags for
+    non-required fields.
+  - TimePartitioning supports "Field".
+
+
+_October 30, 2017_
+
+*v0.16.0*
+
+- Other bigquery changes:
+  - `JobIterator.Next` returns `*Job`; removed `JobInfo` (BREAKING CHANGE).
+  - UseStandardSQL is deprecated; set UseLegacySQL to true if you need
+    Legacy SQL.
+  - Uploader.Put will generate a random insert ID if you do not provide one.
+  - Support time partitioning for load jobs.
+  - Support dry-run queries.
+  - A `Job` remembers its last retrieved status.
+  - Support retrieving job configuration.
+  - Support labels for jobs and tables.
+  - Support dataset access lists.
+  - Improve support for external data sources, including data from Bigtable and
+    Google Sheets, and tables with external data.
+  - Support updating a table's view configuration.
+  - Fix uploading civil times with nanoseconds.
+
+- storage:
+  - Support PubSub notifications.
+  - Support Requester Pays buckets.
+
+- profiler: Support goroutine and mutex profile types.
+
+
+_October 3, 2017_
+
+*v0.15.0*
+
+- firestore: beta release. See the
+  [announcement](https://firebase.googleblog.com/2017/10/introducing-cloud-firestore.html).
+
+- errorreporting: The existing package has been redesigned.
+
+- errors: This package has been removed. Use errorreporting.
+
+
+_September 28, 2017_
+
+*v0.14.0*
+
+- bigquery BREAKING CHANGES:
+  - Standard SQL is the default for queries and views.
+  - `Table.Create` takes `TableMetadata` as a second argument, instead of
+    options.
+  - `Dataset.Create` takes `DatasetMetadata` as a second argument.
+  - `DatasetMetadata` field `ID` renamed to `FullID`
+  - `TableMetadata` field `ID` renamed to `FullID`
+
+- Other bigquery changes:
+  - The client will append a random suffix to a provided job ID if you set
+    `AddJobIDSuffix` to true in a job config.
+  - Listing jobs is supported.
+  - Better retry logic.
+
+- vision, language, speech: clients are now stable
+
+- monitoring: client is now beta
+
+- profiler:
+  - Rename InstanceName to Instance, ZoneName to Zone
+  - Auto-detect service name and version on AppEngine.
+
+_September 8, 2017_
+
+*v0.13.0*
+
+- bigquery: UseLegacySQL options for CreateTable and QueryConfig. Use these
+  options to continue using Legacy SQL after the client switches its default
+  to Standard SQL.
+
+- bigquery: Support for updating dataset labels.
+
+- bigquery: Set DatasetIterator.ProjectID to list datasets in a project other
+  than the client's. DatasetsInProject is no longer needed and is deprecated.
+
+- bigtable: Fail ListInstances when any zones fail.
+
+- spanner: support decoding of slices of basic types (e.g. []string, []int64,
+  etc.)
+
+- logging/logadmin: UpdateSink no longer creates a sink if it is missing
+  (actually a change to the underlying service, not the client)
+
+- profiler: Service and ServiceVersion replace Target in Config.
+
+_August 22, 2017_
+
+*v0.12.0*
+
+- pubsub: Subscription.Receive now uses streaming pull.
+
+- pubsub: add Client.TopicInProject to access topics in a different project
+  than the client.
+
+- errors: renamed errorreporting. The errors package will be removed shortly.
+
+- datastore: improved retry behavior.
+
+- bigquery: support updates to dataset metadata, with etags.
+
+- bigquery: add etag support to Table.Update (BREAKING: etag argument added).
+
+- bigquery: generate all job IDs on the client.
+
+- storage: support bucket lifecycle configurations.
+
+
 _July 31, 2017_
 
 *v0.11.0*

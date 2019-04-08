@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,17 +15,17 @@
 package bigquery
 
 import (
+	"context"
 	"errors"
 	"math"
+	"math/big"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
-
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/internal/testutil"
-	"golang.org/x/net/context"
+	"github.com/google/go-cmp/cmp"
 	bq "google.golang.org/api/bigquery/v2"
 )
 
@@ -50,6 +50,7 @@ var scalarTests = []struct {
 	{civil.DateTime{Date: civil.Date{Year: 2016, Month: 3, Day: 20}, Time: civil.Time{Hour: 4, Minute: 5, Second: 6, Nanosecond: 789000000}},
 		"2016-03-20 04:05:06.789000",
 		dateTimeParamType},
+	{big.NewRat(12345, 1000), "12.345000000", numericParamType},
 }
 
 type (
@@ -60,7 +61,6 @@ type (
 	}
 	S2 struct {
 		D string
-		e int
 	}
 )
 
@@ -88,7 +88,7 @@ var (
 	s1ParamValue = bq.QueryParameterValue{
 		StructValues: map[string]bq.QueryParameterValue{
 			"A": sval("1"),
-			"B": bq.QueryParameterValue{
+			"B": {
 				StructValues: map[string]bq.QueryParameterValue{
 					"D": sval("s"),
 				},
@@ -358,4 +358,28 @@ func paramRoundTrip(c *Client, x interface{}) (data Value, param interface{}, er
 		return nil, nil, err
 	}
 	return val[0], conf.(*QueryConfig).Parameters[0].Value, nil
+}
+
+func TestQueryParameter_toBQ(t *testing.T) {
+	tests := []struct {
+		in   QueryParameter
+		want []string
+	}{
+		{
+			in:   QueryParameter{Name: "name", Value: ""},
+			want: []string{"Value"},
+		},
+	}
+
+	for _, test := range tests {
+		q, err := test.in.toBQ()
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		got := q.ParameterValue.ForceSendFields
+		if !cmp.Equal(test.want, got) {
+			t.Fatalf("want %v, got %v", test.want, got)
+		}
+	}
 }
