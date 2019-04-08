@@ -152,7 +152,7 @@ testrsapss:
 showcoveragersapss: testrsapss
 	$(GO) tool cover -html=coverage_rsapss.out
 
-test: testautograph testautographdb testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testrsapss
+test: testautograph testautographdb testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testrsapss testmonitor
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 
