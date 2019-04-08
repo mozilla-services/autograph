@@ -1,4 +1,4 @@
-FROM golang:1.11
+FROM golang:1.12.2
 EXPOSE 8000
 
 RUN addgroup --gid 10001 app \
