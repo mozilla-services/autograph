@@ -10,6 +10,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"go.mozilla.org/autograph/signer/contentsignaturepki"
 )
 
 func TestVerifyContentSignature(t *testing.T) {
@@ -36,7 +38,7 @@ func TestVerifyExpiredCertChain(t *testing.T) {
 		})
 		log.Fatal(http.ListenAndServe(":64321", nil))
 	}()
-	chain, err := getX5U("http://localhost:64321/expiredcertchain")
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64321/expiredcertchain")
 	if err != nil {
 		t.Fatalf("Failed to retrieved certificate chain: %v", err)
 	}
@@ -57,7 +59,7 @@ func TestVerifyWronglyOrderedChain(t *testing.T) {
 		})
 		log.Fatal(http.ListenAndServe(":64322", nil))
 	}()
-	chain, err := getX5U("http://localhost:64322/wronglyorderedchain")
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64322/wronglyorderedchain")
 	if err != nil {
 		t.Fatalf("Failed to retrieved certificate chain: %v", err)
 	}

@@ -251,7 +251,7 @@ func sendSoftNotification(id string, format string, a ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Soft notification send to %q with body: %s", os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS"), params.Message)
+	log.Printf("Soft notification send to %q with body: %s", os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS"), *params.Message)
 	// add the notification to the cache
 	softNotifCache[id] = time.Now()
 	return nil
