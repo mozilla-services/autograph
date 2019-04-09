@@ -566,7 +566,7 @@ func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool) e
 		// FIXME: we just started signing firefox extensions with COSE so this is non-fatal
 		// but soon enough we'll require COSE in Firefox, at which point this function
 		// should fail when no COSE signature is present (and we can also remove pkcs7 \o/)
-		fmt.Fprintf(os.Stderr, "xpi: failed to retrieve COSE algorithms: %v", err)
+		fmt.Fprintf(os.Stderr, "xpi: skipping COSE verification, failed to retrieve COSE algorithms: %v\n", err)
 		return nil
 	}
 	// if we do find cose algorithms, the associated COSE signatures MUST be valid
@@ -584,6 +584,11 @@ func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool) e
 
 // XpiManifest represent parts of the structure of an extension manifest
 type XpiManifest struct {
+	Applications struct {
+		Gecko struct {
+			ID string `json:"id"`
+		} `json:"gecko"`
+	} `json:"Applications"`
 	BrowserSpecificSettings struct {
 		Gecko struct {
 			ID string `json:"id"`
@@ -601,6 +606,10 @@ func GetXpiID(xpiFile signer.SignedFile) (string, error) {
 	err = json.Unmarshal(manifestData, &manifest)
 	if err != nil {
 		return "", errors.Wrap(err, "xpi: failed to parse json manifest")
+	}
+	// prefer the ID listed under the applications key
+	if manifest.Applications.Gecko.ID != "" {
+		return manifest.Applications.Gecko.ID, nil
 	}
 	return manifest.BrowserSpecificSettings.Gecko.ID, nil
 }

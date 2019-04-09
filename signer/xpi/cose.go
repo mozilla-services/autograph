@@ -401,7 +401,7 @@ func (s *XPISigner) issueCOSESignature(cn string, manifest []byte, algs []*cose.
 func ReadCOSEAlgsFromSig(signedFile signer.SignedFile) (algs []string, err error) {
 	coseSig, err := readFileFromZIP(signedFile, coseSigPath)
 	if err != nil {
-		err = errors.Errorf("xpi: no COSE signature found, skipping")
+		err = errors.Errorf("xpi: no COSE signature found")
 		return
 	}
 	msg, err := cose.Unmarshal(coseSig)

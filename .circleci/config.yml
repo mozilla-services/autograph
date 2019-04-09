@@ -151,38 +151,38 @@ jobs:
             docker run --rm --name autograph-sign-xpi-test --network project_default --user 0 \
             --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client autograph-app /bin/bash \
             -c \
-            "wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && \
+            "wget https://addons.mozilla.org/firefox/downloads/file/1721925/facebook_container-1.6.5-fx.xpi && \
 
             SIGNER_ID=webextensions-rsa \
             TRUST_ROOTS=dev-webext-rsa-root.pem \
             TARGET="http://autograph-app:8000" \
             ./build_test_xpis.sh \
-            pomodoro_clock-1.1.1-an+fx-windows.xpi && \
+            facebook_container-1.6.5-fx.xpi && \
 
             SIGNER_ID=extensions-ecdsa \
             TRUST_ROOTS=dev-ext-ecdsa-root.pem \
             TARGET="http://autograph-app:8000" \
             ./build_test_xpis.sh \
-            pomodoro_clock-1.1.1-an+fx-windows.xpi"
+            facebook_container-1.6.5-fx.xpi"
 
       - run:
           name: check XPI signing works against Autograph HSM
           command: |
             docker run --rm --name autograph-sign-xpi-test-hsm --network project_default --user 0 \
             --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client autograph-app-hsm /bin/bash \
-            -c 'wget https://addons.mozilla.org/firefox/downloads/file/935711/pomodoro_clock-1.1.1-an+fx-windows.xpi && \
+            -c 'wget https://addons.mozilla.org/firefox/downloads/file/1721925/facebook_container-1.6.5-fx.xpi && \
 
             SIGNER_ID=hsm-webextensions-rsa \
             TRUST_ROOTS=dev-webext-rsa-root.pem \
             TARGET="http://autograph-app-hsm:8001" \
             ./build_test_xpis.sh \
-            pomodoro_clock-1.1.1-an+fx-windows.xpi && \
+            facebook_container-1.6.5-fx.xpi && \
 
             SIGNER_ID=hsm-extensions-ecdsa \
             TRUST_ROOTS=dev-ext-ecdsa-root.pem \
             TARGET="http://autograph-app-hsm:8001" \
             ./build_test_xpis.sh \
-            pomodoro_clock-1.1.1-an+fx-windows.xpi'
+            facebook_container-1.6.5-fx.xpi'
 
       - run:
           name: check APK signing works against Autograph
