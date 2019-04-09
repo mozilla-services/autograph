@@ -24,9 +24,6 @@ import (
 	"go.mozilla.org/autograph/signer/rsapss"
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
-	"go.mozilla.org/sops"
-	"go.mozilla.org/sops/decrypt"
-	yaml "gopkg.in/yaml.v2"
 )
 
 // a signatureresponse is returned by autograph to a client with
@@ -43,10 +40,10 @@ type signatureresponse struct {
 }
 
 type configuration struct {
-	URL           string `yaml:"url"`
-	MonitoringKey string `yaml:"monitoringkey"`
-	RootHash      string `yaml:"security.content.signature.root_hash"`
-	RootCert      string `yaml:"rootcert"`
+	url           string
+	monitoringKey string
+	env           string
+	rootHash      string
 	truststore    *x509.CertPool
 }
 
@@ -62,6 +59,28 @@ func init() {
 }
 
 func main() {
+	conf.url = os.Getenv("AUTOGRAPH_URL")
+	if conf.url == "" {
+		log.Fatal("AUTOGRAPH_URL must be set to the base url of the autograph service")
+	}
+	conf.monitoringKey = os.Getenv("AUTOGRAPH_KEY")
+	if conf.monitoringKey == "" {
+		log.Fatal("AUTOGRAPH_KEY must be set to the api monitoring key")
+	}
+	conf.env = os.Getenv("AUTOGRAPH_ENV")
+	switch conf.env {
+	case "stage":
+		conf.rootHash = `DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90`
+		conf.truststore = x509.NewCertPool()
+		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiStageRoot))
+	case "prod":
+		conf.rootHash = `97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E`
+		conf.truststore = x509.NewCertPool()
+		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiProdRoot))
+	default:
+		conf.rootHash = "5E36F214DE823F8B299689235F0341ACAFA075AF82CB4CD4307C3DB343392AFE"
+		conf.truststore = nil
+	}
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
 		lambda.Start(Handler)
@@ -78,31 +97,10 @@ func main() {
 	}
 }
 
+// Handler contacts the autograph service and verifies all monitoring signatures
 func Handler() (err error) {
-	confdir := "."
-	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
-		confdir = os.Getenv("LAMBDA_TASK_ROOT")
-	}
-
-	// load the local configuration file
-	conf, err = loadConf(confdir + "/monitor.autograph.yaml")
-	if err != nil {
-		return fmt.Errorf("failed to load configuration: %s", err.Error())
-	}
-	if os.Getenv("AUTOGRAPH_URL") != "" {
-		log.Printf("Overriding conf.URL %s with env var URL %s\n", conf.URL, os.Getenv("AUTOGRAPH_URL"))
-		conf.URL = os.Getenv("AUTOGRAPH_URL")
-	}
-	if os.Getenv("AUTOGRAPH_KEY") != "" {
-		log.Print("Overriding conf.MonitoringKey with env var")
-		conf.MonitoringKey = os.Getenv("AUTOGRAPH_KEY")
-	}
-	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
-		log.Print("Overriding conf.RootHash with env var")
-		conf.RootHash = os.Getenv("AUTOGRAPH_ROOT_HASH")
-	}
-	log.Println("Retrieving monitoring data from", conf.URL)
-	req, err := http.NewRequest("GET", conf.URL+"__monitor__", nil)
+	log.Println("Retrieving monitoring data from", conf.url)
+	req, err := http.NewRequest("GET", conf.url+"__monitor__", nil)
 	if err != nil {
 		return
 	}
@@ -113,7 +111,7 @@ func Handler() (err error) {
 	req.Close = true
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", makeAuthHeader(req, "monitor", conf.MonitoringKey))
+	req.Header.Set("Authorization", makeAuthHeader(req, "monitor", conf.monitoringKey))
 	cli := &http.Client{}
 	resp, err := cli.Do(req)
 	if err != nil || resp == nil {
@@ -148,7 +146,7 @@ func Handler() (err error) {
 			err = contentsignaturepki.Verify(response.X5U, response.Signature, []byte(inputdata))
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
-			err = verifyXPISignature(response.Signature, conf.truststore)
+			err = verifyXPISignature(response.Signature)
 		case apk.Type:
 			log.Printf("Verifying APK signature from signer %q", response.SignerID)
 			err = verifyAPKSignature(response.Signature)
@@ -183,33 +181,6 @@ func Handler() (err error) {
 		return fmt.Errorf(failure)
 	}
 	log.Println("All signature responses passed, monitoring OK")
-	return
-}
-
-func loadConf(path string) (cfg configuration, err error) {
-	log.Println("Accessing configuration from", path)
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return
-	}
-	// Try to decrypt the conf using sops or load it as plaintext.
-	// If the configuration is not encrypted with sops, the error
-	// sops.MetadataNotFound will be returned, in which case we
-	// ignore it and continue loading the conf.
-	confData, err := decrypt.Data(data, "yaml")
-	if err != nil {
-		if err.Error() == sops.MetadataNotFound.Error() {
-			// not an encrypted file
-			confData = data
-		} else {
-			return
-		}
-	}
-	err = yaml.Unmarshal(confData, &cfg)
-	if cfg.RootCert != "" {
-		cfg.truststore = x509.NewCertPool()
-		cfg.truststore.AppendCertsFromPEM([]byte(cfg.RootCert))
-	}
 	return
 }
 
