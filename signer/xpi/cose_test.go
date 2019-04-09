@@ -686,7 +686,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256"},
 			},
 			results: []string{
-				"xpi: EECert 0: id foo does not match cert cn jid1-Kt2kYYgi32zPuw@jetpack",
+				`xpi: EECert 0: id "foo" does not match cert cn "jid1-Kt2kYYgi32zPuw@jetpack"`,
 			},
 		},
 		//9
