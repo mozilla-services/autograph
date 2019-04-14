@@ -286,10 +286,12 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 		return nil, errors.Wrap(err, "xpi: failed to sign XPI")
 	}
 
+	pkcs7SignatureOwnerPath, pkcs7SigOwnerPath = GetOwnerPaths(s.Owner)
+
 	metas = append(metas, []Metafile{
 		{pkcs7ManifestPath, pkcs7Manifest},
-		{pkcs7SignatureFilePath, sigfile},
-		{pkcs7SigPath, p7sig},
+		{pkcs7SignatureOwnerPath, sigfile},
+		{pkcs7SigOwnerPath, p7sig},
 	}...)
 
 	signedFile, err = repackJARWithMetafiles(input, metas)
