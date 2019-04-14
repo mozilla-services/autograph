@@ -40,6 +40,7 @@ type signatureresponse struct {
 	Signature  string `json:"signature,omitempty"`
 	SignedFile string `json:"signed_file,omitempty"`
 	X5U        string `json:"x5u,omitempty"`
+	Owner      string `json:"owner,omitempty"`
 }
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
@@ -143,6 +144,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			PublicKey:  a.signers[signerID].Config().PublicKey,
 			SignedFile: base64.StdEncoding.EncodeToString(signedfile),
 			X5U:        a.signers[signerID].Config().X5U,
+			Owner:      a.signers[signerID].Config().Owner,
 		}
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {
@@ -210,6 +212,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"ref":        sigresps[i].Ref,
 			"type":       sigresps[i].Type,
 			"signer_id":  sigresps[i].SignerID,
+			"owner":      sigresps[i].Owner,
 			"input_hash": hashlog,
 			"user_id":    userid,
 			"t":          int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
