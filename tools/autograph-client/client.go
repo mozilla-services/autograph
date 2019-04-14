@@ -43,6 +43,7 @@ type signatureresponse struct {
 	Signature  string `json:"signature"`
 	SignedFile string `json:"signed_file"`
 	X5U        string `json:"x5u,omitempty"`
+	Owner      string `json:"owner,omitempty"`
 }
 
 type requestType int
