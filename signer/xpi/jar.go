@@ -275,11 +275,12 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 
 // repackJAR inserts the manifest, signature file and pkcs7 signature in the input JAR file,
 // and return a JAR ZIP archive
-func repackJAR(input, manifest, sigfile, signature []byte) (output []byte, err error) {
+func repackJAR(input, manifest, sigfile, signature []byte, owner string) (output []byte, err error) {
+	pkcs7SignatureOwnerPath, pkcs7SigOwnerPath := GetOwnerPaths(owner)
 	var metas = []Metafile{
 		{pkcs7ManifestPath, manifest},
-		{pkcs7SignatureFilePath, sigfile},
-		{pkcs7SigPath, signature},
+		{pkcs7SignatureOwnerPath, sigfile},
+		{pkcs7SigOwnerPath, signature},
 	}
 	return repackJARWithMetafiles(input, metas)
 }
