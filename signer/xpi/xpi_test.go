@@ -571,9 +571,10 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 
 var PASSINGTESTCASES = []signer.Configuration{
 	signer.Configuration{
-		ID:   "rsa addon",
-		Type: Type,
-		Mode: ModeAddOn,
+		ID:    "rsa addon",
+		Type:  Type,
+		Mode:  ModeAddOn,
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -674,9 +675,10 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 -----END PRIVATE KEY-----`,
 	},
 	{
-		ID:   "rsa system addon",
-		Type: Type,
-		Mode: ModeSystemAddOn,
+		ID:    "rsa system addon",
+		Type:  Type,
+		Mode:  ModeSystemAddOn,
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -777,9 +779,10 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 -----END PRIVATE KEY-----`,
 	},
 	{
-		Type: Type,
-		ID:   "rsa extension",
-		Mode: ModeExtension,
+		Type:  Type,
+		ID:    "rsa extension",
+		Mode:  ModeExtension,
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -880,9 +883,10 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 -----END PRIVATE KEY-----`,
 	},
 	{
-		Type: Type,
-		ID:   "ecdsa addon",
-		Mode: ModeAddOn,
+		Type:  Type,
+		ID:    "ecdsa addon",
+		Mode:  ModeAddOn,
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
@@ -922,9 +926,10 @@ IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
 -----END EC PRIVATE KEY-----`,
 	},
 	{
-		Type: Type,
-		ID:   "ecdsa system addon",
-		Mode: ModeSystemAddOn,
+		Type:  Type,
+		ID:    "ecdsa system addon",
+		Mode:  ModeSystemAddOn,
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
@@ -964,9 +969,10 @@ IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
 -----END EC PRIVATE KEY-----`,
 	},
 	{
-		Type: Type,
-		ID:   "ecdsa extension",
-		Mode: ModeExtension,
+		Type:  Type,
+		ID:    "ecdsa extension",
+		Mode:  ModeExtension,
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
@@ -1006,9 +1012,10 @@ IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
 -----END EC PRIVATE KEY-----`,
 	},
 	{
-		Type: Type,
-		ID:   "ecdsa hotfix",
-		Mode: ModeHotFix,
+		Type:  Type,
+		ID:    "ecdsa hotfix",
+		Mode:  ModeHotFix,
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
@@ -1055,11 +1062,12 @@ var FAILINGTESTCASES = []struct {
 }{
 	{err: "xpi: invalid type", cfg: signer.Configuration{Type: ""}},
 	{err: "xpi: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
-	{err: "xpi: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
-	{err: "xpi: GetKeysAndRand failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+	{err: "xpi: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: "mozilla"}},
+	{err: "xpi: GetKeysAndRand failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: "mozilla", PrivateKey: "Ym9iCg=="}},
 	{err: "xpi: failed to parse certificate PEM", cfg: signer.Configuration{
 		Type:        Type,
 		ID:          "abcd",
+		Owner:       "mozilla",
 		Certificate: "foo",
 		PrivateKey: `
 -----BEGIN RSA PRIVATE KEY-----
@@ -1073,8 +1081,9 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 -----END RSA PRIVATE KEY-----`,
 	}},
 	{err: "xpi: signer certificate must have CA constraint set to true", cfg: signer.Configuration{
-		Type: Type,
-		ID:   "abcd",
+		Type:  Type,
+		ID:    "abcd",
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEPDCCAySgAwIBAgISAxw8x5gKJ8VwTpiqA8lVKdGGMA0GCSqGSIb3DQEBCwUA
@@ -1113,8 +1122,9 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 -----END RSA PRIVATE KEY-----`,
 	}},
 	{err: "xpi: signer certificate is not currently valid", cfg: signer.Configuration{
-		Type: Type,
-		ID:   "abcd",
+		Type:  Type,
+		ID:    "abcd",
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIB0zCCAX2gAwIBAgIJAJixODIxqmZCMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
@@ -1140,8 +1150,9 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 -----END RSA PRIVATE KEY-----`,
 	}},
 	{err: "xpi: signer certificate is missing certificate signing key usage", cfg: signer.Configuration{
-		Type: Type,
-		ID:   "abcd",
+		Type:  Type,
+		ID:    "abcd",
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIB0zCCAX2gAwIBAgIJALIibhYzEpg4MA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
@@ -1167,9 +1178,10 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 -----END RSA PRIVATE KEY-----`,
 	}},
 	{err: `xpi: unknown signer mode "InvalidMode", must be 'add-on', 'extension', 'system add-on' or 'hotfix'`, cfg: signer.Configuration{
-		ID:   "rsa addon",
-		Type: Type,
-		Mode: "InvalidMode",
+		ID:    "rsa addon",
+		Type:  Type,
+		Mode:  "InvalidMode",
+		Owner: "mozilla",
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -1270,9 +1282,10 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 -----END PRIVATE KEY-----`,
 	}},
 	{err: "xpi: issuer RSA key must be at least 2048 bits", cfg: signer.Configuration{
-		ID:   "short-rsa-1024-addon",
-		Type: Type,
-		Mode: ModeAddOn,
+		ID:    "short-rsa-1024-addon",
+		Type:  Type,
+		Mode:  ModeAddOn,
+		Owner: "mozilla",
 		Certificate: `-----BEGIN CERTIFICATE-----
 MIICnTCCAgagAwIBAgIJAPCQ7jTBYG+LMA0GCSqGSIb3DQEBCwUAMHUxCzAJBgNV
 BAYTAlVTMQswCQYDVQQIDAJDQTEWMBQGA1UEBwwNTW91bnRhaW4gVmlldzEXMBUG
@@ -1310,9 +1323,10 @@ a05oGDnmq7R+
 `,
 	}},
 	{err: "xpi: signer certificate does not have code signing EKU", cfg: signer.Configuration{
-		ID:   "rsa-no-eku-addon",
-		Type: Type,
-		Mode: ModeAddOn,
+		ID:    "rsa-no-eku-addon",
+		Type:  Type,
+		Mode:  ModeAddOn,
+		Owner: "mozilla",
 		Certificate: `-----BEGIN CERTIFICATE-----
 MIIDjTCCAnWgAwIBAgIJAPzn72+kKJ31MA0GCSqGSIb3DQEBCwUAMHUxCzAJBgNV
 BAYTAlVTMQswCQYDVQQIDAJDQTEWMBQGA1UEBwwNTW91bnRhaW4gVmlldzEXMBUG
@@ -1368,9 +1382,10 @@ eT6Q43/gPKpGi5Sq1heGugQ=
 	}},
 	// rsa-no-eku-addon with the second line of the cert removed
 	{err: "xpi: could not parse X.509 certificate:", cfg: signer.Configuration{
-		ID:   "rsa-bad-x509",
-		Type: Type,
-		Mode: ModeAddOn,
+		ID:    "rsa-bad-x509",
+		Type:  Type,
+		Mode:  ModeAddOn,
+		Owner: "mozilla",
 		Certificate: `-----BEGIN CERTIFICATE-----
 BAYTAlVTMQswCQYDVQQIDAJDQTEWMBQGA1UEBwwNTW91bnRhaW4gVmlldzEXMBUG
 A1UECgwOTW96aWxsYSBBZGRvbnMxEjAQBgNVBAsMCVVuaXQgVGVzdDEUMBIGA1UE
