@@ -171,6 +171,10 @@ signers:
       # 'system add-on' are signed with the OU 'Mozilla Components' and the provided ID
       # 'hotfix' are signed with the OU 'Production' and the ID 'firefox-hotfix@mozilla.org'
       mode: add-on
+      # Value of owner is used for naming some pkcs7 files inside the xpi.
+      # It should only contain the characters   a-z A-Z 0-9 - _
+      # and no white space. At least 1 and not more than 32 characters.
+      owner: mozilla
       # RSA key gen is slow and CPU intensive, so we can optionally
       # pregenerate and cache keys with a worker pool
       rsacacheconfig:
@@ -281,6 +285,7 @@ signers:
     - id: extensions-ecdsa
       type: xpi
       mode: extension
+      owner: mozilla
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
