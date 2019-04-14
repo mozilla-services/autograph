@@ -29,9 +29,9 @@ the autograph configuration:
 * Mozilla Components (aka. System Addons) use mode `system add-on`
 * Hotfixes use mode `hotfix`
 
-Each signer must have a type, a mode and the certificate and private key of
-an intermediate CA issued by either the staging or root PKIs of AMO (refer to
-internal documentation to issue those, as they require access to private HSMs).
+Each signer must have a type, a mode, an owner and the certificate and private
+key of an intermediate CA issued by either the staging or root PKIs of AMO (refer
+to internal documentation to issue those, as they require access to private HSMs).
 
 When a signature is requested, autograph will generate a private key and issue
 an end-entity certificate specifically for the signature request. The certificate
@@ -44,6 +44,7 @@ right after the signature is issued.
     - id: webextensions-rsa
       type: xpi
       mode: add-on
+      owner: mozilla
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -123,16 +124,16 @@ described in `Extension Signing Algorithm`_, it:
     * adds the detached signature to the Sign Message
   * writes the CBOR-encoded Sign Message to `cose.sig`
   * hashes `cose.manifest` and `cose.sig` and adds them to the manifest file `manifest.mf`
-* hashes the manifest file to generate the signature file `mozilla.sf`
+* hashes the manifest file to generate the signature file `$owner.sf`, for example `mozilla.sf`
 * generates an RSA end entity cert from the signer's intermediate
-* uses the generated cert to sign the signature file and create a PKCS7 detached signature `mozilla.rsa` using the algorithm from `pkcs7_digest`
+* uses the generated cert to sign the signature file and create a PKCS7 detached signature `$owner.rsa`, for example `mozilla.rsa`, using the algorithm from `pkcs7_digest`
 * adds the generated manifest, signature, and detached signature files to the XPI `META-INF/`
 * repacks and returns the ZIP/XPI
 
 The `/sign/data` endpoint generates the end entity cert and signs the
 signature file. The `input` field must contain the base64 encoding of
-a `mozilla.sf` signature file and returns the PKCS7 detached signature
-`mozilla.rsa` in the response `signature` field. The caller is then
+a `$owner.sf` signature file and returns the PKCS7 detached signature
+`$owner.rsa` in the response `signature` field. The caller is then
 responsible for repacking the ZIP.
 
 .. _`COSE Algorithms`: https://www.iana.org/assignments/cose/cose.xhtml#table-header-algorithm-parameters
@@ -145,11 +146,11 @@ Data Signing
 ~~~~~~~~~~~~
 
 XPI signatures are binary files encoded using the PKCS7 format and stored in the
-file called **mozilla.rsa** in the META-INF folder of XPI archives.
+file called **$owner.rsa** in the META-INF folder of XPI archives.
 
-Autograph returns the base64 representation of the `mozilla.rsa` file in its
+Autograph returns the base64 representation of the `$owner.rsa` file in its
 signature responses. Clients must decode the base64 from the autograph response
-and write it to a `mozilla.rsa` file.
+and write it to a `$owner.rsa` file.
 
 .. code:: json
 
