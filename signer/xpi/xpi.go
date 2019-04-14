@@ -521,12 +521,13 @@ func (sig *Signature) String() string {
 // 4) the signature cert chain verifies when an optional non-nil truststore is provided
 //
 func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x509.CertPool, owner string) error {
-	sigStrBytes, err := readFileFromZIP(signedFile, pkcs7SigPath)
+	pkcs7SignatureOwnerPath, pkcs7SigOwnerPath := GetOwnerPaths(owner)
+	sigStrBytes, err := readFileFromZIP(signedFile, pkcs7SigOwnerPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read PKCS7 signature META-INF/mozilla.rsa")
 	}
 	sigStr := base64.StdEncoding.EncodeToString(sigStrBytes)
-	sigData, err := readFileFromZIP(signedFile, pkcs7SignatureFilePath)
+	sigData, err := readFileFromZIP(signedFile, pkcs7SignatureOwnerPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read META-INF/mozilla.sf")
 	}
