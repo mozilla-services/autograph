@@ -46,6 +46,8 @@ const (
 	pkcs7SignatureFilePath = "META-INF/mozilla.sf"
 	pkcs7SigPath           = "META-INF/mozilla.rsa"
 
+	OwnerFormat = `^[a-zA-Z0-9-_]{1,32}$`
+
 	// rsaKeyMinSize is the minimum RSA Key size for issuer keys and new EE RSA keys
 	rsaKeyMinSize = 2048
 )
