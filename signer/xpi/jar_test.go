@@ -112,7 +112,7 @@ func TestMakingJarManifest(t *testing.T) {
 func TestRepack(t *testing.T) {
 	t.Parallel()
 
-	repackedZip, err := repackJAR(unsignedBootstrap, unsignedBootstrapManifest, unsignedBootstrapSignatureFile, unsignedBootstrapSignature)
+	repackedZip, err := repackJAR(unsignedBootstrap, unsignedBootstrapManifest, unsignedBootstrapSignatureFile, unsignedBootstrapSignature, "mozilla")
 	if err != nil {
 		t.Fatal(err)
 	}
