@@ -452,6 +452,12 @@ func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqTy
 		if err != nil {
 			log.Fatal(err)
 		}
+		var owner string
+		if xpi.IsValidOwner(resp.Owner) {
+			owner = resp.Owner
+		} else {
+			owner = "mozilla"
+		}
 		err = xpi.VerifySignedFile(signedFile, roots, req.Options.(xpi.Options))
 		if err != nil {
 			log.Fatal(err)
