@@ -218,12 +218,14 @@ func (s *XPISigner) Config() signer.Configuration {
 // SignFile takes an unsigned zipped XPI file and returns a signed XPI file
 func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile signer.SignedFile, err error) {
 	var (
-		pkcs7Manifest []byte
-		manifest      []byte
-		metas         = []Metafile{}
-		opt           Options
-		coseSig       []byte
-		coseSigAlgs   []*cose.Algorithm
+		pkcs7Manifest           []byte
+		manifest                []byte
+		metas                   = []Metafile{}
+		opt                     Options
+		coseSig                 []byte
+		coseSigAlgs             []*cose.Algorithm
+		pkcs7SignatureOwnerPath string
+		pkcs7SigOwnerPath       string
 	)
 
 	opt, err = GetOptions(options)
