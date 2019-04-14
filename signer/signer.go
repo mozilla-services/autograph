@@ -74,6 +74,10 @@ type Configuration struct {
 	// certificate chain to validate a content signature
 	X5U string `json:"x5u,omitempty"`
 
+	// Owner is used as filename prefix for pkcs7SignatureFilePath
+	// and pkcs7SigPath by XPI signers
+	Owner string `json:"owner,omitempty"`
+
 	// RSACacheConfig for XPI signers this specifies config for an
 	// RSA cache
 	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty"`
