@@ -51,6 +51,9 @@ func TestSignFile(t *testing.T) {
 	if s.Config().ID != testcase.ID {
 		t.Fatalf("signer id %q does not match configuration %q", s.Config().ID, testcase.ID)
 	}
+	if s.Config().Owner != testcase.Owner {
+		t.Fatalf("signer owner %q does not match configuration %q", s.Config().Owner, testcase.Owner)
+	}
 	if s.Config().PrivateKey != testcase.PrivateKey {
 		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, testcase.PrivateKey)
 	}
