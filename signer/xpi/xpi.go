@@ -417,6 +417,19 @@ func IsValidOwner(owner string) bool {
 	return false
 }
 
+// GetOwnerPaths constructs new values for pkcs7SignatureFilePath and
+// pkcs7SigPath by incorporating the provided owner.
+// Returns default values if owner is invalid.
+func GetOwnerPaths(owner string) (pkcs7SigFilePath string, pkcs7SigPathRSA string) {
+	pkcs7SigFilePath = pkcs7SignatureFilePath
+	pkcs7SigPathRSA = pkcs7SigPath
+	if IsValidOwner(owner) {
+		pkcs7SigFilePath = "META-INF/" + owner + ".sf"
+		pkcs7SigPathRSA = "META-INF/" + owner + ".rsa"
+	}
+	return pkcs7SigFilePath, pkcs7SigPathRSA
+}
+
 // Signature is a detached PKCS7 signature or COSE SignMessage
 type Signature struct {
 	p7          *pkcs7.PKCS7
