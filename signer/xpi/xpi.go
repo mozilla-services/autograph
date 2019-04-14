@@ -108,6 +108,14 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		return nil, errors.New("xpi: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
+	if conf.Owner == "" {
+		return nil, errors.New("xpi: missing owner in signer configuration")
+	}
+	if !IsValidOwner(conf.Owner) {
+		return nil, errors.Errorf("xpi: owner %q does not match the permitted format %q",
+			conf.Owner, OwnerFormat)
+	}
+	s.Owner = conf.Owner
 	if conf.PrivateKey == "" {
 		return nil, errors.New("xpi: missing private key in signer configuration")
 	}
