@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"io"
+	"regexp"
 	"strings"
 	"time"
 
@@ -405,6 +406,15 @@ func GetOptions(input interface{}) (options Options, err error) {
 	}
 	err = json.Unmarshal(buf, &options)
 	return
+}
+
+func IsValidOwner(owner string) bool {
+	if owner != "" {
+		if regexp.MustCompile(OwnerFormat).MatchString(owner) {
+			return true
+		}
+	}
+	return false
 }
 
 // Signature is a detached PKCS7 signature or COSE SignMessage
