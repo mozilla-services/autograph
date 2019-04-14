@@ -1068,6 +1068,12 @@ var FAILINGTESTCASES = []struct {
 }{
 	{err: "xpi: invalid type", cfg: signer.Configuration{Type: ""}},
 	{err: "xpi: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
+	{err: "xpi: missing owner in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: ""}},
+	{err: "xpi: owner \" mozilla\" does not match the permitted format \"^[a-zA-Z0-9-_]{1,32}$", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: " mozilla"}},
+	{err: "xpi: owner \" \" does not match the permitted format \"^[a-zA-Z0-9-_]{1,32}$", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: " "}},
+	{err: "xpi: owner \".\" does not match the permitted format \"^[a-zA-Z0-9-_]{1,32}$", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: "."}},
+	{err: "xpi: owner \"*\" does not match the permitted format \"^[a-zA-Z0-9-_]{1,32}$", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: "*"}},
+	{err: "xpi: owner \"string_is_with_33_chars_TOOO-long\" does not match the permitted format \"^[a-zA-Z0-9-_]{1,32}$", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: "string_is_with_33_chars_TOOO-long"}},
 	{err: "xpi: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: "mozilla"}},
 	{err: "xpi: GetKeysAndRand failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", Owner: "mozilla", PrivateKey: "Ym9iCg=="}},
 	{err: "xpi: failed to parse certificate PEM", cfg: signer.Configuration{
