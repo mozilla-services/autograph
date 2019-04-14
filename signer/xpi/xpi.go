@@ -71,6 +71,9 @@ type XPISigner struct {
 	// signature, but for hotfix signers, it is set to a specific value.
 	EndEntityCN string
 
+	// Owner should identify the entity owning the private signing key
+	Owner string
+
 	// rand is the CSPRNG to use from the HSM or crypto/rand
 	rand io.Reader
 
@@ -198,6 +201,7 @@ func (s *XPISigner) Config() signer.Configuration {
 		ID:          s.ID,
 		Type:        s.Type,
 		Mode:        s.Mode,
+		Owner:       s.Owner,
 		PrivateKey:  s.PrivateKey,
 		Certificate: s.Certificate,
 	}
