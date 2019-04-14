@@ -458,7 +458,7 @@ func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqTy
 		} else {
 			owner = "mozilla"
 		}
-		err = xpi.VerifySignedFile(signedFile, roots, req.Options.(xpi.Options))
+		err = xpi.VerifySignedFile(signedFile, roots, owner, req.Options.(xpi.Options))
 		if err != nil {
 			log.Fatal(err)
 		}

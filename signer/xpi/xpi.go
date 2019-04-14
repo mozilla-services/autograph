@@ -586,7 +586,7 @@ func verifyCOSEManifest(signedXPI signer.SignedFile) error {
 
 // VerifySignedFile checks the XPI's PKCS7 signature and COSE
 // signatures if present
-func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, opts Options) error {
+func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, owner string, opts Options) error {
 	var err error
 	err = verifyPKCS7Manifest(signedFile)
 	if err != nil {
