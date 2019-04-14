@@ -575,6 +575,95 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 	}
 }
 
+func TestIsValidOwner(t *testing.T) {
+	var testcases = []struct {
+		expect bool
+		owner  string
+	}{
+		{false, "META-INF/MOZILLA.RSA"},
+		{false, "META-INF/mozilla.rsa"},
+		{false, "META-INF/"},
+		{false, "mozilla.rsa"},
+		{true, "META-INF"},
+		{false, ".rsa"},
+		{true, "mozilla"},
+		{true, "MoZiLLa"},
+		{true, "MOZILLA"},
+		{true, "MANIFEST"},
+		{true, "manifest"},
+		{false, "manifest.mf"},
+		{true, "sig"},
+		{true, "sig-"},
+		{true, "rsa"},
+		{true, "dsa"},
+		{true, "sf"},
+		{true, "mf"},
+		{false, "cose.manifest"},
+		{true, "cose"},
+		{false, "cose.sig"},
+		{true, "cosesig"},
+		{true, "cose-sig"},
+		{true, "foo"},
+		{true, "BAR"},
+		{true, "FOO-bar"},
+		{true, "f0O_BaR"},
+		{true, "a-zA-Z0-9-_"},
+		{true, "m"},
+		{true, "M"},
+		{true, "0"},
+		{true, "9"},
+		{true, "--"},
+		{true, "__"},
+		{true, "-"},
+		{true, "_"},
+		{true, "-_"},
+		{true, "_-"},
+		{true, "abcdefghijklmnopqrstuvwxyz012345"},
+		{false, "abcdefghijklmnopqrstuvwxyz0123456"},
+		{true, "string_is_with_32_chars_NOT-long"},
+		{false, "string_is_with_33_chars_TOOO-long"},
+		{false, ""},
+		{false, " "},
+		{false, "."},
+		{false, "*"},
+		{false, "@"},
+		{false, "!"},
+		{false, "?"},
+		{false, "#"},
+		{false, "/"},
+		{false, "\\"},
+		{false, "$"},
+		{false, "'"},
+		{false, "\""},
+		{false, "+"},
+		{false, "~"},
+		{false, "%"},
+		{false, "&"},
+		{false, "="},
+		{false, ","},
+		{false, ";"},
+		{false, "<"},
+		{false, ">"},
+		{false, "["},
+		{false, "]"},
+		{false, "{"},
+		{false, "}"},
+		{false, "("},
+		{false, ")"},
+		{false, "|"},
+		{false, "\n"},
+		{false, "^"},
+		{false, "rm -rf /*"},
+		{true, "rm-rf"},
+	}
+	for i, testcase := range testcases {
+		if IsValidOwner(testcase.owner) != testcase.expect {
+			t.Fatalf("testcase %d failed. %q returned %t, expected %t",
+				i, testcase.owner, IsValidOwner(testcase.owner), testcase.expect)
+		}
+	}
+}
+
 var PASSINGTESTCASES = []signer.Configuration{
 	signer.Configuration{
 		ID:    "rsa addon",
