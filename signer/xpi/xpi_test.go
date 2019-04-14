@@ -68,7 +68,7 @@ func TestSignFile(t *testing.T) {
 		t.Fatalf("failed to sign file with detached  PKCS7 sig: %v", err)
 	}
 
-	err = VerifySignedFile(signedXPI, nil, opts)
+	err = VerifySignedFile(signedXPI, nil, testcase.Owner, opts)
 	if err != nil {
 		t.Fatalf("failed to verify PKCS7 signed file: %v", err)
 	}
@@ -559,7 +559,7 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 		t.Fatalf("failed to add root cert to pool")
 	}
 
-	err = VerifySignedFile(signedXPI, roots, signOptions)
+	err = VerifySignedFile(signedXPI, roots, testcase.Owner, signOptions)
 	if err != nil {
 		t.Fatalf("failed to verify signed file: %v", err)
 	}
