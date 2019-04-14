@@ -520,7 +520,7 @@ func (sig *Signature) String() string {
 // 3) the PKCS7 signatures
 // 4) the signature cert chain verifies when an optional non-nil truststore is provided
 //
-func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x509.CertPool) error {
+func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x509.CertPool, owner string) error {
 	sigStrBytes, err := readFileFromZIP(signedFile, pkcs7SigPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read PKCS7 signature META-INF/mozilla.rsa")
@@ -592,7 +592,7 @@ func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, o
 	if err != nil {
 		return errors.Wrap(err, "xpi: error verifying PKCS7 manifest for signed file")
 	}
-	err = verifyPKCS7SignatureRoundTrip(signedFile, truststore)
+	err = verifyPKCS7SignatureRoundTrip(signedFile, truststore, owner)
 	if err != nil {
 		return errors.Wrap(err, "xpi: error verifying PKCS7 signature for signed file")
 	}
