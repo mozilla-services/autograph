@@ -664,6 +664,101 @@ func TestIsValidOwner(t *testing.T) {
 	}
 }
 
+func TestGetOwnerPaths(t *testing.T) {
+	var testcases = []struct {
+		SignatureFilePath string
+		SigPath           string
+		owner             string
+	}{
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "META-INF/MOZILLA.RSA"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "META-INF/mozilla.rsa"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "META-INF/"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "mozilla.rsa"},
+		{"META-INF/META-INF.sf", "META-INF/META-INF.rsa", "META-INF"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", ".rsa"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "mozilla"},
+		{"META-INF/MoZiLLa.sf", "META-INF/MoZiLLa.rsa", "MoZiLLa"},
+		{"META-INF/MOZILLA.sf", "META-INF/MOZILLA.rsa", "MOZILLA"},
+		{"META-INF/MANIFEST.sf", "META-INF/MANIFEST.rsa", "MANIFEST"},
+		{"META-INF/manifest.sf", "META-INF/manifest.rsa", "manifest"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "manifest.mf"},
+		{"META-INF/sig.sf", "META-INF/sig.rsa", "sig"},
+		{"META-INF/sig-.sf", "META-INF/sig-.rsa", "sig-"},
+		{"META-INF/rsa.sf", "META-INF/rsa.rsa", "rsa"},
+		{"META-INF/dsa.sf", "META-INF/dsa.rsa", "dsa"},
+		{"META-INF/sf.sf", "META-INF/sf.rsa", "sf"},
+		{"META-INF/mf.sf", "META-INF/mf.rsa", "mf"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "cose.manifest"},
+		{"META-INF/cose.sf", "META-INF/cose.rsa", "cose"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "cose.sig"},
+		{"META-INF/cosesig.sf", "META-INF/cosesig.rsa", "cosesig"},
+		{"META-INF/cose-sig.sf", "META-INF/cose-sig.rsa", "cose-sig"},
+		{"META-INF/foo.sf", "META-INF/foo.rsa", "foo"},
+		{"META-INF/BAR.sf", "META-INF/BAR.rsa", "BAR"},
+		{"META-INF/FOO-bar.sf", "META-INF/FOO-bar.rsa", "FOO-bar"},
+		{"META-INF/f0O_BaR.sf", "META-INF/f0O_BaR.rsa", "f0O_BaR"},
+		{"META-INF/a-zA-Z0-9-_.sf", "META-INF/a-zA-Z0-9-_.rsa", "a-zA-Z0-9-_"},
+		{"META-INF/m.sf", "META-INF/m.rsa", "m"},
+		{"META-INF/M.sf", "META-INF/M.rsa", "M"},
+		{"META-INF/0.sf", "META-INF/0.rsa", "0"},
+		{"META-INF/9.sf", "META-INF/9.rsa", "9"},
+		{"META-INF/--.sf", "META-INF/--.rsa", "--"},
+		{"META-INF/__.sf", "META-INF/__.rsa", "__"},
+		{"META-INF/-.sf", "META-INF/-.rsa", "-"},
+		{"META-INF/_.sf", "META-INF/_.rsa", "_"},
+		{"META-INF/-_.sf", "META-INF/-_.rsa", "-_"},
+		{"META-INF/_-.sf", "META-INF/_-.rsa", "_-"},
+		{"META-INF/abcdefghijklmnopqrstuvwxyz012345.sf", "META-INF/abcdefghijklmnopqrstuvwxyz012345.rsa", "abcdefghijklmnopqrstuvwxyz012345"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "abcdefghijklmnopqrstuvwxyz0123456"},
+		{"META-INF/string_is_with_32_chars_NOT-long.sf", "META-INF/string_is_with_32_chars_NOT-long.rsa", "string_is_with_32_chars_NOT-long"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "string_is_with_33_chars_TOOO-long"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", ""},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", " "},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "."},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "*"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "@"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "!"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "?"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "#"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "/"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "\\"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "$"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "'"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "\""},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "+"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "~"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "%"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "&"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "="},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", ","},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", ";"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "<"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", ">"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "["},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "]"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "{"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "}"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "("},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", ")"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "|"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "\n"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "^"},
+		{"META-INF/mozilla.sf", "META-INF/mozilla.rsa", "rm -rf /*"},
+		{"META-INF/rm-rf.sf", "META-INF/rm-rf.rsa", "rm-rf"},
+	}
+	for i, testcase := range testcases {
+		value1, value2 := GetOwnerPaths(testcase.owner)
+		if value1 != testcase.SignatureFilePath {
+			t.Fatalf("testcase %d failed. %q returned %q, expected %q",
+				i, testcase.owner, value1, testcase.SignatureFilePath)
+		}
+		if value2 != testcase.SigPath {
+			t.Fatalf("testcase %d failed. %q returned %q, expected %q",
+				i, testcase.owner, value2, testcase.SigPath)
+		}
+	}
+}
+
 var PASSINGTESTCASES = []signer.Configuration{
 	signer.Configuration{
 		ID:    "rsa addon",
