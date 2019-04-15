@@ -18,4 +18,4 @@ RUN chmod +x /app/run-monitor-with-root-hash.sh
 
 USER app
 
-CMD /go/bin/autograph-monitor
+CMD /app/run-monitor-with-root-hash.sh
