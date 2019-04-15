@@ -13,7 +13,6 @@ RUN go build -o /go/bin/autograph-monitor /go/src/go.mozilla.org/autograph/tools
 RUN curl -o /app/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
       chmod +x /app/wait-for-it.sh
 
-ADD monitor.autograph.yaml /app
 ADD run-monitor-with-root-hash.sh /app
 RUN chmod +x /app/run-monitor-with-root-hash.sh
 
