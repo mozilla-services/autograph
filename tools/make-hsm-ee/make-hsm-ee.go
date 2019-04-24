@@ -20,7 +20,7 @@ import (
 func usage() {
 	fmt.Printf(`make an end-entity certificate on the hsm for use in content signature
 
-usage: go run make-hsm-ee.go -i <intermediate_label> -a <appname> -c <issuer_cert_path> (-p <hsm_lib_path> -t <hsm_type> -s <hsm_pin>)
+usage: go run make-hsm-ee.go -i <intermediate_label> -a <appname> -c <issuer_cert_path> (-p <hsm_lib_path> -t <hsm_type> -s <hsm_pin> -validDays <days_cert_valid_from_now>)
 
 eg. $ go run make-hsm-ee.go -i csinter1555704936 -a normandy -c issuer.pem
 `)
@@ -31,6 +31,7 @@ func main() {
 	var (
 		interKeyName, appName, hsmPath, hsmType, hsmPin, issuerCertPath string
 		slots                                                           []uint
+		validDays                                                       int
 		err                                                             error
 	)
 	flag.StringVar(&interKeyName, "i", "",
@@ -44,6 +45,7 @@ func main() {
 	flag.StringVar(&hsmPin, "s", "0000",
 		"pin to log into the hsm (use 'user:pass' on cloudhsm)")
 	flag.StringVar(&issuerCertPath, "c", "", "path to the issuer intermediate cert in PEM format")
+	flag.StringVar(&validDays, "validDays", 60, "number of days for the new EE cert to be valid")
 	flag.Parse()
 
 	if appName == "" || interKeyName == "" {
@@ -101,7 +103,7 @@ func main() {
 		},
 		DNSNames:           []string{appName + ".content-signature.mozilla.org"},
 		NotBefore:          time.Now().AddDate(0, 0, -30), // start 30 days ago
-		NotAfter:           time.Now().AddDate(0, 0, 60),  // valid for 60 days
+		NotAfter:           time.Now().AddDate(0, 0, validDays),
 		SignatureAlgorithm: x509.ECDSAWithSHA384,
 		IsCA:               false,
 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
