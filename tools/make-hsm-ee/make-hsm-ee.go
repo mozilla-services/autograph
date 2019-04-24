@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -66,9 +65,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	rng := new(crypto11.PKCS11RandReader)
 
 	// make a keypair for the end-entity
-	eePriv, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	eePriv, err := ecdsa.GenerateKey(elliptic.P384(), rng)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func main() {
 		KeyUsage:           x509.KeyUsageDigitalSignature,
 	}
 	eeCertBytes, err := x509.CreateCertificate(
-		rand.Reader, certTpl, certTpl, eePub, interPriv)
+		rng, certTpl, certTpl, eePub, interPriv)
 	if err != nil {
 		log.Fatalf("create cert failed: %v", err)
 	}
