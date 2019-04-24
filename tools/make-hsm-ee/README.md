@@ -4,6 +4,8 @@ Make an end-entity in the HSM
 To create an end-entity certificate for content signature with an intermediate
 key stored in the hsm, use this little helper.
 
+Use `-c` to provide an issuer parent certificate for the generated EE cert.
+
 It works with softhsm and you can set the -p, -t and -s values to use cloudhsm.
 
 ```bash

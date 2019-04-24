@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"time"
@@ -19,18 +20,18 @@ import (
 func usage() {
 	fmt.Printf(`make an end-entity certificate on the hsm for use in content signature
 
-usage: go run make-hsm-ee.go -i <intermediate_label> -a <appname> (-p <hsm_lib_path> -t <hsm_type> -s <hsm_pin>)
+usage: go run make-hsm-ee.go -i <intermediate_label> -a <appname> -c <issuer_cert_path> (-p <hsm_lib_path> -t <hsm_type> -s <hsm_pin>)
 
-eg. $ go run make-hsm-ee.go -i csinter1555704936 -a normandy
+eg. $ go run make-hsm-ee.go -i csinter1555704936 -a normandy -c issuer.pem
 `)
 
 	log.Fatal()
 }
 func main() {
 	var (
-		interKeyName, appName, hsmPath, hsmType, hsmPin string
-		slots                                           []uint
-		err                                             error
+		interKeyName, appName, hsmPath, hsmType, hsmPin, issuerCertPath string
+		slots                                                           []uint
+		err                                                             error
 	)
 	flag.StringVar(&interKeyName, "i", "",
 		"label of the private key of the intermediate in the hsm")
@@ -42,10 +43,24 @@ func main() {
 		"type of the hsm (use 'cavium' for cloudhsm)")
 	flag.StringVar(&hsmPin, "s", "0000",
 		"pin to log into the hsm (use 'user:pass' on cloudhsm)")
+	flag.StringVar(&issuerCertPath, "c", "", "path to the issuer intermediate cert in PEM format")
 	flag.Parse()
 
 	if appName == "" || interKeyName == "" {
 		usage()
+	}
+
+	issuerCertBytes, err := ioutil.ReadFile(issuerCertPath)
+	if err != nil {
+		log.Fatalf("error reading issuer cert: %s", err.Error())
+	}
+	block, _ := pem.Decode(issuerCertBytes)
+	if block == nil {
+		log.Fatal("No pem block found in issuer cert")
+	}
+	issuer, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		log.Fatalf("failed to parse issuer certificate: %s", err.Error())
 	}
 
 	p11Ctx, err := crypto11.Configure(&crypto11.PKCS11Config{
@@ -93,7 +108,7 @@ func main() {
 		KeyUsage:           x509.KeyUsageDigitalSignature,
 	}
 	eeCertBytes, err := x509.CreateCertificate(
-		rng, certTpl, certTpl, eePub, interPriv)
+		rng, certTpl, issuer, eePub, interPriv)
 	if err != nil {
 		log.Fatalf("create cert failed: %v", err)
 	}
