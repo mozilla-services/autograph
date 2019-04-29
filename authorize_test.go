@@ -132,6 +132,9 @@ func TestNonceFromLRU(t *testing.T) {
 		0)
 	req.Header.Set("Authorization", auth1.RequestHeader())
 	_, _, err = ag.authorizeHeader(req)
+	if err != nil {
+		t.Fatalf("error authorizing header for first request: %s", err)
+	}
 
 	auth2 := hawk.NewRequestAuth(req,
 		&hawk.Credentials{
@@ -141,6 +144,9 @@ func TestNonceFromLRU(t *testing.T) {
 		0)
 	req.Header.Set("Authorization", auth2.RequestHeader())
 	_, _, err = ag.authorizeHeader(req)
+	if err != nil {
+		t.Fatalf("error authorizing header for second request: %s", err)
+	}
 
 	if ag.nonces.Contains(auth1.Nonce) {
 		t.Errorf("First nonce %q found in cache, should have been removed", auth1.Nonce)
