@@ -91,6 +91,7 @@ func main() {
 	}
 	eePub := eePriv.Public()
 
+	expiresAt := time.Now().AddDate(0, 0, validDays)
 	certTpl := &x509.Certificate{
 		SerialNumber: big.NewInt(time.Now().UnixNano()),
 		Subject: pkix.Name{
@@ -103,7 +104,7 @@ func main() {
 		},
 		DNSNames:           []string{appName + ".content-signature.mozilla.org"},
 		NotBefore:          time.Now().AddDate(0, 0, -30), // start 30 days ago
-		NotAfter:           time.Now().AddDate(0, 0, validDays),
+		NotAfter:           expiresAt,
 		SignatureAlgorithm: x509.ECDSAWithSHA384,
 		IsCA:               false,
 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
@@ -115,22 +116,35 @@ func main() {
 		log.Fatalf("create cert failed: %v", err)
 	}
 
+	// date format explanation https://golang.org/src/time/format.go?h=stdLongMonth#L88
+	outputBasename := fmt.Sprintf("%s.content-signature.mozilla.org-%s", appName, expiresAt.UTC().Format("20060102"))
+
 	var eePem bytes.Buffer
 	err = pem.Encode(&eePem, &pem.Block{Type: "CERTIFICATE", Bytes: eeCertBytes})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%s\n", eePem.Bytes())
+	err = ioutil.WriteFile(outputBasename + ".crt", eePem.Bytes(), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	eePrivBytes, err := x509.MarshalECPrivateKey(eePriv)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	secp384r1ECParams := "-----BEGIN EC PARAMETERS-----\nBgUrgQQAIg==\n-----END EC PARAMETERS-----\n"
+
 	var eePrivPem bytes.Buffer
 	err = pem.Encode(&eePrivPem,
 		&pem.Block{Type: "EC PRIVATE KEY", Bytes: eePrivBytes})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%s\n", eePrivPem.Bytes())
+	msgBody := fmt.Sprintf("%s%s\n", secp384r1ECParams, eePrivPem.Bytes())
+	err = ioutil.WriteFile(outputBasename + ".key", []byte(msgBody), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

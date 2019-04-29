@@ -8,9 +8,12 @@ Use `-c` to provide an issuer parent certificate for the generated EE cert.
 
 It works with softhsm and you can set the -p, -t and -s values to use cloudhsm.
 
+It writes PEM encode .crt and .key files:
+
 ```bash
 $ go run make-hsm-ee.go -i csinter1555704936 -a normandy
 2019/04/19 16:28:35 Using HSM on slot 1623786617
+$ cat normandy.content-signature.mozilla.org-20190618.crt
 -----BEGIN CERTIFICATE-----
 MIIC1DCCAlmgAwIBAgIIFZb6GxhoICAwCgYIKoZIzj0EAwMwgaIxCzAJBgNVBAYT
 AlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3
@@ -29,7 +32,10 @@ MGYCMQC8uYmh4IlervdE3jR+4/6C5Ule1y1HDOwCW+unWkcD0vbrqOR6k8S32xys
 OeamUrQCMQCXq9qX1fValotzEqhdPKW4iypbyee7H6wRmrMksBLhDubXsgkpBaIv
 xuPik9soVSs=
 -----END CERTIFICATE-----
-
+$ cat normandy.content-signature.mozilla.org-20190618.key
+-----BEGIN EC PARAMETERS-----
+BgUrgQQAIg==
+-----END EC PARAMETERS-----
 -----BEGIN EC PRIVATE KEY-----
 MIGkAgEBBDDmqnXXKxUYAyQuIIucyB4HslkRbfI2tEF4djRZDSnaA4W8t62WF1ax
 4dcNFAgo4smgBwYFK4EEACKhZANiAASTkkCEi8NB2LTq+0+yJRxWfsOgP0uLDlZb
