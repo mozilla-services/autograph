@@ -45,7 +45,7 @@ func main() {
 	flag.StringVar(&hsmPin, "s", "0000",
 		"pin to log into the hsm (use 'user:pass' on cloudhsm)")
 	flag.StringVar(&issuerCertPath, "c", "", "path to the issuer intermediate cert in PEM format")
-	flag.StringVar(&validDays, "validDays", 60, "number of days for the new EE cert to be valid")
+	flag.IntVar(&validDays, "validDays", 60, "number of days for the new EE cert to be valid")
 	flag.Parse()
 
 	if appName == "" || interKeyName == "" {
