@@ -3,7 +3,6 @@ package contentsignaturepki
 import (
 	"bytes"
 	"crypto"
-	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -106,7 +105,7 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 		KeyUsage:           x509.KeyUsageDigitalSignature,
 	}
 
-	certBytes, err := x509.CreateCertificate(rand.Reader, crtTpl, issuer, s.eePub, s.issuerPriv)
+	certBytes, err := x509.CreateCertificate(s.rand, crtTpl, issuer, s.eePub, s.issuerPriv)
 	if err != nil {
 		err = errors.Wrap(err, "failed to issue end-entity cert")
 		return
