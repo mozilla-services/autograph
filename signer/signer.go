@@ -348,7 +348,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in hsm")
 			}
-			pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).Public()
+			pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).PubKey.(*ecdsa.PublicKey)
 			return
 		case *rsa.PublicKey:
 			keySize := keyTplType.Size()
@@ -356,7 +356,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "failed to generate rsa key in hsm")
 			}
-			pub = priv.(*crypto11.PKCS11PrivateKeyRSA).Public()
+			pub = priv.(*crypto11.PKCS11PrivateKeyRSA).PubKey.(*rsa.PublicKey)
 			return
 		default:
 			return nil, nil, errors.Errorf("making key of type %T is not supported", keyTpl)
