@@ -341,17 +341,18 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		if len(slots) < 1 {
 			return nil, nil, errors.New("failed to find a usable slot in hsm context")
 		}
-		switch keyTpl.(type) {
+		keyNameBytes := []byte(keyName)
+		switch keyTplType := keyTpl.(type) {
 		case *ecdsa.PublicKey:
-			priv, err = crypto11.GenerateECDSAKeyPairOnSlot(slots[0], []byte(keyName), []byte(keyName), keyTpl.(*ecdsa.PublicKey))
+			priv, err = crypto11.GenerateECDSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keyTplType)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in hsm")
 			}
 			pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).Public()
 			return
 		case *rsa.PublicKey:
-			keySize := keyTpl.(*rsa.PublicKey).Size()
-			priv, err = crypto11.GenerateRSAKeyPairOnSlot(slots[0], []byte(keyName), []byte(keyName), keySize)
+			keySize := keyTplType.Size()
+			priv, err = crypto11.GenerateRSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keySize)
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "failed to generate rsa key in hsm")
 			}
@@ -362,9 +363,9 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		}
 	}
 	// no hsm, make keys in memory
-	switch keyTpl.(type) {
+	switch keyTplType := keyTpl.(type) {
 	case *ecdsa.PublicKey:
-		switch keyTpl.(*ecdsa.PublicKey).Params().Name {
+		switch keyTplType.Params().Name {
 		case "P-256":
 			priv, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 		case "P-384":
@@ -379,7 +380,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		pub = priv.(*ecdsa.PrivateKey).Public()
 		return
 	case *rsa.PublicKey:
-		keySize := keyTpl.(*rsa.PublicKey).Size()
+		keySize := keyTplType.Size()
 		priv, err = rsa.GenerateKey(rand.Reader, keySize)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "failed to generate rsa key in memory")
