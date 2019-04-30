@@ -1,16 +1,16 @@
 package cose
 
 import (
-	"encoding/base64"
 	"crypto"
 	"crypto/ecdsa"
-	"crypto/rsa"
-	"crypto/rand"
 	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/subtle"
+	"encoding/base64"
+	"github.com/pkg/errors"
 	"io"
 	"math/big"
-	"github.com/pkg/errors"
 )
 
 // ContextSignature identifies the context of the signature as a
@@ -89,12 +89,12 @@ func NewSigner(alg *Algorithm, options interface{}) (signer *Signer, err error) 
 			return nil, err
 		}
 	} else {
-                return nil, ErrUnknownPrivateKeyType
-        }
+		return nil, ErrUnknownPrivateKeyType
+	}
 
 	return &Signer{
 		PrivateKey: privateKey,
-		alg: alg,
+		alg:        alg,
 	}, nil
 }
 
@@ -109,7 +109,7 @@ func NewSignerFromKey(alg *Algorithm, privateKey crypto.PrivateKey) (signer *Sig
 	}
 	return &Signer{
 		PrivateKey: privateKey,
-		alg: alg,
+		alg:        alg,
 	}, nil
 }
 
@@ -158,9 +158,10 @@ func (s *Signer) Sign(rand io.Reader, digest []byte) (signature []byte, err erro
 		// These integers (r and s) will be the same length as
 		// the length of the key used for the signature
 		// process.
+		const tolerance = uint(1)
 		rByteLen, sByteLen, dByteLen := len(s.Bits()), len(r.Bits()), len(key.D.Bits())
-		if !(sByteLen == rByteLen && sByteLen == dByteLen) {
-			return nil, errors.Errorf("Byte lengths of integers r and s (%d and %d) do not match the key length %d\n", sByteLen, rByteLen, dByteLen)
+		if !(approxEqual(sByteLen, rByteLen, tolerance) && approxEqual(sByteLen, dByteLen, tolerance) && approxEqual(dByteLen, rByteLen, tolerance)) {
+			return nil, errors.Errorf("Byte lengths of integers r and s (%d and %d) do not match the key length %d±%d\n", sByteLen, rByteLen, dByteLen, tolerance)
 		}
 
 		// The signature is encoded by converting the integers
@@ -304,9 +305,9 @@ func ecdsaCurveKeyBytesSize(curve elliptic.Curve) (keyBytesSize int) {
 // https://tools.ietf.org/html/rfc8017#section-4.1
 func I2OSP(b *big.Int, n int) []byte {
 	var (
-		octetString = b.Bytes()
+		octetString     = b.Bytes()
 		octetStringSize = len(octetString)
-		result = make([]byte, n)
+		result          = make([]byte, n)
 	)
 	if !(b.Sign() == 0 || b.Sign() == 1) {
 		panic("I2OSP error: integer must be zero or positive")
@@ -315,8 +316,8 @@ func I2OSP(b *big.Int, n int) []byte {
 		panic("I2OSP error: integer too large")
 	}
 
-	subtle.ConstantTimeCopy(1, result[:n - octetStringSize], result[:n - octetStringSize])
-	subtle.ConstantTimeCopy(1, result[n - octetStringSize:], octetString)
+	subtle.ConstantTimeCopy(1, result[:n-octetStringSize], result[:n-octetStringSize])
+	subtle.ConstantTimeCopy(1, result[n-octetStringSize:], octetString)
 	return result
 }
 
@@ -331,7 +332,6 @@ func FromBase64Int(data string) *big.Int {
 	}
 	return new(big.Int).SetBytes(val)
 }
-
 
 // Sign returns the SignatureBytes for each Signer in the same order
 // on the digest or the error from the first failing Signer
@@ -361,4 +361,20 @@ func Verify(digest []byte, signatures [][]byte, verifiers []ByteVerifier) (err e
 		}
 	}
 	return nil
+}
+
+// approxEquals returns a bool of whether x and y are equal to within
+// a given tolerance
+func approxEqual(x, y int, tolerance uint) bool {
+	var (
+		larger, smaller int
+	)
+	if x > y {
+		larger = x
+		smaller = y
+	} else {
+		larger = y
+		smaller = x
+	}
+	return uint(larger-smaller) <= tolerance
 }
