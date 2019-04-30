@@ -1,16 +1,16 @@
 package cose
 
 import (
-	"encoding/base64"
 	"crypto"
 	"crypto/ecdsa"
-	"crypto/rsa"
-	"crypto/rand"
 	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/subtle"
+	"encoding/base64"
+	"github.com/pkg/errors"
 	"io"
 	"math/big"
-	"github.com/pkg/errors"
 )
 
 // ContextSignature identifies the context of the signature as a
@@ -89,12 +89,12 @@ func NewSigner(alg *Algorithm, options interface{}) (signer *Signer, err error) 
 			return nil, err
 		}
 	} else {
-                return nil, ErrUnknownPrivateKeyType
-        }
+		return nil, ErrUnknownPrivateKeyType
+	}
 
 	return &Signer{
 		PrivateKey: privateKey,
-		alg: alg,
+		alg:        alg,
 	}, nil
 }
 
@@ -109,7 +109,7 @@ func NewSignerFromKey(alg *Algorithm, privateKey crypto.PrivateKey) (signer *Sig
 	}
 	return &Signer{
 		PrivateKey: privateKey,
-		alg: alg,
+		alg:        alg,
 	}, nil
 }
 
@@ -304,9 +304,9 @@ func ecdsaCurveKeyBytesSize(curve elliptic.Curve) (keyBytesSize int) {
 // https://tools.ietf.org/html/rfc8017#section-4.1
 func I2OSP(b *big.Int, n int) []byte {
 	var (
-		octetString = b.Bytes()
+		octetString     = b.Bytes()
 		octetStringSize = len(octetString)
-		result = make([]byte, n)
+		result          = make([]byte, n)
 	)
 	if !(b.Sign() == 0 || b.Sign() == 1) {
 		panic("I2OSP error: integer must be zero or positive")
@@ -315,8 +315,8 @@ func I2OSP(b *big.Int, n int) []byte {
 		panic("I2OSP error: integer too large")
 	}
 
-	subtle.ConstantTimeCopy(1, result[:n - octetStringSize], result[:n - octetStringSize])
-	subtle.ConstantTimeCopy(1, result[n - octetStringSize:], octetString)
+	subtle.ConstantTimeCopy(1, result[:n-octetStringSize], result[:n-octetStringSize])
+	subtle.ConstantTimeCopy(1, result[n-octetStringSize:], octetString)
 	return result
 }
 
@@ -331,7 +331,6 @@ func FromBase64Int(data string) *big.Int {
 	}
 	return new(big.Int).SetBytes(val)
 }
-
 
 // Sign returns the SignatureBytes for each Signer in the same order
 // on the digest or the error from the first failing Signer
