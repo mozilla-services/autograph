@@ -6,39 +6,50 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
+	"time"
+
+	"go.mozilla.org/autograph/signer/contentsignaturepki"
 )
 
-func TestVerifyContentSignature(t *testing.T) {
+func serverAndWaitForSetup(handlerURI, chain, port string) {
 	go func() {
-		http.HandleFunc("/normandychain", func(w http.ResponseWriter, r *http.Request) {
-			chain, err := ioutil.ReadFile(os.Getenv("GOPATH") + `/src/go.mozilla.org/autograph/docs/statics/normandy.content-signature.mozilla.org-20210705.dev.chain`)
-			if err != nil {
-				t.Fatal(err)
-			}
-			fmt.Fprintf(w, "%s", chain)
+		http.HandleFunc(handlerURI, func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, chain)
 		})
-		log.Fatal(http.ListenAndServe(":64320", nil))
+		log.Fatal(http.ListenAndServe(":"+port, nil))
 	}()
-	err := verifyContentSignature(ValidMonitoringContentSignature)
+	setupTimeout, _ := time.ParseDuration("10s")
+	conn, _ := net.DialTimeout("tcp", net.JoinHostPort("", port), setupTimeout)
+	if conn != nil {
+		conn.Close()
+	}
+	return
+}
+
+func TestVerifyContentSignature(t *testing.T) {
+	chain, err := ioutil.ReadFile(os.Getenv("GOPATH") + `/src/go.mozilla.org/autograph/docs/statics/normandy.content-signature.mozilla.org-20210705.dev.chain`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	serverAndWaitForSetup("/normandychain", string(chain), "64320")
+
+	err = verifyContentSignature(ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}
 }
 
 func TestVerifyExpiredCertChain(t *testing.T) {
-	go func() {
-		http.HandleFunc("/expiredcertchain", func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintf(w, ExpiredEndEntityChain)
-		})
-		log.Fatal(http.ListenAndServe(":64321", nil))
-	}()
-	chain, err := getX5U("http://localhost:64321/expiredcertchain")
-	if err != nil {
-		t.Fatalf("Failed to retrieved certificate chain: %v", err)
+	serverAndWaitForSetup("/expiredcertchain", ExpiredEndEntityChain, "64321")
+
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64321/expiredcertchain")
+	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
+		t.Fatalf("Failed to retrieve certificate chain: %v", err)
 	}
 	err = verifyCertChain(chain)
 	if err == nil {
@@ -51,13 +62,9 @@ func TestVerifyExpiredCertChain(t *testing.T) {
 }
 
 func TestVerifyWronglyOrderedChain(t *testing.T) {
-	go func() {
-		http.HandleFunc("/wronglyorderedchain", func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintf(w, WronglyOrderedChain)
-		})
-		log.Fatal(http.ListenAndServe(":64322", nil))
-	}()
-	chain, err := getX5U("http://localhost:64322/wronglyorderedchain")
+	serverAndWaitForSetup("/wronglyorderedchain", WronglyOrderedChain, "64322")
+
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64322/wronglyorderedchain")
 	if err != nil {
 		t.Fatalf("Failed to retrieved certificate chain: %v", err)
 	}
