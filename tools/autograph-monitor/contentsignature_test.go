@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
 )
@@ -25,7 +27,13 @@ func TestVerifyContentSignature(t *testing.T) {
 		})
 		log.Fatal(http.ListenAndServe(":64320", nil))
 	}()
-	err := verifyContentSignature(ValidMonitoringContentSignature)
+	setupTimeout, _ := time.ParseDuration("10s")
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort("", "64320"), setupTimeout)
+	if conn != nil {
+		conn.Close()
+	}
+
+	err = verifyContentSignature(ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}
