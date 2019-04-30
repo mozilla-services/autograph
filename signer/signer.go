@@ -164,10 +164,10 @@ func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.P
 	}
 
 	var publicKeyBytes []byte
-	switch priv.(type) {
+	switch privateKey := priv.(type) {
 	case *rsa.PrivateKey:
-		pub = priv.(*rsa.PrivateKey).Public()
-		publicKeyBytes, err = x509.MarshalPKIXPublicKey(&priv.(*rsa.PrivateKey).PublicKey)
+		pub = privateKey.Public()
+		publicKeyBytes, err = x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
 		if err != nil {
 			err = errors.Wrap(err, "failed to asn1 marshal rsa public key")
 			return
@@ -175,8 +175,8 @@ func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.P
 		rng = rand.Reader
 
 	case *ecdsa.PrivateKey:
-		pub = priv.(*ecdsa.PrivateKey).Public()
-		publicKeyBytes, err = x509.MarshalPKIXPublicKey(&priv.(*ecdsa.PrivateKey).PublicKey)
+		pub = privateKey.Public()
+		publicKeyBytes, err = x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
 		if err != nil {
 			err = errors.Wrap(err, "failed to asn1 marshal ecdsa public key")
 			return
@@ -184,8 +184,8 @@ func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.P
 		rng = rand.Reader
 
 	case *crypto11.PKCS11PrivateKeyECDSA:
-		pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).Public()
-		publicKeyBytes, err = x509.MarshalPKIXPublicKey(priv.(*crypto11.PKCS11PrivateKeyECDSA).PubKey.(*ecdsa.PublicKey))
+		pub = privateKey.Public()
+		publicKeyBytes, err = x509.MarshalPKIXPublicKey(privateKey.PubKey.(*ecdsa.PublicKey))
 		if err != nil {
 			err = errors.Wrap(err, "failed to asn1 marshal crypto11 ecdsa public key")
 			return
@@ -193,8 +193,8 @@ func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.P
 		rng = new(crypto11.PKCS11RandReader)
 
 	case *crypto11.PKCS11PrivateKeyRSA:
-		pub = priv.(*crypto11.PKCS11PrivateKeyRSA).Public()
-		publicKeyBytes, err = x509.MarshalPKIXPublicKey(priv.(*crypto11.PKCS11PrivateKeyRSA).PubKey.(*rsa.PublicKey))
+		pub = privateKey.Public()
+		publicKeyBytes, err = x509.MarshalPKIXPublicKey(privateKey.PubKey.(*rsa.PublicKey))
 		if err != nil {
 			err = errors.Wrap(err, "failed to asn1 marshal crypto11 rsa public key")
 			return
