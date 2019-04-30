@@ -163,50 +163,42 @@ func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.P
 		return
 	}
 
-	var publicKeyBytes []byte
+	var (
+		publicKeyBytes []byte
+		unmarshaledPub crypto.PublicKey
+	)
 	switch privateKey := priv.(type) {
 	case *rsa.PrivateKey:
 		pub = privateKey.Public()
-		publicKeyBytes, err = x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-		if err != nil {
-			err = errors.Wrap(err, "failed to asn1 marshal rsa public key")
-			return
-		}
+		unmarshaledPub = &privateKey.PublicKey
 		rng = rand.Reader
 
 	case *ecdsa.PrivateKey:
 		pub = privateKey.Public()
-		publicKeyBytes, err = x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
-		if err != nil {
-			err = errors.Wrap(err, "failed to asn1 marshal ecdsa public key")
-			return
-		}
+		unmarshaledPub = &privateKey.PublicKey
 		rng = rand.Reader
 
 	case *crypto11.PKCS11PrivateKeyECDSA:
 		pub = privateKey.Public()
-		publicKeyBytes, err = x509.MarshalPKIXPublicKey(privateKey.PubKey.(*ecdsa.PublicKey))
-		if err != nil {
-			err = errors.Wrap(err, "failed to asn1 marshal crypto11 ecdsa public key")
-			return
-		}
+		unmarshaledPub = privateKey.PubKey.(*ecdsa.PublicKey)
 		rng = new(crypto11.PKCS11RandReader)
 
 	case *crypto11.PKCS11PrivateKeyRSA:
 		pub = privateKey.Public()
-		publicKeyBytes, err = x509.MarshalPKIXPublicKey(privateKey.PubKey.(*rsa.PublicKey))
-		if err != nil {
-			err = errors.Wrap(err, "failed to asn1 marshal crypto11 rsa public key")
-			return
-		}
+		unmarshaledPub = privateKey.PubKey.(*rsa.PublicKey)
 		rng = new(crypto11.PKCS11RandReader)
 
 	default:
 		err = errors.Errorf("unsupported private key type %T", priv)
 		return
 	}
-	publicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
 
+	publicKeyBytes, err = x509.MarshalPKIXPublicKey(unmarshaledPub)
+	if err != nil {
+		err = errors.Wrap(err, "failed to asn1 marshal %T public key")
+		return
+	}
+	publicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
 	return
 }
 
