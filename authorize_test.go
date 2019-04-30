@@ -117,8 +117,6 @@ func TestDuplicateNonce(t *testing.T) {
 }
 
 func TestNonceFromLRU(t *testing.T) {
-	t.Parallel()
-
 	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", nil)
 	if err != nil {
 		t.Fatal(err)
