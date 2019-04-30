@@ -158,9 +158,10 @@ func (s *Signer) Sign(rand io.Reader, digest []byte) (signature []byte, err erro
 		// These integers (r and s) will be the same length as
 		// the length of the key used for the signature
 		// process.
+		const tolerance = uint(1)
 		rByteLen, sByteLen, dByteLen := len(s.Bits()), len(r.Bits()), len(key.D.Bits())
-		if !(sByteLen == rByteLen && sByteLen == dByteLen) {
-			return nil, errors.Errorf("Byte lengths of integers r and s (%d and %d) do not match the key length %d\n", sByteLen, rByteLen, dByteLen)
+		if !(approxEqual(sByteLen, rByteLen, tolerance) && approxEqual(sByteLen, dByteLen, tolerance) && approxEqual(dByteLen, rByteLen, tolerance)) {
+			return nil, errors.Errorf("Byte lengths of integers r and s (%d and %d) do not match the key length %d±%d\n", sByteLen, rByteLen, dByteLen, tolerance)
 		}
 
 		// The signature is encoded by converting the integers
@@ -360,4 +361,20 @@ func Verify(digest []byte, signatures [][]byte, verifiers []ByteVerifier) (err e
 		}
 	}
 	return nil
+}
+
+// approxEquals returns a bool of whether x and y are equal to within
+// a given tolerance
+func approxEqual(x, y int, tolerance uint) bool {
+	var (
+		larger, smaller int
+	)
+	if x > y {
+		larger = x
+		smaller = y
+	} else {
+		larger = y
+		smaller = x
+	}
+	return uint(larger-smaller) <= tolerance
 }
