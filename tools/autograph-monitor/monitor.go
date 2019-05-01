@@ -85,15 +85,12 @@ func main() {
 		// we are inside a lambda environment so run as lambda
 		lambda.Start(Handler)
 	} else {
-		// on the command line, run in a loop every 10s
-		for {
-			err := Handler()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error: %v\n", err)
-				os.Exit(1)
-			}
-			time.Sleep(60 * time.Second)
+		err := Handler()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
 		}
+		os.Exit(0)
 	}
 }
 
