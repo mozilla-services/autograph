@@ -67,7 +67,7 @@ jobs:
       - run:
           name: Run unit tests
           command: |
-            make test
+            make generate test
       - run:
           name: Report coverage
           command: |
