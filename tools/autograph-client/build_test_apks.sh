@@ -32,8 +32,8 @@ VERIFY=${VERIFY:-"0"}
 if [ "$VERIFY" = "1" ]; then
     # need to be running as root
     apt update
-    apt install -y android-sdk-build-tools
+    apt install -y android-sdk-build-tools apksigner
     for apk in $(ls *.resigned.apk); do
-      /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose $apk
+      java -jar /usr/bin/apksigner verify --verbose $apk
     done
 fi
