@@ -13,7 +13,7 @@ services:
       - "5432:5432"
     command: postgres -c 'ssl=on' -c 'ssl_cert_file=/opt/server.crt' -c 'ssl_key_file=/opt/server.key'
 
-  autograph-app:
+  app:
     container_name: autograph-app
     image: autograph-app
     build:
@@ -26,7 +26,7 @@ services:
       timeout: 10s
       retries: 3
 
-  autograph-app-hsm:
+  app-hsm:
     container_name: autograph-app-hsm
     image: autograph-app-hsm
     build:
@@ -54,7 +54,7 @@ services:
       timeout: 10s
       retries: 3
 
-  autograph-monitor:
+  monitor:
     container_name: autograph-monitor
     image: autograph-monitor
     build:
@@ -62,7 +62,7 @@ services:
     environment:
       - AUTOGRAPH_URL=http://autograph-app:8000/
     links:
-      - autograph-app
+      - app
     volumes:
       - tmpdir:/tmp/
     command:
@@ -73,7 +73,7 @@ services:
         "/go/bin/autograph-monitor",
       ]
 
-  autograph-monitor-hsm:
+  monitor-hsm:
     container_name: autograph-monitor-hsm
     image: autograph-monitor
     build:
@@ -81,7 +81,7 @@ services:
     environment:
       - AUTOGRAPH_URL=http://autograph-app-hsm:8001/
     links:
-      - autograph-app-hsm
+      - app-hsm
     volumes:
       - tmpdir:/tmp/
     command:
