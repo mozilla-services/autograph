@@ -18,8 +18,14 @@ services:
     image: autograph-app
     build:
       context: .
+    environment:
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
+    links:
+      - db
     ports:
       - "8000:8000"
+    volumes:
+      - tmpdir:/tmp/
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/__heartbeat__"]
       interval: 60s
