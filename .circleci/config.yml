@@ -141,9 +141,9 @@ jobs:
           name: check monitoring works
           command: |
             if [ "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor)" ]; then \
-              echo "Monitor is failing"; exit 1; fi
+              echo "Monitor is failing"; docker-compose logs autograph-monitor; exit 1; fi
             if [ "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-hsm)" ]; then \
-              echo "Monitor is failing"; exit 1; fi
+              echo "HSM Monitor is failing"; docker-compose logs autograph-monitor-hsm; exit 1; fi
 
       - run:
           name: check XPI signing works against Autograph
