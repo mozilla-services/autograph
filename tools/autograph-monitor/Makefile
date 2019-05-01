@@ -1,6 +1,6 @@
 build:
 	go build -o autograph-monitor *.go
-	zip -r autograph-monitor.zip autograph-monitor monitor.autograph.yaml
+	zip -r autograph-monitor.zip autograph-monitor
 test:
 	go test go.mozilla.org/autograph/tools/autograph-monitor
 lint:
