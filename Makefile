@@ -144,7 +144,13 @@ showcoverage: test
 generate:
 	$(GO) generate
 
+build: generate
+	docker-compose build app app-hsm monitor monitor-hsm
+
+integration-test:
+	./bin/run_integration_tests.sh
+
 dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
-.PHONY: all dummy-statsd test generate vendor
+.PHONY: all dummy-statsd test generate vendor integration-test

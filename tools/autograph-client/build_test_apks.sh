@@ -2,7 +2,8 @@
 
 set -e
 
-# CI script to fetch and check autograph and its go client can sign APKs
+# CI script to fetch and check the autograph go client can sign APKs
+# optionally verifies the APKs when env var VERIFY=1
 
 FENNEC_NIGHTLY_URL=https://archive.mozilla.org/pub/mobile/nightly/2018/10/2018-10-01-10-01-42-mozilla-central-android-api-16/fennec-64.0a1.multi.android-arm.apk
 FENNEC_BETA_URL=https://archive.mozilla.org/pub/mobile/releases/64.0b9/android-api-16/en-US/fennec-64.0b9.en-US.android-arm.apk
@@ -26,4 +27,13 @@ go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.a
 # Sign with RSA
 go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.rsa.resigned.apk -k testapp-android
 
-tar cvzf resigned-apks.tgz *.resigned.apk
+# previously from circleci/android:api-25-alpha
+VERIFY=${VERIFY:-"0"}
+if [ "$VERIFY" = "1" ]; then
+    # need to be running as root
+    apt update
+    apt install -y android-sdk-build-tools
+    for apk in $(ls *.resigned.apk); do
+      /opt/android/sdk/build-tools/27.0.3/apksigner verify --verbose $apk
+    done
+fi
