@@ -27,13 +27,17 @@ go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.a
 # Sign with RSA
 go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.rsa.resigned.apk -k testapp-android
 
-# previously from circleci/android:api-25-alpha
 VERIFY=${VERIFY:-"0"}
 if [ "$VERIFY" = "1" ]; then
-    # need to be running as root
-    apt update
-    apt install -y android-sdk-build-tools apksigner
+    # previously from circleci/android:api-25-alpha
+    # NB: need to be running as root
+    echo 'deb http://deb.debian.org/debian buster main' > /etc/apt/sources.list.d/buster.list
+    echo 'deb http://deb.debian.org/debian stretch-backports main' > /etc/apt/sources.list.d/stretch-backports.list
+    apt update -qq
+    apt -t stretch-backports install -y openjdk-11-jre
+    apt -t buster install -y android-sdk-build-tools apksigner
     for apk in $(ls *.resigned.apk); do
-      java -jar /usr/bin/apksigner verify --verbose $apk
+        echo "verifying ${apk}"
+        java -jar /usr/bin/apksigner verify --verbose $apk
     done
 fi
