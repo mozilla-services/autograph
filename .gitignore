@@ -35,3 +35,4 @@ tools/sign-addon/venv/*
 
 tools/autograph-monitor/vendor/go.mozilla.org/autograph/*
 vendor/go.mozilla.org/cose/samples/*
+version.json

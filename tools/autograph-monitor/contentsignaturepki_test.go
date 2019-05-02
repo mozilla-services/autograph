@@ -79,7 +79,7 @@ func TestVerifyWronglyOrderedChain(t *testing.T) {
 }
 
 func TestVerifyFirefoxRoot(t *testing.T) {
-	conf.RootHash = "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E"
+	conf.rootHash = "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E"
 	block, _ := pem.Decode(FirefoxPKIRootPEM)
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")
@@ -95,7 +95,7 @@ func TestVerifyFirefoxRoot(t *testing.T) {
 }
 
 func TestVerifyFirefoxRootWithBadHash(t *testing.T) {
-	conf.RootHash = "foo"
+	conf.rootHash = "foo"
 	block, _ := pem.Decode(FirefoxPKIRootPEM)
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")
@@ -114,7 +114,7 @@ func TestVerifyFirefoxRootWithBadHash(t *testing.T) {
 }
 
 func TestVerifyFirefoxStagingRoot(t *testing.T) {
-	conf.RootHash = "DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90"
+	conf.rootHash = "DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90"
 	block, _ := pem.Decode(FirefoxPKIStagingRootPEM)
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")

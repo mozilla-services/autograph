@@ -135,8 +135,8 @@ func verifyRoot(cert *x509.Certificate) error {
 	if !cert.IsCA {
 		return fmt.Errorf("missing IS CA extension")
 	}
-	if conf.RootHash != "" {
-		rhash := strings.Replace(conf.RootHash, ":", "", -1)
+	if conf.rootHash != "" {
+		rhash := strings.Replace(conf.rootHash, ":", "", -1)
 		// We're configure to check the root hash matches expected value
 		h := sha256.Sum256(cert.Raw)
 		chash := fmt.Sprintf("%X", h[:])
