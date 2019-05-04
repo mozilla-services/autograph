@@ -109,7 +109,10 @@ func (s *XPISigner) makeTemplate(cn string) *x509.Certificate {
 			Province:           []string{"CA"},
 			Locality:           []string{"Mountain View"},
 		},
-		NotBefore:          time.Now(),
+		// set the start date of the EE cert before the expiration of the AMO intermediate
+		// from armagaddon. https://bugzilla.mozilla.org/show_bug.cgi?id=1548973
+		NotBefore:          time.Unix(1556300000, 0),
+
 		NotAfter:           time.Now().Add(8760 * time.Hour), // one year
 		SignatureAlgorithm: s.issuerCert.SignatureAlgorithm,
 		KeyUsage:           x509.KeyUsageDigitalSignature,
