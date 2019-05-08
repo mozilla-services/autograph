@@ -8,7 +8,7 @@ version: 2
 jobs:
   lint-vet-fmt:
     docker:
-      - image: golang:1.11
+      - image: golang:1.12
     working_directory: /usr/local/go/src/go.mozilla.org/autograph
     steps:
       - checkout
@@ -31,7 +31,7 @@ jobs:
 
   unit-test:
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:1.12
       - image: circleci/postgres:11
         environment:
           POSTGRES_USER: root
@@ -77,7 +77,7 @@ jobs:
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
     docker:
-      - image: circleci/golang:1.11.4
+      - image: circleci/golang:1.12
     working_directory: /go/src/go.mozilla.org/autograph
     steps:
       - checkout
