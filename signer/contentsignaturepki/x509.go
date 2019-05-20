@@ -99,7 +99,6 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 		DNSNames:           []string{cn},
 		NotBefore:          notBefore,
 		NotAfter:           notAfter,
-		SignatureAlgorithm: issuer.SignatureAlgorithm,
 		IsCA:               false,
 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
 		KeyUsage:           x509.KeyUsageDigitalSignature,
