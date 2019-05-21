@@ -96,13 +96,12 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 			Province:           []string{"California"},
 			Locality:           []string{"Mountain View"},
 		},
-		DNSNames:           []string{cn},
-		NotBefore:          notBefore,
-		NotAfter:           notAfter,
-		SignatureAlgorithm: issuer.SignatureAlgorithm,
-		IsCA:               false,
-		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
-		KeyUsage:           x509.KeyUsageDigitalSignature,
+		DNSNames:    []string{cn},
+		NotBefore:   notBefore,
+		NotAfter:    notAfter,
+		IsCA:        false,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		KeyUsage:    x509.KeyUsageDigitalSignature,
 	}
 
 	certBytes, err := x509.CreateCertificate(s.rand, crtTpl, issuer, s.eePub, s.issuerPriv)
