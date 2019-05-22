@@ -124,7 +124,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ioutil.WriteFile(outputBasename + ".crt", eePem.Bytes(), 0644)
+	err = ioutil.WriteFile(outputBasename+".crt", eePem.Bytes(), 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func main() {
 		log.Fatal(err)
 	}
 	msgBody := fmt.Sprintf("%s%s\n", secp384r1ECParams, eePrivPem.Bytes())
-	err = ioutil.WriteFile(outputBasename + ".key", []byte(msgBody), 0644)
+	err = ioutil.WriteFile(outputBasename+".key", []byte(msgBody), 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
