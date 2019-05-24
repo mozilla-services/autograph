@@ -62,13 +62,15 @@ type RSACacheConfig struct {
 
 // Configuration defines the parameters of a signer
 type Configuration struct {
-	ID          string            `json:"id"`
-	Type        string            `json:"type"`
-	Mode        string            `json:"mode"`
-	PrivateKey  string            `json:"privatekey,omitempty"`
-	PublicKey   string            `json:"publickey,omitempty"`
-	Certificate string            `json:"certificate,omitempty"`
-	DB          *database.Handler `json:"-"`
+	ID            string            `json:"id"`
+	Type          string            `json:"type"`
+	Mode          string            `json:"mode"`
+	PrivateKey    string            `json:"privatekey,omitempty"`
+	PublicKey     string            `json:"publickey,omitempty"`
+	IssuerPrivKey string            `json:"issuerprivkey,omitempty"`
+	IssuerCert    string            `json:"issuercert,omitempty"`
+	Certificate   string            `json:"certificate,omitempty"`
+	DB            *database.Handler `json:"-"`
 
 	// X5U (X.509 URL) is a URL that points to an X.509 public key
 	// certificate chain to validate a content signature

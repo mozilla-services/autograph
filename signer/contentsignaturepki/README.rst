@@ -89,7 +89,7 @@ Configuration
 The type of this signer is **contentsignaturepki**.
 
 Unlike the original **contentsignature** signer which was entirely manual, this
-signer automates the generation of end-entity certificates at regular intervals,
+signer automates the generation of end-entity certificates at runtime,
 and uploads chains to a pre-determined location (typically an S3 bucket).
 
 To achieve this, it makes use of a Postgres database which must be configured
@@ -111,7 +111,8 @@ The end-entity public cert will be valid for *validity*+*clockskewtolerance*
 amount of time. This is done to accomodate clients that may have bad clocks.
 The standard is to use a validity of 30 days and another 30 days ahead and after
 the validity period for tolerance, effectively creating certificates that are
-valid for 90 days.
+valid for 90 days (30d of clock skew in the past, 30 days of validity, 30 days
+of clock skew in the future).
 
 Once the end-entity created, it is concatenated to the public certificate of the
 intermediate and root of the PKI, then uploaded to *chainuploadlocation*, and
@@ -145,10 +146,10 @@ and starts processing requests.
       x5u: file:///tmp/chains/
 
       # label of the intermediate's private key in the HSM
-      privatekey: csinter1550858489
+      issuerprivkey: csinter1550858489
 
       # public certificate of the intermediate
-      publickey: |
+      issuercert: |
         -----BEGIN CERTIFICATE-----
         MIICXDCCAeKgAwIBAgIIFYXBlGIHbWAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
         VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK

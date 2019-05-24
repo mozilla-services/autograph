@@ -52,16 +52,17 @@ const (
 // ContentSigner implements an issuer of content signatures
 type ContentSigner struct {
 	signer.Configuration
-	issuerPriv, eePriv  crypto.PrivateKey
-	issuerPub, eePub    crypto.PublicKey
-	eeLabel             string
-	rand                io.Reader
-	validity            time.Duration
-	clockSkewTolerance  time.Duration
-	chainUploadLocation string
-	chain               string
-	caCert              string
-	db                  *database.Handler
+	IssuerPrivKey, IssuerPubKey string
+	issuerPriv, eePriv          crypto.PrivateKey
+	issuerPub, eePub            crypto.PublicKey
+	eeLabel                     string
+	rand                        io.Reader
+	validity                    time.Duration
+	clockSkewTolerance          time.Duration
+	chainUploadLocation         string
+	chain                       string
+	caCert                      string
+	db                          *database.Handler
 }
 
 // New initializes a ContentSigner using a signer configuration
@@ -69,8 +70,8 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s = new(ContentSigner)
 	s.ID = conf.ID
 	s.Type = conf.Type
-	s.PrivateKey = conf.PrivateKey
-	s.PublicKey = conf.PublicKey
+	s.IssuerPrivKey = conf.IssuerPrivKey
+	s.IssuerCert = conf.IssuerCert
 	s.X5U = conf.X5U
 	s.validity = conf.Validity
 	s.clockSkewTolerance = conf.ClockSkewTolerance
@@ -84,10 +85,14 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if conf.ID == "" {
 		return nil, fmt.Errorf("contentsignaturepki %q: missing signer ID in signer configuration", s.ID)
 	}
-	if conf.PrivateKey == "" {
-		return nil, fmt.Errorf("contentsignaturepki %q: missing private key in signer configuration", s.ID)
+	if conf.IssuerPrivKey == "" {
+		return nil, fmt.Errorf("contentsignaturepki %q: missing issuer private key in signer configuration", s.ID)
 	}
-	s.issuerPriv, s.issuerPub, s.rand, _, err = conf.GetKeysAndRand()
+	// we need to parse or retrieve from the hsm the issuer private key,
+	// so make a temporary config to call getkeysandrand
+	tmpconf := conf
+	tmpconf.PrivateKey = conf.IssuerPrivKey
+	s.issuerPriv, s.issuerPub, s.rand, _, err = tmpconf.GetKeysAndRand()
 	if err != nil {
 		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to get keys and rand", s.ID)
 	}
@@ -165,6 +170,8 @@ func (s *ContentSigner) Config() signer.Configuration {
 		Mode:                s.Mode,
 		PrivateKey:          s.PrivateKey,
 		PublicKey:           s.PublicKey,
+		IssuerPrivKey:       s.IssuerPrivKey,
+		IssuerCert:          s.IssuerCert,
 		X5U:                 s.X5U,
 		Validity:            s.validity,
 		ClockSkewTolerance:  s.clockSkewTolerance,

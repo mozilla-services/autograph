@@ -91,14 +91,14 @@ var PASSINGTESTCASES = []struct {
 		Mode:                P384ECDSA,
 		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
 		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
-		PrivateKey: `
+		IssuerPrivKey: `
 -----BEGIN EC PRIVATE KEY-----
 MIGkAgEBBDBcwxsHPTSHIVY1qLobCqBtnjRe0UZWOro1xtg2oV4rkypbkkgHHnSA
 s8p0PlGIknKgBwYFK4EEACKhZANiAAQMBfcDj4r/9aAXcUsjjun3vCpBSQoskcdi
 iF4bE+AcFmPABh6AnwTZv0sHYPjkovk3R3RfuXlKyoqhuD73VqBhkuK7R6mN2snh
 fRkWmi6SzHWZIXPzFScoCaHnJrFzNjs=
 -----END EC PRIVATE KEY-----`,
-		PublicKey: `
+		IssuerCert: `
 -----BEGIN CERTIFICATE-----
 MIICXDCCAeKgAwIBAgIIFYW6xg9HrnAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
 VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
@@ -136,13 +136,13 @@ nsbYLErV5grBhN+UxzmY9YwlOl6j6CoBiNkCMQCVBh9UBkWNkUfMUGImrCNDLvlw
 		Mode:                P256ECDSA,
 		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
 		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
-		PrivateKey: `
+		IssuerPrivKey: `
 -----BEGIN EC PRIVATE KEY-----
 MHcCAQEEIEABir6WMfkbG2ZyKKDCij1PlSBldaaJqPQ/9ioWvCM5oAoGCCqGSM49
 AwEHoUQDQgAED0x4GeyH3nxaCVQqPFbRkoBg1BJePxTSg1oaRWIgBbrMYaB/TKpL
 WoBQZFUwn11IFDP5y1B6Tt9U5DxQ3tgt+w==
 -----END EC PRIVATE KEY-----`,
-		PublicKey: `
+		IssuerCert: `
 -----BEGIN CERTIFICATE-----
 MIICIDCCAcWgAwIBAgIIFYW+N1jIJvAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
 VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
@@ -181,12 +181,12 @@ func TestNewFailure(t *testing.T) {
 	}{
 		{err: `contentsignaturepki "": invalid type`, cfg: signer.Configuration{Type: ""}},
 		{err: `contentsignaturepki "": missing signer ID in signer configuration`, cfg: signer.Configuration{Type: Type, ID: ""}},
-		{err: `contentsignaturepki "bob": missing private key in signer configuration`, cfg: signer.Configuration{Type: Type, ID: "bob"}},
-		{err: `contentsignaturepki "bob": failed to get keys and rand`, cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+		{err: `contentsignaturepki "bob": missing issuer private key in signer configuration`, cfg: signer.Configuration{Type: Type, ID: "bob"}},
+		{err: `contentsignaturepki "bob": failed to get keys and rand`, cfg: signer.Configuration{Type: Type, ID: "bob", IssuerPrivKey: "Ym9iCg=="}},
 		{err: `contentsignaturepki "abcd": invalid public key type for issuer, must be ecdsa`, cfg: signer.Configuration{
 			Type: Type,
 			ID:   "abcd",
-			PrivateKey: `
+			IssuerPrivKey: `
 -----BEGIN RSA PRIVATE KEY-----
 MIIBOwIBAAJBALN6oewBN6fJyDErP9IbvLJex6LcSAljchZdj4eGaWttgseYqrww
 xNVONln72JzOmZqXzxITxqi4tpFsrOqw780CAwEAAQJBAKMcSBvb32C1mSJWU+H3
