@@ -114,35 +114,35 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 		}
 	}
 	err = s.findAndSetEE(conf, tx)
-	if err == nil {
+	switch err {
+	case nil:
 		log.Printf("contentsignaturepki %q: reusing existing EE %q", s.ID, s.eeLabel)
-	} else {
+	case database.ErrNoSuitableEEFound:
 		// No suitable end-entity found, making a new chain
-		if err == database.ErrNoSuitableEEFound {
-			log.Printf("contentsignaturepki %q: making new end-entity", s.ID)
-			// create a label and generate the key
-			s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102150405"))
-			s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, s.eeLabel)
-			if err != nil {
-				err = errors.Wrapf(err, "contentsignaturepki %q: failed to generate end entity", s.ID)
-				return
-			}
-			// make the certificate and upload the chain
-			err = s.makeAndUploadChain()
-			if err != nil {
-				return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to make chain and x5u", s.ID)
-			}
-			if tx != nil {
-				// insert it in database
-				hsmHandle := signer.GetPrivKeyHandle(s.eePriv)
-				err = tx.InsertEE(s.X5U, s.eeLabel, s.ID, hsmHandle)
-				if err != nil {
-					return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to insert EE into database", s.ID)
-				}
-			}
-		} else {
-			return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to find suitable end-entity", s.ID)
+		log.Printf("contentsignaturepki %q: making new end-entity", s.ID)
+		// create a label and generate the key
+		s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102150405"))
+		s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, s.eeLabel)
+		if err != nil {
+			err = errors.Wrapf(err, "contentsignaturepki %q: failed to generate end entity", s.ID)
+			return
 		}
+		// make the certificate and upload the chain
+		err = s.makeAndUploadChain()
+		if err != nil {
+			return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to make chain and x5u", s.ID)
+		}
+		if tx != nil {
+			// insert it in database
+			hsmHandle := signer.GetPrivKeyHandle(s.eePriv)
+			err = tx.InsertEE(s.X5U, s.eeLabel, s.ID, hsmHandle)
+			if err != nil {
+				return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to insert EE into database", s.ID)
+			}
+		}
+	default:
+		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to find suitable end-entity", s.ID)
+
 	}
 	_, err = GetX5U(s.X5U)
 	if err != nil {
