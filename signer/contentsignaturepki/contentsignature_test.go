@@ -179,11 +179,11 @@ func TestNewFailure(t *testing.T) {
 		err string
 		cfg signer.Configuration
 	}{
-		{err: "contentsignaturepki: invalid type", cfg: signer.Configuration{Type: ""}},
-		{err: "contentsignaturepki: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
-		{err: "contentsignaturepki: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
-		{err: "contentsignaturepki: failed to get keys and rand for signer \"bob\"", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
-		{err: "contentsignaturepki: invalid public key type for issuer, must be ecdsa", cfg: signer.Configuration{
+		{err: `contentsignaturepki "": invalid type`, cfg: signer.Configuration{Type: ""}},
+		{err: `contentsignaturepki "": missing signer ID in signer configuration`, cfg: signer.Configuration{Type: Type, ID: ""}},
+		{err: `contentsignaturepki "bob": missing private key in signer configuration`, cfg: signer.Configuration{Type: Type, ID: "bob"}},
+		{err: `contentsignaturepki "bob": failed to get keys and rand`, cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+		{err: `contentsignaturepki "abcd": invalid public key type for issuer, must be ecdsa`, cfg: signer.Configuration{
 			Type: Type,
 			ID:   "abcd",
 			PrivateKey: `
@@ -253,7 +253,7 @@ func TestNoShortData(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected to fail with input data too short but succeeded")
 	}
-	if err.Error() != "contentsignaturepki: refusing to sign input data shorter than 10 bytes" {
+	if err.Error() != `contentsignaturepki "testsigner0": refusing to sign input data shorter than 10 bytes` {
 		t.Fatalf("expected to fail with input data too short but failed with: %v", err)
 	}
 }

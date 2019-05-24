@@ -140,6 +140,5 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 		err = errors.Wrap(err, "failed to verify certificate chain")
 		return
 	}
-
 	return
 }
