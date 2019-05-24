@@ -46,10 +46,10 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 
 // GetLabelOfLatestEE returns the label of the latest end-entity for the specified signer
 // that is no older than a given duration
-func (tx *Transaction) GetLabelOfLatestEE(signerID string, youngerThan time.Duration) (label, x5u string, err error) {
+func (db *Handler) GetLabelOfLatestEE(signerID string, youngerThan time.Duration) (label, x5u string, err error) {
 	var nullableX5U sql.NullString
 	maxAge := time.Now().Add(-youngerThan)
-	err = tx.QueryRow(`SELECT label, x5u FROM endentities
+	err = db.QueryRow(`SELECT label, x5u FROM endentities
 				WHERE is_current=TRUE AND signer_id=$1 AND created_at > $2
 				ORDER BY created_at DESC LIMIT 1`,
 		signerID, maxAge).Scan(&label, &nullableX5U)

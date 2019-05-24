@@ -48,13 +48,13 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 	nextTime = nextTime.Add(10 * time.Second)
 	time.Sleep(time.Until(nextTime))
 
-	tx, err := db.BeginEndEntityOperations()
-	if err != nil {
-		t.Fatalf("failed to begin end-entity db operations: %v", err)
-	}
-	label, _, err := tx.GetLabelOfLatestEE(signerID, 15*time.Second)
+	label, _, err := db.GetLabelOfLatestEE(signerID, 15*time.Second)
 	switch err {
 	case ErrNoSuitableEEFound:
+		tx, err := db.BeginEndEntityOperations()
+		if err != nil {
+			t.Fatalf("failed to begin end-entity db operations: %v", err)
+		}
 		// make a new EE
 		label = fmt.Sprintf("%d", time.Now().UnixNano())
 		t.Logf("TestConcurrentEndEntityOperations: routine %d is making an end-entity", j)
@@ -63,14 +63,14 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 		if err != nil {
 			t.Fatalf("failed to insert end-entity into db: %v", err)
 		}
+		err = tx.End()
+		if err != nil {
+			t.Fatalf("failed to end end-entity db operations: %v", err)
+		}
 	case nil:
 		t.Logf("TestConcurrentEndEntityOperations: routine %d is returning end-entity %q", j, label)
 	default:
 		t.Fatal(err)
-	}
-	err = tx.End()
-	if err != nil {
-		t.Fatalf("failed to end end-entity db operations: %v", err)
 	}
 	return label
 }

@@ -111,20 +111,34 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 
 	// the end-entity key is not stored in configuration but may already
 	// exist in an hsm, if present. Try to retrieve it, or make a new one.
-	var tx *database.Transaction
-	if s.db != nil {
-		tx, err = s.db.BeginEndEntityOperations()
-		if err != nil {
-			return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to begin db operations", s.ID)
-		}
-	}
-	err = s.findAndSetEE(conf, tx)
+	err = s.findAndSetEE(conf)
 	switch err {
 	case nil:
 		log.Printf("contentsignaturepki %q: reusing existing EE %q", s.ID, s.eeLabel)
 	case database.ErrNoSuitableEEFound:
 		// No suitable end-entity found, making a new chain
 		log.Printf("contentsignaturepki %q: making new end-entity", s.ID)
+		var tx *database.Transaction
+		if s.db != nil {
+			tx, err = s.db.BeginEndEntityOperations()
+			if err != nil {
+				return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to begin db operations", s.ID)
+			}
+		}
+		// to prevent race conditions, we perform another set of the EE just in case
+		// someone else created it before we managed to obtain the lock
+		err = s.findAndSetEE(conf)
+		switch err {
+		case nil:
+			// alright we found a suitable EE this time to don't make one
+			goto releaseLock
+		case database.ErrNoSuitableEEFound:
+			// still nothing suitable, continue on
+			break
+		default:
+			// some other error popped up, exit
+			return nil, err
+		}
 		// create a label and generate the key
 		s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102150405"))
 		s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, s.eeLabel)
@@ -145,19 +159,20 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 				return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to insert EE into database", s.ID)
 			}
 		}
+	releaseLock:
+		if tx != nil {
+			// close the transaction
+			err = tx.End()
+			if err != nil {
+				return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to commit end-entity operations in database", s.ID)
+			}
+		}
 	default:
 		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to find suitable end-entity", s.ID)
-
 	}
 	_, err = GetX5U(s.X5U)
 	if err != nil {
 		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to verify x5u", s.ID)
-	}
-	if tx != nil {
-		err = tx.End()
-		if err != nil {
-			return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to commit end-entity operations in database", s.ID)
-		}
 	}
 	return
 }
