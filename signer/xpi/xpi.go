@@ -28,6 +28,11 @@ const (
 	// regular firefox add-ons and web extensions developed by anyone
 	ModeAddOn = "add-on"
 
+	// ModeAddOnWithRecommendation represents a signer that issues
+	// signatures for regular firefox add-ons and web extensions
+	// developed by anyone including a recommendation file
+	ModeAddOnWithRecommendation  = "add-on-with-recommendation"
+
 	// ModeExtension represents a signer that issues signatures for
 	// internal extensions developed by Mozilla
 	ModeExtension = "extension"
@@ -142,6 +147,8 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	}
 	switch conf.Mode {
 	case ModeAddOn:
+		s.OU = "Production"
+	case ModeAddOnWithRecommendation:
 		s.OU = "Production"
 	case ModeExtension:
 		s.OU = "Mozilla Extensions"
