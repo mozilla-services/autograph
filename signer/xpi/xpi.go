@@ -31,7 +31,7 @@ const (
 	// ModeAddOnWithRecommendation represents a signer that issues
 	// signatures for regular firefox add-ons and web extensions
 	// developed by anyone including a recommendation file
-	ModeAddOnWithRecommendation  = "add-on-with-recommendation"
+	ModeAddOnWithRecommendation = "add-on-with-recommendation"
 
 	// ModeExtension represents a signer that issues signatures for
 	// internal extensions developed by Mozilla
@@ -94,6 +94,29 @@ type XPISigner struct {
 
 	// stats is the statsd client for reporting metrics
 	stats *signer.StatsClient
+
+	// recommendationAllowedStates is a map of strings the signer
+	// is allowed to set in the recommendations file to true
+	// indicating whether they're allowed or not
+	recommendationAllowedStates map[string]bool
+
+	// recommendationFilePath is the path in the XPI to save the
+	// recommendations file
+	recommendationFilePath string
+
+	// recommendationValidityRelativeStart is when to set the
+	// recommendation validity not_before relative to now
+	recommendationValidityRelativeStart time.Duration
+
+	// recommendationValidityDuration is when to set the
+	// recommendation validity not_after relative to now
+	//
+	// i.e.
+	//         ValidityRelativeStart    ValidityDuration
+	//       <----------------------> <------------------->
+	//      |                        |                     |
+	//   not_before          now / signing TS          not_after
+	recommendationValidityDuration time.Duration
 }
 
 // New initializes an XPI signer using a configuration
@@ -146,9 +169,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		return nil, errors.New("xpi: signer certificate does not have code signing EKU")
 	}
 	switch conf.Mode {
-	case ModeAddOn:
-		s.OU = "Production"
-	case ModeAddOnWithRecommendation:
+	case ModeAddOn, ModeAddOnWithRecommendation:
 		s.OU = "Production"
 	case ModeExtension:
 		s.OU = "Mozilla Extensions"
@@ -163,6 +184,19 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	}
 	s.Mode = conf.Mode
 	s.stats = stats
+
+	if conf.Mode == ModeAddOnWithRecommendation {
+		s.recommendationAllowedStates = conf.RecommendationConfig.AllowedStates
+		s.recommendationValidityRelativeStart = conf.RecommendationConfig.ValidityRelativeStart
+		s.recommendationValidityDuration = conf.RecommendationConfig.ValidityDuration
+		log.Infof("xpi: set recommendation options allowed states: %+v, path: %s, start duration: %s duration: %s",
+			s.recommendationAllowedStates,
+			s.recommendationFilePath,
+			s.recommendationValidityRelativeStart,
+			s.recommendationValidityDuration)
+	}
+	s.recommendationFilePath = conf.RecommendationConfig.FilePath
+	log.Infof("xpi: signer %s is ignoring recommendation file path %s", s.ID, s.recommendationFilePath)
 
 	// If the private key is rsa, launch go routines that
 	// populates the rsa cache with private keys of the same
@@ -229,6 +263,22 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	coseSigAlgs, err = opt.Algorithms()
 	if err != nil {
 		return nil, errors.Wrap(err, "xpi: error parsing cose_algorithms options")
+	}
+
+	if s.Mode == ModeAddOnWithRecommendation {
+		recFileBytes, err := s.makeRecommendationFile(opt, cn)
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: error making recommendation file from options")
+		}
+		input, err = appendFileToZIP(input, s.recommendationFilePath, recFileBytes)
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: error append recommendation file to XPI")
+		}
+	} else {
+		input, err = removeFileFromZIP(input, s.recommendationFilePath)
+		if err != nil {
+			return nil, errors.Wrap(err, "xpi: error removing recommendation file from XPI")
+		}
 	}
 
 	manifest, err = makeJARManifest(input)
@@ -349,6 +399,11 @@ type Options struct {
 
 	// PKCS7Digest is a string required for /sign/file referring to algorithm to use for the PKCS7 signature digest
 	PKCS7Digest string `json:"pkcs7_digest"`
+
+	// Recommendations is an optional list of strings referring to
+	// recommended states to add to the recommendations file
+	// for signers in ModeAddOnWithRecommendation
+	Recommendations []string `json:"recommendations"`
 }
 
 // CN returns the common name
@@ -374,6 +429,22 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 			return nil, errors.Errorf("xpi: invalid or unsupported COSE algorithm %s", algStr)
 		}
 		algs = append(algs, alg)
+	}
+	return
+}
+
+// Recommendations validates and returns allowed recommendation states
+// algorithms from the request
+func (o *Options) RecommendationStates(allowedRecommendationStates map[string]bool) (states []string, err error) {
+	if o == nil {
+		err = errors.New("xpi: cannot get recommendation states from nil Options")
+	}
+
+	for _, rec := range o.Recommendations {
+		if val, ok := allowedRecommendationStates[rec]; !(ok && val) {
+			return nil, errors.Errorf("xpi: invalid or unsupported recommendation state %s", rec)
+		}
+		states = append(states, rec)
 	}
 	return
 }
@@ -528,9 +599,9 @@ func verifyPKCS7Manifest(signedXPI signer.SignedFile) error {
 		return errors.Wrapf(err, "error validating PK7 manifest")
 	}
 
-	// 3 from PK7 sig, manifest, and sigFile
-	if !(numZippedFiles > numManifestEntries && numZippedFiles-numManifestEntries == 3) {
-		return errors.Errorf("mismatch in # manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
+	expectedMetaFilesInManifest := 3 // PK7 sig, manifest, and sigFile
+	if !(numZippedFiles > numManifestEntries && numZippedFiles-numManifestEntries == expectedMetaFilesInManifest) {
+		return errors.Errorf("mismatch in # PK7 manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
 	}
 	return nil
 }
@@ -545,7 +616,7 @@ func verifyCOSEManifest(signedXPI signer.SignedFile) error {
 
 	// 5 from PK7 sig, manifest, and sigFile; and COSE sig and manifest
 	if !(numZippedFiles > numManifestEntries && numZippedFiles-numManifestEntries == 5) {
-		return errors.Errorf("mismatch in # manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
+		return errors.Errorf("mismatch in # COSE manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
 	}
 	return nil
 }

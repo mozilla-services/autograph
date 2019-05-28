@@ -328,7 +328,7 @@ func TestRepackJARWithMetafilesValidatesMetafileName(t *testing.T) {
 	}
 }
 
-// Fixtures can be added by converting APKs to string literals using hexdump, eg:
+// Fixtures can be added by converting XPIs to string literals using hexdump, eg:
 // hexdump -v -e '16/1 "_x%02X" "\n"' /tmp/fakeapk/fakeapk.zip | sed 's/_/\\/g; s/\\x  //g; s/.*/    "&"/'
 
 // a copy of toolkit/mozapps/extensions/test/xpcshell/data/signing_checks/unsigned_bootstrap_2.xpi

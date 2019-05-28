@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -70,7 +71,7 @@ func formatFilename(filename []byte) (formatted []byte, err error) {
 func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err error) {
 	for _, f := range metafiles {
 		if !f.IsNameValid() {
-			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
+			err = errors.Errorf("Cannot makePKCS7Manifest with metafile at invalid path %s", f.Name)
 			return
 		}
 	}
@@ -318,6 +319,131 @@ func isCOSESignatureFile(name string) bool {
 		}
 	}
 	return false
+}
+
+// appendFileToZIP appends a file with its contents to a ZIP archive and returns it or an error
+func appendFileToZIP(input []byte, filepath string, filecontents []byte) (output []byte, err error) {
+	var (
+		rc     io.ReadCloser
+		fwhead *zip.FileHeader
+		fw     io.Writer
+		data   []byte
+	)
+	inputReader := bytes.NewReader(input)
+	r, err := zip.NewReader(inputReader, int64(len(input)))
+	if err != nil {
+		return
+	}
+	// Create a buffer to write our archive to.
+	buf := new(bytes.Buffer)
+
+	// Create a new zip archive.
+	w := zip.NewWriter(buf)
+
+	// Iterate through the files in the archive,
+	for _, f := range r.File {
+		rc, err = f.Open()
+		if err != nil {
+			return
+		}
+		fwhead := &zip.FileHeader{
+			Name:   f.Name,
+			Method: zip.Deflate,
+		}
+		// insert the file into the archive
+		fw, err = w.CreateHeader(fwhead)
+		if err != nil {
+			return
+		}
+		data, err = ioutil.ReadAll(rc)
+		if err != nil {
+			return
+		}
+		_, err = fw.Write(data)
+		if err != nil {
+			return
+		}
+		rc.Close()
+	}
+	// append a file. Those will be compressed
+	// so we don't have to worry about their alignment
+	fwhead = &zip.FileHeader{
+		Name:   filepath,
+		Method: zip.Deflate,
+	}
+	fw, err = w.CreateHeader(fwhead)
+	if err != nil {
+		return
+	}
+	_, err = fw.Write(filecontents)
+	if err != nil {
+		return
+	}
+	// Make sure to check the error on Close.
+	err = w.Close()
+	if err != nil {
+		return
+	}
+	output = buf.Bytes()
+	return
+}
+
+// removeFileFromZIP remove all archive entries matching a given file
+// path and returns the filtered XPI or an error
+func removeFileFromZIP(input []byte, filepath string) (output []byte, err error) {
+	var (
+		rc   io.ReadCloser
+		fw   io.Writer
+		data []byte
+	)
+	inputReader := bytes.NewReader(input)
+	r, err := zip.NewReader(inputReader, int64(len(input)))
+	if err != nil {
+		return
+	}
+	// Create a buffer to write our archive to.
+	buf := new(bytes.Buffer)
+
+	// Create a new zip archive.
+	w := zip.NewWriter(buf)
+
+	// Iterate through the files in the archive,
+	for _, f := range r.File {
+		if f.Name == filepath {
+			log.Infof("xpi: skipping filepath path %s matching reserved name %s", f.Name, filepath)
+			continue
+		}
+
+		rc, err = f.Open()
+		if err != nil {
+			return
+		}
+		fwhead := &zip.FileHeader{
+			Name:   f.Name,
+			Method: zip.Deflate,
+		}
+		// insert the file into the archive
+		fw, err = w.CreateHeader(fwhead)
+		if err != nil {
+			return
+		}
+		data, err = ioutil.ReadAll(rc)
+		if err != nil {
+			return
+		}
+		_, err = fw.Write(data)
+		if err != nil {
+			return
+		}
+		rc.Close()
+	}
+	// Make sure to check the error on Close.
+	err = w.Close()
+	if err != nil {
+		return
+	}
+	output = buf.Bytes()
+	return
 }
 
 // readFileFromZIP reads a given filename out of a ZIP and returns it or an error
