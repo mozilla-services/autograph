@@ -60,10 +60,10 @@ vet:
 	$(GO) vet go.mozilla.org/autograph/signer/rsapss
 
 fmt-diff:
-	gofmt -d *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
+	gofmt -d *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
 fmt-fix:
-	gofmt -w *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/
+	gofmt -w *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
 testautograph:
 	$(GOTEST) -coverprofile=coverage_autograph.out go.mozilla.org/autograph
