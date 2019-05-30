@@ -166,6 +166,7 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 			if err != nil {
 				return errors.Wrapf(err, "contentsignaturepki %q: failed to insert EE into database", s.ID)
 			}
+			log.Printf("contentsignaturepki %q: generated private key labeled %q with hsm handle %d and x5u %q", s.ID, s.eeLabel, hsmHandle, s.X5U)
 		}
 	releaseLock:
 		if tx != nil {
