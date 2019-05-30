@@ -265,6 +265,10 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 		return nil, errors.Wrap(err, "xpi: error parsing cose_algorithms options")
 	}
 
+	input, err = removeFileFromZIP(input, s.recommendationFilePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "xpi: error removing recommendation file from XPI")
+	}
 	if s.Mode == ModeAddOnWithRecommendation {
 		recFileBytes, err := s.makeRecommendationFile(opt, cn)
 		if err != nil {
@@ -273,11 +277,6 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 		input, err = appendFileToZIP(input, s.recommendationFilePath, recFileBytes)
 		if err != nil {
 			return nil, errors.Wrap(err, "xpi: error append recommendation file to XPI")
-		}
-	} else {
-		input, err = removeFileFromZIP(input, s.recommendationFilePath)
-		if err != nil {
-			return nil, errors.Wrap(err, "xpi: error removing recommendation file from XPI")
 		}
 	}
 
