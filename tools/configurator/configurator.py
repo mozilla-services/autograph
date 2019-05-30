@@ -12,7 +12,8 @@ from ruamel import yaml
 SIGNER_CONFIG_PARAMS = ["type", "mode", "privatekey", "publickey",
                         "certificate", "x5u", "keyid", "passphrase",
                         "validity", "clock_skew_tolerance",
-                        "chain_upload_location", "cacert"]
+                        "chain_upload_location", "issuerprivkey",
+                        "issuercert", "cacert"]
 
 
 __doc__ = """Helper to set or modify values in Autograph configuration files"""

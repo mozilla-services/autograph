@@ -148,9 +148,9 @@ signers:
     # x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
     x5u: file:///tmp/chains/
     # label of the intermediate private key in the HSM
-    privatekey: csinter1550858489
+    issuerprivkey: csinter1550858489
     # public certificate of the intermediate
-    publickey: |
+    issuercert: |
       -----BEGIN CERTIFICATE-----
       MIICXDCCAeKgAwIBAgIIFYXBlGIHbWAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
       VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
@@ -189,8 +189,8 @@ signers:
     clockskewtolerance: 10m
     chainuploadlocation: file:///tmp/chains/
     x5u: file:///tmp/chains/
-    privatekey: csinter1550858489
-    publickey: |
+    issuerprivkey: csinter1550858489
+    issuercert: |
       -----BEGIN CERTIFICATE-----
       MIICXDCCAeKgAwIBAgIIFYXBlGIHbWAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
       VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK

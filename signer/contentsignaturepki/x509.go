@@ -2,7 +2,6 @@ package contentsignaturepki
 
 import (
 	"bytes"
-	"crypto"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -17,14 +16,14 @@ import (
 
 // findAndSetEE searches the database for an end-entity key that is currently
 // valid for this signer and is not older than cfg.Validity days
-func (s *ContentSigner) findAndSetEE(conf signer.Configuration, tx *database.Transaction) (err error) {
+func (s *ContentSigner) findAndSetEE(conf signer.Configuration) (err error) {
 	var tmpX5U string
 	if s.db == nil {
 		// no database, no chance to find an existing key
 		return database.ErrNoSuitableEEFound
 	}
 	// search the database for the label of an end-entity private key that is still valid.
-	s.eeLabel, tmpX5U, err = tx.GetLabelOfLatestEE(s.ID, s.validity)
+	s.eeLabel, tmpX5U, err = s.db.GetLabelOfLatestEE(s.ID, s.validity)
 	if err != nil {
 		return
 	}
@@ -32,12 +31,11 @@ func (s *ContentSigner) findAndSetEE(conf signer.Configuration, tx *database.Tra
 		s.X5U = tmpX5U
 	}
 	conf.PrivateKey = s.eeLabel
-	s.eePriv, err = conf.GetPrivateKey()
+	s.eePriv, s.eePub, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
 	if err != nil {
 		err = errors.Wrapf(err, "found suitable end-entity labeled %q in database but not in hsm", s.eeLabel)
 		return
 	}
-	s.eePub = s.eePriv.(crypto.Signer).Public()
 	return
 }
 
@@ -76,7 +74,7 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	// valid for longer than that to account for clock skew
 	notAfter := time.Now().UTC().Add(s.validity + s.clockSkewTolerance)
 
-	block, _ := pem.Decode([]byte(s.PublicKey))
+	block, _ := pem.Decode([]byte(s.IssuerCert))
 	if block == nil {
 		err = errors.New("no pem block found in signer public key configuration")
 		return
@@ -144,7 +142,7 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	}
 
 	// return a chain with the EE cert first then the issuers
-	chain = certPem.String() + s.PublicKey + s.caCert
+	chain = certPem.String() + s.IssuerCert + s.caCert
 	name = fmt.Sprintf("%s-%s.chain", cert.Subject.CommonName, cert.NotAfter.Format("2006-01-02-15-04-05"))
 	return
 }

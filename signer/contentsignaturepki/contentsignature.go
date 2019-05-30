@@ -52,16 +52,17 @@ const (
 // ContentSigner implements an issuer of content signatures
 type ContentSigner struct {
 	signer.Configuration
-	issuerPriv, eePriv  crypto.PrivateKey
-	issuerPub, eePub    crypto.PublicKey
-	eeLabel             string
-	rand                io.Reader
-	validity            time.Duration
-	clockSkewTolerance  time.Duration
-	chainUploadLocation string
-	chain               string
-	caCert              string
-	db                  *database.Handler
+	IssuerPrivKey, IssuerPubKey string
+	issuerPriv, eePriv          crypto.PrivateKey
+	issuerPub, eePub            crypto.PublicKey
+	eeLabel                     string
+	rand                        io.Reader
+	validity                    time.Duration
+	clockSkewTolerance          time.Duration
+	chainUploadLocation         string
+	chain                       string
+	caCert                      string
+	db                          *database.Handler
 }
 
 // New initializes a ContentSigner using a signer configuration
@@ -69,8 +70,8 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s = new(ContentSigner)
 	s.ID = conf.ID
 	s.Type = conf.Type
-	s.PrivateKey = conf.PrivateKey
-	s.PublicKey = conf.PublicKey
+	s.IssuerPrivKey = conf.IssuerPrivKey
+	s.IssuerCert = conf.IssuerCert
 	s.X5U = conf.X5U
 	s.validity = conf.Validity
 	s.clockSkewTolerance = conf.ClockSkewTolerance
@@ -79,82 +80,110 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.db = conf.DB
 
 	if conf.Type != Type {
-		return nil, errors.Errorf("contentsignaturepki: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("contentsignaturepki %q: invalid type %q, must be %q", s.ID, conf.Type, Type)
 	}
 	if conf.ID == "" {
-		return nil, errors.New("contentsignaturepki: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("contentsignaturepki %q: missing signer ID in signer configuration", s.ID)
 	}
-	if conf.PrivateKey == "" {
-		return nil, errors.New("contentsignaturepki: missing private key in signer configuration")
+	if conf.IssuerPrivKey == "" {
+		return nil, fmt.Errorf("contentsignaturepki %q: missing issuer private key in signer configuration", s.ID)
 	}
-	s.issuerPriv, s.issuerPub, s.rand, _, err = conf.GetKeysAndRand()
+	// we need to parse or retrieve from the hsm the issuer private key,
+	// so make a temporary config to call getkeysandrand
+	tmpconf := conf
+	tmpconf.PrivateKey = conf.IssuerPrivKey
+	s.issuerPriv, s.issuerPub, s.rand, _, err = tmpconf.GetKeysAndRand()
 	if err != nil {
-		return nil, errors.Wrapf(err, "contentsignaturepki: failed to get keys and rand for signer %q", conf.ID)
+		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to get keys and rand", s.ID)
 	}
 	// if validity is undef, default to 30 days
 	if s.validity == 0 {
-		log.Printf("contentsignaturepki: no validity configured for signer %s, defaulting to 30 days", s.ID)
+		log.Printf("contentsignaturepki %q: no validity configured, defaulting to 30 days", s.ID)
 		s.validity = 720 * time.Hour
 	}
 
 	switch s.issuerPub.(type) {
 	case *ecdsa.PublicKey:
 	default:
-		return nil, errors.New("contentsignaturepki: invalid public key type for issuer, must be ecdsa")
+		return nil, fmt.Errorf("contentsignaturepki %q: invalid public key type for issuer, must be ecdsa", s.ID)
 	}
 	s.Mode = s.getModeFromCurve()
 
-	// the end-entity key is not stored in configuration but may already
-	// exist in an hsm, if present. Try to retrieve it, or make a new one.
-	var tx *database.Transaction
-	if s.db != nil {
-		tx, err = s.db.BeginEndEntityOperations()
-		if err != nil {
-			return nil, errors.Wrap(err, "contentsignaturepki: failed to begin end-entity db operations")
-		}
-	}
-	err = s.findAndSetEE(conf, tx)
+	err = s.initEE(conf)
 	if err != nil {
-		if err == database.ErrNoSuitableEEFound {
-			log.Printf("contentsignaturepki: making new end-entity for signer %q", s.ID)
-			// create a label and generate the key
-			s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102150405"))
-			s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, s.eeLabel)
-			if err != nil {
-				err = errors.Wrap(err, "failed to generate key for end entity")
-				return
-			}
-			// make the certificate and upload the chain
-			err = s.makeAndUploadChain()
-			if err != nil {
-				return nil, errors.Wrap(err, "contentsignaturepki: failed to make chain and x5u for end-entity")
-			}
-			if tx != nil {
-				// insert it in database
-				hsmHandle := signer.GetPrivKeyHandle(s.eePriv)
-				err = tx.InsertEE(s.X5U, s.eeLabel, s.ID, hsmHandle)
-				if err != nil {
-					return nil, errors.Wrap(err, "contentsignaturepki: failed to insert new EE into database")
-				}
-			}
-		} else {
-			return nil, errors.Wrap(err, "contentsignaturepki: failed to find suitable end-entity")
-		}
-	}
-
-	// check if we already have a valid x5u, and if not make a new chain,
-	// upload it and re-verify
-	_, err = GetX5U(s.X5U)
-	if err != nil {
-		return nil, errors.Wrap(err, "contentsignaturepki: failed to verify x5u")
-	}
-	if tx != nil {
-		err = tx.End()
-		if err != nil {
-			return nil, errors.Wrap(err, "contentsignaturepki: failed to commit end-entity operations in database")
-		}
+		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to initialize end-entity", s.ID)
 	}
 	return
+}
+
+// initEE configures an end-entity key and certificate that will be used
+// for signing. It will try to retrieve an existing one from db/hsm, and if
+// no suitable candidate can be found, a new one will be created.
+func (s *ContentSigner) initEE(conf signer.Configuration) error {
+	err := s.findAndSetEE(conf)
+	switch err {
+	case nil:
+		log.Printf("contentsignaturepki %q: reusing existing EE %q", s.ID, s.eeLabel)
+	case database.ErrNoSuitableEEFound:
+		// No suitable end-entity found, making a new chain
+		log.Printf("contentsignaturepki %q: making new end-entity", s.ID)
+		var tx *database.Transaction
+		if s.db != nil {
+			tx, err = s.db.BeginEndEntityOperations()
+			if err != nil {
+				return errors.Wrapf(err, "contentsignaturepki %q: failed to begin db operations", s.ID)
+			}
+		}
+		// to prevent race conditions, we perform another set of the EE just in case
+		// someone else created it before we managed to obtain the lock
+		err = s.findAndSetEE(conf)
+		switch err {
+		case nil:
+			// alright we found a suitable EE this time to don't make one
+			goto releaseLock
+		case database.ErrNoSuitableEEFound:
+			// still nothing suitable, continue on
+			break
+		default:
+			// some other error popped up, exit
+			return err
+		}
+		// create a label and generate the key
+		s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102150405"))
+		s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, s.eeLabel)
+		if err != nil {
+			return errors.Wrapf(err, "contentsignaturepki %q: failed to generate end entity", s.ID)
+		}
+		// make the certificate and upload the chain
+		err = s.makeAndUploadChain()
+		if err != nil {
+			return errors.Wrapf(err, "contentsignaturepki %q: failed to make chain and x5u", s.ID)
+		}
+		if tx != nil {
+			// insert it in database
+			hsmHandle := signer.GetPrivKeyHandle(s.eePriv)
+			err = tx.InsertEE(s.X5U, s.eeLabel, s.ID, hsmHandle)
+			if err != nil {
+				return errors.Wrapf(err, "contentsignaturepki %q: failed to insert EE into database", s.ID)
+			}
+			log.Printf("contentsignaturepki %q: generated private key labeled %q with hsm handle %d and x5u %q", s.ID, s.eeLabel, hsmHandle, s.X5U)
+		}
+	releaseLock:
+		if tx != nil {
+			// close the transaction
+			err = tx.End()
+			if err != nil {
+				return errors.Wrapf(err, "contentsignaturepki %q: failed to commit end-entity operations in database", s.ID)
+			}
+		}
+	default:
+		return errors.Wrapf(err, "contentsignaturepki %q: failed to find suitable end-entity", s.ID)
+	}
+	_, err = GetX5U(s.X5U)
+	if err != nil {
+		return errors.Wrapf(err, "contentsignaturepki %q: failed to verify x5u", s.ID)
+	}
+	return nil
 }
 
 // Config returns the configuration of the current signer
@@ -165,6 +194,8 @@ func (s *ContentSigner) Config() signer.Configuration {
 		Mode:                s.Mode,
 		PrivateKey:          s.PrivateKey,
 		PublicKey:           s.PublicKey,
+		IssuerPrivKey:       s.IssuerPrivKey,
+		IssuerCert:          s.IssuerCert,
 		X5U:                 s.X5U,
 		Validity:            s.validity,
 		ClockSkewTolerance:  s.clockSkewTolerance,
@@ -177,7 +208,7 @@ func (s *ContentSigner) Config() signer.Configuration {
 // The returned signature is of type ContentSignature and ready to be Marshalled.
 func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Signature, error) {
 	if len(input) < 10 {
-		return nil, errors.Errorf("contentsignaturepki: refusing to sign input data shorter than 10 bytes")
+		return nil, fmt.Errorf("contentsignaturepki %q: refusing to sign input data shorter than 10 bytes", s.ID)
 	}
 	alg, hash := MakeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
@@ -211,7 +242,7 @@ func MakeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
 // has already been hashed with something like sha384
 func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Signature, error) {
 	if len(input) != 32 && len(input) != 48 && len(input) != 64 {
-		return nil, errors.Errorf("contentsignaturepki: refusing to sign input hash. length %d, expected 32, 48 or 64", len(input))
+		return nil, fmt.Errorf("contentsignaturepki %q: refusing to sign input hash. length %d, expected 32, 48 or 64", s.ID, len(input))
 	}
 	var err error
 	csig := new(ContentSignature)
@@ -224,12 +255,12 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 
 	asn1Sig, err := s.eePriv.(crypto.Signer).Sign(rand.Reader, input, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignaturepki: failed to sign hash")
+		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to sign hash", s.ID)
 	}
 	var ecdsaSig ecdsaAsn1Signature
 	_, err = asn1.Unmarshal(asn1Sig, &ecdsaSig)
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignaturepki: failed to parse signature")
+		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to parse signature", s.ID)
 	}
 	csig.R = ecdsaSig.R
 	csig.S = ecdsaSig.S

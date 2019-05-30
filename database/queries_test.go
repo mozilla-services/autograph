@@ -18,6 +18,11 @@ func TestConcurrentEndEntityOperations(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	var one uint
+	err = db.QueryRow("SELECT 1").Scan(&one)
+	if err != nil || one != 1 {
+		t.Fatal("Database connection failed:", err)
+	}
 	defer db.Close()
 
 	var wg sync.WaitGroup
@@ -48,13 +53,25 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 	nextTime = nextTime.Add(10 * time.Second)
 	time.Sleep(time.Until(nextTime))
 
-	tx, err := db.BeginEndEntityOperations()
-	if err != nil {
-		t.Fatalf("failed to begin end-entity db operations: %v", err)
-	}
-	label, _, err := tx.GetLabelOfLatestEE(signerID, 15*time.Second)
+	label, _, err := db.GetLabelOfLatestEE(signerID, 15*time.Second)
 	switch err {
 	case ErrNoSuitableEEFound:
+		tx, err := db.BeginEndEntityOperations()
+		if err != nil {
+			t.Fatalf("failed to begin end-entity db operations: %v", err)
+		}
+		// test again the no EE is available after obtaining the lock, just in
+		// case another routine made an EE in the meantime
+		label, _, err = db.GetLabelOfLatestEE(signerID, 15*time.Second)
+		switch err {
+		case nil:
+			t.Logf("TestConcurrentEndEntityOperations: routine %d is returning end-entity %q", j, label)
+			goto releaseLock
+		case ErrNoSuitableEEFound:
+			break
+		default:
+			t.Fatal(err)
+		}
 		// make a new EE
 		label = fmt.Sprintf("%d", time.Now().UnixNano())
 		t.Logf("TestConcurrentEndEntityOperations: routine %d is making an end-entity", j)
@@ -63,14 +80,15 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 		if err != nil {
 			t.Fatalf("failed to insert end-entity into db: %v", err)
 		}
+	releaseLock:
+		err = tx.End()
+		if err != nil {
+			t.Fatalf("failed to end end-entity db operations: %v", err)
+		}
 	case nil:
 		t.Logf("TestConcurrentEndEntityOperations: routine %d is returning end-entity %q", j, label)
 	default:
 		t.Fatal(err)
-	}
-	err = tx.End()
-	if err != nil {
-		t.Fatalf("failed to end end-entity db operations: %v", err)
 	}
 	return label
 }

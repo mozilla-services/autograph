@@ -72,14 +72,14 @@ signers:
       clockskewtolerance: 1h
       chainuploadlocation: file:///tmp/autograph/chains/normandydev/
       x5u: file:///tmp/autograph/chains/normandydev/
-      privatekey: |
+      issuerprivkey: |
         -----BEGIN EC PRIVATE KEY-----
         MIGkAgEBBDBEk1fq5FMwBSLKDldmW+QRo15eebdJK1DdrUlp2SmwVf85TffXlFsa
         accDMiiow/WgBwYFK4EEACKhZANiAARP5dbB0qgDev4IRzVkuHDYf2TDc8YkpNFW
         nQ/KonN1EWrMIWNAeuOOJgjswwq0+M2J0/TNcnYlts5tVZh6MFYKwYHG/NlkTZZ5
         5wb3GKy8JkoFH/X74Tm3o06hf0BuCfY=
         -----END EC PRIVATE KEY-----
-      publickey: |
+      issuercert: |
         -----BEGIN CERTIFICATE-----
         MIICWzCCAeKgAwIBAgIIFY4HHiYeU5AwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
         VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
@@ -124,14 +124,14 @@ signers:
       clockskewtolerance: 1h
       chainuploadlocation: file:///tmp/autograph/chains/remotesettingsdev/
       x5u: file:///tmp/autograph/chains/remotesettingsdev/
-      privatekey: |
+      issuerprivkey: |
         -----BEGIN EC PRIVATE KEY-----
         MIGkAgEBBDBEk1fq5FMwBSLKDldmW+QRo15eebdJK1DdrUlp2SmwVf85TffXlFsa
         accDMiiow/WgBwYFK4EEACKhZANiAARP5dbB0qgDev4IRzVkuHDYf2TDc8YkpNFW
         nQ/KonN1EWrMIWNAeuOOJgjswwq0+M2J0/TNcnYlts5tVZh6MFYKwYHG/NlkTZZ5
         5wb3GKy8JkoFH/X74Tm3o06hf0BuCfY=
         -----END EC PRIVATE KEY-----
-      publickey: |
+      issuercert: |
         -----BEGIN CERTIFICATE-----
         MIICWzCCAeKgAwIBAgIIFY4HHiYeU5AwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
         VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
