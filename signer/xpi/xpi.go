@@ -189,14 +189,14 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		s.recommendationAllowedStates = conf.RecommendationConfig.AllowedStates
 		s.recommendationValidityRelativeStart = conf.RecommendationConfig.ValidityRelativeStart
 		s.recommendationValidityDuration = conf.RecommendationConfig.ValidityDuration
-		log.Infof("xpi: set recommendation options allowed states: %+v, path: %s, start duration: %s duration: %s",
+		log.Infof("xpi: set recommendation options allowed states: %+v, path: %q, start duration: %q duration: %q",
 			s.recommendationAllowedStates,
 			s.recommendationFilePath,
 			s.recommendationValidityRelativeStart,
 			s.recommendationValidityDuration)
 	}
 	s.recommendationFilePath = conf.RecommendationConfig.FilePath
-	log.Infof("xpi: signer %s is ignoring recommendation file path %s", s.ID, s.recommendationFilePath)
+	log.Infof("xpi: signer %q is ignoring recommendation file path %q", s.ID, s.recommendationFilePath)
 
 	// If the private key is rsa, launch go routines that
 	// populates the rsa cache with private keys of the same
@@ -206,7 +206,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 			return nil, errors.Errorf("xpi: issuer RSA key must be at least %d bits", rsaKeyMinSize)
 		}
 		if conf.RSACacheConfig.StatsSampleRate < 5*time.Second {
-			log.Warnf("xpi: sampling rsa cache as rate of %s (less than 5s)", conf.RSACacheConfig.StatsSampleRate)
+			log.Warnf("xpi: sampling rsa cache as rate of %q (less than 5s)", conf.RSACacheConfig.StatsSampleRate)
 		}
 		s.rsaCacheGeneratorSleepDuration = conf.RSACacheConfig.GeneratorSleepDuration
 		s.rsaCacheFetchTimeout = conf.RSACacheConfig.FetchTimeout
@@ -217,7 +217,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 			go s.populateRsaCache(issuerKey.N.BitLen())
 		}
 
-		log.Infof("xpi: %d RSA key cache started with %d generators running every %s\n and a %s timeout", conf.RSACacheConfig.NumKeys, conf.RSACacheConfig.NumGenerators, s.rsaCacheGeneratorSleepDuration, s.rsaCacheFetchTimeout)
+		log.Infof("xpi: %d RSA key cache started with %d generators running every %q\n and a %q timeout", conf.RSACacheConfig.NumKeys, conf.RSACacheConfig.NumGenerators, s.rsaCacheGeneratorSleepDuration, s.rsaCacheFetchTimeout)
 
 		if s.stats == nil {
 			log.Warnf("xpi: No statsd client found to send RSA cache metrics")
@@ -426,7 +426,7 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 	for _, algStr := range o.COSEAlgorithms {
 		alg := stringToCOSEAlg(algStr)
 		if alg == nil {
-			return nil, errors.Errorf("xpi: invalid or unsupported COSE algorithm %s", algStr)
+			return nil, errors.Errorf("xpi: invalid or unsupported COSE algorithm %q", algStr)
 		}
 		algs = append(algs, alg)
 	}
@@ -442,7 +442,7 @@ func (o *Options) RecommendationStates(allowedRecommendationStates map[string]bo
 
 	for _, rec := range o.Recommendations {
 		if val, ok := allowedRecommendationStates[rec]; !(ok && val) {
-			return nil, errors.Errorf("xpi: invalid or unsupported recommendation state %s", rec)
+			return nil, errors.Errorf("xpi: invalid or unsupported recommendation state %q", rec)
 		}
 		states = append(states, rec)
 	}

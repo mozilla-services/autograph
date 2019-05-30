@@ -1,6 +1,7 @@
 package xpi
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -13,7 +14,7 @@ func TestValidateRecommendation(t *testing.T) {
 
 	twoYears, err := time.ParseDuration("17532h")
 	if err != nil {
-		t.Fatalf("failed to parse duration for test fixture: %s", err)
+		t.Fatalf("failed to parse duration for test fixture: %q", err)
 	}
 	allowedRecommendationStates := map[string]bool{
 		"recommended": true,
@@ -26,7 +27,7 @@ func TestValidateRecommendation(t *testing.T) {
 		rec := Recommend("example@mozilla", []string{"recommended"}, now, now.Add(twoYears))
 		err := rec.Validate(allowedRecommendationStates)
 		if err != nil {
-			t.Fatalf("rec %+v did not validate as expected got err %s", rec, err)
+			t.Fatalf("rec %+v did not validate as expected got err %q", rec, err)
 		}
 	})
 
@@ -66,7 +67,7 @@ func TestValidateRecommendation(t *testing.T) {
 		}
 		err := rec.Validate(allowedRecommendationStates)
 		if err == nil {
-			t.Fatalf("rec %+v with invalid state %s validated when it should not have", rec, state)
+			t.Fatalf("rec %+v with invalid state %q validated when it should not have", rec, state)
 		}
 	})
 
@@ -195,22 +196,22 @@ func TestMakeRecommendationFile(t *testing.T) {
 
 		recFileBytes, err := s.makeRecommendationFile(opts, "example@mozilla")
 		if err != nil {
-			t.Fatalf("failed to make recommendation file as expected got err: %s", err)
+			t.Fatalf("failed to make recommendation file as expected got err: %q", err)
 		}
-		fmt.Printf("%s\n", recFileBytes)
+		fmt.Printf("%q\n", recFileBytes)
 		rec, err := UnmarshalRecommendation(recFileBytes)
 		if err != nil {
-			t.Fatalf("failed to unmarshal recommendation file back to rec got err: %s", err)
+			t.Fatalf("failed to unmarshal recommendation file back to rec got err: %q", err)
 		}
 		err = rec.Validate(s.recommendationAllowedStates)
 		if err != nil {
-			t.Fatalf("unmarshaled recommendation file was invalid with err: %s", err)
+			t.Fatalf("unmarshaled recommendation file was invalid with err: %q", err)
 		}
 		if rec.AddOnID != "example@mozilla" {
-			t.Fatalf("unmarshaled recommendation file used unexpected addonid: %s (expected example@mozilla)", rec.AddOnID)
+			t.Fatalf("unmarshaled recommendation file used unexpected addonid: %q (expected example@mozilla)", rec.AddOnID)
 		}
 		if len(rec.States) != 1 && rec.States[0] != "recommended" {
-			t.Fatalf("unmarshaled recommendation file contains unexpected states: %s (expected [\"recommended\"])", rec.States)
+			t.Fatalf("unmarshaled recommendation file contains unexpected states: %q (expected [\"recommended\"])", rec.States)
 		}
 	})
 
@@ -234,8 +235,19 @@ func TestMakeRecommendationFile(t *testing.T) {
 	t.Run("fails for invalid options", func(t *testing.T) {
 		t.Parallel()
 
+		// hack to deep copy the configuration so we don't change allowed state by ref breaking other tests
+		var dupRecTestCase signer.Configuration
+		buf, err := json.Marshal(recTestCase)
+		if err != nil {
+			t.Fatalf("failed to marshal testcase for signer %q", err)
+		}
+		err = json.Unmarshal(buf, &dupRecTestCase)
+		if err != nil {
+			t.Fatalf("failed to unmarshal testcase for signer %q", err)
+		}
+
 		// initialize a signer
-		s, err := New(recTestCase, nil)
+		s, err := New(dupRecTestCase, nil)
 		if err != nil {
 			t.Fatalf("testcase signer initialization failed with: %v", err)
 		}
@@ -247,8 +259,8 @@ func TestMakeRecommendationFile(t *testing.T) {
 		_, err = s.makeRecommendationFile(opts, "example@mozilla")
 		if err == nil {
 			t.Fatalf("did not fail to make recommendation file for signer with invalid rec state options with expected error")
-		} else if err.Error() != "xpi: error parsing recommendations from options: xpi: invalid or unsupported recommendation state recommended" {
-			t.Fatalf("did not fail to make recommendation file for signer with invalid rec state options with expected error. got %s", err)
+		} else if err.Error() != "xpi: error parsing recommendations from options: xpi: invalid or unsupported recommendation state \"recommended\"" {
+			t.Fatalf("did not fail to make recommendation file for signer with invalid rec state options with expected error. got %q", err)
 		}
 
 		// reset state the other subtests depend on so they pass
@@ -277,7 +289,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		if err == nil {
 			t.Fatalf("did not fail to make recommendation file for signer with invalid rec state options with expected error")
 		} else if err.Error() != "xpi: recommendation validation failed: xpi: recommendation validity not_after must be after not_before field" {
-			t.Fatalf("did not fail to make recommendation file for signer with validation failing with expected error. got %s", err)
+			t.Fatalf("did not fail to make recommendation file for signer with validation failing with expected error. got %q", err)
 		}
 	})
 }
@@ -287,7 +299,7 @@ func TestRecommendationMarshalsAndUnmarshalsToJSON(t *testing.T) {
 
 	twoYears, err := time.ParseDuration("17532h")
 	if err != nil {
-		t.Fatalf("failed to parse duration for test fixture: %s", err)
+		t.Fatalf("failed to parse duration for test fixture: %q", err)
 	}
 	now := time.Now().UTC().Truncate(time.Second)
 
@@ -295,12 +307,12 @@ func TestRecommendationMarshalsAndUnmarshalsToJSON(t *testing.T) {
 		rec := Recommend("example@mozilla", []string{"recommended"}, now, now.Add(twoYears))
 		recFileBytes, err := rec.Marshal()
 		if err != nil {
-			t.Fatalf("failed to marshal recommendation. Got err: %s", err)
+			t.Fatalf("failed to marshal recommendation. Got err: %q", err)
 		}
 
 		rec, err = UnmarshalRecommendation(recFileBytes)
 		if err != nil {
-			t.Fatalf("failed to unmarshal recommendation file back to rec. Got err: %s", err)
+			t.Fatalf("failed to unmarshal recommendation file back to rec. Got err: %q", err)
 		}
 	})
 
@@ -331,7 +343,7 @@ func TestRecommendationNotIncludedInOtherSignerModes(t *testing.T) {
 		}
 
 		tc := testcase // capture range variable
-		tcName := fmt.Sprintf("%d %s", i, testcase.ID)
+		tcName := fmt.Sprintf("%d %q", i, testcase.ID)
 
 		t.Run(tcName, func(t *testing.T) {
 			t.Parallel()
@@ -352,7 +364,7 @@ func TestRecommendationNotIncludedInOtherSignerModes(t *testing.T) {
 			signedXPI, err := s.SignFile(input, signOptions)
 			_, err = readFileFromZIP(signedXPI, s.recommendationFilePath)
 			if err == nil {
-				t.Fatalf("signer %s in mode %s did not remove recommendations file at %s", tc.ID, tc.Mode, s.recommendationFilePath)
+				t.Fatalf("signer %q in mode %q did not remove recommendations file at %q", tc.ID, tc.Mode, s.recommendationFilePath)
 			}
 		})
 	}
@@ -464,10 +476,10 @@ func TestSignFileWithRecommendation(t *testing.T) {
 		}
 		rec, err := UnmarshalRecommendation(recFileBytes)
 		if err != nil {
-			t.Fatalf("failed to unmarshal invalid JSON recommendation file %s", err)
+			t.Fatalf("failed to unmarshal invalid JSON recommendation file %q", err)
 		}
 		if string(rec.AddOnID) != opts.ID {
-			t.Fatalf("failed to use new CN in recommendation file expected %s and got %s", opts.ID, string(rec.AddOnID))
+			t.Fatalf("failed to use new CN in recommendation file expected %q and got %q", opts.ID, string(rec.AddOnID))
 		}
 		// fmt.Printf("%s\n", recFileBytes)
 	})

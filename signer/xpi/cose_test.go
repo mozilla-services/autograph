@@ -161,7 +161,7 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 		}
 		issuerKeySize, err := s.getIssuerRSAKeySize()
 		if err != nil {
-			t.Fatalf("failed to get issuer RSA key size: %s", err)
+			t.Fatalf("failed to get issuer RSA key size: %q", err)
 		}
 		if rsaKey.N.BitLen() < issuerKeySize {
 			t.Fatalf("EE key %d is smaller than signer issuer key %d", rsaKey.N.BitLen(), issuerKeySize)
@@ -471,28 +471,28 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 
 	validSigBytes, err := hex.DecodeString(strings.Replace(strings.Replace(validCOSESig, "\n", "", -1), " ", "", -1))
 	if err != nil {
-		t.Fatalf("error decoding validCOSESig %s", err)
+		t.Fatalf("error decoding validCOSESig %q", err)
 	}
 
 	msgBytes, err := cose.Unmarshal(validSigBytes)
 	if err != nil {
-		t.Fatalf("error unmarshaling validCOSESig %s", err)
+		t.Fatalf("error unmarshaling validCOSESig %q", err)
 	}
 	msg := msgBytes.(cose.SignMessage)
 	msg.Payload = []byte("blah")
 
 	invalidSigBytes, err := cose.Marshal(msg)
 	if err != nil {
-		t.Fatalf("error unmarshaling invalidSigBytes %s", err)
+		t.Fatalf("error unmarshaling invalidSigBytes %q", err)
 	}
 
 	s, err := New(PASSINGTESTCASES[0], nil)
 	if err != nil {
-		t.Fatalf("signer initialization failed with: %v", err)
+		t.Fatalf("signer initialization failed with: %q", err)
 	}
 	testCNValidSig, err := s.issueCOSESignature("test-cn", []byte("foo"), []*cose.Algorithm{cose.ES256})
 	if err != nil {
-		t.Fatalf("signer failed to issuer test COSE Signature with err: %v", err)
+		t.Fatalf("signer failed to issuer test COSE Signature with err: %q", err)
 	}
 
 	testCNRoots := x509.NewCertPool()
@@ -527,7 +527,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots: nil,
 			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: failed to read META-INF/cose.sig from signed zip: failed to find META-INF/cose.sig in ZIP",
+				"xpi: failed to read META-INF/cose.sig from signed zip: failed to find \"META-INF/cose.sig\" in ZIP",
 			},
 		},
 		//2
@@ -545,7 +545,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots: nil,
 			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: failed to read META-INF/manifest.mf from signed zip: failed to find META-INF/manifest.mf in ZIP",
+				"xpi: failed to read META-INF/manifest.mf from signed zip: failed to find \"META-INF/manifest.mf\" in ZIP",
 			},
 		},
 		//3
@@ -567,7 +567,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots: nil,
 			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: pkcs7 manifest does not contain the line: Name: META-INF/cose.sig",
+				"xpi: pkcs7 manifest does not contain the line: \"Name: META-INF/cose.sig\"",
 			},
 		},
 		//4
@@ -589,7 +589,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots: nil,
 			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: cose manifest contains the line: Name: META-INF/cose.sig",
+				"xpi: cose manifest contains the line: \"Name: META-INF/cose.sig\"",
 			},
 		},
 		//5
@@ -686,7 +686,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256"},
 			},
 			results: []string{
-				"xpi: EECert 0: id foo does not match cert cn jid1-Kt2kYYgi32zPuw@jetpack",
+				"xpi: EECert 0: id \"foo\" does not match cert cn \"jid1-Kt2kYYgi32zPuw@jetpack\"",
 			},
 		},
 		//9

@@ -57,7 +57,7 @@ func (r *Recommendation) Validate(allowedRecommendationStates map[string]bool) e
 	}
 	for _, state := range r.States {
 		if _, ok := allowedRecommendationStates[state]; !ok {
-			return errors.Errorf("xpi: recommendation included the invalid state %s", state)
+			return errors.Errorf("xpi: recommendation included the invalid state %q", state)
 		}
 	}
 
@@ -109,7 +109,7 @@ func (r *Recommendation) Marshal() ([]byte, error) {
 // using the signer config and request options
 func (s *XPISigner) makeRecommendationFile(opt Options, cn string) ([]byte, error) {
 	if s.Mode != ModeAddOnWithRecommendation {
-		return nil, errors.Errorf("xpi: cannot make recommendation file for signer in mode %s", s.Mode)
+		return nil, errors.Errorf("xpi: cannot make recommendation file for signer in mode %q", s.Mode)
 	}
 
 	recommendedStatesRequested, err := opt.RecommendationStates(s.recommendationAllowedStates)
@@ -135,7 +135,7 @@ func (s *XPISigner) makeRecommendationFile(opt Options, cn string) ([]byte, erro
 func (s *XPISigner) ReadAndVerifyRecommendationFile(signedXPI []byte) (recFileBytes []byte, err error) {
 	recFileBytes, err = readFileFromZIP(signedXPI, s.recommendationFilePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to read recommendation file from %s", s.recommendationFilePath)
+		return nil, errors.Wrapf(err, "failed to read recommendation file from %q", s.recommendationFilePath)
 	}
 	rec, err := UnmarshalRecommendation(recFileBytes)
 	if err != nil {

@@ -187,7 +187,7 @@ func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 func verifyPKCS7DigestWithPKCS7Lib(t *testing.T, input, pkcs7Sig, testCaseCerts []byte) error {
 	p7, err := pkcs7.Parse(pkcs7Sig)
 	if err != nil {
-		t.Fatalf("failed to parse XPI sig %s", err)
+		t.Fatalf("failed to parse XPI sig %q", err)
 	}
 	p7.Content = input
 
@@ -213,7 +213,7 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 	// NB: can't call SignData directly since it doesn't support SHA256
 	pkcs7SigSHA2, err := s.signDataWithPKCS7(input, "foo@bar.net", pkcs7.OIDDigestAlgorithmSHA256)
 	if err != nil {
-		t.Fatalf("failed to sign XPI with SHA2 digest %s", err)
+		t.Fatalf("failed to sign XPI with SHA2 digest %q", err)
 	}
 	err = verifyPKCS7DigestWithPKCS7Lib(t, input, pkcs7SigSHA2, []byte(testcase.Certificate))
 	if err != nil {
@@ -222,7 +222,7 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 
 	pkcs7SigSHA1, err := s.signDataWithPKCS7(input, "foo@bar.net", pkcs7.OIDDigestAlgorithmSHA1)
 	if err != nil {
-		t.Fatalf("failed to sign XPI with SHA1 digest %s", err)
+		t.Fatalf("failed to sign XPI with SHA1 digest %q", err)
 	}
 	err = verifyPKCS7DigestWithPKCS7Lib(t, input, pkcs7SigSHA1, []byte(testcase.Certificate))
 	if err != nil {
@@ -262,19 +262,19 @@ func TestOptionsP7Digest(t *testing.T) {
 	opts.PKCS7Digest = "SHA256"
 	digest, err := opts.PK7Digest()
 	if err != nil {
-		t.Fatalf("PK7Digest() returned unexpected error %s", err)
+		t.Fatalf("PK7Digest() returned unexpected error %q", err)
 	}
 	if !digest.Equal(pkcs7.OIDDigestAlgorithmSHA256) {
-		t.Fatalf("PK7Digest() returned unexpected digest %s", digest)
+		t.Fatalf("PK7Digest() returned unexpected digest %q", digest)
 	}
 
 	opts.PKCS7Digest = "sha1"
 	digest, err = opts.PK7Digest()
 	if err != nil {
-		t.Fatalf("PK7Digest() returned unexpected error %s", err)
+		t.Fatalf("PK7Digest() returned unexpected error %q", err)
 	}
 	if !digest.Equal(pkcs7.OIDDigestAlgorithmSHA1) {
-		t.Fatalf("PK7Digest() returned unexpected digest %s", digest)
+		t.Fatalf("PK7Digest() returned unexpected digest %q", digest)
 	}
 
 	opts.PKCS7Digest = ""
@@ -321,7 +321,7 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 	if err == nil {
 		t.Fatal("bad COSE Algs should have errored by didn't")
 	} else if err.Error() != expectedErr {
-		t.Fatalf("bad COSE Algs should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+		t.Fatalf("bad COSE Algs should have failed with %q but failed with %q instead", expectedErr, err.Error())
 	}
 
 	// sign input data with valid cose algs option
@@ -334,7 +334,7 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 	if err == nil {
 		t.Fatal("bad COSE Algs should have errored by didn't")
 	} else if err.Error() != expectedErr {
-		t.Fatalf("bad COSE Algs should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+		t.Fatalf("bad COSE Algs should have failed with %q but failed with %q instead", expectedErr, err.Error())
 	}
 }
 
@@ -356,7 +356,7 @@ func TestBadPKCS7DigestErrs(t *testing.T) {
 	if err == nil {
 		t.Fatal("bad PKCS7 digest should have errored by didn't")
 	} else if err.Error() != expectedErr {
-		t.Fatalf("bad PKCS7 digest should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+		t.Fatalf("bad PKCS7 digest should have failed with %q but failed with %q instead", expectedErr, err.Error())
 	}
 }
 
@@ -492,12 +492,12 @@ func TestRsaCaching(t *testing.T) {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
 	cachedElapsed := time.Since(start)
-	t.Logf("retrieved rsa key from cache in %s", cachedElapsed)
+	t.Logf("retrieved rsa key from cache in %q", cachedElapsed)
 
 	start = time.Now()
 	rsa.GenerateKey(rand.Reader, keySize)
 	generatedElapsed := time.Since(start)
-	t.Logf("generated rsa key without cache in %s", generatedElapsed)
+	t.Logf("generated rsa key without cache in %q", generatedElapsed)
 
 	if cachedElapsed > generatedElapsed {
 		t.Fatal("key retrieval from populated cache took longer than generating directly")
