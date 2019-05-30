@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -34,7 +35,7 @@ var maxFirstLineByteLen = maxLineByteLen - (len([]byte("Name: ")) + 1) // + 1 fo
 // refed from: https://source.android.com/security/apksigning/#v1
 func formatFilename(filename []byte) (formatted []byte, err error) {
 	if !utf8.Valid(filename) {
-		err = errors.Errorf("xpi: invalid UTF8 in filename %s", filename)
+		err = errors.Errorf("xpi: invalid UTF8 in filename %q", filename)
 		return
 	}
 	var (
@@ -70,7 +71,7 @@ func formatFilename(filename []byte) (formatted []byte, err error) {
 func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err error) {
 	for _, f := range metafiles {
 		if !f.IsNameValid() {
-			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
+			err = errors.Errorf("Cannot makePKCS7Manifest with metafile at invalid path %q", f.Name)
 			return
 		}
 	}
@@ -193,7 +194,7 @@ func (m *Metafile) IsNameValid() bool {
 func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, err error) {
 	for _, f := range metafiles {
 		if !f.IsNameValid() {
-			err = errors.Errorf("Cannot pack metafile with invalid path %s", f.Name)
+			err = errors.Errorf("Cannot pack metafile with invalid path %q", f.Name)
 			return
 		}
 	}
@@ -320,6 +321,131 @@ func isCOSESignatureFile(name string) bool {
 	return false
 }
 
+// appendFileToZIP appends a file with its contents to a ZIP archive and returns it or an error
+func appendFileToZIP(input []byte, filepath string, filecontents []byte) (output []byte, err error) {
+	var (
+		rc     io.ReadCloser
+		fwhead *zip.FileHeader
+		fw     io.Writer
+		data   []byte
+	)
+	inputReader := bytes.NewReader(input)
+	r, err := zip.NewReader(inputReader, int64(len(input)))
+	if err != nil {
+		return
+	}
+	// Create a buffer to write our archive to.
+	buf := new(bytes.Buffer)
+
+	// Create a new zip archive.
+	w := zip.NewWriter(buf)
+
+	// Iterate through the files in the archive,
+	for _, f := range r.File {
+		rc, err = f.Open()
+		if err != nil {
+			return
+		}
+		fwhead := &zip.FileHeader{
+			Name:   f.Name,
+			Method: zip.Deflate,
+		}
+		// insert the file into the archive
+		fw, err = w.CreateHeader(fwhead)
+		if err != nil {
+			return
+		}
+		data, err = ioutil.ReadAll(rc)
+		if err != nil {
+			return
+		}
+		_, err = fw.Write(data)
+		if err != nil {
+			return
+		}
+		rc.Close()
+	}
+	// append a file. Those will be compressed
+	// so we don't have to worry about their alignment
+	fwhead = &zip.FileHeader{
+		Name:   filepath,
+		Method: zip.Deflate,
+	}
+	fw, err = w.CreateHeader(fwhead)
+	if err != nil {
+		return
+	}
+	_, err = fw.Write(filecontents)
+	if err != nil {
+		return
+	}
+	// Make sure to check the error on Close.
+	err = w.Close()
+	if err != nil {
+		return
+	}
+	output = buf.Bytes()
+	return
+}
+
+// removeFileFromZIP remove all archive entries matching a given file
+// path and returns the filtered XPI or an error
+func removeFileFromZIP(input []byte, filepath string) (output []byte, err error) {
+	var (
+		rc   io.ReadCloser
+		fw   io.Writer
+		data []byte
+	)
+	inputReader := bytes.NewReader(input)
+	r, err := zip.NewReader(inputReader, int64(len(input)))
+	if err != nil {
+		return
+	}
+	// Create a buffer to write our archive to.
+	buf := new(bytes.Buffer)
+
+	// Create a new zip archive.
+	w := zip.NewWriter(buf)
+
+	// Iterate through the files in the archive,
+	for _, f := range r.File {
+		if f.Name == filepath {
+			log.Infof("xpi: skipping filepath path %q matching reserved name %q", f.Name, filepath)
+			continue
+		}
+
+		rc, err = f.Open()
+		if err != nil {
+			return
+		}
+		fwhead := &zip.FileHeader{
+			Name:   f.Name,
+			Method: zip.Deflate,
+		}
+		// insert the file into the archive
+		fw, err = w.CreateHeader(fwhead)
+		if err != nil {
+			return
+		}
+		data, err = ioutil.ReadAll(rc)
+		if err != nil {
+			return
+		}
+		_, err = fw.Write(data)
+		if err != nil {
+			return
+		}
+		rc.Close()
+	}
+	// Make sure to check the error on Close.
+	err = w.Close()
+	if err != nil {
+		return
+	}
+	output = buf.Bytes()
+	return
+}
+
 // readFileFromZIP reads a given filename out of a ZIP and returns it or an error
 func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 	zipReader := bytes.NewReader(signedXPI)
@@ -333,16 +459,16 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
-				return nil, errors.Wrapf(err, "Error opening file %s in ZIP", filename)
+				return nil, errors.Wrapf(err, "Error opening file %q in ZIP", filename)
 			}
 			data, err := ioutil.ReadAll(rc)
 			if err != nil {
-				return nil, errors.Wrapf(err, "Error reading file %s in ZIP", filename)
+				return nil, errors.Wrapf(err, "Error reading file %q in ZIP", filename)
 			}
 			return data, nil
 		}
 	}
-	return nil, errors.Errorf("failed to find %s in ZIP", filename)
+	return nil, errors.Errorf("failed to find %q in ZIP", filename)
 }
 
 // readXPIContentsToMap reads XPI file contents into memory into a
@@ -364,14 +490,14 @@ func readXPIContentsToMap(signedXPI []byte) (map[string][]byte, error) {
 		rc, err := f.Open()
 		defer rc.Close()
 		if err != nil {
-			return nil, errors.Wrapf(err, "Error opening file %s in ZIP", f.Name)
+			return nil, errors.Wrapf(err, "Error opening file %q in ZIP", f.Name)
 		}
 		data, err := ioutil.ReadAll(rc)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Error reading file %s in ZIP", f.Name)
+			return nil, errors.Wrapf(err, "Error reading file %q in ZIP", f.Name)
 		}
 		if _, ok = filenameToContents[f.Name]; ok {
-			return nil, errors.Errorf("%s occurs twice in ZIP", f.Name)
+			return nil, errors.Errorf("%q occurs twice in ZIP", f.Name)
 		}
 		filenameToContents[f.Name] = data
 	}
@@ -396,27 +522,27 @@ func parseManifestEntry(entry []byte) (filename string, fileSHA1, fileSHA256 []b
 		case 0:
 			tmp := bytes.Split(line, []byte("Name: "))
 			if len(tmp) != 2 {
-				return "", nil, nil, errors.Errorf("unexpected name line: %s", line)
+				return "", nil, nil, errors.Errorf("unexpected name line: %q", line)
 			}
 			filename = string(tmp[1])
 		case 1:
 			if !bytes.Equal(line, []byte("Digest-Algorithms: SHA1 SHA256")) {
-				return "", nil, nil, errors.Errorf("unexpected digest algs: %s", line)
+				return "", nil, nil, errors.Errorf("unexpected digest algs: %q", line)
 			}
 		case 2:
 			tmp := bytes.Split(line, []byte("SHA1-Digest: "))
 			if len(tmp) != 2 {
-				return "", nil, nil, errors.Errorf("unexpected SHA1 line: %s", line)
+				return "", nil, nil, errors.Errorf("unexpected SHA1 line: %q", line)
 			}
 			fileSHA1 = tmp[1]
 		case 3:
 			tmp := bytes.Split(line, []byte("SHA256-Digest: "))
 			if len(tmp) != 2 {
-				return "", nil, nil, errors.Errorf("unexpected SHA256 line: %s", line)
+				return "", nil, nil, errors.Errorf("unexpected SHA256 line: %q", line)
 			}
 			fileSHA256 = tmp[1]
 		default:
-			return "", nil, nil, errors.Errorf("unexpected manifest line: %s", line)
+			return "", nil, nil, errors.Errorf("unexpected manifest line: %q", line)
 		}
 	}
 	return filename, fileSHA1, fileSHA256, nil
@@ -432,10 +558,10 @@ func checkSHAsums(data, sha1sum, sha256sum []byte) error {
 	computedSHA256 := []byte(base64.StdEncoding.EncodeToString(h2.Sum(nil)))
 
 	if !bytes.Equal(sha1sum, computedSHA1) {
-		return errors.Errorf("SHA1 mismatch got %s but computed %s", sha1sum, computedSHA1)
+		return errors.Errorf("SHA1 mismatch got %q but computed %q", sha1sum, computedSHA1)
 	}
 	if !bytes.Equal(sha256sum, computedSHA256) {
-		return errors.Errorf("SHA2 mismatch got %s but computed %s", sha256sum, computedSHA256)
+		return errors.Errorf("SHA2 mismatch got %q but computed %q", sha256sum, computedSHA256)
 	}
 	return nil
 }
@@ -462,7 +588,7 @@ func verifyAndCountManifest(signedXPI []byte, manifestPath string) (int, int, er
 		return -1, -1, errors.Wrapf(err, "error reading XPI contents to map")
 	}
 	if manifestBytes, ok = filenameToContents[manifestPath]; !ok {
-		return -1, -1, errors.Wrapf(err, "did not find manifest %s in zip", manifestPath)
+		return -1, -1, errors.Wrapf(err, "did not find manifest %q in zip", manifestPath)
 	}
 
 	for _, entry := range bytes.Split(manifestBytes, []byte("\n\n")) {
@@ -473,25 +599,25 @@ func verifyAndCountManifest(signedXPI []byte, manifestPath string) (int, int, er
 		}
 		filename, fileSHA1, fileSHA256, err := parseManifestEntry(entry)
 		if err != nil {
-			return -1, -1, errors.Wrapf(err, "failed to parse manifest entry: %s", entry)
+			return -1, -1, errors.Wrapf(err, "failed to parse manifest entry: %q", entry)
 		}
 		if filename == "" || fileSHA1 == nil || fileSHA256 == nil {
-			return -1, -1, errors.Errorf("failed to parse manifest entry: %s", entry)
+			return -1, -1, errors.Errorf("failed to parse manifest entry: %q", entry)
 		}
 
 		if _, ok = manifestEntryNames[filename]; ok {
-			return -1, -1, errors.Errorf("duplicate entries for file %s in manifest", filename)
+			return -1, -1, errors.Errorf("duplicate entries for file %q in manifest", filename)
 		}
 		manifestEntryNames[filename] = true
 
 		var contents []byte
 		if contents, ok = filenameToContents[string(filename)]; !ok {
-			return -1, -1, errors.Errorf("file %s in manifest but not XPI", filename)
+			return -1, -1, errors.Errorf("file %q in manifest but not XPI", filename)
 		}
 
 		err = checkSHAsums(contents, fileSHA1, fileSHA256)
 		if err != nil {
-			return -1, -1, errors.Wrapf(err, "file %s hash mistmatch between manifest and computed", filename)
+			return -1, -1, errors.Wrapf(err, "file %q hash mistmatch between manifest and computed", filename)
 		}
 
 	}

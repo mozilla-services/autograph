@@ -18,7 +18,7 @@ func TestFormatFilenameShort(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(formatted, expected) {
-		t.Fatalf("manifest filename mismatch Expected:\n%s\nGot:\n%s", expected, formatted)
+		t.Fatalf("manifest filename mismatch Expected:\n%q\nGot:\n%q", expected, formatted)
 	}
 }
 
@@ -33,7 +33,7 @@ func TestFormatFilenameLong(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(formatted, expected) {
-		t.Fatalf("manifest filename mismatch Expected:\n%s\nGot:\n%s", expected, formatted)
+		t.Fatalf("manifest filename mismatch Expected:\n%q\nGot:\n%q", expected, formatted)
 	}
 }
 
@@ -66,7 +66,7 @@ func TestFormatFilenameLonger(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(formatted, expected) {
-		t.Fatalf("manifest filename mismatch Expected:\n%s\nGot:\n%s", expected, formatted)
+		t.Fatalf("manifest filename mismatch Expected:\n%q\nGot:\n%q", expected, formatted)
 	}
 }
 
@@ -102,10 +102,10 @@ func TestMakingJarManifest(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(manifest, unsignedBootstrapManifest) {
-		t.Fatalf("manifest mismatch. Expect:\n%s\nGot:\n%s", unsignedBootstrapManifest, manifest)
+		t.Fatalf("manifest mismatch. Expect:\n%q\nGot:\n%q", unsignedBootstrapManifest, manifest)
 	}
 	if !bytes.Equal(sigfile, unsignedBootstrapSignatureFile) {
-		t.Fatalf("signature file mismatch. Expect:\n%s\nGot:\n%s", unsignedBootstrapSignatureFile, sigfile)
+		t.Fatalf("signature file mismatch. Expect:\n%q\nGot:\n%q", unsignedBootstrapSignatureFile, sigfile)
 	}
 }
 
@@ -139,12 +139,12 @@ func TestRepack(t *testing.T) {
 			fileCount++
 		case "META-INF/manifest.mf":
 			if !bytes.Equal(data, unsignedBootstrapManifest) {
-				t.Fatalf("manifest mismatch. Expect:\n%s\nGot:\n%s", unsignedBootstrapManifest, data)
+				t.Fatalf("manifest mismatch. Expect:\n%q\nGot:\n%q", unsignedBootstrapManifest, data)
 			}
 			hasManifest = true
 		case "META-INF/mozilla.sf":
 			if !bytes.Equal(data, unsignedBootstrapSignatureFile) {
-				t.Fatalf("signature file mismatch. Expect:\n%s\nGot:\n%s", unsignedBootstrapSignatureFile, data)
+				t.Fatalf("signature file mismatch. Expect:\n%q\nGot:\n%q", unsignedBootstrapSignatureFile, data)
 			}
 			hasSignatureFile = true
 		case "META-INF/mozilla.rsa":
@@ -153,7 +153,7 @@ func TestRepack(t *testing.T) {
 			}
 			hasSignature = true
 		default:
-			t.Fatalf("found unknown file in zip archive: %s", f.Name)
+			t.Fatalf("found unknown file in zip archive: %q", f.Name)
 		}
 	}
 	if fileCount != 3 {
@@ -202,7 +202,7 @@ func TestRepackEmptyCOSE(t *testing.T) {
 		switch f.Name {
 		case "META-INF/cose.manifest":
 			if !bytes.Equal(data, unsignedEmptyCOSEManifest) {
-				t.Fatalf("manifest mismatch. Expect:\n%s\nGot:\n%s", unsignedEmptyCOSEManifest, data)
+				t.Fatalf("manifest mismatch. Expect:\n%q\nGot:\n%q", unsignedEmptyCOSEManifest, data)
 			}
 			hasManifest = true
 		case "META-INF/cose.sig":
@@ -211,7 +211,7 @@ func TestRepackEmptyCOSE(t *testing.T) {
 			}
 			hasSignature = true
 		default:
-			t.Fatalf("found unknown file in zip archive: %s", f.Name)
+			t.Fatalf("found unknown file in zip archive: %q", f.Name)
 		}
 	}
 	if fileCount != 0 {
@@ -328,7 +328,7 @@ func TestRepackJARWithMetafilesValidatesMetafileName(t *testing.T) {
 	}
 }
 
-// Fixtures can be added by converting APKs to string literals using hexdump, eg:
+// Fixtures can be added by converting XPIs to string literals using hexdump, eg:
 // hexdump -v -e '16/1 "_x%02X" "\n"' /tmp/fakeapk/fakeapk.zip | sed 's/_/\\/g; s/\\x  //g; s/.*/    "&"/'
 
 // a copy of toolkit/mozapps/extensions/test/xpcshell/data/signing_checks/unsigned_bootstrap_2.xpi

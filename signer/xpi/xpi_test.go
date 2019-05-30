@@ -187,7 +187,7 @@ func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 func verifyPKCS7DigestWithPKCS7Lib(t *testing.T, input, pkcs7Sig, testCaseCerts []byte) error {
 	p7, err := pkcs7.Parse(pkcs7Sig)
 	if err != nil {
-		t.Fatalf("failed to parse XPI sig %s", err)
+		t.Fatalf("failed to parse XPI sig %q", err)
 	}
 	p7.Content = input
 
@@ -213,7 +213,7 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 	// NB: can't call SignData directly since it doesn't support SHA256
 	pkcs7SigSHA2, err := s.signDataWithPKCS7(input, "foo@bar.net", pkcs7.OIDDigestAlgorithmSHA256)
 	if err != nil {
-		t.Fatalf("failed to sign XPI with SHA2 digest %s", err)
+		t.Fatalf("failed to sign XPI with SHA2 digest %q", err)
 	}
 	err = verifyPKCS7DigestWithPKCS7Lib(t, input, pkcs7SigSHA2, []byte(testcase.Certificate))
 	if err != nil {
@@ -222,7 +222,7 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 
 	pkcs7SigSHA1, err := s.signDataWithPKCS7(input, "foo@bar.net", pkcs7.OIDDigestAlgorithmSHA1)
 	if err != nil {
-		t.Fatalf("failed to sign XPI with SHA1 digest %s", err)
+		t.Fatalf("failed to sign XPI with SHA1 digest %q", err)
 	}
 	err = verifyPKCS7DigestWithPKCS7Lib(t, input, pkcs7SigSHA1, []byte(testcase.Certificate))
 	if err != nil {
@@ -262,19 +262,19 @@ func TestOptionsP7Digest(t *testing.T) {
 	opts.PKCS7Digest = "SHA256"
 	digest, err := opts.PK7Digest()
 	if err != nil {
-		t.Fatalf("PK7Digest() returned unexpected error %s", err)
+		t.Fatalf("PK7Digest() returned unexpected error %q", err)
 	}
 	if !digest.Equal(pkcs7.OIDDigestAlgorithmSHA256) {
-		t.Fatalf("PK7Digest() returned unexpected digest %s", digest)
+		t.Fatalf("PK7Digest() returned unexpected digest %q", digest)
 	}
 
 	opts.PKCS7Digest = "sha1"
 	digest, err = opts.PK7Digest()
 	if err != nil {
-		t.Fatalf("PK7Digest() returned unexpected error %s", err)
+		t.Fatalf("PK7Digest() returned unexpected error %q", err)
 	}
 	if !digest.Equal(pkcs7.OIDDigestAlgorithmSHA1) {
-		t.Fatalf("PK7Digest() returned unexpected digest %s", digest)
+		t.Fatalf("PK7Digest() returned unexpected digest %q", digest)
 	}
 
 	opts.PKCS7Digest = ""
@@ -321,7 +321,7 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 	if err == nil {
 		t.Fatal("bad COSE Algs should have errored by didn't")
 	} else if err.Error() != expectedErr {
-		t.Fatalf("bad COSE Algs should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+		t.Fatalf("bad COSE Algs should have failed with %q but failed with %q instead", expectedErr, err.Error())
 	}
 
 	// sign input data with valid cose algs option
@@ -334,7 +334,7 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 	if err == nil {
 		t.Fatal("bad COSE Algs should have errored by didn't")
 	} else if err.Error() != expectedErr {
-		t.Fatalf("bad COSE Algs should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+		t.Fatalf("bad COSE Algs should have failed with %q but failed with %q instead", expectedErr, err.Error())
 	}
 }
 
@@ -356,7 +356,7 @@ func TestBadPKCS7DigestErrs(t *testing.T) {
 	if err == nil {
 		t.Fatal("bad PKCS7 digest should have errored by didn't")
 	} else if err.Error() != expectedErr {
-		t.Fatalf("bad PKCS7 digest should have failed with '%s' but failed with '%s' instead", expectedErr, err.Error())
+		t.Fatalf("bad PKCS7 digest should have failed with %q but failed with %q instead", expectedErr, err.Error())
 	}
 }
 
@@ -492,12 +492,12 @@ func TestRsaCaching(t *testing.T) {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
 	cachedElapsed := time.Since(start)
-	t.Logf("retrieved rsa key from cache in %s", cachedElapsed)
+	t.Logf("retrieved rsa key from cache in %q", cachedElapsed)
 
 	start = time.Now()
 	rsa.GenerateKey(rand.Reader, keySize)
 	generatedElapsed := time.Since(start)
-	t.Logf("generated rsa key without cache in %s", generatedElapsed)
+	t.Logf("generated rsa key without cache in %q", generatedElapsed)
 
 	if cachedElapsed > generatedElapsed {
 		t.Fatal("key retrieval from populated cache took longer than generating directly")
@@ -883,6 +883,57 @@ PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 		Type: Type,
 		ID:   "ecdsa addon",
 		Mode: ModeAddOn,
+		Certificate: `
+-----BEGIN CERTIFICATE-----
+MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
+BgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRwwGgYDVQQKExNBbGxp
+em9tIENvcnBvcmF0aW9uMSAwHgYDVQQLExdBbGxpem9tIEFNTyBEZXZlbG9wbWVu
+dDEYMBYGA1UEAxMPZGV2LmFtby5yb290LmNhMS4wLAYJKoZIhvcNAQkBFh9mb3hz
+ZWMrZGV2YW1vcm9vdGNhQG1vemlsbGEuY29tMB4XDTE3MDMyMjExNDg0MFoXDTI3
+MDMyMDExNDg0MFowgbwxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UE
+BxMNTW91bnRhaW4gVmlldzEcMBoGA1UEChMTQWxsaXpvbSBDb3Jwb3JhdGlvbjEg
+MB4GA1UECxMXQWxsaXpvbSBBTU8gRGV2ZWxvcG1lbnQxGDAWBgNVBAMTD2Rldi5h
+bW8ucm9vdC5jYTEuMCwGCSqGSIb3DQEJARYfZm94c2VjK2RldmFtb3Jvb3RjYUBt
+b3ppbGxhLmNvbTB2MBAGByqGSM49AgEGBSuBBAAiA2IABD0rcBU0tirO38TeyZXU
+4jz+2v2ngib0I7ABJ4dQg5ZEfC7nW1HvgbKowwjxqPJnpB+W+RUcnsdspj91uwv9
+RW22eGPLY8Oot7cgULitIXpBJ1ChHTCMWkzQ/C3jBYAoe6OCAcAwggG8MA8GA1Ud
+EwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgGGMBYGA1UdJQEB/wQMMAoGCCsGAQUF
+BwMDMB0GA1UdDgQWBBQoV8bn7ADMjKLF9XAIwDeEdqn8bDCB6QYDVR0jBIHhMIHe
+gBQoV8bn7ADMjKLF9XAIwDeEdqn8bKGBwqSBvzCBvDELMAkGA1UEBhMCVVMxCzAJ
+BgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRwwGgYDVQQKExNBbGxp
+em9tIENvcnBvcmF0aW9uMSAwHgYDVQQLExdBbGxpem9tIEFNTyBEZXZlbG9wbWVu
+dDEYMBYGA1UEAxMPZGV2LmFtby5yb290LmNhMS4wLAYJKoZIhvcNAQkBFh9mb3hz
+ZWMrZGV2YW1vcm9vdGNhQG1vemlsbGEuY29tggEBMDQGCWCGSAGG+EIBBAQnFiVo
+dHRwczovL2Ftby5kZXYubW96YXdzLm5ldC9jYS9jcmwucGVtMEAGCCsGAQUFBwEB
+BDQwMjAwBggrBgEFBQcwAoYkaHR0cHM6Ly9hbW8uZGV2Lm1vemF3cy5uZXQvY2Ev
+Y2EucGVtMAoGCCqGSM49BAMCA2gAMGUCMH/W3TjLf0giza8y83S0f4i21b1hSxEv
+DZ0QKXuha63GeB4qNOcqqE0Zh7ttWhZ2lQIxANlADi6ZTdDtByJL/QKbk9hKGJCE
+wMlTLnlLg0nhVXAEq2SRaF7Tx/v4Ny9kuR7p5A==
+-----END CERTIFICATE-----`,
+		PrivateKey: `
+-----BEGIN EC PARAMETERS-----
+BgUrgQQAIg==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDCRB9WEMGnGieJ+Vpy0s4Lg/nfONiJTNynL0z/yC4/arw1TX5MhS9/2
+Hx2rI3n9NUmgBwYFK4EEACKhZANiAAQ9K3AVNLYqzt/E3smV1OI8/tr9p4Im9COw
+ASeHUIOWRHwu51tR74GyqMMI8ajyZ6QflvkVHJ7HbKY/dbsL/UVttnhjy2PDqLe3
+IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
+-----END EC PRIVATE KEY-----`,
+	},
+	{
+		Type: Type,
+		ID:   "ecdsa addon with rec",
+		Mode: ModeAddOnWithRecommendation,
+		RecommendationConfig: signer.RecommendationConfig{
+			AllowedStates: map[string]bool{
+				"standard":    true,
+				"recommended": true,
+			},
+			FilePath:              "test-recommendations.json",
+			ValidityRelativeStart: time.Minute,
+			ValidityDuration:      5 * 365 * time.Hour,
+		},
 		Certificate: `
 -----BEGIN CERTIFICATE-----
 MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ

@@ -34,7 +34,7 @@ func TestMakeEndEntity(t *testing.T) {
 			"NavratnePeniaze@NávratnéPeniaze.com",
 			"foo-bar@baz",
 		} {
-			t.Run(fmt.Sprintf("for CN=%s", testid), func(t *testing.T) {
+			t.Run(fmt.Sprintf("for CN=%q", testid), func(t *testing.T) {
 				t.Parallel()
 
 				cndigest := sha256.Sum256([]byte(testid))
@@ -113,7 +113,7 @@ func TestGetIssuerRSAKeySize(t *testing.T) {
 
 		size, err := s.getIssuerRSAKeySize()
 		if err != nil {
-			t.Fatalf("unexpected err from getIssuerRSAKeySize %s", err)
+			t.Fatalf("unexpected err from getIssuerRSAKeySize %q", err)
 		}
 		if size != 4096 {
 			t.Fatalf("got unexpected size from getIssuerRSAKeySize %d expected 2048", size)
@@ -157,10 +157,10 @@ func TestGetIssuerECDSACurve(t *testing.T) {
 
 		curve, err := s.getIssuerECDSACurve()
 		if err != nil {
-			t.Fatalf("unexpected err from getIssuerECDSACurve %s", err)
+			t.Fatalf("unexpected err from getIssuerECDSACurve %q", err)
 		}
 		if curve != elliptic.P384() {
-			t.Fatalf("got unexpected curve from getIssuerECDSACurve %s expected P384", curve)
+			t.Fatalf("got unexpected curve from getIssuerECDSACurve %q expected P384", curve)
 		}
 	})
 

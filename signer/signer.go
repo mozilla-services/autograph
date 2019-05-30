@@ -60,6 +60,32 @@ type RSACacheConfig struct {
 	StatsSampleRate time.Duration
 }
 
+// RecommendationConfig is a config for the XPI recommendation file
+type RecommendationConfig struct {
+	// AllowedStates is a map of strings the signer is allowed to
+	// set in the recommendations file to true indicating whether
+	// they're allowed or not
+	AllowedStates map[string]bool `yaml:"states,omitempty"`
+
+	// FilePath is the path in the XPI to save the recommendations
+	// file
+	FilePath string `yaml:"path,omitempty"`
+
+	// ValidityRelativeStart is when to set the recommendation
+	// validity not_before relative to now
+	ValidityRelativeStart time.Duration `yaml:"relative_start,omitempty"`
+
+	// ValidityDuration is when to set the recommendation validity
+	// not_after relative to now
+	//
+	// i.e.
+	//         ValidityRelativeStart    ValidityDuration
+	//       <----------------------> <------------------->
+	//      |                        |                     |
+	//   not_before          now / signing TS          not_after
+	ValidityDuration time.Duration `yaml:"duration,omitempty"`
+}
+
 // Configuration defines the parameters of a signer
 type Configuration struct {
 	ID            string            `json:"id"`
@@ -79,6 +105,11 @@ type Configuration struct {
 	// RSACacheConfig for XPI signers this specifies config for an
 	// RSA cache
 	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty"`
+
+	// RecommendationConfig specifies config values for
+	// recommendations files for XPI signers
+	RecommendationConfig RecommendationConfig `yaml:"recommendation,omitempty"`
+
 	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
 	// attributes and use a legacy PKCS7 digest
 	NoPKCS7SignedAttributes bool `json:"nopkcs7signedattributes,omitempty"`

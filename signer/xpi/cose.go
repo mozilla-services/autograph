@@ -106,7 +106,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 	case nil:
 		err = errors.New("xpi: cannot generate private key for nil cose Algorithm")
 	default:
-		err = errors.Errorf("xpi: cannot generate private key for unsupported cose Algorithm %s", coseAlg.Name)
+		err = errors.Errorf("xpi: cannot generate private key for unsupported cose Algorithm %q", coseAlg.Name)
 	}
 	return
 }
@@ -278,11 +278,11 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 	for _, coseFilePath := range coseFilePaths {
 		var coseFileEntry = []byte("Name: " + coseFilePath)
 		if !bytes.Contains(pkcs7Manifest, coseFileEntry) {
-			return errors.Errorf("xpi: pkcs7 manifest does not contain the line: %s", coseFileEntry)
+			return errors.Errorf("xpi: pkcs7 manifest does not contain the line: %q", coseFileEntry)
 		}
 
 		if bytes.Contains(coseManifest, coseFileEntry) {
-			return errors.Errorf("xpi: cose manifest contains the line: %s", coseFileEntry)
+			return errors.Errorf("xpi: cose manifest contains the line: %q", coseFileEntry)
 		}
 	}
 
@@ -311,7 +311,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 
 	for i, eeCert := range eeCerts {
 		if signOptions.ID != eeCert.Subject.CommonName {
-			return errors.Errorf("xpi: EECert %d: id %s does not match cert cn %s", i, signOptions.ID, eeCert.Subject.CommonName)
+			return errors.Errorf("xpi: EECert %d: id %q does not match cert cn %q", i, signOptions.ID, eeCert.Subject.CommonName)
 		}
 		opts := x509.VerifyOptions{
 			DNSName:       dnsName,
