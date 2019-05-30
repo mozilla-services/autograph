@@ -30,7 +30,7 @@ func (s *XPISigner) populateRsaCache(size int) {
 		start = time.Now()
 		key, err = rsa.GenerateKey(s.rand, size)
 		if err != nil {
-			log.Fatalf("xpi: error generating RSA key for cache: %s", err)
+			log.Fatalf("xpi: error generating RSA key for cache: %q", err)
 		}
 		if key == nil {
 			log.Fatal("xpi: error generated nil RSA key for cache")
@@ -175,13 +175,13 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		}
 		eeKey, err = ecdsa.GenerateKey(curve, s.rand)
 		if err != nil {
-			err = errors.Wrapf(err, "xpi: failed to generate ecdsa private key on curve %s", curve.Params().Name)
+			err = errors.Wrapf(err, "xpi: failed to generate ecdsa private key on curve %q", curve.Params().Name)
 			return
 		}
 
 		newKey, ok := eeKey.(*ecdsa.PrivateKey)
 		if !ok {
-			err = errors.Wrapf(err, "xpi: failed to cast generated key on curve %s to *ecdsa.PrivateKey", curve.Params().Name)
+			err = errors.Wrapf(err, "xpi: failed to cast generated key on curve %q to *ecdsa.PrivateKey", curve.Params().Name)
 			return
 		}
 		eePublicKey = newKey.Public()
@@ -222,7 +222,7 @@ func (s *XPISigner) MakeEndEntity(cn string, coseAlg *cose.Algorithm) (eeCert *x
 	} else {
 		eeKey, eePublicKey, err = s.generateCOSEKeyPair(coseAlg)
 		if err != nil {
-			err = errors.Wrapf(err, "xpi.MakeEndEntity: error generating key matching COSE Algorithm type %s", coseAlg.Name)
+			err = errors.Wrapf(err, "xpi.MakeEndEntity: error generating key matching COSE Algorithm type %q", coseAlg.Name)
 			return
 		}
 	}
