@@ -25,6 +25,7 @@ configured to issue signatures for a given type using the `mode` parameter in
 the autograph configuration:
 
 * Regular addons use mode `add-on`
+* Regular addons with recommendations use mode `add-on-with-recommendation`
 * Mozilla Extensions use mode `extension`
 * Mozilla Components (aka. System Addons) use mode `system add-on`
 * Hotfixes use mode `hotfix`
@@ -33,17 +34,57 @@ Each signer must have a type, a mode and the certificate and private key of
 an intermediate CA issued by either the staging or root PKIs of AMO (refer to
 internal documentation to issue those, as they require access to private HSMs).
 
-When a signature is requested, autograph will generate a private key and issue
-an end-entity certificate specifically for the signature request. The certificate
-is signed by the configured intermediate CA. The private key is thrown away
-right after the signature is issued.
+When a signature is requested, autograph will generate a private key
+and issue an end-entity certificate specifically for the signature
+request. The certificate is signed by the configured intermediate
+CA. The private key is thrown away right after the signature is
+issued. Note that if one XPI signer is including a recommendations
+file the other XPI signers should reserve that file path.
 
 .. code:: yaml
 
-	signers:
+  signers:
     - id: webextensions-rsa
       type: xpi
       mode: add-on
+      recommendation:
+        path: "recommendation.json"
+      certificate: |
+          -----BEGIN CERTIFICATE-----
+          MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
+		  ...
+          -----END CERTIFICATE-----
+      privatekey: |
+          -----BEGIN PRIVATE KEY-----
+          MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
+		  ...
+          -----END PRIVATE KEY-----
+
+The signer can also include optional config params for an RSA key
+cache and recommendations file:
+
+.. code:: yaml
+
+  signers:
+    - id: webextensions-rsa
+      type: xpi
+      mode: add-on
+      recommendation:
+        path: "recommendation.json"
+        states:
+          standard: true
+          recommended: true
+          partner: true
+        relative_start: 0h
+        duration: 26298h
+      # RSA key gen is slow and CPU intensive, so we can optionally
+      # pregenerate and cache keys with a worker pool
+      rsacacheconfig:
+        numkeys: 25
+        numgenerators: 2
+        generatorsleepduration: 1m
+        fetchtimeout: 100ms
+        statssamplerate: 1m
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -72,8 +113,7 @@ Supports the `/sign/data` and `/sign/file` endpoints for data and file signing r
 		}
 	]
 
-`/sign/file` requires a PKCS7 digest algorithm and can include an
-**optional** list of COSE Algorithms:
+and `/sign/file` uses the format:
 
 .. code:: json
 
@@ -84,6 +124,10 @@ Supports the `/sign/data` and `/sign/file` endpoints for data and file signing r
 				"id": "myaddon@allizom.org",
 				"cose_algorithms": [
 					"ES256"
+				],
+				"recommendations": [
+					"standard",
+					"recommended"
 				],
 				"pkcs7_digest": "SHA256"
 			},
@@ -109,6 +153,11 @@ Where options includes the following fields:
   supported `COSE Algorithms`_ (as of 2018-06-20 one of `"ES256"`,
   `"ES384"`, `"ES512"`, or `"PS256"`) to sign the XPI with in addition
   to the PKCS7 signature. Only `/sign/file` supports this field.
+
+* `recommendations` is an **optional** array of strings representing
+  recommendation states to add to the recommendation file for XPI
+  signers in `add-on-with-recommendation` mode. Only `/sign/file`
+  supports this field.
 
 The `/sign/file` endpoint takes a whole XPI encoded in base64. As
 described in `Extension Signing Algorithm`_, it:
