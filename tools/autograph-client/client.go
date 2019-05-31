@@ -342,6 +342,10 @@ examples:
 						log.Fatalf("got error verifying RSA-PSS response: %s", err)
 					}
 					sigStatus = true
+					sigData, err = base64.StdEncoding.DecodeString(response.Signature)
+					if err != nil {
+						log.Fatal(err)
+					}
 				case gpg2.Type, pgp.Type:
 					sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
 					sigData = []byte(response.Signature)
