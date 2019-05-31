@@ -22,14 +22,19 @@ const (
 type RSAPSSSigner struct {
 	signer.Configuration
 
-	// key is the RSA private key to sign hashes
+	// key is the RSA private key to sign hashes.
+	// we use the `crypto.PrivateKey` interface to support
+	// keys in HSM.
 	key crypto.PrivateKey
+
+	// pubkey is an RSA Public Key
+	pubKey crypto.PublicKey
 
 	// rng is our random number generator
 	rng io.Reader
 }
 
-// New initializes a pgp signer using a configuration
+// New initializes a rsapss signer using a configuration
 func New(conf signer.Configuration) (s *RSAPSSSigner, err error) {
 	s = new(RSAPSSSigner)
 
@@ -51,16 +56,14 @@ func New(conf signer.Configuration) (s *RSAPSSSigner, err error) {
 	if conf.PublicKey == "" {
 		return nil, errors.New("rsapss: missing public key in signer configuration")
 	}
-	s.key, _, s.rng, s.PublicKey, err = conf.GetKeysAndRand()
+	s.key, s.pubKey, s.rng, s.PublicKey, err = conf.GetKeysAndRand()
 	if err != nil {
 		return nil, errors.Wrapf(err, "rsapss: error fetching key and rand from signer configuration")
 	}
-
-	_, ok := s.key.(*rsa.PrivateKey)
+	_, ok := s.pubKey.(*rsa.PublicKey)
 	if !ok {
-		return nil, errors.Errorf("rsapss: parsed private key is not a recognized RSA key type")
+		return nil, errors.Errorf("rsapss: unsupported public key type %T, use RSA keys", s.pubKey)
 	}
-
 	return s, nil
 }
 
@@ -74,7 +77,7 @@ func (s *RSAPSSSigner) Config() signer.Configuration {
 	}
 }
 
-// SignData takes data hashes it and returns a signed base64 encoded hash
+// SignData takes data, hashes it and returns a signed base64 encoded hash
 func (s *RSAPSSSigner) SignData(data []byte, options interface{}) (signer.Signature, error) {
 	h := sha1.New()
 	h.Write(data)
