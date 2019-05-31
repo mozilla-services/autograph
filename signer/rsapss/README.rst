@@ -14,9 +14,34 @@ Example Usage:
 
 .. code:: bash
 
+    # hash your input data into a separate file
+    $ echo foo | sha1sum -b | cut -d ' ' -f 1 | xxd -r -p > /tmp/inputhash.bin
+
     # request a signature using the autograph client
-    $ go run client.go -D -wa $(echo hi | sha1sum -b | cut -d ' ' -f 1 | xxd -r -p | base64) \
-      -k dummyrsapss -o signed-hash.out -ko /tmp/testkey.pub
+    $ go run client.go -D -wa $(cat /tmp/inputhash.bin | base64) \
+      -k dummyrsapss -o /tmp/sig.bin -ko /tmp/pub.key
+
+    # format /tmp/pub.key to PEM (fold lines to 64 and add header and footer)
+    $ (echo '-----BEGIN PUBLIC KEY-----'; cat /tmp/pub.key |fold -w 64; echo;echo '-----END PUBLIC KEY-----') > /tmp/pub.pem
+
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYu
+    WYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4S
+    lEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3y
+    i62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PY
+    yUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s
+    0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cR
+    mwIDAQAB
+    -----END PUBLIC KEY-----
+
+    # verify the signature with openssl
+    $ openssl pkeyutl -verify \
+    -in /tmp/inputhash.bin \
+    -sigfile /tmp/sig.bin \
+    -inkey /tmp/pub.pem -pubin -keyform PEM \
+    -pkeyopt rsa_padding_mode:pss -pkeyopt rsa_pss_saltlen:-1 -pkeyopt digest:sha1
+
+    Signature Verified Successfully
 
 Configuration
 -------------
