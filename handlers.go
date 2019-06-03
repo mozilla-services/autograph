@@ -206,6 +206,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"ref":        sigresps[i].Ref,
 			"type":       sigresps[i].Type,
 			"signer_id":  sigresps[i].SignerID,
+			"key_id":     sigreq.KeyID,
 			"input_hash": hashlog,
 			"user_id":    userid,
 			"t":          int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
