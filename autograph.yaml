@@ -171,6 +171,8 @@ signers:
       # 'system add-on' are signed with the OU 'Mozilla Components' and the provided ID
       # 'hotfix' are signed with the OU 'Production' and the ID 'firefox-hotfix@mozilla.org'
       mode: add-on
+      recommendation:
+        path: "mozilla-recommendation.json"
       # RSA key gen is slow and CPU intensive, so we can optionally
       # pregenerate and cache keys with a worker pool
       rsacacheconfig:
@@ -281,6 +283,8 @@ signers:
     - id: extensions-ecdsa
       type: xpi
       mode: extension
+      recommendation:
+        path: "mozilla-recommendation.json"
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIEaDCCA+6gAwIBAgIBATAKBggqhkjOPQQDAjCBvDELMAkGA1UEBhMCVVMxCzAJ
@@ -910,7 +914,7 @@ signers:
       # 'hotfix' are signed with the OU 'Production' and the ID 'firefox-hotfix@mozilla.org'
       mode: add-on-with-recommendation
       recommendation:
-        path: "test-recommendation.json"
+        path: "mozilla-recommendation.json"
         states:
           standard: true
           recommended: true
