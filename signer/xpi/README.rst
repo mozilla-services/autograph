@@ -234,3 +234,28 @@ response and write it to a `signed_addon.xpi` file.
 		"signed_file": "MIIRUQYJKoZIhvcNAQcCoIIRQjCCET4CAQExCTAHBgUr..."
 	  }
 	]
+
+Appendix A: Firefox add-on signature verification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+	graph LR
+	  Add-on-->OpenSignedAppFile
+	  OpenSignedAppFile-->VerifyPK7Signature
+	  OpenSignedAppFile-->VerifyCOSESignature
+
+	  subgraph pkcs7
+	  VerifyPK7Signature-->rsa["Get RSA signature"]
+	  VerifyPK7Signature-->hash["Get hash of SF signature file"]
+	  rsa-->VerifySignature
+	  hash-->VerifySignature
+	  VerifySignature-->eeCert["Get Signing Certificate"]
+	  eeCert-->VerifyCertificate
+	  VerifyPK7Signature-->mf["Get manifest file hashes"]
+	  mf-->verifyMF["Verify PKCS7 manifest file hashes"]
+	  end
+
+	  subgraph cose
+	  VerifyCOSESignature-->foo
+	  end
