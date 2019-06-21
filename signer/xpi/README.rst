@@ -240,22 +240,35 @@ Appendix A: Firefox add-on signature verification
 
 .. code::
 
-	graph LR
-	  Add-on-->OpenSignedAppFile
+	graph TD
+	  Firefox-->OpenSignedAppFile
 	  OpenSignedAppFile-->VerifyPK7Signature
 	  OpenSignedAppFile-->VerifyCOSESignature
+	  OpenSignedAppFile == return zip reader and signing cert ==> Firefox 
 
 	  subgraph pkcs7
-	  VerifyPK7Signature-->rsa["Get RSA signature"]
-	  VerifyPK7Signature-->hash["Get hash of SF signature file"]
-	  rsa-->VerifySignature
-	  hash-->VerifySignature
-	  VerifySignature-->eeCert["Get Signing Certificate"]
-	  eeCert-->VerifyCertificate
-	  VerifyPK7Signature-->mf["Get manifest file hashes"]
-	  mf-->verifyMF["Verify PKCS7 manifest file hashes"]
+	  VerifyPK7Signature == Extract RSA signature ==> VerifySignature
+	  VerifyPK7Signature == Extract hash of SF signature file ==> VerifySignature
+	  VerifySignature == Extract Signing Certificate ==> VerifyCertificate
+	  VerifyCertificate == Get Trusted Root ==> BuildCertChain
+	  BuildCertChain == ERROR_EXPIRED_CERTIFICATE ==> Success
+	  Success --> VerifyPK7Signature
+	  BuildCertChain == else ==> Error
+	  Error --> VerifyPK7Signature
 	  end
 
 	  subgraph cose
-	  VerifyCOSESignature-->foo
+	  VerifyCOSESignature == Extract Signature ==> verify_cose_signature_ffi
+	  VerifyCOSESignature == Extract SF Signature file ==> verify_cose_signature_ffi
+	  VerifyCOSESignature == Get Trusted Root ==> verify_cose_signature_ffi
+	  end
+
+	  subgraph verify_manifest
+	  VerifyCOSESignature == List files to ignore==> VerifyAppManifest
+	  VerifyPK7Signature == List files to ignore==> VerifyAppManifest
+	  VerifyAppManifest--> ParseMF
+	  ParseMF == for each manifest entry ==> VerifyEntryContentDigest
+	  VerifyEntryContentDigest--> VerifyStreamContentDigest
+	  VerifyStreamContentDigest == entry digest matches manifest ==> NS_OK
+	  VerifyStreamContentDigest == else ==> NS_ERROR_SIGNED_JAR_*
 	  end
