@@ -241,10 +241,22 @@ Appendix A: Firefox add-on signature verification
 .. code::
 
 	graph TD
-	  Firefox-->OpenSignedAppFile
+	  Firefox-->loadManifest
+	  loadManifest -->verifySignedState
+	  verifySignedState-->OpenSignedAppFile
 	  OpenSignedAppFile-->VerifyPK7Signature
 	  OpenSignedAppFile-->VerifyCOSESignature
-	  OpenSignedAppFile == return zip reader and signing cert ==> Firefox 
+	  OpenSignedAppFile == return zip reader and signing cert ==> verifySignedState
+
+	  subgraph extension.jsm
+	  verifySignedState-->verifySignedStateForRoot
+	  verifySignedStateForRoot == Get signing cert and add-on ID ==>getSignedStatus
+	  getSignedStatus == if add-on ID != cert CN ==> SIGNEDSTATE_BROKEN
+	  getSignedStatus == if cert OU is Mozilla Components ==> SIGNEDSTATE_SYSTEM
+	  getSignedStatus == if cert OU is Mozilla Extensions==> SIGNEDSTATE_PRIVILEGED
+	  getSignedStatus == if signature valid ==> SIGNEDSTATE_SIGNED
+	  getSignedStatus == if signature invalid ==> NS_ERROR_SIGNED_JAR_*
+	  end
 
 	  subgraph pkcs7
 	  VerifyPK7Signature == Extract RSA signature ==> VerifySignature
@@ -270,5 +282,5 @@ Appendix A: Firefox add-on signature verification
 	  ParseMF == for each manifest entry ==> VerifyEntryContentDigest
 	  VerifyEntryContentDigest--> VerifyStreamContentDigest
 	  VerifyStreamContentDigest == entry digest matches manifest ==> NS_OK
-	  VerifyStreamContentDigest == else ==> NS_ERROR_SIGNED_JAR_*
+	  VerifyStreamContentDigest == else ==> NS_ERROR_SIGNED_JAR_something
 	  end
