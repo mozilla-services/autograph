@@ -240,7 +240,7 @@ Appendix A: Firefox add-on signature verification
 
 .. code::
 
-	graph TD
+	graph LR
 	  Firefox-->loadManifest
 	  loadManifest -->verifySignedState
 	  verifySignedState-->OpenSignedAppFile
