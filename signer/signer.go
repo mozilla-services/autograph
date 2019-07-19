@@ -244,12 +244,8 @@ func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.P
 //
 // Note that we assume the PKCS11 library has been previously initialized
 func (cfg *Configuration) GetPrivateKey() (crypto.PrivateKey, error) {
-	// make sure heading newlines are removed
-	removeNewlines := regexp.MustCompile(`^(\r?\n)`)
-	cfg.PrivateKey = removeNewlines.ReplaceAllString(cfg.PrivateKey, "")
-	// if a private key in the config starts with a PEM header, it is
-	// defined locally and is parsed and returned
-	if strings.HasPrefix(cfg.PrivateKey, "-----BEGIN") {
+	cfg.PrivateKey = removePrivateKeyNewlines(cfg.PrivateKey)
+	if cfg.PrivateKeyHasPEMPrefix() {
 		return ParsePrivateKey([]byte(cfg.PrivateKey))
 	}
 	// otherwise, we assume the privatekey represents a label in the HSM
@@ -351,6 +347,44 @@ func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
 		},
 		X: x,
 	}, nil
+}
+
+func removePrivateKeyNewlines(confPrivateKey string) string {
+	// make sure heading newlines are removed
+	removeNewlines := regexp.MustCompile(`^(\r?\n)`)
+	return removeNewlines.ReplaceAllString(confPrivateKey, "")
+}
+
+// PrivateKeyHasPEMPrefix returns whether the signer configuration
+// prefix begins with `-----BEGIN` (indicating a PEM block) after
+// stripping newlines
+func (cfg *Configuration) PrivateKeyHasPEMPrefix() bool {
+	// if a private key in the config starts with a PEM header, it is
+	// defined locally and is parsed and returned
+	return strings.HasPrefix(removePrivateKeyNewlines(cfg.PrivateKey), "-----BEGIN")
+}
+
+// CheckHSMConnection is the default implementation of
+// CheckHSMConnection (exposed via the signer.Configuration
+// interface).  It tried to fetch the signer private key and errors if
+// that fails or the private key is not an HSM key handle.
+func (cfg *Configuration) CheckHSMConnection() error {
+	if cfg.PrivateKeyHasPEMPrefix() {
+		return errors.Errorf("private key for signer %s has a PEM prefix and is not an HSM key label", cfg.ID)
+	}
+	if !cfg.isHsmAvailable {
+		return errors.Errorf("HSM is not available for signer %s", cfg.ID)
+	}
+
+	privKey, err := cfg.GetPrivateKey()
+	if err != nil {
+		return errors.Wrapf(err, "error fetching private key for signer %s", cfg.ID)
+	}
+	// returns 0 if the key is not stored in the hsm
+	if GetPrivKeyHandle(privKey) != 0 {
+		return nil
+	}
+	return errors.Errorf("Unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
 }
 
 // MakeKey generates a new key of type keyTpl and returns the priv and public interfaces.

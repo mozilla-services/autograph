@@ -78,6 +78,11 @@ type autographer struct {
 	signerIndex map[string]int
 	nonces      *lru.Cache
 	debug       bool
+
+	// hsmHeartbeatSignerConf is the signer conf to use to check
+	// HSM connectivity (set to the first signer with an HSM label
+	// in initHSM) when it is non-nil
+	hsmHeartbeatSignerConf *signer.Configuration
 }
 
 func main() {
@@ -172,7 +177,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	ag.startCleanupHandler()
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/__heartbeat__", handleHeartbeat).Methods("GET")
+	router.HandleFunc("/__heartbeat__", ag.handleHeartbeat).Methods("GET")
 	router.HandleFunc("/__lbheartbeat__", handleLBHeartbeat).Methods("GET")
 	router.HandleFunc("/__version__", handleVersion).Methods("GET")
 	router.HandleFunc("/__monitor__", ag.handleMonitor).Methods("GET")
@@ -305,6 +310,13 @@ func (a *autographer) initHSM(conf configuration) {
 		// tell the signers they can try using the HSM
 		for i := range conf.Signers {
 			conf.Signers[i].InitHSM(tmpCtx)
+			signerConf := conf.Signers[i]
+
+			// save the first signer with an HSM label as
+			// the key to test from the heartbeat handler
+			if a.hsmHeartbeatSignerConf == nil && !signerConf.PrivateKeyHasPEMPrefix() {
+				a.hsmHeartbeatSignerConf = &signerConf
+			}
 		}
 	}
 }

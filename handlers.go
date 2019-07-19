@@ -238,6 +238,47 @@ func handleLBHeartbeat(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ohai"))
 }
 
+// handleHeartbeat checks whether backing services are enabled and
+// accessible and returns 200 when they are and 502 when the
+// aren't. Currently it only checks whether the HSM is accessible.
+func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		return
+	}
+	var (
+		// a map of backing service name to up or down/inaccessible status
+		result = map[string]bool{}
+		status = http.StatusOK
+	)
+
+	// try to fetch the private key from the HSM for the first
+	// signer conf with a non-PEM private key that we saved on
+	// server start
+	conf := a.hsmHeartbeatSignerConf
+	if conf != nil {
+		err := conf.CheckHSMConnection()
+		if err == nil {
+			result["hsmAccessible"] = true
+			status = http.StatusOK
+		} else {
+			log.Errorf("error checking HSM connection for signer %s: %s", conf.ID, err)
+			result["hsmAccessible"] = false
+			status = http.StatusInternalServerError
+		}
+	}
+
+	respdata, err := json.Marshal(result)
+	if err != nil {
+		log.Errorf("heartbeat failed to marshal JSON with error: %s", err)
+		httpError(w, r, http.StatusInternalServerError, "error marshaling response JSON")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(respdata)
+}
+
 func handleVersion(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
