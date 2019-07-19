@@ -137,17 +137,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 
 	// initialize the hsm if a configuration is defined
 	if conf.HSM.Path != "" {
-		tmpCtx, err := crypto11.Configure(&conf.HSM)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if tmpCtx != nil {
-			// if we successfully initialized the crypto11 context,
-			// tell the signers they can try using the HSM
-			for i := range conf.Signers {
-				conf.Signers[i].HsmIsAvailable(tmpCtx)
-			}
-		}
+		ag.initHSM(conf)
 	}
 
 	if conf.Statsd.Addr != "" {
@@ -302,6 +292,21 @@ func (a *autographer) addDB(dbConf database.Config) chan bool {
 	go a.db.Monitor(dbConf.MonitorPollInterval, closeDBMonitor)
 	log.Print("database connection established")
 	return closeDBMonitor
+}
+
+// initHSM sets up the HSM and notifies signers it is available
+func (a *autographer) initHSM(conf configuration) {
+	tmpCtx, err := crypto11.Configure(&conf.HSM)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if tmpCtx != nil {
+		// if we successfully initialized the crypto11 context,
+		// tell the signers they can try using the HSM
+		for i := range conf.Signers {
+			conf.Signers[i].HsmIsAvailable(tmpCtx)
+		}
+	}
 }
 
 // addSigners initializes each signer specified in the configuration by parsing
