@@ -378,7 +378,7 @@ func TestHeartbeat(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handleHeartbeat(w, req)
+		handleLBHeartbeat(w, req)
 		if w.Code != testcase.expect {
 			t.Fatalf("test case %d failed with code %d but %d was expected",
 				i, w.Code, testcase.expect)

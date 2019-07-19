@@ -229,8 +229,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	log.WithFields(log.Fields{"rid": rid}).Info("signing request completed successfully")
 }
 
-// handleHeartbeat returns a simple message indicating that the API is alive and well
-func handleHeartbeat(w http.ResponseWriter, r *http.Request) {
+// handleLBHeartbeat returns a simple message indicating that the API is alive and well
+func handleLBHeartbeat(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
 		return

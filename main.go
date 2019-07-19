@@ -173,7 +173,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", handleHeartbeat).Methods("GET")
-	router.HandleFunc("/__lbheartbeat__", handleHeartbeat).Methods("GET")
+	router.HandleFunc("/__lbheartbeat__", handleLBHeartbeat).Methods("GET")
 	router.HandleFunc("/__version__", handleVersion).Methods("GET")
 	router.HandleFunc("/__monitor__", ag.handleMonitor).Methods("GET")
 	router.HandleFunc("/sign/file", ag.handleSignature).Methods("POST")
