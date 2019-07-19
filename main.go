@@ -129,19 +129,10 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	// and store them into the autographer handler
 	ag = newAutographer(conf.Server.NonceCacheSize)
 
-	// connect to the database
 	if conf.Database.Name != "" {
-		ag.db, err = database.Connect(conf.Database)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if ag.db == nil {
-			log.Fatal("failed to initialize database connection, unknown error")
-		}
-		// start a monitoring function that panics if
-		// the db becomes inaccessible
-		go ag.db.Monitor()
-		log.Print("database connection established")
+		// ignore the monitor close chan since it will stop
+		// when the app is stopped
+		_ = ag.addDB(conf.Database)
 	}
 
 	// initialize the hsm if a configuration is defined
@@ -292,6 +283,25 @@ func (a *autographer) startCleanupHandler() {
 		}
 		os.Exit(0)
 	}()
+}
+
+// addDB connects to the DB and starts a gorountine to monitor DB
+// connectivity
+func (a *autographer) addDB(dbConf database.Config) chan bool {
+	var err error
+	a.db, err = database.Connect(dbConf)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if a.db == nil {
+		log.Fatal("failed to initialize database connection, unknown error")
+	}
+	// start a monitoring function that errors if the db
+	// becomes inaccessible
+	closeDBMonitor := make(chan bool)
+	go a.db.Monitor(dbConf.MonitorPollInterval, closeDBMonitor)
+	log.Print("database connection established")
+	return closeDBMonitor
 }
 
 // addSigners initializes each signer specified in the configuration by parsing
