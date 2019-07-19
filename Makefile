@@ -32,17 +32,21 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	$(GOLINT) go.mozilla.org/autograph \
-		go.mozilla.org/autograph/database \
-		go.mozilla.org/autograph/signer \
-		go.mozilla.org/autograph/signer/contentsignature \
-		go.mozilla.org/autograph/signer/contentsignaturepki \
-		go.mozilla.org/autograph/signer/xpi \
-		go.mozilla.org/autograph/signer/apk \
-		go.mozilla.org/autograph/signer/mar \
-		go.mozilla.org/autograph/signer/pgp \
-		go.mozilla.org/autograph/signer/gpg2 \
-		go.mozilla.org/autograph/signer/rsapss
+	test 0 -eq $(shell $(GOLINT) go.mozilla.org/autograph \
+			go.mozilla.org/autograph/database \
+			go.mozilla.org/autograph/signer \
+			go.mozilla.org/autograph/signer/contentsignature \
+			go.mozilla.org/autograph/signer/contentsignaturepki \
+			go.mozilla.org/autograph/signer/xpi \
+			go.mozilla.org/autograph/signer/apk \
+			go.mozilla.org/autograph/signer/mar \
+			go.mozilla.org/autograph/signer/pgp \
+			go.mozilla.org/autograph/signer/gpg2 \
+			go.mozilla.org/autograph/signer/rsapss | tee /tmp/autograph-golint.txt | grep -v 'and that stutters' | wc -l)
+
+show-lint:
+	cat /tmp/autograph-golint.txt
+	rm -f /tmp/autograph-golint.txt
 
 vet:
 	$(GO) vet go.mozilla.org/autograph
