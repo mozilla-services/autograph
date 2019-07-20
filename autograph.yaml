@@ -513,7 +513,6 @@ signers:
 
     - id: testmar
       type: mar
-      # label of the private key in the hsm, it isn't stored locally
       privatekey: |
           -----BEGIN PRIVATE KEY-----
           MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCAUrUDTS86CuqV
