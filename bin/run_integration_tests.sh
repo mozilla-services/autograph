@@ -53,7 +53,7 @@ docker-compose run \
 	       --rm \
 	       --user 0 \
 	       -e TARGET=http://app:8000 \
-               -e VERIFY=1 \
+               -e VERIFY=0 \
 	       --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client \
 	       --entrypoint ./build_test_apks.sh \
 	       app
