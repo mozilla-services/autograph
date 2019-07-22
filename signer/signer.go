@@ -34,7 +34,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// IDs must follow this representation
+// IDFormat is a regex for the format IDs must follow
 const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 
 // RSACacheConfig is a config for the RSAKeyCache

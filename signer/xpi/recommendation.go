@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Recommendation represents an Addon Recommendation file
 type Recommendation struct {
 	// AddOnID is the ID of the extension this recommendation is
 	// for. Must match the ID in the extension’s manifest.json
@@ -51,6 +52,8 @@ func validateValidityTime(t time.Time) error {
 	return nil
 }
 
+// Validate checks a Recommendation's validity fields and state is in
+// the allowed states
 func (r *Recommendation) Validate(allowedRecommendationStates map[string]bool) error {
 	if len(r.States) < 1 {
 		return errors.Errorf("xpi: recommendation must include at least one state")
