@@ -143,8 +143,8 @@ type Configuration struct {
 	hsmCtx         *pkcs11.Ctx
 }
 
-// HsmIsAvailable indicates that an HSM has been initialized
-func (cfg *Configuration) HsmIsAvailable(ctx *pkcs11.Ctx) {
+// InitHSM indicates that an HSM has been initialized
+func (cfg *Configuration) InitHSM(ctx *pkcs11.Ctx) {
 	cfg.isHsmAvailable = true
 	cfg.hsmCtx = ctx
 }

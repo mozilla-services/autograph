@@ -304,7 +304,7 @@ func (a *autographer) initHSM(conf configuration) {
 		// if we successfully initialized the crypto11 context,
 		// tell the signers they can try using the HSM
 		for i := range conf.Signers {
-			conf.Signers[i].HsmIsAvailable(tmpCtx)
+			conf.Signers[i].InitHSM(tmpCtx)
 		}
 	}
 }
