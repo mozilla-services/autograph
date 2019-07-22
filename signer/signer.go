@@ -139,6 +139,13 @@ type Configuration struct {
 	// CaCert is the certificate of the root of the pki, when used
 	CaCert string `json:"cacert,omitempty"`
 
+	// RSAPSSSaltLengthEqualsHash tells the rsapss signer to use a salt length
+	// equals to the length of the hash used in the signature
+	RSAPSSSaltLengthEqualsHash bool `json:"rsapsssaltlengthequalshash,omitempty"`
+
+	// RSAPSSHash is the name of the hash algorithm used by a rsapss signer
+	RSAPSSHash string `json:"rsapsshash,omitempty"`
+
 	isHsmAvailable bool
 	hsmCtx         *pkcs11.Ctx
 }

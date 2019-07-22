@@ -3,7 +3,6 @@ package rsapss
 import (
 	"crypto"
 	"crypto/rsa"
-	"crypto/sha1"
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
@@ -32,6 +31,9 @@ type RSAPSSSigner struct {
 
 	// rng is our random number generator
 	rng io.Reader
+
+	rsaPssSaltLength int
+	rsaPssHash       crypto.Hash
 }
 
 // New initializes a rsapss signer using a configuration
@@ -64,6 +66,20 @@ func New(conf signer.Configuration) (s *RSAPSSSigner, err error) {
 	if !ok {
 		return nil, errors.Errorf("rsapss: unsupported public key type %T, use RSA keys", s.pubKey)
 	}
+	if conf.RSAPSSSaltLengthEqualsHash {
+		s.rsaPssSaltLength = rsa.PSSSaltLengthEqualsHash
+	} else {
+		s.rsaPssSaltLength = rsa.PSSSaltLengthAuto
+	}
+	switch conf.RSAPSSHash {
+	case "sha1":
+		s.rsaPssHash = crypto.SHA1
+	case "sha256":
+		s.rsaPssHash = crypto.SHA256
+	default:
+		// default to sha256
+		s.rsaPssHash = crypto.SHA256
+	}
 	return s, nil
 }
 
@@ -79,7 +95,7 @@ func (s *RSAPSSSigner) Config() signer.Configuration {
 
 // SignData takes data, hashes it and returns a signed base64 encoded hash
 func (s *RSAPSSSigner) SignData(data []byte, options interface{}) (signer.Signature, error) {
-	h := sha1.New()
+	h := s.rsaPssHash.New()
 	h.Write(data)
 	digest := h.Sum(nil)
 	return s.SignHash(digest, options)
@@ -87,16 +103,15 @@ func (s *RSAPSSSigner) SignData(data []byte, options interface{}) (signer.Signat
 
 // SignHash takes an input hash and returns a signed base64 encoded hash
 func (s *RSAPSSSigner) SignHash(digest []byte, options interface{}) (signer.Signature, error) {
-	if len(digest) != 20 {
-		return nil, errors.Errorf("rsapss: refusing to sign input hash. Got length %d, expected 20.", len(digest))
+	// sha1 is 20, sha256 is 32
+	if len(digest) != 20 && len(digest) != 32 {
+		return nil, errors.Errorf("rsapss: refusing to sign input hash. Got length %d, expected 20 or 32.", len(digest))
 	}
-
-	opts := &rsa.PSSOptions{
-		SaltLength: rsa.PSSSaltLengthEqualsHash,
-		Hash:       crypto.SHA1,
-	}
-
-	sigBytes, err := s.key.(crypto.Signer).Sign(s.rng, digest, opts)
+	sigBytes, err := s.key.(crypto.Signer).Sign(
+		s.rng, digest, &rsa.PSSOptions{
+			SaltLength: s.rsaPssSaltLength,
+			Hash:       s.rsaPssHash,
+		})
 	if err != nil {
 		return nil, errors.Wrap(err, "rsapss: error signing hash")
 	}
@@ -136,20 +151,17 @@ func (s *RSAPSSSigner) GetDefaultOptions() interface{} {
 	return Options{}
 }
 
-// VerifySignature verifies a rsapss signature for the given SHA1
+// VerifySignature verifies a rsapss signature for the given hash
 // digest for the given RSA public and signature bytes
-func VerifySignature(pubKey *rsa.PublicKey, digest, sigBytes []byte) error {
-	err := rsa.VerifyPSS(pubKey, crypto.SHA1, digest, sigBytes, &rsa.PSSOptions{
-		SaltLength: rsa.PSSSaltLengthEqualsHash,
-		Hash:       crypto.SHA1,
-	})
+func VerifySignature(pubKey *rsa.PublicKey, digest, sigBytes []byte, opts rsa.PSSOptions) error {
+	err := rsa.VerifyPSS(pubKey, opts.Hash, digest, sigBytes, &opts)
 	return errors.Wrapf(err, "rsapss: failed to verify signature")
 }
 
 // VerifySignatureFromB64 verifies a signature from base64 encoded
 // digest, signature, and public key as autograph returns from its API
 // used in the client and monitor
-func VerifySignatureFromB64(b64Digest, b64Signature, b64PubKey string) error {
+func VerifySignatureFromB64(b64Digest, b64Signature, b64PubKey string, opts rsa.PSSOptions) error {
 	digest, err := base64.StdEncoding.DecodeString(b64Digest)
 	if err != nil {
 		return err
@@ -172,5 +184,5 @@ func VerifySignatureFromB64(b64Digest, b64Signature, b64PubKey string) error {
 	if !ok {
 		return fmt.Errorf("expected rsa.PublicKey, but got pub key type %T", pubKey)
 	}
-	return VerifySignature(rsaKey, digest, sig)
+	return VerifySignature(rsaKey, digest, sig, opts)
 }
