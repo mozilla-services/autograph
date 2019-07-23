@@ -24,6 +24,7 @@ import (
 	"strings"
 	"testing"
 
+	"go.mozilla.org/autograph/database"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/mar"
@@ -416,7 +417,7 @@ func TestHeartbeat(t *testing.T) {
 }
 
 func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
-	// NB: do not run in parallel with TestHeartbeat
+	// NB: do not run in parallel with TestHeartbeat*
 	ag.hsmHeartbeatSignerConf = &ag.signers[0].(*contentsignature.ContentSigner).Configuration
 
 	expectedStatus := http.StatusInternalServerError
@@ -437,6 +438,40 @@ func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
 	}
 
 	ag.hsmHeartbeatSignerConf = nil
+}
+
+func TestHeartbeatChecksDBStatusOK(t *testing.T) {
+	// NB: do not run in parallel with TestHeartbeat* or DB tests
+	db, err := database.Connect(database.Config{
+		Name:     "autograph",
+		User:     "myautographdbuser",
+		Password: "myautographdbpassword",
+		Host:     "127.0.0.1:5432",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ag.db = db
+
+	expectedStatus := http.StatusOK
+	expectedBody := []byte("{\"dbAccessible\":true}")
+
+	req, err := http.NewRequest(`GET`, "http://foo.bar/__heartbeat__", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := httptest.NewRecorder()
+	ag.handleHeartbeat(w, req)
+
+	if w.Code != expectedStatus {
+		t.Fatalf("failed with code %d but %d was expected", w.Code, expectedStatus)
+	}
+	if !bytes.Equal(w.Body.Bytes(), expectedBody) {
+		t.Fatalf("got unexpected heartbeat body %s expected %s", w.Body.Bytes(), expectedBody)
+	}
+
+	db.Close()
+	ag.db = nil
 }
 
 func TestVersion(t *testing.T) {

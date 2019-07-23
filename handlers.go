@@ -268,6 +268,19 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// check the database connection and return its status, but
+	// don't fail the heartbeat since we only care about DB
+	// connectivity on server start
+	if a.db != nil {
+		err := a.db.CheckConnection()
+		if err == nil {
+			result["dbAccessible"] = true
+		} else {
+			log.Errorf("error checking DB connection: %s", err)
+			result["dbAccessible"] = false
+		}
+	}
+
 	respdata, err := json.Marshal(result)
 	if err != nil {
 		log.Errorf("heartbeat failed to marshal JSON with error: %s", err)
