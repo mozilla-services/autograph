@@ -11,10 +11,17 @@ func verifyXPISignature(sig string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return xpiSig.VerifyWithChain(conf.truststore)
+	err = xpiSig.VerifyWithChain(conf.truststore)
+	if err == nil {
+		return nil
+	}
+	log.Printf("Got error %s verifying XPI signature with rel truststore trying dep truststore", err)
+	return xpiSig.VerifyWithChain(conf.depTruststore)
 }
 
-var firefoxPkiStageRoot = `-----BEGIN CERTIFICATE-----
+const firefoxPkiStageRootHash = `DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90`
+
+const firefoxPkiStageRoot = `-----BEGIN CERTIFICATE-----
 MIIHYzCCBUugAwIBAgIBATANBgkqhkiG9w0BAQwFADCBqDELMAkGA1UEBhMCVVMx
 CzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRwwGgYDVQQKExNB
 ZGRvbnMgVGVzdCBTaWduaW5nMSQwIgYDVQQDExt0ZXN0LmFkZG9ucy5zaWduaW5n
@@ -57,7 +64,8 @@ thPX5WNsS8bwno2ccqncVLQ4PZxOIB83DFBFmAvTuBiAYWq874rneTXqInHyeCq+
 819l9s72pDsFaGevmm0Us9bYuufTS5U=
 -----END CERTIFICATE-----`
 
-var firefoxPkiProdRoot = `-----BEGIN CERTIFICATE-----
+const firefoxPkiProdRootHash = `97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E`
+const firefoxPkiProdRoot = `-----BEGIN CERTIFICATE-----
 MIIGYTCCBEmgAwIBAgIBATANBgkqhkiG9w0BAQwFADB9MQswCQYDVQQGEwJVUzEc
 MBoGA1UEChMTTW96aWxsYSBDb3Jwb3JhdGlvbjEvMC0GA1UECxMmTW96aWxsYSBB
 TU8gUHJvZHVjdGlvbiBTaWduaW5nIFNlcnZpY2UxHzAdBgNVBAMTFnJvb3QtY2Et
