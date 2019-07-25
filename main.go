@@ -9,6 +9,7 @@ package main
 //go:generate ./version.sh
 
 import (
+	"crypto/sha256"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -207,24 +208,32 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 
 // loadFromFile reads a configuration from a local file
 func (c *configuration) loadFromFile(path string) error {
-	var confData []byte
-	data, err := ioutil.ReadFile(path)
+	var (
+		data, confData []byte
+		confSHA        [32]byte
+		err            error
+	)
+	data, err = ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
+	confSHA = sha256.Sum256(data)
+
 	// Try to decrypt the conf using sops or load it as plaintext.
 	// If the configuration is not encrypted with sops, the error
 	// sops.MetadataNotFound will be returned, in which case we
 	// ignore it and continue loading the conf.
 	confData, err = decrypt.Data(data, "yaml")
-	if err != nil {
-		if err == sops.MetadataNotFound {
-			// not an encrypted file
-			confData = data
-		} else {
-			return errors.Wrap(err, "failed to load sops encrypted configuration")
-		}
+	if err == nil {
+		log.Infof("loaded encrypted config from %s with sha256sum %x", path, confSHA)
+	} else if err == sops.MetadataNotFound {
+		log.Infof("loaded unencrypted config from %s with sha256sum %x", path, confSHA)
+		// not an encrypted file
+		confData = data
+	} else {
+		return errors.Wrap(err, "failed to load sops encrypted configuration")
 	}
+
 	err = yaml.Unmarshal(confData, &c)
 	if err != nil {
 		return err
