@@ -1,4 +1,4 @@
-FROM golang:1.12
+FROM golang:1.12-buster
 EXPOSE 8000
 
 RUN addgroup --gid 10001 app \
