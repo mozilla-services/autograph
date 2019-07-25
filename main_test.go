@@ -47,7 +47,10 @@ func TestMain(m *testing.M) {
 			log.Fatal(err)
 		}
 	}
-	ag.makeSignerIndex()
+	err = ag.makeSignerIndex()
+	if err != nil {
+		log.Fatal(err)
+	}
 	// ok this is lame but the contentsignaturepki signer will upload a file dated
 	// at the given second so we don't want anything else to run at the same second
 	// otherwise that file may get rewritten. Easiest way to solve it? Sleep.
@@ -279,6 +282,73 @@ authorizations:
 	}
 	os.Remove(filename)
 }
+
+func TestUnknownSignerInAuthorization(t *testing.T) {
+	t.Parallel()
+
+	var conf configuration
+	// write conf file to /tmp and read it back
+	fd, err := ioutil.TempFile("", "autographtestconf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fi, err := fd.Stat()
+	if err != nil {
+		t.Fatal(err)
+	}
+	filename := fmt.Sprintf("%s/%s", os.TempDir(), fi.Name())
+	_, err = fd.Write([]byte(`
+server:
+    listen: "localhost:8000"
+    noncecachesize: 64
+
+signers:
+    - id: testsigner1
+      type: contentsignature
+      x5u: https://foo.example.com/chains/certificates.pem
+      privatekey: |
+          -----BEGIN EC PARAMETERS-----
+          BggqhkjOPQMBBw==
+          -----END EC PARAMETERS-----
+          -----BEGIN EC PRIVATE KEY-----
+          MHcCAQEEII+Is30aP9wrB/H6AkKrJjMG8EVY2WseSFHTfWGCIk7voAoGCCqGSM49
+          AwEHoUQDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq
+          3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==
+          -----END EC PRIVATE KEY-----
+
+authorizations:
+    - id: tester
+      key: oiqwhfoqihfoiqeheouqqouhfdq
+      signers:
+          - testsigner2
+`))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	fd.Close()
+	err = conf.loadFromFile(filename)
+	if err != nil {
+		t.Fatalf("config parsing failed and should have passed: %v", err)
+	}
+	// initialize signers from the configuration
+	// and store them into the autographer handler
+	ag := newAutographer(conf.Server.NonceCacheSize)
+	err = ag.addSigners(conf.Signers)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ag.addAuthorizations(conf.Authorizations)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ag.makeSignerIndex()
+	if err == nil {
+		t.Fatalf("should have failed with unknown signer in authorization but succeeded")
+	}
+	os.Remove(filename)
+}
+
 func TestConfigLoadFileNotExist(t *testing.T) {
 	t.Parallel()
 

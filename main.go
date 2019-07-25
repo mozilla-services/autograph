@@ -165,7 +165,10 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ag.makeSignerIndex()
+	err = ag.makeSignerIndex()
+	if err != nil {
+		log.Fatal(err)
+	}
 	if debug {
 		ag.enableDebug()
 	}
@@ -434,16 +437,24 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 
 // makeSignerIndex creates a map of authorization IDs and signer IDs to
 // quickly locate a signer based on the user requesting the signature.
-func (a *autographer) makeSignerIndex() {
+func (a *autographer) makeSignerIndex() error {
 	// add an entry for each authid+signerid pair
 	for _, auth := range a.auths {
 		for _, sid := range auth.Signers {
+			// make sure the sid is valid
+			sidExists := false
+
 			for pos, s := range a.signers {
 				if sid == s.Config().ID {
+					sidExists = true
 					log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.hawkMaxTimestampSkew)
 					tag := auth.ID + "+" + s.Config().ID
 					a.signerIndex[tag] = pos
 				}
+			}
+
+			if !sidExists {
+				return fmt.Errorf("in auth id %q, signer id %q was not found in the list of known signers", auth.ID, sid)
 			}
 		}
 	}
@@ -464,4 +475,5 @@ func (a *autographer) makeSignerIndex() {
 			}
 		}
 	}
+	return nil
 }
