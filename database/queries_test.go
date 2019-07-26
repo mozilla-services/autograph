@@ -10,10 +10,11 @@ import (
 
 func TestConcurrentEndEntityOperations(t *testing.T) {
 	db, err := Connect(Config{
-		Name:     "autograph",
-		User:     "myautographdbuser",
-		Password: "myautographdbpassword",
-		Host:     "127.0.0.1:5432",
+		Name:                "autograph",
+		User:                "myautographdbuser",
+		Password:            "myautographdbpassword",
+		Host:                "127.0.0.1:5432",
+		MonitorPollInterval: 10 * time.Second,
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -61,6 +61,7 @@ Make sure to set a user with limited grants in the configuration.
 		sslrootcert: /etc/ssl/certs/db-root.crt
 		maxopenconns: 100
 		maxidleconns: 10
+		monitorpollinterval: 10s
 
 Hardware Security Module (HSM)
 ------------------------------
