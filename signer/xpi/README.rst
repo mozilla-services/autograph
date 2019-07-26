@@ -238,6 +238,8 @@ response and write it to a `signed_addon.xpi` file.
 Appendix A: Firefox add-on signature verification
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+This directed graphs represents the add-ons signature verification path in Firefox.
+
 .. code::
 
 	graph LR
@@ -248,7 +250,7 @@ Appendix A: Firefox add-on signature verification
 	  OpenSignedAppFile-->VerifyCOSESignature
 	  OpenSignedAppFile == return zip reader and signing cert ==> verifySignedState
 
-	  subgraph extension.jsm
+	  subgraph extension_jsm
 	  verifySignedState-->verifySignedStateForRoot
 	  verifySignedStateForRoot == Get signing cert and add-on ID ==>getSignedStatus
 	  getSignedStatus == if add-on ID != cert CN ==> SIGNEDSTATE_BROKEN
