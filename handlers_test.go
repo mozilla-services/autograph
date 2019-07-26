@@ -24,6 +24,7 @@ import (
 	"strings"
 	"testing"
 
+	"go.mozilla.org/autograph/database"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/mar"
@@ -360,7 +361,7 @@ func TestAuthFail(t *testing.T) {
 	}
 }
 
-func TestHeartbeat(t *testing.T) {
+func TestLBHeartbeat(t *testing.T) {
 	t.Parallel()
 
 	var TESTCASES = []struct {
@@ -373,17 +374,104 @@ func TestHeartbeat(t *testing.T) {
 		{http.StatusMethodNotAllowed, `HEAD`},
 	}
 	for i, testcase := range TESTCASES {
-		req, err := http.NewRequest(testcase.method, "http://foo.bar/__heartbeat__", nil)
+		req, err := http.NewRequest(testcase.method, "http://foo.bar/__lbheartbeat__", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handleHeartbeat(w, req)
+		handleLBHeartbeat(w, req)
 		if w.Code != testcase.expect {
 			t.Fatalf("test case %d failed with code %d but %d was expected",
 				i, w.Code, testcase.expect)
 		}
 	}
+}
+
+func TestHeartbeat(t *testing.T) {
+	t.Parallel()
+
+	var TESTCASES = []struct {
+		expectedHTTPStatus int
+		method             string
+	}{
+		{http.StatusOK, `GET`},
+		{http.StatusMethodNotAllowed, `POST`},
+		{http.StatusMethodNotAllowed, `PUT`},
+		{http.StatusMethodNotAllowed, `HEAD`},
+	}
+	for i, testcase := range TESTCASES {
+		req, err := http.NewRequest(testcase.method, "http://foo.bar/__heartbeat__", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		ag.handleHeartbeat(w, req)
+		if w.Code != testcase.expectedHTTPStatus {
+			t.Fatalf("test case %d failed with code %d but %d was expected",
+				i, w.Code, testcase.expectedHTTPStatus)
+		}
+		if bytes.Equal(w.Body.Bytes(), []byte("{}\n")) {
+			t.Fatalf("test case %d returned unexpected heartbeat body %s expected {}", i, w.Body.Bytes())
+		}
+	}
+}
+
+func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
+	// NB: do not run in parallel with TestHeartbeat*
+	ag.hsmHeartbeatSignerConf = &ag.signers[0].(*contentsignature.ContentSigner).Configuration
+
+	expectedStatus := http.StatusInternalServerError
+	expectedBody := []byte("{\"hsmAccessible\":false}")
+
+	req, err := http.NewRequest(`GET`, "http://foo.bar/__heartbeat__", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := httptest.NewRecorder()
+	ag.handleHeartbeat(w, req)
+
+	if w.Code != expectedStatus {
+		t.Fatalf("failed with code %d but %d was expected", w.Code, expectedStatus)
+	}
+	if !bytes.Equal(w.Body.Bytes(), expectedBody) {
+		t.Fatalf("got unexpected heartbeat body %s expected %s", w.Body.Bytes(), expectedBody)
+	}
+
+	ag.hsmHeartbeatSignerConf = nil
+}
+
+func TestHeartbeatChecksDBStatusOK(t *testing.T) {
+	// NB: do not run in parallel with TestHeartbeat* or DB tests
+	db, err := database.Connect(database.Config{
+		Name:     "autograph",
+		User:     "myautographdbuser",
+		Password: "myautographdbpassword",
+		Host:     "127.0.0.1:5432",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ag.db = db
+
+	expectedStatus := http.StatusOK
+	expectedBody := []byte("{\"dbAccessible\":true}")
+
+	req, err := http.NewRequest(`GET`, "http://foo.bar/__heartbeat__", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := httptest.NewRecorder()
+	ag.handleHeartbeat(w, req)
+
+	if w.Code != expectedStatus {
+		t.Fatalf("failed with code %d but %d was expected", w.Code, expectedStatus)
+	}
+	if !bytes.Equal(w.Body.Bytes(), expectedBody) {
+		t.Fatalf("got unexpected heartbeat body %s expected %s", w.Body.Bytes(), expectedBody)
+	}
+
+	db.Close()
+	ag.db = nil
 }
 
 func TestVersion(t *testing.T) {

@@ -14,7 +14,9 @@ jobs:
       - checkout
       - run:
           name: run golint
-          command: make install-golint lint || true
+          command: |
+            make install-golint lint
+            make show-lint
       - run:
           name: run gofmt
           command: |

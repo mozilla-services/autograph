@@ -432,7 +432,7 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 	return
 }
 
-// Recommendations validates and returns allowed recommendation states
+// RecommendationStates validates and returns allowed recommendation states
 // algorithms from the request
 func (o *Options) RecommendationStates(allowedRecommendationStates map[string]bool) (states []string, err error) {
 	if o == nil {

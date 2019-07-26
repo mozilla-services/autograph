@@ -29,6 +29,7 @@ statsd:
 #    sslrootcert: /etc/ssl/certs/db-root.crt
 #    maxopenconns: 100
 #    maxidleconns: 10
+#    monitorpollinterval: 10s
 
 # The keys below are testing keys that do not grant any power
 signers:
@@ -513,7 +514,6 @@ signers:
 
     - id: testmar
       type: mar
-      # label of the private key in the hsm, it isn't stored locally
       privatekey: |
           -----BEGIN PRIVATE KEY-----
           MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCAUrUDTS86CuqV
@@ -1034,7 +1034,6 @@ authorizations:
       signers:
           - appkey1
           - appkey2
-          - appkey3
           - normandy
           - remote-settings
           - webextensions-rsa
