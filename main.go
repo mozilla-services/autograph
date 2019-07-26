@@ -428,7 +428,7 @@ func (a *autographer) makeSignerIndex() error {
 	for _, auth := range a.auths {
 		// if the authorization has no signer configured, skip it
 		if len(auth.Signers) < 1 {
-			continue
+			return fmt.Errorf("auth id %q must have at least one signer configured", auth.ID)
 		}
 		for pos, signer := range a.signers {
 			if auth.Signers[0] == signer.Config().ID {
