@@ -234,3 +234,55 @@ response and write it to a `signed_addon.xpi` file.
 		"signed_file": "MIIRUQYJKoZIhvcNAQcCoIIRQjCCET4CAQExCTAHBgUr..."
 	  }
 	]
+
+Appendix A: Firefox add-on signature verification
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This directed graphs represents the add-ons signature verification path in Firefox.
+
+.. code::
+
+	graph LR
+	  Firefox-->loadManifest
+	  loadManifest -->verifySignedState
+	  verifySignedState-->OpenSignedAppFile
+	  OpenSignedAppFile-->VerifyPK7Signature
+	  OpenSignedAppFile-->VerifyCOSESignature
+	  OpenSignedAppFile == return zip reader and signing cert ==> verifySignedState
+
+	  subgraph extension_jsm
+	  verifySignedState-->verifySignedStateForRoot
+	  verifySignedStateForRoot == Get signing cert and add-on ID ==>getSignedStatus
+	  getSignedStatus == if add-on ID != cert CN ==> SIGNEDSTATE_BROKEN
+	  getSignedStatus == if cert OU is Mozilla Components ==> SIGNEDSTATE_SYSTEM
+	  getSignedStatus == if cert OU is Mozilla Extensions==> SIGNEDSTATE_PRIVILEGED
+	  getSignedStatus == if signature valid ==> SIGNEDSTATE_SIGNED
+	  getSignedStatus == if signature invalid ==> NS_ERROR_SIGNED_JAR_*
+	  end
+
+	  subgraph pkcs7
+	  VerifyPK7Signature == Extract RSA signature ==> VerifySignature
+	  VerifyPK7Signature == Extract hash of SF signature file ==> VerifySignature
+	  VerifySignature == Extract Signing Certificate ==> VerifyCertificate
+	  VerifyCertificate == Get Trusted Root ==> BuildCertChain
+	  BuildCertChain == ERROR_EXPIRED_CERTIFICATE ==> Success
+	  Success --> VerifyPK7Signature
+	  BuildCertChain == else ==> Error
+	  Error --> VerifyPK7Signature
+	  end
+
+	  subgraph cose
+	  VerifyCOSESignature == Extract Signature ==> verify_cose_signature_ffi
+	  VerifyCOSESignature == Extract SF Signature file ==> verify_cose_signature_ffi
+	  VerifyCOSESignature == Get Trusted Root ==> verify_cose_signature_ffi
+	  end
+
+	  subgraph verify_manifest
+	  VerifyCOSESignature == List files to ignore==> VerifyAppManifest
+	  VerifyPK7Signature == List files to ignore==> VerifyAppManifest
+	  VerifyAppManifest--> ParseMF
+	  ParseMF == for each manifest entry ==> VerifyEntryContentDigest
+	  VerifyEntryContentDigest--> VerifyStreamContentDigest
+	  VerifyStreamContentDigest == entry digest matches manifest ==> NS_OK
+	  VerifyStreamContentDigest == else ==> NS_ERROR_SIGNED_JAR_something
+	  end

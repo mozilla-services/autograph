@@ -9,6 +9,7 @@ package main
 //go:generate ./version.sh
 
 import (
+	"crypto/sha256"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -78,6 +79,11 @@ type autographer struct {
 	signerIndex map[string]int
 	nonces      *lru.Cache
 	debug       bool
+
+	// hsmHeartbeatSignerConf is the signer conf to use to check
+	// HSM connectivity (set to the first signer with an HSM label
+	// in initHSM) when it is non-nil
+	hsmHeartbeatSignerConf *signer.Configuration
 }
 
 func main() {
@@ -129,34 +135,15 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	// and store them into the autographer handler
 	ag = newAutographer(conf.Server.NonceCacheSize)
 
-	// connect to the database
 	if conf.Database.Name != "" {
-		ag.db, err = database.Connect(conf.Database)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if ag.db == nil {
-			log.Fatal("failed to initialize database connection, unknown error")
-		}
-		// start a monitoring function that panics if
-		// the db becomes inaccessible
-		go ag.db.Monitor()
-		log.Print("database connection established")
+		// ignore the monitor close chan since it will stop
+		// when the app is stopped
+		_ = ag.addDB(conf.Database)
 	}
 
 	// initialize the hsm if a configuration is defined
 	if conf.HSM.Path != "" {
-		tmpCtx, err := crypto11.Configure(&conf.HSM)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if tmpCtx != nil {
-			// if we successfully initialized the crypto11 context,
-			// tell the signers they can try using the HSM
-			for i := range conf.Signers {
-				conf.Signers[i].HsmIsAvailable(tmpCtx)
-			}
-		}
+		ag.initHSM(conf)
 	}
 
 	if conf.Statsd.Addr != "" {
@@ -194,8 +181,8 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	ag.startCleanupHandler()
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/__heartbeat__", handleHeartbeat).Methods("GET")
-	router.HandleFunc("/__lbheartbeat__", handleHeartbeat).Methods("GET")
+	router.HandleFunc("/__heartbeat__", ag.handleHeartbeat).Methods("GET")
+	router.HandleFunc("/__lbheartbeat__", handleLBHeartbeat).Methods("GET")
 	router.HandleFunc("/__version__", handleVersion).Methods("GET")
 	router.HandleFunc("/__monitor__", ag.handleMonitor).Methods("GET")
 	router.HandleFunc("/sign/file", ag.handleSignature).Methods("POST")
@@ -224,24 +211,32 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 
 // loadFromFile reads a configuration from a local file
 func (c *configuration) loadFromFile(path string) error {
-	var confData []byte
-	data, err := ioutil.ReadFile(path)
+	var (
+		data, confData []byte
+		confSHA        [32]byte
+		err            error
+	)
+	data, err = ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
+	confSHA = sha256.Sum256(data)
+
 	// Try to decrypt the conf using sops or load it as plaintext.
 	// If the configuration is not encrypted with sops, the error
 	// sops.MetadataNotFound will be returned, in which case we
 	// ignore it and continue loading the conf.
 	confData, err = decrypt.Data(data, "yaml")
-	if err != nil {
-		if err == sops.MetadataNotFound {
-			// not an encrypted file
-			confData = data
-		} else {
-			return errors.Wrap(err, "failed to load sops encrypted configuration")
-		}
+	if err == nil {
+		log.Infof("loaded encrypted config from %s with sha256sum %x", path, confSHA)
+	} else if err == sops.MetadataNotFound {
+		log.Infof("loaded unencrypted config from %s with sha256sum %x", path, confSHA)
+		// not an encrypted file
+		confData = data
+	} else {
+		return errors.Wrap(err, "failed to load sops encrypted configuration")
 	}
+
 	err = yaml.Unmarshal(confData, &c)
 	if err != nil {
 		return err
@@ -295,6 +290,47 @@ func (a *autographer) startCleanupHandler() {
 		}
 		os.Exit(0)
 	}()
+}
+
+// addDB connects to the DB and starts a gorountine to monitor DB
+// connectivity
+func (a *autographer) addDB(dbConf database.Config) chan bool {
+	var err error
+	a.db, err = database.Connect(dbConf)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if a.db == nil {
+		log.Fatal("failed to initialize database connection, unknown error")
+	}
+	// start a monitoring function that errors if the db
+	// becomes inaccessible
+	closeDBMonitor := make(chan bool)
+	go a.db.Monitor(dbConf.MonitorPollInterval, closeDBMonitor)
+	log.Print("database connection established")
+	return closeDBMonitor
+}
+
+// initHSM sets up the HSM and notifies signers it is available
+func (a *autographer) initHSM(conf configuration) {
+	tmpCtx, err := crypto11.Configure(&conf.HSM)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if tmpCtx != nil {
+		// if we successfully initialized the crypto11 context,
+		// tell the signers they can try using the HSM
+		for i := range conf.Signers {
+			conf.Signers[i].InitHSM(tmpCtx)
+			signerConf := conf.Signers[i]
+
+			// save the first signer with an HSM label as
+			// the key to test from the heartbeat handler
+			if a.hsmHeartbeatSignerConf == nil && !signerConf.PrivateKeyHasPEMPrefix() {
+				a.hsmHeartbeatSignerConf = &signerConf
+			}
+		}
+	}
 }
 
 // addSigners initializes each signer specified in the configuration by parsing

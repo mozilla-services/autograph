@@ -45,6 +45,9 @@ type configuration struct {
 	env           string
 	rootHash      string
 	truststore    *x509.CertPool
+	// hash keystore for verifying XPI dep signers
+	depRootHash   string
+	depTruststore *x509.CertPool
 }
 
 var conf configuration
@@ -70,16 +73,23 @@ func main() {
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
 	switch conf.env {
 	case "stage":
-		conf.rootHash = `DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90`
+		conf.rootHash = firefoxPkiStageRootHash
 		conf.truststore = x509.NewCertPool()
 		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiStageRoot))
+		conf.depRootHash = ""
+		conf.depTruststore = nil
 	case "prod":
-		conf.rootHash = `97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E`
+		conf.rootHash = firefoxPkiProdRootHash
 		conf.truststore = x509.NewCertPool()
 		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiProdRoot))
+		conf.depRootHash = firefoxPkiStageRootHash
+		conf.depTruststore = x509.NewCertPool()
+		conf.depTruststore.AppendCertsFromPEM([]byte(firefoxPkiStageRoot))
 	default:
 		conf.rootHash = "5E36F214DE823F8B299689235F0341ACAFA075AF82CB4CD4307C3DB343392AFE"
 		conf.truststore = nil
+		conf.depRootHash = ""
+		conf.depTruststore = nil
 	}
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda

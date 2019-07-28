@@ -34,14 +34,15 @@ type Transaction struct {
 
 // Config holds the parameters to connect to a database
 type Config struct {
-	Name         string
-	User         string
-	Password     string
-	Host         string
-	SSLMode      string
-	SSLRootCert  string
-	MaxOpenConns int
-	MaxIdleConns int
+	Name                string
+	User                string
+	Password            string
+	Host                string
+	SSLMode             string
+	SSLRootCert         string
+	MaxOpenConns        int
+	MaxIdleConns        int
+	MonitorPollInterval time.Duration
 }
 
 // Connect creates a database connection and returns a handler
@@ -70,20 +71,36 @@ func Connect(config Config) (*Handler, error) {
 	return &Handler{dbfd}, nil
 }
 
-// Monitor runs an infinite loop that queries the database every 10 seconds
-// and panics if the query fails. It can be used in a goroutine to crash when
-// the database becomes unavailable.
-func (db *Handler) Monitor() {
-	// simple DB watchdog, crashes the process if connection dies
+// CheckConnection runs a test query against the database and returns
+// an error if it fails
+func (db *Handler) CheckConnection() error {
+	var one uint
+	err := db.QueryRow("SELECT 1").Scan(&one)
+	if err != nil {
+		return errors.Wrap(err, "Database connection failed")
+	}
+	if one != 1 {
+		return errors.Errorf("Apparently the database doesn't know the meaning of one anymore")
+	}
+	return nil
+}
+
+// Monitor queries the database every pollInterval until it gets a
+// quit signal logging an error when the test query fails. It can be
+// used in a goroutine to check when the database becomes unavailable.
+func (db *Handler) Monitor(pollInterval time.Duration, quit chan bool) {
+	log.Infof("starting DB monitor polling every %s", pollInterval)
 	for {
-		var one uint
-		err := db.QueryRow("SELECT 1").Scan(&one)
-		if err != nil {
-			log.Fatal("Database connection failed:", err)
+		select {
+		case <-time.After(pollInterval):
+			err := db.CheckConnection()
+			if err != nil {
+				log.Error(err)
+				break
+			}
+		case <-quit:
+			log.Info("Shutting down DB monitor")
+			return
 		}
-		if one != 1 {
-			log.Fatal("Apparently the database doesn't know the meaning of one anymore. Crashing.")
-		}
-		time.Sleep(10 * time.Second)
 	}
 }
