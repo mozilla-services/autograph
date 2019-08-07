@@ -1,4 +1,4 @@
-FROM golang:1.12
+FROM golang:1.12-buster
 EXPOSE 8000
 
 RUN addgroup --gid 10001 app \
@@ -11,6 +11,7 @@ RUN addgroup --gid 10001 app \
       apt -y upgrade && \
       apt -y install libltdl-dev && \
       apt -y install gpg && \
+      apt -y install libncurses5 && \
       apt-get clean
 
 # import the RDS CA bundle
