@@ -5,7 +5,7 @@ Autograph is a cryptographic signature service that implements
 [MAR Signing](signer/mar/README.rst) for Firefox updates,
 [APK V1 Signing](signer/apk/README.rst) for Android,
 [PGP](signer/pgp/README.rst), [GPG2](signer/gpg2/README.rst)
-and [RSA PSS](signer/rsapss/README.rst).
+and [RSA](signer/genericrsa/README.rst).
 
 [![CircleCI](https://circleci.com/gh/mozilla-services/autograph/tree/master.svg?style=svg)](https://circleci.com/gh/mozilla-services/autograph/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/mozilla-services/autograph/badge.svg?branch=master)](https://coveralls.io/github/mozilla-services/autograph?branch=master)

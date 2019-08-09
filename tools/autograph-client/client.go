@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
@@ -19,8 +20,10 @@ import (
 	"strings"
 	"time"
 
+	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/genericrsa"
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
@@ -28,22 +31,6 @@ import (
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
-
-type signaturerequest struct {
-	Input   string `json:"input"`
-	KeyID   string `json:"keyid"`
-	Options interface{}
-}
-
-type signatureresponse struct {
-	Ref        string `json:"ref"`
-	Type       string `json:"type"`
-	SignerID   string `json:"signer_id"`
-	PublicKey  string `json:"public_key,omitempty"`
-	Signature  string `json:"signature"`
-	SignedFile string `json:"signed_file"`
-	X5U        string `json:"x5u,omitempty"`
-}
 
 type requestType int
 
@@ -83,7 +70,7 @@ func main() {
 		iter, maxworkers, sa                                                                                                    int
 		debug                                                                                                                   bool
 		err                                                                                                                     error
-		requests                                                                                                                []signaturerequest
+		requests                                                                                                                []formats.SignatureRequest
 		algs                                                                                                                    coseAlgs
 	)
 	flag.Usage = func() {
@@ -179,7 +166,7 @@ examples:
 		}
 		data = base64.StdEncoding.EncodeToString(filebytes)
 	}
-	request := signaturerequest{
+	request := formats.SignatureRequest{
 		Input: data,
 		KeyID: keyid,
 	}
@@ -278,7 +265,7 @@ examples:
 				log.Fatalf("%s %s", resp.Status, body)
 			}
 			// verify that we got a proper signature response, with a valid signature
-			var responses []signatureresponse
+			var responses []formats.SignatureResponse
 			err = json.Unmarshal(body, &responses)
 			if err != nil {
 				log.Fatal(err)
@@ -333,6 +320,29 @@ examples:
 				case mar.Type:
 					sigStatus = verifyMAR(input)
 					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
+					if err != nil {
+						log.Fatal(err)
+					}
+				case genericrsa.Type:
+					sig, err := genericrsa.Unmarshal(response.Signature)
+					if err != nil {
+						log.Fatalf("failed to unmarshal rsa signature: %s", err)
+					}
+					keyBytes, err := base64.StdEncoding.DecodeString(response.PublicKey)
+					if err != nil {
+						log.Fatal(err)
+					}
+					keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
+					if err != nil {
+						log.Fatal(err)
+					}
+					pubKey := keyInterface.(*rsa.PublicKey)
+					err = genericrsa.VerifySignature(input, sig.(*genericrsa.Signature).Data, pubKey, response.SignerOpts, response.Mode)
+					if err != nil {
+						log.Fatalf("failed to verify rsa signature: %s", err)
+					}
+					sigStatus = true
+					sigData, err = base64.StdEncoding.DecodeString(response.Signature)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -401,7 +411,7 @@ func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash,
 }
 
 // verify an ecdsa signature
-func verifyContentSignature(input []byte, resp signatureresponse, endpoint string) bool {
+func verifyContentSignature(input []byte, resp formats.SignatureResponse, endpoint string) bool {
 	keyBytes, err := base64.StdEncoding.DecodeString(resp.PublicKey)
 	if err != nil {
 		log.Fatal(err)
@@ -438,7 +448,7 @@ func verifyContentSignature(input []byte, resp signatureresponse, endpoint strin
 	return ecdsa.Verify(pubKey, input, sig.R, sig.S)
 }
 
-func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqType requestType, roots *x509.CertPool) bool {
+func verifyXPI(input []byte, req formats.SignatureRequest, resp formats.SignatureResponse, reqType requestType, roots *x509.CertPool) bool {
 	switch reqType {
 	case requestTypeData:
 		sig, err := xpi.Unmarshal(resp.Signature, input)
