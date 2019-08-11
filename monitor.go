@@ -70,13 +70,14 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 
 			sigerrstrs[i] = ""
 			sigresps[i] = formats.SignatureResponse{
-				Ref:       id(),
-				Type:      s.Config().Type,
-				Mode:      s.Config().Mode,
-				SignerID:  s.Config().ID,
-				PublicKey: s.Config().PublicKey,
-				Signature: encodedsig,
-				X5U:       s.Config().X5U,
+				Ref:        id(),
+				Type:       s.Config().Type,
+				Mode:       s.Config().Mode,
+				SignerID:   s.Config().ID,
+				PublicKey:  s.Config().PublicKey,
+				Signature:  encodedsig,
+				X5U:        s.Config().X5U,
+				SignerOpts: s.Config().SignerOpts,
 			}
 		}(i, s)
 	}

@@ -42,6 +42,7 @@ lint:
 			go.mozilla.org/autograph/signer/mar \
 			go.mozilla.org/autograph/signer/pgp \
 			go.mozilla.org/autograph/signer/gpg2 \
+			go.mozilla.org/autograph/signer/genericrsa \
 			go.mozilla.org/autograph/signer/rsapss | tee /tmp/autograph-golint.txt | grep -v 'and that stutters' | wc -l)
 
 show-lint:
@@ -132,13 +133,19 @@ testgpg2:
 showcoveragegpg2: testgpg2
 	$(GO) tool cover -html=coverage_gpg2.out
 
+testgenericrsa:
+	$(GOTEST) -coverprofile=coverage_genericrsa.out go.mozilla.org/autograph/signer/genericrsa
+
+showcoveragegenericrsa: testgenericrsa
+	$(GO) tool cover -html=coverage_genericrsa.out
+
 testrsapss:
 	$(GOTEST) -coverprofile=coverage_rsapss.out go.mozilla.org/autograph/signer/rsapss
 
 showcoveragersapss: testrsapss
 	$(GO) tool cover -html=coverage_rsapss.out
 
-test: testautograph testautographdb testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testrsapss testmonitor
+test: testautograph testautographdb testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testgenericrsa testrsapss testmonitor
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 
