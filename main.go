@@ -348,6 +348,10 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		if _, exists := sids[signerConf.ID]; exists {
 			return fmt.Errorf("duplicate signer ID %q is not permitted", signerConf.ID)
 		}
+		// "monitor" is a reserved name
+		if signerConf.ID == "monitor" {
+			return fmt.Errorf("'monitor' is a reserved signer name and cannot be used in configuration")
+		}
 		sids[signerConf.ID] = true
 		var (
 			s           signer.Signer
@@ -445,7 +449,16 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 // quickly locate a signer based on the user requesting the signature.
 func (a *autographer) makeSignerIndex() error {
 	// add an entry for each authid+signerid pair
-	for _, auth := range a.auths {
+	for id, auth := range a.auths {
+		if id == "monitor" {
+			// the "monitor" authorization is a special case
+			// that doesn't need a signer index
+			continue
+		}
+		// if the authorization has no signer configured, error out
+		if len(auth.Signers) < 1 {
+			return fmt.Errorf("auth id %q must have at least one signer configured", id)
+		}
 		for _, sid := range auth.Signers {
 			// make sure the sid is valid
 			sidExists := false
@@ -463,15 +476,8 @@ func (a *autographer) makeSignerIndex() error {
 				return fmt.Errorf("in auth id %q, signer id %q was not found in the list of known signers", auth.ID, sid)
 			}
 		}
-	}
-	// add a fallback entry with just the authid, to use when no signerid
-	// is specified in the signing request. This entry maps to the first
-	// authorized signer
-	for _, auth := range a.auths {
-		// if the authorization has no signer configured, skip it
-		if len(auth.Signers) < 1 {
-			continue
-		}
+		// add a default entry for the signer, such that if none is provided in
+		// the signing request, the default is used
 		for pos, signer := range a.signers {
 			if auth.Signers[0] == signer.Config().ID {
 				log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.hawkMaxTimestampSkew)

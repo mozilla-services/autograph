@@ -349,6 +349,23 @@ authorizations:
 	os.Remove(filename)
 }
 
+// An authorization without at least one signer configured must fail
+func TestAuthWithoutSigner(t *testing.T) {
+	t.Parallel()
+	var authorizations = []authorization{
+		authorization{
+			ID: "alice",
+		},
+	}
+	tmpag := newAutographer(1)
+	tmpag.addSigners(conf.Signers)
+	tmpag.addAuthorizations(authorizations)
+	err := tmpag.makeSignerIndex()
+	if err == nil {
+		t.Fatalf("should have failed with must have one signer but succeeded")
+	}
+}
+
 func TestConfigLoadFileNotExist(t *testing.T) {
 	t.Parallel()
 

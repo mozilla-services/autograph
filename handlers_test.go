@@ -501,25 +501,6 @@ func TestVersion(t *testing.T) {
 	}
 }
 
-// An authorization without at least one signer configured should not have
-// a default signer configured in the signerIndex
-func TestAuthWithoutSigner(t *testing.T) {
-	t.Parallel()
-
-	var authorizations = []authorization{
-		authorization{
-			ID: "alice",
-		},
-	}
-	tmpag := newAutographer(1)
-	tmpag.addSigners(conf.Signers)
-	tmpag.addAuthorizations(authorizations)
-	tmpag.makeSignerIndex()
-	if _, ok := tmpag.signerIndex[authorizations[0].ID+"+"]; ok {
-		t.Fatalf("found a default signer but shouldn't have")
-	}
-}
-
 // verify that user `alice` and `bob` are allowed to sign
 // with their respective keys:
 // * `appkey1` and `appkey2` for `alice`
