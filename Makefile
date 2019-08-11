@@ -34,6 +34,7 @@ tag: all
 lint:
 	test 0 -eq $(shell $(GOLINT) go.mozilla.org/autograph \
 			go.mozilla.org/autograph/database \
+			go.mozilla.org/autograph/formats \
 			go.mozilla.org/autograph/signer \
 			go.mozilla.org/autograph/signer/contentsignature \
 			go.mozilla.org/autograph/signer/contentsignaturepki \
@@ -53,6 +54,7 @@ vet:
 	$(GO) vet go.mozilla.org/autograph
 	$(GO) vet go.mozilla.org/autograph/database
 	$(GO) vet go.mozilla.org/autograph/signer
+	$(GO) vet go.mozilla.org/autograph/formats
 	$(GO) vet go.mozilla.org/autograph/signer/apk
 	$(GO) vet go.mozilla.org/autograph/signer/contentsignature
 	$(GO) vet go.mozilla.org/autograph/signer/contentsignaturepki
@@ -62,6 +64,7 @@ vet:
 	$(GO) vet go.mozilla.org/autograph/signer/mar
 	$(GO) vet go.mozilla.org/autograph/signer/pgp
 	$(GO) vet go.mozilla.org/autograph/signer/gpg2
+	$(GO) vet go.mozilla.org/autograph/signer/genericrsa
 	$(GO) vet go.mozilla.org/autograph/signer/rsapss
 
 fmt-diff:
@@ -81,6 +84,12 @@ testautographdb:
 
 showcoverageautographdb: testautographdb
 	$(GO) tool cover -html=coverage_db.out
+
+testautographformats:
+	$(GOTEST) -coverprofile=coverage_formats.out go.mozilla.org/autograph/formats
+
+showcoverageautographformats: testautographformats
+	$(GO) tool cover -html=coverage_formats.out
 
 testsigner:
 	$(GOTEST) -coverprofile=coverage_signer.out go.mozilla.org/autograph/signer
@@ -145,7 +154,7 @@ testrsapss:
 showcoveragersapss: testrsapss
 	$(GO) tool cover -html=coverage_rsapss.out
 
-test: testautograph testautographdb testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testgenericrsa testrsapss testmonitor
+test: testautograph testautographdb testautographformats testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testgenericrsa testrsapss testmonitor
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 

@@ -1,6 +1,8 @@
 RSA-PSS Signing
 ===============
 
+**THIS SIGNER IS DEPRECATED, USE THE `genericrsa` SIGNER INSTEAD**
+
 .. sectnum::
 .. contents:: Table of Contents
 
@@ -56,7 +58,7 @@ For example:
 .. code:: yaml
 
     signers:
-    - id: some-rsapss-rsa-key
+    - id: some-rsa-key
       type: rsapss
       privatekey: |
         -----BEGIN RSA PRIVATE KEY-----
