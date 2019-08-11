@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
 )
 
@@ -29,7 +30,7 @@ var ignoredCerts = map[string]bool{
 // to verify the sig. Otherwise, use the PublicKey contained in the response.
 //
 // If the signature passes, verify the chain of trust maps.
-func verifyContentSignature(response signatureresponse) error {
+func verifyContentSignature(response formats.SignatureResponse) error {
 	var (
 		key   *ecdsa.PublicKey
 		err   error
