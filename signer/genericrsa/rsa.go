@@ -244,7 +244,6 @@ func VerifySignature(input, sigBytes []byte, pubKey *rsa.PublicKey, sigopt inter
 	default:
 		return errors.Errorf("genericrsa: invalid mode %q", mode)
 	}
-	return errors.Wrapf(err, "genericrsa: failed to verify signature")
 }
 
 // VerifyGenericRsaSignatureResponse is a helper that takes
