@@ -65,12 +65,12 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, rsapssHash, zipMethodOption string
-		iter, maxworkers, sa                                                                                                    int
-		debug                                                                                                                   bool
-		err                                                                                                                     error
-		requests                                                                                                                []formats.SignatureRequest
-		algs                                                                                                                    coseAlgs
+		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, zipMethodOption string
+		iter, maxworkers, sa                                                                                        int
+		debug                                                                                                       bool
+		err                                                                                                         error
+		requests                                                                                                    []formats.SignatureRequest
+		algs                                                                                                        coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -328,7 +328,7 @@ examples:
 						log.Fatal(err)
 					}
 				case rsapss.Type:
-					err = rsapss.VerifySignatureFromB64(rsapssHash, response.Signature, response.PublicKey)
+					err = rsapss.VerifySignatureFromB64(requests[i].Input, response.Signature, response.PublicKey)
 					if err != nil {
 						log.Fatalf("got error verifying RSA-PSS response: %s", err)
 					}
