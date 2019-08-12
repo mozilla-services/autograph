@@ -306,7 +306,7 @@ func (a *autographer) addDB(dbConf database.Config) chan bool {
 	}
 	// start a monitoring function that errors if the db
 	// becomes inaccessible
-	closeDBMonitor := make(chan bool)
+	closeDBMonitor := make(chan bool, 1)
 	go a.db.Monitor(dbConf.MonitorPollInterval, closeDBMonitor)
 	log.Print("database connection established")
 	return closeDBMonitor
