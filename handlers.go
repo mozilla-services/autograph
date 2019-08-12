@@ -7,6 +7,7 @@
 package main
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -21,6 +22,20 @@ import (
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer"
 )
+
+// HeartbeatConfig configures the heartbeat handler. It sets timeouts
+// for each backing service to check.
+//
+// `hsmHeartbeatSignerConf` is determined added on boot in initHSM
+type HeartbeatConfig struct {
+	HSMCheckTimeout time.Duration
+	DBCheckTimeout  time.Duration
+
+	// hsmSignerConf is the signer conf to use to check
+	// HSM connectivity (set to the first signer with an HSM label
+	// in initHSM) when it is non-nil
+	hsmSignerConf *signer.Configuration
+}
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
 // and calls the signers to generate signature responses.
@@ -227,18 +242,35 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
 		return
 	}
+	if a.heartbeatConf == nil {
+		httpError(w, r, http.StatusInternalServerError, "Missing heartbeat config")
+		return
+	}
 	var (
 		// a map of backing service name to up or down/inaccessible status
-		result = map[string]bool{}
-		status = http.StatusOK
+		result         = map[string]bool{}
+		status         = http.StatusOK
+		requestContext = r.Context()
 	)
 
 	// try to fetch the private key from the HSM for the first
 	// signer conf with a non-PEM private key that we saved on
 	// server start
-	conf := a.hsmHeartbeatSignerConf
-	if conf != nil {
-		err := conf.CheckHSMConnection()
+	if a.heartbeatConf.hsmSignerConf != nil {
+		var (
+			err         error
+			conf        = a.heartbeatConf.hsmSignerConf
+			checkResult = make(chan error, 1)
+		)
+		go func() {
+			checkResult <- conf.CheckHSMConnection()
+		}()
+		select {
+		case <-time.After(a.heartbeatConf.HSMCheckTimeout):
+			err = fmt.Errorf("Checking HSM connection for signer %s private key timed out", conf.ID)
+		case err = <-checkResult:
+		}
+
 		if err == nil {
 			result["hsmAccessible"] = true
 			status = http.StatusOK
@@ -253,7 +285,9 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// don't fail the heartbeat since we only care about DB
 	// connectivity on server start
 	if a.db != nil {
-		err := a.db.CheckConnection()
+		dbCheckCtx, dbCancel := context.WithTimeout(requestContext, a.heartbeatConf.DBCheckTimeout)
+		defer dbCancel()
+		err := a.db.CheckConnectionContext(dbCheckCtx)
 		if err == nil {
 			result["dbAccessible"] = true
 		} else {
