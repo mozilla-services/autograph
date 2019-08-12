@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	// Type of this signer is "rsa"
+	// Type of this signer is "genericrsa"
 	Type = "genericrsa"
 )
 
@@ -109,13 +109,13 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 	}
 
 	s.Hash = conf.Hash
-	var hRef crypto.Hash
+	var hashID crypto.Hash
 	switch s.Hash {
 	case "sha1":
-		hRef = crypto.SHA1
+		hashID = crypto.SHA1
 		s.hashSize = sha1.Size
 	case "sha256":
-		hRef = crypto.SHA256
+		hashID = crypto.SHA256
 		s.hashSize = sha256.Size
 	default:
 		return nil, errors.Errorf("genericrsa: unsupported hash %q for signer %q, must be 'sha1' or 'sha256'", s.Hash, s.ID)
@@ -126,14 +126,14 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 	case ModePSS:
 		s.sigOpts = &rsa.PSSOptions{
 			SaltLength: s.SaltLength,
-			Hash:       hRef,
+			Hash:       hashID,
 		}
 	case ModePKCS15:
 		if s.SaltLength != 0 {
 			return nil, errors.Errorf("genericrsa: signer %q uses mode %q and sets salt length to %d, which is only valid in 'pss' mode", s.ID, s.Mode, s.SaltLength)
 		}
 		s.sigOpts = &Options{
-			Hash: hRef,
+			Hash: hashID,
 		}
 	}
 	return s, nil

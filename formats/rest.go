@@ -1,7 +1,6 @@
 package formats
 
-// SignatureRequest is sent by an autograph client to request
-// a signature on input data
+// SignatureRequest is sent by a client to request a signature on input data
 type SignatureRequest struct {
 	Input   string `json:"input"`
 	KeyID   string `json:"keyid,omitempty"`
