@@ -68,7 +68,7 @@ type configuration struct {
 	Signers        []signer.Configuration
 	Authorizations []authorization
 	Monitoring     authorization
-	Heartbeat      HeartbeatConfig
+	Heartbeat      heartbeatConfig
 }
 
 // An autographer is a running instance of an autograph service,
@@ -81,7 +81,7 @@ type autographer struct {
 	signerIndex   map[string]int
 	nonces        *lru.Cache
 	debug         bool
-	heartbeatConf *HeartbeatConfig
+	heartbeatConf *heartbeatConfig
 }
 
 func main() {

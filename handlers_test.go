@@ -426,7 +426,7 @@ func TestHeartbeat(t *testing.T) {
 
 func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
 	// NB: do not run in parallel with TestHeartbeat*
-	ag.heartbeatConf = &HeartbeatConfig{
+	ag.heartbeatConf = &heartbeatConfig{
 		HSMCheckTimeout: time.Second,
 		hsmSignerConf:   &ag.signers[0].(*contentsignature.ContentSigner).Configuration,
 	}
@@ -459,7 +459,7 @@ func TestHeartbeatChecksDBStatusOKAndTimesout(t *testing.T) {
 		t.Fatal(err)
 	}
 	ag.db = db
-	ag.heartbeatConf = &HeartbeatConfig{
+	ag.heartbeatConf = &heartbeatConfig{
 		DBCheckTimeout: 2 * time.Second,
 	}
 

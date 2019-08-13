@@ -27,7 +27,7 @@ import (
 // for each backing service to check.
 //
 // `hsmHeartbeatSignerConf` is determined added on boot in initHSM
-type HeartbeatConfig struct {
+type heartbeatConfig struct {
 	HSMCheckTimeout time.Duration
 	DBCheckTimeout  time.Duration
 
