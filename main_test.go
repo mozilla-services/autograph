@@ -64,13 +64,18 @@ func TestConfigLoad(t *testing.T) {
 	t.Parallel()
 
 	testcases := []struct {
+		name string
 		pass bool
 		data []byte
 	}{
-		{true, []byte(`
+		{"one signer", true, []byte(`
 server:
     listen: "localhost:8000"
     noncecachesize: 64
+
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
     - id: testsigner1
@@ -85,7 +90,44 @@ signers:
 monitoring:
     key: qowidhqowidhqoihdqodwh
 `)},
-		{true, []byte(`
+		{"two signers", true, []byte(`
+server:
+    listen: "localhost:8000"
+    noncecachesize: 64
+
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
+
+signers:
+    - id: testsigner1
+      privatekey: |
+        -----BEGIN EC PRIVATE KEY-----
+        MIGkAgEBBDBe7dXZ/epqVkrRWbStmwe2WyTcpWJ5cCbrqcM4tCG4vdX9b0Ri+VYo
+        LiHkmxenK0mgBwYFK4EEACKhZANiAASvggNRMynXOObY9QW4gJXCwgsNa/8vcjHK
+        wgzyqfXUzv3PbiZbDVYtYT7FMzd84CmX9BEtsE8bQS2Ci7q0Izp9aRUjCiTlUuAZ
+        XMhBcGTy1e65CRjbCNM4A8w0/K30x4k=
+        -----END EC PRIVATE KEY-----
+
+    - id: testsigner2
+      privatekey: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIBOgIBAAJBALhlXvMK5hIgGGRgdUycR8FWAmZC5bOeUrLr9SWep2NnR9nmBDgS
+        AYYFTraBw2se+oagYyWjccDnbJR9GPHarWkCAwEAAQJAey1kbxCxvhvoj20MDoA7
+        QsB02+EGVqWFcvZCjb3c7X4XZS0Oe1y1TJSmyL7oEepuL3NTgXYib+RSLT8vph8u
+        zQIhANzuVRWzm7sSgTsPgg/P+q/5O2BXzoY/QpWdDb8DWEVjAiEA1apqeW9u38o3
+        xpjJBa7tTNzgmuZtupFvB7baO8So0cMCICjTxld3VI0Sk10ltYRUi+AfL7DTKTA3
+        2ocpedPVu2c/AiEAuCx0KQa3sKmTWFmcdYyqOeXuqTbVAMuZxDGGfZxv1JcCIA2v
+        84l6Qav0l4A3NDdT+cotbnDqQ5wjF+UZ8uwsBwSl
+        -----END RSA PRIVATE KEY-----
+
+authorizations:
+    - id: tester
+      key: oiqwhfoqihfoiqeheouqqouhfdq
+      signers:
+          - testsigner1
+`)},
+		{"missing heartbeat config", false, []byte(`
 server:
     listen: "localhost:8000"
     noncecachesize: 64
@@ -118,13 +160,16 @@ authorizations:
       signers:
           - testsigner1
 `)},
-		// bogus yaml
-		{false, []byte(`{{{{{{{`)},
-		// yaml with tabs
-		{false, []byte(`
+
+		{"bogus yaml", false, []byte(`{{{{{{{`)},
+		{"yaml with tabs", false, []byte(`
 server:
 	listen: "localhost:8000"
 	noncecachesize: 64
+
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
       - privatekey: |
@@ -156,11 +201,11 @@ authorizations:
 		fd.Close()
 		err = conf.loadFromFile(filename)
 		if err != nil && testcase.pass {
-			t.Fatalf("testcase %d failed and should have passed: %v",
-				i, err)
+			t.Fatalf("testcase %d %q failed and should have passed: %v",
+				i, testcase.name, err)
 		}
 		if err == nil && !testcase.pass {
-			t.Fatalf("testcase %d passed and should have failed", i)
+			t.Fatalf("testcase %d %q passed and should have failed", i, testcase.name)
 		}
 		os.Remove(filename)
 	}
@@ -184,6 +229,10 @@ func TestDuplicateSigners(t *testing.T) {
 server:
     listen: "localhost:8000"
     noncecachesize: 64
+
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
     - id: testsigner1
@@ -235,6 +284,10 @@ func TestDuplicateAuthorization(t *testing.T) {
 server:
     listen: "localhost:8000"
     noncecachesize: 64
+
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
     - id: testsigner1
@@ -301,6 +354,10 @@ func TestUnknownSignerInAuthorization(t *testing.T) {
 server:
     listen: "localhost:8000"
     noncecachesize: 64
+
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
     - id: testsigner1

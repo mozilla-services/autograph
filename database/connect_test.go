@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -26,7 +27,7 @@ func TestMonitor(t *testing.T) {
 		go db.Monitor(5*time.Millisecond, quit)
 
 		// should not error for initial monitor run
-		err = db.CheckConnection()
+		err = db.CheckConnectionContext(context.Background())
 		if err != nil {
 			t.Fatalf("db.CheckConnection failed when it should not have with error: %s", err)
 		}
@@ -34,7 +35,7 @@ func TestMonitor(t *testing.T) {
 
 		// error for failing checks
 		db.Close()
-		err = db.CheckConnection()
+		err = db.CheckConnectionContext(context.Background())
 		if err == nil {
 			t.Fatalf("db.CheckConnection did not fail for a closed DB")
 		}

@@ -62,6 +62,11 @@ Make sure to set a user with limited grants in the configuration.
 		maxopenconns: 100
 		maxidleconns: 10
 		monitorpollinterval: 10s
+	heartbeat:
+		dbchecktimeout: 15ms
+
+`heartbeat.dbchecktimeout` is how long the heartbeat handler
+should wait for the DB to return a response before erroring.
 
 Hardware Security Module (HSM)
 ------------------------------
@@ -80,8 +85,13 @@ To configure it globally, set the following config where:
 		path:       /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
 		tokenlabel: cavium
 		pin:        ulfr:e2deea623796eecd
+	heartbeat:
+		hsmchecktimeout: 10ms
 
 Refer to each signer's configuration doc to know how they each make use of the HSM.
+
+`heartbeat.hsmchecktimeout` is how long the heartbeat handler should
+wait for the HSM to return a response before erroring.
 
 Signers
 -------

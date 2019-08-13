@@ -1,6 +1,7 @@
 package database // import "go.mozilla.org/autograph/database"
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/url"
@@ -71,11 +72,11 @@ func Connect(config Config) (*Handler, error) {
 	return &Handler{dbfd}, nil
 }
 
-// CheckConnection runs a test query against the database and returns
-// an error if it fails
-func (db *Handler) CheckConnection() error {
+// CheckConnectionContext runs a test query against the database and
+// returns an error if it fails
+func (db *Handler) CheckConnectionContext(ctx context.Context) error {
 	var one uint
-	err := db.QueryRow("SELECT 1").Scan(&one)
+	err := db.QueryRowContext(ctx, "SELECT 1").Scan(&one)
 	if err != nil {
 		return errors.Wrap(err, "Database connection failed")
 	}
@@ -93,7 +94,7 @@ func (db *Handler) Monitor(pollInterval time.Duration, quit chan bool) {
 	for {
 		select {
 		case <-time.After(pollInterval):
-			err := db.CheckConnection()
+			err := db.CheckConnectionContext(context.Background())
 			if err != nil {
 				log.Error(err)
 				break

@@ -68,23 +68,20 @@ type configuration struct {
 	Signers        []signer.Configuration
 	Authorizations []authorization
 	Monitoring     authorization
+	Heartbeat      heartbeatConfig
 }
 
 // An autographer is a running instance of an autograph service,
 // with all signers and permissions configured
 type autographer struct {
-	db          *database.Handler
-	stats       *statsd.Client
-	signers     []signer.Signer
-	auths       map[string]authorization
-	signerIndex map[string]int
-	nonces      *lru.Cache
-	debug       bool
-
-	// hsmHeartbeatSignerConf is the signer conf to use to check
-	// HSM connectivity (set to the first signer with an HSM label
-	// in initHSM) when it is non-nil
-	hsmHeartbeatSignerConf *signer.Configuration
+	db            *database.Handler
+	stats         *statsd.Client
+	signers       []signer.Signer
+	auths         map[string]authorization
+	signerIndex   map[string]int
+	nonces        *lru.Cache
+	debug         bool
+	heartbeatConf *heartbeatConfig
 }
 
 func main() {
@@ -122,7 +119,6 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 	} else {
 		listen = conf.Server.Listen
 	}
-
 	return
 }
 
@@ -242,6 +238,10 @@ func (c *configuration) loadFromFile(path string) error {
 	if err != nil {
 		return err
 	}
+
+	if c.Heartbeat.DBCheckTimeout == time.Duration(int64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(int64(0)) {
+		return errors.Errorf("Missing required heartbeat config section with non-zero timeouts")
+	}
 	return nil
 }
 
@@ -306,7 +306,7 @@ func (a *autographer) addDB(dbConf database.Config) chan bool {
 	}
 	// start a monitoring function that errors if the db
 	// becomes inaccessible
-	closeDBMonitor := make(chan bool)
+	closeDBMonitor := make(chan bool, 1)
 	go a.db.Monitor(dbConf.MonitorPollInterval, closeDBMonitor)
 	log.Print("database connection established")
 	return closeDBMonitor
@@ -327,8 +327,8 @@ func (a *autographer) initHSM(conf configuration) {
 
 			// save the first signer with an HSM label as
 			// the key to test from the heartbeat handler
-			if a.hsmHeartbeatSignerConf == nil && !signerConf.PrivateKeyHasPEMPrefix() {
-				a.hsmHeartbeatSignerConf = &signerConf
+			if a.heartbeatConf != nil && a.heartbeatConf.hsmSignerConf == nil && !signerConf.PrivateKeyHasPEMPrefix() {
+				a.heartbeatConf.hsmSignerConf = &signerConf
 			}
 		}
 	}

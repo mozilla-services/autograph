@@ -23,6 +23,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"go.mozilla.org/autograph/database"
 	"go.mozilla.org/autograph/formats"
@@ -388,60 +389,65 @@ func TestLBHeartbeat(t *testing.T) {
 	}
 }
 
-func TestHeartbeat(t *testing.T) {
-	t.Parallel()
-
-	var TESTCASES = []struct {
-		expectedHTTPStatus int
-		method             string
-	}{
-		{http.StatusOK, `GET`},
-		{http.StatusMethodNotAllowed, `POST`},
-		{http.StatusMethodNotAllowed, `PUT`},
-		{http.StatusMethodNotAllowed, `HEAD`},
-	}
-	for i, testcase := range TESTCASES {
-		req, err := http.NewRequest(testcase.method, "http://foo.bar/__heartbeat__", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		w := httptest.NewRecorder()
-		ag.handleHeartbeat(w, req)
-		if w.Code != testcase.expectedHTTPStatus {
-			t.Fatalf("test case %d failed with code %d but %d was expected",
-				i, w.Code, testcase.expectedHTTPStatus)
-		}
-		if bytes.Equal(w.Body.Bytes(), []byte("{}\n")) {
-			t.Fatalf("test case %d returned unexpected heartbeat body %s expected {}", i, w.Body.Bytes())
-		}
-	}
-}
-
-func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
-	// NB: do not run in parallel with TestHeartbeat*
-	ag.hsmHeartbeatSignerConf = &ag.signers[0].(*contentsignature.ContentSigner).Configuration
-
-	expectedStatus := http.StatusInternalServerError
-	expectedBody := []byte("{\"hsmAccessible\":false}")
-
-	req, err := http.NewRequest(`GET`, "http://foo.bar/__heartbeat__", nil)
+func checkHeartbeatReturnsExpectedStatusAndBody(t *testing.T, name, method string, expectedStatusCode int, expectedBody []byte) {
+	req, err := http.NewRequest(method, "http://foo.bar/__heartbeat__", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	w := httptest.NewRecorder()
 	ag.handleHeartbeat(w, req)
-
-	if w.Code != expectedStatus {
-		t.Fatalf("failed with code %d but %d was expected", w.Code, expectedStatus)
+	if w.Code != expectedStatusCode {
+		t.Fatalf("test case %s failed with code %d but %d was expected",
+			name, w.Code, expectedStatusCode)
 	}
 	if !bytes.Equal(w.Body.Bytes(), expectedBody) {
-		t.Fatalf("got unexpected heartbeat body %s expected %s", w.Body.Bytes(), expectedBody)
+		t.Fatalf("test case %s returned unexpected heartbeat body %q expected %q", name, w.Body.Bytes(), expectedBody)
 	}
-
-	ag.hsmHeartbeatSignerConf = nil
 }
 
-func TestHeartbeatChecksDBStatusOK(t *testing.T) {
+func TestHeartbeat(t *testing.T) {
+	t.Parallel()
+
+	var TESTCASES = []struct {
+		name               string
+		method             string
+		expectedHTTPStatus int
+		expectedBody       string
+	}{
+		{"returns 200 for GET", `GET`, http.StatusOK, "{}"},
+		{"returns 405 for POST", `POST`, http.StatusMethodNotAllowed, "POST method not allowed; endpoint accepts GET only\r\nrequest-id: -\n"},
+		{"returns 405 for PUT", `PUT`, http.StatusMethodNotAllowed, "PUT method not allowed; endpoint accepts GET only\r\nrequest-id: -\n"},
+		{"returns 405 for HEAD", `HEAD`, http.StatusMethodNotAllowed, "HEAD method not allowed; endpoint accepts GET only\r\nrequest-id: -\n"},
+	}
+	for _, testcase := range TESTCASES {
+		checkHeartbeatReturnsExpectedStatusAndBody(t, testcase.name, testcase.method, testcase.expectedHTTPStatus, []byte((testcase.expectedBody)))
+	}
+}
+
+func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
+	// NB: do not run in parallel with TestHeartbeat*
+	ag.heartbeatConf = &heartbeatConfig{
+		HSMCheckTimeout: time.Second,
+		hsmSignerConf:   &ag.signers[0].(*contentsignature.ContentSigner).Configuration,
+	}
+
+	expectedStatus := http.StatusInternalServerError
+	expectedBody := []byte("{\"hsmAccessible\":false}")
+	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 500 for GET with HSM inaccessible", `GET`, expectedStatus, expectedBody)
+
+	ag.heartbeatConf = nil
+}
+
+func TestHeartbeatChecksHSMStatusFailsWhenNotConfigured(t *testing.T) {
+	// NB: do not run in parallel with TestHeartbeat*
+	ag.heartbeatConf = nil
+
+	expectedStatus := http.StatusInternalServerError
+	expectedBody := []byte("Missing heartbeat config\r\nrequest-id: -\n")
+	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 500 for GET without heartbeat config HSM", `GET`, expectedStatus, expectedBody)
+}
+
+func TestHeartbeatChecksDBStatusOKAndTimesout(t *testing.T) {
 	// NB: do not run in parallel with TestHeartbeat* or DB tests
 	db, err := database.Connect(database.Config{
 		Name:     "autograph",
@@ -453,25 +459,30 @@ func TestHeartbeatChecksDBStatusOK(t *testing.T) {
 		t.Fatal(err)
 	}
 	ag.db = db
+	ag.heartbeatConf = &heartbeatConfig{
+		DBCheckTimeout: 2 * time.Second,
+	}
 
+	// check OK run locally requires running DB container
 	expectedStatus := http.StatusOK
 	expectedBody := []byte("{\"dbAccessible\":true}")
+	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 200 for GET with DB accessible", `GET`, expectedStatus, expectedBody)
 
-	req, err := http.NewRequest(`GET`, "http://foo.bar/__heartbeat__", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	w := httptest.NewRecorder()
-	ag.handleHeartbeat(w, req)
+	// drop timeout
+	ag.heartbeatConf.DBCheckTimeout = 1 * time.Nanosecond
+	// check DB request times out
+	expectedStatus = http.StatusOK
+	expectedBody = []byte("{\"dbAccessible\":false}")
+	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 200 for GET with DB time out", `GET`, expectedStatus, expectedBody)
 
-	if w.Code != expectedStatus {
-		t.Fatalf("failed with code %d but %d was expected", w.Code, expectedStatus)
-	}
-	if !bytes.Equal(w.Body.Bytes(), expectedBody) {
-		t.Fatalf("got unexpected heartbeat body %s expected %s", w.Body.Bytes(), expectedBody)
-	}
-
+	// restore longer timeout and close the DB connection
+	ag.heartbeatConf.DBCheckTimeout = 1 * time.Second
 	db.Close()
+	// check DB request still fails
+	expectedStatus = http.StatusOK
+	expectedBody = []byte("{\"dbAccessible\":false}")
+	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 200 for GET with DB inaccessible", `GET`, expectedStatus, expectedBody)
+
 	ag.db = nil
 }
 
