@@ -15,9 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
+	"go.mozilla.org/autograph/signer/genericrsa"
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
@@ -25,19 +27,6 @@ import (
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
-
-// a signatureresponse is returned by autograph to a client with
-// a signature computed on input data
-type signatureresponse struct {
-	Ref        string `json:"ref"`
-	Type       string `json:"type"`
-	Mode       string `json:"mode"`
-	SignerID   string `json:"signer_id"`
-	PublicKey  string `json:"public_key"`
-	Signature  string `json:"signature"`
-	SignedFile string `json:"signed_file,omitempty"`
-	X5U        string `json:"x5u,omitempty"`
-}
 
 type configuration struct {
 	url           string
@@ -136,7 +125,7 @@ func Handler() (err error) {
 	}
 
 	// verify that we got a proper signature response, with valid signatures
-	var responses []signatureresponse
+	var responses []formats.SignatureResponse
 	err = json.Unmarshal(body, &responses)
 	if err != nil {
 		return
@@ -160,6 +149,9 @@ func Handler() (err error) {
 		case mar.Type:
 			log.Printf("Verifying MAR signature from signer %q", response.SignerID)
 			err = verifyMARSignature(response.Signature, response.PublicKey)
+		case genericrsa.Type:
+			log.Printf("Verifying RSA signature from signer %q", response.SignerID)
+			err = genericrsa.VerifyGenericRsaSignatureResponse([]byte(inputdata), response)
 		case rsapss.Type:
 			log.Printf("Verifying RSA-PSS signature from signer %q", response.SignerID)
 			err = verifyRsapssSignature(response.Signature, response.PublicKey)

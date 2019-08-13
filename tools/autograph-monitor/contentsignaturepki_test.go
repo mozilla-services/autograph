@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
 )
 
@@ -131,7 +132,7 @@ func TestVerifyFirefoxStagingRoot(t *testing.T) {
 
 // fixtures -----------------------------------------------------------------
 
-var ValidMonitoringContentSignature = signatureresponse{
+var ValidMonitoringContentSignature = formats.SignatureResponse{
 	Ref:       "1881ks1du39bi26cfmfczu6pf3",
 	Type:      "contentsignature",
 	Mode:      "p384ecdsa",

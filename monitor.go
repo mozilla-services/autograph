@@ -9,6 +9,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer"
 )
 
@@ -41,7 +42,7 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sigerrstrs := make([]string, len(a.signers))
-	sigresps := make([]signatureresponse, len(a.signers))
+	sigresps := make([]formats.SignatureResponse, len(a.signers))
 	var wg sync.WaitGroup
 	for i, s := range a.signers {
 		wg.Add(1)
@@ -68,14 +69,15 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 			}
 
 			sigerrstrs[i] = ""
-			sigresps[i] = signatureresponse{
-				Ref:       id(),
-				Type:      s.Config().Type,
-				Mode:      s.Config().Mode,
-				SignerID:  s.Config().ID,
-				PublicKey: s.Config().PublicKey,
-				Signature: encodedsig,
-				X5U:       s.Config().X5U,
+			sigresps[i] = formats.SignatureResponse{
+				Ref:        id(),
+				Type:       s.Config().Type,
+				Mode:       s.Config().Mode,
+				SignerID:   s.Config().ID,
+				PublicKey:  s.Config().PublicKey,
+				Signature:  encodedsig,
+				X5U:        s.Config().X5U,
+				SignerOpts: s.Config().SignerOpts,
 			}
 		}(i, s)
 	}

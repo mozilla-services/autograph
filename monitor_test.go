@@ -11,9 +11,11 @@ import (
 	"strings"
 	"testing"
 
+	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
+	"go.mozilla.org/autograph/signer/genericrsa"
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
@@ -40,7 +42,7 @@ func TestMonitorPass(t *testing.T) {
 		t.Fatalf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
 	}
 	// verify that we got a proper signature response, with a valid signature
-	var responses []signatureresponse
+	var responses []formats.SignatureResponse
 	err = json.Unmarshal(w.Body.Bytes(), &responses)
 	if err != nil {
 		t.Fatal(err)
@@ -68,6 +70,8 @@ func TestMonitorPass(t *testing.T) {
 				response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
 		case rsapss.Type:
 			err = verifyRsapssSignature(response.Signature, response.PublicKey)
+		case genericrsa.Type:
+			err = genericrsa.VerifyGenericRsaSignatureResponse(MonitoringInputData, response)
 		case pgp.Type, gpg2.Type:
 			// we don't verify pgp signatures. I don't feel good about this, but the openpgp
 			// package is very much a pain to deal with and requires putting the public key
@@ -107,7 +111,7 @@ func TestMonitorHasSignerParameters(t *testing.T) {
 		t.Fatalf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
 	}
 	// verify that we got a proper signature response, with a valid signature
-	var responses []signatureresponse
+	var responses []formats.SignatureResponse
 	err = json.Unmarshal(w.Body.Bytes(), &responses)
 	if err != nil {
 		t.Fatal(err)

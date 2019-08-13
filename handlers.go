@@ -18,29 +18,9 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer"
 )
-
-// a signaturerequest is sent by an autograph client to request
-// a signature on input data
-type signaturerequest struct {
-	Input   string `json:"input"`
-	KeyID   string `json:"keyid,omitempty"`
-	Options interface{}
-}
-
-// a signatureresponse is returned by autograph to a client with
-// a signature computed on input data
-type signatureresponse struct {
-	Ref        string `json:"ref"`
-	Type       string `json:"type"`
-	Mode       string `json:"mode"`
-	SignerID   string `json:"signer_id"`
-	PublicKey  string `json:"public_key"`
-	Signature  string `json:"signature,omitempty"`
-	SignedFile string `json:"signed_file,omitempty"`
-	X5U        string `json:"x5u,omitempty"`
-}
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
 // and calls the signers to generate signature responses.
@@ -88,7 +68,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
 		return
 	}
-	var sigreqs []signaturerequest
+	var sigreqs []formats.SignatureRequest
 	err = json.Unmarshal(body, &sigreqs)
 	if a.stats != nil {
 		sendStatsErr := a.stats.Timing("body_unmarshaled", time.Since(starttime), nil, 1.0)
@@ -108,7 +88,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	if a.debug {
 		fmt.Printf("signature request\n-----------------\n%s\n", body)
 	}
-	sigresps := make([]signatureresponse, len(sigreqs))
+	sigresps := make([]formats.SignatureResponse, len(sigreqs))
 	// Each signature requested in the http request body is processed individually.
 	// For each, a signer is looked up, and used to compute a raw signature
 	// the signature is then encoded appropriately, and added to the response slice
@@ -135,7 +115,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, r, http.StatusUnauthorized, "%v", err)
 			return
 		}
-		sigresps[i] = signatureresponse{
+		sigresps[i] = formats.SignatureResponse{
 			Ref:        id(),
 			Type:       a.signers[signerID].Config().Type,
 			Mode:       a.signers[signerID].Config().Mode,
@@ -143,6 +123,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			PublicKey:  a.signers[signerID].Config().PublicKey,
 			SignedFile: base64.StdEncoding.EncodeToString(signedfile),
 			X5U:        a.signers[signerID].Config().X5U,
+			SignerOpts: a.signers[signerID].Config().SignerOpts,
 		}
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {

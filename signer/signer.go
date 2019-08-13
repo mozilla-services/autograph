@@ -139,6 +139,17 @@ type Configuration struct {
 	// CaCert is the certificate of the root of the pki, when used
 	CaCert string `json:"cacert,omitempty"`
 
+	// Hash is a hash algorithm like 'sha1' or 'sha256'
+	Hash string `json:"hash,omitempty"`
+
+	// SaltLength controls the length of the salt used in a RSA PSS
+	// signature. It can either be a number of bytes, or one of the special
+	// PSSSaltLength constants from the rsa package.
+	SaltLength int `json:"saltlength,omitempty"`
+
+	// SignerOpts contains options for signing with a Signer
+	SignerOpts crypto.SignerOpts `json:"signer_opts,omitempty"`
+
 	isHsmAvailable bool
 	hsmCtx         *pkcs11.Ctx
 }

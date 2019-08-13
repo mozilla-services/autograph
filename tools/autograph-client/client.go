@@ -19,8 +19,10 @@ import (
 	"strings"
 	"time"
 
+	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/contentsignature"
+	"go.mozilla.org/autograph/signer/genericrsa"
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
@@ -28,22 +30,6 @@ import (
 	"go.mozilla.org/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
-
-type signaturerequest struct {
-	Input   string `json:"input"`
-	KeyID   string `json:"keyid"`
-	Options interface{}
-}
-
-type signatureresponse struct {
-	Ref        string `json:"ref"`
-	Type       string `json:"type"`
-	SignerID   string `json:"signer_id"`
-	PublicKey  string `json:"public_key,omitempty"`
-	Signature  string `json:"signature"`
-	SignedFile string `json:"signed_file"`
-	X5U        string `json:"x5u,omitempty"`
-}
 
 type requestType int
 
@@ -79,12 +65,12 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, rsapssHash, zipMethodOption string
-		iter, maxworkers, sa                                                                                                    int
-		debug                                                                                                                   bool
-		err                                                                                                                     error
-		requests                                                                                                                []signaturerequest
-		algs                                                                                                                    coseAlgs
+		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, zipMethodOption string
+		iter, maxworkers, sa                                                                                        int
+		debug                                                                                                       bool
+		err                                                                                                         error
+		requests                                                                                                    []formats.SignatureRequest
+		algs                                                                                                        coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -133,8 +119,8 @@ examples:
 * sign some data with gpg2:
         $ go run client.go -d $(echo 'hello' | base64) -k pgpsubkey -o /tmp/testsig.pgp -ko /tmp/testkey.asc
 
-* sign SHA1 hashed data with rsapss:
-        $ go run client.go -D -wa $(echo hi | sha1sum -b | cut -d ' ' -f 1 | xxd -r -p | base64) -k dummyrsapss -o signed-hash.out -ko /tmp/testkey.pub
+* sign SHA1 hashed data with rsa pss:
+        $ go run client.go -D -a $(echo hi | sha1sum -b | cut -d ' ' -f 1 | xxd -r -p | base64) -k dummyrsapss -o signed-hash.out -ko /tmp/testkey.pub
 `)
 	}
 	flag.StringVar(&userid, "u", "alice", "User ID")
@@ -150,7 +136,6 @@ examples:
 	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
 	flag.StringVar(&cn, "cn", "", "when signing XPI, sets the CN to the add-on ID")
 	flag.IntVar(&sa, "sa", 0, "when signing MAR hashes, sets the Signature Algorithm")
-	flag.StringVar(&rsapssHash, "wa", "base64(sha1(data))", "for RSA-PSS Base64 SHA1 hash to sign using the /sign/hash endpoint")
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
 	flag.StringVar(&pk7digest, "pk7digest", "", "an optional PK7 digest algorithm to use for XPI file signing, either 'sha1' (default) or 'sha256'.")
 	flag.StringVar(&zipMethodOption, "zip", "", "an optional param for APK file signing. Defaults to '' to compress all files (the other options are 'all' which does the same thing and 'passthrough' which doesn't change file compression")
@@ -166,10 +151,6 @@ examples:
 		log.Printf("signing hash %q", hash)
 		url = url + "/sign/hash"
 		data = hash
-	} else if rsapssHash != "base64(sha1(data))" {
-		log.Printf("signing RSA-PSS hash %q", rsapssHash)
-		url = url + "/sign/hash"
-		data = rsapssHash
 	} else if infile != "/path/to/file" {
 		log.Printf("signing file %q", infile)
 		url = url + "/sign/file"
@@ -179,7 +160,7 @@ examples:
 		}
 		data = base64.StdEncoding.EncodeToString(filebytes)
 	}
-	request := signaturerequest{
+	request := formats.SignatureRequest{
 		Input: data,
 		KeyID: keyid,
 	}
@@ -278,7 +259,7 @@ examples:
 				log.Fatalf("%s %s", resp.Status, body)
 			}
 			// verify that we got a proper signature response, with a valid signature
-			var responses []signatureresponse
+			var responses []formats.SignatureResponse
 			err = json.Unmarshal(body, &responses)
 			if err != nil {
 				log.Fatal(err)
@@ -336,8 +317,18 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
+				case genericrsa.Type:
+					err = genericrsa.VerifyGenericRsaSignatureResponse(input, response)
+					if err != nil {
+						log.Fatal(err)
+					}
+					sigStatus = true
+					sigData, err = base64.StdEncoding.DecodeString(response.Signature)
+					if err != nil {
+						log.Fatal(err)
+					}
 				case rsapss.Type:
-					err = rsapss.VerifySignatureFromB64(rsapssHash, response.Signature, response.PublicKey)
+					err = rsapss.VerifySignatureFromB64(requests[i].Input, response.Signature, response.PublicKey)
 					if err != nil {
 						log.Fatalf("got error verifying RSA-PSS response: %s", err)
 					}
@@ -401,7 +392,7 @@ func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash,
 }
 
 // verify an ecdsa signature
-func verifyContentSignature(input []byte, resp signatureresponse, endpoint string) bool {
+func verifyContentSignature(input []byte, resp formats.SignatureResponse, endpoint string) bool {
 	keyBytes, err := base64.StdEncoding.DecodeString(resp.PublicKey)
 	if err != nil {
 		log.Fatal(err)
@@ -438,7 +429,7 @@ func verifyContentSignature(input []byte, resp signatureresponse, endpoint strin
 	return ecdsa.Verify(pubKey, input, sig.R, sig.S)
 }
 
-func verifyXPI(input []byte, req signaturerequest, resp signatureresponse, reqType requestType, roots *x509.CertPool) bool {
+func verifyXPI(input []byte, req formats.SignatureRequest, resp formats.SignatureResponse, reqType requestType, roots *x509.CertPool) bool {
 	switch reqType {
 	case requestTypeData:
 		sig, err := xpi.Unmarshal(resp.Signature, input)

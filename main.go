@@ -35,6 +35,7 @@ import (
 	"go.mozilla.org/autograph/signer/contentsignature"
 
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
+	"go.mozilla.org/autograph/signer/genericrsa"
 	"go.mozilla.org/autograph/signer/gpg2"
 	"go.mozilla.org/autograph/signer/mar"
 	"go.mozilla.org/autograph/signer/pgp"
@@ -403,6 +404,11 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			}
 		case gpg2.Type:
 			s, err = gpg2.New(signerConf)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+			}
+		case genericrsa.Type:
+			s, err = genericrsa.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
