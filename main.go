@@ -131,6 +131,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	// initialize signers from the configuration
 	// and store them into the autographer handler
 	ag = newAutographer(conf.Server.NonceCacheSize)
+	ag.heartbeatConf = &conf.Heartbeat
 
 	if conf.Database.Name != "" {
 		// ignore the monitor close chan since it will stop
