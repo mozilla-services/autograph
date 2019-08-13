@@ -17,8 +17,8 @@ hsm:
 # When the DB or HSM is enabled use these timeouts for the
 # /__heartbeat__ handler
 heartbeat:
-    hsmchecktimeout: 10ms
-    dbchecktimeout: 15ms
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 # When using a postgres database, set the config below:
 database:

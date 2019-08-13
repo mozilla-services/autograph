@@ -34,8 +34,8 @@ statsd:
 # When the DB or HSM is enabled use these timeouts for the
 # /__heartbeat__ handler
 heartbeat:
-    hsmchecktimeout: 10ms
-    dbchecktimeout: 15ms
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 # The keys below are testing keys that do not grant any power
 signers:

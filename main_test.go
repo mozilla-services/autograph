@@ -74,8 +74,8 @@ server:
     noncecachesize: 64
 
 heartbeat:
-    hsmchecktimeout: 10ms
-    dbchecktimeout: 15ms
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
     - id: testsigner1
@@ -96,8 +96,8 @@ server:
     noncecachesize: 64
 
 heartbeat:
-    hsmchecktimeout: 10ms
-    dbchecktimeout: 15ms
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
     - id: testsigner1
@@ -168,8 +168,8 @@ server:
 	noncecachesize: 64
 
 heartbeat:
-    hsmchecktimeout: 10ms
-    dbchecktimeout: 15ms
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
       - privatekey: |
@@ -231,8 +231,8 @@ server:
     noncecachesize: 64
 
 heartbeat:
-    hsmchecktimeout: 10ms
-    dbchecktimeout: 15ms
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
     - id: testsigner1
@@ -286,8 +286,8 @@ server:
     noncecachesize: 64
 
 heartbeat:
-    hsmchecktimeout: 10ms
-    dbchecktimeout: 15ms
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
     - id: testsigner1
@@ -356,8 +356,8 @@ server:
     noncecachesize: 64
 
 heartbeat:
-    hsmchecktimeout: 10ms
-    dbchecktimeout: 15ms
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
 
 signers:
     - id: testsigner1
