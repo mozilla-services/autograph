@@ -74,8 +74,7 @@ jobs:
           name: Report coverage
           command: |
             cd $GOPATH/src/go.mozilla.org/autograph
-            # disabling while coveralls is down to fix DB
-            # $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci
+            $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci
 
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
