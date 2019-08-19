@@ -40,6 +40,7 @@ import (
 const (
 	SubscriptionID          = "AZURE_SUBSCRIPTION_ID"
 	TenantID                = "AZURE_TENANT_ID"
+	AuxiliaryTenantIDs      = "AZURE_AUXILIARY_TENANT_IDS"
 	ClientID                = "AZURE_CLIENT_ID"
 	ClientSecret            = "AZURE_CLIENT_SECRET"
 	CertificatePath         = "AZURE_CERTIFICATE_PATH"
@@ -96,6 +97,7 @@ func GetSettingsFromEnvironment() (s EnvironmentSettings, err error) {
 	}
 	s.setValue(SubscriptionID)
 	s.setValue(TenantID)
+	s.setValue(AuxiliaryTenantIDs)
 	s.setValue(ClientID)
 	s.setValue(ClientSecret)
 	s.setValue(CertificatePath)
@@ -145,6 +147,12 @@ func (settings EnvironmentSettings) GetClientCredentials() (ClientCredentialsCon
 	config := NewClientCredentialsConfig(clientID, secret, tenantID)
 	config.AADEndpoint = settings.Environment.ActiveDirectoryEndpoint
 	config.Resource = settings.Values[Resource]
+	if auxTenants, ok := settings.Values[AuxiliaryTenantIDs]; ok {
+		config.AuxTenants = strings.Split(auxTenants, ";")
+		for i := range config.AuxTenants {
+			config.AuxTenants[i] = strings.TrimSpace(config.AuxTenants[i])
+		}
+	}
 	return config, nil
 }
 
@@ -349,6 +357,15 @@ func (settings FileSettings) getAADEndpoint() string {
 	return azure.PublicCloud.ActiveDirectoryEndpoint
 }
 
+// ServicePrincipalTokenFromClientCredentials creates a ServicePrincipalToken from the available client credentials.
+func (settings FileSettings) ServicePrincipalTokenFromClientCredentials(baseURI string) (*adal.ServicePrincipalToken, error) {
+	resource, err := settings.getResourceForToken(baseURI)
+	if err != nil {
+		return nil, err
+	}
+	return settings.ServicePrincipalTokenFromClientCredentialsWithResource(resource)
+}
+
 // ClientCredentialsAuthorizer creates an authorizer from the available client credentials.
 func (settings FileSettings) ClientCredentialsAuthorizer(baseURI string) (autorest.Authorizer, error) {
 	resource, err := settings.getResourceForToken(baseURI)
@@ -358,8 +375,9 @@ func (settings FileSettings) ClientCredentialsAuthorizer(baseURI string) (autore
 	return settings.ClientCredentialsAuthorizerWithResource(resource)
 }
 
-// ClientCredentialsAuthorizerWithResource creates an authorizer from the available client credentials and the specified resource.
-func (settings FileSettings) ClientCredentialsAuthorizerWithResource(resource string) (autorest.Authorizer, error) {
+// ServicePrincipalTokenFromClientCredentialsWithResource creates a ServicePrincipalToken
+// from the available client credentials and the specified resource.
+func (settings FileSettings) ServicePrincipalTokenFromClientCredentialsWithResource(resource string) (*adal.ServicePrincipalToken, error) {
 	if _, ok := settings.Values[ClientSecret]; !ok {
 		return nil, errors.New("missing client secret")
 	}
@@ -367,13 +385,35 @@ func (settings FileSettings) ClientCredentialsAuthorizerWithResource(resource st
 	if err != nil {
 		return nil, err
 	}
+	return adal.NewServicePrincipalToken(*config, settings.Values[ClientID], settings.Values[ClientSecret], resource)
+}
 
-	spToken, err := adal.NewServicePrincipalToken(*config, settings.Values[ClientID], settings.Values[ClientSecret], resource)
+func (settings FileSettings) clientCertificateConfigWithResource(resource string) (ClientCertificateConfig, error) {
+	if _, ok := settings.Values[CertificatePath]; !ok {
+		return ClientCertificateConfig{}, errors.New("missing certificate path")
+	}
+	cfg := NewClientCertificateConfig(settings.Values[CertificatePath], settings.Values[CertificatePassword], settings.Values[ClientID], settings.Values[TenantID])
+	cfg.AADEndpoint = settings.getAADEndpoint()
+	cfg.Resource = resource
+	return cfg, nil
+}
+
+// ClientCredentialsAuthorizerWithResource creates an authorizer from the available client credentials and the specified resource.
+func (settings FileSettings) ClientCredentialsAuthorizerWithResource(resource string) (autorest.Authorizer, error) {
+	spToken, err := settings.ServicePrincipalTokenFromClientCredentialsWithResource(resource)
 	if err != nil {
 		return nil, err
 	}
-
 	return autorest.NewBearerAuthorizer(spToken), nil
+}
+
+// ServicePrincipalTokenFromClientCertificate creates a ServicePrincipalToken from the available certificate credentials.
+func (settings FileSettings) ServicePrincipalTokenFromClientCertificate(baseURI string) (*adal.ServicePrincipalToken, error) {
+	resource, err := settings.getResourceForToken(baseURI)
+	if err != nil {
+		return nil, err
+	}
+	return settings.ServicePrincipalTokenFromClientCertificateWithResource(resource)
 }
 
 // ClientCertificateAuthorizer creates an authorizer from the available certificate credentials.
@@ -385,14 +425,21 @@ func (settings FileSettings) ClientCertificateAuthorizer(baseURI string) (autore
 	return settings.ClientCertificateAuthorizerWithResource(resource)
 }
 
+// ServicePrincipalTokenFromClientCertificateWithResource creates a ServicePrincipalToken from the available certificate credentials.
+func (settings FileSettings) ServicePrincipalTokenFromClientCertificateWithResource(resource string) (*adal.ServicePrincipalToken, error) {
+	cfg, err := settings.clientCertificateConfigWithResource(resource)
+	if err != nil {
+		return nil, err
+	}
+	return cfg.ServicePrincipalToken()
+}
+
 // ClientCertificateAuthorizerWithResource creates an authorizer from the available certificate credentials and the specified resource.
 func (settings FileSettings) ClientCertificateAuthorizerWithResource(resource string) (autorest.Authorizer, error) {
-	if _, ok := settings.Values[CertificatePath]; !ok {
-		return nil, errors.New("missing certificate path")
+	cfg, err := settings.clientCertificateConfigWithResource(resource)
+	if err != nil {
+		return nil, err
 	}
-	cfg := NewClientCertificateConfig(settings.Values[CertificatePath], settings.Values[CertificatePassword], settings.Values[ClientID], settings.Values[TenantID])
-	cfg.AADEndpoint = settings.getAADEndpoint()
-	cfg.Resource = resource
 	return cfg.Authorizer()
 }
 
@@ -507,23 +554,43 @@ type ClientCredentialsConfig struct {
 	ClientID     string
 	ClientSecret string
 	TenantID     string
+	AuxTenants   []string
 	AADEndpoint  string
 	Resource     string
 }
 
-// Authorizer gets the authorizer from client credentials.
-func (ccc ClientCredentialsConfig) Authorizer() (autorest.Authorizer, error) {
+// ServicePrincipalToken creates a ServicePrincipalToken from client credentials.
+func (ccc ClientCredentialsConfig) ServicePrincipalToken() (*adal.ServicePrincipalToken, error) {
 	oauthConfig, err := adal.NewOAuthConfig(ccc.AADEndpoint, ccc.TenantID)
 	if err != nil {
 		return nil, err
 	}
+	return adal.NewServicePrincipalToken(*oauthConfig, ccc.ClientID, ccc.ClientSecret, ccc.Resource)
+}
 
-	spToken, err := adal.NewServicePrincipalToken(*oauthConfig, ccc.ClientID, ccc.ClientSecret, ccc.Resource)
+// MultiTenantServicePrincipalToken creates a MultiTenantServicePrincipalToken from client credentials.
+func (ccc ClientCredentialsConfig) MultiTenantServicePrincipalToken() (*adal.MultiTenantServicePrincipalToken, error) {
+	oauthConfig, err := adal.NewMultiTenantOAuthConfig(ccc.AADEndpoint, ccc.TenantID, ccc.AuxTenants, adal.OAuthOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get oauth token from client credentials: %v", err)
+		return nil, err
 	}
+	return adal.NewMultiTenantServicePrincipalToken(oauthConfig, ccc.ClientID, ccc.ClientSecret, ccc.Resource)
+}
 
-	return autorest.NewBearerAuthorizer(spToken), nil
+// Authorizer gets the authorizer from client credentials.
+func (ccc ClientCredentialsConfig) Authorizer() (autorest.Authorizer, error) {
+	if len(ccc.AuxTenants) == 0 {
+		spToken, err := ccc.ServicePrincipalToken()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get SPT from client credentials: %v", err)
+		}
+		return autorest.NewBearerAuthorizer(spToken), nil
+	}
+	mtSPT, err := ccc.MultiTenantServicePrincipalToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get multitenant SPT from client credentials: %v", err)
+	}
+	return autorest.NewMultiTenantServicePrincipalTokenAuthorizer(mtSPT), nil
 }
 
 // ClientCertificateConfig provides the options to get a bearer authorizer from a client certificate.
@@ -536,26 +603,29 @@ type ClientCertificateConfig struct {
 	Resource            string
 }
 
-// Authorizer gets an authorizer object from client certificate.
-func (ccc ClientCertificateConfig) Authorizer() (autorest.Authorizer, error) {
+// ServicePrincipalToken creates a ServicePrincipalToken from client certificate.
+func (ccc ClientCertificateConfig) ServicePrincipalToken() (*adal.ServicePrincipalToken, error) {
 	oauthConfig, err := adal.NewOAuthConfig(ccc.AADEndpoint, ccc.TenantID)
-
+	if err != nil {
+		return nil, err
+	}
 	certData, err := ioutil.ReadFile(ccc.CertificatePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read the certificate file (%s): %v", ccc.CertificatePath, err)
 	}
-
 	certificate, rsaPrivateKey, err := decodePkcs12(certData, ccc.CertificatePassword)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode pkcs12 certificate while creating spt: %v", err)
 	}
+	return adal.NewServicePrincipalTokenFromCertificate(*oauthConfig, ccc.ClientID, certificate, rsaPrivateKey, ccc.Resource)
+}
 
-	spToken, err := adal.NewServicePrincipalTokenFromCertificate(*oauthConfig, ccc.ClientID, certificate, rsaPrivateKey, ccc.Resource)
-
+// Authorizer gets an authorizer object from client certificate.
+func (ccc ClientCertificateConfig) Authorizer() (autorest.Authorizer, error) {
+	spToken, err := ccc.ServicePrincipalToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oauth token from certificate auth: %v", err)
 	}
-
 	return autorest.NewBearerAuthorizer(spToken), nil
 }
 
@@ -573,26 +643,25 @@ func (dfc DeviceFlowConfig) Authorizer() (autorest.Authorizer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oauth token from device flow: %v", err)
 	}
-
 	return autorest.NewBearerAuthorizer(spToken), nil
 }
 
 // ServicePrincipalToken gets the service principal token from device flow.
 func (dfc DeviceFlowConfig) ServicePrincipalToken() (*adal.ServicePrincipalToken, error) {
-	oauthClient := &autorest.Client{}
 	oauthConfig, err := adal.NewOAuthConfig(dfc.AADEndpoint, dfc.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	oauthClient := &autorest.Client{}
 	deviceCode, err := adal.InitiateDeviceAuth(oauthClient, *oauthConfig, dfc.ClientID, dfc.Resource)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start device auth flow: %s", err)
 	}
-
 	log.Println(*deviceCode.Message)
-
 	token, err := adal.WaitForUserCompletion(oauthClient, deviceCode)
 	if err != nil {
 		return nil, fmt.Errorf("failed to finish device auth flow: %s", err)
 	}
-
 	return adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, dfc.ClientID, dfc.Resource, *token)
 }
 
@@ -620,17 +689,21 @@ type UsernamePasswordConfig struct {
 	Resource    string
 }
 
+// ServicePrincipalToken creates a ServicePrincipalToken from username and password.
+func (ups UsernamePasswordConfig) ServicePrincipalToken() (*adal.ServicePrincipalToken, error) {
+	oauthConfig, err := adal.NewOAuthConfig(ups.AADEndpoint, ups.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	return adal.NewServicePrincipalTokenFromUsernamePassword(*oauthConfig, ups.ClientID, ups.Username, ups.Password, ups.Resource)
+}
+
 // Authorizer gets the authorizer from a username and a password.
 func (ups UsernamePasswordConfig) Authorizer() (autorest.Authorizer, error) {
-
-	oauthConfig, err := adal.NewOAuthConfig(ups.AADEndpoint, ups.TenantID)
-
-	spToken, err := adal.NewServicePrincipalTokenFromUsernamePassword(*oauthConfig, ups.ClientID, ups.Username, ups.Password, ups.Resource)
-
+	spToken, err := ups.ServicePrincipalToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oauth token from username and password auth: %v", err)
 	}
-
 	return autorest.NewBearerAuthorizer(spToken), nil
 }
 
