@@ -211,10 +211,8 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	if err != nil {
 		return nil, errors.Wrap(err, "gpg2: failed to create stdin pipe for sign cmd")
 	}
-	go func() {
-		defer stdin.Close()
-		io.WriteString(stdin, s.passphrase)
-	}()
+	io.WriteString(stdin, s.passphrase)
+	stdin.Close()
 	out, err := gpgVerifySig.CombinedOutput()
 	if err != nil {
 		return nil, errors.Wrapf(err, "gpg2: failed to sign input %s\n%s", err, out)
