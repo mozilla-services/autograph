@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sync"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -28,6 +29,11 @@ const (
 )
 
 var isAlphanumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
+
+// gpg2 fails when multiple signers are called at in parallel so we serialize
+// invoking this signer through a global mutex. For more info on this particular
+// piece of gpg sadness, see https://answers.launchpad.net/duplicity/+question/296122
+var serializeSigning sync.Mutex
 
 // GPG2Signer holds the configuration of the signer
 type GPG2Signer struct {
@@ -192,6 +198,10 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	}
 	defer os.Remove(tmpContentFile.Name())
 	ioutil.WriteFile(tmpContentFile.Name(), data, 0755)
+
+	// take a mutex to prevent multiple invocations of gpg in parallel
+	serializeSigning.Lock()
+	defer serializeSigning.Unlock()
 
 	gpgVerifySig := exec.Command("gpg",
 		"--no-default-keyring",
