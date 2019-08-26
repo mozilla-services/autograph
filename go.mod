@@ -15,7 +15,7 @@ require (
 	github.com/Azure/go-autorest/logger v0.1.0
 	github.com/Azure/go-autorest/tracing v0.5.0
 	github.com/DataDog/datadog-go v2.2.0+incompatible
-	github.com/ThalesIgnite/crypto11 v1.0.2
+	github.com/ThalesIgnite/crypto11 v0.1.0
 	github.com/aws/aws-lambda-go v1.12.1
 	github.com/aws/aws-sdk-go v1.23.4
 	github.com/census-instrumentation/opencensus-proto v0.2.1
@@ -38,6 +38,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/ugorji/go v0.0.0-20180112141927-9831f2c3ac10
+	github.com/vitessio/vitess v2.1.1+incompatible // indirect
 	github.com/youtube/vitess v2.1.1+incompatible
 	go.mozilla.org/cose v0.0.0-20190501152713-f9a30ead5d8a
 	go.mozilla.org/gopgagent v0.0.0-20170926210634-4d7ea76ff71a

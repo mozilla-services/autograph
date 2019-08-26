@@ -32,6 +32,8 @@ github.com/Azure/go-autorest/tracing v0.5.0/go.mod h1:r/s2XiOKccPW3HrqB+W0TQzfbt
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/DataDog/datadog-go v2.2.0+incompatible h1:V5BKkxACZLjzHjSgBbr2gvLA2Ae49yhc6CSY7MLy5k4=
 github.com/DataDog/datadog-go v2.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
+github.com/ThalesIgnite/crypto11 v0.1.0 h1:wh3jljzD2GLFcWZQlT5RC2yHxt10gdxhZg/TnFiFhaQ=
+github.com/ThalesIgnite/crypto11 v0.1.0/go.mod h1:DdvQlzHSrdXwhcXCWY6o1HquZycJyAwsXXpKlk1+rww=
 github.com/ThalesIgnite/crypto11 v1.0.2 h1:Uo6et1kPRpIHCbYmdV8ZrvA2ovzHu4zNy5fyhFWuJLs=
 github.com/ThalesIgnite/crypto11 v1.0.2/go.mod h1:gvzQcWFdCGJwPa4S/d1aZKo7hDyfycbCz4TipaFpaJE=
 github.com/aws/aws-lambda-go v1.12.1 h1:rMToYOcPFYDixQ7VNNPg78LmiqPgWD5f8zdLL+EsDAk=
