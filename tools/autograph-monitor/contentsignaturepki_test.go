@@ -4,7 +4,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -34,7 +33,7 @@ func serverAndWaitForSetup(handlerURI, chain, port string) {
 func TestVerifyContentSignature(t *testing.T) {
 	serverAndWaitForSetup("/normandychain", NormandyDevChain2021, "64320")
 
-	err = verifyContentSignature(ValidMonitoringContentSignature)
+	err := verifyContentSignature(ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}
