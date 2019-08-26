@@ -25,25 +25,21 @@ import (
 	"crypto/cipher"
 	"errors"
 	"fmt"
-
 	"github.com/miekg/pkcs11"
 )
 
 // cipher.AEAD ----------------------------------------------------------
 
-// A PaddingMode is used by a block cipher (see NewCBC).
-type PaddingMode int
-
 const (
-	// PaddingNone represents a block cipher with no padding.
-	PaddingNone PaddingMode = iota
+	// PaddingNone represents a block cipher with no padding. (See NewCBC.)
+	PaddingNone = iota
 
-	// PaddingPKCS represents a block cipher used with PKCS#7 padding.
+	// PaddingPKCS represents a block cipher used with PKCS#7 padding. (See NewCBC.)
 	PaddingPKCS
 )
 
 type genericAead struct {
-	key *SecretKey
+	key *PKCS11SecretKey
 
 	overhead int
 
@@ -57,21 +53,22 @@ type genericAead struct {
 //
 // This depends on the HSM supporting the CKM_*_GCM mechanism. If it is not supported
 // then you must use cipher.NewGCM; it will be slow.
-func (key *SecretKey) NewGCM() (cipher.AEAD, error) {
+func (key *PKCS11SecretKey) NewGCM() (g cipher.AEAD, err error) {
 	if key.Cipher.GCMMech == 0 {
-		return nil, fmt.Errorf("GCM not implemented for key type %#x", key.Cipher.GenParams[0].KeyType)
+		err = fmt.Errorf("GCM not implemented for key type %#x", key.Cipher.GenParams[0].KeyType)
+		return
 	}
-
-	g := genericAead{
+	g = genericAead{
 		key:       key,
 		overhead:  16,
 		nonceSize: 12,
-		makeMech: func(nonce []byte, additionalData []byte) ([]*pkcs11.Mechanism, error) {
+		makeMech: func(nonce []byte, additionalData []byte) (mech []*pkcs11.Mechanism, error error) {
 			params := pkcs11.NewGCMParams(nonce, additionalData, 16*8 /*bits*/)
-			return []*pkcs11.Mechanism{pkcs11.NewMechanism(key.Cipher.GCMMech, params)}, nil
+			mech = []*pkcs11.Mechanism{pkcs11.NewMechanism(key.Cipher.GCMMech, params)}
+			return
 		},
 	}
-	return g, nil
+	return
 }
 
 // NewCBC returns a given cipher wrapped in CBC mode.
@@ -79,33 +76,34 @@ func (key *SecretKey) NewGCM() (cipher.AEAD, error) {
 // Despite the cipher.AEAD return type, there is no support for additional data and no authentication.
 // This method exists to provide a convenient way to do bulk (possibly padded) CBC encryption.
 // Think carefully before passing the cipher.AEAD to any consumer that expects authentication.
-func (key *SecretKey) NewCBC(paddingMode PaddingMode) (cipher.AEAD, error) {
-
-	var pkcsMech uint
-
-	switch paddingMode {
-	case PaddingNone:
-		pkcsMech = key.Cipher.CBCMech
-	case PaddingPKCS:
-		pkcsMech = key.Cipher.CBCPKCSMech
-	default:
-		return nil, errors.New("unrecognized padding mode")
-	}
-
-	g := genericAead{
+func (key *PKCS11SecretKey) NewCBC(paddingMode int) (g cipher.AEAD, err error) {
+	g = genericAead{
 		key:       key,
 		overhead:  0,
 		nonceSize: key.BlockSize(),
-		makeMech: func(nonce []byte, additionalData []byte) ([]*pkcs11.Mechanism, error) {
+		makeMech: func(nonce []byte, additionalData []byte) (mech []*pkcs11.Mechanism, error error) {
 			if len(additionalData) > 0 {
-				return nil, errors.New("additional data not supported for CBC mode")
+				err = errors.New("additional data not supported for CBC mode")
 			}
-
-			return []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcsMech, nonce)}, nil
+			var pkcsMech uint
+			switch paddingMode {
+			case PaddingNone:
+				pkcsMech = key.Cipher.CBCMech
+			case PaddingPKCS:
+				pkcsMech = key.Cipher.CBCPKCSMech
+			default:
+				err = errors.New("unrecognized padding mode")
+				return
+			}
+			if pkcsMech == 0 {
+				err = errors.New("unsupported padding mode")
+				return
+			}
+			mech = []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcsMech, nonce)}
+			return
 		},
 	}
-
-	return g, nil
+	return
 }
 
 func (g genericAead) NonceSize() int {
@@ -118,16 +116,16 @@ func (g genericAead) Overhead() int {
 
 func (g genericAead) Seal(dst, nonce, plaintext, additionalData []byte) []byte {
 	var result []byte
-	if err := g.key.context.withSession(func(session *pkcs11Session) (err error) {
+	if err := withSession(g.key.Slot, func(session *PKCS11Session) (err error) {
 		var mech []*pkcs11.Mechanism
 		if mech, err = g.makeMech(nonce, additionalData); err != nil {
 			return
 		}
-		if err = session.ctx.EncryptInit(session.handle, mech, g.key.handle); err != nil {
+		if err = session.Ctx.EncryptInit(session.Handle, mech, g.key.Handle); err != nil {
 			err = fmt.Errorf("C_EncryptInit: %v", err)
 			return
 		}
-		if result, err = session.ctx.Encrypt(session.handle, plaintext); err != nil {
+		if result, err = session.Ctx.Encrypt(session.Handle, plaintext); err != nil {
 			err = fmt.Errorf("C_Encrypt: %v", err)
 			return
 		}
@@ -142,16 +140,16 @@ func (g genericAead) Seal(dst, nonce, plaintext, additionalData []byte) []byte {
 
 func (g genericAead) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte, error) {
 	var result []byte
-	if err := g.key.context.withSession(func(session *pkcs11Session) (err error) {
+	if err := withSession(g.key.Slot, func(session *PKCS11Session) (err error) {
 		var mech []*pkcs11.Mechanism
 		if mech, err = g.makeMech(nonce, additionalData); err != nil {
 			return
 		}
-		if err = session.ctx.DecryptInit(session.handle, mech, g.key.handle); err != nil {
+		if err = session.Ctx.DecryptInit(session.Handle, mech, g.key.Handle); err != nil {
 			err = fmt.Errorf("C_DecryptInit: %v", err)
 			return
 		}
-		if result, err = session.ctx.Decrypt(session.handle, ciphertext); err != nil {
+		if result, err = session.Ctx.Decrypt(session.Handle, ciphertext); err != nil {
 			err = fmt.Errorf("C_Decrypt: %v", err)
 			return
 		}

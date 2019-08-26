@@ -21,30 +21,20 @@
 
 package crypto11
 
-import (
-	"io"
-)
-
-// NewRandomReader returns a reader for the random number generator on the token.
-func (c *Context) NewRandomReader() (io.Reader, error) {
-	if c.closed.Get() {
-		return nil, errClosed
-	}
-
-	return pkcs11RandReader{c}, nil
+// PKCS11RandReader is a random number reader that uses PKCS#11.
+type PKCS11RandReader struct {
 }
 
-// pkcs11RandReader is a random number reader that uses PKCS#11.
-type pkcs11RandReader struct {
-	context *Context
-}
-
-// This implements the Reader interface for pkcs11RandReader.
-func (r pkcs11RandReader) Read(data []byte) (n int, err error) {
+// Read fills data with random bytes generated via PKCS#11 using the default slot.
+//
+// This implements the Reader interface for PKCS11RandReader.
+func (reader PKCS11RandReader) Read(data []byte) (n int, err error) {
 	var result []byte
-
-	if err = r.context.withSession(func(session *pkcs11Session) error {
-		result, err = r.context.ctx.GenerateRandom(session.handle, len(data))
+	if instance.ctx == nil {
+		return 0, ErrNotConfigured
+	}
+	if err = withSession(instance.slot, func(session *PKCS11Session) error {
+		result, err = instance.ctx.GenerateRandom(session.Handle, len(data))
 		return err
 	}); err != nil {
 		return 0, err

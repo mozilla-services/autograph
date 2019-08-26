@@ -22,10 +22,12 @@
 package crypto11
 
 import (
+	"context"
 	"crypto/cipher"
-	"runtime"
-
+	"fmt"
 	"github.com/miekg/pkcs11"
+	"github.com/youtube/vitess/go/pools"
+	"runtime"
 )
 
 // cipher.BlockMode -----------------------------------------------------
@@ -55,7 +57,7 @@ const (
 // If this is a problem for your application then use NewCBCEncrypterCloser instead.
 //
 // If that is not possible then adding calls to runtime.GC() may help.
-func (key *SecretKey) NewCBCEncrypter(iv []byte) (cipher.BlockMode, error) {
+func (key *PKCS11SecretKey) NewCBCEncrypter(iv []byte) (bm cipher.BlockMode, err error) {
 	return key.newBlockModeCloser(key.Cipher.CBCMech, modeEncrypt, iv, true)
 }
 
@@ -66,7 +68,7 @@ func (key *SecretKey) NewCBCEncrypter(iv []byte) (cipher.BlockMode, error) {
 // If this is a problem for your application then use NewCBCDecrypterCloser instead.
 //
 // If that is not possible then adding calls to runtime.GC() may help.
-func (key *SecretKey) NewCBCDecrypter(iv []byte) (cipher.BlockMode, error) {
+func (key *PKCS11SecretKey) NewCBCDecrypter(iv []byte) (bm cipher.BlockMode, err error) {
 	return key.newBlockModeCloser(key.Cipher.CBCMech, modeDecrypt, iv, true)
 }
 
@@ -75,7 +77,7 @@ func (key *SecretKey) NewCBCDecrypter(iv []byte) (cipher.BlockMode, error) {
 //
 // Use of NewCBCEncrypterCloser rather than NewCBCEncrypter represents a commitment to call the Close() method
 // of the returned BlockModeCloser.
-func (key *SecretKey) NewCBCEncrypterCloser(iv []byte) (BlockModeCloser, error) {
+func (key *PKCS11SecretKey) NewCBCEncrypterCloser(iv []byte) (bmc BlockModeCloser, err error) {
 	return key.newBlockModeCloser(key.Cipher.CBCMech, modeEncrypt, iv, false)
 }
 
@@ -84,14 +86,14 @@ func (key *SecretKey) NewCBCEncrypterCloser(iv []byte) (BlockModeCloser, error) 
 //
 // Use of NewCBCDecrypterCloser rather than NewCBCEncrypter represents a commitment to call the Close() method
 // of the returned BlockModeCloser.
-func (key *SecretKey) NewCBCDecrypterCloser(iv []byte) (BlockModeCloser, error) {
+func (key *PKCS11SecretKey) NewCBCDecrypterCloser(iv []byte) (bmc BlockModeCloser, err error) {
 	return key.newBlockModeCloser(key.Cipher.CBCMech, modeDecrypt, iv, false)
 }
 
 // blockModeCloser is a concrete implementation of BlockModeCloser supporting CBC.
 type blockModeCloser struct {
 	// PKCS#11 session to use
-	session *pkcs11Session
+	session *PKCS11Session
 
 	// Cipher block size
 	blockSize int
@@ -104,40 +106,48 @@ type blockModeCloser struct {
 }
 
 // newBlockModeCloser creates a new blockModeCloser for the chosen mechanism and mode.
-func (key *SecretKey) newBlockModeCloser(mech uint, mode int, iv []byte, setFinalizer bool) (*blockModeCloser, error) {
-
-	session, err := key.context.getSession()
-	if err != nil {
-		return nil, err
+func (key *PKCS11SecretKey) newBlockModeCloser(mech uint, mode int, iv []byte, setFinalizer bool) (bmc *blockModeCloser, err error) {
+	// TODO maybe refactor with withSession()
+	sessionPool := pool.Get(key.Slot)
+	if sessionPool == nil {
+		err = fmt.Errorf("crypto11: no session for slot %d", key.Slot)
+		return
 	}
-
-	bmc := &blockModeCloser{
-		session:   session,
+	ctx := context.Background()
+	if instance.cfg.PoolWaitTimeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.Background(), instance.cfg.PoolWaitTimeout)
+		defer cancel()
+	}
+	var session pools.Resource
+	if session, err = sessionPool.Get(ctx); err != nil {
+		return
+	}
+	bmc = &blockModeCloser{
+		session:   session.(*PKCS11Session),
 		blockSize: key.Cipher.BlockSize,
 		mode:      mode,
 		cleanup: func() {
-			key.context.pool.Put(session)
+			sessionPool.Put(session)
 		},
 	}
 	mechDescription := []*pkcs11.Mechanism{pkcs11.NewMechanism(mech, iv)}
-
 	switch mode {
 	case modeDecrypt:
-		err = session.ctx.DecryptInit(session.handle, mechDescription, key.handle)
+		err = bmc.session.Ctx.DecryptInit(bmc.session.Handle, mechDescription, key.Handle)
 	case modeEncrypt:
-		err = session.ctx.EncryptInit(bmc.session.handle, mechDescription, key.handle)
+		err = bmc.session.Ctx.EncryptInit(bmc.session.Handle, mechDescription, key.Handle)
 	default:
 		panic("unexpected mode")
 	}
 	if err != nil {
 		bmc.cleanup()
-		return nil, err
+		return
 	}
 	if setFinalizer {
 		runtime.SetFinalizer(bmc, finalizeBlockModeCloser)
 	}
-
-	return bmc, nil
+	return
 }
 
 func finalizeBlockModeCloser(obj interface{}) {
@@ -159,9 +169,9 @@ func (bmc *blockModeCloser) CryptBlocks(dst, src []byte) {
 	var err error
 	switch bmc.mode {
 	case modeDecrypt:
-		result, err = bmc.session.ctx.DecryptUpdate(bmc.session.handle, src)
+		result, err = bmc.session.Ctx.DecryptUpdate(bmc.session.Handle, src)
 	case modeEncrypt:
-		result, err = bmc.session.ctx.EncryptUpdate(bmc.session.handle, src)
+		result, err = bmc.session.Ctx.EncryptUpdate(bmc.session.Handle, src)
 	}
 	if err != nil {
 		panic(err)
@@ -184,9 +194,9 @@ func (bmc *blockModeCloser) Close() {
 	var err error
 	switch bmc.mode {
 	case modeDecrypt:
-		result, err = bmc.session.ctx.DecryptFinal(bmc.session.handle)
+		result, err = bmc.session.Ctx.DecryptFinal(bmc.session.Handle)
 	case modeEncrypt:
-		result, err = bmc.session.ctx.EncryptFinal(bmc.session.handle)
+		result, err = bmc.session.Ctx.EncryptFinal(bmc.session.Handle)
 	}
 	bmc.session = nil
 	bmc.cleanup()
