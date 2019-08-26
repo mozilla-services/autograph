@@ -22,11 +22,7 @@ install:
 	$(GO) install go.mozilla.org/autograph
 
 vendor:
-	govend -u --prune
-	#go get -u github.com/golang/dep/...
-	#dep ensure -update
-	rm -rf vendor/go.mozilla.org/autograph/  # don't vendor ourselves
-	git add vendor/
+	go mod vendor
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
