@@ -9,7 +9,6 @@ jobs:
   lint-vet-fmt:
     docker:
       - image: golang:1.12-buster
-    working_directory: /usr/local/go/src/go.mozilla.org/autograph
     steps:
       - checkout
       - run:
@@ -38,7 +37,6 @@ jobs:
         environment:
           POSTGRES_USER: root
           POSTGRES_DB: autograph
-    working_directory: /go/src/go.mozilla.org/autograph
     environment:
       GOPATH: "/go"
     steps:
@@ -73,14 +71,12 @@ jobs:
       - run:
           name: Report coverage
           command: |
-            cd $GOPATH/src/go.mozilla.org/autograph
             $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci
 
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
     docker:
       - image: circleci/golang:1.12-buster
-    working_directory: /go/src/go.mozilla.org/autograph
     steps:
       - checkout
       - setup_remote_docker

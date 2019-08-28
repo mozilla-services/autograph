@@ -1,0 +1,12 @@
+language: go
+go:
+  - 1.4
+  - 1.5
+  - 1.6
+  - tip
+before_install:
+  - if [ "$(go version|awk '{print $3}')" == "go1.4" ]; then go get gopkg.in/check.v1; fi
+  - mkdir -p $GOPATH/src/go.mozilla.org
+  - mv $GOPATH/src/github.com/mozilla-services/hawk-go $GOPATH/src/go.mozilla.org/hawk
+script:
+  - make test
