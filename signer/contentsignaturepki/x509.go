@@ -31,7 +31,8 @@ func (s *ContentSigner) findAndSetEE(conf signer.Configuration) (err error) {
 		s.X5U = tmpX5U
 	}
 	conf.PrivateKey = s.eeLabel
-	s.eePriv, s.eePub, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
+	s.rand = conf.GetRand()
+	s.eePriv, s.eePub, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
 		err = errors.Wrapf(err, "found suitable end-entity labeled %q in database but not in hsm", s.eeLabel)
 		return

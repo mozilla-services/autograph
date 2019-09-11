@@ -99,9 +99,10 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 	if conf.PublicKey == "" {
 		return nil, errors.Errorf("genericrsa: missing public key for signer %q", s.ID)
 	}
-	s.key, s.pubKey, s.rng, s.PublicKey, err = conf.GetKeysAndRand()
+	s.rng = conf.GetRand()
+	s.key, s.pubKey, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrapf(err, "genericrsa: error fetching key and rand for signer %q", s.ID)
+		return nil, errors.Wrapf(err, "genericrsa: error fetching key for signer %q", s.ID)
 	}
 	_, ok := s.pubKey.(*rsa.PublicKey)
 	if !ok {

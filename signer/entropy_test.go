@@ -24,12 +24,9 @@ func shannonEntropy(data []byte) (entropy float64) {
 
 func TestRng(t *testing.T) {
 	for i, testcase := range PASSINGTESTCASES {
-		_, _, rng, _, err := testcase.cfg.GetKeysAndRand()
-		if err != nil {
-			t.Fatalf("testcase %d failed to load signer configuration: %v", i, err)
-		}
+		rng := testcase.cfg.GetRand()
 		randomData := make([]byte, 512)
-		_, err = rng.Read(randomData)
+		_, err := rng.Read(randomData)
 		if err != nil {
 			t.Fatalf("testcase %d failed to read from rng: %v", i, err)
 		}
