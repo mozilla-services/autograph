@@ -182,7 +182,7 @@ func TestNewFailure(t *testing.T) {
 		{err: `contentsignaturepki "": invalid type`, cfg: signer.Configuration{Type: ""}},
 		{err: `contentsignaturepki "": missing signer ID in signer configuration`, cfg: signer.Configuration{Type: Type, ID: ""}},
 		{err: `contentsignaturepki "bob": missing issuer private key in signer configuration`, cfg: signer.Configuration{Type: Type, ID: "bob"}},
-		{err: `contentsignaturepki "bob": failed to get keys and rand`, cfg: signer.Configuration{Type: Type, ID: "bob", IssuerPrivKey: "Ym9iCg=="}},
+		{err: `contentsignaturepki "bob": failed to get keys`, cfg: signer.Configuration{Type: Type, ID: "bob", IssuerPrivKey: "Ym9iCg=="}},
 		{err: `contentsignaturepki "abcd": invalid public key type for issuer, must be ecdsa`, cfg: signer.Configuration{
 			Type: Type,
 			ID:   "abcd",

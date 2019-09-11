@@ -207,10 +207,10 @@ func (cfg *Configuration) GetRand() io.Reader {
 	return rand.Reader
 }
 
-// GetKeysAndRand parses a configuration to retrieve the private and public key
-// of a signer, as well as a RNG and a marshalled public key. It knows to handle
-// HSMs as needed, and thus removes that complexity from individual signers.
-func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.PublicKey, rng io.Reader, publicKey string, err error) {
+// GetKeys parses a configuration to retrieve the private and public
+// key of a signer, and a marshalled public key. It fetches keys from
+// the HSM when possible.
+func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKey, publicKey string, err error) {
 	priv, err = cfg.GetPrivateKey()
 	if err != nil {
 		return
@@ -220,7 +220,6 @@ func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.P
 		publicKeyBytes []byte
 		unmarshaledPub crypto.PublicKey
 	)
-	rng = cfg.GetRand()
 
 	switch privateKey := priv.(type) {
 	case *rsa.PrivateKey:

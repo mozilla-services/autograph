@@ -56,9 +56,10 @@ func New(conf signer.Configuration) (s *RSAPSSSigner, err error) {
 	if conf.PublicKey == "" {
 		return nil, errors.New("rsapss: missing public key in signer configuration")
 	}
-	s.key, s.pubKey, s.rng, s.PublicKey, err = conf.GetKeysAndRand()
+	s.rng = conf.GetRand()
+	s.key, s.pubKey, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrapf(err, "rsapss: error fetching key and rand from signer configuration")
+		return nil, errors.Wrapf(err, "rsapss: error fetching key from signer configuration")
 	}
 	_, ok := s.pubKey.(*rsa.PublicKey)
 	if !ok {

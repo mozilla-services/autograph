@@ -65,7 +65,8 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if conf.PrivateKey == "" {
 		return nil, errors.New("contentsignature: missing private key in signer configuration")
 	}
-	s.priv, s.pub, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
+	s.rand = conf.GetRand()
+	s.priv, s.pub, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
 		return nil, errors.Wrap(err, "contentsignature: failed to retrieve signer")
 	}
