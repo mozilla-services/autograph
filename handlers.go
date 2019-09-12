@@ -37,6 +37,18 @@ type heartbeatConfig struct {
 	hsmSignerConf *signer.Configuration
 }
 
+// hashSHA256AsHex returns the hex encoded string of the SHA256 sum
+// the arg toHash bytes
+func hashSHA256AsHex(toHash []byte) string {
+	h := sha256.New()
+	h.Write(toHash)
+	return asHex(h.Sum(nil))
+}
+
+func asHex(toHex []byte) string {
+	return fmt.Sprintf("%X", toHex)
+}
+
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
 // and calls the signers to generate signature responses.
 func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
@@ -158,9 +170,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
 				return
 			}
-			// convert the input hash to hexadecimal for logging
-			hashlog = fmt.Sprintf("%X", input)
-
+			// the input is already a hash just convert it to hex
+			inputHash := asHex(input)
 		case "/sign/data":
 			dataSigner, ok := a.signers[signerID].(signer.DataSigner)
 			if !ok {
@@ -178,10 +189,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// calculate a hash of the input to store in the signing logs
-			md := sha256.New()
-			md.Write(input)
-			hashlog = fmt.Sprintf("%X", md.Sum(nil))
-
+			inputHash := hashSHA256AsHex(input)
 		case "/sign/file":
 			fileSigner, ok := a.signers[signerID].(signer.FileSigner)
 			if !ok {
@@ -195,9 +203,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
 			// calculate a hash of the input to store in the signing logs
-			md := sha256.New()
-			md.Write(input)
-			hashlog = fmt.Sprintf("%X", md.Sum(nil))
+			inputHash := hashSHA256AsHex(input)
 		}
 		log.WithFields(log.Fields{
 			"rid":        rid,
@@ -206,7 +212,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"ref":        sigresps[i].Ref,
 			"type":       sigresps[i].Type,
 			"signer_id":  sigresps[i].SignerID,
-			"input_hash": hashlog,
+			"input_hash": inputHash,
 			"user_id":    userid,
 			"t":          int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("signing operation succeeded")
