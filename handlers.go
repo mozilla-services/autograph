@@ -42,11 +42,7 @@ type heartbeatConfig struct {
 func hashSHA256AsHex(toHash []byte) string {
 	h := sha256.New()
 	h.Write(toHash)
-	return asHex(h.Sum(nil))
-}
-
-func asHex(toHex []byte) string {
-	return fmt.Sprintf("%X", toHex)
+	return fmt.Sprintf("%X", h.Sum(nil))
 }
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
@@ -121,10 +117,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	// the signature is then encoded appropriately, and added to the response slice
 	for i, sigreq := range sigreqs {
 		var (
-			input      []byte
-			sig        signer.Signature
-			signedfile []byte
-			hashlog    string
+			input                 []byte
+			sig                   signer.Signature
+			signedfile            []byte
+			inputHash, outputHash string
 		)
 
 		// Decode the base64 input data
@@ -171,7 +167,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// the input is already a hash just convert it to hex
-			inputHash := asHex(input)
+			inputHash = fmt.Sprintf("%X", input)
+			outputHash = "unimplemented"
 		case "/sign/data":
 			dataSigner, ok := a.signers[signerID].(signer.DataSigner)
 			if !ok {
@@ -189,7 +186,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// calculate a hash of the input to store in the signing logs
-			inputHash := hashSHA256AsHex(input)
+			inputHash = hashSHA256AsHex(input)
+			outputHash = hashSHA256AsHex([]byte(sigresps[i].Signature))
 		case "/sign/file":
 			fileSigner, ok := a.signers[signerID].(signer.FileSigner)
 			if !ok {
@@ -203,18 +201,20 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
 			// calculate a hash of the input to store in the signing logs
-			inputHash := hashSHA256AsHex(input)
+			inputHash = hashSHA256AsHex(input)
+			outputHash = hashSHA256AsHex(signedfile)
 		}
 		log.WithFields(log.Fields{
-			"rid":        rid,
-			"options":    sigreq.Options,
-			"mode":       sigresps[i].Mode,
-			"ref":        sigresps[i].Ref,
-			"type":       sigresps[i].Type,
-			"signer_id":  sigresps[i].SignerID,
-			"input_hash": inputHash,
-			"user_id":    userid,
-			"t":          int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
+			"rid":         rid,
+			"options":     sigreq.Options,
+			"mode":        sigresps[i].Mode,
+			"ref":         sigresps[i].Ref,
+			"type":        sigresps[i].Type,
+			"signer_id":   sigresps[i].SignerID,
+			"input_hash":  inputHash,
+			"output_hash": outputHash,
+			"user_id":     userid,
+			"t":           int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("signing operation succeeded")
 	}
 	respdata, err := json.Marshal(sigresps)
