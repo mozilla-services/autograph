@@ -251,6 +251,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		result         = map[string]bool{}
 		status         = http.StatusOK
 		requestContext = r.Context()
+		rid            = getRequestID(r)
 	)
 
 	// try to fetch the private key from the HSM for the first
@@ -258,24 +259,31 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// server start
 	if a.heartbeatConf.hsmSignerConf != nil {
 		var (
-			err         error
-			conf        = a.heartbeatConf.hsmSignerConf
-			checkResult = make(chan error, 1)
+			err                 error
+			hsmSignerConf       = a.heartbeatConf.hsmSignerConf
+			hsmHBTimeout        = a.heartbeatConf.HSMCheckTimeout
+			checkResult         = make(chan error, 1)
+			hsmHeartbeatStartTs = time.Now()
 		)
 		go func() {
-			checkResult <- conf.CheckHSMConnection()
+			checkResult <- hsmSignerConf.CheckHSMConnection()
 		}()
 		select {
-		case <-time.After(a.heartbeatConf.HSMCheckTimeout):
-			err = fmt.Errorf("Checking HSM connection for signer %s private key timed out", conf.ID)
+		case <-time.After(hsmHBTimeout):
+			err = fmt.Errorf("Checking HSM connection for signer %s private key timed out", hsmSignerConf.ID)
 		case err = <-checkResult:
 		}
 
 		if err == nil {
+			log.WithFields(log.Fields{
+				"rid":     rid,
+				"t":       int32(time.Since(hsmHeartbeatStartTs) / time.Millisecond),
+				"timeout": fmt.Sprintf("%s", hsmHBTimeout),
+			}).Info("HSM heartbeat completed successfully")
 			result["hsmAccessible"] = true
 			status = http.StatusOK
 		} else {
-			log.Errorf("error checking HSM connection for signer %s: %s", conf.ID, err)
+			log.Errorf("error checking HSM connection for signer %s: %s", hsmSignerConf.ID, err)
 			result["hsmAccessible"] = false
 			status = http.StatusInternalServerError
 		}
@@ -285,10 +293,16 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// don't fail the heartbeat since we only care about DB
 	// connectivity on server start
 	if a.db != nil {
+		dbHeartbeatStartTs := time.Now()
 		dbCheckCtx, dbCancel := context.WithTimeout(requestContext, a.heartbeatConf.DBCheckTimeout)
 		defer dbCancel()
 		err := a.db.CheckConnectionContext(dbCheckCtx)
 		if err == nil {
+			log.WithFields(log.Fields{
+				"rid":     rid,
+				"t":       int32(time.Since(dbHeartbeatStartTs) / time.Millisecond),
+				"timeout": fmt.Sprintf("%s", a.heartbeatConf.DBCheckTimeout),
+			}).Info("DB heartbeat completed successfully")
 			result["dbAccessible"] = true
 		} else {
 			log.Errorf("error checking DB connection: %s", err)
