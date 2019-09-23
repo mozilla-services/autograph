@@ -88,13 +88,14 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	if conf.IssuerPrivKey == "" {
 		return nil, fmt.Errorf("contentsignaturepki %q: missing issuer private key in signer configuration", s.ID)
 	}
-	// we need to parse or retrieve from the hsm the issuer private key,
-	// so make a temporary config to call getkeysandrand
+	s.rand = conf.GetRand()
+	// make a temporary config since we need to retrieve the
+	// issuer private key from the hsm
 	tmpconf := conf
 	tmpconf.PrivateKey = conf.IssuerPrivKey
-	s.issuerPriv, s.issuerPub, s.rand, _, err = tmpconf.GetKeysAndRand()
+	s.issuerPriv, s.issuerPub, _, err = tmpconf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to get keys and rand", s.ID)
+		return nil, errors.Wrapf(err, "contentsignaturepki %q: failed to get keys", s.ID)
 	}
 	// if validity is undef, default to 30 days
 	if s.validity == 0 {

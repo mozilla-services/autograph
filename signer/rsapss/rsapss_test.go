@@ -255,7 +255,7 @@ func TestVerifySignatureFromB64(t *testing.T) {
 	// args to VerifySignatureFromB64
 	var (
 		b64Digest = base64.StdEncoding.EncodeToString(_digest)
-		b64PubKey = _s.PublicKey // base64 encoded in signer GetKeysAndRand
+		b64PubKey = _s.PublicKey // base64 encoded in signer GetKeys
 		b64Sig    = _b64Sig
 	)
 

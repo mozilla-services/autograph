@@ -198,10 +198,19 @@ type Signature interface {
 // SignedFile is an []bytes that contains file data
 type SignedFile []byte
 
-// GetKeysAndRand parses a configuration to retrieve the private and public key
-// of a signer, as well as a RNG and a marshalled public key. It knows to handle
-// HSMs as needed, and thus removes that complexity from individual signers.
-func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.PublicKey, rng io.Reader, publicKey string, err error) {
+// GetRand returns a cryptographically secure random number from the
+// HSM if available and otherwise rand.Reader
+func (cfg *Configuration) GetRand() io.Reader {
+	if cfg.isHsmAvailable {
+		return new(crypto11.PKCS11RandReader)
+	}
+	return rand.Reader
+}
+
+// GetKeys parses a configuration to retrieve the private and public
+// key of a signer, and a marshalled public key. It fetches keys from
+// the HSM when possible.
+func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKey, publicKey string, err error) {
 	priv, err = cfg.GetPrivateKey()
 	if err != nil {
 		return
@@ -211,26 +220,23 @@ func (cfg *Configuration) GetKeysAndRand() (priv crypto.PrivateKey, pub crypto.P
 		publicKeyBytes []byte
 		unmarshaledPub crypto.PublicKey
 	)
+
 	switch privateKey := priv.(type) {
 	case *rsa.PrivateKey:
 		pub = privateKey.Public()
 		unmarshaledPub = &privateKey.PublicKey
-		rng = rand.Reader
 
 	case *ecdsa.PrivateKey:
 		pub = privateKey.Public()
 		unmarshaledPub = &privateKey.PublicKey
-		rng = rand.Reader
 
 	case *crypto11.PKCS11PrivateKeyECDSA:
 		pub = privateKey.Public()
 		unmarshaledPub = privateKey.PubKey.(*ecdsa.PublicKey)
-		rng = new(crypto11.PKCS11RandReader)
 
 	case *crypto11.PKCS11PrivateKeyRSA:
 		pub = privateKey.Public()
 		unmarshaledPub = privateKey.PubKey.(*rsa.PublicKey)
-		rng = new(crypto11.PKCS11RandReader)
 
 	default:
 		err = errors.Errorf("unsupported private key type %T", priv)

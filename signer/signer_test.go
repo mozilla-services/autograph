@@ -207,7 +207,7 @@ func TestNoSuitableKeyFound(t *testing.T) {
 
 func TestMakeKey(t *testing.T) {
 	for i, testcase := range PASSINGTESTCASES {
-		_, keyTpl, _, _, err := testcase.cfg.GetKeysAndRand()
+		_, keyTpl, _, err := testcase.cfg.GetKeys()
 		if err != nil {
 			t.Fatalf("testcase %d failed to load signer configuration: %v", i, err)
 		}

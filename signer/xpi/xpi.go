@@ -135,9 +135,10 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	}
 	s.PrivateKey = conf.PrivateKey
 
-	s.issuerKey, s.issuerPublicKey, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
+	s.rand = conf.GetRand()
+	s.issuerKey, s.issuerPublicKey, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: GetKeysAndRand failed to retrieve signer")
+		return nil, errors.Wrap(err, "xpi: GetKeys failed to retrieve signer")
 	}
 
 	block, _ := pem.Decode([]byte(conf.Certificate))

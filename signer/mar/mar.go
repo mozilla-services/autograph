@@ -49,9 +49,10 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 		return nil, errors.New("mar: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
-	s.signingKey, s.publicKey, s.rand, s.PublicKey, err = conf.GetKeysAndRand()
+	s.rand = conf.GetRand()
+	s.signingKey, s.publicKey, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrap(err, "mar: failed to get keys and random io reader")
+		return nil, errors.Wrap(err, "mar: failed to get keys")
 	}
 
 	// select the default signature algorithm depending on the private key type

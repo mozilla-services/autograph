@@ -1107,7 +1107,7 @@ var FAILINGTESTCASES = []struct {
 	{err: "xpi: invalid type", cfg: signer.Configuration{Type: ""}},
 	{err: "xpi: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
 	{err: "xpi: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
-	{err: "xpi: GetKeysAndRand failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+	{err: "xpi: GetKeys failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
 	{err: "xpi: failed to parse certificate PEM", cfg: signer.Configuration{
 		Type:        Type,
 		ID:          "abcd",
