@@ -19,13 +19,19 @@ TARGET=${TARGET:-'http://127.0.0.1:8000'}
 go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0a1.multi.android-arm.apk -o fennec-64.0a1.multi.android-arm.resigned.apk -k apk_cert_with_dsa_sha1 -pk7digest sha1
 
 # Sign Fennec Beta
-go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0b9.en-US.android-arm.apk -o fennec-64.0b9.en-US.android-arm.resigned.apk -k legacy_apk_with_rsa -pk7digest sha1
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0b9.en-US.android-arm.apk -o fennec-legacy-sha1.resigned.apk -k legacy_apk_with_rsa -pk7digest sha1
 
 # Sign with ECDSA
-go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.ecdsa.resigned.apk -k apk_cert_with_ecdsa_sha256
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0b9.en-US.android-arm.apk -o fennec-ecdsa.resigned.apk -k apk_cert_with_ecdsa_sha256
 
 # Sign with RSA
-go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.rsa.resigned.apk -k testapp-android
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0b9.en-US.android-arm.apk -o fennec-rsa.resigned.apk -k testapp-android
+
+# Sign Aligned APK with ECDSA
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.ecdsa.resigned.apk -k apk_cert_with_ecdsa_sha256
+
+# Sign Aligned APK with RSA
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f aligned-two-files.apk -o aligned-two-files.rsa.resigned.apk -k testapp-android-legacy
 
 VERIFY=${VERIFY:-"0"}
 if [ "$VERIFY" = "1" ]; then
