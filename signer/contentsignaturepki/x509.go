@@ -37,10 +37,6 @@ func (s *ContentSigner) findAndSetEE(conf signer.Configuration) (err error) {
 		err = errors.Wrapf(err, "found suitable end-entity labeled %q in database but not in hsm", s.eeLabel)
 		return
 	}
-	if len(s.PublicKey) < 50 {
-		err = errors.Errorf("malformed public key in key label %q for signer %q: %q", s.eeLabel, s.ID, s.PublicKey)
-		return
-	}
 	return
 }
 
