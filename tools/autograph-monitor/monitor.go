@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/apk"
+	"go.mozilla.org/autograph/signer/apk2"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
 	"go.mozilla.org/autograph/signer/genericrsa"
@@ -146,6 +147,11 @@ func Handler() (err error) {
 		case apk.Type:
 			log.Printf("Verifying APK signature from signer %q", response.SignerID)
 			err = verifyAPKSignature(response.Signature)
+		case apk2.Type:
+			// we don't verify apk2 signatures because they can only be obtained on valid
+			// APK files, which is too big to fit in the monitoring logic
+			log.Printf("Skipping verification of APK2 signature from signer %q (we can't verify those)", response.SignerID)
+			continue
 		case mar.Type:
 			log.Printf("Verifying MAR signature from signer %q", response.SignerID)
 			err = verifyMARSignature(response.Signature, response.PublicKey)
@@ -158,7 +164,7 @@ func Handler() (err error) {
 		case pgp.Type, gpg2.Type:
 			// we don't verify pgp signatures because that requires building a keyring
 			// using the public key which is hard to do using the current openpgp package
-			log.Printf("Skipping verification of PGP signature from signer %q", response.SignerID)
+			log.Printf("Skipping verification of PGP signature from signer %q (we can't verify those)", response.SignerID)
 			continue
 		default:
 			err = fmt.Errorf("unknown signature type %q", response.Type)

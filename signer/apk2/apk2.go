@@ -53,10 +53,10 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 		return nil, errors.Wrap(err, "apk2: failed to encode private key to pkcs8")
 	}
 
-	if conf.PublicKey == "" {
+	if conf.Certificate == "" {
 		return nil, errors.New("apk2: missing public cert in signer configuration")
 	}
-	s.PublicKey = conf.PublicKey
+	s.Certificate = conf.PublicKey
 	return
 }
 
@@ -66,7 +66,7 @@ func (s *APK2Signer) Config() signer.Configuration {
 		ID:         s.ID,
 		Type:       s.Type,
 		PrivateKey: s.PrivateKey,
-		PublicKey:  s.PublicKey,
+		Certificate:  s.Certificate,
 	}
 }
 
@@ -87,7 +87,7 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 		return nil, errors.Wrap(err, "apk2: failed to create tempfile for input to sign")
 	}
 	defer os.Remove(certPath.Name())
-	err = ioutil.WriteFile(certPath.Name(), []byte(s.PublicKey), 0400)
+	err = ioutil.WriteFile(certPath.Name(), []byte(s.Certificate), 0400)
 	if err != nil {
 		return nil, errors.Wrap(err, "apk2: failed to write public cert to tempfile")
 	}
@@ -103,7 +103,7 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	ioutil.WriteFile(tmpAPKFile.Name(), file, 0755)
 	defer os.Remove(tmpAPKFile.Name())
 
-	apkSigCmd := exec.Command("apksigner", "sign",
+	apkSigCmd := exec.Command("java", "-jar", "/usr/bin/apksigner", "sign",
 		"--key", keyPath.Name(),
 		"--cert", certPath.Name(),
 		"--v1-signing-enabled", "true",

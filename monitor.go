@@ -11,6 +11,7 @@ import (
 
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer"
+	"go.mozilla.org/autograph/signer/apk2"
 )
 
 // MonitoringInputData is the data signed by the monitoring handler
@@ -49,6 +50,21 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 
 		go func(i int, s signer.Signer) {
 			defer wg.Done()
+
+			if s.Config().Type == apk2.Type {
+				// apk2 signer cannot be monitored because it only
+				// works with full APK files, which is too heavy for this
+				// monitoring function, so we return a signature response
+				// without a signature, only metadata
+				sigresps[i] = formats.SignatureResponse{
+					Ref:        id(),
+					Type:       s.Config().Type,
+					Mode:       s.Config().Mode,
+					SignerID:   s.Config().ID,
+					SignerOpts: s.Config().SignerOpts,
+				}
+				return
+			}
 
 			if _, ok := s.(signer.DataSigner); !ok {
 				sigerrstrs[i] = fmt.Sprintf("signer %q does not implement the DataSigner interface", s.Config().ID)

@@ -36,6 +36,7 @@ lint:
 			go.mozilla.org/autograph/signer/contentsignaturepki \
 			go.mozilla.org/autograph/signer/xpi \
 			go.mozilla.org/autograph/signer/apk \
+			go.mozilla.org/autograph/signer/apk2 \
 			go.mozilla.org/autograph/signer/mar \
 			go.mozilla.org/autograph/signer/pgp \
 			go.mozilla.org/autograph/signer/gpg2 \
@@ -52,11 +53,11 @@ vet:
 	$(GO) vet go.mozilla.org/autograph/signer
 	$(GO) vet go.mozilla.org/autograph/formats
 	$(GO) vet go.mozilla.org/autograph/signer/apk
+	$(GO) vet go.mozilla.org/autograph/signer/apk2
 	$(GO) vet go.mozilla.org/autograph/signer/contentsignature
 	$(GO) vet go.mozilla.org/autograph/signer/contentsignaturepki
 	$(GO) vet go.mozilla.org/autograph/signer/mar
 	$(GO) vet go.mozilla.org/autograph/signer/xpi
-	$(GO) vet go.mozilla.org/autograph/signer/apk
 	$(GO) vet go.mozilla.org/autograph/signer/mar
 	$(GO) vet go.mozilla.org/autograph/signer/pgp
 	$(GO) vet go.mozilla.org/autograph/signer/gpg2
@@ -120,6 +121,12 @@ testapk:
 showcoverageapk: testapk
 	$(GO) tool cover -html=coverage_apk.out
 
+testapk2:
+	$(GOTEST) -coverprofile=coverage_apk2.out go.mozilla.org/autograph/signer/apk2
+
+showcoverageapk2: testapk2
+	$(GO) tool cover -html=coverage_apk2.out
+
 testmar:
 	$(GOTEST) -coverprofile=coverage_mar.out go.mozilla.org/autograph/signer/mar
 
@@ -150,7 +157,7 @@ testrsapss:
 showcoveragersapss: testrsapss
 	$(GO) tool cover -html=coverage_rsapss.out
 
-test: testautograph testautographdb testautographformats testsigner testcs testcspki testxpi testapk testmar testpgp testgpg2 testgenericrsa testrsapss testmonitor
+test: testautograph testautographdb testautographformats testsigner testcs testcspki testxpi testapk testapk2 testmar testpgp testgpg2 testgenericrsa testrsapss testmonitor
 	echo 'mode: count' > coverage.out
 	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
 
