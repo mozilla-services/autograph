@@ -3,10 +3,13 @@ package apk2
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
-	"os/exec"
+
+	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"os"
+	"os/exec"
+
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/autograph/signer"
@@ -21,8 +24,8 @@ const (
 // APK2Signer holds the configuration of the signer
 type APK2Signer struct {
 	signer.Configuration
-
-	pkcs8Key []byte
+	minSdkVersion string
+	pkcs8Key      []byte
 }
 
 // New initializes an apk signer using a configuration
@@ -47,6 +50,13 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "apk2: failed to get private key from configuration")
 	}
+	switch priv.(type) {
+	case *ecdsa.PrivateKey:
+		// ecdsa is only supported in sdk 18 and higher
+		s.minSdkVersion = "18"
+	default:
+		s.minSdkVersion = "9"
+	}
 	//apksigner wants a pkcs8 encoded privkey
 	s.pkcs8Key, err = x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
@@ -56,17 +66,17 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	if conf.Certificate == "" {
 		return nil, errors.New("apk2: missing public cert in signer configuration")
 	}
-	s.Certificate = conf.PublicKey
+	s.Certificate = conf.Certificate
 	return
 }
 
 // Config returns the configuration of the current signer
 func (s *APK2Signer) Config() signer.Configuration {
 	return signer.Configuration{
-		ID:         s.ID,
-		Type:       s.Type,
-		PrivateKey: s.PrivateKey,
-		Certificate:  s.Certificate,
+		ID:          s.ID,
+		Type:        s.Type,
+		PrivateKey:  s.PrivateKey,
+		Certificate: s.Certificate,
 	}
 }
 
@@ -76,7 +86,7 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	if err != nil {
 		return nil, errors.Wrap(err, "apk2: failed to create tempfile with private key")
 	}
-    defer os.Remove(keyPath.Name())
+	defer os.Remove(keyPath.Name())
 	err = ioutil.WriteFile(keyPath.Name(), []byte(s.pkcs8Key), 0400)
 	if err != nil {
 		return nil, errors.Wrap(err, "apk2: failed to write private key to tempfile")
@@ -101,14 +111,13 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	}
 	defer os.Remove(tmpAPKFile.Name())
 	ioutil.WriteFile(tmpAPKFile.Name(), file, 0755)
-	defer os.Remove(tmpAPKFile.Name())
 
 	apkSigCmd := exec.Command("java", "-jar", "/usr/bin/apksigner", "sign",
 		"--key", keyPath.Name(),
 		"--cert", certPath.Name(),
 		"--v1-signing-enabled", "true",
 		"--v2-signing-enabled", "true",
-		"--min-sdk-version", "9",
+		"--min-sdk-version", s.minSdkVersion,
 		tmpAPKFile.Name(),
 	)
 	out, err := apkSigCmd.CombinedOutput()
