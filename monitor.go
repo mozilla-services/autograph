@@ -53,7 +53,7 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 
 			// First try the DataSigner interface. If the signer doesn't
 			// implement it, try the FileSigner interface. If that's still
-			// not implemented, return an error.S
+			// not implemented, return an error.
 			if _, ok := s.(signer.DataSigner); ok {
 				// sign with data set to the base64 of the string 'AUTOGRAPH MONITORING'
 				sig, err := s.(signer.DataSigner).SignData(MonitoringInputData, s.(signer.DataSigner).GetDefaultOptions())
@@ -82,6 +82,9 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if _, ok := s.(signer.FileSigner); ok {
+				// Signers that only implement the FileSigner interface must
+				// also implement the TestFileGetter interface to return a valid
+				// test file that can be used here to monitor the signer.
 				if _, ok := s.(signer.TestFileGetter); !ok {
 					sigerrstrs[i] = fmt.Sprintf("signer %q implements FileSigner but not the TestFileGetter interface", s.Config().ID)
 					return

@@ -13,6 +13,7 @@ import (
 
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/apk"
+	"go.mozilla.org/autograph/signer/apk2"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
 	"go.mozilla.org/autograph/signer/genericrsa"
@@ -65,6 +66,12 @@ func TestMonitorPass(t *testing.T) {
 			err = verifyAPKManifestSignature(
 				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature)
+		case apk2.Type:
+			signedfile, err := base64.StdEncoding.DecodeString(response.SignedFile)
+			if err != nil {
+				t.Fatalf("failed to base64 decode signed file")
+			}
+			err = verifyAPKSignature(signedfile)
 		case mar.Type:
 			err = verifyMARSignature(base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)

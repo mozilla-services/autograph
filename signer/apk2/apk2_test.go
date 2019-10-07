@@ -11,10 +11,10 @@ import (
 func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *APK2Signer {
 	s, err := New(apk2signerconf)
 	if s == nil {
-		t.Fatal("expected non-nil signer for valid conf, but got nil signer")
+		t.Fatalf("%s: expected non-nil signer for valid conf, but got nil signer", t.Name())
 	}
 	if err != nil {
-		t.Fatalf("signer initialization failed with: %v", err)
+		t.Fatalf("%s: signer initialization failed with: %v", t.Name(), err)
 	}
 	return s
 }
@@ -22,10 +22,10 @@ func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *APK2Sig
 func assertNewSignerWithConfErrs(t *testing.T, invalidConf signer.Configuration) {
 	s, err := New(invalidConf)
 	if s != nil {
-		t.Fatalf("expected nil signer for invalid conf, but got non-nil signer %v", s)
+		t.Fatalf("%s: expected nil signer for invalid conf, but got non-nil signer\n%+v", t.Name(), invalidConf)
 	}
 	if err == nil {
-		t.Fatal("signer initialization did not fail")
+		t.Fatalf("%s: signer initialization did not fail", t.Name())
 	}
 }
 
@@ -62,11 +62,11 @@ func TestNewSigner(t *testing.T) {
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
 
-	t.Run("invalid PublicKey", func(t *testing.T) {
+	t.Run("invalid Certificate", func(t *testing.T) {
 		t.Parallel()
 
 		invalidConf := apk2signerconf
-		invalidConf.PublicKey = ""
+		invalidConf.Certificate = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
 }
@@ -120,7 +120,7 @@ func TestSignFile(t *testing.T) {
 		ioutil.WriteFile(tmpApk.Name(), signedFile, 0755)
 
 		// call apksigner to verify the APK
-		apkSignerVerifySig := exec.Command("apksigner", "verify", "--verbose", tmpApk.Name())
+		apkSignerVerifySig := exec.Command("java", "-jar", "/usr/bin/apksigner", "verify", "--verbose", tmpApk.Name())
 		out, err := apkSignerVerifySig.CombinedOutput()
 		if err != nil {
 			t.Fatalf("error verifying apk signature: %s\n%s", err, out)
@@ -160,7 +160,7 @@ Q9+gIrgtjJrWCw6SHF3pIB749A1J4NMlQ+0XjPhcwSMrxxkMTwmLhgSEHZcVl3C6
 zw097oFSo1ZF/8Qpe3cb3252I9MOWKSXWTJ1BP2iVlCp0jRteFCJj8SB2CAnay9F
 1KDtwVd+U8cK/z6UQxo8YQ==
 -----END PRIVATE KEY-----`,
-	PublicKey: `-----BEGIN CERTIFICATE-----
+	Certificate: `-----BEGIN CERTIFICATE-----
 MIIDyTCCArGgAwIBAgIEVxuKpDANBgkqhkiG9w0BAQsFADCBlDELMAkGA1UEBhMC
 VVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcx
 HDAaBgNVBAoTE01vemlsbGEgQ29ycG9yYXRpb24xHDAaBgNVBAsTE1JlbGVhc2Ug
