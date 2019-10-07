@@ -198,6 +198,12 @@ type Signature interface {
 // SignedFile is an []bytes that contains file data
 type SignedFile []byte
 
+// TestFileGetter returns a test file a signer will accept in its
+// SignFile interface
+type TestFileGetter interface {
+	GetTestFile() (testfile []byte)
+}
+
 // GetRand returns a cryptographically secure random number from the
 // HSM if available and otherwise rand.Reader
 func (cfg *Configuration) GetRand() io.Reader {

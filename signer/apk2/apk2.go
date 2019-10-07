@@ -141,3 +141,8 @@ type Options struct {
 func (s *APK2Signer) GetDefaultOptions() interface{} {
 	return Options{}
 }
+
+// GetTestFile returns a valid test APK
+func (s *APK2Signer) GetTestFile() []byte {
+	return testAPK
+}

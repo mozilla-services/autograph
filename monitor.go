@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,7 +12,6 @@ import (
 
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer"
-	"go.mozilla.org/autograph/signer/apk2"
 )
 
 // MonitoringInputData is the data signed by the monitoring handler
@@ -51,50 +51,63 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 		go func(i int, s signer.Signer) {
 			defer wg.Done()
 
-			if s.Config().Type == apk2.Type {
-				// apk2 signer cannot be monitored because it only
-				// works with full APK files, which is too heavy for this
-				// monitoring function, so we return a signature response
-				// without a signature, only metadata
+			// First try the DataSigner interface. If the signer doesn't
+			// implement it, try the FileSigner interface. If that's still
+			// not implemented, return an error.S
+			if _, ok := s.(signer.DataSigner); ok {
+				// sign with data set to the base64 of the string 'AUTOGRAPH MONITORING'
+				sig, err := s.(signer.DataSigner).SignData(MonitoringInputData, s.(signer.DataSigner).GetDefaultOptions())
+				if err != nil {
+					sigerrstrs[i] = fmt.Sprintf("signing failed with error: %v", err)
+					return
+				}
+
+				encodedsig, err := sig.Marshal()
+				if err != nil {
+					sigerrstrs[i] = fmt.Sprintf("encoding failed with error: %v", err)
+					return
+				}
+				sigerrstrs[i] = ""
 				sigresps[i] = formats.SignatureResponse{
 					Ref:        id(),
 					Type:       s.Config().Type,
 					Mode:       s.Config().Mode,
 					SignerID:   s.Config().ID,
+					PublicKey:  s.Config().PublicKey,
+					Signature:  encodedsig,
+					X5U:        s.Config().X5U,
 					SignerOpts: s.Config().SignerOpts,
 				}
 				return
 			}
 
-			if _, ok := s.(signer.DataSigner); !ok {
-				sigerrstrs[i] = fmt.Sprintf("signer %q does not implement the DataSigner interface", s.Config().ID)
+			if _, ok := s.(signer.FileSigner); ok {
+				if _, ok := s.(signer.TestFileGetter); !ok {
+					sigerrstrs[i] = fmt.Sprintf("signer %q implements FileSigner but not the TestFileGetter interface", s.Config().ID)
+					return
+				}
+				output, err := s.(signer.FileSigner).SignFile(s.(signer.TestFileGetter).GetTestFile(), s.(signer.FileSigner).GetDefaultOptions())
+				if err != nil {
+					sigerrstrs[i] = fmt.Sprintf("signing failed with error: %v", err)
+					return
+				}
+				signedfile := base64.StdEncoding.EncodeToString(output)
+				sigerrstrs[i] = ""
+				sigresps[i] = formats.SignatureResponse{
+					Ref:        id(),
+					Type:       s.Config().Type,
+					Mode:       s.Config().Mode,
+					SignerID:   s.Config().ID,
+					PublicKey:  s.Config().PublicKey,
+					SignedFile: signedfile,
+					X5U:        s.Config().X5U,
+					SignerOpts: s.Config().SignerOpts,
+				}
 				return
 			}
 
-			// base64 of the string 'AUTOGRAPH MONITORING'
-			sig, err := s.(signer.DataSigner).SignData(MonitoringInputData, s.(signer.DataSigner).GetDefaultOptions())
-			if err != nil {
-				sigerrstrs[i] = fmt.Sprintf("signing failed with error: %v", err)
-				return
-			}
-
-			encodedsig, err := sig.Marshal()
-			if err != nil {
-				sigerrstrs[i] = fmt.Sprintf("encoding failed with error: %v", err)
-				return
-			}
-
-			sigerrstrs[i] = ""
-			sigresps[i] = formats.SignatureResponse{
-				Ref:        id(),
-				Type:       s.Config().Type,
-				Mode:       s.Config().Mode,
-				SignerID:   s.Config().ID,
-				PublicKey:  s.Config().PublicKey,
-				Signature:  encodedsig,
-				X5U:        s.Config().X5U,
-				SignerOpts: s.Config().SignerOpts,
-			}
+			sigerrstrs[i] = fmt.Sprintf("signer %q does not implement DataSigner or FileSigner interfaces", s.Config().ID)
+			return
 		}(i, s)
 	}
 	wg.Wait()
