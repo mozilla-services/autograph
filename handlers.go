@@ -37,6 +37,14 @@ type heartbeatConfig struct {
 	hsmSignerConf *signer.Configuration
 }
 
+// hashSHA256AsHex returns the hex encoded string of the SHA256 sum
+// the arg toHash bytes
+func hashSHA256AsHex(toHash []byte) string {
+	h := sha256.New()
+	h.Write(toHash)
+	return fmt.Sprintf("%X", h.Sum(nil))
+}
+
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
 // and calls the signers to generate signature responses.
 func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
@@ -109,10 +117,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	// the signature is then encoded appropriately, and added to the response slice
 	for i, sigreq := range sigreqs {
 		var (
-			input      []byte
-			sig        signer.Signature
-			signedfile []byte
-			hashlog    string
+			input                 []byte
+			sig                   signer.Signature
+			signedfile            []byte
+			inputHash, outputHash string
 		)
 
 		// Decode the base64 input data
@@ -158,9 +166,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
 				return
 			}
-			// convert the input hash to hexadecimal for logging
-			hashlog = fmt.Sprintf("%X", input)
-
+			// the input is already a hash just convert it to hex
+			inputHash = fmt.Sprintf("%X", input)
+			outputHash = "unimplemented"
 		case "/sign/data":
 			dataSigner, ok := a.signers[signerID].(signer.DataSigner)
 			if !ok {
@@ -178,10 +186,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// calculate a hash of the input to store in the signing logs
-			md := sha256.New()
-			md.Write(input)
-			hashlog = fmt.Sprintf("%X", md.Sum(nil))
-
+			inputHash = hashSHA256AsHex(input)
+			outputHash = hashSHA256AsHex([]byte(sigresps[i].Signature))
 		case "/sign/file":
 			fileSigner, ok := a.signers[signerID].(signer.FileSigner)
 			if !ok {
@@ -195,20 +201,20 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
 			// calculate a hash of the input to store in the signing logs
-			md := sha256.New()
-			md.Write(input)
-			hashlog = fmt.Sprintf("%X", md.Sum(nil))
+			inputHash = hashSHA256AsHex(input)
+			outputHash = hashSHA256AsHex(signedfile)
 		}
 		log.WithFields(log.Fields{
-			"rid":        rid,
-			"options":    sigreq.Options,
-			"mode":       sigresps[i].Mode,
-			"ref":        sigresps[i].Ref,
-			"type":       sigresps[i].Type,
-			"signer_id":  sigresps[i].SignerID,
-			"input_hash": hashlog,
-			"user_id":    userid,
-			"t":          int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
+			"rid":         rid,
+			"options":     sigreq.Options,
+			"mode":        sigresps[i].Mode,
+			"ref":         sigresps[i].Ref,
+			"type":        sigresps[i].Type,
+			"signer_id":   sigresps[i].SignerID,
+			"input_hash":  inputHash,
+			"output_hash": outputHash,
+			"user_id":     userid,
+			"t":           int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("signing operation succeeded")
 	}
 	respdata, err := json.Marshal(sigresps)
@@ -251,6 +257,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		result         = map[string]bool{}
 		status         = http.StatusOK
 		requestContext = r.Context()
+		rid            = getRequestID(r)
 	)
 
 	// try to fetch the private key from the HSM for the first
@@ -258,24 +265,31 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// server start
 	if a.heartbeatConf.hsmSignerConf != nil {
 		var (
-			err         error
-			conf        = a.heartbeatConf.hsmSignerConf
-			checkResult = make(chan error, 1)
+			err                 error
+			hsmSignerConf       = a.heartbeatConf.hsmSignerConf
+			hsmHBTimeout        = a.heartbeatConf.HSMCheckTimeout
+			checkResult         = make(chan error, 1)
+			hsmHeartbeatStartTs = time.Now()
 		)
 		go func() {
-			checkResult <- conf.CheckHSMConnection()
+			checkResult <- hsmSignerConf.CheckHSMConnection()
 		}()
 		select {
-		case <-time.After(a.heartbeatConf.HSMCheckTimeout):
-			err = fmt.Errorf("Checking HSM connection for signer %s private key timed out", conf.ID)
+		case <-time.After(hsmHBTimeout):
+			err = fmt.Errorf("Checking HSM connection for signer %s private key timed out", hsmSignerConf.ID)
 		case err = <-checkResult:
 		}
 
 		if err == nil {
+			log.WithFields(log.Fields{
+				"rid":     rid,
+				"t":       int32(time.Since(hsmHeartbeatStartTs) / time.Millisecond),
+				"timeout": fmt.Sprintf("%s", hsmHBTimeout),
+			}).Info("HSM heartbeat completed successfully")
 			result["hsmAccessible"] = true
 			status = http.StatusOK
 		} else {
-			log.Errorf("error checking HSM connection for signer %s: %s", conf.ID, err)
+			log.Errorf("error checking HSM connection for signer %s: %s", hsmSignerConf.ID, err)
 			result["hsmAccessible"] = false
 			status = http.StatusInternalServerError
 		}
@@ -285,10 +299,16 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// don't fail the heartbeat since we only care about DB
 	// connectivity on server start
 	if a.db != nil {
+		dbHeartbeatStartTs := time.Now()
 		dbCheckCtx, dbCancel := context.WithTimeout(requestContext, a.heartbeatConf.DBCheckTimeout)
 		defer dbCancel()
 		err := a.db.CheckConnectionContext(dbCheckCtx)
 		if err == nil {
+			log.WithFields(log.Fields{
+				"rid":     rid,
+				"t":       int32(time.Since(dbHeartbeatStartTs) / time.Millisecond),
+				"timeout": fmt.Sprintf("%s", a.heartbeatConf.DBCheckTimeout),
+			}).Info("DB heartbeat completed successfully")
 			result["dbAccessible"] = true
 		} else {
 			log.Errorf("error checking DB connection: %s", err)

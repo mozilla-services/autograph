@@ -255,6 +255,10 @@ func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKe
 		return
 	}
 	publicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
+	if len(publicKey) < 50 {
+		err = errors.Errorf("encoded public key is shorter than 50char, which is impossible: %q", publicKey)
+		return
+	}
 	return
 }
 
