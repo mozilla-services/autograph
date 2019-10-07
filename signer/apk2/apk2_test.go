@@ -1,11 +1,11 @@
 package apk2
 
 import (
-	"testing"
-	"io/ioutil"
-	"os/exec"
-	"os"
 	"go.mozilla.org/autograph/signer"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"testing"
 )
 
 func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *APK2Signer {
@@ -130,8 +130,8 @@ func TestSignFile(t *testing.T) {
 }
 
 var apk2signerconf = signer.Configuration{
-	ID:         "apk2test",
-	Type:       Type,
+	ID:   "apk2test",
+	Type: Type,
 	PrivateKey: `-----BEGIN PRIVATE KEY-----
 MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCAUrUDTS86CuqV
 ctCo8jG8SSd4W/m/A4UF0J8T+la/pnJsZt2HhQ+Ma/+HmXF8QSeVax0LfrOaRmLy

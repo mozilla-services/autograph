@@ -7,7 +7,6 @@
 package main
 
 import (
-	"go.mozilla.org/autograph/signer/apk2"
 	"archive/zip"
 	"bytes"
 	"crypto/ecdsa"
@@ -17,6 +16,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"go.mozilla.org/autograph/signer/apk2"
 	"hash"
 	"io/ioutil"
 	"log"
