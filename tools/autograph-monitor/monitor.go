@@ -81,6 +81,9 @@ func main() {
 		conf.depRootHash = ""
 		conf.depTruststore = nil
 	}
+	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
+		conf.rootHash = os.Getenv("AUTOGRAPH_ROOT_HASH")
+	}
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
 		lambda.Start(Handler)
