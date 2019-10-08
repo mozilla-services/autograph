@@ -5,6 +5,22 @@ GO := go
 GOLINT := golint -set_exit_status
 GOTEST := $(GO) test -v -covermode=count -count=1
 
+PACKAGES := go.mozilla.org/autograph \
+go.mozilla.org/autograph/database \
+go.mozilla.org/autograph/signer \
+go.mozilla.org/autograph/formats \
+go.mozilla.org/autograph/signer/apk \
+go.mozilla.org/autograph/signer/apk2 \
+go.mozilla.org/autograph/signer/contentsignature \
+go.mozilla.org/autograph/signer/contentsignaturepki \
+go.mozilla.org/autograph/signer/mar \
+go.mozilla.org/autograph/signer/xpi \
+go.mozilla.org/autograph/signer/mar \
+go.mozilla.org/autograph/signer/pgp \
+go.mozilla.org/autograph/signer/gpg2 \
+go.mozilla.org/autograph/signer/genericrsa \
+go.mozilla.org/autograph/signer/rsapss
+
 all: generate test vet lint install
 
 install-golint:
@@ -28,47 +44,21 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	test 0 -eq $(shell $(GOLINT) go.mozilla.org/autograph \
-			go.mozilla.org/autograph/database \
-			go.mozilla.org/autograph/formats \
-			go.mozilla.org/autograph/signer \
-			go.mozilla.org/autograph/signer/contentsignature \
-			go.mozilla.org/autograph/signer/contentsignaturepki \
-			go.mozilla.org/autograph/signer/xpi \
-			go.mozilla.org/autograph/signer/apk \
-			go.mozilla.org/autograph/signer/apk2 \
-			go.mozilla.org/autograph/signer/mar \
-			go.mozilla.org/autograph/signer/pgp \
-			go.mozilla.org/autograph/signer/gpg2 \
-			go.mozilla.org/autograph/signer/genericrsa \
-			go.mozilla.org/autograph/signer/rsapss | tee /tmp/autograph-golint.txt | grep -v 'and that stutters' | wc -l)
+	test 0 -eq $(shell $(GOLINT) $(PACKAGES) | tee /tmp/autograph-golint.txt | grep -v 'and that stutters' | wc -l)
 
 show-lint:
 	cat /tmp/autograph-golint.txt
 	rm -f /tmp/autograph-golint.txt
 
 vet:
-	$(GO) vet go.mozilla.org/autograph
-	$(GO) vet go.mozilla.org/autograph/database
-	$(GO) vet go.mozilla.org/autograph/signer
-	$(GO) vet go.mozilla.org/autograph/formats
-	$(GO) vet go.mozilla.org/autograph/signer/apk
-	$(GO) vet go.mozilla.org/autograph/signer/apk2
-	$(GO) vet go.mozilla.org/autograph/signer/contentsignature
-	$(GO) vet go.mozilla.org/autograph/signer/contentsignaturepki
-	$(GO) vet go.mozilla.org/autograph/signer/mar
-	$(GO) vet go.mozilla.org/autograph/signer/xpi
-	$(GO) vet go.mozilla.org/autograph/signer/mar
-	$(GO) vet go.mozilla.org/autograph/signer/pgp
-	$(GO) vet go.mozilla.org/autograph/signer/gpg2
-	$(GO) vet go.mozilla.org/autograph/signer/genericrsa
-	$(GO) vet go.mozilla.org/autograph/signer/rsapss
+	go vet $(PACKAGES)
 
 fmt-diff:
 	gofmt -d *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
 fmt-fix:
-	gofmt -w *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
+	go fmt $(PACKAGES)
+	gofmt -w tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
 testautograph:
 	$(GOTEST) -coverprofile=coverage_autograph.out go.mozilla.org/autograph
