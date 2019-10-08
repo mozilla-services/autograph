@@ -1,5 +1,6 @@
 #!/bin/bash
 [ -z "$2" ] && echo "$0 <config> <signer_id>" && echo "returns the SHA256 of the CACERT" && exit 1
+[ ! -r "$1" ] && echo "configuration file '$1' not found" && exit 1
 
 yqcmd=(yq -r -c ".signers | (map(select(.id | contains (\"$2\")))) | .[] .cacert")
 

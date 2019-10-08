@@ -33,7 +33,7 @@ jobs:
   unit-test:
     docker:
       - image: circleci/golang:1.13-buster
-      - image: circleci/postgres:11
+      - image: circleci/postgres:10.6
         environment:
           POSTGRES_USER: root
           POSTGRES_DB: autograph
@@ -44,7 +44,7 @@ jobs:
       - run:
           name: Install packages
           command: |
-            sudo apt-get -y install libltdl-dev gpg postgresql-client
+            sudo apt-get -y install libltdl-dev gpg postgresql-client apksigner
             make install-goveralls install-cover
       - run:
           name: Waiting for Postgres to be ready

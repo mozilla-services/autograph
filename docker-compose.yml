@@ -1,6 +1,8 @@
 version: "3"
 volumes:
-  tmpdir:
+  apptmpdir:
+  hsmtmpdir:
+  hsmconfig:
 services:
   db:
     container_name: autograph-db
@@ -25,7 +27,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - tmpdir:/tmp/
+      - apptmpdir:/tmp/
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/__heartbeat__"]
       interval: 60s
@@ -44,7 +46,8 @@ services:
     ports:
       - "8001:8001"
     volumes:
-      - tmpdir:/tmp/
+      - hsmtmpdir:/tmp/
+      - hsmconfig:/app/
     command:
       [
         "/app/wait-for-it.sh",
@@ -67,10 +70,11 @@ services:
       context: tools/autograph-monitor/
     environment:
       - AUTOGRAPH_URL=http://autograph-app:8000/
+      - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
     links:
       - app
     volumes:
-      - tmpdir:/tmp/
+      - apptmpdir:/tmp/
     command:
       [
         "/app/wait-for-it.sh",
@@ -86,16 +90,18 @@ services:
       context: tools/autograph-monitor/
     environment:
       - AUTOGRAPH_URL=http://autograph-app-hsm:8001/
+      - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
     links:
       - app-hsm
     volumes:
-      - tmpdir:/tmp/
+      - hsmtmpdir:/tmp/
+      - hsmconfig:/hsmapp/
     command:
       [
         "/app/wait-for-it.sh",
         "autograph-app-hsm:8001",
         "--",
         "/app/run-monitor-with-root-hash.sh",
-        "/tmp/autograph.softhsm.yaml",
+        "/hsmapp/autograph.softhsm.yaml",
         "normandy",
       ]

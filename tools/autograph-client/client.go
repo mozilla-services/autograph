@@ -21,6 +21,7 @@ import (
 
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/apk"
+	"go.mozilla.org/autograph/signer/apk2"
 	"go.mozilla.org/autograph/signer/contentsignature"
 	"go.mozilla.org/autograph/signer/genericrsa"
 	"go.mozilla.org/autograph/signer/gpg2"
@@ -311,6 +312,12 @@ examples:
 						log.Fatal(err)
 					}
 					sigStatus = verifyAPK(sigData)
+				case apk2.Type:
+					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
+					if err != nil {
+						log.Fatal(err)
+					}
+					sigStatus = verifyAPK2(sigData)
 				case mar.Type:
 					sigStatus = verifyMAR(input)
 					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
@@ -504,10 +511,16 @@ func verifyAPK(signedAPK []byte) bool {
 }
 
 func verifyMAR(signedMAR []byte) bool {
+	log.Println("mar verification is not implemented, skipping")
 	return true
 }
 
 func verifyPGP(input []byte, signature string, pubkey string) bool {
+	log.Println("pgp verification is not implemented, skipping")
+	return true
+}
 
+func verifyAPK2(input []byte) bool {
+	log.Println("apk2 verification is not implemented, skipping")
 	return true
 }

@@ -16,6 +16,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"go.mozilla.org/autograph/signer/apk2"
 	"hash"
 	"io/ioutil"
 	"log"
@@ -96,7 +97,7 @@ func TestSignaturePass(t *testing.T) {
 			[]formats.SignatureRequest{
 				formats.SignatureRequest{
 					Input: "U2lnbmF0dXJlLVZlcnNpb246IDEuMApNRDUtRGlnZXN0LU1hbmlmZXN0OiA3d3RFNTF2bW00NlZQRmEvNkF0NWZ3PT0KU0hBMS1EaWdlc3QtTWFuaWZlc3Q6IEZMZEFIZHQvVjdFVHozK0JMUUtHcFFBenoyRT0KCg==",
-					KeyID: "testapp-android",
+					KeyID: "testapp-android-legacy",
 				},
 			},
 		},
@@ -188,7 +189,7 @@ func TestSignaturePass(t *testing.T) {
 					response.PublicKey)
 			case xpi.Type:
 				err = verifyXPISignature(testcase.signaturerequests[j].Input, response.Signature)
-			case apk.Type:
+			case apk.Type, apk2.Type:
 				if req.URL.RequestURI() == "/sign/data" {
 					// ok this is a bit of a hack but since apk signatures are really just pkcs7 we can
 					// reuse the xpi verification code here...
@@ -767,7 +768,7 @@ func verifyAPKSignature(signedAPK []byte) error {
 	)
 	for _, f := range r.File {
 		switch f.Name {
-		case "META-INF/SIGNATURE.SF":
+		case "META-INF/SIGNATURE.SF", "META-INF/APK2_TES.SF":
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
@@ -777,7 +778,7 @@ func verifyAPKSignature(signedAPK []byte) error {
 			if err != nil {
 				return err
 			}
-		case "META-INF/SIGNATURE.RSA":
+		case "META-INF/SIGNATURE.RSA", "META-INF/APK2_TES.RSA":
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
