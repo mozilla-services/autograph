@@ -24,8 +24,13 @@ const (
 // APK2Signer holds the configuration of the signer
 type APK2Signer struct {
 	signer.Configuration
+
+	// minSdkVersion is the minimum Android SDK version the signed APK
+	// will be compatible with. We need this when using ECDSA keys that
+	// are only compatible with SDK>=18
 	minSdkVersion string
-	pkcs8Key      []byte
+
+	pkcs8Key []byte
 }
 
 // New initializes an apk signer using a configuration
@@ -54,7 +59,9 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	case *ecdsa.PrivateKey:
 		// ecdsa is only supported in sdk 18 and higher
 		s.minSdkVersion = "18"
+		log.Printf("apk2: setting min android sdk version to 18 as required to sign with ecdsa")
 	default:
+		log.Printf("apk2: setting min android sdk version to 9")
 		s.minSdkVersion = "9"
 	}
 	//apksigner wants a pkcs8 encoded privkey
