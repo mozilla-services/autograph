@@ -511,13 +511,16 @@ func verifyAPK(signedAPK []byte) bool {
 }
 
 func verifyMAR(signedMAR []byte) bool {
+	log.Println("mar verification is not implemented, skipping")
 	return true
 }
 
 func verifyPGP(input []byte, signature string, pubkey string) bool {
+	log.Println("pgp verification is not implemented, skipping")
 	return true
 }
 
 func verifyAPK2(input []byte) bool {
+	log.Println("apk2 verification is not implemented, skipping")
 	return true
 }
