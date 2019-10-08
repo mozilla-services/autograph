@@ -33,7 +33,7 @@ jobs:
   unit-test:
     docker:
       - image: circleci/golang:1.13-buster
-      - image: circleci/postgres:12
+      - image: circleci/postgres:10.6
         environment:
           POSTGRES_USER: root
           POSTGRES_DB: autograph

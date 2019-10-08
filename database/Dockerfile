@@ -1,4 +1,4 @@
-FROM postgres:12
+FROM postgres:10.6
 
 # CircleCI does not support mounting folders, so add files directly
 # https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
