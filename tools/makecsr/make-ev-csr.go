@@ -23,14 +23,14 @@ import (
 func main() {
 	var (
 		keyLabel string
-		ou       string
-		cn       string
-		email    string
+		// ou       string
+		cn string
+		// email    string
 	)
 	flag.StringVar(&keyLabel, "l", "mykey", "Label of the key in the HSM")
-	flag.StringVar(&ou, "ou", "Mozilla AMO Production Signing Service", "OrganizationalUnit of the Subject")
-	flag.StringVar(&cn, "cn", "Content Signing Intermediate", "CommonName of the Subject")
-	flag.StringVar(&email, "email", "foxsec@mozilla.com", "Email of the Subject")
+	// flag.StringVar(&ou, "ou", "Mozilla AMO Production Signing Service", "OrganizationalUnit of the Subject")
+	// flag.StringVar(&cn, "cn", "Content Signing Intermediate", "CommonName of the Subject")
+	// flag.StringVar(&email, "email", "foxsec@mozilla.com", "Email of the Subject")
 	flag.Parse()
 
 	p11Ctx, err := crypto11.ConfigureFromFile("crypto11.config")
@@ -51,15 +51,24 @@ func main() {
 	sigalg := x509.ECDSAWithSHA384
 	switch privKey.(type) {
 	case *crypto11.PKCS11PrivateKeyRSA:
-		sigalg = x509.SHA384WithRSA
+		sigalg = x509.SHA256WithRSA
 
 	}
+	// hard code values for this cert
 	crtReq := &x509.CertificateRequest{
 		Subject: pkix.Name{
-			CommonName:         fmt.Sprintf("%s/emailAddress=%s", cn, email),
+			CommonName:         "Mozilla Corporation",
+			Locality:           []string{"Mountain View"},
+			Province:           []string{"California"},
 			Organization:       []string{"Mozilla Corporation"},
-			OrganizationalUnit: []string{ou},
+			OrganizationalUnit: []string{"Release Engineering"},
 			Country:            []string{"US"},
+			ExtraNames: []pkix.AttributeTypeAndValue{
+				pkix.AttributeTypeAndValue{
+					Type:  []int{1, 2, 840, 113549, 1, 9, 1},
+					Value: []string{"release+certificates@mozilla.com"},
+				},
+			},
 		},
 		DNSNames:           []string{cn},
 		SignatureAlgorithm: sigalg,
