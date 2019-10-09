@@ -53,7 +53,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
 	golang.org/x/text v0.3.2
-	google.golang.org/api v0.8.0
+	google.golang.org/api v0.11.0
 	google.golang.org/grpc v1.24.0
 	gopkg.in/yaml.v2 v2.2.4
 	vitess.io/vitess v2.1.1+incompatible
