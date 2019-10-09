@@ -47,7 +47,7 @@ require (
 	go.mozilla.org/mozlogrus v2.0.0+incompatible
 	go.mozilla.org/pkcs7 v0.0.0-20181213175627-3cffc6fbfe83
 	go.mozilla.org/sops v0.0.0-20190611200209-e9e1e87723c8
-	go.opencensus.io v0.22.0
+	go.opencensus.io v0.22.1
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
