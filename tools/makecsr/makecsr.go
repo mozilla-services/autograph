@@ -24,7 +24,7 @@ func main() {
 	var (
 		keyLabel string
 		// ou       string
-		cn       string
+		cn string
 		// email    string
 	)
 	flag.StringVar(&keyLabel, "l", "mykey", "Label of the key in the HSM")
@@ -58,15 +58,15 @@ func main() {
 	crtReq := &x509.CertificateRequest{
 		Subject: pkix.Name{
 			CommonName:         "Mozilla Corporation",
-			Locality:	    []string{"Mountain View"},
-			Province:	    []string{"California"},
+			Locality:           []string{"Mountain View"},
+			Province:           []string{"California"},
 			Organization:       []string{"Mozilla Corporation"},
 			OrganizationalUnit: []string{"Release Engineering"},
 			Country:            []string{"US"},
-			ExtraNames:         []pkix.AttributeTypeAndValue{
+			ExtraNames: []pkix.AttributeTypeAndValue{
 				pkix.AttributeTypeAndValue{
-					Type:	[]int{1, 2, 840, 113549, 1, 9, 1},
-					Value:	[]string{"release+certificates@mozilla.com"},
+					Type:  []int{1, 2, 840, 113549, 1, 9, 1},
+					Value: []string{"release+certificates@mozilla.com"},
 				},
 			},
 		},
