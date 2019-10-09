@@ -30,7 +30,7 @@ require (
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c
 	github.com/lib/pq v1.2.0
 	github.com/mattn/go-colorable v0.1.2
-	github.com/mattn/go-isatty v0.0.9
+	github.com/mattn/go-isatty v0.0.10
 	github.com/miekg/pkcs11 v1.0.3
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-wordwrap v1.0.0
@@ -54,7 +54,7 @@ require (
 	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
 	golang.org/x/text v0.3.2
 	google.golang.org/api v0.8.0
-	google.golang.org/grpc v1.23.0
-	gopkg.in/yaml.v2 v2.2.2
+	google.golang.org/grpc v1.24.0
+	gopkg.in/yaml.v2 v2.2.4
 	vitess.io/vitess v2.1.1+incompatible
 )
