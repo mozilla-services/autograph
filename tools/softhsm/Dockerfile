@@ -19,8 +19,7 @@ RUN mkdir -p /var/lib/softhsm/tokens && \
       softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
 
 # load dev keys
-ADD webextensions-rsa.pem /go/src/go.mozilla.org/autograph/tools/softhsm/
-ADD extensions-ecdsa-pk8.pem /go/src/go.mozilla.org/autograph/tools/softhsm/
+ADD . /go/src/go.mozilla.org/autograph/tools/softhsm/
 
 # Import a key pair from the given path. The file must be in PKCS#8-format. Use with --slot or --token or --serial, --file-pin, --label, --id, --no-public-key, and --pxin.
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --id deadbeef --import /go/src/go.mozilla.org/autograph/tools/softhsm/webextensions-rsa.pem
