@@ -55,7 +55,7 @@ For example:
 
     signers:
     - id: some-rsa-key
-      type: rsa
+      type: genericrsa
       mode: pss
       hash: sha256
       saltlength: -1
@@ -93,7 +93,7 @@ public key is from the config.
     [
       {
         "ref": "29cfra8jxug9r3mzjapmlbjlp5",
-        "type": "rsa",
+        "type": "genericrsa",
         "mode": "pss",
         "signer_id": "dummy-rsa",
         "public_key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4SlEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3yi62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PYyUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cRmwIDAQAB",
