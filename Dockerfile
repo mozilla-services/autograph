@@ -23,8 +23,12 @@ ADD . /go/src/go.mozilla.org/autograph
 ADD autograph.yaml /app
 ADD version.json /app
 
-RUN go install go.mozilla.org/autograph
+RUN go install go.mozilla.org/autograph && \
+    rm -rf /go/src/ /usr/local/go
 
 USER app
 WORKDIR /app
+
+RUN mkdir -p /tmp/autograph/chains/
+
 CMD /go/bin/autograph
