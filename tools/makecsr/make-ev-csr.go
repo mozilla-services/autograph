@@ -9,8 +9,10 @@ package main
 
 import (
 	"crypto/rand"
+	//hwine"crypto/rsa" //hwine
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/pem"
 	"flag"
 	"fmt"
@@ -23,15 +25,19 @@ import (
 func main() {
 	var (
 		keyLabel string
-		// ou       string
-		cn string
-		// email    string
 	)
 	flag.StringVar(&keyLabel, "l", "mykey", "Label of the key in the HSM")
-	// flag.StringVar(&ou, "ou", "Mozilla AMO Production Signing Service", "OrganizationalUnit of the Subject")
-	// flag.StringVar(&cn, "cn", "Content Signing Intermediate", "CommonName of the Subject")
-	// flag.StringVar(&email, "email", "foxsec@mozilla.com", "Email of the Subject")
 	flag.Parse()
+
+	// We need the email address encoded as asn1.ia5
+	email_utf8 := "release+certificates@mozilla.com"
+	type ia5String struct {
+		A string `asn1:"ia5"`
+	}
+	email_ia5, err := asn1.Marshal(ia5String{email_utf8})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	p11Ctx, err := crypto11.ConfigureFromFile("crypto11.config")
 	if err != nil {
@@ -48,11 +54,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	//hwine privKey, _ := rsa.GenerateKey(rand.Reader, 2048) //hwine
+	//hwine sigalg = x509.SHA256WithRSA //hwine
 	sigalg := x509.ECDSAWithSHA384
 	switch privKey.(type) {
 	case *crypto11.PKCS11PrivateKeyRSA:
 		sigalg = x509.SHA256WithRSA
-
 	}
 	// hard code values for this cert
 	crtReq := &x509.CertificateRequest{
@@ -66,11 +73,11 @@ func main() {
 			ExtraNames: []pkix.AttributeTypeAndValue{
 				pkix.AttributeTypeAndValue{
 					Type:  []int{1, 2, 840, 113549, 1, 9, 1},
-					Value: []string{"release+certificates@mozilla.com"},
+					Value: email_ia5,
 				},
 			},
 		},
-		DNSNames:           []string{cn},
+		DNSNames:           []string{"Mozilla Corporation"},
 		SignatureAlgorithm: sigalg,
 	}
 	fmt.Printf("+%v\n", crtReq)
