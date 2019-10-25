@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 GO := go
 GOLINT := golint -set_exit_status
-GOTEST := $(GO) test -v -covermode=count -count=1
-PACKAGE_NAMES := $(shell git grep -E -n --no-color -h '^package [a-z]+$$' -- '*.go' ':!vendor/' ':!tools/' | cut -d ':' -f 2 | sed 's/package\s+//g' | sed 's/main/autograph/g' | sort | uniq)
+GOTEST := $(GO) test -v -coverprofile coverage.out -covermode=count -count=1
+PACKAGE_NAMES := $(shell git grep -E -n --no-color -h '^package [a-z0-9]+$$' -- '*.go' ':!vendor/' ':!tools/' | cut -d ':' -f 2 | sed 's/package //g' | sed 's/main/autograph/g' | sort | uniq) monitor
 PACKAGES := $(addprefix go.mozilla.org/,$(PACKAGE_NAMES))
+TEST_TARGETS := $(addprefix test,$(PACKAGE_NAMES))
 
 all: generate test vet lint install
 
@@ -46,96 +47,58 @@ fmt-fix:
 	go fmt $(PACKAGES)
 	gofmt -w tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
-testautograph:
-	$(GOTEST) -coverprofile=coverage_autograph.out go.mozilla.org/autograph
+# for test* and showcoverage* targets include known package names for
+# autocompletion but fall through to generic implementation
 
-showcoverageautograph: testautograph
-	$(GO) tool cover -html=coverage_autograph.out
-
-testautographdb:
-	$(GOTEST) -coverprofile=coverage_db.out go.mozilla.org/autograph/database
-
-showcoverageautographdb: testautographdb
-	$(GO) tool cover -html=coverage_db.out
-
-testautographformats:
-	$(GOTEST) -coverprofile=coverage_formats.out go.mozilla.org/autograph/formats
-
-showcoverageautographformats: testautographformats
-	$(GO) tool cover -html=coverage_formats.out
-
-testsigner:
-	$(GOTEST) -coverprofile=coverage_signer.out go.mozilla.org/autograph/signer
-
-showcoveragesigner: testsigner
-	$(GO) tool cover -html=coverage_signer.out
-
-testmonitor:
-	$(GOTEST) -coverprofile=coverage_monitor.out go.mozilla.org/autograph/tools/autograph-monitor
-
-testcs:
-	$(GOTEST) -coverprofile=coverage_cs.out go.mozilla.org/autograph/signer/contentsignature
-
-showcoveragecs: testcs
-	$(GO) tool cover -html=coverage_cs.out
-
-testcspki:
-	$(GOTEST) -coverprofile=coverage_cspki.out go.mozilla.org/autograph/signer/contentsignaturepki
-
-showcoveragecspki: testcspki
-	$(GO) tool cover -html=coverage_cspki.out
-
-testxpi:
-	$(GOTEST) -coverprofile=coverage_xpi.out go.mozilla.org/autograph/signer/xpi
-
-showcoveragexpi: testxpi
-	$(GO) tool cover -html=coverage_xpi.out
+# non-signer package paths
+testautograph: PACKAGE_PATH = go.mozilla.org/autograph
+testdatabase: PACKAGE_PATH = go.mozilla.org/autograph/database
+testformats:  PACKAGE_PATH = go.mozilla.org/autograph/formats
+testmonitor: PACKAGE_PATH = go.mozilla.org/autograph/tools/autograph-monitor
+testsigner: PACKAGE_PATH = go.mozilla.org/autograph/signer
 
 testapk:
-	$(GOTEST) -coverprofile=coverage_apk.out go.mozilla.org/autograph/signer/apk
-
-showcoverageapk: testapk
-	$(GO) tool cover -html=coverage_apk.out
-
-testapk2:
-	$(GOTEST) -coverprofile=coverage_apk2.out go.mozilla.org/autograph/signer/apk2
-
-showcoverageapk2: testapk2
-	$(GO) tool cover -html=coverage_apk2.out
-
-testmar:
-	$(GOTEST) -coverprofile=coverage_mar.out go.mozilla.org/autograph/signer/mar
-
-showcoveragemar: testmar
-	$(GO) tool cover -html=coverage_mar.out
-
-testpgp:
-	$(GOTEST) -coverprofile=coverage_pgp.out go.mozilla.org/autograph/signer/pgp
-
-showcoveragepgp: testpgp
-	$(GO) tool cover -html=coverage_pgp.out
-
-testgpg2:
-	$(GOTEST) -coverprofile=coverage_gpg2.out go.mozilla.org/autograph/signer/gpg2
-
-showcoveragegpg2: testgpg2
-	$(GO) tool cover -html=coverage_gpg2.out
-
+testcontentsignature:
+testcontentsignaturepki:
 testgenericrsa:
-	$(GOTEST) -coverprofile=coverage_genericrsa.out go.mozilla.org/autograph/signer/genericrsa
-
-showcoveragegenericrsa: testgenericrsa
-	$(GO) tool cover -html=coverage_genericrsa.out
-
+testgpg2:
+testmar:
+testpgp:
 testrsapss:
-	$(GOTEST) -coverprofile=coverage_rsapss.out go.mozilla.org/autograph/signer/rsapss
+testxpi:
+# default vars for test* targets https://www.gnu.org/software/make/manual/html_node/Pattern_002dspecific.html#Pattern_002dspecific
+test%: PACKAGE_NAME = $(subst test,,$@)
+test%: PACKAGE_PATH = $(addprefix go.mozilla.org/autograph/signer/,$(subst test,,$@))
+test%: PACKAGE_TEST_OUTPUT_DIR = $(subst test,testprofiles/,$@)
+test%:
+	mkdir -p $(PACKAGE_TEST_OUTPUT_DIR)
+	$(GOTEST) -outputdir "testprofiles/$(PACKAGE_NAME)" $(PACKAGE_PATH)
 
-showcoveragersapss: testrsapss
-	$(GO) tool cover -html=coverage_rsapss.out
+showcoverageautograph:
+showcoveragedatabase:
+showcoverageformats:
+showcoveragemonitor:
+showcoveragesigner:
 
-test: testautograph testautographdb testautographformats testsigner testcs testcspki testxpi testapk testapk2 testmar testpgp testgpg2 testgenericrsa testrsapss testmonitor
+showcoverageapk:
+showcoveragecontentsignature:
+showcoveragecontentsignaturepki:
+showcoveragegenericrsa:
+showcoveragegpg2:
+showcoveragemar:
+showcoveragepgp:
+showcoveragersapss:
+showcoveragexpi:
+
+showcoverage%: PACKAGE_NAME = $(subst showcoverage,,$@)
+showcoverage%: PACKAGE_TEST_OUTPUT_DIR = $(subst showcoverage,testprofiles/,$@)
+showcoverage%:
+	make $(subst showcoverage,test,$@)
+	$(GO) tool cover -html=$(PACKAGE_TEST_OUTPUT_DIR)/coverage.out
+
+test: $(TEST_TARGETS)
 	echo 'mode: count' > coverage.out
-	grep -v mode coverage_*.out | cut -d ':' -f 2,3 >> coverage.out
+	grep -v mode $(shell find testprofiles/ -name coverage.out) | cut -d ':' -f 2,3 >> coverage.out
 
 showcoverage: test
 	$(GO) tool cover -html=coverage.out
@@ -152,4 +115,5 @@ integration-test:
 dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
+.SUFFIXES:            # Delete the default suffixes
 .PHONY: all dummy-statsd test generate vendor integration-test
