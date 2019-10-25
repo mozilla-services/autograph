@@ -4,22 +4,8 @@
 GO := go
 GOLINT := golint -set_exit_status
 GOTEST := $(GO) test -v -covermode=count -count=1
-
-PACKAGES := go.mozilla.org/autograph \
-go.mozilla.org/autograph/database \
-go.mozilla.org/autograph/signer \
-go.mozilla.org/autograph/formats \
-go.mozilla.org/autograph/signer/apk \
-go.mozilla.org/autograph/signer/apk2 \
-go.mozilla.org/autograph/signer/contentsignature \
-go.mozilla.org/autograph/signer/contentsignaturepki \
-go.mozilla.org/autograph/signer/mar \
-go.mozilla.org/autograph/signer/xpi \
-go.mozilla.org/autograph/signer/mar \
-go.mozilla.org/autograph/signer/pgp \
-go.mozilla.org/autograph/signer/gpg2 \
-go.mozilla.org/autograph/signer/genericrsa \
-go.mozilla.org/autograph/signer/rsapss
+PACKAGE_NAMES := $(shell git grep -E -n --no-color -h '^package [a-z]+$$' -- '*.go' ':!vendor/' ':!tools/' | cut -d ':' -f 2 | sed 's/package\s+//g' | sed 's/main/autograph/g' | sort | uniq)
+PACKAGES := $(addprefix go.mozilla.org/,$(PACKAGE_NAMES))
 
 all: generate test vet lint install
 
