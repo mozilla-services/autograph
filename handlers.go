@@ -23,7 +23,7 @@ import (
 	"go.mozilla.org/autograph/signer"
 )
 
-// HeartbeatConfig configures the heartbeat handler. It sets timeouts
+// heartbeatConfig configures the heartbeat handler. It sets timeouts
 // for each backing service to check.
 //
 // `hsmHeartbeatSignerConf` is determined added on boot in initHSM
