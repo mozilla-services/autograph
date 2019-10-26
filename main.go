@@ -186,6 +186,14 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	router.HandleFunc("/sign/file", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/data", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
+	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
+		err = setRuntimeConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+		addProfilerHandlers(router)
+		log.Infof("enabled HTTP perf profiler")
+	}
 
 	server := &http.Server{
 		IdleTimeout:  conf.Server.IdleTimeout,
