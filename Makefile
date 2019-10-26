@@ -73,7 +73,9 @@ test%: PACKAGE_TEST_OUTPUT_DIR = $(subst test,testprofiles/,$@)
 test%:
 	mkdir -p $(PACKAGE_TEST_OUTPUT_DIR)
 	$(GOTEST) -outputdir "testprofiles/$(PACKAGE_NAME)" $(PACKAGE_PATH)
+ifeq ($(RACE_TEST),1)
 	$(GO) test -v -race $(PACKAGE_PATH)
+endif
 
 showcoverageautograph:
 showcoveragedatabase:
