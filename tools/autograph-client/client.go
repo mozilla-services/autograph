@@ -122,6 +122,9 @@ examples:
 
 * sign SHA1 hashed data with rsa pss:
         $ go run client.go -D -a $(echo hi | sha1sum -b | cut -d ' ' -f 1 | xxd -r -p | base64) -k dummyrsapss -o signed-hash.out -ko /tmp/testkey.pub
+
+* issue an authenticode signature on a hash:
+        $ go run client.go -D -a "$(echo foo | sha1sum -b | cut -d ' ' -f 1 | xxd -r -p | base64)" -k testauthenticode -o /tmp/sig.bin -ko /tmp/pub.key
 `)
 	}
 	flag.StringVar(&userid, "u", "alice", "User ID")

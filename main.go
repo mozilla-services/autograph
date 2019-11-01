@@ -95,17 +95,41 @@ func main() {
 
 func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, authPrint, debug bool) {
 	var (
-		cfgFile string
-		port    string
-		err     error
-		fset    = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
+		cfgFile  string
+		port     string
+		err      error
+		logLevel string
+		fset     = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
 	)
 
 	fset.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	fset.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
-	fset.BoolVar(&debug, "D", false, "Print debug logs")
+	// https://github.com/sirupsen/logrus#level-logging
+	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
+	fset.BoolVar(&debug, "D", false, "Sets the log level to debug to print debug logs.")
 	fset.Parse(args)
+
+	switch logLevel {
+	case "debug":
+		debug = true
+	case "":
+		if debug {
+			logLevel = "debug"
+		}
+	default:
+		if debug {
+			log.Fatalf("Got debug true, but conflicting log level: %s", logLevel)
+		}
+	}
+	if logLevel != "" {
+		level, err := log.ParseLevel(logLevel)
+		if err != nil {
+			log.Fatalf("Error parsing log level: %s", err)
+		}
+		log.SetLevel(level)
+		log.Infof("Set logging level to %s", level)
+	}
 
 	err = conf.loadFromFile(cfgFile)
 	if err != nil {
@@ -186,6 +210,14 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	router.HandleFunc("/sign/file", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/data", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
+	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
+		err = setRuntimeConfig()
+		if err != nil {
+			log.Fatal(err)
+		}
+		addProfilerHandlers(router)
+		log.Infof("enabled HTTP perf profiler")
+	}
 
 	server := &http.Server{
 		IdleTimeout:  conf.Server.IdleTimeout,

@@ -6,7 +6,7 @@ require (
 	contrib.go.opencensus.io/exporter/ocagent v0.6.0
 	github.com/Azure/azure-sdk-for-go v32.6.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.9.2
-	github.com/Azure/go-autorest/autorest/adal v0.6.0
+	github.com/Azure/go-autorest/autorest/adal v0.8.0
 	github.com/Azure/go-autorest/autorest/azure/auth v0.3.0
 	github.com/Azure/go-autorest/autorest/azure/cli v0.3.0
 	github.com/Azure/go-autorest/autorest/date v0.2.0
@@ -14,10 +14,10 @@ require (
 	github.com/Azure/go-autorest/autorest/validation v0.2.0
 	github.com/Azure/go-autorest/logger v0.1.0
 	github.com/Azure/go-autorest/tracing v0.5.0
-	github.com/DataDog/datadog-go v2.2.0+incompatible
+	github.com/DataDog/datadog-go v2.3.0+incompatible
 	github.com/ThalesIgnite/crypto11 v0.1.0
 	github.com/aws/aws-lambda-go v1.13.2
-	github.com/aws/aws-sdk-go v1.25.9
+	github.com/aws/aws-sdk-go v1.25.19
 	github.com/census-instrumentation/opencensus-proto v0.2.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dimchansky/utfbom v1.1.0
