@@ -14,7 +14,7 @@ jobs:
       - run:
           name: run golint
           command: |
-            make install-golint lint
+            make install-golint lint check-no-crypto11-in-signers
             make show-lint
       - run:
           name: run gofmt
