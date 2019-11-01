@@ -33,9 +33,13 @@ tag: all
 lint:
 	test 0 -eq $(shell $(GOLINT) $(PACKAGE_PATHS) | tee /tmp/autograph-golint.txt | grep -v 'and that stutters' | wc -l)
 
+# refs: https://github.com/mozilla-services/autograph/issues/247
+check-no-crypto11-in-signers:
+	test 0 -eq $(shell grep -Ri crypto11 signer/*/ | tee /tmp/autograph-crypto11-check.txt | wc -l)
+
 show-lint:
-	cat /tmp/autograph-golint.txt
-	rm -f /tmp/autograph-golint.txt
+	cat /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
+	rm -f /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
 
 vet:
 	go vet $(PACKAGE_PATHS)
@@ -119,4 +123,4 @@ dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
 .SUFFIXES:            # Delete the default suffixes
-.PHONY: all dummy-statsd test generate vendor integration-test
+.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers

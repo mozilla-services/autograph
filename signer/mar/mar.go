@@ -13,8 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"go.mozilla.org/autograph/signer"
 	margo "go.mozilla.org/mar"
-
-	"github.com/ThalesIgnite/crypto11"
 )
 
 const (
@@ -48,6 +46,7 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 	if conf.PrivateKey == "" {
 		return nil, errors.New("mar: missing private key in signer configuration")
 	}
+
 	s.PrivateKey = conf.PrivateKey
 	s.rand = conf.GetRand()
 	s.signingKey, s.publicKey, s.PublicKey, err = conf.GetKeys()
@@ -55,29 +54,18 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 		return nil, errors.Wrap(err, "mar: failed to get keys")
 	}
 
-	// select the default signature algorithm depending on the private key type
-	switch s.signingKey.(type) {
-	case *rsa.PrivateKey:
+	// select the default signature algorithm depending on the public key type
+	switch pubKey := s.publicKey.(type) {
+	case *rsa.PublicKey:
 		s.defaultSigAlg = margo.SigAlgRsaPkcs1Sha384
-	case *crypto11.PKCS11PrivateKeyRSA:
-		s.defaultSigAlg = margo.SigAlgRsaPkcs1Sha384
-	case *ecdsa.PrivateKey:
-		switch s.publicKey.(*ecdsa.PublicKey).Params().Name {
+	case *ecdsa.PublicKey:
+		switch pubKey.Params().Name {
 		case elliptic.P256().Params().Name:
 			s.defaultSigAlg = margo.SigAlgEcdsaP256Sha256
 		case elliptic.P384().Params().Name:
 			s.defaultSigAlg = margo.SigAlgEcdsaP384Sha384
 		default:
-			return nil, fmt.Errorf("mar: elliptic curve %q is not supported", s.publicKey.(*ecdsa.PublicKey).Params().Name)
-		}
-	case *crypto11.PKCS11PrivateKeyECDSA:
-		switch s.publicKey.(*ecdsa.PublicKey).Params().Name {
-		case elliptic.P256().Params().Name:
-			s.defaultSigAlg = margo.SigAlgEcdsaP256Sha256
-		case elliptic.P384().Params().Name:
-			s.defaultSigAlg = margo.SigAlgEcdsaP384Sha384
-		default:
-			return nil, fmt.Errorf("mar: elliptic curve %q is not supported", s.publicKey.(*ecdsa.PublicKey).Params().Name)
+			return nil, fmt.Errorf("mar: elliptic curve %q is not supported", pubKey.Params().Name)
 		}
 	default:
 		return nil, errors.Errorf("mar: unsupported public key type %T", s.signingKey)
