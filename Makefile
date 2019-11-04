@@ -81,6 +81,19 @@ ifeq ($(RACE_TEST),1)
 	$(GO) test -v -race $(PACKAGE_PATH)
 endif
 
+benchmarkxpi:
+benchmark%: PACKAGE_NAME = $(subst benchmark,,$@)
+benchmark%: PACKAGE_PATH = $(addprefix go.mozilla.org/autograph/signer/,$(subst benchmark,,$@))
+benchmark%: PACKAGE_TEST_OUTPUT_DIR = $(subst benchmark,testprofiles/,$@)
+benchmark%:
+	mkdir -p $(PACKAGE_TEST_OUTPUT_DIR)
+	$(GO) test -run=XXX -benchtime=15s -bench=. -v -cpuprofile "testprofiles/$(PACKAGE_NAME)/cpu.out" $(PACKAGE_PATH)
+
+showbenchmarkxpi:
+showbenchmark%: PACKAGE_NAME = $(subst showbenchmark,,$@)
+showbenchmark%:
+	go tool pprof -web "testprofiles/$(PACKAGE_NAME)/cpu.out"
+
 showcoverageautograph:
 showcoveragedatabase:
 showcoverageformats:
