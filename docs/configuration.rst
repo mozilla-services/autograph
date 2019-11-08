@@ -161,7 +161,7 @@ the configurations.
 
 .. -- a-h-s.dot contains the source for the svg file, which can be regenerated
 	by ``dot -Tsvg a-h-s.dot >a-h-s.dot.svg``
-.. image:: a-h-s.dot.svg
+.. image:: a-h-s.dot.svg?sanitize=true
 	:alt: image of relationships between authorization objects
 
 .. _`parsed as a time.Duration`: https://golang.org/pkg/time/#ParseDuration
