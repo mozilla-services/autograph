@@ -4,7 +4,10 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
+
+	"go.mozilla.org/autograph/formats"
 )
 
 var (
@@ -98,4 +101,84 @@ func (tx *Transaction) End() error {
 		return err
 	}
 	return nil
+}
+
+const selectAuths = `SELECT
+hawk_credentials.id as hawk_id,
+hawk_credentials.secret as hawk_secret,
+EXTRACT(EPOCH FROM hawk_credentials.validity) as hawk_validity,
+array_agg(signers.id) AS signer_ids
+FROM
+authorizations
+INNER JOIN hawk_credentials ON authorizations.credential_id = hawk_credentials.id
+INNER JOIN signers ON authorizations.signer_id = signers.id
+GROUP BY hawk_credentials.id`
+
+// GetAuthorizations returns the hawk credentials and validity and any authorized signer IDs
+func (db *Handler) GetAuthorizations() (auths []formats.Authorization, err error) {
+	rows, err := db.Query(selectAuths)
+	if err != nil {
+		err = errors.Wrapf(err, "Error selecting auths")
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var (
+			auth    formats.Authorization
+			seconds int64
+		)
+		if err = rows.Scan(&auth.ID, &auth.Key, &seconds, pq.Array(&auth.Signers)); err != nil {
+			err = errors.Wrapf(err, "Error scanning auth row")
+			return
+		}
+		auth.HawkTimestampValidity = time.Duration(seconds) * time.Second
+		auths = append(auths, auth)
+	}
+	if err = rows.Err(); err != nil {
+		err = errors.Wrapf(err, "Error after iterating over auth rows")
+		return
+	}
+	return
+}
+
+// InsertAuthorization creates inserts a hawk credential w/ validity,
+// authorized signer IDs, and permissions to access the signers for
+// the creds
+func (db *Handler) InsertAuthorization(auth formats.Authorization) (err error) {
+	var tx *sql.Tx
+	tx, err = db.Begin()
+	if err != nil {
+		err = errors.Wrap(err, "failed to create transaction")
+		return err
+	}
+
+	_, err = tx.Exec(`INSERT INTO hawk_credentials(id, secret, validity)
+				VALUES ($1, $2, $3)`, &auth.ID, &auth.Key, auth.HawkTimestampValidity.Seconds())
+	if err != nil {
+		tx.Rollback()
+		err = errors.Wrapf(err, "failed to insert hawk creds for id %s", auth.ID)
+		return err
+	}
+	for _, signerID := range auth.Signers {
+		_, err = tx.Exec(`INSERT INTO signers(id) VALUES ($1)`, signerID)
+		if err != nil {
+			tx.Rollback()
+			err = errors.Wrapf(err, "failed to insert signer id %s", signerID)
+			return err
+		}
+		_, err = tx.Exec(`INSERT INTO authorizations(credential_id, signer_id) VALUES ($1, $2)`, auth.ID, signerID)
+		if err != nil {
+			tx.Rollback()
+			err = errors.Wrapf(err, "failed to insert signer id %s", signerID)
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		err = errors.Wrap(err, "failed to commit transaction in database")
+		tx.Rollback()
+		return err
+	}
+	return
 }
