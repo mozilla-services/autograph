@@ -19,10 +19,16 @@ install-cover:
 install-goveralls:
 	$(GO) get github.com/mattn/goveralls
 
+install-migrate:
+	$(GO) get -tags 'postgres' -u github.com/golang-migrate/migrate/v4/cmd/migrate/
+
 install-dev-deps: install-golint install-cover install-goveralls
 
 install:
 	$(GO) install go.mozilla.org/autograph
+
+database/schema.sql:
+	cat $(shell ls -1 database/migrations/*.up.sql) > database/schema.sql
 
 vendor:
 	go mod vendor
@@ -136,4 +142,4 @@ dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
 .SUFFIXES:            # Delete the default suffixes
-.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers
+.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers database/schema.sql
