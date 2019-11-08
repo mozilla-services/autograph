@@ -123,7 +123,8 @@ showcoverage%: PACKAGE_NAME = $(subst showcoverage,,$@)
 showcoverage%: PACKAGE_TEST_OUTPUT_DIR = $(subst showcoverage,testprofiles/,$@)
 showcoverage%:
 	make $(subst showcoverage,test,$@)
-	$(GO) tool cover -html=$(PACKAGE_TEST_OUTPUT_DIR)/coverage.out
+	$(GO) tool cover -html=$(PACKAGE_TEST_OUTPUT_DIR)/coverage.out -o coverage.html
+	python -m webbrowser -t coverage.html
 
 test: $(TEST_TARGETS)
 	echo 'mode: count' > coverage.out
