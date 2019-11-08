@@ -1,0 +1,32 @@
+digraph AHS {
+    node [shape=none]
+
+    Signer [label=<
+    <table>
+    <tr><td colspan="2">Signer</td></tr>
+    <tr><td port="1">id</td> <td>unique text name</td></tr>
+    <tr><td colspan="2">Per signer type secret specification</td></tr>
+    </table>>]
+
+    App_Authorization [label=<
+    <table>
+    <tr><td colspan="2">App Authorization</td></tr>
+    <tr><td port="1">id</td>  <td>hawk 'key id' text, global unique</td></tr>
+    <tr><td port="2">key</td> <td>hawk 'key'/secret</td></tr>
+    <tr><td port="3">signers</td> <td>array of Signer.id</td></tr>
+    </table>>]
+    
+    Edge_Authorization [label=<
+    <table>
+    <tr><td colspan="2">Edge Authorization</td></tr>
+    <tr><td port="1">token</td> <td>API token used by client</td></tr>
+    <tr><td port="2">user</td>  <td>hawk 'key id' text, global unique</td>
+        <td port="5" rowspan="3">App<br/>credentials</td></tr>
+    <tr><td port="3">key</td>  <td>hawk 'key' secret</td></tr>
+    <tr><td port="4">signer</td> <td>Fixed Signer.id</td></tr>
+    </table>>]
+
+    App_Authorization:3:w -> Signer:1
+    Edge_Authorization:5 -> App_Authorization
+
+}

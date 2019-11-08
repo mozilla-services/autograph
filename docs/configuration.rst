@@ -96,8 +96,21 @@ wait for the HSM to return a response before erroring.
 Signers
 -------
 
-The configuration for each signer is described in their
-respective README under the *signer/* directory.
+The detailed configuration for each signer is described in their
+respective README under the `autograph/signer/`__ directory.
+
+__ https://github.com/mozilla-services/autograph/tree/master/signer
+
+All signers share the common field `id`, which is a name unique to the
+installation to identify each signer. The `id` is used in the authorization
+configurations for both `autograph` and `autograph edge`.
+
+.. code:: yaml
+
+	signer:
+	    # installation unigue name for this signer/key/attributes combination
+		- id: apk_signer_for_focus
+		# rest of object depends on the signer type
 
 Authorizations
 --------------
@@ -142,6 +155,14 @@ request.
 The optional key `hawktimestampvalidity` maps to a string `parsed as a
 time.Duration`_ and allows for different HAWK timestamp skews than the
 default of 1 minute.
+
+The following diagram shows how the authentication and signer ids are linked in
+the configurations.
+
+.. -- a-h-s.dot contains the source for the svg file, which can be regenerated
+	by ``dot -Tsvg a-h-s.dot >a-h-s.dot.svg``
+.. image:: a-h-s.dot.svg
+	:alt: image of relationships between authorization objects
 
 .. _`parsed as a time.Duration`: https://golang.org/pkg/time/#ParseDuration
 
