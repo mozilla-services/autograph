@@ -159,7 +159,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	ag = newAutographer(conf.Server.NonceCacheSize)
 	ag.heartbeatConf = &conf.Heartbeat
 
-	if conf.Database.Name != "" {
+	if conf.isDBEnabled() {
 		// ignore the monitor close chan since it will stop
 		// when the app is stopped
 		_ = ag.addDB(conf.Database)
@@ -278,6 +278,11 @@ func (c *configuration) loadFromFile(path string) error {
 		return errors.Errorf("Missing required heartbeat config section with non-zero timeouts")
 	}
 	return nil
+}
+
+// isDBEnabled returns whether the database is enabled in the config
+func (c *configuration) isDBEnabled() bool {
+	return c.Database.Name != ""
 }
 
 // newAutographer creates an instance of an autographer
