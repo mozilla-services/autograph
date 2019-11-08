@@ -183,9 +183,37 @@ signers:
         -----END EC PRIVATE KEY-----
 authorizations:
 	- tester
-`)},
+`)}, {"no auths but load_authorizations_from_db is true", true, []byte(`server:
+    listen: "localhost:8000"
+    noncecachesize: 64
+
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
+
+signers:
+    - id: testsigner1
+      type: contentsignature
+      x5u: https://foo.example.com/chains/certificates.pem
+      privatekey: |
+          -----BEGIN EC PARAMETERS-----
+          BggqhkjOPQMBBw==
+          -----END EC PARAMETERS-----
+          -----BEGIN EC PRIVATE KEY-----
+          MHcCAQEEII+Is30aP9wrB/H6AkKrJjMG8EVY2WseSFHTfWGCIk7voAoGCCqGSM49
+          AwEHoUQDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq
+          3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==
+          -----END EC PRIVATE KEY-----
+
+loadauthorizationsfromdb: true`)},
 	}
+
 	for i, testcase := range testcases {
+		var expectedLoadAuthorizationsFromDB = false
+		if testcase.name == "no auths but load_authorizations_from_db is true" {
+			expectedLoadAuthorizationsFromDB = true
+		}
+
 		var conf configuration
 		// write conf file to /tmp and read it back
 		fd, err := ioutil.TempFile("", "autographtestconf")
@@ -209,6 +237,10 @@ authorizations:
 		}
 		if err == nil && !testcase.pass {
 			t.Fatalf("testcase %d %q passed and should have failed", i, testcase.name)
+		}
+
+		if conf.LoadAuthorizationsFromDB != expectedLoadAuthorizationsFromDB {
+			t.Fatalf("testcase %d %q config parsing got unexpected load auths from db expected %t got %t", i, testcase.name, expectedLoadAuthorizationsFromDB, conf.LoadAuthorizationsFromDB)
 		}
 		os.Remove(filename)
 	}

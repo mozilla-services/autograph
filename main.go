@@ -64,12 +64,13 @@ type configuration struct {
 		Namespace string
 		Buflen    int
 	}
-	HSM            crypto11.PKCS11Config
-	Database       database.Config
-	Signers        []signer.Configuration
-	Authorizations []formats.Authorization
-	Monitoring     formats.Authorization
-	Heartbeat      heartbeatConfig
+	HSM                      crypto11.PKCS11Config
+	Database                 database.Config
+	Signers                  []signer.Configuration
+	Authorizations           []formats.Authorization
+	Monitoring               formats.Authorization
+	Heartbeat                heartbeatConfig
+	LoadAuthorizationsFromDB bool
 }
 
 // An autographer is a running instance of an autograph service,
