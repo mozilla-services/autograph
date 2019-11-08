@@ -17,14 +17,14 @@ import (
 // MonitoringInputData is the data signed by the monitoring handler
 var MonitoringInputData = []byte(`AUTOGRAPH MONITORING`)
 
-func (a *autographer) addMonitoring(monitoring authorization) error {
+func (a *autographer) addMonitoring(monitoring formats.Authorization) error {
 	if monitoring.Key == "" {
 		return nil
 	}
 	if _, ok := a.auths["monitor"]; ok {
 		return fmt.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
 	}
-	monitoring.hawkMaxTimestampSkew = time.Minute
+	monitoring.HawkTimestampValidity = time.Minute
 	a.auths["monitor"] = monitoring
 	return nil
 }

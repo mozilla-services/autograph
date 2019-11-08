@@ -15,6 +15,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+
+	"go.mozilla.org/autograph/formats"
 )
 
 var (
@@ -410,8 +412,8 @@ authorizations:
 // An authorization without at least one signer configured must fail
 func TestAuthWithoutSigner(t *testing.T) {
 	t.Parallel()
-	var authorizations = []authorization{
-		authorization{
+	var authorizations = []formats.Authorization{
+		formats.Authorization{
 			ID: "alice",
 		},
 	}

@@ -17,15 +17,6 @@ import (
 	"go.mozilla.org/hawk"
 )
 
-// an authorization
-type authorization struct {
-	ID                    string
-	Key                   string
-	Signers               []string
-	HawkTimestampValidity string
-	hawkMaxTimestampSkew  time.Duration
-}
-
 func abs(d time.Duration) time.Duration {
 	if d < 0 {
 		return -d
@@ -63,7 +54,7 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 	if err != nil {
 		return nil, "", err
 	}
-	hawk.MaxTimestampSkew = a.auths[userid].hawkMaxTimestampSkew
+	hawk.MaxTimestampSkew = a.auths[userid].HawkTimestampValidity
 	err = auth.Valid()
 	if a.stats != nil {
 		sendStatsErr := a.stats.Timing("hawk.validated", time.Since(getRequestStartTime(r)), nil, 1.0)

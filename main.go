@@ -30,6 +30,7 @@ import (
 	"github.com/mozilla-services/yaml"
 
 	"go.mozilla.org/autograph/database"
+	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/apk2"
@@ -66,8 +67,8 @@ type configuration struct {
 	HSM            crypto11.PKCS11Config
 	Database       database.Config
 	Signers        []signer.Configuration
-	Authorizations []authorization
-	Monitoring     authorization
+	Authorizations []formats.Authorization
+	Monitoring     formats.Authorization
 	Heartbeat      heartbeatConfig
 }
 
@@ -77,7 +78,7 @@ type autographer struct {
 	db            *database.Handler
 	stats         *statsd.Client
 	signers       []signer.Signer
-	auths         map[string]authorization
+	auths         map[string]formats.Authorization
 	signerIndex   map[string]int
 	nonces        *lru.Cache
 	debug         bool
@@ -148,8 +149,9 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 
 func run(conf configuration, listen string, authPrint, debug bool) {
 	var (
-		ag  *autographer
-		err error
+		ag    *autographer
+		err   error
+		auths []formats.Authorization = conf.Authorizations
 	)
 
 	// initialize signers from the configuration
@@ -179,7 +181,7 @@ func run(conf configuration, listen string, authPrint, debug bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ag.addAuthorizations(conf.Authorizations)
+	err = ag.addAuthorizations(auths)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -282,7 +284,7 @@ func (c *configuration) loadFromFile(path string) error {
 func newAutographer(cachesize int) (a *autographer) {
 	var err error
 	a = new(autographer)
-	a.auths = make(map[string]authorization)
+	a.auths = make(map[string]formats.Authorization)
 	a.signerIndex = make(map[string]int)
 	a.nonces, err = lru.New(cachesize)
 	if err != nil {
@@ -465,18 +467,13 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 
 // addAuthorizations reads a list of authorizations from the configuration and
 // stores them into the autographer handler as a map indexed by user id, for fast lookup.
-func (a *autographer) addAuthorizations(auths []authorization) (err error) {
+func (a *autographer) addAuthorizations(auths []formats.Authorization) (err error) {
 	for _, auth := range auths {
 		if _, ok := a.auths[auth.ID]; ok {
 			return fmt.Errorf("authorization id '" + auth.ID + "' already defined, duplicates are not permitted")
 		}
-		if auth.HawkTimestampValidity != "" {
-			auth.hawkMaxTimestampSkew, err = time.ParseDuration(auth.HawkTimestampValidity)
-			if err != nil {
-				return err
-			}
-		} else {
-			auth.hawkMaxTimestampSkew = time.Minute
+		if auth.HawkTimestampValidity <= 0*time.Second {
+			auth.HawkTimestampValidity = time.Minute
 		}
 		a.auths[auth.ID] = auth
 	}
@@ -504,7 +501,7 @@ func (a *autographer) makeSignerIndex() error {
 			for pos, s := range a.signers {
 				if sid == s.Config().ID {
 					sidExists = true
-					log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.hawkMaxTimestampSkew)
+					log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.HawkTimestampValidity)
 					tag := auth.ID + "+" + s.Config().ID
 					a.signerIndex[tag] = pos
 				}
@@ -518,7 +515,7 @@ func (a *autographer) makeSignerIndex() error {
 		// the signing request, the default is used
 		for pos, signer := range a.signers {
 			if auth.Signers[0] == signer.Config().ID {
-				log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.hawkMaxTimestampSkew)
+				log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.HawkTimestampValidity)
 				tag := auth.ID + "+"
 				a.signerIndex[tag] = pos
 				break

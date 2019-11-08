@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"go.mozilla.org/hawk"
+
+	"go.mozilla.org/autograph/formats"
 )
 
 func TestMissingAuthorization(t *testing.T) {
@@ -178,7 +180,7 @@ func TestDefaultSignerNotFound(t *testing.T) {
 func TestAddDuplicateAuthorization(t *testing.T) {
 	t.Parallel()
 
-	var authorizations = []authorization{
+	var authorizations = []formats.Authorization{
 		{
 			ID: "alice",
 		},
@@ -205,11 +207,11 @@ func TestHawkTimestampSkewFail(t *testing.T) {
 
 	tmpag := newAutographer(1)
 	tmpag.addSigners(conf.Signers)
-	tmpag.addAuthorizations([]authorization{
+	tmpag.addAuthorizations([]formats.Authorization{
 		{
 			ID:                    "alice",
 			Key:                   "1862300e9bd18eafab2eb8d6",
-			HawkTimestampValidity: "2s",
+			HawkTimestampValidity: 2 * time.Second,
 			Signers:               []string{"appkey1"},
 		}})
 
