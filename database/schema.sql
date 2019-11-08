@@ -26,3 +26,24 @@ CREATE TABLE endentities_lock(
 );
 GRANT SELECT, INSERT, UPDATE ON endentities_lock TO myautographdbuser;
 GRANT USAGE ON endentities_lock_id_seq TO myautographdbuser;
+-- 1573238043_create_signers.up.sql
+
+-- stores IDs until we can move additional signer config to the DB
+CREATE TABLE signers(
+      id VARCHAR PRIMARY KEY UNIQUE NOT NULL
+);
+-- 1573238052_create_hawk_credentials.up.sql
+CREATE TABLE hawk_credentials(
+      id VARCHAR PRIMARY KEY UNIQUE,
+      secret bytea NOT NULL,
+      validity INTERVAL SECOND(0) DEFAULT INTERVAL '1 minute'
+);
+-- 1573238059_create_authorizations.up.sql
+CREATE TABLE authorizations(
+      id SERIAL PRIMARY KEY,
+      credential_id VARCHAR references hawk_credentials(id),
+      signer_id VARCHAR references signers(id),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+-- 1573238336_grant_authgraphdbuser_select_on_signers_hawk_credentials_and_authorizations.up.sql
+GRANT SELECT ON signers, hawk_credentials, authorizations TO myautographdbuser;

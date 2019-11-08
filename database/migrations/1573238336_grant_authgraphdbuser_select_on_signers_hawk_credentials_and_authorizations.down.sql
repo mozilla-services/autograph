@@ -1,0 +1,2 @@
+-- 1573238336_grant_authgraphdbuser_select_on_signers_hawk_credentials_and_authorizations.down.sql
+REVOKE SELECT ON signers, hawk_credentials, authorizations TO myautographdbuser;
