@@ -187,6 +187,20 @@ func run(conf configuration, listen string, authPrint, authSQL, debug bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if conf.LoadAuthorizationsFromDB {
+		if len(conf.Authorizations) > 0 {
+			log.Fatalf("Cannot load authorizations from the DB and config file")
+		}
+		if ag.db == nil {
+			log.Fatalf("Failed load authorizations from the DB: db handler is nil")
+		}
+		auths, err = ag.db.GetAuthorizations()
+		if err != nil {
+			log.Fatalf("Failed to load authorizations from the DB: %s", err)
+		}
+		log.Infof("Loaded %d authorizations from the DB", len(auths))
+	}
 	err = ag.addAuthorizations(auths)
 	if err != nil {
 		log.Fatal(err)
