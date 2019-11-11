@@ -19,6 +19,9 @@ install-cover:
 install-goveralls:
 	$(GO) get github.com/mattn/goveralls
 
+install-staticcheck:
+	$(GO) get honnef.co/go/tools/cmd/staticcheck
+
 install-dev-deps: install-golint install-cover install-goveralls
 
 install:
@@ -79,6 +82,9 @@ test%:
 	$(GOTEST) -outputdir "testprofiles/$(PACKAGE_NAME)" $(PACKAGE_PATH)
 ifeq ($(RACE_TEST),1)
 	$(GO) test -v -race $(PACKAGE_PATH)
+endif
+ifeq ($(STATIC_CHECK),1)
+	$(GO) staticcheck $(PACKAGE_PATH)
 endif
 
 benchmarkxpi:
