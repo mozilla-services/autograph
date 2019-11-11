@@ -1,0 +1,17 @@
+# When the DB or HSM is enabled use these timeouts for the
+# /__heartbeat__ handler
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
+
+authorizations:
+  - id: alice
+    key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
+    signers:
+      - testmar
+      - testmar2
+      - testmarecdsa
+      - testcsp384
+      - hsm-webextensions-rsa
+      - hsm-extensions-ecdsa
+      - normandy

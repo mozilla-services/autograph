@@ -3,6 +3,7 @@ FROM postgres:10.6
 # CircleCI does not support mounting folders, so add files directly
 # https://circleci.com/docs/2.0/building-docker-images/#mounting-folders
 ADD schema.sql /docker-entrypoint-initdb.d/schema.sql
+ADD auths.sql /docker-entrypoint-initdb.d/zzz_auths.sql
 
 ADD server.key /opt/server.key
 ADD server.crt /opt/server.crt

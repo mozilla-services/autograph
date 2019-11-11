@@ -13,9 +13,9 @@ services:
       - POSTGRES_DB=autograph
     ports:
       - "5432:5432"
-    # uncomment for local DB migration testing
-    volumes:
-      - ${PWD}/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    # # uncomment for local DB migration testing
+    # volumes:
+    #   - ${PWD}/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     command: postgres -c 'ssl=on' -c 'ssl_cert_file=/opt/server.crt' -c 'ssl_key_file=/opt/server.key'
 
   app:

@@ -8,7 +8,6 @@ RUN apt update && \
 
 # copy the config
 ADD autograph.softhsm.yaml /app/
-ADD autograph.softhsm.db_auths.yaml /app/
 
 # give app access to dev db root cert
 ADD db-root.crt /opt/db-root.crt

@@ -229,17 +229,8 @@ signers:
       2OqlM2hZQeI/FpHm2ZevdMYcyqmQD0uBE1DTcg==
       -----END CERTIFICATE-----
 
-authorizations:
-  - id: alice
-    key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
-    signers:
-      - testmar
-      - testmar2
-      - testmarecdsa
-      - testcsp384
-      - hsm-webextensions-rsa
-      - hsm-extensions-ecdsa
-      - normandy
+loadauthorizationsfromdb: true
 
+authorizations:
 monitoring:
   key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs

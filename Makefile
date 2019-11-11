@@ -33,8 +33,8 @@ install:
 database/schema.sql:
 	cat $(shell ls -1 database/migrations/*.up.sql) > database/schema.sql
 
-tools/softhsm/auths.sql:
-	$(GO) run go.mozilla.org/autograph -auth-to-sql -c tools/softhsm/autograph.softhsm.yaml -l error > tools/softhsm/auths.sql
+database/auths.sql:
+	$(GO) run go.mozilla.org/autograph -auth-to-sql -c tools/softhsm/autograph.softhsm.auths.yaml -l error > database/auths.sql
 
 vendor:
 	go mod vendor
@@ -49,9 +49,9 @@ lint:
 check-no-crypto11-in-signers:
 	test 0 -eq $(shell grep -Ri crypto11 signer/*/ | tee /tmp/autograph-crypto11-check.txt | wc -l)
 
-check-database-sql-files-up-to-date: database/schema.sql tools/softhsm/auths.sql
+check-database-sql-files-up-to-date: database/schema.sql database/auths.sql
 	test 0 -eq $(shell git diff database/schema.sql | wc -l)
-	test 0 -eq $(shell git diff tools/softhsm/auths.sql | wc -l)
+	test 0 -eq $(shell git diff database/auths.sql | wc -l)
 
 show-lint:
 	cat /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
@@ -102,7 +102,7 @@ endif
 
 # helper command for auth tests
 truncate-auth-tables:
-	docker-compose exec -u postgres db /bin/bash -lc 'psql autograph -c "TRUNCATE authorizations, signers, hawk_credentials;"'
+	docker-compose exec -u postgres hsm-db /bin/bash -lc 'psql autograph -c "TRUNCATE authorizations, signers, hawk_credentials;"'
 
 benchmarkxpi:
 benchmark%: PACKAGE_NAME = $(subst benchmark,,$@)
@@ -160,4 +160,4 @@ dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
 .SUFFIXES:            # Delete the default suffixes
-.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers database/schema.sql tools/softhsm/auths.sql check-database-sql-files-up-to-date truncate-auth-tables
+.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers database/schema.sql database/auths.sql check-database-sql-files-up-to-date truncate-auth-tables
