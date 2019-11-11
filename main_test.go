@@ -472,7 +472,7 @@ func TestDefaultPort(t *testing.T) {
 	t.Parallel()
 
 	expected := "0.0.0.0:8000"
-	_, listen, _, _ := parseArgsAndLoadConfig([]string{})
+	_, listen, _, _, _ := parseArgsAndLoadConfig([]string{})
 	if listen != expected {
 		t.Errorf("expected listen %s got %s", expected, listen)
 	}
@@ -482,7 +482,7 @@ func TestPortOverride(t *testing.T) {
 	t.Parallel()
 
 	expected := "0.0.0.0:8080"
-	_, listen, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
+	_, listen, _, _, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
 	if listen != expected {
 		t.Errorf("expected listen %s got %s", expected, listen)
 	}
@@ -495,27 +495,27 @@ func TestLogLevelParsing(t *testing.T) {
 		debug bool
 		fatal bool = false
 	)
-	_, _, _, debug = parseArgsAndLoadConfig([]string{"-l", "debug"})
+	_, _, _, _, debug = parseArgsAndLoadConfig([]string{"-l", "debug"})
 	if !(debug == true && log.GetLevel() == log.DebugLevel) {
 		t.Errorf("failed to set debug flag for debug log level")
 	}
-	_, _, _, debug = parseArgsAndLoadConfig([]string{"-D"})
+	_, _, _, _, debug = parseArgsAndLoadConfig([]string{"-D"})
 	if !(debug == true && log.GetLevel() == log.DebugLevel) {
 		t.Errorf("failed to set debug log level for debug flag")
 	}
-	_, _, _, debug = parseArgsAndLoadConfig([]string{"-l", "error"})
+	_, _, _, _, debug = parseArgsAndLoadConfig([]string{"-l", "error"})
 	if !(debug == false && log.GetLevel() == log.ErrorLevel) {
 		t.Errorf("failed to set error log level")
 	}
 
 	log.StandardLogger().ExitFunc = func(int) { fatal = true }
-	_, _, _, _ = parseArgsAndLoadConfig([]string{"-l", "error", "-D"})
+	_, _, _, _, _ = parseArgsAndLoadConfig([]string{"-l", "error", "-D"})
 	if fatal != true {
 		t.Errorf("did not fail for mismatched log level and debug flag")
 	}
 
 	fatal = false
-	_, _, _, _ = parseArgsAndLoadConfig([]string{"-l", "foo"})
+	_, _, _, _, _ = parseArgsAndLoadConfig([]string{"-l", "foo"})
 	if fatal != true {
 		t.Errorf("did not fail for invalid log level")
 	}

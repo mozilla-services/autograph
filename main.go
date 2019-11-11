@@ -94,7 +94,7 @@ func main() {
 	run(parseArgsAndLoadConfig(args))
 }
 
-func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, authPrint, debug bool) {
+func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, authPrint, authSQL, debug bool) {
 	var (
 		cfgFile  string
 		port     string
@@ -106,6 +106,7 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 	fset.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	fset.BoolVar(&authPrint, "A", false, "Print authorizations matrix and exit")
+	fset.BoolVar(&authSQL, "auth-to-sql", false, "Print authorizations as SQL to stdout")
 	// https://github.com/sirupsen/logrus#level-logging
 	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
 	fset.BoolVar(&debug, "D", false, "Sets the log level to debug to print debug logs.")
@@ -147,12 +148,17 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, a
 	return
 }
 
-func run(conf configuration, listen string, authPrint, debug bool) {
+func run(conf configuration, listen string, authPrint, authSQL, debug bool) {
 	var (
 		ag    *autographer
 		err   error
 		auths []formats.Authorization = conf.Authorizations
 	)
+
+	if authSQL {
+		ag.PrintConfAuthorizationsAsSQL(conf)
+		os.Exit(0)
+	}
 
 	// initialize signers from the configuration
 	// and store them into the autographer handler

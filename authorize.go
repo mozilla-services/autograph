@@ -170,3 +170,20 @@ func (a *autographer) PrintAuthorizations() {
 		}
 	}
 }
+
+func (a *autographer) PrintConfAuthorizationsAsSQL(conf configuration) {
+	fmt.Println("\nBEGIN;")
+	for _, auth := range conf.Authorizations {
+		fmt.Println()
+
+		if auth.HawkTimestampValidity <= 0*time.Second {
+			auth.HawkTimestampValidity = time.Minute
+		}
+		fmt.Printf("\nINSERT INTO hawk_credentials(id, secret, validity) VALUES ('%s', '%s', interval '%d seconds');", auth.ID, auth.Key, int64(auth.HawkTimestampValidity.Seconds()))
+		for _, signerID := range auth.Signers {
+			fmt.Printf("\nINSERT INTO signers(id) VALUES ('%s');", signerID)
+			fmt.Printf("\nINSERT INTO authorizations(credential_id, signer_id) VALUES ('%s', '%s');", auth.ID, signerID)
+		}
+	}
+	fmt.Println("\nCOMMIT;")
+}
