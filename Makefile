@@ -89,6 +89,9 @@ test%:
 ifeq ($(RACE_TEST),1)
 	$(GO) test -v -race $(PACKAGE_PATH)
 endif
+# helper command for auth tests
+truncate-auth-tables:
+	docker-compose exec -u postgres db /bin/bash -lc 'psql autograph -c "TRUNCATE authorizations, signers, hawk_credentials;"'
 
 benchmarkxpi:
 benchmark%: PACKAGE_NAME = $(subst benchmark,,$@)
@@ -146,4 +149,4 @@ dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
 .SUFFIXES:            # Delete the default suffixes
-.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers database/schema.sql check-database-schema-sql-up-to-date
+.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers database/schema.sql check-database-schema-sql-up-to-date truncate-auth-tables
