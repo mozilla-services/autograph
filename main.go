@@ -16,7 +16,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -381,9 +380,9 @@ func (a *autographer) initHSM(conf configuration) {
 func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 	sids := make(map[string]bool)
 	for _, signerConf := range signerConfs {
-		if !regexp.MustCompile(signer.IDFormat).MatchString(signerConf.ID) {
+		if err := formats.ValidateSignerID(signerConf.ID); err != nil {
 			return fmt.Errorf("signer ID %q does not match the permitted format %q",
-				signerConf.ID, signer.IDFormat)
+				signerConf.ID, formats.SignerIDFormat)
 		}
 		// forbid signers with the same ID
 		if _, exists := sids[signerConf.ID]; exists {
