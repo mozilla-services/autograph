@@ -22,6 +22,9 @@ install-goveralls:
 install-migrate:
 	$(GO) get -tags 'postgres' -u github.com/golang-migrate/migrate/v4/cmd/migrate/
 
+install-staticcheck:
+	$(GO) get honnef.co/go/tools/cmd/staticcheck
+
 install-dev-deps: install-golint install-cover install-goveralls
 
 install:
@@ -89,6 +92,10 @@ test%:
 ifeq ($(RACE_TEST),1)
 	$(GO) test -v -race $(PACKAGE_PATH)
 endif
+ifeq ($(STATIC_CHECK),1)
+	$(GO) staticcheck $(PACKAGE_PATH)
+endif
+
 # helper command for auth tests
 truncate-auth-tables:
 	docker-compose exec -u postgres db /bin/bash -lc 'psql autograph -c "TRUNCATE authorizations, signers, hawk_credentials;"'
