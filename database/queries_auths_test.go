@@ -51,7 +51,18 @@ func TestInsertAndGetAuths(t *testing.T) {
 			HawkTimestampValidity: time.Minute * 5,
 			Signers:               []string{"test-signer-1", "test-signer-2"},
 		}
+		badAuth = formats.Authorization{
+			ID:                    "-invalid-hawk-id",
+			Key:                   "cdbc735007c1c1ed5f3f1d97c0a71b5260ae1e6d6d50ef1e561d0b9c6342073c",
+			HawkTimestampValidity: time.Minute * 5,
+			Signers:               []string{"test-signer-1", "test-signer-2"},
+		}
 	)
+	err = adminDB.InsertAuthorization(badAuth)
+	if err == nil {
+		t.Fatal("did not fail to insert bad authorization")
+	}
+
 	err = adminDB.InsertAuthorization(auth)
 	if err != nil {
 		t.Fatal("failed to insert authorization:", err)

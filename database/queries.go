@@ -132,6 +132,10 @@ func (db *Handler) GetAuthorizations() (auths []formats.Authorization, err error
 			return
 		}
 		auth.HawkTimestampValidity = time.Duration(seconds) * time.Second
+		if err = auth.Validate(); err != nil {
+			err = errors.Wrapf(err, "Got invalid auth row from DB")
+			return
+		}
 		auths = append(auths, auth)
 	}
 	if err = rows.Err(); err != nil {
@@ -145,6 +149,11 @@ func (db *Handler) GetAuthorizations() (auths []formats.Authorization, err error
 // authorized signer IDs, and permissions to access the signers for
 // the creds
 func (db *Handler) InsertAuthorization(auth formats.Authorization) (err error) {
+	if err = auth.Validate(); err != nil {
+		err = errors.Wrapf(err, "Cannot insert invalid auth row into DB")
+		return
+	}
+
 	var tx *sql.Tx
 	tx, err = db.Begin()
 	if err != nil {
