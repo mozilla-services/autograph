@@ -43,6 +43,9 @@ lint:
 check-no-crypto11-in-signers:
 	test 0 -eq $(shell grep -Ri crypto11 signer/*/ | tee /tmp/autograph-crypto11-check.txt | wc -l)
 
+check-database-schema-sql-up-to-date: database/schema.sql
+	test 0 -eq $(shell git diff database/schema.sql | wc -l)
+
 show-lint:
 	cat /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
 	rm -f /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
@@ -142,4 +145,4 @@ dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
 .SUFFIXES:            # Delete the default suffixes
-.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers database/schema.sql
+.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers database/schema.sql check-database-schema-sql-up-to-date
