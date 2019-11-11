@@ -47,3 +47,6 @@ CREATE TABLE authorizations(
 );
 -- 1573238336_grant_authgraphdbuser_select_on_signers_hawk_credentials_and_authorizations.up.sql
 GRANT SELECT ON signers, hawk_credentials, authorizations TO myautographdbuser;
+-- 1573486912_create_auth_admin_role.up.sql
+CREATE ROLE myautographdbauthadmin;
+ALTER ROLE myautographdbauthadmin WITH NOSUPERUSER INHERIT NOCREATEROLE NOCREATEDB LOGIN PASSWORD 'myautographdbauthadminpassword';
