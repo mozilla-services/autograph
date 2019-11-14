@@ -156,7 +156,8 @@ func TestMonitorNoConfig(t *testing.T) {
 	tmpag := newAutographer(1)
 	var nomonitor configuration
 	tmpag.addMonitoring(nomonitor.Monitoring)
-	if _, ok := tmpag.auths[monitorAuthID]; ok {
+	_, err := tmpag.getAuthByID(monitorAuthID)
+	if err == nil {
 		t.Fatal("monitor configuration found when none was passed")
 	}
 }

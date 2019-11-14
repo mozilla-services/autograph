@@ -297,6 +297,15 @@ func (a *autographer) disableDebug() {
 	return
 }
 
+// getAuthByID returns an authorization if it exists or nil. Call
+// addAuthorizations and addMonitoring first
+func (a *autographer) getAuthByID(id string) (authorization, error) {
+	if auth, ok := a.auths[id]; ok {
+		return auth, nil
+	}
+	return authorization{}, ErrAuthNotFound
+}
+
 // startCleanupHandler sets up a chan to catch int, kill, term
 // signals and run signer AtExit functions
 func (a *autographer) startCleanupHandler() {

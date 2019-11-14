@@ -23,8 +23,13 @@ func (a *autographer) addMonitoring(monitoring authorization) error {
 	if monitoring.Key == "" {
 		return nil
 	}
-	if _, ok := a.auths[monitorAuthID]; ok {
+	_, err := a.getAuthByID(monitorAuthID)
+	switch err {
+	case ErrAuthNotFound:
+	case nil:
 		return fmt.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
+	default:
+		return fmt.Errorf("error fetching 'monitor' auth: %q", err)
 	}
 	monitoring.hawkMaxTimestampSkew = time.Minute
 	a.auths[monitorAuthID] = monitoring

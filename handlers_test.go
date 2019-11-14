@@ -149,9 +149,14 @@ func TestSignaturePass(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 
 		// generate a hawk header for the request
+		testAuth, err := ag.getAuthByID(userid)
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		authheader := getAuthHeader(req,
-			ag.auths[userid].ID,
-			ag.auths[userid].Key,
+			testAuth.ID,
+			testAuth.Key,
 			sha256.New,
 			id(),
 			"application/json",
@@ -261,9 +266,14 @@ func TestBadRequest(t *testing.T) {
 			t.Fatal(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
+		auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		authheader := getAuthHeader(req,
-			ag.auths[conf.Authorizations[0].ID].ID,
-			ag.auths[conf.Authorizations[0].ID].Key,
+			auth.ID,
+			auth.Key,
 			sha256.New, id(),
 			"application/json",
 			[]byte(testcase.body))
@@ -286,9 +296,14 @@ func TestRequestTooLarge(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	authheader := getAuthHeader(req,
-		ag.auths[conf.Authorizations[0].ID].ID,
-		ag.auths[conf.Authorizations[0].ID].Key,
+		auth.ID,
+		auth.Key,
 		sha256.New, id(),
 		"application/json",
 		[]byte(blob))
@@ -310,9 +325,14 @@ func TestBadContentType(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/foobar")
+	auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	authheader := getAuthHeader(req,
-		ag.auths[conf.Authorizations[0].ID].ID,
-		ag.auths[conf.Authorizations[0].ID].Key,
+		auth.ID,
+		auth.Key,
 		sha256.New, id(),
 		"application/foobar",
 		[]byte(blob))
@@ -568,7 +588,12 @@ func TestSignerAuthorized(t *testing.T) {
 			t.Fatal(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
-		authheader := getAuthHeader(req, ag.auths[userid].ID, ag.auths[userid].Key,
+		auth, err := ag.getAuthByID(userid)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		authheader := getAuthHeader(req, auth.ID, auth.Key,
 			sha256.New, id(), "application/json", body)
 		req.Header.Set("Authorization", authheader)
 		w := httptest.NewRecorder()
@@ -627,7 +652,11 @@ func TestSignerUnauthorized(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, ag.auths[userid].ID, ag.auths[userid].Key,
+	auth, err := ag.getAuthByID(userid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	authheader := getAuthHeader(req, auth.ID, auth.Key,
 		sha256.New, id(), "application/json", body)
 	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
@@ -656,7 +685,11 @@ func TestContentType(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, ag.auths[userid].ID, ag.auths[userid].Key,
+	auth, err := ag.getAuthByID(userid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	authheader := getAuthHeader(req, auth.ID, auth.Key,
 		sha256.New, id(), "application/json", body)
 	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
