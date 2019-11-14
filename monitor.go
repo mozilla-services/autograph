@@ -14,6 +14,8 @@ import (
 	"go.mozilla.org/autograph/signer"
 )
 
+const monitorAuthID = "monitor"
+
 // MonitoringInputData is the data signed by the monitoring handler
 var MonitoringInputData = []byte(`AUTOGRAPH MONITORING`)
 
@@ -21,11 +23,11 @@ func (a *autographer) addMonitoring(monitoring authorization) error {
 	if monitoring.Key == "" {
 		return nil
 	}
-	if _, ok := a.auths["monitor"]; ok {
+	if _, ok := a.auths[monitorAuthID]; ok {
 		return fmt.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
 	}
 	monitoring.hawkMaxTimestampSkew = time.Minute
-	a.auths["monitor"] = monitoring
+	a.auths[monitorAuthID] = monitoring
 	return nil
 }
 
@@ -37,7 +39,7 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
 		return
 	}
-	if userid != "monitor" {
+	if userid != monitorAuthID {
 		httpError(w, r, http.StatusUnauthorized, "user is not permitted to call this endpoint")
 		return
 	}
