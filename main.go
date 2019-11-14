@@ -306,6 +306,29 @@ func (a *autographer) getAuthByID(id string) (authorization, error) {
 	return authorization{}, ErrAuthNotFound
 }
 
+// addAuth adds an authorization to the auth map or errors
+func (a *autographer) addAuth(auth *authorization) (err error) {
+	_, getAuthErr := a.getAuthByID(auth.ID)
+	switch getAuthErr {
+	case nil:
+		return fmt.Errorf("authorization id '%s' already defined, duplicates are not permitted", auth.ID)
+	case ErrAuthNotFound:
+		// this is what we want
+	default:
+		return errors.Wrapf(getAuthErr, "error finding auth with id '%s'", auth.ID)
+	}
+	if auth.HawkTimestampValidity != "" {
+		auth.hawkMaxTimestampSkew, err = time.ParseDuration(auth.HawkTimestampValidity)
+		if err != nil {
+			return err
+		}
+	} else {
+		auth.hawkMaxTimestampSkew = time.Minute
+	}
+	a.auths[auth.ID] = *auth
+	return nil
+}
+
 // startCleanupHandler sets up a chan to catch int, kill, term
 // signals and run signer AtExit functions
 func (a *autographer) startCleanupHandler() {
@@ -470,18 +493,10 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 // stores them into the autographer handler as a map indexed by user id, for fast lookup.
 func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 	for _, auth := range auths {
-		if _, ok := a.auths[auth.ID]; ok {
-			return fmt.Errorf("authorization id '" + auth.ID + "' already defined, duplicates are not permitted")
+		err = a.addAuth(&auth)
+		if err != nil {
+			return
 		}
-		if auth.HawkTimestampValidity != "" {
-			auth.hawkMaxTimestampSkew, err = time.ParseDuration(auth.HawkTimestampValidity)
-			if err != nil {
-				return err
-			}
-		} else {
-			auth.hawkMaxTimestampSkew = time.Minute
-		}
-		a.auths[auth.ID] = auth
 	}
 	return
 }

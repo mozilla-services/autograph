@@ -31,9 +31,9 @@ func (a *autographer) addMonitoring(monitoring authorization) error {
 	default:
 		return fmt.Errorf("error fetching 'monitor' auth: %q", err)
 	}
+	monitoring.ID = monitorAuthID
 	monitoring.hawkMaxTimestampSkew = time.Minute
-	a.auths[monitorAuthID] = monitoring
-	return nil
+	return a.addAuth(&monitoring)
 }
 
 func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
