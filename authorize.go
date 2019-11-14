@@ -157,25 +157,3 @@ func (a *autographer) getSignerID(userid, keyid string) (int, error) {
 	}
 	return a.signerIndex[tag], nil
 }
-
-func (a *autographer) PrintAuthorizations() {
-	fmt.Println("\n---- Signers ----")
-	for _, signr := range a.signers {
-		fmt.Printf("- %s [%s %s]:\n",
-			signr.Config().ID, signr.Config().Type, signr.Config().Mode)
-		for user, auth := range a.auths {
-			for _, authsigner := range auth.Signers {
-				if authsigner == signr.Config().ID {
-					fmt.Printf("\t* %s\n", user)
-				}
-			}
-		}
-	}
-	fmt.Println("\n---- Authorizations ----")
-	for user, auth := range a.auths {
-		fmt.Printf("-%s: \n", user)
-		for _, authsigner := range auth.Signers {
-			fmt.Printf("\t* %s\n", authsigner)
-		}
-	}
-}
