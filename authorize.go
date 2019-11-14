@@ -53,7 +53,7 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 		return nil, "", err
 	}
 	userid = auth.Credentials.ID
-	auth, err = hawk.NewAuthFromRequest(r, a.lookupCred(auth.Credentials.ID), a.lookupNonce)
+	auth, err = hawk.NewAuthFromRequest(r, a.lookupCred(userid), a.lookupNonce)
 	if a.stats != nil {
 		sendStatsErr := a.stats.Timing("hawk.auth_created", time.Since(getRequestStartTime(r)), nil, 1.0)
 		if sendStatsErr != nil {
