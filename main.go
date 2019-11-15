@@ -77,7 +77,6 @@ type autographer struct {
 	db            *database.Handler
 	stats         *statsd.Client
 	signers       []signer.Signer
-	auths         map[string]authorization
 	signerIndex   map[string]int
 	nonces        *lru.Cache
 	debug         bool
@@ -277,7 +276,6 @@ func (c *configuration) loadFromFile(path string) error {
 func newAutographer(cachesize int) (a *autographer) {
 	var err error
 	a = new(autographer)
-	a.auths = make(map[string]authorization)
 	a.authBackend = newInMemoryAuthBackend()
 	a.signerIndex = make(map[string]int)
 	a.nonces, err = lru.New(cachesize)
@@ -302,33 +300,17 @@ func (a *autographer) disableDebug() {
 // getAuthByID returns an authorization if it exists or nil. Call
 // addAuthorizations and addMonitoring first
 func (a *autographer) getAuthByID(id string) (authorization, error) {
-	if auth, ok := a.auths[id]; ok {
-		return auth, nil
-	}
-	return authorization{}, ErrAuthNotFound
+	return a.authBackend.getAuthByID(id)
+}
+
+// getAuths returns enabled authorizations
+func (a *autographer) getAuths() map[string]authorization {
+	return a.authBackend.getAuths()
 }
 
 // addAuth adds an authorization to the auth map or errors
 func (a *autographer) addAuth(auth *authorization) (err error) {
-	_, getAuthErr := a.getAuthByID(auth.ID)
-	switch getAuthErr {
-	case nil:
-		return fmt.Errorf("authorization id '%s' already defined, duplicates are not permitted", auth.ID)
-	case ErrAuthNotFound:
-		// this is what we want
-	default:
-		return errors.Wrapf(getAuthErr, "error finding auth with id '%s'", auth.ID)
-	}
-	if auth.HawkTimestampValidity != "" {
-		auth.hawkMaxTimestampSkew, err = time.ParseDuration(auth.HawkTimestampValidity)
-		if err != nil {
-			return err
-		}
-	} else {
-		auth.hawkMaxTimestampSkew = time.Minute
-	}
-	a.auths[auth.ID] = *auth
-	return nil
+	return a.authBackend.addAuth(auth)
 }
 
 // startCleanupHandler sets up a chan to catch int, kill, term
@@ -507,7 +489,7 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 // quickly locate a signer based on the user requesting the signature.
 func (a *autographer) makeSignerIndex() error {
 	// add an entry for each authid+signerid pair
-	for id, auth := range a.auths {
+	for id, auth := range a.getAuths() {
 		if id == monitorAuthID {
 			// the "monitor" authorization is a special case
 			// that doesn't need a signer index
