@@ -4,6 +4,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+
+	"go.mozilla.org/autograph/signer"
 )
 
 // authBackend is an interface for adding and finding HAWK users and
@@ -14,6 +17,7 @@ type authBackend interface {
 	getAuthByID(id string) (authorization, error)
 	getAuths() map[string]authorization
 	getSignerID(userid, keyid string) (int, error)
+	makeSignerIndex([]signer.Signer) error
 }
 
 // inMemoryBackend is an authBackend that loads a config and stores
@@ -99,4 +103,49 @@ func (b *inMemoryBackend) getSignerID(userid, keyid string) (int, error) {
 		return -1, errors.Errorf("%s is not authorized to sign with key ID %s", userid, keyid)
 	}
 	return b.signerIndex[tag], nil
+}
+
+// makeSignerIndex creates a map of authorization IDs and signer IDs to
+// quickly locate a signer based on the user requesting the signature.
+func (b *inMemoryBackend) makeSignerIndex(signers []signer.Signer) error {
+	// add an entry for each authid+signerid pair
+	for id, auth := range b.getAuths() {
+		if id == monitorAuthID {
+			// the "monitor" authorization is a special case
+			// that doesn't need a signer index
+			continue
+		}
+		// if the authorization has no signer configured, error out
+		if len(auth.Signers) < 1 {
+			return errors.Errorf("auth id %q must have at least one signer configured", id)
+		}
+		for _, sid := range auth.Signers {
+			// make sure the sid is valid
+			sidExists := false
+
+			for pos, s := range signers {
+				if sid == s.Config().ID {
+					sidExists = true
+					log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.hawkMaxTimestampSkew)
+					tag := auth.ID + "+" + s.Config().ID
+					b.signerIndex[tag] = pos
+				}
+			}
+
+			if !sidExists {
+				return errors.Errorf("in auth id %q, signer id %q was not found in the list of known signers", auth.ID, sid)
+			}
+		}
+		// add a default entry for the signer, such that if none is provided in
+		// the signing request, the default is used
+		for pos, signer := range signers {
+			if auth.Signers[0] == signer.Config().ID {
+				log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.hawkMaxTimestampSkew)
+				tag := auth.ID + "+"
+				b.signerIndex[tag] = pos
+				break
+			}
+		}
+	}
+	return nil
 }
