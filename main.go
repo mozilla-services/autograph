@@ -303,11 +303,6 @@ func (a *autographer) getAuthByID(id string) (authorization, error) {
 	return a.authBackend.getAuthByID(id)
 }
 
-// getAuths returns enabled authorizations
-func (a *autographer) getAuths() map[string]authorization {
-	return a.authBackend.getAuths()
-}
-
 // addAuth adds an authorization to the auth map or errors
 func (a *autographer) addAuth(auth *authorization) (err error) {
 	return a.authBackend.addAuth(auth)
@@ -489,7 +484,7 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 // quickly locate a signer based on the user requesting the signature.
 func (a *autographer) makeSignerIndex() error {
 	// add an entry for each authid+signerid pair
-	for id, auth := range a.getAuths() {
+	for id, auth := range a.authBackend.getAuths() {
 		if id == monitorAuthID {
 			// the "monitor" authorization is a special case
 			// that doesn't need a signer index
