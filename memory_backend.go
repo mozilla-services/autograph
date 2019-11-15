@@ -13,6 +13,7 @@ type authBackend interface {
 	addMonitoringAuth(string) error
 	getAuthByID(id string) (authorization, error)
 	getAuths() map[string]authorization
+	getSignerID(userid, keyid string) (int, error)
 }
 
 // inMemoryBackend is an authBackend that loads a config and stores
@@ -84,4 +85,18 @@ func (b *inMemoryBackend) addMonitoringAuth(monitorKey string) error {
 		HawkTimestampValidity: "1m",
 		hawkMaxTimestampSkew:  time.Minute,
 	})
+}
+
+// getSignerId returns the signer identifier for the user. If a keyid
+// is specified, the corresponding signer is returned. If no signer is
+// found, an error is returned and the signer identifier is set to -1.
+func (b *inMemoryBackend) getSignerID(userid, keyid string) (int, error) {
+	tag := userid + "+" + keyid
+	if _, ok := b.signerIndex[tag]; !ok {
+		if keyid == "" {
+			return -1, errors.Errorf("%q does not have a default signing key", userid)
+		}
+		return -1, errors.Errorf("%s is not authorized to sign with key ID %s", userid, keyid)
+	}
+	return b.signerIndex[tag], nil
 }
