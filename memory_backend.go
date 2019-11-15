@@ -17,7 +17,9 @@ type authBackend interface {
 	addAuthToSignerIndex(auth authorization, signers []signer.Signer) error
 	addMonitoringAuth(string) error
 	getAuthByID(id string) (authorization, error)
+	addSigner(signer.Signer)
 	getSignerID(userid, keyid string) (int, error)
+	getSigners() []signer.Signer
 }
 
 // inMemoryBackend is an authBackend that loads a config and stores
@@ -25,6 +27,7 @@ type authBackend interface {
 type inMemoryBackend struct {
 	auths       map[string]authorization
 	signerIndex map[string]int
+	signers     []signer.Signer
 }
 
 // newInMemoryAuthBackend returns an empty inMemoryBackend
@@ -32,6 +35,7 @@ func newInMemoryAuthBackend() (backend *inMemoryBackend) {
 	return &inMemoryBackend{
 		auths:       make(map[string]authorization),
 		signerIndex: make(map[string]int),
+		signers:     []signer.Signer{},
 	}
 }
 
@@ -98,6 +102,16 @@ func (b *inMemoryBackend) getSignerID(userid, keyid string) (int, error) {
 		return -1, errors.Errorf("%s is not authorized to sign with key ID %s", userid, keyid)
 	}
 	return b.signerIndex[tag], nil
+}
+
+// addSigner adds a newly configured signer
+func (b *inMemoryBackend) addSigner(signer signer.Signer) {
+	b.signers = append(b.signers, signer)
+}
+
+// getSigners returns all configured signers
+func (b *inMemoryBackend) getSigners() []signer.Signer {
+	return b.signers
 }
 
 // getSignerIndexTag returns the tag to lookup the signer for a hawk user

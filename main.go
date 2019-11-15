@@ -76,7 +76,6 @@ type configuration struct {
 type autographer struct {
 	db            *database.Handler
 	stats         *statsd.Client
-	signers       []signer.Signer
 	nonces        *lru.Cache
 	debug         bool
 	heartbeatConf *heartbeatConfig
@@ -483,12 +482,12 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 	return
 }
 
-// getSigners returns
+// getSigners returns the slice of configured signers
 func (a *autographer) getSigners() []signer.Signer {
-	return a.signers
+	return a.authBackend.getSigners()
 }
 
-// addSigner returns
+// addSigner adds a configured signer
 func (a *autographer) addSigner(signer signer.Signer) {
-	a.signers = append(a.signers, signer)
+	a.authBackend.addSigner(signer)
 }
