@@ -19,6 +19,9 @@ install-cover:
 install-goveralls:
 	$(GO) get github.com/mattn/goveralls
 
+install-staticcheck:
+	$(GO) get honnef.co/go/tools/cmd/staticcheck
+
 install-dev-deps: install-golint install-cover install-goveralls
 
 install:
@@ -80,6 +83,9 @@ test%:
 ifeq ($(RACE_TEST),1)
 	$(GO) test -v -race $(PACKAGE_PATH)
 endif
+ifeq ($(STATIC_CHECK),1)
+	$(GO) staticcheck $(PACKAGE_PATH)
+endif
 
 benchmarkxpi:
 benchmark%: PACKAGE_NAME = $(subst benchmark,,$@)
@@ -114,7 +120,8 @@ showcoverage%: PACKAGE_NAME = $(subst showcoverage,,$@)
 showcoverage%: PACKAGE_TEST_OUTPUT_DIR = $(subst showcoverage,testprofiles/,$@)
 showcoverage%:
 	make $(subst showcoverage,test,$@)
-	$(GO) tool cover -html=$(PACKAGE_TEST_OUTPUT_DIR)/coverage.out
+	$(GO) tool cover -html=$(PACKAGE_TEST_OUTPUT_DIR)/coverage.out -o coverage.html
+	python -m webbrowser -t coverage.html
 
 test: $(TEST_TARGETS)
 	echo 'mode: count' > coverage.out

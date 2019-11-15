@@ -53,7 +53,7 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 		return nil, "", err
 	}
 	userid = auth.Credentials.ID
-	auth, err = hawk.NewAuthFromRequest(r, a.lookupCred(auth.Credentials.ID), a.lookupNonce)
+	auth, err = hawk.NewAuthFromRequest(r, a.lookupCred(userid), a.lookupNonce)
 	if a.stats != nil {
 		sendStatsErr := a.stats.Timing("hawk.auth_created", time.Since(getRequestStartTime(r)), nil, 1.0)
 		if sendStatsErr != nil {
@@ -156,26 +156,4 @@ func (a *autographer) getSignerID(userid, keyid string) (int, error) {
 		return -1, fmt.Errorf("%s is not authorized to sign with key ID %s", userid, keyid)
 	}
 	return a.signerIndex[tag], nil
-}
-
-func (a *autographer) PrintAuthorizations() {
-	fmt.Println("\n---- Signers ----")
-	for _, signr := range a.signers {
-		fmt.Printf("- %s [%s %s]:\n",
-			signr.Config().ID, signr.Config().Type, signr.Config().Mode)
-		for user, auth := range a.auths {
-			for _, authsigner := range auth.Signers {
-				if authsigner == signr.Config().ID {
-					fmt.Printf("\t* %s\n", user)
-				}
-			}
-		}
-	}
-	fmt.Println("\n---- Authorizations ----")
-	for user, auth := range a.auths {
-		fmt.Printf("-%s: \n", user)
-		for _, authsigner := range auth.Signers {
-			fmt.Printf("\t* %s\n", authsigner)
-		}
-	}
 }
