@@ -376,7 +376,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			return fmt.Errorf("duplicate signer ID %q is not permitted", signerConf.ID)
 		}
 		// "monitor" is a reserved name
-		if signerConf.ID == "monitor" {
+		if signerConf.ID == monitorAuthID {
 			return fmt.Errorf("'monitor' is a reserved signer name and cannot be used in configuration")
 		}
 		sids[signerConf.ID] = true
@@ -482,7 +482,7 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 func (a *autographer) makeSignerIndex() error {
 	// add an entry for each authid+signerid pair
 	for id, auth := range a.auths {
-		if id == "monitor" {
+		if id == monitorAuthID {
 			// the "monitor" authorization is a special case
 			// that doesn't need a signer index
 			continue

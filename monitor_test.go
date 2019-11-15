@@ -34,7 +34,7 @@ func TestMonitorPass(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, "monitor", conf.Monitoring.Key,
+	authheader := getAuthHeader(req, monitorAuthID, conf.Monitoring.Key,
 		sha256.New, id(), "application/json", empty)
 	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
@@ -109,7 +109,7 @@ func TestMonitorHasSignerParameters(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, "monitor", conf.Monitoring.Key,
+	authheader := getAuthHeader(req, monitorAuthID, conf.Monitoring.Key,
 		sha256.New, id(), "application/json", empty)
 	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
@@ -156,7 +156,7 @@ func TestMonitorNoConfig(t *testing.T) {
 	tmpag := newAutographer(1)
 	var nomonitor configuration
 	tmpag.addMonitoring(nomonitor.Monitoring)
-	if _, ok := tmpag.auths["monitor"]; ok {
+	if _, ok := tmpag.auths[monitorAuthID]; ok {
 		t.Fatal("monitor configuration found when none was passed")
 	}
 }
