@@ -14,7 +14,6 @@ import (
 // their permissions
 type authBackend interface {
 	addAuth(*authorization) error
-	addAuthToSignerIndex(auth authorization, signers []signer.Signer) error
 	addMonitoringAuth(string) error
 	getAuthByID(id string) (authorization, error)
 	addSigner(signer.Signer)
@@ -59,7 +58,7 @@ func (b *inMemoryBackend) addAuth(auth *authorization) (err error) {
 		auth.hawkMaxTimestampSkew = time.Minute
 	}
 	b.auths[auth.ID] = *auth
-	return nil
+	return b.addAuthToSignerIndex(auth)
 }
 
 // getAuthByID returns an authorization if it exists or nil. Call
@@ -120,7 +119,7 @@ func getSignerIndexTag(authID, signerID string) string {
 }
 
 // addAuthToSignerIndex
-func (b *inMemoryBackend) addAuthToSignerIndex(auth authorization, signers []signer.Signer) error {
+func (b *inMemoryBackend) addAuthToSignerIndex(auth *authorization) error {
 	// the "monitor" authorization is doesn't need a signer index
 	if auth.ID == monitorAuthID {
 		return nil
@@ -134,7 +133,7 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth authorization, signers []sig
 		// make sure the sid is valid
 		sidExists := false
 
-		for pos, s := range signers {
+		for pos, s := range b.signers {
 			if sid == s.Config().ID {
 				sidExists = true
 				log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.hawkMaxTimestampSkew)
@@ -148,7 +147,7 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth authorization, signers []sig
 	}
 	// add a default entry for the signer, such that if none is provided in
 	// the signing request, the default is used
-	for pos, signer := range signers {
+	for pos, signer := range b.signers {
 		if auth.Signers[0] == signer.Config().ID {
 			log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.hawkMaxTimestampSkew)
 			tag := auth.ID + "+"

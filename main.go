@@ -474,10 +474,6 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 		if err != nil {
 			return
 		}
-		err = a.authBackend.addAuthToSignerIndex(auth, a.getSigners())
-		if err != nil {
-			return
-		}
 	}
 	return
 }
