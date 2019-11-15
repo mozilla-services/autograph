@@ -130,15 +130,13 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Find the ID of the requested signer
-		// Return an error if the signer is not found or if the user is not allowed
-		// to use this signer
-		signerID, err := a.getSignerID(userid, sigreq.KeyID)
-		if err != nil || signerID < 0 {
+		// returns an error if the signer is not found or if
+		// the user is not allowed to use this signer
+		requestedSigner, err := a.authBackend.getSignerForUser(userid, sigreq.KeyID)
+		if err != nil {
 			httpError(w, r, http.StatusUnauthorized, "%v", err)
 			return
 		}
-		requestedSigner := a.getSigners()[signerID]
 		requestedSignerConfig := requestedSigner.Config()
 		sigresps[i] = formats.SignatureResponse{
 			Ref:        id(),

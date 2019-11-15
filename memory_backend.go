@@ -19,6 +19,7 @@ type authBackend interface {
 	addSigner(signer.Signer)
 	getSignerID(userid, keyid string) (int, error)
 	getSigners() []signer.Signer
+	getSignerForUser(userID, signerID string) (signer.Signer, error)
 }
 
 // inMemoryBackend is an authBackend that loads a config and stores
@@ -111,6 +112,16 @@ func (b *inMemoryBackend) addSigner(signer signer.Signer) {
 // getSigners returns all configured signers
 func (b *inMemoryBackend) getSigners() []signer.Signer {
 	return b.signers
+}
+
+// getSignerForUser returns the signer with the given ID for the
+// provided hawk ID or an error
+func (b *inMemoryBackend) getSignerForUser(userID, signerID string) (signer.Signer, error) {
+	signerIndexID, err := b.getSignerID(userID, signerID)
+	if err != nil || signerIndexID < 0 {
+		return nil, err
+	}
+	return b.getSigners()[signerIndexID], nil
 }
 
 // getSignerIndexTag returns the tag to lookup the signer for a hawk user
