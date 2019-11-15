@@ -449,7 +449,7 @@ func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
 	// NB: do not run in parallel with TestHeartbeat*
 	ag.heartbeatConf = &heartbeatConfig{
 		HSMCheckTimeout: time.Second,
-		hsmSignerConf:   &ag.signers[0].(*contentsignature.ContentSigner).Configuration,
+		hsmSignerConf:   &ag.getSigners()[0].(*contentsignature.ContentSigner).Configuration,
 	}
 
 	expectedStatus := http.StatusInternalServerError

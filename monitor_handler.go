@@ -32,10 +32,10 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sigerrstrs := make([]string, len(a.signers))
-	sigresps := make([]formats.SignatureResponse, len(a.signers))
+	sigerrstrs := make([]string, len(a.getSigners()))
+	sigresps := make([]formats.SignatureResponse, len(a.getSigners()))
 	var wg sync.WaitGroup
-	for i, s := range a.signers {
+	for i, s := range a.getSigners() {
 		wg.Add(1)
 
 		go func(i int, s signer.Signer) {

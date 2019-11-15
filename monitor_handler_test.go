@@ -126,7 +126,7 @@ func TestMonitorHasSignerParameters(t *testing.T) {
 	for i, response := range responses {
 		switch response.Type {
 		case contentsignature.Type:
-			for _, s := range ag.signers {
+			for _, s := range ag.getSigners() {
 				if response.SignerID == s.Config().ID {
 					if response.X5U != s.Config().X5U {
 						t.Fatalf("X5U in signature response %d does not match its signer: expected %q got %q",

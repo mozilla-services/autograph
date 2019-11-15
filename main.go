@@ -306,7 +306,7 @@ func (a *autographer) startCleanupHandler() {
 	go func() {
 		sig := <-c
 		log.Infof("main: received signal %s; cleaning up signers", sig)
-		for _, s := range a.signers {
+		for _, s := range a.getSigners() {
 			statefulSigner, ok := s.(signer.StatefulSigner)
 			if !ok {
 				continue
@@ -452,7 +452,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		default:
 			return fmt.Errorf("unknown signer type %q", signerConf.Type)
 		}
-		a.signers = append(a.signers, s)
+		a.addSigner(s)
 	}
 	return nil
 }
@@ -475,10 +475,20 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 		if err != nil {
 			return
 		}
-		err = a.authBackend.addAuthToSignerIndex(auth, a.signers)
+		err = a.authBackend.addAuthToSignerIndex(auth, a.getSigners())
 		if err != nil {
 			return
 		}
 	}
 	return
+}
+
+// getSigners returns
+func (a *autographer) getSigners() []signer.Signer {
+	return a.signers
+}
+
+// addSigner returns
+func (a *autographer) addSigner(signer signer.Signer) {
+	a.signers = append(a.signers, signer)
 }
