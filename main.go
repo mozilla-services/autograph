@@ -82,6 +82,7 @@ type autographer struct {
 	nonces        *lru.Cache
 	debug         bool
 	heartbeatConf *heartbeatConfig
+	authBackend   authBackend
 }
 
 func main() {
@@ -277,6 +278,7 @@ func newAutographer(cachesize int) (a *autographer) {
 	var err error
 	a = new(autographer)
 	a.auths = make(map[string]authorization)
+	a.authBackend = newInMemoryAuthBackend()
 	a.signerIndex = make(map[string]int)
 	a.nonces, err = lru.New(cachesize)
 	if err != nil {
