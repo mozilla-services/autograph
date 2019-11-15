@@ -77,7 +77,6 @@ type autographer struct {
 	db            *database.Handler
 	stats         *statsd.Client
 	signers       []signer.Signer
-	signerIndex   map[string]int
 	nonces        *lru.Cache
 	debug         bool
 	heartbeatConf *heartbeatConfig
@@ -277,7 +276,6 @@ func newAutographer(cachesize int) (a *autographer) {
 	var err error
 	a = new(autographer)
 	a.authBackend = newInMemoryAuthBackend()
-	a.signerIndex = make(map[string]int)
 	a.nonces, err = lru.New(cachesize)
 	if err != nil {
 		log.Fatal(err)
@@ -488,44 +486,5 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 // makeSignerIndex creates a map of authorization IDs and signer IDs to
 // quickly locate a signer based on the user requesting the signature.
 func (a *autographer) makeSignerIndex() error {
-	// add an entry for each authid+signerid pair
-	for id, auth := range a.authBackend.getAuths() {
-		if id == monitorAuthID {
-			// the "monitor" authorization is a special case
-			// that doesn't need a signer index
-			continue
-		}
-		// if the authorization has no signer configured, error out
-		if len(auth.Signers) < 1 {
-			return fmt.Errorf("auth id %q must have at least one signer configured", id)
-		}
-		for _, sid := range auth.Signers {
-			// make sure the sid is valid
-			sidExists := false
-
-			for pos, s := range a.signers {
-				if sid == s.Config().ID {
-					sidExists = true
-					log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.hawkMaxTimestampSkew)
-					tag := auth.ID + "+" + s.Config().ID
-					a.signerIndex[tag] = pos
-				}
-			}
-
-			if !sidExists {
-				return fmt.Errorf("in auth id %q, signer id %q was not found in the list of known signers", auth.ID, sid)
-			}
-		}
-		// add a default entry for the signer, such that if none is provided in
-		// the signing request, the default is used
-		for pos, signer := range a.signers {
-			if auth.Signers[0] == signer.Config().ID {
-				log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.hawkMaxTimestampSkew)
-				tag := auth.ID + "+"
-				a.signerIndex[tag] = pos
-				break
-			}
-		}
-	}
-	return nil
+	return a.authBackend.makeSignerIndex(a.signers)
 }
