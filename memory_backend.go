@@ -6,10 +6,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-// authBackend is an interface for finding HAWK users and their
-// permissions
+// authBackend is an interface for adding and finding HAWK users and
+// their permissions
 type authBackend interface {
 	addAuth(*authorization) error
+	addMonitoringAuth(*authorization) error
 	getAuthByID(id string) (authorization, error)
 	getAuths() map[string]authorization
 }
@@ -62,4 +63,20 @@ func (b *inMemoryBackend) getAuthByID(id string) (authorization, error) {
 // getAuths returns enabled authorizations
 func (b *inMemoryBackend) getAuths() map[string]authorization {
 	return b.auths
+}
+
+// addMonitoringAuth adds an authorization to enable the
+// tools/autograph-monitor
+func (b *inMemoryBackend) addMonitoringAuth(monitoring *authorization) error {
+	_, err := b.getAuthByID(monitorAuthID)
+	switch err {
+	case ErrAuthNotFound:
+	case nil:
+		return errors.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
+	default:
+		return errors.Errorf("error fetching 'monitor' auth: %q", err)
+	}
+	monitoring.ID = monitorAuthID
+	monitoring.hawkMaxTimestampSkew = time.Minute
+	return b.addAuth(monitoring)
 }
