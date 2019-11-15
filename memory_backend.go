@@ -15,7 +15,6 @@ type authBackend interface {
 	addAuth(*authorization) error
 	addMonitoringAuth(string) error
 	getAuthByID(id string) (authorization, error)
-	getAuths() map[string]authorization
 	getSignerID(userid, keyid string) (int, error)
 	makeSignerIndex([]signer.Signer) error
 }
@@ -67,11 +66,6 @@ func (b *inMemoryBackend) getAuthByID(id string) (authorization, error) {
 	return authorization{}, ErrAuthNotFound
 }
 
-// getAuths returns enabled authorizations
-func (b *inMemoryBackend) getAuths() map[string]authorization {
-	return b.auths
-}
-
 // addMonitoringAuth adds an authorization to enable the
 // tools/autograph-monitor
 func (b *inMemoryBackend) addMonitoringAuth(monitorKey string) error {
@@ -109,7 +103,7 @@ func (b *inMemoryBackend) getSignerID(userid, keyid string) (int, error) {
 // quickly locate a signer based on the user requesting the signature.
 func (b *inMemoryBackend) makeSignerIndex(signers []signer.Signer) error {
 	// add an entry for each authid+signerid pair
-	for id, auth := range b.getAuths() {
+	for id, auth := range b.auths {
 		if id == monitorAuthID {
 			// the "monitor" authorization is a special case
 			// that doesn't need a signer index
