@@ -467,6 +467,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 // tools/autograph-monitor
 func (a *autographer) addMonitoring(auth authorization) (err error) {
 	if auth.Key == "" {
+		log.Infof("monitoring is disabled. No key found")
 		return nil
 	}
 	return a.authBackend.addMonitoringAuth(&auth)
