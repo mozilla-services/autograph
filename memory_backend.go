@@ -18,13 +18,15 @@ type authBackend interface {
 // inMemoryBackend is an authBackend that loads a config and stores
 // that auth info in memory
 type inMemoryBackend struct {
-	auths map[string]authorization
+	auths       map[string]authorization
+	signerIndex map[string]int
 }
 
 // newInMemoryAuthBackend returns an empty inMemoryBackend
 func newInMemoryAuthBackend() (backend *inMemoryBackend) {
 	return &inMemoryBackend{
-		auths: make(map[string]authorization),
+		auths:       make(map[string]authorization),
+		signerIndex: make(map[string]int),
 	}
 }
 
