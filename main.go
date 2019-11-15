@@ -303,11 +303,6 @@ func (a *autographer) getAuthByID(id string) (authorization, error) {
 	return a.authBackend.getAuthByID(id)
 }
 
-// addAuth adds an authorization to the auth map or errors
-func (a *autographer) addAuth(auth *authorization) (err error) {
-	return a.authBackend.addAuth(auth)
-}
-
 // startCleanupHandler sets up a chan to catch int, kill, term
 // signals and run signer AtExit functions
 func (a *autographer) startCleanupHandler() {
@@ -481,7 +476,7 @@ func (a *autographer) addMonitoring(auth authorization) (err error) {
 // stores them into the autographer handler as a map indexed by user id, for fast lookup.
 func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 	for _, auth := range auths {
-		err = a.addAuth(&auth)
+		err = a.authBackend.addAuth(&auth)
 		if err != nil {
 			return
 		}
