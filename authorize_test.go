@@ -172,8 +172,8 @@ func TestNonceFromLRU(t *testing.T) {
 func TestSignerNotFound(t *testing.T) {
 	t.Parallel()
 
-	pos, err := ag.getSignerID(`unknown018qoegdxc`, `unkown093ytid`)
-	if err == nil || pos != -1 {
+	_, err := ag.authBackend.getSignerForUser(`unknown018qoegdxc`, `unkown093ytid`)
+	if err == nil {
 		t.Errorf("expected to fail lookup up a signer but succeeded")
 	}
 }
@@ -181,8 +181,8 @@ func TestSignerNotFound(t *testing.T) {
 func TestDefaultSignerNotFound(t *testing.T) {
 	t.Parallel()
 
-	pos, err := ag.getSignerID(`unknown018qoegdxc`, ``)
-	if err == nil || pos != -1 {
+	_, err := ag.authBackend.getSignerForUser(`unknown018qoegdxc`, ``)
+	if err == nil {
 		t.Errorf("expected to fail lookup up a signer but succeeded")
 	}
 }

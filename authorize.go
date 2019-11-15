@@ -149,10 +149,3 @@ func (a *autographer) lookupNonce(val string, ts time.Time, creds *hawk.Credenti
 	a.nonces.Add(val, time.Now())
 	return true
 }
-
-// getSignerId returns the signer identifier for the user. If a keyid is specified,
-// the corresponding signer is returned. If no signer is found, an error is returned
-// and the signer identifier is set to -1.
-func (a *autographer) getSignerID(userid, keyid string) (int, error) {
-	return a.authBackend.getSignerID(userid, keyid)
-}

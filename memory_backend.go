@@ -17,7 +17,6 @@ type authBackend interface {
 	addMonitoringAuth(string) error
 	getAuthByID(id string) (authorization, error)
 	addSigner(signer.Signer)
-	getSignerID(userid, keyid string) (int, error)
 	getSigners() []signer.Signer
 	getSignerForUser(userID, signerID string) (signer.Signer, error)
 }
