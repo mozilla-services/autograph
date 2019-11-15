@@ -470,7 +470,7 @@ func (a *autographer) addMonitoring(auth authorization) (err error) {
 		log.Infof("monitoring is disabled. No key found")
 		return nil
 	}
-	return a.authBackend.addMonitoringAuth(&auth)
+	return a.authBackend.addMonitoringAuth(auth.Key)
 }
 
 // addAuthorizations reads a list of authorizations from the configuration and

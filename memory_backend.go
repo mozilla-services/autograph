@@ -10,7 +10,7 @@ import (
 // their permissions
 type authBackend interface {
 	addAuth(*authorization) error
-	addMonitoringAuth(*authorization) error
+	addMonitoringAuth(string) error
 	getAuthByID(id string) (authorization, error)
 	getAuths() map[string]authorization
 }
@@ -67,7 +67,7 @@ func (b *inMemoryBackend) getAuths() map[string]authorization {
 
 // addMonitoringAuth adds an authorization to enable the
 // tools/autograph-monitor
-func (b *inMemoryBackend) addMonitoringAuth(monitoring *authorization) error {
+func (b *inMemoryBackend) addMonitoringAuth(monitorKey string) error {
 	_, err := b.getAuthByID(monitorAuthID)
 	switch err {
 	case ErrAuthNotFound:
@@ -76,7 +76,10 @@ func (b *inMemoryBackend) addMonitoringAuth(monitoring *authorization) error {
 	default:
 		return errors.Errorf("error fetching 'monitor' auth: %q", err)
 	}
-	monitoring.ID = monitorAuthID
-	monitoring.hawkMaxTimestampSkew = time.Minute
-	return b.addAuth(monitoring)
+	return b.addAuth(&authorization{
+		ID:                    monitorAuthID,
+		Key:                   monitorKey,
+		HawkTimestampValidity: "1m",
+		hawkMaxTimestampSkew:  time.Minute,
+	})
 }
