@@ -468,6 +468,15 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 	return nil
 }
 
+// addMonitoring adds an authorization to enable the
+// tools/autograph-monitor
+func (a *autographer) addMonitoring(auth authorization) (err error) {
+	if auth.Key == "" {
+		return nil
+	}
+	return a.authBackend.addMonitoringAuth(&auth)
+}
+
 // addAuthorizations reads a list of authorizations from the configuration and
 // stores them into the autographer handler as a map indexed by user id, for fast lookup.
 func (a *autographer) addAuthorizations(auths []authorization) (err error) {
