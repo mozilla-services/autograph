@@ -138,20 +138,22 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, r, http.StatusUnauthorized, "%v", err)
 			return
 		}
+		requestedSigner := a.getSigners()[signerID]
+		requestedSignerConfig := requestedSigner.Config()
 		sigresps[i] = formats.SignatureResponse{
 			Ref:        id(),
-			Type:       a.getSigners()[signerID].Config().Type,
-			Mode:       a.getSigners()[signerID].Config().Mode,
-			SignerID:   a.getSigners()[signerID].Config().ID,
-			PublicKey:  a.getSigners()[signerID].Config().PublicKey,
+			Type:       requestedSignerConfig.Type,
+			Mode:       requestedSignerConfig.Mode,
+			SignerID:   requestedSignerConfig.ID,
+			PublicKey:  requestedSignerConfig.PublicKey,
 			SignedFile: base64.StdEncoding.EncodeToString(signedfile),
-			X5U:        a.getSigners()[signerID].Config().X5U,
-			SignerOpts: a.getSigners()[signerID].Config().SignerOpts,
+			X5U:        requestedSignerConfig.X5U,
+			SignerOpts: requestedSignerConfig.SignerOpts,
 		}
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {
 		case "/sign/hash":
-			hashSigner, ok := a.getSigners()[signerID].(signer.HashSigner)
+			hashSigner, ok := requestedSigner.(signer.HashSigner)
 			if !ok {
 				httpError(w, r, http.StatusBadRequest, "requested signer does not implement hash signing")
 				return
@@ -170,7 +172,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			inputHash = fmt.Sprintf("%X", input)
 			outputHash = "unimplemented"
 		case "/sign/data":
-			dataSigner, ok := a.getSigners()[signerID].(signer.DataSigner)
+			dataSigner, ok := requestedSigner.(signer.DataSigner)
 			if !ok {
 				httpError(w, r, http.StatusBadRequest, "requested signer does not implement data signing")
 				return
@@ -189,7 +191,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			inputHash = hashSHA256AsHex(input)
 			outputHash = hashSHA256AsHex([]byte(sigresps[i].Signature))
 		case "/sign/file":
-			fileSigner, ok := a.getSigners()[signerID].(signer.FileSigner)
+			fileSigner, ok := requestedSigner.(signer.FileSigner)
 			if !ok {
 				httpError(w, r, http.StatusBadRequest, "requested signer does not implement file signing")
 				return
