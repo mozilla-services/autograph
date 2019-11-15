@@ -18,7 +18,6 @@ type authBackend interface {
 	addMonitoringAuth(string) error
 	getAuthByID(id string) (authorization, error)
 	getSignerID(userid, keyid string) (int, error)
-	makeSignerIndex([]signer.Signer) error
 }
 
 // inMemoryBackend is an authBackend that loads a config and stores
@@ -141,18 +140,6 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth authorization, signers []sig
 			tag := auth.ID + "+"
 			b.signerIndex[tag] = pos
 			break
-		}
-	}
-	return nil
-}
-
-// makeSignerIndex creates a map of authorization IDs and signer IDs to
-// quickly locate a signer based on the user requesting the signature.
-func (b *inMemoryBackend) makeSignerIndex(signers []signer.Signer) error {
-	for _, auth := range b.auths {
-		err := b.addAuthToSignerIndex(auth, signers)
-		if err != nil {
-			return err
 		}
 	}
 	return nil

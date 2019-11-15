@@ -185,10 +185,6 @@ func run(conf configuration, listen string, debug bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ag.makeSignerIndex()
-	if err != nil {
-		log.Fatal(err)
-	}
 	if debug {
 		ag.enableDebug()
 	}
@@ -485,10 +481,4 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 		}
 	}
 	return
-}
-
-// makeSignerIndex creates a map of authorization IDs and signer IDs to
-// quickly locate a signer based on the user requesting the signature.
-func (a *autographer) makeSignerIndex() error {
-	return a.authBackend.makeSignerIndex(a.signers)
 }
