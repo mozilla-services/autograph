@@ -397,10 +397,6 @@ authorizations:
 		t.Fatal(err)
 	}
 	err = ag.addAuthorizations(conf.Authorizations)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = ag.makeSignerIndex()
 	if err == nil {
 		t.Fatalf("should have failed with unknown signer in authorization but succeeded")
 	}

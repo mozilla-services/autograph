@@ -14,6 +14,7 @@ import (
 // their permissions
 type authBackend interface {
 	addAuth(*authorization) error
+	addAuthToSignerIndex(auth authorization, signers []signer.Signer) error
 	addMonitoringAuth(string) error
 	getAuthByID(id string) (authorization, error)
 	getSignerID(userid, keyid string) (int, error)
