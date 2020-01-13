@@ -25,7 +25,7 @@ require (
 	github.com/miekg/pkcs11 v1.0.3
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mozilla-services/yaml v0.0.0-20180922153656-28ffe5d0cafb
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/vitessio/vitess v2.1.1+incompatible // indirect
 	github.com/youtube/vitess v2.1.1+incompatible // indirect
