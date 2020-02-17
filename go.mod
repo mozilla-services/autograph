@@ -12,7 +12,7 @@ require (
 	github.com/DataDog/datadog-go v2.3.0+incompatible
 	github.com/ThalesIgnite/crypto11 v0.1.0
 	github.com/aws/aws-lambda-go v1.13.3
-	github.com/aws/aws-sdk-go v1.28.13
+	github.com/aws/aws-sdk-go v1.29.3
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gorilla/mux v1.7.3
 	github.com/goware/prefixer v0.0.0-20160118172347-395022866408 // indirect
