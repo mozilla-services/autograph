@@ -8,7 +8,7 @@ RUN apt update && \
       apt-get clean && \
       python3 -m pip install yq
 
-RUN go build -o /go/bin/autograph-monitor /go/src/go.mozilla.org/autograph/tools/autograph-monitor/*.go
+RUN go build -o /go/bin/autograph-monitor /app/src/autograph/tools/autograph-monitor/*.go
 
 RUN curl -o /app/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
       chmod +x /app/wait-for-it.sh
