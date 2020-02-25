@@ -19,11 +19,11 @@ RUN curl -o /tmp/rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloa
     rm -f /tmp/rds-combined-ca-bundle.pem && \
     update-ca-certificates
 
-ADD . /go/src/go.mozilla.org/autograph
+ADD . /app/src/autograph
 ADD autograph.yaml /app
 ADD version.json /app
 
-RUN go install go.mozilla.org/autograph
+RUN cd /app/src/autograph && go install go.mozilla.org/autograph
 
 USER app
 WORKDIR /app
