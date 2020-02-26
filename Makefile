@@ -28,7 +28,8 @@ install:
 	$(GO) install go.mozilla.org/autograph
 
 vendor:
-	go mod vendor
+	# install go get -u github.com/oligot/go-mod-upgrade
+	go-mod-upgrade
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
