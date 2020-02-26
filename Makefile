@@ -4,8 +4,7 @@
 GO := go
 GOLINT := golint -set_exit_status
 GOTEST := $(GO) test -v -coverprofile coverage.out -covermode=count -count=1
-PACKAGE_NAMES := $(shell git grep -E -n --no-color -h '^package [a-z0-9]+$$' -- '*.go' ':!vendor/' ':!tools/' | cut -d ':' -f 2 | sed 's/package //g' | sed 's/main/autograph/g' | sort | uniq) monitor
-PACKAGE_PATHS := $(subst go.mozilla.org/autograph/signer/autograph,go.mozilla.org/autograph,$(subst go.mozilla.org/autograph/signer/monitor,go.mozilla.org/autograph/tools/autograph-monitor,$(subst go.mozilla.org/autograph/signer/signer,go.mozilla.org/autograph/signer,$(subst go.mozilla.org/autograph/signer/formats,go.mozilla.org/autograph/formats,$(subst go.mozilla.org/autograph/signer/database,go.mozilla.org/autograph/database,$(addprefix go.mozilla.org/autograph/signer/,$(PACKAGE_NAMES)))))))
+PACKAGE_NAMES := $(shell go list go.mozilla.org/autograph/...|grep -v tools | sed -e :a -e '$!N; s/\n/ /; ta')
 TEST_TARGETS := $(addprefix test,$(PACKAGE_NAMES))
 
 all: generate test vet lint install
@@ -35,7 +34,7 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	test 0 -eq $(shell $(GOLINT) $(PACKAGE_PATHS) | tee /tmp/autograph-golint.txt | grep -v 'and that stutters' | wc -l)
+	test 0 -eq $(shell $(GOLINT) $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
 
 # refs: https://github.com/mozilla-services/autograph/issues/247
 check-no-crypto11-in-signers:
@@ -46,13 +45,13 @@ show-lint:
 	rm -f /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
 
 vet:
-	go vet $(PACKAGE_PATHS)
+	go vet $(PACKAGE_NAMES)
 
 fmt-diff:
 	gofmt -d *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
 fmt-fix:
-	go fmt $(PACKAGE_PATHS)
+	go fmt $(PACKAGE_NAMES)
 	gofmt -w tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
 # for test* and showcoverage* targets include known package names for
