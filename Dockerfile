@@ -14,7 +14,7 @@ RUN addgroup --gid 10001 app \
 
 # import the RDS CA bundle
 # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts.General.SSL
-RUN curl -o /tmp/rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && \
+RUN curl -o /tmp/rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem && \
     openssl x509 -in /tmp/rds-combined-ca-bundle.pem -inform PEM -out /usr/local/share/ca-certificates/rds-combined-ca-bundle.crt && \
     rm -f /tmp/rds-combined-ca-bundle.pem && \
     update-ca-certificates
