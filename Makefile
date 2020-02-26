@@ -1,30 +1,26 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-GO := go
-GOLINT := golint -set_exit_status
-GOTEST := $(GO) test -v -coverprofile coverage.out -covermode=count -count=1
 PACKAGE_NAMES := $(shell go list go.mozilla.org/autograph/...|grep -v tools | sed -e :a -e '$!N; s/\n/ /; ta')
-TEST_TARGETS := $(addprefix test,$(PACKAGE_NAMES))
 
 all: generate test vet lint install
 
 install-golint:
-	$(GO) get golang.org/x/lint/golint
+	go get golang.org/x/lint/golint
 
 install-cover:
-	$(GO) get golang.org/x/tools/cmd/cover
+	go get golang.org/x/tools/cmd/cover
 
 install-goveralls:
-	$(GO) get github.com/mattn/goveralls
+	go get github.com/mattn/goveralls
 
 install-staticcheck:
-	$(GO) get honnef.co/go/tools/cmd/staticcheck
+	go get honnef.co/go/tools/cmd/staticcheck
 
 install-dev-deps: install-golint install-cover install-goveralls
 
 install:
-	$(GO) install go.mozilla.org/autograph
+	go install go.mozilla.org/autograph
 
 vendor:
 	# install go get -u github.com/oligot/go-mod-upgrade
@@ -34,7 +30,7 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	test 0 -eq $(shell $(GOLINT) $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
+	test 0 -eq $(shell golint -set_exit_status $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
 
 # refs: https://github.com/mozilla-services/autograph/issues/247
 check-no-crypto11-in-signers:
@@ -54,84 +50,20 @@ fmt-fix:
 	go fmt $(PACKAGE_NAMES)
 	gofmt -w tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
-# for test* and showcoverage* targets include known package names for
-# autocompletion but fall through to generic implementation
-
-# non-signer package paths
-testautograph: PACKAGE_PATH = go.mozilla.org/autograph
-testdatabase: PACKAGE_PATH = go.mozilla.org/autograph/database
-testformats:  PACKAGE_PATH = go.mozilla.org/autograph/formats
-testmonitor: PACKAGE_PATH = go.mozilla.org/autograph/tools/autograph-monitor
-testsigner: PACKAGE_PATH = go.mozilla.org/autograph/signer
-
-testapk:
-testcontentsignature:
-testcontentsignaturepki:
-testgenericrsa:
-testgpg2:
-testmar:
-testpgp:
-testrsapss:
-testxpi:
-# default vars for test* targets https://www.gnu.org/software/make/manual/html_node/Pattern_002dspecific.html#Pattern_002dspecific
-test%: PACKAGE_NAME = $(subst test,,$@)
-test%: PACKAGE_PATH = $(addprefix go.mozilla.org/autograph/signer/,$(subst test,,$@))
-test%: PACKAGE_TEST_OUTPUT_DIR = $(subst test,testprofiles/,$@)
-test%:
-	mkdir -p $(PACKAGE_TEST_OUTPUT_DIR)
-	$(GOTEST) -outputdir "testprofiles/$(PACKAGE_NAME)" $(PACKAGE_PATH)
-ifeq ($(RACE_TEST),1)
-	$(GO) test -v -race $(PACKAGE_PATH)
-endif
-ifeq ($(STATIC_CHECK),1)
-	$(GO) staticcheck $(PACKAGE_PATH)
-endif
-
 benchmarkxpi:
-benchmark%: PACKAGE_NAME = $(subst benchmark,,$@)
-benchmark%: PACKAGE_PATH = $(addprefix go.mozilla.org/autograph/signer/,$(subst benchmark,,$@))
-benchmark%: PACKAGE_TEST_OUTPUT_DIR = $(subst benchmark,testprofiles/,$@)
-benchmark%:
-	mkdir -p $(PACKAGE_TEST_OUTPUT_DIR)
-	$(GO) test -run=XXX -benchtime=15s -bench=. -v -cpuprofile "testprofiles/$(PACKAGE_NAME)/cpu.out" $(PACKAGE_PATH)
+	go test -run=XXX -benchtime=15s -bench=. -v -cpuprofile cpu.out go.mozilla.org/autograph/signer/xpi ;\
 
 showbenchmarkxpi:
-showbenchmark%: PACKAGE_NAME = $(subst showbenchmark,,$@)
-showbenchmark%:
-	go tool pprof -web "testprofiles/$(PACKAGE_NAME)/cpu.out"
+	go tool pprof -web cpu.out
 
-showcoverageautograph:
-showcoveragedatabase:
-showcoverageformats:
-showcoveragemonitor:
-showcoveragesigner:
-
-showcoverageapk:
-showcoveragecontentsignature:
-showcoveragecontentsignaturepki:
-showcoveragegenericrsa:
-showcoveragegpg2:
-showcoveragemar:
-showcoveragepgp:
-showcoveragersapss:
-showcoveragexpi:
-
-showcoverage%: PACKAGE_NAME = $(subst showcoverage,,$@)
-showcoverage%: PACKAGE_TEST_OUTPUT_DIR = $(subst showcoverage,testprofiles/,$@)
-showcoverage%:
-	make $(subst showcoverage,test,$@)
-	$(GO) tool cover -html=$(PACKAGE_TEST_OUTPUT_DIR)/coverage.out -o coverage.html
-	python -m webbrowser -t coverage.html
-
-test: $(TEST_TARGETS)
-	echo 'mode: count' > coverage.out
-	grep -v mode $(shell find testprofiles/ -name coverage.out) | cut -d ':' -f 2,3 >> coverage.out
+test:
+	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)
 
 showcoverage: test
-	$(GO) tool cover -html=coverage.out
+	go tool cover -html=coverage.out
 
 generate:
-	$(GO) generate
+	go generate
 
 build: generate
 	docker-compose build app app-hsm monitor monitor-hsm
