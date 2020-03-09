@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -87,6 +88,11 @@ func main() {
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
 		lambda.Start(Handler)
+		// force gc run
+		// https://bugzilla.mozilla.org/show_bug.cgi?id=1621133
+		t1 := time.Now()
+		runtime.GC()
+		log.Println("Garbage collected in", time.Now().Sub(t1))
 	} else {
 		err := Handler()
 		if err != nil {
