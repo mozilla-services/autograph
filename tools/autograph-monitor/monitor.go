@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -97,8 +98,21 @@ func main() {
 	}
 }
 
-// Handler contacts the autograph service and verifies all monitoring signatures
+// Handler is a wrapper around monitor() that performs garbage collection
+// before returning
 func Handler() (err error) {
+	defer func() {
+		// force gc run
+		// https://bugzilla.mozilla.org/show_bug.cgi?id=1621133
+		t1 := time.Now()
+		runtime.GC()
+		log.Println("Garbage collected in", time.Now().Sub(t1))
+	}()
+	return monitor()
+}
+
+// monitor contacts the autograph service and verifies all monitoring signatures
+func monitor() (err error) {
 	log.Println("Retrieving monitoring data from", conf.url)
 	req, err := http.NewRequest("GET", conf.url+"__monitor__", nil)
 	if err != nil {
