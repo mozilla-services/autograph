@@ -56,6 +56,13 @@ benchmarkxpi:
 showbenchmarkxpi:
 	go tool pprof -web cpu.out
 
+race:
+	go test -v -race $(PACKAGE_NAMES)
+
+staticcheck:
+	go get -u honnef.co/go/tools/cmd/staticcheck
+	staticcheck $(PACKAGE_NAMES)
+
 test:
 	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)
 
