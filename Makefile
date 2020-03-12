@@ -6,24 +6,26 @@ PACKAGE_NAMES := $(shell go list go.mozilla.org/autograph/...|grep -v tools | se
 all: generate test vet lint install
 
 install-golint:
-	go get golang.org/x/lint/golint
+	go get -u golang.org/x/lint/golint
 
 install-cover:
-	go get golang.org/x/tools/cmd/cover
+	go get -u golang.org/x/tools/cmd/cover
 
 install-goveralls:
-	go get github.com/mattn/goveralls
+	go get -u github.com/mattn/goveralls
 
 install-staticcheck:
-	go get honnef.co/go/tools/cmd/staticcheck
+	go get -u honnef.co/go/tools/cmd/staticcheck
 
-install-dev-deps: install-golint install-cover install-goveralls
+install-go-mod-upgrade:
+	go get -u github.com/oligot/go-mod-upgrade
+
+install-dev-deps: install-golint install-cover install-goveralls install-go-mod-upgrade
 
 install:
 	go install go.mozilla.org/autograph
 
 vendor:
-	# install go get -u github.com/oligot/go-mod-upgrade
 	go-mod-upgrade
 
 tag: all
@@ -60,7 +62,6 @@ race:
 	go test -v -race $(PACKAGE_NAMES)
 
 staticcheck:
-	go get -u honnef.co/go/tools/cmd/staticcheck
 	staticcheck $(PACKAGE_NAMES)
 
 test:
