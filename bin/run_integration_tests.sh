@@ -36,7 +36,7 @@ docker-compose run \
 	       --rm \
 	       --user 0 \
 	       -e AUTOGRAPH_URL=http://app:8000 \
-	       --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client \
+	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_xpis.sh \
 	       app
 docker-compose run \
@@ -44,7 +44,7 @@ docker-compose run \
 	       --user 0 \
 	       -e AUTOGRAPH_URL=http://app-hsm:8001 \
 	       -e SIGNER_ID_PREFIX="hsm-" \
-	       --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client \
+	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_xpis.sh \
 	       app-hsm
 
@@ -54,7 +54,7 @@ docker-compose run \
 	       --user 0 \
 	       -e TARGET=http://app:8000 \
                -e VERIFY=1 \
-	       --workdir /go/src/go.mozilla.org/autograph/tools/autograph-client \
+	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./build_test_apks.sh \
 	       app
 # TODO: add HSM support for APK signing keys and test here
