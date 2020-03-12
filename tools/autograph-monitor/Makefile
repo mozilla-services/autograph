@@ -9,4 +9,6 @@ vet:
 	go vet *.go
 clean:
 	rm autograph-monitor autograph-monitor.zip
+vendor:
+	go-mod-upgrade
 .PHONY: vendor clean build

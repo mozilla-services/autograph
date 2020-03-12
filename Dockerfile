@@ -16,11 +16,11 @@ RUN addgroup --gid 10001 app \
 # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts.General.SSL
 RUN curl -o /usr/local/share/rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
 
-ADD . /go/src/go.mozilla.org/autograph
+ADD . /app/src/autograph
 ADD autograph.yaml /app
 ADD version.json /app
 
-RUN go install go.mozilla.org/autograph
+RUN cd /app/src/autograph && go install go.mozilla.org/autograph
 
 USER app
 WORKDIR /app
