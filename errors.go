@@ -17,7 +17,7 @@ import (
 )
 
 // ErrAuthNotFound is for when autographer.getAuthByID doesn't find an auth
-var ErrAuthNotFound = errors.New("authorization with id %q not found")
+var ErrAuthNotFound = errors.New("authorization not found")
 
 func httpError(w http.ResponseWriter, r *http.Request, errorCode int, errorMessage string, args ...interface{}) {
 	rid := getRequestID(r)
