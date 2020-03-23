@@ -11,7 +11,7 @@ require (
 	github.com/DataDog/datadog-go v3.4.1+incompatible
 	github.com/ThalesIgnite/crypto11 v0.1.0
 	github.com/aws/aws-lambda-go v1.15.0
-	github.com/aws/aws-sdk-go v1.29.24
+	github.com/aws/aws-sdk-go v1.29.29
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/lib/pq v1.3.0
