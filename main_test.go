@@ -48,10 +48,6 @@ func TestMain(m *testing.M) {
 			log.Fatal(err)
 		}
 	}
-	err = ag.makeSignerIndex()
-	if err != nil {
-		log.Fatal(err)
-	}
 	// ok this is lame but the contentsignaturepki signer will upload a file dated
 	// at the given second so we don't want anything else to run at the same second
 	// otherwise that file may get rewritten. Easiest way to solve it? Sleep.
@@ -397,10 +393,6 @@ authorizations:
 		t.Fatal(err)
 	}
 	err = ag.addAuthorizations(conf.Authorizations)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = ag.makeSignerIndex()
 	if err == nil {
 		t.Fatalf("should have failed with unknown signer in authorization but succeeded")
 	}
@@ -417,8 +409,7 @@ func TestAuthWithoutSigner(t *testing.T) {
 	}
 	tmpag := newAutographer(1)
 	tmpag.addSigners(conf.Signers)
-	tmpag.addAuthorizations(authorizations)
-	err := tmpag.makeSignerIndex()
+	err := tmpag.addAuthorizations(authorizations)
 	if err == nil {
 		t.Fatalf("should have failed with must have one signer but succeeded")
 	}

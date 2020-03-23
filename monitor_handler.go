@@ -19,18 +19,6 @@ const monitorAuthID = "monitor"
 // MonitoringInputData is the data signed by the monitoring handler
 var MonitoringInputData = []byte(`AUTOGRAPH MONITORING`)
 
-func (a *autographer) addMonitoring(monitoring authorization) error {
-	if monitoring.Key == "" {
-		return nil
-	}
-	if _, ok := a.auths[monitorAuthID]; ok {
-		return fmt.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
-	}
-	monitoring.hawkMaxTimestampSkew = time.Minute
-	a.auths[monitorAuthID] = monitoring
-	return nil
-}
-
 func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	rid := getRequestID(r)
 	starttime := time.Now()
@@ -44,10 +32,11 @@ func (a *autographer) handleMonitor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sigerrstrs := make([]string, len(a.signers))
-	sigresps := make([]formats.SignatureResponse, len(a.signers))
+	signers := a.getSigners()
+	sigerrstrs := make([]string, len(signers))
+	sigresps := make([]formats.SignatureResponse, len(signers))
 	var wg sync.WaitGroup
-	for i, s := range a.signers {
+	for i, s := range signers {
 		wg.Add(1)
 
 		go func(i int, s signer.Signer) {

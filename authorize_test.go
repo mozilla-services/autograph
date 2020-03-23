@@ -62,7 +62,11 @@ func TestBadPayload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", []byte(`9247oldfjd18weohfa`))
+	auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	authheader := getAuthHeader(req, auth.ID, auth.Key, sha256.New, id(), "application/json", []byte(`9247oldfjd18weohfa`))
 	req.Header.Set("Authorization", authheader)
 	_, err = ag.authorize(req, body)
 	if err == nil {
@@ -101,7 +105,11 @@ func TestDuplicateNonce(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, ag.auths[conf.Authorizations[0].ID].ID, ag.auths[conf.Authorizations[0].ID].Key, sha256.New, id(), "application/json", body)
+	auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	authheader := getAuthHeader(req, auth.ID, auth.Key, sha256.New, id(), "application/json", body)
 	req.Header.Set("Authorization", authheader)
 	// run it once
 	_, _, err = ag.authorizeHeader(req)
@@ -122,10 +130,15 @@ func TestNonceFromLRU(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	authCreds, err := ag.getAuthByID(conf.Authorizations[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	auth1 := hawk.NewRequestAuth(req,
 		&hawk.Credentials{
-			ID:   ag.auths[conf.Authorizations[0].ID].ID,
-			Key:  ag.auths[conf.Authorizations[0].ID].Key,
+			ID:   authCreds.ID,
+			Key:  authCreds.Key,
 			Hash: sha256.New},
 		0)
 	req.Header.Set("Authorization", auth1.RequestHeader())
@@ -136,8 +149,8 @@ func TestNonceFromLRU(t *testing.T) {
 
 	auth2 := hawk.NewRequestAuth(req,
 		&hawk.Credentials{
-			ID:   ag.auths[conf.Authorizations[0].ID].ID,
-			Key:  ag.auths[conf.Authorizations[0].ID].Key,
+			ID:   authCreds.ID,
+			Key:  authCreds.Key,
 			Hash: sha256.New},
 		0)
 	req.Header.Set("Authorization", auth2.RequestHeader())
@@ -159,8 +172,8 @@ func TestNonceFromLRU(t *testing.T) {
 func TestSignerNotFound(t *testing.T) {
 	t.Parallel()
 
-	pos, err := ag.getSignerID(`unknown018qoegdxc`, `unkown093ytid`)
-	if err == nil || pos != -1 {
+	_, err := ag.authBackend.getSignerForUser(`unknown018qoegdxc`, `unkown093ytid`)
+	if err == nil {
 		t.Errorf("expected to fail lookup up a signer but succeeded")
 	}
 }
@@ -168,8 +181,8 @@ func TestSignerNotFound(t *testing.T) {
 func TestDefaultSignerNotFound(t *testing.T) {
 	t.Parallel()
 
-	pos, err := ag.getSignerID(`unknown018qoegdxc`, ``)
-	if err == nil || pos != -1 {
+	_, err := ag.authBackend.getSignerForUser(`unknown018qoegdxc`, ``)
+	if err == nil {
 		t.Errorf("expected to fail lookup up a signer but succeeded")
 	}
 }
