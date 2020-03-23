@@ -13,6 +13,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -80,6 +81,7 @@ type autographer struct {
 	debug         bool
 	heartbeatConf *heartbeatConfig
 	authBackend   authBackend
+	isReady       bool
 }
 
 func main() {
@@ -189,6 +191,7 @@ func run(conf configuration, listen string, debug bool) {
 	}
 
 	ag.startCleanupHandler()
+	ag.startTcpHealthCheckHandler()
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", ag.handleHeartbeat).Methods("GET")
@@ -316,6 +319,30 @@ func (a *autographer) startCleanupHandler() {
 			}
 		}
 		os.Exit(0)
+	}()
+}
+
+// startTcpHealthCheckHandler answer to TCP connection directed to port 61337
+// when autograph is fully started and ready. The "isReady" boolean is controlled
+// by the handleHeartbeat routine.
+func (a *autographer) startTcpHealthCheckHandler() {
+	ln, err := net.Listen("tcp", ":61337")
+	if err != nil {
+		log.Fatalf("cannot start tcp heartbeat handler: %v", err)
+	}
+	go func() {
+		for {
+			if !a.isReady {
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			conn, err := ln.Accept()
+			if err != nil {
+				log.Fatalf("failed to accept incoming tcp connection on heartbeat handler: %v", err)
+			}
+			fmt.Fprintf(conn, "ohai")
+			conn.Close()
+		}
 	}()
 }
 

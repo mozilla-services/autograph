@@ -320,11 +320,18 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("heartbeat failed to marshal JSON with error: %s", err)
 		httpError(w, r, http.StatusInternalServerError, "error marshaling response JSON")
+		a.isReady = false
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write(respdata)
+
+	if status == http.StatusOK {
+		a.isReady = true
+	} else {
+		a.isReady = false
+	}
 }
 
 func handleVersion(w http.ResponseWriter, r *http.Request) {
