@@ -191,7 +191,7 @@ func run(conf configuration, listen string, debug bool) {
 	}
 
 	ag.startCleanupHandler()
-	ag.startTcpHealthCheckHandler()
+	ag.startTCPHealthCheckHandler()
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", ag.handleHeartbeat).Methods("GET")
@@ -322,10 +322,10 @@ func (a *autographer) startCleanupHandler() {
 	}()
 }
 
-// startTcpHealthCheckHandler answer to TCP connection directed to port 61337
+// startTCPHealthCheckHandler answer to TCP connection directed to port 61337
 // when autograph is fully started and ready. The "isReady" boolean is controlled
 // by the handleHeartbeat routine.
-func (a *autographer) startTcpHealthCheckHandler() {
+func (a *autographer) startTCPHealthCheckHandler() {
 	ln, err := net.Listen("tcp", ":61337")
 	if err != nil {
 		log.Fatalf("cannot start tcp heartbeat handler: %v", err)
