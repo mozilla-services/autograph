@@ -19,20 +19,20 @@ RUN mkdir -p /var/lib/softhsm/tokens && \
       softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
 
 # load dev keys
-ADD webextensions-rsa.pem /go/src/go.mozilla.org/autograph/tools/softhsm/
-ADD extensions-ecdsa-pk8.pem /go/src/go.mozilla.org/autograph/tools/softhsm/
+ADD webextensions-rsa.pem /app/src/autograph/tools/softhsm/
+ADD extensions-ecdsa-pk8.pem /app/src/autograph/tools/softhsm/
 
 # Import a key pair from the given path. The file must be in PKCS#8-format. Use with --slot or --token or --serial, --file-pin, --label, --id, --no-public-key, and --pxin.
-RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --id deadbeef --import /go/src/go.mozilla.org/autograph/tools/softhsm/webextensions-rsa.pem
-RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 --id 12345678 --import /go/src/go.mozilla.org/autograph/tools/softhsm/extensions-ecdsa-pk8.pem
+RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --id deadbeef --import /app/src/autograph/tools/softhsm/webextensions-rsa.pem
+RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 --id 12345678 --import /app/src/autograph/tools/softhsm/extensions-ecdsa-pk8.pem
 
 # genkeys
-RUN cd /go/src/go.mozilla.org/autograph/tools/softhsm/ && go run genkeys.go
+RUN cd /app/src/autograph/tools/softhsm/ && go run genkeys.go
 
 # make a pki in softhsm then update the config
-RUN cd /go/src/go.mozilla.org/autograph/tools/genpki/ && \
+RUN cd /app/src/autograph/tools/genpki/ && \
       go run genpki.go > /app/genpki.out && \
-      cd /go/src/go.mozilla.org/autograph/tools/configurator && \
+      cd /app/src/autograph/tools/configurator && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
       -p issuerprivkey -v "$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \

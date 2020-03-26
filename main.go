@@ -76,12 +76,10 @@ type configuration struct {
 type autographer struct {
 	db            *database.Handler
 	stats         *statsd.Client
-	signers       []signer.Signer
-	auths         map[string]authorization
-	signerIndex   map[string]int
 	nonces        *lru.Cache
 	debug         bool
 	heartbeatConf *heartbeatConfig
+	authBackend   authBackend
 }
 
 func main() {
@@ -186,10 +184,6 @@ func run(conf configuration, listen string, debug bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ag.makeSignerIndex()
-	if err != nil {
-		log.Fatal(err)
-	}
 	if debug {
 		ag.enableDebug()
 	}
@@ -276,8 +270,7 @@ func (c *configuration) loadFromFile(path string) error {
 func newAutographer(cachesize int) (a *autographer) {
 	var err error
 	a = new(autographer)
-	a.auths = make(map[string]authorization)
-	a.signerIndex = make(map[string]int)
+	a.authBackend = newInMemoryAuthBackend()
 	a.nonces, err = lru.New(cachesize)
 	if err != nil {
 		log.Fatal(err)
@@ -297,6 +290,12 @@ func (a *autographer) disableDebug() {
 	return
 }
 
+// getAuthByID returns an authorization if it exists or nil. Call
+// addAuthorizations and addMonitoring first
+func (a *autographer) getAuthByID(id string) (authorization, error) {
+	return a.authBackend.getAuthByID(id)
+}
+
 // startCleanupHandler sets up a chan to catch int, kill, term
 // signals and run signer AtExit functions
 func (a *autographer) startCleanupHandler() {
@@ -306,7 +305,7 @@ func (a *autographer) startCleanupHandler() {
 	go func() {
 		sig := <-c
 		log.Infof("main: received signal %s; cleaning up signers", sig)
-		for _, s := range a.signers {
+		for _, s := range a.getSigners() {
 			statefulSigner, ok := s.(signer.StatefulSigner)
 			if !ok {
 				continue
@@ -452,72 +451,39 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		default:
 			return fmt.Errorf("unknown signer type %q", signerConf.Type)
 		}
-		a.signers = append(a.signers, s)
+		a.addSigner(s)
 	}
 	return nil
+}
+
+// addMonitoring adds an authorization to enable the
+// tools/autograph-monitor
+func (a *autographer) addMonitoring(auth authorization) (err error) {
+	if auth.Key == "" {
+		log.Infof("monitoring is disabled. No key found")
+		return nil
+	}
+	return a.authBackend.addMonitoringAuth(auth.Key)
 }
 
 // addAuthorizations reads a list of authorizations from the configuration and
 // stores them into the autographer handler as a map indexed by user id, for fast lookup.
 func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 	for _, auth := range auths {
-		if _, ok := a.auths[auth.ID]; ok {
-			return fmt.Errorf("authorization id '" + auth.ID + "' already defined, duplicates are not permitted")
+		err = a.authBackend.addAuth(&auth)
+		if err != nil {
+			return
 		}
-		if auth.HawkTimestampValidity != "" {
-			auth.hawkMaxTimestampSkew, err = time.ParseDuration(auth.HawkTimestampValidity)
-			if err != nil {
-				return err
-			}
-		} else {
-			auth.hawkMaxTimestampSkew = time.Minute
-		}
-		a.auths[auth.ID] = auth
 	}
 	return
 }
 
-// makeSignerIndex creates a map of authorization IDs and signer IDs to
-// quickly locate a signer based on the user requesting the signature.
-func (a *autographer) makeSignerIndex() error {
-	// add an entry for each authid+signerid pair
-	for id, auth := range a.auths {
-		if id == monitorAuthID {
-			// the "monitor" authorization is a special case
-			// that doesn't need a signer index
-			continue
-		}
-		// if the authorization has no signer configured, error out
-		if len(auth.Signers) < 1 {
-			return fmt.Errorf("auth id %q must have at least one signer configured", id)
-		}
-		for _, sid := range auth.Signers {
-			// make sure the sid is valid
-			sidExists := false
+// getSigners returns the slice of configured signers
+func (a *autographer) getSigners() []signer.Signer {
+	return a.authBackend.getSigners()
+}
 
-			for pos, s := range a.signers {
-				if sid == s.Config().ID {
-					sidExists = true
-					log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.hawkMaxTimestampSkew)
-					tag := auth.ID + "+" + s.Config().ID
-					a.signerIndex[tag] = pos
-				}
-			}
-
-			if !sidExists {
-				return fmt.Errorf("in auth id %q, signer id %q was not found in the list of known signers", auth.ID, sid)
-			}
-		}
-		// add a default entry for the signer, such that if none is provided in
-		// the signing request, the default is used
-		for pos, signer := range a.signers {
-			if auth.Signers[0] == signer.Config().ID {
-				log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.hawkMaxTimestampSkew)
-				tag := auth.ID + "+"
-				a.signerIndex[tag] = pos
-				break
-			}
-		}
-	}
-	return nil
+// addSigner adds a configured signer
+func (a *autographer) addSigner(signer signer.Signer) {
+	a.authBackend.addSigner(signer)
 }

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"go.mozilla.org/hawk"
@@ -63,7 +64,11 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 	if err != nil {
 		return nil, "", err
 	}
-	hawk.MaxTimestampSkew = a.auths[userid].hawkMaxTimestampSkew
+	hawkSkewAuth, err := a.getAuthByID(userid)
+	if err != nil {
+		return nil, "", errors.Wrapf(err, "error finding auth for id %s for hawk.MaxTimestampSkew", userid)
+	}
+	hawk.MaxTimestampSkew = hawkSkewAuth.hawkMaxTimestampSkew
 	err = auth.Valid()
 	if a.stats != nil {
 		sendStatsErr := a.stats.Timing("hawk.validated", time.Since(getRequestStartTime(r)), nil, 1.0)
@@ -113,15 +118,16 @@ func (a *autographer) authorize(r *http.Request, body []byte) (userid string, er
 // id string. If found, a Credential function is return to complete the hawk authorization.
 // If not found, a function that returns an error is returned.
 func (a *autographer) lookupCred(id string) hawk.CredentialsLookupFunc {
-	if _, ok := a.auths[id]; ok {
+	auth, err := a.getAuthByID(id)
+	if err == nil {
 		// matching user found, return its token
 		return func(creds *hawk.Credentials) error {
-			creds.Key = a.auths[id].Key
+			creds.Key = auth.Key
 			creds.Hash = sha256.New
 			return nil
 		}
 	}
-	// credentials not found, return a function that returns a CredentialError
+	// credentials not found or other error, return a function that returns a CredentialError
 	return func(creds *hawk.Credentials) error {
 		return &hawk.CredentialError{
 			Type: hawk.UnknownID,
@@ -142,18 +148,4 @@ func (a *autographer) lookupNonce(val string, ts time.Time, creds *hawk.Credenti
 	}
 	a.nonces.Add(val, time.Now())
 	return true
-}
-
-// getSignerId returns the signer identifier for the user. If a keyid is specified,
-// the corresponding signer is returned. If no signer is found, an error is returned
-// and the signer identifier is set to -1.
-func (a *autographer) getSignerID(userid, keyid string) (int, error) {
-	tag := userid + "+" + keyid
-	if _, ok := a.signerIndex[tag]; !ok {
-		if keyid == "" {
-			return -1, fmt.Errorf("%q does not have a default signing key", userid)
-		}
-		return -1, fmt.Errorf("%s is not authorized to sign with key ID %s", userid, keyid)
-	}
-	return a.signerIndex[tag], nil
 }
