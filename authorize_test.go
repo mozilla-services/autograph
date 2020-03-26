@@ -216,14 +216,18 @@ func TestAddDuplicateAuthorization(t *testing.T) {
 func TestHawkTimestampSkewFail(t *testing.T) {
 	t.Parallel()
 
+	var err error
 	tmpag := newAutographer(1)
+	tmpag.hawkMaxTimestampSkew, err = time.ParseDuration("2s")
+	if err != nil {
+		t.Fatal(err)
+	}
 	tmpag.addSigners(conf.Signers)
 	tmpag.addAuthorizations([]authorization{
 		{
-			ID:                    "alice",
-			Key:                   "1862300e9bd18eafab2eb8d6",
-			HawkTimestampValidity: "2s",
-			Signers:               []string{"appkey1"},
+			ID:      "alice",
+			Key:     "1862300e9bd18eafab2eb8d6",
+			Signers: []string{"appkey1"},
 		}})
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")

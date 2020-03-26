@@ -63,23 +63,25 @@ type configuration struct {
 		Namespace string
 		Buflen    int
 	}
-	HSM            crypto11.PKCS11Config
-	Database       database.Config
-	Signers        []signer.Configuration
-	Authorizations []authorization
-	Monitoring     authorization
-	Heartbeat      heartbeatConfig
+	HSM                   crypto11.PKCS11Config
+	Database              database.Config
+	Signers               []signer.Configuration
+	Authorizations        []authorization
+	Monitoring            authorization
+	Heartbeat             heartbeatConfig
+	HawkTimestampValidity string
 }
 
 // An autographer is a running instance of an autograph service,
 // with all signers and permissions configured
 type autographer struct {
-	db            *database.Handler
-	stats         *statsd.Client
-	nonces        *lru.Cache
-	debug         bool
-	heartbeatConf *heartbeatConfig
-	authBackend   authBackend
+	db                   *database.Handler
+	stats                *statsd.Client
+	nonces               *lru.Cache
+	debug                bool
+	heartbeatConf        *heartbeatConfig
+	authBackend          authBackend
+	hawkMaxTimestampSkew time.Duration
 }
 
 func main() {
@@ -183,6 +185,14 @@ func run(conf configuration, listen string, debug bool) {
 	err = ag.addMonitoring(conf.Monitoring)
 	if err != nil {
 		log.Fatal(err)
+	}
+	if conf.HawkTimestampValidity != "" {
+		ag.hawkMaxTimestampSkew, err = time.ParseDuration(conf.HawkTimestampValidity)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		ag.hawkMaxTimestampSkew = time.Minute
 	}
 	if debug {
 		ag.enableDebug()

@@ -37,6 +37,10 @@ heartbeat:
     hsmchecktimeout: 100ms
     dbchecktimeout: 150ms
 
+# allow hawk authorization headers to be valid for up to 10 minutes
+# to account for diverging clocks between client and server
+hawktimestampvalidity: 10m
+
 # The keys below are testing keys that do not grant any power
 signers:
     # a p384 key, the standard
@@ -1206,7 +1210,6 @@ authorizations:
 
     - id: bob
       key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d
-      hawktimestampvalidity: 10m
       signers:
           - appkey2
 

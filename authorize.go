@@ -20,11 +20,9 @@ import (
 
 // an authorization
 type authorization struct {
-	ID                    string
-	Key                   string
-	Signers               []string
-	HawkTimestampValidity string
-	hawkMaxTimestampSkew  time.Duration
+	ID      string
+	Key     string
+	Signers []string
 }
 
 func abs(d time.Duration) time.Duration {
@@ -64,11 +62,11 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 	if err != nil {
 		return nil, "", err
 	}
-	hawkSkewAuth, err := a.getAuthByID(userid)
+	_, err = a.getAuthByID(userid)
 	if err != nil {
 		return nil, "", errors.Wrapf(err, "error finding auth for id %s for hawk.MaxTimestampSkew", userid)
 	}
-	hawk.MaxTimestampSkew = hawkSkewAuth.hawkMaxTimestampSkew
+	hawk.MaxTimestampSkew = a.hawkMaxTimestampSkew
 	err = auth.Valid()
 	if a.stats != nil {
 		sendStatsErr := a.stats.Timing("hawk.validated", time.Since(getRequestStartTime(r)), nil, 1.0)

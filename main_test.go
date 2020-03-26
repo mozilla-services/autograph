@@ -48,6 +48,14 @@ func TestMain(m *testing.M) {
 			log.Fatal(err)
 		}
 	}
+	if conf.HawkTimestampValidity != "" {
+		ag.hawkMaxTimestampSkew, err = time.ParseDuration(conf.HawkTimestampValidity)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		ag.hawkMaxTimestampSkew = time.Minute
+	}
 	// ok this is lame but the contentsignaturepki signer will upload a file dated
 	// at the given second so we don't want anything else to run at the same second
 	// otherwise that file may get rewritten. Easiest way to solve it? Sleep.
