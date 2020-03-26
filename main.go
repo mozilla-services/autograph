@@ -194,6 +194,8 @@ func run(conf configuration, listen string, debug bool) {
 	} else {
 		ag.hawkMaxTimestampSkew = time.Minute
 	}
+	log.Infof("setting hawk timestamp skew to %s", ag.hawkMaxTimestampSkew)
+
 	if debug {
 		ag.enableDebug()
 	}
