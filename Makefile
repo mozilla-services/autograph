@@ -32,7 +32,8 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	test 0 -eq $(shell golint -set_exit_status $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
+	golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
+	test 0 -eq $(shell cat /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
 
 # refs: https://github.com/mozilla-services/autograph/issues/247
 check-no-crypto11-in-signers:
