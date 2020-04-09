@@ -75,7 +75,7 @@ generate:
 	go generate
 
 build: generate
-	docker-compose build app app-hsm monitor monitor-hsm
+	docker-compose build --no-cache app app-hsm monitor monitor-hsm
 
 integration-test:
 	./bin/run_integration_tests.sh
