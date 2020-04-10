@@ -53,8 +53,11 @@ func (db *Handler) GetLabelOfLatestEE(signerID string, youngerThan time.Duration
 				WHERE is_current=TRUE AND signer_id=$1 AND created_at > $2
 				ORDER BY created_at DESC LIMIT 1`,
 		signerID, maxAge).Scan(&label, &nullableX5U)
-	if err == sql.ErrNoRows {
-		return "", "", ErrNoSuitableEEFound
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", "", ErrNoSuitableEEFound
+		}
+		return
 	}
 	x5uValue, err := nullableX5U.Value()
 	if x5uValue != nil {
