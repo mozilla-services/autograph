@@ -49,6 +49,8 @@ services:
     volumes:
       - hsmtmpdir:/tmp/
       - hsmconfig:/app/
+    depends_on:
+      - db
     command:
       [
         "/app/wait-for-it.sh",
@@ -74,6 +76,8 @@ services:
       - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
     links:
       - app
+    depends_on:
+      - app
     volumes:
       - apptmpdir:/tmp/
     command:
@@ -93,6 +97,8 @@ services:
       - AUTOGRAPH_URL=http://autograph-app-hsm:8001/
       - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
     links:
+      - app-hsm
+    depends_on:
       - app-hsm
     volumes:
       - hsmtmpdir:/tmp/
