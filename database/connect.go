@@ -69,7 +69,11 @@ func Connect(config Config) (*Handler, error) {
 	if config.MaxIdleConns > 0 {
 		dbfd.SetMaxIdleConns(config.MaxIdleConns)
 	}
-	return &Handler{dbfd}, nil
+	h := &Handler{dbfd}
+	dbCheckCtx, dbCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer dbCancel()
+	err = h.CheckConnectionContext(dbCheckCtx)
+	return h, err
 }
 
 // CheckConnectionContext runs a test query against the database and
