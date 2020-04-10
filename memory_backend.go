@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -49,14 +48,6 @@ func (b *inMemoryBackend) addAuth(auth *authorization) (err error) {
 	default:
 		return errors.Wrapf(getAuthErr, "error finding auth with id '%s'", auth.ID)
 	}
-	if auth.HawkTimestampValidity != "" {
-		auth.hawkMaxTimestampSkew, err = time.ParseDuration(auth.HawkTimestampValidity)
-		if err != nil {
-			return err
-		}
-	} else {
-		auth.hawkMaxTimestampSkew = time.Minute
-	}
 	b.auths[auth.ID] = *auth
 	return b.addAuthToSignerIndex(auth)
 }
@@ -82,10 +73,8 @@ func (b *inMemoryBackend) addMonitoringAuth(monitorKey string) error {
 		return errors.Errorf("error fetching 'monitor' auth: %q", err)
 	}
 	return b.addAuth(&authorization{
-		ID:                    monitorAuthID,
-		Key:                   monitorKey,
-		HawkTimestampValidity: "1m",
-		hawkMaxTimestampSkew:  time.Minute,
+		ID:  monitorAuthID,
+		Key: monitorKey,
 	})
 }
 
@@ -146,7 +135,7 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth *authorization) error {
 		for pos, s := range b.signers {
 			if sid == s.Config().ID {
 				sidExists = true
-				log.Printf("Mapping auth id %q and signer id %q to signer %d with hawk ts validity %s", auth.ID, s.Config().ID, pos, auth.hawkMaxTimestampSkew)
+				log.Printf("Mapping auth id %q and signer id %q to signer %d", auth.ID, s.Config().ID, pos)
 				b.signerIndex[getSignerIndexTag(auth.ID, s.Config().ID)] = pos
 			}
 		}
@@ -159,7 +148,7 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth *authorization) error {
 	// the signing request, the default is used
 	for pos, signer := range b.signers {
 		if auth.Signers[0] == signer.Config().ID {
-			log.Printf("Mapping auth id %q to default signer %d with hawk ts validity %s", auth.ID, pos, auth.hawkMaxTimestampSkew)
+			log.Printf("Mapping auth id %q to default signer %d", auth.ID, pos)
 			tag := auth.ID + "+"
 			b.signerIndex[tag] = pos
 			break
