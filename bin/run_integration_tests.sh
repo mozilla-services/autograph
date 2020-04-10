@@ -3,12 +3,15 @@
 set -e
 set -o pipefail
 
+# stop everything currently running
+docker-compose down -v
+
 # wipe DB state from previous runs
 docker-compose stop db
 docker-compose rm -f db
 
 # start db and servers
-docker-compose up -d db app app-hsm
+docker-compose up -d --force-recreate db app app-hsm
 
 echo "waiting for autograph-app to start"
 while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
