@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go v1.30.9
 	github.com/gorilla/mux v1.7.4
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/lib/pq v1.3.0
+	github.com/lib/pq v1.4.0
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/miekg/pkcs11 v1.0.3
