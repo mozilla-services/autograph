@@ -46,6 +46,22 @@ func TestFormatFilenameInvalidUTF8(t *testing.T) {
 	}
 }
 
+func TestFormatFilenameWithControlCharacter(t *testing.T) {
+	t.Parallel()
+
+	// Both are the same, really, but `expected` is slightly more readable.
+	fn := []byte("some/file\x0d")
+	expected := []byte("some/file\r")
+
+	formatted, err := formatFilename(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(formatted, expected) {
+		t.Fatalf("manifest filename mismatch Expected:\n%q\nGot:\n%q", expected, formatted)
+	}
+}
+
 func TestFormatFilenameTooLong(t *testing.T) {
 	t.Parallel()
 
