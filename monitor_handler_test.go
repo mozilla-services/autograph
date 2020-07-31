@@ -38,7 +38,7 @@ func TestMonitorPass(t *testing.T) {
 		sha256.New, id(), "application/json", empty)
 	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
-	ag.handleMonitor(w, req)
+	mo.handleMonitor(w, req)
 	if w.Code != http.StatusCreated || w.Body.String() == "" {
 		t.Fatalf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
 	}
@@ -113,7 +113,7 @@ func TestMonitorHasSignerParameters(t *testing.T) {
 		sha256.New, id(), "application/json", empty)
 	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
-	ag.handleMonitor(w, req)
+	mo.handleMonitor(w, req)
 	if w.Code != http.StatusCreated || w.Body.String() == "" {
 		t.Fatalf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
 	}
@@ -213,7 +213,7 @@ func TestMonitorBadRequest(t *testing.T) {
 		authheader := getAuthHeader(req, testcase.user, testcase.key, sha256.New, id(), "application/json", []byte(testcase.body))
 		req.Header.Set("Authorization", authheader)
 		w := httptest.NewRecorder()
-		ag.handleMonitor(w, req)
+		mo.handleMonitor(w, req)
 		if w.Code == http.StatusCreated {
 			t.Fatalf("test case %d failed with %d: %s", i, w.Code, w.Body.String())
 		}
