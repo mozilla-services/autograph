@@ -30,29 +30,29 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	<-m.initialized
 
 	m.RLock()
+	defer m.RUnlock()
 
 	for _, errstr := range m.sigerrstrs {
 		if errstr != "" {
-			m.RUnlock()
 			httpError(w, r, http.StatusInternalServerError, errstr)
 			return
 		}
 	}
 
-	respdata, err := json.Marshal(m.sigresps)
-
-	m.RUnlock()
-
-	if err != nil {
-		httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
-		return
-	}
 	if m.debug {
-		log.Printf("signature response: %s", respdata)
+		log.Printf("signature response: %s", m.sigresps)
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write(respdata)
+
+	enc := json.NewEncoder(w)
+	for _, response := range m.sigresps {
+		if err := enc.Encode(&response); err != nil {
+			httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
+			return
+		}
+	}
+
 	log.WithFields(log.Fields{
 		"rid":     rid,
 		"user_id": userid,

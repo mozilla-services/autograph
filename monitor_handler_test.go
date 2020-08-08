@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -42,13 +43,17 @@ func TestMonitorPass(t *testing.T) {
 	if w.Code != http.StatusCreated || w.Body.String() == "" {
 		t.Fatalf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
 	}
-	// verify that we got a proper signature response, with a valid signature
-	var responses []formats.SignatureResponse
-	err = json.Unmarshal(w.Body.Bytes(), &responses)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for i, response := range responses {
+
+	dec := json.NewDecoder(w.Result().Body)
+	for {
+		// verify that we got a proper signature response, with a valid signature
+		var response formats.SignatureResponse
+		if err := dec.Decode(&response); err == io.EOF {
+			break
+		} else if err != nil {
+			t.Fatal(err)
+		}
+
 		switch response.Type {
 		case contentsignature.Type:
 			err = verifyContentSignature(
@@ -89,7 +94,7 @@ func TestMonitorPass(t *testing.T) {
 		}
 		if err != nil {
 			t.Logf("%+v", response)
-			t.Fatalf("verification of monitoring response %d failed: %v", i, err)
+			t.Fatalf("verification of monitoring response failed: %v", err)
 		}
 	}
 }
@@ -117,32 +122,35 @@ func TestMonitorHasSignerParameters(t *testing.T) {
 	if w.Code != http.StatusCreated || w.Body.String() == "" {
 		t.Fatalf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
 	}
-	// verify that we got a proper signature response, with a valid signature
-	var responses []formats.SignatureResponse
-	err = json.Unmarshal(w.Body.Bytes(), &responses)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for i, response := range responses {
+
+	dec := json.NewDecoder(w.Result().Body)
+	for {
+		// verify that we got a proper signature response, with a valid signature
+		var response formats.SignatureResponse
+		if err := dec.Decode(&response); err == io.EOF {
+			break
+		} else if err != nil {
+			t.Fatal(err)
+		}
 		switch response.Type {
 		case contentsignature.Type:
 			for _, s := range ag.getSigners() {
 				if response.SignerID == s.Config().ID {
 					if response.X5U != s.Config().X5U {
-						t.Fatalf("X5U in signature response %d does not match its signer: expected %q got %q",
-							i, s.Config().X5U, response.X5U)
+						t.Fatalf("X5U in signature response does not match its signer: expected %q got %q",
+							s.Config().X5U, response.X5U)
 					}
 					if response.Type != s.Config().Type {
-						t.Fatalf("Type of signature response %d does not match its signer: expected %q got %q",
-							i, s.Config().Type, response.Type)
+						t.Fatalf("Type of signature response does not match its signer: expected %q got %q",
+							s.Config().Type, response.Type)
 					}
 					if response.Mode != s.Config().Mode {
-						t.Fatalf("Mode of signature response %d does not match its signer: expected %q got %q",
-							i, s.Config().Mode, response.Mode)
+						t.Fatalf("Mode of signature response does not match its signer: expected %q got %q",
+							s.Config().Mode, response.Mode)
 					}
 					if response.PublicKey != s.Config().PublicKey {
-						t.Fatalf("Public Key of signature response %d does not match its signer: expected %q got %q",
-							i, s.Config().PublicKey, response.PublicKey)
+						t.Fatalf("Public Key of signature response does not match its signer: expected %q got %q",
+							s.Config().PublicKey, response.PublicKey)
 					}
 				}
 			}
