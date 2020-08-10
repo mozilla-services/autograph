@@ -192,7 +192,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		}
 
 		opts := s.GetDefaultOptions().(Options)
-		opts.Recommendations = []string{"recommended"}
+		opts.Recommendations = []string{"recommended", "standard"}
 
 		recFileBytes, err := s.makeRecommendationFile(opts, "example@mozilla")
 		if err != nil {
@@ -210,8 +210,8 @@ func TestMakeRecommendationFile(t *testing.T) {
 		if rec.AddOnID != "example@mozilla" {
 			t.Fatalf("unmarshaled recommendation file used unexpected addonid: %q (expected example@mozilla)", rec.AddOnID)
 		}
-		if len(rec.States) != 1 && rec.States[0] != "recommended" {
-			t.Fatalf("unmarshaled recommendation file contains unexpected states: %q (expected [\"recommended\"])", rec.States)
+		if !(len(rec.States) == 2 && rec.States[0] == "recommended" && rec.States[1] == "standard") {
+			t.Fatalf("unmarshaled recommendation file with unexpected states: %q (expected [\"recommended\" \"standard\"])", rec.States)
 		}
 	})
 
