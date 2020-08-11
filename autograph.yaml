@@ -983,7 +983,6 @@ signers:
       recommendation:
         path: "mozilla-recommendation.json"
         states:
-          standard: true
           recommended: true
           sponsored: true
           verified: true
