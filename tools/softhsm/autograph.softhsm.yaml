@@ -20,6 +20,12 @@ heartbeat:
     hsmchecktimeout: 100ms
     dbchecktimeout: 150ms
 
+# allow hawk authorization headers to be valid for up to 10 minutes
+# to account for diverging clocks between client and server
+hawktimestampvalidity: 10m
+
+monitorinterval: 5m
+
 # When using a postgres database, set the config below:
 database:
   name: autograph
