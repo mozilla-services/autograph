@@ -41,6 +41,7 @@ heartbeat:
 # to account for diverging clocks between client and server
 hawktimestampvalidity: 10m
 
+# optional refresh rate for cached monitor data
 monitorinterval: 5m
 
 # The keys below are testing keys that do not grant any power

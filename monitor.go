@@ -38,10 +38,10 @@ type monitor struct {
 }
 
 // The monitor loop, should run in a separate goroutine.
-func (m *monitor) start(interval string) {
-	duration, err := time.ParseDuration(interval)
-	if err != nil {
-		log.Fatal(err)
+func (m *monitor) start(duration time.Duration) {
+	if duration.Nanoseconds() <= 0 {
+		duration = 5 * time.Minute
+		log.Infof("monitor: using 5m instead of invalid interval %q", duration)
 	}
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()
@@ -127,7 +127,7 @@ func (m *monitor) checkSigners() {
 	}
 }
 
-func newMonitor(ag *autographer, interval string) *monitor {
+func newMonitor(ag *autographer, duration time.Duration) *monitor {
 	m := new(monitor)
 	m.authorize = func(r *http.Request, body []byte) (userid string, err error) {
 		return ag.authorize(r, body)
@@ -140,7 +140,7 @@ func newMonitor(ag *autographer, interval string) *monitor {
 	m.exit = ag.exit
 	m.debug = ag.debug
 
-	go m.start(interval)
+	go m.start(duration)
 
 	return m
 }

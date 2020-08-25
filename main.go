@@ -70,7 +70,7 @@ type configuration struct {
 	Monitoring            authorization
 	Heartbeat             heartbeatConfig
 	HawkTimestampValidity string
-	MonitorInterval       string
+	MonitorInterval       time.Duration
 }
 
 // An autographer is a running instance of an autograph service,
