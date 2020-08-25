@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -133,24 +133,20 @@ func monitor() (err error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("Request failed with %s: %s", resp.Status, body)
+		return fmt.Errorf("Request failed with %s: %s", resp.Status, resp.Body)
 	}
 
-	// verify that we got a proper signature response, with valid signatures
-	var responses []formats.SignatureResponse
-	err = json.Unmarshal(body, &responses)
-	if err != nil {
-		return
-	}
+	dec := json.NewDecoder(resp.Body)
 	failed := false
 	var failures []error
-	for i, response := range responses {
+	for {
+		var response formats.SignatureResponse
+		if err := dec.Decode(&response); err == io.EOF {
+			break
+		} else if err != nil {
+			log.Fatal(err)
+		}
 		switch response.Type {
 		case contentsignature.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
@@ -188,11 +184,11 @@ func monitor() (err error) {
 		}
 		if err != nil {
 			failed = true
-			log.Printf("Response %d from signer %q does not pass: %v", i, response.SignerID, err)
+			log.Printf("Response from signer %q does not pass: %v", response.SignerID, err)
 			log.Printf("Response was: %+v", response)
 			failures = append(failures, err)
 		} else {
-			log.Printf("Response %d from signer %q passes verification", i, response.SignerID)
+			log.Printf("Response from signer %q passes verification", response.SignerID)
 		}
 	}
 	if failed {

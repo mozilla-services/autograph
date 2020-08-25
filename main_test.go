@@ -19,6 +19,7 @@ import (
 
 var (
 	ag     *autographer
+	mo     *monitor
 	pubkey *ecdsa.PublicKey
 	conf   configuration
 )
@@ -60,8 +61,16 @@ func TestMain(m *testing.M) {
 	// at the given second so we don't want anything else to run at the same second
 	// otherwise that file may get rewritten. Easiest way to solve it? Sleep.
 	time.Sleep(time.Second)
+
+	// Initialize a monitor.
+	mo = newMonitor(ag, conf.MonitorInterval)
+
 	// run the tests and exit
 	r := m.Run()
+
+	// Shutdown the monitor
+	close(ag.exit)
+
 	os.Exit(r)
 }
 

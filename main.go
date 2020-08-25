@@ -70,6 +70,7 @@ type configuration struct {
 	Monitoring            authorization
 	Heartbeat             heartbeatConfig
 	HawkTimestampValidity string
+	MonitorInterval       time.Duration
 }
 
 // An autographer is a running instance of an autograph service,
@@ -82,6 +83,9 @@ type autographer struct {
 	heartbeatConf        *heartbeatConfig
 	authBackend          authBackend
 	hawkMaxTimestampSkew time.Duration
+
+	// Used to signal the monitor on exit of the autographer instance.
+	exit chan interface{}
 }
 
 func main() {
@@ -202,11 +206,14 @@ func run(conf configuration, listen string, debug bool) {
 
 	ag.startCleanupHandler()
 
+	// Initialize a monitor.
+	monitor := newMonitor(ag, conf.MonitorInterval)
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", ag.handleHeartbeat).Methods("GET")
 	router.HandleFunc("/__lbheartbeat__", handleLBHeartbeat).Methods("GET")
 	router.HandleFunc("/__version__", handleVersion).Methods("GET")
-	router.HandleFunc("/__monitor__", ag.handleMonitor).Methods("GET")
+	router.HandleFunc("/__monitor__", monitor.handleMonitor).Methods("GET")
 	router.HandleFunc("/sign/file", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/data", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
@@ -237,6 +244,9 @@ func run(conf configuration, listen string, debug bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Shutdown the monitor.
+	close(ag.exit)
 }
 
 // loadFromFile reads a configuration from a local file
@@ -284,6 +294,7 @@ func newAutographer(cachesize int) (a *autographer) {
 	a = new(autographer)
 	a.authBackend = newInMemoryAuthBackend()
 	a.nonces, err = lru.New(cachesize)
+	a.exit = make(chan interface{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -327,6 +338,10 @@ func (a *autographer) startCleanupHandler() {
 				log.Errorf("main: error in signer %s AtExit fn: %s", s.Config().ID, err)
 			}
 		}
+
+		// Shutdown the monitor
+		close(a.exit)
+
 		os.Exit(0)
 	}()
 }
