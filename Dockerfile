@@ -1,6 +1,8 @@
 FROM golang:1.15.1-buster
 EXPOSE 8000
 
+ENV GODEBUG=x509ignoreCN=0
+
 RUN addgroup --gid 10001 app \
       && \
       adduser --gid 10001 --uid 10001 \
