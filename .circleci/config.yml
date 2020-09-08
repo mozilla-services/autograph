@@ -106,7 +106,7 @@ jobs:
 
   deploy:
     docker:
-      - image: docker:18.02.0-ce
+      - image: docker:18.06.3-ce
     steps:
       - setup_remote_docker
       - restore_cache:
