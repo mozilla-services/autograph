@@ -7,9 +7,9 @@ import (
 )
 
 func verifyAPKSignature(sig string) error {
-	xpiSig, err := apk.Unmarshal(sig, []byte(inputdata))
+	apkSig, err := apk.Unmarshal(sig, []byte(inputdata))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return xpiSig.Verify()
+	return apkSig.Verify()
 }
