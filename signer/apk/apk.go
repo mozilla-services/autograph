@@ -272,7 +272,7 @@ func GetOptions(input interface{}) (options Options, err error) {
 func (s *APKSigner) GetDefaultOptions() interface{} {
 	return Options{
 		ZIP:         ZIPMethodCompressPassthrough,
-		PKCS7Digest: "SHA256",
+		PKCS7Digest: "SHA1",
 	}
 }
 
