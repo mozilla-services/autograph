@@ -1,5 +1,3 @@
-// +build !race
-
 package database
 
 import (
@@ -32,14 +30,21 @@ func TestConcurrentEndEntityOperations(t *testing.T) {
 	concurrency := 73 // took a long time to pick that number!
 	wg.Add(concurrency)
 	signerID := fmt.Sprintf("database_unit_testing_%d", time.Now().UnixNano())
-	labels := make(map[string]bool)
+	labelsSyncMap := sync.Map{}
+
 	for i := 0; i < concurrency; i++ {
 		go func(j int) {
 			label := waitAndMakeEE(j, db, &wg, t, signerID)
-			labels[label] = true
+			labelsSyncMap.Store(label, true)
 		}(i)
 	}
 	wg.Wait()
+	labels := make(map[string]bool)
+
+	labelsSyncMap.Range(func(key, value interface{}) bool {
+		labels[key.(string)] = true
+		return true
+	})
 	if len(labels) != 1 {
 		t.Fatalf("expected to find a single label but found %d: %s",
 			len(labels), reflect.ValueOf(labels).MapKeys())
