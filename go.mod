@@ -11,7 +11,7 @@ require (
 	github.com/DataDog/datadog-go v3.7.2+incompatible
 	github.com/ThalesIgnite/crypto11 v0.1.0
 	github.com/aws/aws-lambda-go v1.19.1
-	github.com/aws/aws-sdk-go v1.34.27
+	github.com/aws/aws-sdk-go v1.34.32
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/lib/pq v1.8.0
@@ -33,5 +33,4 @@ require (
 	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
 	google.golang.org/api v0.11.0 // indirect
 	google.golang.org/grpc v1.24.0 // indirect
-	gopkg.in/yaml.v2 v2.2.4 // indirect
 )
