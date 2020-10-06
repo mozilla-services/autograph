@@ -338,7 +338,7 @@ signers:
           -----END EC PRIVATE KEY-----
 
     - id: testapp-android-legacy
-      type: apk
+      type: apk2
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIDyTCCArGgAwIBAgIEVxuKpDANBgkqhkiG9w0BAQsFADCBlDELMAkGA1UEBhMC
@@ -394,8 +394,7 @@ signers:
           -----END PRIVATE KEY-----
 
     - id: legacy_apk_with_rsa
-      nopkcs7signedattributes: true
-      type: apk
+      type: apk2
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIDyTCCArGgAwIBAgIEVxuKpDANBgkqhkiG9w0BAQsFADCBlDELMAkGA1UEBhMC
