@@ -16,9 +16,6 @@ HAWK_USER=${HAWK_USER:-alice}
 HAWK_SECRET=${HAWK_SECRET:-fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu}
 TARGET=${TARGET:-'http://127.0.0.1:8000'}
 
-# Sign Fennec Nightly
-go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0a1.multi.android-arm.apk -o fennec-64.0a1.multi.android-arm.resigned.apk -k apk_cert_with_dsa_sha1 -pk7digest sha1
-
 # Sign Fennec Beta
 go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0b9.en-US.android-arm.apk -o fennec-legacy-sha1.resigned.apk -k legacy_apk_with_rsa -pk7digest sha1
 
