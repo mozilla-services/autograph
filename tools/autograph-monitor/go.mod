@@ -3,7 +3,7 @@ module go.mozilla.org/autograph/tools/autograph-monitor
 go 1.13
 
 require (
-	github.com/aws/aws-lambda-go v1.20.0
+	github.com/aws/aws-lambda-go v1.22.0
 	github.com/aws/aws-sdk-go v1.36.19
 	go.mozilla.org/autograph v0.0.0-20200224202955-7cd80491527d
 	go.mozilla.org/hawk v0.0.0-20190327210923-a483e4a7047e
