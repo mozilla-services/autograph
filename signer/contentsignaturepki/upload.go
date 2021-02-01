@@ -97,6 +97,10 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 	// verify the chain
 	// the first cert is the end entity, then the intermediate and the root
 	block, rest := pem.Decode(body)
+	if block == nil || block.Type != "CERTIFICATE" {
+		err = errors.Wrap(err, "failed to PEM decode ee certificate from chain")
+		return
+	}
 	ee, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		err = errors.Wrap(err, "failed to parse ee certificate from chain")
@@ -106,6 +110,10 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 
 	// the second cert is the intermediate
 	block, rest = pem.Decode(rest)
+	if block == nil || block.Type != "CERTIFICATE" {
+		err = errors.Wrap(err, "failed to PEM decode intermediate certificate from chain")
+		return
+	}
 	inter, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		err = errors.Wrap(err, "failed to parse intermediate issuer certificate from chain")
@@ -117,6 +125,10 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 
 	// the third and last cert is the root
 	block, rest = pem.Decode(rest)
+	if block == nil || block.Type != "CERTIFICATE" {
+		err = errors.Wrap(err, "failed to PEM decode root certificate from chain")
+		return
+	}
 	root, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		err = errors.Wrap(err, "failed to parse root certificate from chain")
