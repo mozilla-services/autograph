@@ -65,13 +65,17 @@ jobs:
           command: make dummy-statsd
           background: true
       - run:
-          name: Run unit tests
+          name: Run app unit tests
           command: |
             make generate test
       - run:
           name: Report coverage
           command: |
             $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci
+      - run:
+          name: Run monitor unit tests
+          command: |
+            cd tools/autograph-monitor && make test
 
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
