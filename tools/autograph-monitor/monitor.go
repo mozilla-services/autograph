@@ -63,13 +63,13 @@ func main() {
 	}
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
 	switch conf.env {
-	case "stage":
+	case "autographstage":
 		conf.rootHash = firefoxPkiStageRootHash
 		conf.truststore = x509.NewCertPool()
 		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiStageRoot))
 		conf.depRootHash = ""
 		conf.depTruststore = nil
-	case "prod":
+	case "autographprod":
 		conf.rootHash = firefoxPkiProdRootHash
 		conf.truststore = x509.NewCertPool()
 		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiProdRoot))
