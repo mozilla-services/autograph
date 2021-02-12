@@ -33,7 +33,7 @@ func serverAndWaitForSetup(handlerURI, chain, port string) {
 func TestVerifyContentSignature(t *testing.T) {
 	serverAndWaitForSetup("/normandychain", NormandyDevChain2021, "64320")
 
-	err := verifyContentSignature(ValidMonitoringContentSignature)
+	err := verifyContentSignature(conf.rootHash, ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}
@@ -46,7 +46,7 @@ func TestVerifyExpiredCertChain(t *testing.T) {
 	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
 		t.Fatalf("Failed to retrieve certificate chain: %v", err)
 	}
-	err = verifyCertChain(chain)
+	err = verifyCertChain(conf.rootHash, chain)
 	if err == nil {
 		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
 	}
@@ -63,7 +63,7 @@ func TestVerifyWronglyOrderedChain(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to retrieved certificate chain: %v", err)
 	}
-	err = verifyCertChain(chain)
+	err = verifyCertChain(conf.rootHash, chain)
 	if err == nil {
 		t.Fatal("Expected to fail chain verification with cert not signed by parent, but succeeded")
 	}
@@ -74,7 +74,7 @@ func TestVerifyWronglyOrderedChain(t *testing.T) {
 }
 
 func TestVerifyFirefoxRoot(t *testing.T) {
-	conf.rootHash = "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E"
+	rootHash := "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E"
 	block, _ := pem.Decode(FirefoxPKIRootPEM)
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")
@@ -83,14 +83,14 @@ func TestVerifyFirefoxRoot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not parse X.509 certificate: %v", err)
 	}
-	err = verifyRoot(certX509)
+	err = verifyRoot(rootHash, certX509)
 	if err != nil {
 		t.Fatalf("Failed to verify valid Firefox root certificate: %v", err)
 	}
 }
 
 func TestVerifyFirefoxRootWithBadHash(t *testing.T) {
-	conf.rootHash = "foo"
+	rootHash := "foo"
 	block, _ := pem.Decode(FirefoxPKIRootPEM)
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")
@@ -99,7 +99,7 @@ func TestVerifyFirefoxRootWithBadHash(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not parse X.509 certificate: %v", err)
 	}
-	err = verifyRoot(certX509)
+	err = verifyRoot(rootHash, certX509)
 	if err == nil {
 		t.Fatalf("Expected to fail with incorrect hash, but succeeded.")
 	}
@@ -109,7 +109,7 @@ func TestVerifyFirefoxRootWithBadHash(t *testing.T) {
 }
 
 func TestVerifyFirefoxStagingRoot(t *testing.T) {
-	conf.rootHash = "DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90"
+	rootHash := "DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90"
 	block, _ := pem.Decode(FirefoxPKIStagingRootPEM)
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")
@@ -118,7 +118,7 @@ func TestVerifyFirefoxStagingRoot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not parse X.509 certificate: %v", err)
 	}
-	err = verifyRoot(certX509)
+	err = verifyRoot(rootHash, certX509)
 	if err != nil {
 		t.Fatalf("Failed to verify valid Firefox root certificate: %v", err)
 	}
