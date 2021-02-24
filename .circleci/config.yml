@@ -69,13 +69,13 @@ jobs:
           command: |
             make generate test
       - run:
-          name: Report coverage
-          command: |
-            $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci
-      - run:
           name: Run monitor unit tests
           command: |
-            cd tools/autograph-monitor && make test
+            make -C tools/autograph-monitor test
+      - run:
+          name: Report app and monitor unit test coverage
+          command: |
+            $GOPATH/bin/goveralls -coverprofile=coverage.out,tools/autograph-monitor/monitor-coverage.out -service circle-ci
 
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
