@@ -20,7 +20,7 @@ require (
 	github.com/miekg/pkcs11 v1.0.3
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.0
 	github.com/urfave/cli v1.22.1 // indirect
 	github.com/youtube/vitess v2.1.1+incompatible // indirect
 	go.mozilla.org/cose v0.0.0-20200221144611-2ea72a6b3de3
