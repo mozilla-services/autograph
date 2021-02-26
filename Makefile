@@ -81,7 +81,7 @@ integration-test:
 	./bin/run_integration_tests.sh
 
 dummy-statsd:
-	nc -kluvw 0 localhost 8125
+	nc -kluvw 1 localhost 8125
 
 .SUFFIXES:            # Delete the default suffixes
 .PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers
