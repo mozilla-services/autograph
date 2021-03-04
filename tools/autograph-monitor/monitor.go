@@ -52,12 +52,6 @@ var conf configuration
 
 const inputdata string = "AUTOGRAPH MONITORING"
 
-var softNotifCache map[string]time.Time
-
-func init() {
-	// create a cache to avoid sending the same notifications over and over
-	softNotifCache = make(map[string]time.Time)
-}
 
 func main() {
 	conf.url = os.Getenv("AUTOGRAPH_URL")
@@ -237,13 +231,6 @@ func makeAuthHeader(req *http.Request, user, token string) string {
 
 // send a message to a predefined sns topic
 func sendSoftNotification(id string, format string, a ...interface{}) error {
-	if ts, ok := softNotifCache[id]; ok {
-		// don't send dup notifications for 24 hours
-		if ts.Add(24 * time.Hour).After(time.Now()) {
-			log.Printf("silencing soft notification ID %s", id)
-			return nil
-		}
-	}
 	if os.Getenv("LAMBDA_TASK_ROOT") == "" || os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS") == "" {
 		// We're not running in lambda or the conf isnt ready so don't try to publish to SQS
 		log.Printf("soft notification ID %s: %s", id, fmt.Sprintf(format, a...))
@@ -260,7 +247,5 @@ func sendSoftNotification(id string, format string, a ...interface{}) error {
 		return err
 	}
 	log.Printf("Soft notification send to %q with body: %s", os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS"), *params.Message)
-	// add the notification to the cache
-	softNotifCache[id] = time.Now()
 	return nil
 }
