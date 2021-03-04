@@ -30,7 +30,7 @@ var ignoredCerts = map[string]bool{
 // to verify the sig. Otherwise, use the PublicKey contained in the response.
 //
 // If the signature passes, verify the chain of trust maps.
-func verifyContentSignature(response formats.SignatureResponse) error {
+func verifyContentSignature(rootHash string, response formats.SignatureResponse) error {
 	var (
 		key   *ecdsa.PublicKey
 		err   error
@@ -60,7 +60,7 @@ func verifyContentSignature(response formats.SignatureResponse) error {
 		return fmt.Errorf("Signature verification failed")
 	}
 	if certs != nil {
-		err = verifyCertChain(certs)
+		err = verifyCertChain(rootHash, certs)
 		if err != nil {
 			// check if we should ignore this cert
 			if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
@@ -85,10 +85,10 @@ func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error
 	return pubkey, nil
 }
 
-func verifyCertChain(certs []*x509.Certificate) error {
+func verifyCertChain(rootHash string, certs []*x509.Certificate) error {
 	for i, cert := range certs {
 		if (i + 1) == len(certs) {
-			err := verifyRoot(cert)
+			err := verifyRoot(rootHash, cert)
 			if err != nil {
 				return fmt.Errorf("Certificate %d %q is root but fails validation: %v",
 					i, cert.Subject.CommonName, err)
@@ -128,7 +128,15 @@ func verifyCertChain(certs []*x509.Certificate) error {
 	return nil
 }
 
-func verifyRoot(cert *x509.Certificate) error {
+// verifyRoot checks that a root cert is:
+//
+// 1) self-signed
+// 2) a CA
+// 3) has the x509v3 Extentions for CodeSigning use
+//
+// and SHA2 sum of raw bytes matches the provided rootHash param
+// (e.g. from openssl x509 -noout -text -fingerprint -sha256 -in ca.crt)
+func verifyRoot(rootHash string, cert *x509.Certificate) error {
 	// this is the last cert, it should be self signed
 	if !bytes.Equal(cert.RawSubject, cert.RawIssuer) {
 		return fmt.Errorf("subject does not match issuer, should be equal")
@@ -136,8 +144,8 @@ func verifyRoot(cert *x509.Certificate) error {
 	if !cert.IsCA {
 		return fmt.Errorf("missing IS CA extension")
 	}
-	if conf.rootHash != "" {
-		rhash := strings.Replace(conf.rootHash, ":", "", -1)
+	if rootHash != "" {
+		rhash := strings.Replace(rootHash, ":", "", -1)
 		// We're configure to check the root hash matches expected value
 		h := sha256.Sum256(cert.Raw)
 		chash := fmt.Sprintf("%X", h[:])
