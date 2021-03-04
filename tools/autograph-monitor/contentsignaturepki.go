@@ -117,9 +117,8 @@ func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certifica
 		}
 		if notifier != nil && time.Now().Add(30*24*time.Hour).After(cert.NotAfter) {
 			// cert expires in less than 30 days, this is a soft error. send an email.
-			certFingerprint := fmt.Sprintf("%x", sha256.Sum256(cert.Raw))
-			message := fmt.Sprintf("Certificate %d %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
-			err := notifier.Send(certFingerprint, message)
+			message := fmt.Sprintf("Certificate %d for %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
+			err := notifier.Send(cert.Subject.CommonName, "warning", message)
 			if err != nil {
 				log.Printf("failed to send soft notification: %v", err)
 			}
@@ -132,8 +131,15 @@ func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certifica
 			return fmt.Errorf("Certificate %d %q is not yet valid: notBefore=%s",
 				i, cert.Subject.CommonName, cert.NotBefore)
 		}
-		log.Printf("Certificate %d %q is valid from %s to %s",
-			i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter)
+		message := fmt.Sprintf(fmt.Sprintf("Certificate %d %q is valid from %s to %s",
+			i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter))
+		log.Printf(message)
+		if notifier != nil {
+			err := notifier.Send(cert.Subject.CommonName, "info", message)
+			if err != nil {
+				log.Printf("failed to send soft notification: %v", err)
+			}
+		}
 	}
 	return nil
 }

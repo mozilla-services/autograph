@@ -3,6 +3,7 @@ module go.mozilla.org/autograph/tools/autograph-monitor
 go 1.13
 
 require (
+	github.com/PagerDuty/go-pagerduty v1.3.0
 	github.com/aws/aws-lambda-go v1.22.0
 	github.com/aws/aws-sdk-go v1.37.30
 	github.com/golang/mock v1.5.0
