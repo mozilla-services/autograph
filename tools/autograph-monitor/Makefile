@@ -2,7 +2,11 @@ build:
 	go build -o autograph-monitor *.go
 	zip -r autograph-monitor.zip autograph-monitor
 test:
-	go test -count=1 go.mozilla.org/autograph/tools/autograph-monitor
+	go test -coverprofile monitor-coverage.out -covermode=count -count=1 go.mozilla.org/autograph/tools/autograph-monitor
+test-cover-report:
+	go tool cover -func=monitor-coverage.out
+test-cover-report-html:
+	go tool cover -html=monitor-coverage.out
 lint:
 	golint *.go
 vet:
