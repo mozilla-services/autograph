@@ -54,3 +54,7 @@ AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs \
 2019/04/09 09:41:13 Response 14 from signer "dummyrsapss" passes verification
 2019/04/09 09:41:13 All signature responses passed, monitoring OK
 ```
+
+The additional environmental variable `AUTOGRAPH_ROOT_HASH` sets the
+root hash monitor will use to verify addon and content signature (as
+used in `run-monitor-with-root-hash.sh`).
