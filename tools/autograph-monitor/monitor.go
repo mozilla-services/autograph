@@ -36,9 +36,16 @@ type configuration struct {
 	env           string
 	rootHash      string
 	truststore    *x509.CertPool
-	// hash keystore for verifying XPI dep signers
+
+	// hash and keystore for verifying XPI dep signers
 	depRootHash   string
 	depTruststore *x509.CertPool
+
+	// hash and keystore for verifying ContentSignature responses
+	// when XPI and ContentSignature branches of the code signing
+	// PKI use different roots
+	contentSignatureRootHash   string
+	contentSignatureTruststore *x509.CertPool
 }
 
 var conf configuration
@@ -61,29 +68,41 @@ func main() {
 	if conf.monitoringKey == "" {
 		log.Fatal("AUTOGRAPH_KEY must be set to the api monitoring key")
 	}
+
+	// configure monitor to check responses against Fx stage or
+	// prod or autograph dev code signing PKI roots and CA root
+	// certs defined in constants.go
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
 	switch conf.env {
 	case "stage":
 		conf.rootHash = firefoxPkiStageRootHash
 		conf.truststore = x509.NewCertPool()
 		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiStageRoot))
+		conf.contentSignatureRootHash = firefoxPkiContentSignatureStageRootHash
+		conf.contentSignatureTruststore = x509.NewCertPool()
+		conf.contentSignatureTruststore.AppendCertsFromPEM([]byte(firefoxPkiContentSignatureStageRoot))
 		conf.depRootHash = ""
 		conf.depTruststore = nil
 	case "prod":
 		conf.rootHash = firefoxPkiProdRootHash
 		conf.truststore = x509.NewCertPool()
 		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiProdRoot))
+		conf.contentSignatureRootHash = firefoxPkiProdRootHash
+		conf.contentSignatureTruststore = conf.truststore
 		conf.depRootHash = firefoxPkiStageRootHash
 		conf.depTruststore = x509.NewCertPool()
 		conf.depTruststore.AppendCertsFromPEM([]byte(firefoxPkiStageRoot))
 	default:
 		conf.rootHash = autographDevRootHash
 		conf.truststore = nil
+		conf.contentSignatureRootHash = autographDevRootHash
+		conf.contentSignatureTruststore = nil
 		conf.depRootHash = ""
 		conf.depTruststore = nil
 	}
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
 		conf.rootHash = os.Getenv("AUTOGRAPH_ROOT_HASH")
+		conf.contentSignatureRootHash = conf.rootHash
 	}
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
@@ -150,10 +169,10 @@ func monitor() (err error) {
 		switch response.Type {
 		case contentsignature.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
-			err = verifyContentSignature(conf.rootHash, response)
+			err = verifyContentSignature(conf.contentSignatureRootHash, response)
 		case contentsignaturepki.Type:
 			log.Printf("Verifying content signature pki from signer %q", response.SignerID)
-			err = verifyContentSignature(conf.rootHash, response)
+			err = verifyContentSignature(conf.contentSignatureRootHash, response)
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature)
