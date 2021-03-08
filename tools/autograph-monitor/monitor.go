@@ -77,7 +77,7 @@ func main() {
 		conf.depTruststore = x509.NewCertPool()
 		conf.depTruststore.AppendCertsFromPEM([]byte(firefoxPkiStageRoot))
 	default:
-		conf.rootHash = "5E36F214DE823F8B299689235F0341ACAFA075AF82CB4CD4307C3DB343392AFE"
+		conf.rootHash = autographDevRootHash
 		conf.truststore = nil
 		conf.depRootHash = ""
 		conf.depTruststore = nil

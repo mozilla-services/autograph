@@ -74,8 +74,8 @@ func TestVerifyWronglyOrderedChain(t *testing.T) {
 }
 
 func TestVerifyFirefoxRoot(t *testing.T) {
-	rootHash := "97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E"
-	block, _ := pem.Decode(FirefoxPKIRootPEM)
+	rootHash := firefoxPkiProdRootHash
+	block, _ := pem.Decode([]byte(firefoxPkiProdRoot))
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")
 	}
@@ -91,7 +91,7 @@ func TestVerifyFirefoxRoot(t *testing.T) {
 
 func TestVerifyFirefoxRootWithBadHash(t *testing.T) {
 	rootHash := "foo"
-	block, _ := pem.Decode(FirefoxPKIRootPEM)
+	block, _ := pem.Decode([]byte(firefoxPkiProdRoot))
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")
 	}
@@ -109,8 +109,8 @@ func TestVerifyFirefoxRootWithBadHash(t *testing.T) {
 }
 
 func TestVerifyFirefoxStagingRoot(t *testing.T) {
-	rootHash := "DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90"
-	block, _ := pem.Decode(FirefoxPKIStagingRootPEM)
+	rootHash := firefoxPkiStageRootHash
+	block, _ := pem.Decode([]byte(firefoxPkiStageRoot))
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")
 	}
@@ -135,12 +135,6 @@ var ValidMonitoringContentSignature = formats.SignatureResponse{
 	Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
 	X5U:       "http://127.0.0.1:64320/normandychain",
 }
-
-// this is the trusted root ca for the firefox pki
-var FirefoxPKIRootPEM = []byte(firefoxPkiProdRoot)
-
-// this is the trusted root ca for the staging firefox pki
-var FirefoxPKIStagingRootPEM = []byte(firefoxPkiStageRoot)
 
 // This chain has an expired end-entity certificate
 var ExpiredEndEntityChain = `-----BEGIN CERTIFICATE-----

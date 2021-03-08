@@ -1,5 +1,11 @@
 package main
 
+// autographDevRootHash is the SHA2 hash of the cacert in the
+// autograph dev config:
+// https://github.com/mozilla-services/autograph/blob/b3081068f4a9c0c1de02150432f2d02887dd6722/autograph.yaml#L113-L126
+// used on the normandy and remote settings development servers
+const autographDevRootHash = `5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`
+
 // firefoxPkiStageRootHash is the SHA2 hash of the firefoxPkiStageRoot
 // cert raw bytes
 const firefoxPkiStageRootHash = `DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90`
