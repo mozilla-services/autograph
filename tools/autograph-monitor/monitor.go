@@ -52,7 +52,6 @@ var conf configuration
 
 const inputdata string = "AUTOGRAPH MONITORING"
 
-
 func main() {
 	conf.url = os.Getenv("AUTOGRAPH_URL")
 	if conf.url == "" {
@@ -230,16 +229,16 @@ func makeAuthHeader(req *http.Request, user, token string) string {
 }
 
 // send a message to a predefined sns topic
-func sendSoftNotification(id string, format string, a ...interface{}) error {
+func sendSoftNotification(id, message string) error {
 	if os.Getenv("LAMBDA_TASK_ROOT") == "" || os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS") == "" {
 		// We're not running in lambda or the conf isnt ready so don't try to publish to SQS
-		log.Printf("soft notification ID %s: %s", id, fmt.Sprintf(format, a...))
+		log.Printf("soft notification ID %s: %s", id, message)
 		return nil
 	}
 
 	svc := sns.New(session.New())
 	params := &sns.PublishInput{
-		Message:  aws.String(fmt.Sprintf(format, a...)),
+		Message:  aws.String(message),
 		TopicArn: aws.String(os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS")),
 	}
 	_, err := svc.Publish(params)
