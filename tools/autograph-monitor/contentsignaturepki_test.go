@@ -109,8 +109,8 @@ func TestVerifyFirefoxRootWithBadHash(t *testing.T) {
 }
 
 func TestVerifyFirefoxStagingRoot(t *testing.T) {
-	rootHash := firefoxPkiStageRootHash
-	block, _ := pem.Decode([]byte(firefoxPkiStageRoot))
+	rootHash := firefoxPkiContentSignatureStageRootHash
+	block, _ := pem.Decode([]byte(firefoxPkiContentSignatureStageRoot))
 	if block == nil {
 		t.Fatalf("Failed to parse certificate PEM")
 	}
