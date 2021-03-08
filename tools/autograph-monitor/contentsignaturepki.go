@@ -85,6 +85,17 @@ func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error
 	return pubkey, nil
 }
 
+// verifyCertChain checks certs in a chain slice (usually [EE, intermediate, root]) are:
+//
+// 1) signed by their parent/issuer/the next cert in the chain or if they're the last cert that they're self-signed and all func verifyRoot checks pass
+// 2) valid for the current time i.e. cert NotBefore < current time < cert NotAfter
+//
+// It returns an error if any of the above checks fail or any cert in
+// the chain expires in 15 days or less.
+//
+// When an AWS SNS topic is configured it also sends a soft
+// notification for each cert expiring in less than 30 days.
+//
 func verifyCertChain(rootHash string, certs []*x509.Certificate) error {
 	for i, cert := range certs {
 		if (i + 1) == len(certs) {
