@@ -1,6 +1,10 @@
 build:
 	go build -o autograph-monitor *.go
 	zip -r autograph-monitor.zip autograph-monitor
+doc:
+	go doc -all .
+doc-http:
+	godoc -http=:8080
 test:
 	go test -coverprofile monitor-coverage.out -covermode=count -count=1 go.mozilla.org/autograph/tools/autograph-monitor
 test-cover-report:
