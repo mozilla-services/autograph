@@ -7,16 +7,30 @@ correctly.
 
 Monitor runs standalone or as a lambda function.
 
-Three environment variables are required:
+It accepts two required environment variables:
 
-* AUTOGRAPH_URL is the address of the autograph endpoint
-* AUTOGRAPH_KEY is the monitoring API key
-* AUTOGRAPH_ENV optionally sets the root of the firefox pki to a pre-defined value
-    depending on the environment monitor is running in.
-    Acceptable values are "stage" and "prod".
-    When unset, this will use a default value for local development.
+* `AUTOGRAPH_URL` the address of the autograph endpoint
+* `AUTOGRAPH_KEY` the monitoring API key
 
-With these env vars set, running monitor is as easy as:
+And additional optional environment variables:
+
+* `AUTOGRAPH_ENV` sets the root of the Firefox PKI to a pre-defined
+  value depending on the environment monitor is running in.
+  Acceptable values are "stage" and "prod".  When unset, this will use
+  a default value for local development. The variables it uses can be
+  found in `constants.go`.
+
+* `AUTOGRAPH_ROOT_HASH` sets the root hash monitor to verify addon and
+  content signature against (as used in
+  `run-monitor-with-root-hash.sh`).
+
+* `AUTOGRAPH_PD_ROUTING_KEY` is an integration key for the pagerduty
+  events v2 API. When present the monitor will trigger and resolve
+  alerts for warnings like a content signature certificate expiring in
+  30 days.
+
+
+An example run looks like:
 
 ```bash
 AUTOGRAPH_URL=http://localhost:8000/ \
@@ -54,7 +68,3 @@ AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs \
 2019/04/09 09:41:13 Response 14 from signer "dummyrsapss" passes verification
 2019/04/09 09:41:13 All signature responses passed, monitoring OK
 ```
-
-The additional environmental variable `AUTOGRAPH_ROOT_HASH` sets the
-root hash monitor will use to verify addon and content signature (as
-used in `run-monitor-with-root-hash.sh`).
