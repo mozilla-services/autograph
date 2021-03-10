@@ -1,10 +1,16 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha256"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
 	"log"
+	"math/big"
 	"net"
 	"net/http"
 	"strings"
@@ -73,54 +79,138 @@ func TestVerifyWronglyOrderedChain(t *testing.T) {
 	}
 }
 
-func TestVerifyFirefoxRoot(t *testing.T) {
-	rootHash := firefoxPkiProdRootHash
-	block, _ := pem.Decode([]byte(firefoxPkiProdRoot))
-	if block == nil {
-		t.Fatalf("Failed to parse certificate PEM")
-	}
-	certX509, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		t.Fatalf("Could not parse X.509 certificate: %v", err)
-	}
-	err = verifyRoot(rootHash, certX509)
-	if err != nil {
-		t.Fatalf("Failed to verify valid Firefox root certificate: %v", err)
-	}
-}
+func Test_verifyRoot(t *testing.T) {
+	var (
+		mustPEMToCert = func(s string) *x509.Certificate {
+			block, _ := pem.Decode([]byte(s))
+			if block == nil {
+				t.Fatalf("Failed to parse certificate PEM")
+			}
+			certX509, err := x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				t.Fatalf("Could not parse X.509 certificate: %v", err)
+			}
+			return certX509
+		}
+		selfSignRoot = func(cn string, extKeyUsages []x509.ExtKeyUsage, isCA bool, privateKey *ecdsa.PrivateKey) *x509.Certificate {
+			certTpl := &x509.Certificate{
+				SerialNumber: big.NewInt(time.Now().UnixNano()),
+				Subject: pkix.Name{
+					Organization:       []string{"Mozilla Corporation"},
+					OrganizationalUnit: []string{"Cloud Services Autograph Unit Testing"},
+					Country:            []string{"US"},
+					Province:           []string{"California"},
+					Locality:           []string{"Mountain View"},
+					CommonName:         cn,
+				},
+				DNSNames:              []string{cn},
+				NotBefore:             time.Now(),
+				NotAfter:              time.Now().Add(time.Hour),
+				SignatureAlgorithm:    x509.ECDSAWithSHA384,
+				IsCA:                  isCA,
+				BasicConstraintsValid: true,
+				ExtKeyUsage:           extKeyUsages,
+				KeyUsage:              x509.KeyUsageDigitalSignature,
+			}
+			certBytes, err := x509.CreateCertificate(rand.Reader, certTpl, certTpl, privateKey.Public(), privateKey)
+			if err != nil {
+				t.Fatalf("Could not self sign an X.509 root certificate: %v", err)
+			}
+			certX509, err := x509.ParseCertificate(certBytes)
+			if err != nil {
+				t.Fatalf("Could not parse X.509 certificate: %v", err)
+			}
+			return certX509
+		}
+		sha2Fingerprint = func(cert *x509.Certificate) string {
+			return strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
+		}
+		testKey = func() *ecdsa.PrivateKey {
+			priv, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+			if err != nil {
+				t.Fatalf("Could not generate private key: %v", err)
+			}
+			return priv
+		}()
 
-func TestVerifyFirefoxRootWithBadHash(t *testing.T) {
-	rootHash := "foo"
-	block, _ := pem.Decode([]byte(firefoxPkiProdRoot))
-	if block == nil {
-		t.Fatalf("Failed to parse certificate PEM")
-	}
-	certX509, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		t.Fatalf("Could not parse X.509 certificate: %v", err)
-	}
-	err = verifyRoot(rootHash, certX509)
-	if err == nil {
-		t.Fatalf("Expected to fail with incorrect hash, but succeeded.")
-	}
-	if !strings.Contains(err.Error(), "hash does not match expected root") {
-		t.Fatalf("Expected to fail with hash mismatch, but failed with: %v", err)
-	}
-}
+		selfSignedRoot      = selfSignRoot("example.content-signature.mozilla.org", []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning}, true, testKey)
+		selfSignedRootNonCA = selfSignRoot("example.content-signature.mozilla.org", []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning}, false, testKey)
+		selfSignedRootNoExt = selfSignRoot("example.content-signature.mozilla.org", []x509.ExtKeyUsage{}, true, testKey)
+	)
 
-func TestVerifyFirefoxStagingRoot(t *testing.T) {
-	rootHash := firefoxPkiContentSignatureStageRootHash
-	block, _ := pem.Decode([]byte(firefoxPkiContentSignatureStageRoot))
-	if block == nil {
-		t.Fatalf("Failed to parse certificate PEM")
+	type args struct {
+		rootHash string
+		cert     *x509.Certificate
 	}
-	certX509, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		t.Fatalf("Could not parse X.509 certificate: %v", err)
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "verify Firefox prod root",
+			args: args{
+				rootHash: firefoxPkiProdRootHash,
+				cert:     mustPEMToCert(firefoxPkiProdRoot),
+			},
+			wantErr: false,
+		},
+		{
+			name: "verify Firefox stage root",
+			args: args{
+				rootHash: firefoxPkiContentSignatureStageRootHash,
+				cert:     mustPEMToCert(firefoxPkiContentSignatureStageRoot),
+			},
+			wantErr: false,
+		},
+		{
+			name: "verify sign-signed root",
+			args: args{
+				rootHash: sha2Fingerprint(selfSignedRoot),
+				cert:     selfSignedRoot,
+			},
+			wantErr: false,
+		},
+		// error testcases
+		{
+			name: "root not self-signed errs",
+			args: args{
+				rootHash: sha2Fingerprint(mustPEMToCert(NormandyDevChain2021Intermediate)),
+				cert:     mustPEMToCert(NormandyDevChain2021Intermediate),
+			},
+			wantErr: true,
+		},
+		{
+			name: "root not CA errs",
+			args: args{
+				rootHash: sha2Fingerprint(selfSignedRootNonCA),
+				cert:     selfSignedRootNonCA,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid root hash errs",
+			args: args{
+				rootHash: "foo",
+				cert:     mustPEMToCert(firefoxPkiProdRoot),
+			},
+			wantErr: true,
+		},
+		{
+			name: "root without code signing ext errs",
+			args: args{
+				rootHash: sha2Fingerprint(selfSignedRootNoExt),
+				cert:     selfSignedRootNoExt,
+			},
+			wantErr: true,
+		},
 	}
-	err = verifyRoot(rootHash, certX509)
-	if err != nil {
-		t.Fatalf("Failed to verify valid Firefox root certificate: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := verifyRoot(tt.args.rootHash, tt.args.cert); (err != nil) != tt.wantErr {
+				t.Errorf("verifyRoot() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }
 
@@ -334,43 +424,7 @@ ZARKjbu1TuYQHf0fs+GwID8zeLc2zJL7UzcHFwwQ6Nda9OJN4uPAuC/BKaIpxCLL
 wNuvFqc=
 -----END CERTIFICATE-----`
 
-var NormandyDevChain2021 = `-----BEGIN CERTIFICATE-----
-MIIGRTCCBC2gAwIBAgIEAQAABTANBgkqhkiG9w0BAQwFADBrMQswCQYDVQQGEwJV
-UzEQMA4GA1UEChMHQWxsaXpvbTEXMBUGA1UECxMOQ2xvdWQgU2VydmljZXMxMTAv
-BgNVBAMTKERldnppbGxhIFNpZ25pbmcgU2VydmljZXMgSW50ZXJtZWRpYXRlIDEw
-HhcNMTYwNzA2MjE1NzE1WhcNMjEwNzA1MjE1NzE1WjCBrzELMAkGA1UEBhMCVVMx
-EzARBgNVBAgTCkNhbGlmb3JuaWExHDAaBgNVBAoTE01vemlsbGEgQ29ycG9yYXRp
-b24xFzAVBgNVBAsTDkNsb3VkIFNlcnZpY2VzMS8wLQYDVQQDEyZub3JtYW5keS5j
-b250ZW50LXNpZ25hdHVyZS5tb3ppbGxhLm9yZzEjMCEGCSqGSIb3DQEJARYUc2Vj
-dXJpdHlAbW96aWxsYS5vcmcwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAARUQqIIAiTB
-GDVUWw/wk5h1IXpreq+BtE+gQr15O4tusHpCLGjOxwpHiJYnxk45fpE8JGAV19UO
-hmqMUEU0k31C1EGTSZW0ducSvHrh3a8wXShZ6dxLWHItbbCGA6A7PumjggJYMIIC
-VDAdBgNVHQ4EFgQUVfksSjlZ0i1TBiS1vcoObaMeXn0wge8GA1UdIwSB5zCB5IAU
-/YboUIXAovChEpudDBuodHKbjUuhgcWkgcIwgb8xCzAJBgNVBAYTAlVTMQswCQYD
-VQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEmMCQGA1UEChMdQ29udGVu
-dCBTaWduYXR1cmUgRGV2IFNpZ25pbmcxJjAkBgNVBAMTHWRldi5jb250ZW50LXNp
-Z25hdHVyZS5yb290LmNhMTswOQYJKoZIhvcNAQkBFixjbG91ZHNlYytkZXZyb290
-Y29udGVudHNpZ25hdHVyZUBtb3ppbGxhLmNvbYIEAQAABDAMBgNVHRMBAf8EAjAA
-MA4GA1UdDwEB/wQEAwIHgDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDAzBEBgNVHR8E
-PTA7MDmgN6A1hjNodHRwczovL2NvbnRlbnQtc2lnbmF0dXJlLmRldi5tb3phd3Mu
-bmV0L2NhL2NybC5wZW0wQgYJYIZIAYb4QgEEBDUWM2h0dHBzOi8vY29udGVudC1z
-aWduYXR1cmUuZGV2Lm1vemF3cy5uZXQvY2EvY3JsLnBlbTBOBggrBgEFBQcBAQRC
-MEAwPgYIKwYBBQUHMAKGMmh0dHBzOi8vY29udGVudC1zaWduYXR1cmUuZGV2Lm1v
-emF3cy5uZXQvY2EvY2EucGVtMDEGA1UdEQQqMCiCJm5vcm1hbmR5LmNvbnRlbnQt
-c2lnbmF0dXJlLm1vemlsbGEub3JnMA0GCSqGSIb3DQEBDAUAA4ICAQCwb+8JTAB7
-ZfQmFqPUIV2cQQv696AaDPQCtA9YS4zmUfcLMvfZVAbK397zFr0RMDdLiTUQDoeq
-rBEmPXhJRPiv6JAK4n7Jf6Y6XfXcNxx+q3garR09Vm/0CnEq/iV+ZAtPkoKIO9kr
-Nkzecd894yQCF4hIuPQ5qtMySeqJmH3Dp13eq4T0Oew1Bu32rNHuBJh2xYBkWdun
-aAw/YX0I5EqZBP/XA6gbiA160tTK+hnpnlMtw/ljkvfhHbWpICD4aSiTL8L3vABQ
-j7bqjMKR5xDkuGWshZfcmonpvQhGTye/RZ1vz5IzA3VOJt1mz5bdZlitpaOm/Yv0
-x6aODz8GP/PiRWFQ5CW8Uf/7pGc5rSyvnfZV2ix8EzFlo8cUtuN1fjrPFPOFOLvG
-iiB6S9nlXiKBGYIDdd8V8iC5xJpzjiAWJQigwSNzuc2K30+iPo3w0zazkwe5V8jW
-gj6gItYxh5xwVQTPHD0EOd9HvV1ou42+rH5Y+ISFUm25zz02UtUHEK0BKtL0lmdt
-DwVq5jcHn6bx2/iwUtlKvPXtfM/6JjTJlkLZLtS7U5/pwcS0owo9zAL0qg3bdm16
-+v/olmPqQFLUHmamJTzv3rojj5X/uVdx1HMM3wBjV9tRYoYaZw9RIInRmM8Z1pHv
-JJ+CIZgCyd5vgp57BKiodRZcgHoCH+BkOQ==
------END CERTIFICATE-----
------BEGIN CERTIFICATE-----
+var NormandyDevChain2021Intermediate = `-----BEGIN CERTIFICATE-----
 MIIHijCCBXKgAwIBAgIEAQAABDANBgkqhkiG9w0BAQwFADCBvzELMAkGA1UEBhMC
 VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MSYwJAYDVQQK
 Ex1Db250ZW50IFNpZ25hdHVyZSBEZXYgU2lnbmluZzEmMCQGA1UEAxMdZGV2LmNv
@@ -412,7 +466,45 @@ lS310HG3or1K8Nnu5Utfe7T6ppX8bLRMkS1/w0p7DKxHaf4D/GJcCtM9lcSt9JpW
 69z/3zmaELzo0gWcrjLXh7fU9AvbU4EUF6rwzxbPGF78jJcGK+oBf8uWUCkBykDt
 VsAEZI1u4EDg8e/C1nFqaH9gNMArAgquYIB9rve+hdprIMnva0S147pflWopBWcb
 jwzgpfquuYnnxe0CNBA=
+-----END CERTIFICATE-----`
+
+var NormandyDevChain2021 = `-----BEGIN CERTIFICATE-----
+MIIGRTCCBC2gAwIBAgIEAQAABTANBgkqhkiG9w0BAQwFADBrMQswCQYDVQQGEwJV
+UzEQMA4GA1UEChMHQWxsaXpvbTEXMBUGA1UECxMOQ2xvdWQgU2VydmljZXMxMTAv
+BgNVBAMTKERldnppbGxhIFNpZ25pbmcgU2VydmljZXMgSW50ZXJtZWRpYXRlIDEw
+HhcNMTYwNzA2MjE1NzE1WhcNMjEwNzA1MjE1NzE1WjCBrzELMAkGA1UEBhMCVVMx
+EzARBgNVBAgTCkNhbGlmb3JuaWExHDAaBgNVBAoTE01vemlsbGEgQ29ycG9yYXRp
+b24xFzAVBgNVBAsTDkNsb3VkIFNlcnZpY2VzMS8wLQYDVQQDEyZub3JtYW5keS5j
+b250ZW50LXNpZ25hdHVyZS5tb3ppbGxhLm9yZzEjMCEGCSqGSIb3DQEJARYUc2Vj
+dXJpdHlAbW96aWxsYS5vcmcwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAARUQqIIAiTB
+GDVUWw/wk5h1IXpreq+BtE+gQr15O4tusHpCLGjOxwpHiJYnxk45fpE8JGAV19UO
+hmqMUEU0k31C1EGTSZW0ducSvHrh3a8wXShZ6dxLWHItbbCGA6A7PumjggJYMIIC
+VDAdBgNVHQ4EFgQUVfksSjlZ0i1TBiS1vcoObaMeXn0wge8GA1UdIwSB5zCB5IAU
+/YboUIXAovChEpudDBuodHKbjUuhgcWkgcIwgb8xCzAJBgNVBAYTAlVTMQswCQYD
+VQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEmMCQGA1UEChMdQ29udGVu
+dCBTaWduYXR1cmUgRGV2IFNpZ25pbmcxJjAkBgNVBAMTHWRldi5jb250ZW50LXNp
+Z25hdHVyZS5yb290LmNhMTswOQYJKoZIhvcNAQkBFixjbG91ZHNlYytkZXZyb290
+Y29udGVudHNpZ25hdHVyZUBtb3ppbGxhLmNvbYIEAQAABDAMBgNVHRMBAf8EAjAA
+MA4GA1UdDwEB/wQEAwIHgDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDAzBEBgNVHR8E
+PTA7MDmgN6A1hjNodHRwczovL2NvbnRlbnQtc2lnbmF0dXJlLmRldi5tb3phd3Mu
+bmV0L2NhL2NybC5wZW0wQgYJYIZIAYb4QgEEBDUWM2h0dHBzOi8vY29udGVudC1z
+aWduYXR1cmUuZGV2Lm1vemF3cy5uZXQvY2EvY3JsLnBlbTBOBggrBgEFBQcBAQRC
+MEAwPgYIKwYBBQUHMAKGMmh0dHBzOi8vY29udGVudC1zaWduYXR1cmUuZGV2Lm1v
+emF3cy5uZXQvY2EvY2EucGVtMDEGA1UdEQQqMCiCJm5vcm1hbmR5LmNvbnRlbnQt
+c2lnbmF0dXJlLm1vemlsbGEub3JnMA0GCSqGSIb3DQEBDAUAA4ICAQCwb+8JTAB7
+ZfQmFqPUIV2cQQv696AaDPQCtA9YS4zmUfcLMvfZVAbK397zFr0RMDdLiTUQDoeq
+rBEmPXhJRPiv6JAK4n7Jf6Y6XfXcNxx+q3garR09Vm/0CnEq/iV+ZAtPkoKIO9kr
+Nkzecd894yQCF4hIuPQ5qtMySeqJmH3Dp13eq4T0Oew1Bu32rNHuBJh2xYBkWdun
+aAw/YX0I5EqZBP/XA6gbiA160tTK+hnpnlMtw/ljkvfhHbWpICD4aSiTL8L3vABQ
+j7bqjMKR5xDkuGWshZfcmonpvQhGTye/RZ1vz5IzA3VOJt1mz5bdZlitpaOm/Yv0
+x6aODz8GP/PiRWFQ5CW8Uf/7pGc5rSyvnfZV2ix8EzFlo8cUtuN1fjrPFPOFOLvG
+iiB6S9nlXiKBGYIDdd8V8iC5xJpzjiAWJQigwSNzuc2K30+iPo3w0zazkwe5V8jW
+gj6gItYxh5xwVQTPHD0EOd9HvV1ou42+rH5Y+ISFUm25zz02UtUHEK0BKtL0lmdt
+DwVq5jcHn6bx2/iwUtlKvPXtfM/6JjTJlkLZLtS7U5/pwcS0owo9zAL0qg3bdm16
++v/olmPqQFLUHmamJTzv3rojj5X/uVdx1HMM3wBjV9tRYoYaZw9RIInRmM8Z1pHv
+JJ+CIZgCyd5vgp57BKiodRZcgHoCH+BkOQ==
 -----END CERTIFICATE-----
+` + NormandyDevChain2021Intermediate + `
 -----BEGIN CERTIFICATE-----
 MIIH3DCCBcSgAwIBAgIBATANBgkqhkiG9w0BAQwFADCBvzELMAkGA1UEBhMCVVMx
 CzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MSYwJAYDVQQKEx1D
