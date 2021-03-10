@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	gomock "github.com/golang/mock/gomock"
+	"github.com/mozilla-services/autograph/tools/autograph-monitor/mock_main"
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
 )
@@ -33,7 +35,7 @@ func serverAndWaitForSetup(handlerURI, chain, port string) {
 func TestVerifyContentSignature(t *testing.T) {
 	serverAndWaitForSetup("/normandychain", NormandyDevChain2021, "64320")
 
-	err := verifyContentSignature(conf.rootHash, ValidMonitoringContentSignature)
+	err := verifyContentSignature(nil, conf.rootHash, ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}
@@ -46,7 +48,61 @@ func TestVerifyExpiredCertChain(t *testing.T) {
 	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
 		t.Fatalf("Failed to retrieve certificate chain: %v", err)
 	}
-	err = verifyCertChain(conf.rootHash, chain)
+	err = verifyCertChain(nil, conf.rootHash, chain)
+	if err == nil {
+		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
+	}
+	log.Printf("Chain verification failed with: %v", err)
+	if !strings.Contains(err.Error(), "expires in less than 15 days") {
+		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
+	}
+}
+
+func TestVerifyExpiredCertChainNotifys(t *testing.T) {
+	serverAndWaitForSetup("/expiredcertchain2", ExpiredEndEntityChain, "64322")
+
+	ctrl := gomock.NewController(t)
+	// Assert that Bar() is invoked.
+	defer ctrl.Finish()
+
+	m := mock_main.NewMockNotifier(ctrl)
+
+	// Should notifier.Send once
+	m.EXPECT().Send("26ded079693a776c71d3b1cb976de66e29f92735419084506ae0d0642ea4f5c8", `Certificate 0 "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`)
+
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64322/expiredcertchain2")
+	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
+		t.Fatalf("Failed to retrieve certificate chain: %v", err)
+	}
+
+	err = verifyCertChain(m, conf.rootHash, chain)
+	if err == nil {
+		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
+	}
+	log.Printf("Chain verification failed with: %v", err)
+	if !strings.Contains(err.Error(), "expires in less than 15 days") {
+		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
+	}
+}
+
+func TestVerifyExpiredCertChainWhenNotifySendErrs(t *testing.T) {
+	serverAndWaitForSetup("/expiredcertchain3", ExpiredEndEntityChain, "64323")
+
+	ctrl := gomock.NewController(t)
+	// Assert that Bar() is invoked.
+	defer ctrl.Finish()
+
+	m := mock_main.NewMockNotifier(ctrl)
+
+	// Should notifier.Send once
+	m.EXPECT().Send("26ded079693a776c71d3b1cb976de66e29f92735419084506ae0d0642ea4f5c8", `Certificate 0 "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error"))
+
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64323/expiredcertchain3")
+	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
+		t.Fatalf("Failed to retrieve certificate chain: %v", err)
+	}
+
+	err = verifyCertChain(m, conf.rootHash, chain)
 	if err == nil {
 		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
 	}
@@ -57,13 +113,13 @@ func TestVerifyExpiredCertChain(t *testing.T) {
 }
 
 func TestVerifyWronglyOrderedChain(t *testing.T) {
-	serverAndWaitForSetup("/wronglyorderedchain", WronglyOrderedChain, "64322")
+	serverAndWaitForSetup("/wronglyorderedchain", WronglyOrderedChain, "64324")
 
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64322/wronglyorderedchain")
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64324/wronglyorderedchain")
 	if err != nil {
 		t.Fatalf("Failed to retrieved certificate chain: %v", err)
 	}
-	err = verifyCertChain(conf.rootHash, chain)
+	err = verifyCertChain(nil, conf.rootHash, chain)
 	if err == nil {
 		t.Fatal("Expected to fail chain verification with cert not signed by parent, but succeeded")
 	}

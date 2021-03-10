@@ -30,7 +30,7 @@ var ignoredCerts = map[string]bool{
 // to verify the sig. Otherwise, use the PublicKey contained in the response.
 //
 // If the signature passes, verify the chain of trust maps.
-func verifyContentSignature(rootHash string, response formats.SignatureResponse) error {
+func verifyContentSignature(notifier Notifier, rootHash string, response formats.SignatureResponse) error {
 	var (
 		key   *ecdsa.PublicKey
 		err   error
@@ -60,7 +60,7 @@ func verifyContentSignature(rootHash string, response formats.SignatureResponse)
 		return fmt.Errorf("Signature verification failed")
 	}
 	if certs != nil {
-		err = verifyCertChain(rootHash, certs)
+		err = verifyCertChain(notifier, rootHash, certs)
 		if err != nil {
 			// check if we should ignore this cert
 			if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
@@ -96,7 +96,7 @@ func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error
 // When an AWS SNS topic is configured it also sends a soft
 // notification for each cert expiring in less than 30 days.
 //
-func verifyCertChain(rootHash string, certs []*x509.Certificate) error {
+func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certificate) error {
 	for i, cert := range certs {
 		if (i + 1) == len(certs) {
 			err := verifyRoot(rootHash, cert)
@@ -115,11 +115,11 @@ func verifyCertChain(rootHash string, certs []*x509.Certificate) error {
 			log.Printf("Certificate %d %q has a valid signature from parent certificate %d %q",
 				i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName)
 		}
-		if time.Now().Add(30 * 24 * time.Hour).After(cert.NotAfter) {
+		if notifier != nil && time.Now().Add(30*24*time.Hour).After(cert.NotAfter) {
 			// cert expires in less than 30 days, this is a soft error. send an email.
 			certFingerprint := fmt.Sprintf("%x", sha256.Sum256(cert.Raw))
 			message := fmt.Sprintf("Certificate %d %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
-			err := sendSoftNotification(certFingerprint, message)
+			err := notifier.Send(certFingerprint, message)
 			if err != nil {
 				log.Printf("failed to send soft notification: %v", err)
 			}
