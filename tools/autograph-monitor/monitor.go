@@ -13,9 +13,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/apk2"
@@ -48,9 +45,12 @@ type configuration struct {
 	contentSignatureTruststore *x509.CertPool
 }
 
-var conf configuration
-
 const inputdata string = "AUTOGRAPH MONITORING"
+
+var (
+	conf     configuration
+	notifier *SNSNotifier
+)
 
 func main() {
 	conf.url = os.Getenv("AUTOGRAPH_URL")
@@ -96,6 +96,11 @@ func main() {
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
 		conf.rootHash = os.Getenv("AUTOGRAPH_ROOT_HASH")
 		conf.contentSignatureRootHash = conf.rootHash
+	}
+	if os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS") == "" {
+		notifier = &SNSNotifier{
+			Topic: os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS"),
+		}
 	}
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
@@ -162,10 +167,10 @@ func monitor() (err error) {
 		switch response.Type {
 		case contentsignature.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
-			err = verifyContentSignature(conf.contentSignatureRootHash, response)
+			err = verifyContentSignature(notifier, conf.contentSignatureRootHash, response)
 		case contentsignaturepki.Type:
 			log.Printf("Verifying content signature pki from signer %q", response.SignerID)
-			err = verifyContentSignature(conf.contentSignatureRootHash, response)
+			err = verifyContentSignature(notifier, conf.contentSignatureRootHash, response)
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature)
@@ -226,25 +231,4 @@ func makeAuthHeader(req *http.Request, user, token string) string {
 	payloadhash.Write([]byte(""))
 	auth.SetHash(payloadhash)
 	return auth.RequestHeader()
-}
-
-// send a message to a predefined sns topic
-func sendSoftNotification(id, message string) error {
-	if os.Getenv("LAMBDA_TASK_ROOT") == "" || os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS") == "" {
-		// We're not running in lambda or the conf isnt ready so don't try to publish to SQS
-		log.Printf("soft notification ID %s: %s", id, message)
-		return nil
-	}
-
-	svc := sns.New(session.New())
-	params := &sns.PublishInput{
-		Message:  aws.String(message),
-		TopicArn: aws.String(os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS")),
-	}
-	_, err := svc.Publish(params)
-	if err != nil {
-		return err
-	}
-	log.Printf("Soft notification send to %q with body: %s", os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS"), *params.Message)
-	return nil
 }
