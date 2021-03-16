@@ -4,7 +4,7 @@
 # DOCKER_USER
 # DOCKER_PASS
 #
-version: 2
+version: 2.1
 jobs:
   lint-vet-fmt:
     docker:
