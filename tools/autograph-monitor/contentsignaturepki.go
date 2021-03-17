@@ -118,17 +118,20 @@ func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certifica
 		var (
 			notificationSeverity, notificationMessage string
 			err                                       error
+			timeToExpiration                          = cert.NotAfter.Sub(time.Now())
+			timeToValid                               = cert.NotBefore.Sub(time.Now())
 		)
-		if time.Now().Add(30 * 24 * time.Hour).After(cert.NotAfter) {
+		if timeToExpiration < 30*24*time.Hour {
 			notificationSeverity = "warning"
 			// cert expires in less than 30 days, this is a soft error. send an email.
 			notificationMessage = fmt.Sprintf("Certificate %d for %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
+			log.Printf(notificationMessage)
 		}
-		if time.Now().Add(15 * 24 * time.Hour).After(cert.NotAfter) {
+		if timeToExpiration < 15*24*time.Hour {
 			err = fmt.Errorf("Certificate %d %q expires in less than 15 days: notAfter=%s",
 				i, cert.Subject.CommonName, cert.NotAfter)
 		}
-		if time.Now().Before(cert.NotBefore) {
+		if timeToValid > time.Nanosecond {
 			err = fmt.Errorf("Certificate %d %q is not yet valid: notBefore=%s",
 				i, cert.Subject.CommonName, cert.NotBefore)
 		}
