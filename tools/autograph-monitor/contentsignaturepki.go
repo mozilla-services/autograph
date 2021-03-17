@@ -131,6 +131,10 @@ func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certifica
 			err = fmt.Errorf("Certificate %d %q expires in less than 15 days: notAfter=%s",
 				i, cert.Subject.CommonName, cert.NotAfter)
 		}
+		if timeToExpiration < -time.Nanosecond {
+			err = fmt.Errorf("Certificate %d %q expired: notAfter=%s",
+				i, cert.Subject.CommonName, cert.NotAfter)
+		}
 		if timeToValid > time.Nanosecond {
 			err = fmt.Errorf("Certificate %d %q is not yet valid: notBefore=%s",
 				i, cert.Subject.CommonName, cert.NotBefore)
