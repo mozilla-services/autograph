@@ -115,30 +115,44 @@ func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certifica
 			log.Printf("Certificate %d %q has a valid signature from parent certificate %d %q",
 				i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName)
 		}
-		if notifier != nil && time.Now().Add(30*24*time.Hour).After(cert.NotAfter) {
+		var (
+			notificationSeverity, notificationMessage string
+			err                                       error
+			timeToExpiration                          = cert.NotAfter.Sub(time.Now())
+			timeToValid                               = cert.NotBefore.Sub(time.Now())
+		)
+		if timeToExpiration < 30*24*time.Hour {
+			notificationSeverity = "warning"
 			// cert expires in less than 30 days, this is a soft error. send an email.
-			message := fmt.Sprintf("Certificate %d for %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
-			err := notifier.Send(cert.Subject.CommonName, "warning", message)
-			if err != nil {
-				log.Printf("failed to send soft notification: %v", err)
-			}
+			notificationMessage = fmt.Sprintf("Certificate %d for %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
+			log.Printf(notificationMessage)
 		}
-		if time.Now().Add(15 * 24 * time.Hour).After(cert.NotAfter) {
-			return fmt.Errorf("Certificate %d %q expires in less than 15 days: notAfter=%s",
+		if timeToExpiration < 15*24*time.Hour {
+			err = fmt.Errorf("Certificate %d %q expires in less than 15 days: notAfter=%s",
 				i, cert.Subject.CommonName, cert.NotAfter)
 		}
-		if time.Now().Before(cert.NotBefore) {
-			return fmt.Errorf("Certificate %d %q is not yet valid: notBefore=%s",
+		if timeToExpiration < -time.Nanosecond {
+			err = fmt.Errorf("Certificate %d %q expired: notAfter=%s",
+				i, cert.Subject.CommonName, cert.NotAfter)
+		}
+		if timeToValid > time.Nanosecond {
+			err = fmt.Errorf("Certificate %d %q is not yet valid: notBefore=%s",
 				i, cert.Subject.CommonName, cert.NotBefore)
 		}
-		message := fmt.Sprintf(fmt.Sprintf("Certificate %d %q is valid from %s to %s",
-			i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter))
-		log.Printf(message)
+		if err == nil {
+			notificationSeverity = "info"
+			notificationMessage = fmt.Sprintf(fmt.Sprintf("Certificate %d %q is valid from %s to %s",
+				i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter))
+			log.Printf(notificationMessage)
+		}
 		if notifier != nil {
-			err := notifier.Send(cert.Subject.CommonName, "info", message)
-			if err != nil {
-				log.Printf("failed to send soft notification: %v", err)
+			notifyErr := notifier.Send(cert.Subject.CommonName, notificationSeverity, notificationMessage)
+			if notifyErr != nil {
+				log.Printf("failed to send soft notification: %v", notifyErr)
 			}
+		}
+		if err != nil {
+			return err
 		}
 	}
 	return nil

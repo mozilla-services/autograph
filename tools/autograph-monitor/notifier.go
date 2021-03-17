@@ -67,7 +67,7 @@ func (n *PDEventNotifier) prepareEvent(dedupeKey, severity, message string) (*pa
 		action = "resolve"
 	}
 	if !(len(dedupeKey) < 256) {
-		return nil, fmt.Errorf("notifier: received invalid dedupeKey %s (%d long). Must be less than 256 chars.", dedupeKey, len(dedupeKey))
+		return nil, fmt.Errorf("notifier: received invalid dedupeKey %s (%d long). Must be less than 256 chars", dedupeKey, len(dedupeKey))
 	}
 
 	return &pagerduty.V2Event{

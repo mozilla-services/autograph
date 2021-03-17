@@ -134,7 +134,7 @@ func TestVerifyExpiredCertChain(t *testing.T) {
 		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
 	}
 	log.Printf("Chain verification failed with: %v", err)
-	if !strings.Contains(err.Error(), "expires in less than 15 days") {
+	if !strings.Contains(err.Error(), "expired") {
 		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
 	}
 }
@@ -160,7 +160,7 @@ func TestVerifyExpiredCertChainNotifySendsWarning(t *testing.T) {
 		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
 	}
 	log.Printf("Chain verification failed with: %v", err)
-	if !strings.Contains(err.Error(), "expires in less than 15 days") {
+	if !strings.Contains(err.Error(), "expired") {
 		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
 	}
 }
@@ -186,7 +186,7 @@ func TestVerifyExpiredCertChainWhenNotifySendWarningErrs(t *testing.T) {
 		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
 	}
 	log.Printf("Chain verification failed with: %v", err)
-	if !strings.Contains(err.Error(), "expires in less than 15 days") {
+	if !strings.Contains(err.Error(), "expired") {
 		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
 	}
 }
