@@ -16,6 +16,7 @@ jobs:
           command: |
             make install-golint lint check-no-crypto11-in-signers
             make show-lint
+            make -C tools/autograph-monitor lint
       - run:
           name: run gofmt
           command: |
@@ -28,7 +29,9 @@ jobs:
             apt-get install -y libltdl-dev
       - run:
           name: run go vet
-          command: make vet
+          command: |
+            make vet
+            make -C tools/autograph-monitor vet
 
   unit-test:
     docker:
