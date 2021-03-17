@@ -43,13 +43,15 @@ type configuration struct {
 	// PKI use different roots
 	contentSignatureRootHash   string
 	contentSignatureTruststore *x509.CertPool
+
+	// notifier raises and resolves warnings
+	notifier Notifier
 }
 
 const inputdata string = "AUTOGRAPH MONITORING"
 
 var (
-	conf     configuration
-	notifier *PDEventNotifier
+	conf configuration
 )
 
 func main() {
@@ -98,7 +100,7 @@ func main() {
 		conf.contentSignatureRootHash = conf.rootHash
 	}
 	if os.Getenv("AUTOGRAPH_PD_ROUTING_KEY") != "" {
-		notifier = &PDEventNotifier{
+		conf.notifier = &PDEventNotifier{
 			RoutingKey:       os.Getenv("AUTOGRAPH_PD_ROUTING_KEY"),
 			PayloadSource:    os.Getenv("AWS_LAMBDA_FUNCTION_NAME"),
 			PayloadComponent: os.Getenv("AWS_LAMBDA_FUNCTION_VERSION"),
@@ -171,10 +173,10 @@ func monitor() (err error) {
 		switch response.Type {
 		case contentsignature.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
-			err = verifyContentSignature(notifier, conf.contentSignatureRootHash, response)
+			err = verifyContentSignature(conf.notifier, conf.contentSignatureRootHash, response)
 		case contentsignaturepki.Type:
 			log.Printf("Verifying content signature pki from signer %q", response.SignerID)
-			err = verifyContentSignature(notifier, conf.contentSignatureRootHash, response)
+			err = verifyContentSignature(conf.notifier, conf.contentSignatureRootHash, response)
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature)
