@@ -17,9 +17,84 @@ import (
 	"testing"
 	"time"
 
+	gomock "github.com/golang/mock/gomock"
+	"github.com/mozilla-services/autograph/tools/autograph-monitor/mock_main"
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/contentsignaturepki"
 )
+
+// helper funcs  -----------------------------------------------------------------
+
+func mustPEMToCert(s string) *x509.Certificate {
+	block, _ := pem.Decode([]byte(s))
+	if block == nil {
+		log.Fatalf("Failed to parse certificate PEM")
+	}
+	certX509, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		log.Fatalf("Could not parse X.509 certificate: %v", err)
+	}
+	return certX509
+}
+
+type signOptions struct {
+	commonName   string
+	extKeyUsages []x509.ExtKeyUsage
+	privateKey   *ecdsa.PrivateKey
+	isCA         bool
+	issuer       *x509.Certificate
+	notBefore    time.Time
+	notAfter     time.Time
+}
+
+func signTestCert(options signOptions) *x509.Certificate {
+	var (
+		issuer = options.issuer
+	)
+	certTpl := &x509.Certificate{
+		SerialNumber: big.NewInt(time.Now().UnixNano()),
+		Subject: pkix.Name{
+			Organization: []string{"Mozilla"},
+			// OrganizationalUnit: []string{"Cloud Services Autograph Unit Testing"},
+			Country:    []string{"US"},
+			Province:   []string{"CA"},
+			Locality:   []string{"Mountain View"},
+			CommonName: options.commonName,
+		},
+		DNSNames:              []string{options.commonName},
+		NotBefore:             options.notBefore,
+		NotAfter:              options.notAfter,
+		SignatureAlgorithm:    x509.ECDSAWithSHA384,
+		IsCA:                  options.isCA,
+		BasicConstraintsValid: true,
+		ExtKeyUsage:           options.extKeyUsages,
+		KeyUsage:              x509.KeyUsageDigitalSignature,
+	}
+	if options.issuer == nil {
+		issuer = certTpl
+	}
+	certBytes, err := x509.CreateCertificate(rand.Reader, certTpl, issuer, options.privateKey.Public(), options.privateKey)
+	if err != nil {
+		log.Fatalf("Could not self sign an X.509 root certificate: %v", err)
+	}
+	certX509, err := x509.ParseCertificate(certBytes)
+	if err != nil {
+		log.Fatalf("Could not parse X.509 certificate: %v", err)
+	}
+	return certX509
+}
+
+func sha2Fingerprint(cert *x509.Certificate) string {
+	return strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
+}
+
+func generateTestKey() *ecdsa.PrivateKey {
+	priv, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	if err != nil {
+		log.Fatalf("Could not generate private key: %v", err)
+	}
+	return priv
+}
 
 func serverAndWaitForSetup(handlerURI, chain, port string) {
 	go func() {
@@ -36,10 +111,12 @@ func serverAndWaitForSetup(handlerURI, chain, port string) {
 	return
 }
 
+// Tests -----------------------------------------------------------------
+
 func TestVerifyContentSignature(t *testing.T) {
 	serverAndWaitForSetup("/normandychain", NormandyDevChain2021, "64320")
 
-	err := verifyContentSignature(conf.rootHash, ValidMonitoringContentSignature)
+	err := verifyContentSignature(nil, conf.rootHash, ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}
@@ -52,7 +129,59 @@ func TestVerifyExpiredCertChain(t *testing.T) {
 	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
 		t.Fatalf("Failed to retrieve certificate chain: %v", err)
 	}
-	err = verifyCertChain(conf.rootHash, chain)
+	err = verifyCertChain(nil, conf.rootHash, chain)
+	if err == nil {
+		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
+	}
+	log.Printf("Chain verification failed with: %v", err)
+	if !strings.Contains(err.Error(), "expires in less than 15 days") {
+		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
+	}
+}
+
+func TestVerifyExpiredCertChainNotifySendsWarning(t *testing.T) {
+	serverAndWaitForSetup("/expiredcertchain2", ExpiredEndEntityChain, "64322")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mock_main.NewMockNotifier(ctrl)
+
+	// Should notifier.Send once
+	m.EXPECT().Send("normandy.content-signature.mozilla.org", "warning", `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`)
+
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64322/expiredcertchain2")
+	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
+		t.Fatalf("Failed to retrieve certificate chain: %v", err)
+	}
+
+	err = verifyCertChain(m, conf.rootHash, chain)
+	if err == nil {
+		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
+	}
+	log.Printf("Chain verification failed with: %v", err)
+	if !strings.Contains(err.Error(), "expires in less than 15 days") {
+		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
+	}
+}
+
+func TestVerifyExpiredCertChainWhenNotifySendWarningErrs(t *testing.T) {
+	serverAndWaitForSetup("/expiredcertchain3", ExpiredEndEntityChain, "64323")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mock_main.NewMockNotifier(ctrl)
+
+	// Should notifier.Send once
+	m.EXPECT().Send("normandy.content-signature.mozilla.org", "warning", `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error"))
+
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64323/expiredcertchain3")
+	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
+		t.Fatalf("Failed to retrieve certificate chain: %v", err)
+	}
+
+	err = verifyCertChain(m, conf.rootHash, chain)
 	if err == nil {
 		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
 	}
@@ -63,13 +192,13 @@ func TestVerifyExpiredCertChain(t *testing.T) {
 }
 
 func TestVerifyWronglyOrderedChain(t *testing.T) {
-	serverAndWaitForSetup("/wronglyorderedchain", WronglyOrderedChain, "64322")
+	serverAndWaitForSetup("/wronglyorderedchain", WronglyOrderedChain, "64324")
 
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64322/wronglyorderedchain")
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64324/wronglyorderedchain")
 	if err != nil {
 		t.Fatalf("Failed to retrieved certificate chain: %v", err)
 	}
-	err = verifyCertChain(conf.rootHash, chain)
+	err = verifyCertChain(nil, conf.rootHash, chain)
 	if err == nil {
 		t.Fatal("Expected to fail chain verification with cert not signed by parent, but succeeded")
 	}
@@ -79,65 +208,109 @@ func TestVerifyWronglyOrderedChain(t *testing.T) {
 	}
 }
 
-func Test_verifyRoot(t *testing.T) {
-	var (
-		mustPEMToCert = func(s string) *x509.Certificate {
-			block, _ := pem.Decode([]byte(s))
-			if block == nil {
-				t.Fatalf("Failed to parse certificate PEM")
-			}
-			certX509, err := x509.ParseCertificate(block.Bytes)
-			if err != nil {
-				t.Fatalf("Could not parse X.509 certificate: %v", err)
-			}
-			return certX509
-		}
-		selfSignRoot = func(cn string, extKeyUsages []x509.ExtKeyUsage, isCA bool, privateKey *ecdsa.PrivateKey) *x509.Certificate {
-			certTpl := &x509.Certificate{
-				SerialNumber: big.NewInt(time.Now().UnixNano()),
-				Subject: pkix.Name{
-					Organization:       []string{"Mozilla Corporation"},
-					OrganizationalUnit: []string{"Cloud Services Autograph Unit Testing"},
-					Country:            []string{"US"},
-					Province:           []string{"California"},
-					Locality:           []string{"Mountain View"},
-					CommonName:         cn,
-				},
-				DNSNames:              []string{cn},
-				NotBefore:             time.Now(),
-				NotAfter:              time.Now().Add(time.Hour),
-				SignatureAlgorithm:    x509.ECDSAWithSHA384,
-				IsCA:                  isCA,
-				BasicConstraintsValid: true,
-				ExtKeyUsage:           extKeyUsages,
-				KeyUsage:              x509.KeyUsageDigitalSignature,
-			}
-			certBytes, err := x509.CreateCertificate(rand.Reader, certTpl, certTpl, privateKey.Public(), privateKey)
-			if err != nil {
-				t.Fatalf("Could not self sign an X.509 root certificate: %v", err)
-			}
-			certX509, err := x509.ParseCertificate(certBytes)
-			if err != nil {
-				t.Fatalf("Could not parse X.509 certificate: %v", err)
-			}
-			return certX509
-		}
-		sha2Fingerprint = func(cert *x509.Certificate) string {
-			return strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
-		}
-		testKey = func() *ecdsa.PrivateKey {
-			priv, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-			if err != nil {
-				t.Fatalf("Could not generate private key: %v", err)
-			}
-			return priv
-		}()
+func TestVerifyInvalidRootChain(t *testing.T) {
+	serverAndWaitForSetup("/invalidrootchain", InvalidRootChain, "64325")
 
-		selfSignedRoot      = selfSignRoot("example.content-signature.mozilla.org", []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning}, true, testKey)
-		selfSignedRootNonCA = selfSignRoot("example.content-signature.mozilla.org", []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning}, false, testKey)
-		selfSignedRootNoExt = selfSignRoot("example.content-signature.mozilla.org", []x509.ExtKeyUsage{}, true, testKey)
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64325/invalidrootchain")
+	if err != nil {
+		t.Fatalf("Failed to retrieved certificate chain: %v", err)
+	}
+	err = verifyCertChain(nil, conf.rootHash, chain)
+	if err == nil {
+		t.Fatal("Expected to fail chain verification with 'is root but fails validation', but succeeded")
+	}
+	log.Printf("Chain verification failed with: %v", err)
+	if !strings.Contains(err.Error(), "is root but fails validation") {
+		t.Fatalf("Expected to failed with 'is root but fails validation', but failed with: %v", err)
+	}
+}
+
+func TestVerifyNotYetValidChain(t *testing.T) {
+	serverAndWaitForSetup("/notyetvalidchain", NotYetValidChain, "64326")
+
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64326/notyetvalidchain")
+	if err != nil {
+		t.Fatalf("Failed to retrieved certificate chain: %v", err)
+	}
+	err = verifyCertChain(nil, conf.rootHash, chain)
+	if err == nil {
+		t.Fatal("Expected to fail chain verification with 'is not yet valid', but succeeded")
+	}
+	log.Printf("Chain verification failed with: %v", err)
+	if !strings.Contains(err.Error(), "is not yet valid") {
+		t.Fatalf("Expected to failed with 'is not yet valid', but failed with: %v", err)
+	}
+}
+
+func TestVerifyChainNotifyResolvesWarning(t *testing.T) {
+	serverAndWaitForSetup("/normandychain2", NormandyDevChain2021, "64327")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mock_main.NewMockNotifier(ctrl)
+
+	// Should notifier.Send three times
+	gomock.InOrder(
+		m.EXPECT().Send("normandy.content-signature.mozilla.org", "info", `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`),
+		m.EXPECT().Send("Devzilla Signing Services Intermediate 1", "info", `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`),
+		m.EXPECT().Send("dev.content-signature.root.ca", "info", `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`),
 	)
 
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64327/normandychain2")
+	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
+		t.Fatalf("Failed to retrieve certificate chain: %v", err)
+	}
+
+	err = verifyCertChain(m, conf.rootHash, chain)
+	if err != nil {
+		t.Fatalf("Failed to verify monitoring content signature: %v", err)
+	}
+}
+
+func TestVerifyChainNotifyResolveWarningErrs(t *testing.T) {
+	serverAndWaitForSetup("/normandychain3", NormandyDevChain2021, "64328")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mock_main.NewMockNotifier(ctrl)
+
+	// Should notifier.Send two times
+	gomock.InOrder(
+		m.EXPECT().Send("normandy.content-signature.mozilla.org", "info", `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`),
+		m.EXPECT().Send("Devzilla Signing Services Intermediate 1", "info", `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error")),
+		m.EXPECT().Send("dev.content-signature.root.ca", "info", `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`),
+	)
+
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64328/normandychain3")
+	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
+		t.Fatalf("Failed to retrieve certificate chain: %v", err)
+	}
+
+	err = verifyCertChain(m, conf.rootHash, chain)
+	if err != nil {
+		t.Fatalf("Failed to verify monitoring content signature: %v", err)
+	}
+}
+
+func TestVerifyChainTypedNilNotifier(t *testing.T) {
+	serverAndWaitForSetup("/normandychain4", NormandyDevChain2021, "64329")
+
+	chain, err := contentsignaturepki.GetX5U("http://localhost:64329/normandychain4")
+	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
+		t.Fatalf("Failed to retrieve certificate chain: %v", err)
+	}
+
+	var notifier *PDEventNotifier = nil
+
+	err = verifyCertChain(notifier, conf.rootHash, chain)
+	if err != nil {
+		t.Fatalf("Failed to verify monitoring content signature: %v", err)
+	}
+}
+
+func Test_verifyRoot(t *testing.T) {
 	type args struct {
 		rootHash string
 		cert     *x509.Certificate
@@ -216,15 +389,63 @@ func Test_verifyRoot(t *testing.T) {
 
 // fixtures -----------------------------------------------------------------
 
-var ValidMonitoringContentSignature = formats.SignatureResponse{
-	Ref:       "1881ks1du39bi26cfmfczu6pf3",
-	Type:      "contentsignature",
-	Mode:      "p384ecdsa",
-	SignerID:  "normankey",
-	PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
-	Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
-	X5U:       "http://127.0.0.1:64320/normandychain",
-}
+var (
+	testKey        = generateTestKey()
+	selfSignedRoot = signTestCert(signOptions{
+		commonName:   "example.content-signature.mozilla.org",
+		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		privateKey:   testKey,
+		isCA:         true,
+		issuer:       nil, // self-sign
+		notBefore:    time.Now(),
+		notAfter:     time.Now().Add(time.Hour),
+	})
+	selfSignedRootNonCA = signTestCert(signOptions{
+		commonName:   "example.content-signature.mozilla.org",
+		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		privateKey:   testKey,
+		isCA:         false,
+		issuer:       nil, // self-sign
+		notBefore:    time.Now(),
+		notAfter:     time.Now().Add(time.Hour),
+	})
+	selfSignedRootNoExt = signTestCert(signOptions{
+		commonName:   "example.content-signature.mozilla.org",
+		extKeyUsages: []x509.ExtKeyUsage{},
+		privateKey:   testKey,
+		isCA:         true,
+		issuer:       nil, // self-sign
+		notBefore:    time.Now(),
+		notAfter:     time.Now().Add(time.Hour),
+	})
+	selfSignedRootNotYetValid = signTestCert(signOptions{
+		commonName:   "example.content-signature.mozilla.org",
+		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		privateKey:   testKey,
+		isCA:         true,
+		issuer:       nil, // self-sign
+		notBefore:    time.Now().Add(3 * time.Hour),
+		notAfter:     time.Now().Add(60 * 24 * time.Hour),
+	})
+
+	ValidMonitoringContentSignature = formats.SignatureResponse{
+		Ref:       "1881ks1du39bi26cfmfczu6pf3",
+		Type:      "contentsignature",
+		Mode:      "p384ecdsa",
+		SignerID:  "normankey",
+		PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
+		Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
+		X5U:       "http://127.0.0.1:64320/normandychain",
+	}
+	InvalidRootChain = string(pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: []byte(selfSignedRootNonCA.Raw),
+	}))
+	NotYetValidChain = string(pem.EncodeToMemory(&pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: []byte(selfSignedRootNotYetValid.Raw),
+	}))
+)
 
 // This chain has an expired end-entity certificate
 var ExpiredEndEntityChain = `-----BEGIN CERTIFICATE-----

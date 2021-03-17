@@ -13,9 +13,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sns"
 	"go.mozilla.org/autograph/formats"
 	"go.mozilla.org/autograph/signer/apk"
 	"go.mozilla.org/autograph/signer/apk2"
@@ -46,18 +43,16 @@ type configuration struct {
 	// PKI use different roots
 	contentSignatureRootHash   string
 	contentSignatureTruststore *x509.CertPool
-}
 
-var conf configuration
+	// notifier raises and resolves warnings
+	notifier Notifier
+}
 
 const inputdata string = "AUTOGRAPH MONITORING"
 
-var softNotifCache map[string]time.Time
-
-func init() {
-	// create a cache to avoid sending the same notifications over and over
-	softNotifCache = make(map[string]time.Time)
-}
+var (
+	conf configuration
+)
 
 func main() {
 	conf.url = os.Getenv("AUTOGRAPH_URL")
@@ -104,6 +99,15 @@ func main() {
 		conf.rootHash = os.Getenv("AUTOGRAPH_ROOT_HASH")
 		conf.contentSignatureRootHash = conf.rootHash
 	}
+	if os.Getenv("AUTOGRAPH_PD_ROUTING_KEY") != "" {
+		conf.notifier = &PDEventNotifier{
+			RoutingKey:       os.Getenv("AUTOGRAPH_PD_ROUTING_KEY"),
+			PayloadSource:    os.Getenv("AWS_LAMBDA_FUNCTION_NAME"),
+			PayloadComponent: os.Getenv("AWS_LAMBDA_FUNCTION_VERSION"),
+		}
+		log.Println("Configured pagerduty notifier to send create low urgency alerts.")
+	}
+
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
 		lambda.Start(Handler)
@@ -169,10 +173,10 @@ func monitor() (err error) {
 		switch response.Type {
 		case contentsignature.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
-			err = verifyContentSignature(conf.contentSignatureRootHash, response)
+			err = verifyContentSignature(conf.notifier, conf.contentSignatureRootHash, response)
 		case contentsignaturepki.Type:
 			log.Printf("Verifying content signature pki from signer %q", response.SignerID)
-			err = verifyContentSignature(conf.contentSignatureRootHash, response)
+			err = verifyContentSignature(conf.notifier, conf.contentSignatureRootHash, response)
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature)
@@ -233,34 +237,4 @@ func makeAuthHeader(req *http.Request, user, token string) string {
 	payloadhash.Write([]byte(""))
 	auth.SetHash(payloadhash)
 	return auth.RequestHeader()
-}
-
-// send a message to a predefined sns topic
-func sendSoftNotification(id string, format string, a ...interface{}) error {
-	if ts, ok := softNotifCache[id]; ok {
-		// don't send dup notifications for 24 hours
-		if ts.Add(24 * time.Hour).After(time.Now()) {
-			log.Printf("silencing soft notification ID %s", id)
-			return nil
-		}
-	}
-	if os.Getenv("LAMBDA_TASK_ROOT") == "" || os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS") == "" {
-		// We're not running in lambda or the conf isnt ready so don't try to publish to SQS
-		log.Printf("soft notification ID %s: %s", id, fmt.Sprintf(format, a...))
-		return nil
-	}
-
-	svc := sns.New(session.New())
-	params := &sns.PublishInput{
-		Message:  aws.String(fmt.Sprintf(format, a...)),
-		TopicArn: aws.String(os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS")),
-	}
-	_, err := svc.Publish(params)
-	if err != nil {
-		return err
-	}
-	log.Printf("Soft notification send to %q with body: %s", os.Getenv("AUTOGRAPH_SOFT_NOTIFICATION_SNS"), *params.Message)
-	// add the notification to the cache
-	softNotifCache[id] = time.Now()
-	return nil
 }
