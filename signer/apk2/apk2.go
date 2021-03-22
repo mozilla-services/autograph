@@ -128,6 +128,7 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 		"--cert", certPath.Name(),
 		"--v1-signing-enabled", "true",
 		"--v2-signing-enabled", "true",
+		"--v3-signing-enabled", "true",
 		"--min-sdk-version", s.minSdkVersion,
 		tmpAPKFile.Name(),
 	)
