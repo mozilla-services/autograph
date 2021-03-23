@@ -109,3 +109,16 @@ func (db *Handler) Monitor(pollInterval time.Duration, quit chan bool) {
 		}
 	}
 }
+
+// GetTestDBHost returns the env var AUTOGRAPH_DB_HOST value or default of
+// 127.0.0.1
+func GetTestDBHost() string {
+	host, ok := os.LookupEnv("AUTOGRAPH_DB_HOST")
+	if !ok {
+		host = "127.0.0.1"
+		log.Printf("Using default AUTOGRAPH_DB_HOST=%s", host)
+	} else {
+		log.Printf("Using AUTOGRAPH_DB_HOST=%s", host)
+	}
+	return host
+}

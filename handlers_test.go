@@ -470,11 +470,12 @@ func TestHeartbeatChecksHSMStatusFailsWhenNotConfigured(t *testing.T) {
 
 func TestHeartbeatChecksDBStatusOKAndTimesout(t *testing.T) {
 	// NB: do not run in parallel with TestHeartbeat* or DB tests
+	host := database.GetTestDBHost()
 	db, err := database.Connect(database.Config{
 		Name:     "autograph",
 		User:     "myautographdbuser",
 		Password: "myautographdbpassword",
-		Host:     "127.0.0.1:5432",
+		Host:     host + ":5432",
 	})
 	if err != nil {
 		t.Fatal(err)

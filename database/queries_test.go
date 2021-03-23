@@ -9,11 +9,12 @@ import (
 )
 
 func TestConcurrentEndEntityOperations(t *testing.T) {
+	host := GetTestDBHost()
 	db, err := Connect(Config{
 		Name:                "autograph",
 		User:                "myautographdbuser",
 		Password:            "myautographdbpassword",
-		Host:                "127.0.0.1:5432",
+		Host:                host + ":5432",
 		MonitorPollInterval: 10 * time.Second,
 	})
 	if err != nil {
