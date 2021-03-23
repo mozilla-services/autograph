@@ -112,3 +112,29 @@ services:
         "/hsmapp/autograph.softhsm.yaml",
         "normandy",
       ]
+
+  unit-test:
+    container_name: autograph-unit-test
+    image: autograph-app
+    build:
+      context: .
+    environment:
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/app/src/autograph/tools/softhsm/db-root.crt
+      - AUTOGRAPH_DB_HOST=db
+      # env var to tell script to report coverage
+      - CI
+      # env vars to help goveralls report coverage
+      - COVERALLS_TOKEN
+      - CI_BRANCH
+      - CI_PULL_REQUEST
+      - CIRCLE_BRANCH
+      - CIRCLE_BUILD_NUM
+      - CIRCLE_PR_NUMBER
+    links:
+      - db
+    user: "0"
+    working_dir: "/app/src/autograph/"
+    command:
+      [
+        "./bin/run_unit_tests.sh"
+      ]
