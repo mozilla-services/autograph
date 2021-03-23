@@ -32,11 +32,8 @@ go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f ../../signer/apk2/a
 
 VERIFY=${VERIFY:-"0"}
 if [ "$VERIFY" = "1" ]; then
-    # NB: need to be running as root
-    apt update -qq
-    apt install -y openjdk-11-jre android-sdk-build-tools apksigner
     for apk in $(ls *.resigned.apk); do
         echo "verifying ${apk}"
-        java -jar /usr/bin/apksigner verify --verbose $apk
+        java -jar /usr/share/java/apksigner.jar verify --verbose $apk
     done
 fi
