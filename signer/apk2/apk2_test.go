@@ -121,7 +121,7 @@ func TestSignFile(t *testing.T) {
 		ioutil.WriteFile(tmpApk.Name(), signedFile, 0755)
 
 		// call apksigner to verify the APK
-		apkSignerVerifySig := exec.Command("java", "-jar", "/usr/bin/apksigner", "verify", "--verbose", tmpApk.Name())
+		apkSignerVerifySig := exec.Command("java", "-jar", "/usr/share/java/apksigner.jar", "verify", "--verbose", tmpApk.Name())
 		out, err := apkSignerVerifySig.CombinedOutput()
 		if err != nil {
 			t.Fatalf("error verifying apk signature: %s\n%s", err, out)

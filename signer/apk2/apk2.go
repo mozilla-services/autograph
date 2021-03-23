@@ -123,7 +123,7 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	defer os.Remove(tmpAPKFile.Name())
 	ioutil.WriteFile(tmpAPKFile.Name(), file, 0755)
 
-	apkSigCmd := exec.Command("java", "-jar", "/usr/bin/apksigner", "sign",
+	apkSigCmd := exec.Command("java", "-jar", "/usr/share/java/apksigner.jar", "sign",
 		"--key", keyPath.Name(),
 		"--cert", certPath.Name(),
 		"--v1-signing-enabled", "true",
