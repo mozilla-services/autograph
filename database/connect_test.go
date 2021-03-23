@@ -13,11 +13,12 @@ func TestMonitor(t *testing.T) {
 		t.Parallel()
 
 		// connects
+		host := GetTestDBHost()
 		db, err := Connect(Config{
 			Name:     "autograph",
 			User:     "myautographdbuser",
 			Password: "myautographdbpassword",
-			Host:     "127.0.0.1:5432",
+			Host:     host + ":5432",
 		})
 		if err != nil {
 			t.Fatal(err)
