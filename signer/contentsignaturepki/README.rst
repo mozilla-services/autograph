@@ -13,9 +13,9 @@ compromised to serve fraudulent data to our users. Content Signature implements
 a signing protocol to protect the information sent from backend services to Firefox
 user-agents.
 
-Content signature adds a layer to TLS and certificate pinning. 
-As we grow our service infrastructure, the risk of a vulnerability on our public 
-endpoints increases, and an attacker could exploit a vulnerability to serve bad 
+Content signature adds a layer to TLS and certificate pinning.
+As we grow our service infrastructure, the risk of a vulnerability on our public
+endpoints increases, and an attacker could exploit a vulnerability to serve bad
 data from trusted sites directly. TLS with certificate pinning prevents bad actors
 from creating fraudulent Firefox services, but does not reduce the impact a break-in
 would have on our users. Content signature provides this extra layer.
@@ -46,7 +46,7 @@ the JSON representation of a content signature:
 	{
 	  "mode": "p384ecdsa",
 	  "signature": "gZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaI",
-    "x5u": "https://foo.example.com/chains/certificates.pem"
+	  "x5u": "https://foo.example.com/chains/certificates.pem"
 	}
 
 * **mode** is a suite of algorithms used to issue the signature. Two modes are supported:
