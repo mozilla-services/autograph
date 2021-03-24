@@ -20,7 +20,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	"github.com/mozilla-services/autograph/tools/autograph-monitor/mock_main"
 	"go.mozilla.org/autograph/formats"
-	"go.mozilla.org/autograph/signer/contentsignaturepki"
 )
 
 // helper funcs  -----------------------------------------------------------------
@@ -174,6 +173,8 @@ func Test_verifyCertChain(t *testing.T) {
 		args                 args
 		wantErr              bool
 		errSubStr            string
+		useMockNotifier      bool
+		mockNotifierCallback func(*mock_main.MockNotifier)
 	}{
 		{
 			name: "expired end-entity chain fails",
@@ -184,6 +185,7 @@ func Test_verifyCertChain(t *testing.T) {
 			},
 			wantErr:         true,
 			errSubStr:       "expired",
+			useMockNotifier: false,
 		},
 		{
 			name: "invalid root chain fails",
@@ -194,6 +196,7 @@ func Test_verifyCertChain(t *testing.T) {
 			},
 			wantErr:         true,
 			errSubStr:       "is root but fails validation",
+			useMockNotifier: false,
 		},
 		{
 			name: "not yet valid chain fails",
@@ -204,6 +207,7 @@ func Test_verifyCertChain(t *testing.T) {
 			},
 			wantErr:         true,
 			errSubStr:       "is not yet valid",
+			useMockNotifier: false,
 		},
 		{
 			name: "wrongly ordered chain fails",
@@ -214,6 +218,7 @@ func Test_verifyCertChain(t *testing.T) {
 			},
 			wantErr:         true,
 			errSubStr:       "is not signed by parent certificate",
+			useMockNotifier: false,
 		},
 		{
 			name: "valid chain with typed nil notifier passes",
@@ -224,6 +229,77 @@ func Test_verifyCertChain(t *testing.T) {
 			},
 			wantErr:         false,
 			errSubStr:       "",
+			useMockNotifier: false,
+		},
+		{
+			name: "expired EE chain sends warning",
+			args: args{
+				notifier: nil,
+				rootHash: conf.rootHash,
+				certs:    mustChainToCerts(ExpiredEndEntityChain),
+			},
+			wantErr:         true,
+			errSubStr:       "expired",
+			useMockNotifier: true,
+			mockNotifierCallback: func(m *mock_main.MockNotifier) {
+				m.EXPECT().Send("normandy.content-signature.mozilla.org", "warning", `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`)
+				return
+			},
+		},
+		{
+			name: "expired EE chain send warning errors",
+			args: args{
+				notifier: nil,
+				rootHash: conf.rootHash,
+				certs:    mustChainToCerts(ExpiredEndEntityChain),
+			},
+			wantErr:         true,
+			errSubStr:       "expired",
+			useMockNotifier: true,
+			mockNotifierCallback: func(m *mock_main.MockNotifier) {
+				m.EXPECT().Send("normandy.content-signature.mozilla.org", "warning", `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error"))
+				return
+			},
+		},
+		{
+			name: "valid chain resolves warnings",
+			args: args{
+				notifier: nil,
+				rootHash: conf.rootHash,
+				certs:    mustChainToCerts(NormandyDevChain2021),
+			},
+			wantErr:         false,
+			errSubStr:       "",
+			useMockNotifier: true,
+			mockNotifierCallback: func(m *mock_main.MockNotifier) {
+				// Should notifier.Send three times
+				gomock.InOrder(
+					m.EXPECT().Send("normandy.content-signature.mozilla.org", "info", `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`),
+					m.EXPECT().Send("Devzilla Signing Services Intermediate 1", "info", `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`),
+					m.EXPECT().Send("dev.content-signature.root.ca", "info", `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`),
+				)
+				return
+			},
+		},
+		{
+			name: "valid chain resolves warnings send errors",
+			args: args{
+				notifier: nil,
+				rootHash: conf.rootHash,
+				certs:    mustChainToCerts(NormandyDevChain2021),
+			},
+			wantErr:         false,
+			errSubStr:       "",
+			useMockNotifier: true,
+			mockNotifierCallback: func(m *mock_main.MockNotifier) {
+				// Should notifier.Send three times
+				gomock.InOrder(
+					m.EXPECT().Send("normandy.content-signature.mozilla.org", "info", `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`),
+					m.EXPECT().Send("Devzilla Signing Services Intermediate 1", "info", `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error")),
+					m.EXPECT().Send("dev.content-signature.root.ca", "info", `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`),
+				)
+				return
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -232,6 +308,14 @@ func Test_verifyCertChain(t *testing.T) {
 				err      error
 				notifier Notifier = tt.args.notifier
 			)
+
+			if tt.useMockNotifier {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
+				m := mock_main.NewMockNotifier(ctrl)
+				tt.mockNotifierCallback(m)
+				notifier = m
+			}
 
 			err = verifyCertChain(notifier, tt.args.rootHash, tt.args.certs)
 
@@ -245,110 +329,6 @@ func Test_verifyCertChain(t *testing.T) {
 				t.Fatalf("verifyCertChain() expected to fail with %s but failed with: %v", tt.errSubStr, err.Error())
 			}
 		})
-	}
-}
-
-func TestVerifyExpiredCertChainNotifySendsWarning(t *testing.T) {
-	serverAndWaitForSetup("/expiredcertchain2", ExpiredEndEntityChain, "64322")
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	m := mock_main.NewMockNotifier(ctrl)
-
-	// Should notifier.Send once
-	m.EXPECT().Send("normandy.content-signature.mozilla.org", "warning", `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`)
-
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64322/expiredcertchain2")
-	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
-		t.Fatalf("Failed to retrieve certificate chain: %v", err)
-	}
-
-	err = verifyCertChain(m, conf.rootHash, chain)
-	if err == nil {
-		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
-	}
-	log.Printf("Chain verification failed with: %v", err)
-	if !strings.Contains(err.Error(), "expired") {
-		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
-	}
-}
-
-func TestVerifyExpiredCertChainWhenNotifySendWarningErrs(t *testing.T) {
-	serverAndWaitForSetup("/expiredcertchain3", ExpiredEndEntityChain, "64323")
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	m := mock_main.NewMockNotifier(ctrl)
-
-	// Should notifier.Send once
-	m.EXPECT().Send("normandy.content-signature.mozilla.org", "warning", `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error"))
-
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64323/expiredcertchain3")
-	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
-		t.Fatalf("Failed to retrieve certificate chain: %v", err)
-	}
-
-	err = verifyCertChain(m, conf.rootHash, chain)
-	if err == nil {
-		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
-	}
-	log.Printf("Chain verification failed with: %v", err)
-	if !strings.Contains(err.Error(), "expired") {
-		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
-	}
-}
-
-func TestVerifyChainNotifyResolvesWarning(t *testing.T) {
-	serverAndWaitForSetup("/normandychain2", NormandyDevChain2021, "64327")
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	m := mock_main.NewMockNotifier(ctrl)
-
-	// Should notifier.Send three times
-	gomock.InOrder(
-		m.EXPECT().Send("normandy.content-signature.mozilla.org", "info", `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`),
-		m.EXPECT().Send("Devzilla Signing Services Intermediate 1", "info", `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`),
-		m.EXPECT().Send("dev.content-signature.root.ca", "info", `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`),
-	)
-
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64327/normandychain2")
-	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
-		t.Fatalf("Failed to retrieve certificate chain: %v", err)
-	}
-
-	err = verifyCertChain(m, conf.rootHash, chain)
-	if err != nil {
-		t.Fatalf("Failed to verify monitoring content signature: %v", err)
-	}
-}
-
-func TestVerifyChainNotifyResolveWarningErrs(t *testing.T) {
-	serverAndWaitForSetup("/normandychain3", NormandyDevChain2021, "64328")
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	m := mock_main.NewMockNotifier(ctrl)
-
-	// Should notifier.Send two times
-	gomock.InOrder(
-		m.EXPECT().Send("normandy.content-signature.mozilla.org", "info", `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`),
-		m.EXPECT().Send("Devzilla Signing Services Intermediate 1", "info", `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error")),
-		m.EXPECT().Send("dev.content-signature.root.ca", "info", `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`),
-	)
-
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64328/normandychain3")
-	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
-		t.Fatalf("Failed to retrieve certificate chain: %v", err)
-	}
-
-	err = verifyCertChain(m, conf.rootHash, chain)
-	if err != nil {
-		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}
 }
 
