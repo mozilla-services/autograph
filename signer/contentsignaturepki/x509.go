@@ -76,7 +76,7 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	notAfter := time.Now().UTC().Add(s.validity + s.clockSkewTolerance)
 
 	block, _ := pem.Decode([]byte(s.IssuerCert))
-	if block == nil {
+	if block == nil || block.Type != "CERTIFICATE" {
 		err = errors.New("no pem block found in signer public key configuration")
 		return
 	}
