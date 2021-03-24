@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"net"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -134,26 +134,15 @@ func mustChainToCerts(chain string) (certs []*x509.Certificate) {
 	return
 }
 
-func serverAndWaitForSetup(handlerURI, chain, port string) {
-	go func() {
-		http.HandleFunc(handlerURI, func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintf(w, chain)
-		})
-		log.Fatal(http.ListenAndServe(":"+port, nil))
-	}()
-	setupTimeout, _ := time.ParseDuration("10s")
-	conn, _ := net.DialTimeout("tcp", net.JoinHostPort("", port), setupTimeout)
-	if conn != nil {
-		conn.Close()
-	}
-	return
-}
-
 // Tests -----------------------------------------------------------------
 
 func TestVerifyContentSignature(t *testing.T) {
-	serverAndWaitForSetup("/normandychain", NormandyDevChain2021, "64320")
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, NormandyDevChain2021)
+	}))
+	defer ts.Close()
 
+	ValidMonitoringContentSignature.X5U = ts.URL
 	err := verifyContentSignature(nil, conf.rootHash, ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
