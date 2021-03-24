@@ -96,6 +96,45 @@ func generateTestKey() *ecdsa.PrivateKey {
 	return priv
 }
 
+func mustChainToCerts(chain string) (certs []*x509.Certificate) {
+	// the first cert is the end entity, then the intermediate and the root
+	block, rest := pem.Decode([]byte(chain))
+	if block == nil || block.Type != "CERTIFICATE" {
+		log.Fatalf("failed to PEM decode ee certificate from chain")
+	}
+	ee, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		log.Fatalf("failed to parse ee certificate from chain: %q", err)
+	}
+	certs = append(certs, ee)
+
+	// the second cert is the intermediate
+	block, rest = pem.Decode(rest)
+	if block == nil || block.Type != "CERTIFICATE" {
+		log.Fatalf("failed to PEM decode intermediate certificate from chain")
+	}
+	inter, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		log.Fatalf("failed to parse intermediate certificate from chain: %q", err)
+	}
+	certs = append(certs, inter)
+
+	// the third and last cert is the root
+	block, rest = pem.Decode(rest)
+	if block == nil || block.Type != "CERTIFICATE" {
+		log.Fatalf("failed to PEM decode root certificate from chain")
+	}
+	root, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		log.Fatalf("failed to parse root certificate from chain: %q", err)
+	}
+	if len(rest) != 0 {
+		log.Fatalf("trailing data after root certificate in chain")
+	}
+	certs = append(certs, root)
+	return
+}
+
 func serverAndWaitForSetup(handlerURI, chain, port string) {
 	go func() {
 		http.HandleFunc(handlerURI, func(w http.ResponseWriter, r *http.Request) {
@@ -122,20 +161,90 @@ func TestVerifyContentSignature(t *testing.T) {
 	}
 }
 
-func TestVerifyExpiredCertChain(t *testing.T) {
-	serverAndWaitForSetup("/expiredcertchain", ExpiredEndEntityChain, "64321")
+func Test_verifyCertChain(t *testing.T) {
+	var typedNilNotifier *PDEventNotifier = nil
 
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64321/expiredcertchain")
-	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
-		t.Fatalf("Failed to retrieve certificate chain: %v", err)
+	type args struct {
+		notifier Notifier
+		rootHash string
+		certs    []*x509.Certificate
 	}
-	err = verifyCertChain(nil, conf.rootHash, chain)
-	if err == nil {
-		t.Fatal("Expected to fail chain verification with expired end-entity, but succeeded")
+	tests := []struct {
+		name                 string
+		args                 args
+		wantErr              bool
+		errSubStr            string
+	}{
+		{
+			name: "expired end-entity chain fails",
+			args: args{
+				notifier: nil,
+				rootHash: conf.rootHash,
+				certs:    mustChainToCerts(ExpiredEndEntityChain),
+			},
+			wantErr:         true,
+			errSubStr:       "expired",
+		},
+		{
+			name: "invalid root chain fails",
+			args: args{
+				notifier: nil,
+				rootHash: conf.rootHash,
+				certs:    []*x509.Certificate{selfSignedRootNonCA},
+			},
+			wantErr:         true,
+			errSubStr:       "is root but fails validation",
+		},
+		{
+			name: "not yet valid chain fails",
+			args: args{
+				notifier: nil,
+				rootHash: conf.rootHash,
+				certs:    []*x509.Certificate{selfSignedRootNotYetValid},
+			},
+			wantErr:         true,
+			errSubStr:       "is not yet valid",
+		},
+		{
+			name: "wrongly ordered chain fails",
+			args: args{
+				notifier: nil,
+				rootHash: conf.rootHash,
+				certs:    mustChainToCerts(WronglyOrderedChain),
+			},
+			wantErr:         true,
+			errSubStr:       "is not signed by parent certificate",
+		},
+		{
+			name: "valid chain with typed nil notifier passes",
+			args: args{
+				notifier: typedNilNotifier,
+				rootHash: conf.rootHash,
+				certs:    mustChainToCerts(NormandyDevChain2021),
+			},
+			wantErr:         false,
+			errSubStr:       "",
+		},
 	}
-	log.Printf("Chain verification failed with: %v", err)
-	if !strings.Contains(err.Error(), "expired") {
-		t.Fatalf("Expected to failed with expired end-entity but failed with: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				err      error
+				notifier Notifier = tt.args.notifier
+			)
+
+			err = verifyCertChain(notifier, tt.args.rootHash, tt.args.certs)
+
+			if tt.wantErr == false && err != nil { // unexpected error
+				t.Errorf("verifyCertChain() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr == true && err == nil { // unexpected pass
+				t.Errorf("verifyCertChain() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr == true && !strings.Contains(err.Error(), tt.errSubStr) {
+				t.Fatalf("verifyCertChain() expected to fail with %s but failed with: %v", tt.errSubStr, err.Error())
+			}
+		})
 	}
 }
 
@@ -191,57 +300,6 @@ func TestVerifyExpiredCertChainWhenNotifySendWarningErrs(t *testing.T) {
 	}
 }
 
-func TestVerifyWronglyOrderedChain(t *testing.T) {
-	serverAndWaitForSetup("/wronglyorderedchain", WronglyOrderedChain, "64324")
-
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64324/wronglyorderedchain")
-	if err != nil {
-		t.Fatalf("Failed to retrieved certificate chain: %v", err)
-	}
-	err = verifyCertChain(nil, conf.rootHash, chain)
-	if err == nil {
-		t.Fatal("Expected to fail chain verification with cert not signed by parent, but succeeded")
-	}
-	log.Printf("Chain verification failed with: %v", err)
-	if !strings.Contains(err.Error(), "is not signed by parent certificate") {
-		t.Fatalf("Expected to failed with certificate not being signed by parent, but failed with: %v", err)
-	}
-}
-
-func TestVerifyInvalidRootChain(t *testing.T) {
-	serverAndWaitForSetup("/invalidrootchain", InvalidRootChain, "64325")
-
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64325/invalidrootchain")
-	if err != nil {
-		t.Fatalf("Failed to retrieved certificate chain: %v", err)
-	}
-	err = verifyCertChain(nil, conf.rootHash, chain)
-	if err == nil {
-		t.Fatal("Expected to fail chain verification with 'is root but fails validation', but succeeded")
-	}
-	log.Printf("Chain verification failed with: %v", err)
-	if !strings.Contains(err.Error(), "is root but fails validation") {
-		t.Fatalf("Expected to failed with 'is root but fails validation', but failed with: %v", err)
-	}
-}
-
-func TestVerifyNotYetValidChain(t *testing.T) {
-	serverAndWaitForSetup("/notyetvalidchain", NotYetValidChain, "64326")
-
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64326/notyetvalidchain")
-	if err != nil {
-		t.Fatalf("Failed to retrieved certificate chain: %v", err)
-	}
-	err = verifyCertChain(nil, conf.rootHash, chain)
-	if err == nil {
-		t.Fatal("Expected to fail chain verification with 'is not yet valid', but succeeded")
-	}
-	log.Printf("Chain verification failed with: %v", err)
-	if !strings.Contains(err.Error(), "is not yet valid") {
-		t.Fatalf("Expected to failed with 'is not yet valid', but failed with: %v", err)
-	}
-}
-
 func TestVerifyChainNotifyResolvesWarning(t *testing.T) {
 	serverAndWaitForSetup("/normandychain2", NormandyDevChain2021, "64327")
 
@@ -289,22 +347,6 @@ func TestVerifyChainNotifyResolveWarningErrs(t *testing.T) {
 	}
 
 	err = verifyCertChain(m, conf.rootHash, chain)
-	if err != nil {
-		t.Fatalf("Failed to verify monitoring content signature: %v", err)
-	}
-}
-
-func TestVerifyChainTypedNilNotifier(t *testing.T) {
-	serverAndWaitForSetup("/normandychain4", NormandyDevChain2021, "64329")
-
-	chain, err := contentsignaturepki.GetX5U("http://localhost:64329/normandychain4")
-	if err != nil && strings.Contains(err.Error(), "failed to retrieve") {
-		t.Fatalf("Failed to retrieve certificate chain: %v", err)
-	}
-
-	var notifier *PDEventNotifier = nil
-
-	err = verifyCertChain(notifier, conf.rootHash, chain)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}
@@ -437,14 +479,6 @@ var (
 		Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
 		X5U:       "http://127.0.0.1:64320/normandychain",
 	}
-	InvalidRootChain = string(pem.EncodeToMemory(&pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: []byte(selfSignedRootNonCA.Raw),
-	}))
-	NotYetValidChain = string(pem.EncodeToMemory(&pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: []byte(selfSignedRootNotYetValid.Raw),
-	}))
 )
 
 // This chain has an expired end-entity certificate
