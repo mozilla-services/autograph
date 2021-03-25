@@ -24,13 +24,18 @@ while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"
   sleep 1 # wait before checking again
 done
 
-echo "checking monitoring"
+# fetch the updated root hash from the app-hsm service
+docker cp autograph-app-hsm:/tmp/normandy_dev_root_hash.txt .
+APP_HSM_NORMANDY_ROOT_HASH=$(grep '[0-9A-F]' normandy_dev_root_hash.txt | tr -d '\r\n')
+
+echo "checking monitoring using hsm root hash:" "$APP_HSM_NORMANDY_ROOT_HASH"
 docker-compose run \
 	       --rm \
                -e AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs \
                monitor
 docker-compose run \
 	       --rm \
+               -e "AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH" \
                -e AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs \
                monitor-hsm
 

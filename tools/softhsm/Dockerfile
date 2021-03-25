@@ -3,8 +3,9 @@ FROM autograph-app
 USER root
 RUN apt update && \
       apt -y upgrade && \
-      apt -y install softhsm2 python3 python3-ruamel.yaml && \
-      apt-get clean
+      apt -y install jq softhsm2 python3 python3-pip python3-ruamel.yaml && \
+      apt-get clean && \
+      python3 -m pip install yq
 
 # copy the config
 ADD autograph.softhsm.yaml /app/
@@ -29,7 +30,10 @@ RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 -
 # genkeys
 RUN cd /app/src/autograph/tools/softhsm/ && go run genkeys.go
 
-# make a pki in softhsm then update the config
+# make a pki in softhsm
+# then update the config
+# then write the generated config and new root hash to /tmp
+# docker-compose mounts /tmp for the monitor-hsm service
 RUN cd /app/src/autograph/tools/genpki/ && \
       go run genpki.go > /app/genpki.out && \
       cd /app/src/autograph/tools/configurator && \
@@ -44,9 +48,9 @@ RUN cd /app/src/autograph/tools/genpki/ && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
       -p issuercert -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
-      -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')"
-
-# in docker-compose, the monitor job will mount /tmp to get the generated config
-RUN cp /app/autograph.softhsm.yaml /tmp/
+      -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')" && \
+      cp /app/autograph.softhsm.yaml /tmp/ && \
+      /bin/bash /app/src/autograph/tools/softhsm/hash_signer_cacert.sh /app/autograph.softhsm.yaml normandy > /tmp/normandy_dev_root_hash.txt && \
+      cat /tmp/normandy_dev_root_hash.txt
 
 CMD /go/bin/autograph -c /app/autograph.softhsm.yaml
