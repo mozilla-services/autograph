@@ -1,5 +1,4 @@
 FROM autograph-app
-MAINTAINER Mozilla
 
 USER root
 RUN apt update && \
