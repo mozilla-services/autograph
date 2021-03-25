@@ -46,9 +46,6 @@ RUN cd /app/src/autograph/tools/genpki/ && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
       -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')"
 
-RUN curl -o /app/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
-      chmod +x /app/wait-for-it.sh
-
 # in docker-compose, the monitor job will mount /tmp to get the generated config
 RUN cp /app/autograph.softhsm.yaml /tmp/
 

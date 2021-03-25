@@ -53,7 +53,7 @@ services:
       - db
     command:
       [
-        "/app/wait-for-it.sh",
+        "/app/src/autograph/bin/wait-for-it.sh",
         "db:5432",
         "--",
         "autograph",
@@ -82,7 +82,7 @@ services:
       - apptmpdir:/tmp/
     command:
       [
-        "/app/wait-for-it.sh",
+        "/app/src/autograph/bin/wait-for-it.sh",
         "autograph-app:8001",
         "--",
         "/go/bin/autograph-monitor",
@@ -105,7 +105,7 @@ services:
       - hsmconfig:/hsmapp/
     command:
       [
-        "/app/wait-for-it.sh",
+        "/app/src/autograph/bin/wait-for-it.sh",
         "autograph-app-hsm:8001",
         "--",
         "/app/run-monitor-with-root-hash.sh",

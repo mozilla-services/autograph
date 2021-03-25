@@ -9,9 +9,6 @@ RUN apt update && \
 
 RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autograph-monitor .
 
-RUN curl -o /app/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
-      chmod +x /app/wait-for-it.sh
-
 ADD run-monitor-with-root-hash.sh /app
 RUN chmod +x /app/run-monitor-with-root-hash.sh
 
