@@ -98,6 +98,7 @@ func main() {
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
 		conf.rootHash = os.Getenv("AUTOGRAPH_ROOT_HASH")
 		conf.contentSignatureRootHash = conf.rootHash
+		log.Printf("Using root hash from env var AUTOGRAPH_ROOT_HASH=%q\n", conf.rootHash)
 	}
 	if os.Getenv("AUTOGRAPH_PD_ROUTING_KEY") != "" {
 		conf.notifier = &PDEventNotifier{

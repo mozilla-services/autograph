@@ -5,6 +5,11 @@ PACKAGE_NAMES := $(shell go list go.mozilla.org/autograph/...|grep -v tools | se
 
 all: generate test vet lint install
 
+# update the vendored version of the wait-for-it.sh script
+install-wait-for-it:
+	curl -o bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
+	chmod +x bin/wait-for-it.sh
+
 install-golint:
 	go get -u golang.org/x/lint/golint
 
