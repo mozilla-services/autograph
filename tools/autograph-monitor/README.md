@@ -29,6 +29,7 @@ And additional optional environment variables:
   alerts for warnings like a content signature certificate expiring in
   30 days.
 
+When the upstream app is down monitor requests will time out after 30 seconds.
 
 An example run looks like:
 

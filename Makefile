@@ -79,8 +79,16 @@ showcoverage: test
 generate:
 	go generate
 
+# image build order:
+#
+# app -> {app-hsm,monitor}
+# monitor -> monitor-lambda-emulator,monitor-hsm-lambda-emulator
+# app-hsm -> monitor-hsm-lambda-emulator (app-hsm writes chains and updated config to shared /tmp volume)
+#
 build: generate
-	docker-compose build --no-cache app app-hsm monitor monitor-hsm
+	docker-compose build --no-cache --parallel app db
+	docker-compose build --no-cache --parallel app-hsm monitor
+	docker-compose build --no-cache --parallel monitor-lambda-emulator monitor-hsm-lambda-emulator
 
 integration-test:
 	./bin/run_integration_tests.sh

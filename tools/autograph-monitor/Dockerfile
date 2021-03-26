@@ -7,7 +7,6 @@ RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autogra
 FROM debian:buster
 
 COPY --from=build /go/bin/autograph-monitor /usr/bin/autograph-monitor
-COPY --from=build /app/src/autograph/bin/wait-for-it.sh /usr/bin/wait-for-it.sh
 
 RUN addgroup --gid 10001 app \
       && \
