@@ -81,10 +81,10 @@ services:
       - apptmpdir:/tmp/
     command:
       [
-        "/app/src/autograph/bin/wait-for-it.sh",
+        "/usr/bin/wait-for-it.sh",
         "autograph-app:8001",
         "--",
-        "/go/bin/autograph-monitor",
+        "/usr/bin/autograph-monitor",
       ]
 
   monitor-hsm:
@@ -104,10 +104,10 @@ services:
       - hsmtmpdir:/tmp/
     command:
       [
-        "/app/src/autograph/bin/wait-for-it.sh",
+        "/usr/bin/wait-for-it.sh",
         "autograph-app-hsm:8001",
         "--",
-        "/go/bin/autograph-monitor",
+        "/usr/bin/autograph-monitor",
       ]
 
   unit-test:
