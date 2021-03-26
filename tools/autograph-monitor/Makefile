@@ -1,6 +1,8 @@
 build:
 	go build -o autograph-monitor *.go
 	zip -r autograph-monitor.zip autograph-monitor
+build-image:
+	docker build -t autograph-monitor:latest .
 doc:
 	go doc -all .
 doc-http:

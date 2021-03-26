@@ -10,7 +10,7 @@ docker-compose down -v
 docker-compose stop db
 docker-compose rm -f db
 
-# start db and servers
+# start db and app servers
 docker-compose up -d --force-recreate db app app-hsm
 
 echo "waiting for autograph-app to start"
@@ -28,16 +28,27 @@ done
 docker cp autograph-app-hsm:/tmp/normandy_dev_root_hash.txt .
 APP_HSM_NORMANDY_ROOT_HASH=$(grep '[0-9A-F]' normandy_dev_root_hash.txt | tr -d '\r\n')
 
+# start the monitor lambda emulators
+docker-compose up -d monitor-lambda-emulator
+AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH docker-compose up -d monitor-hsm-lambda-emulator
+
+echo "waiting for monitor-lambda-emulator to start"
+while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-lambda-emulator)"; do
+  echo -n "."
+  sleep 1 # wait before checking again
+done
+echo "waiting for monitor-hsm-lambda-emulator to start"
+while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-hsm-lambda-emulator)"; do
+  echo -n "."
+  sleep 1 # wait before checking again
+done
+
 echo "checking monitoring using hsm root hash:" "$APP_HSM_NORMANDY_ROOT_HASH"
-docker-compose run \
-	       --rm \
-               -e AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs \
-               monitor
-docker-compose run \
-	       --rm \
-               -e "AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH" \
-               -e AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs \
-               monitor-hsm
+# exec in containers to workaround https://circleci.com/docs/2.0/building-docker-images/#accessing-services
+docker-compose exec monitor-lambda-emulator "/usr/local/bin/test_monitor.sh"
+docker-compose logs monitor-lambda-emulator
+docker-compose exec monitor-hsm-lambda-emulator "/usr/local/bin/test_monitor.sh"
+docker-compose logs monitor-hsm-lambda-emulator
 
 echo "checking XPI signing"
 docker-compose run \

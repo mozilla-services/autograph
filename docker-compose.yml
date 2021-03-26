@@ -69,46 +69,48 @@ services:
     image: autograph-monitor
     build:
       context: tools/autograph-monitor/
+
+  monitor-lambda-emulator:
+    container_name: autograph-monitor-lambda-emulator
+    image: autograph-monitor-lambda-emulator
+    build:
+      context: tools/autograph-monitor/
+      dockerfile: Dockerfile.lambda-emulator
     environment:
       - AUTOGRAPH_URL=http://autograph-app:8000/
       - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
+      # set a non-empty value to use the lambda handler
+      - LAMBDA_TASK_ROOT=/usr/local/bin/
       - AUTOGRAPH_ROOT_HASH
+    ports:
+      - "9000:8080"
     links:
       - app
     depends_on:
       - app
     volumes:
       - apptmpdir:/tmp/
-    command:
-      [
-        "/app/src/autograph/bin/wait-for-it.sh",
-        "autograph-app:8001",
-        "--",
-        "/go/bin/autograph-monitor",
-      ]
 
-  monitor-hsm:
-    container_name: autograph-monitor-hsm
-    image: autograph-monitor
+  monitor-hsm-lambda-emulator:
+    container_name: autograph-monitor-hsm-lambda-emulator
+    image: autograph-monitor-lambda-emulator
     build:
       context: tools/autograph-monitor/
+      dockerfile: Dockerfile.lambda-emulator
     environment:
       - AUTOGRAPH_URL=http://autograph-app-hsm:8001/
       - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
+      # set a non-empty value to use the lambda handler
+      - LAMBDA_TASK_ROOT=/usr/local/bin/
       - AUTOGRAPH_ROOT_HASH
+    ports:
+      - "9001:8080"
     links:
       - app-hsm
     depends_on:
       - app-hsm
     volumes:
       - hsmtmpdir:/tmp/
-    command:
-      [
-        "/app/src/autograph/bin/wait-for-it.sh",
-        "autograph-app-hsm:8001",
-        "--",
-        "/go/bin/autograph-monitor",
-      ]
 
   unit-test:
     container_name: autograph-unit-test
