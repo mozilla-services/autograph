@@ -99,7 +99,7 @@ Signers
 The detailed configuration for each signer is described in their
 respective README under the `autograph/signer/`__ directory.
 
-__ https://github.com/mozilla-services/autograph/tree/master/signer
+__ https://github.com/mozilla-services/autograph/tree/main/signer
 
 All signers share the common field `id`, which is a name unique to the
 installation to identify each signer. The `id` is used in the authorization

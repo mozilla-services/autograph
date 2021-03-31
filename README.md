@@ -7,8 +7,8 @@ Autograph is a cryptographic signature service that implements
 [PGP](signer/pgp/README.rst), [GPG2](signer/gpg2/README.rst)
 and [RSA](signer/genericrsa/README.rst).
 
-[![CircleCI](https://circleci.com/gh/mozilla-services/autograph/tree/master.svg?style=svg)](https://circleci.com/gh/mozilla-services/autograph/tree/master)
-[![Coverage Status](https://coveralls.io/repos/github/mozilla-services/autograph/badge.svg?branch=master)](https://coveralls.io/github/mozilla-services/autograph?branch=master)
+[![CircleCI](https://circleci.com/gh/mozilla-services/autograph/tree/main.svg?style=svg)](https://circleci.com/gh/mozilla-services/autograph/tree/main)
+[![Coverage Status](https://coveralls.io/repos/github/mozilla-services/autograph/badge.svg?branch=main)](https://coveralls.io/github/mozilla-services/autograph?branch=main)
 [![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=mozilla-services/autograph)](https://dependabot.com)
 
 Why is it called "autograph"? Because it's a service to sign stuff.

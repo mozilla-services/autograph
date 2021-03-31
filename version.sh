@@ -3,7 +3,7 @@
 set -e
 
 cd "$(dirname "$0")"
-# create a version.json per https://github.com/mozilla-services/Dockerflow/blob/master/docs/version_object.md
+# create a version.json per https://github.com/mozilla-services/Dockerflow/blob/main/docs/version_object.md
 printf '{"commit":"%s","version":"%s","source":"https://github.com/%s/%s","build":"%s"}\n' \
 "$CIRCLE_SHA1" \
 "$CIRCLE_TAG" \
