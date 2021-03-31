@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pkg/errors"
 	"github.com/mozilla-services/autograph/signer"
+	"github.com/pkg/errors"
 	margo "go.mozilla.org/mar"
 )
 

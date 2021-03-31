@@ -10,9 +10,9 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/mozilla-services/autograph/signer"
 )
 
 const (

@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
 	"time"

@@ -13,8 +13,8 @@ import (
 
 	"github.com/mozilla-services/autograph/formats"
 
-	"github.com/pkg/errors"
 	"github.com/mozilla-services/autograph/signer"
+	"github.com/pkg/errors"
 )
 
 const (

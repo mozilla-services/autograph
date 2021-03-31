@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/mozilla-services/autograph/signer"
 	"go.mozilla.org/cose"
 	"go.mozilla.org/pkcs7"
 )

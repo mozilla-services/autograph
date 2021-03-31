@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/mozilla-services/autograph/signer"
 	"go.mozilla.org/cose"
 )
 

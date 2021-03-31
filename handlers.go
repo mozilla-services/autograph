@@ -18,9 +18,9 @@ import (
 	"path"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer"
+	log "github.com/sirupsen/logrus"
 )
 
 // heartbeatConfig configures the heartbeat handler. It sets timeouts
