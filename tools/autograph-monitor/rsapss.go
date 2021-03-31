@@ -4,7 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 
-	"go.mozilla.org/autograph/signer/rsapss"
+	"github.com/mozilla-services/autograph/signer/rsapss"
 )
 
 func verifyRsapssSignature(b64Sig, b64Key string) error {

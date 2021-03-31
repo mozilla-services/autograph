@@ -1,4 +1,4 @@
-package database // import "go.mozilla.org/autograph/database"
+package database // import "github.com/mozilla-services/autograph/database"
 
 import (
 	"context"

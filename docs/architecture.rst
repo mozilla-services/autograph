@@ -32,7 +32,7 @@ Some signers use HSMs to store cryptographic keys, in which cases the signer
 asks the HSM to run the crypto operation instead of doing it itself.
 
  ::
-    
+
     Autograph                        +---------------------------------------------------------+
     Architecture                     |                       +--------+     +----+   +-------+ |
                                      |                    +-->Signer A+----->SIGN<---+Private| |
@@ -80,17 +80,17 @@ user is permitted to use the requested signer. Should all these steps succeed,
 the signing request is passed along to a signer.
 
 Signers are separate Go packages defined under the
-`go.mozilla.org/autograph/signer/...` package. Each signer implements a specific
+`github.com/mozilla-services/autograph/signer/...` package. Each signer implements a specific
 type of signing, for example:
 
-* **go.mozilla.org/autograph/signer/contentsignature** implements a signing
+* **github.com/mozilla-services/autograph/signer/contentsignature** implements a signing
   protocol inspired by `http-miser`_ and used to sign data sent from backend
   services to Firefox user agents. The protocol is described in details in
   `Firefox Content-Signature`_. The implementation in Autograph is described in
   the `content-signature signer's README`_.
-  
 
-* **go.mozilla.org/autograph/signer/xpi** implements the PKCS7/SMIME detached
+
+* **github.com/mozilla-services/autograph/signer/xpi** implements the PKCS7/SMIME detached
   signature protocol used to sign Firefox add-ons. The protocol is described in
   details in `Add-ons/Extension Signing`_. The implementation in Autograph is
   described in the `xpi signer's README`_.

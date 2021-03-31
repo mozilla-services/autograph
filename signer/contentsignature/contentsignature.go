@@ -1,4 +1,4 @@
-package contentsignature // import "go.mozilla.org/autograph/signer/contentsignature"
+package contentsignature // import "github.com/mozilla-services/autograph/signer/contentsignature"
 
 import (
 	"crypto"
@@ -10,7 +10,7 @@ import (
 	"hash"
 	"io"
 
-	"go.mozilla.org/autograph/signer"
+	"github.com/mozilla-services/autograph/signer"
 
 	"github.com/pkg/errors"
 )

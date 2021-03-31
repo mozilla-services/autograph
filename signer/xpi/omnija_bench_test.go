@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"go.mozilla.org/autograph/signer"
+	"github.com/mozilla-services/autograph/signer"
 )
 
 func BenchmarkResignOmnija(b *testing.B) {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"go.mozilla.org/autograph/signer"
+	"github.com/mozilla-services/autograph/signer"
 )
 
 func TestValidateRecommendation(t *testing.T) {

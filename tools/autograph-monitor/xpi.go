@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"go.mozilla.org/autograph/signer/xpi"
+	"github.com/mozilla-services/autograph/signer/xpi"
 )
 
 func verifyXPISignature(sig string) error {

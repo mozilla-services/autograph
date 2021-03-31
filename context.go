@@ -10,7 +10,7 @@ type contextKey struct {
 	name string
 }
 
-func (k *contextKey) String() string { return "go.mozilla.org/autograph context value " + k.name }
+func (k *contextKey) String() string { return "github.com/mozilla-services/autograph context value " + k.name }
 
 var (
 	// ctxReqID is the string identifier of a request ID in a context

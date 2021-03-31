@@ -36,18 +36,18 @@ Install ltdl:
 
 Then download and build autograph:
 ```bash
-$ go get go.mozilla.org/autograph
+$ go get github.com/mozilla-services/autograph
 ```
 
 The resulting binary will be placed in `$GOPATH/bin/autograph`. To run autograph with the example conf, do:
 ```bash
-$ cd $GOPATH/src/go.mozilla.org/autograph
+$ cd $GOPATH/src/github.com/mozilla-services/autograph
 $ $GOPATH/bin/autograph -c autograph.yaml
 ```
 
 Example clients are in the `tools` directory. You can install the Go one like this:
 ```bash
-$ go get go.mozilla.org/autograph/tools/autograph-client
+$ go get github.com/mozilla-services/autograph/tools/autograph-client
 $ $GOPATH/bin/autograph-client -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu -t http://localhost:8000/sign/data -r '[{"input": "Y2FyaWJvdW1hdXJpY2UK"}]'
 2016/08/23 17:25:55 signature 0 pass
 ```

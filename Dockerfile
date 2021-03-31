@@ -22,7 +22,7 @@ ADD . /app/src/autograph
 ADD autograph.yaml /app
 ADD version.json /app
 
-RUN cd /app/src/autograph && go install go.mozilla.org/autograph
+RUN cd /app/src/autograph && go install .
 
 USER app
 WORKDIR /app

@@ -12,7 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"go.mozilla.org/autograph/signer"
+	"github.com/mozilla-services/autograph/signer"
 )
 
 const (

@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"go.mozilla.org/autograph/signer"
+	"github.com/mozilla-services/autograph/signer"
 )
 
 func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *GPG2Signer {

@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-PACKAGE_NAMES := $(shell go list go.mozilla.org/autograph/...|grep -v tools | sed -e :a -e '$!N; s/\n/ /; ta')
+PACKAGE_NAMES := $(shell go list github.com/mozilla-services/autograph/...|grep -v tools | sed -e :a -e '$!N; s/\n/ /; ta')
 
 all: generate test vet lint install
 
@@ -28,7 +28,7 @@ install-go-mod-upgrade:
 install-dev-deps: install-golint install-cover install-goveralls install-go-mod-upgrade
 
 install:
-	go install go.mozilla.org/autograph
+	go install github.com/mozilla-services/autograph
 
 vendor:
 	go-mod-upgrade
@@ -59,7 +59,7 @@ fmt-fix:
 	gofmt -w tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
 benchmarkxpi:
-	go test -run=XXX -benchtime=15s -bench=. -v -cpuprofile cpu.out go.mozilla.org/autograph/signer/xpi ;\
+	go test -run=XXX -benchtime=15s -bench=. -v -cpuprofile cpu.out github.com/mozilla-services/autograph/signer/xpi ;\
 
 showbenchmarkxpi:
 	go tool pprof -web cpu.out

@@ -19,7 +19,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	"github.com/mozilla-services/autograph/tools/autograph-monitor/mock_main"
-	"go.mozilla.org/autograph/formats"
+	"github.com/mozilla-services/autograph/formats"
 )
 
 // helper funcs  -----------------------------------------------------------------

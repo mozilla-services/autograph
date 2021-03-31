@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"go.mozilla.org/autograph/signer"
+	"github.com/mozilla-services/autograph/signer"
 	"go.mozilla.org/cose"
 )
 
