@@ -99,11 +99,11 @@ type of signing, for example:
 
 .. _`Firefox Content-Signature`: http://wiki.mozilla.org/Security/Content-Signature
 
-.. _`content-signature signer's README`: https://github.com/mozilla-services/autograph/blob/master/signer/contentsignature/README.rst
+.. _`content-signature signer's README`: https://github.com/mozilla-services/autograph/blob/main/signer/contentsignature/README.rst
 
 .. _`Add-ons/Extension Signing`: https://wiki.mozilla.org/Add-ons/Extension_Signing
 
-.. _`xpi signer's README`: https://github.com/mozilla-services/autograph/blob/master/signer/xpi/README.rst
+.. _`xpi signer's README`: https://github.com/mozilla-services/autograph/blob/main/signer/xpi/README.rst
 
 Signers can implement three interfaces: `FileSigner`, `DataSigner` and
 `HashSigner`, which correspond to the endpoints `/sign/file`, `/sign/data` and

@@ -7,7 +7,7 @@ set -e
 
 FENNEC_NIGHTLY_URL=https://archive.mozilla.org/pub/mobile/nightly/2018/10/2018-10-01-10-01-42-mozilla-central-android-api-16/fennec-64.0a1.multi.android-arm.apk
 FENNEC_BETA_URL=https://archive.mozilla.org/pub/mobile/releases/64.0b9/android-api-16/en-US/fennec-64.0b9.en-US.android-arm.apk
-ALIGNED_URL=https://raw.githubusercontent.com/mozilla-services/autograph/master/signer/apk/aligned-two-files.apk
+ALIGNED_URL=https://raw.githubusercontent.com/mozilla-services/autograph/main/signer/apk/aligned-two-files.apk
 FOCUS_LATEST_URL=https://archive.mozilla.org/pub/android/focus/latest/Focus-arm.apk
 
 wget -t 5 $FENNEC_NIGHTLY_URL $FENNEC_BETA_URL $ALIGNED_URL $FOCUS_LATEST_URL
