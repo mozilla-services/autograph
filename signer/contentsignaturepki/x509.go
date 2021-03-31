@@ -9,9 +9,9 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/mozilla-services/autograph/database"
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
-	"go.mozilla.org/autograph/database"
-	"go.mozilla.org/autograph/signer"
 )
 
 // findAndSetEE searches the database for an end-entity key that is currently

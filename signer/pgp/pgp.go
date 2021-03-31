@@ -3,8 +3,8 @@ package pgp
 import (
 	"bytes"
 
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
-	"go.mozilla.org/autograph/signer"
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/armor"
 )

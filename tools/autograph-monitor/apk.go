@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"go.mozilla.org/autograph/signer/apk"
+	"github.com/mozilla-services/autograph/signer/apk"
 )
 
 func verifyAPKSignature(sig string) error {

@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
-	"go.mozilla.org/autograph/signer"
 )
 
 const (

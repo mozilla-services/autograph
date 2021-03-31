@@ -1,7 +1,7 @@
 package apk2
 
 import (
-	"go.mozilla.org/autograph/signer"
+	"github.com/mozilla-services/autograph/signer"
 	"io/ioutil"
 	"os"
 	"os/exec"

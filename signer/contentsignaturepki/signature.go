@@ -1,4 +1,4 @@
-package contentsignaturepki // import "go.mozilla.org/autograph/signer/contentsignaturepki"
+package contentsignaturepki // import "github.com/mozilla-services/autograph/signer/contentsignaturepki"
 import (
 	"crypto/ecdsa"
 	"encoding/base64"

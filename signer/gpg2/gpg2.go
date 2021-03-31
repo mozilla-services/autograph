@@ -10,9 +10,9 @@ import (
 	"regexp"
 	"sync"
 
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"go.mozilla.org/autograph/signer"
 )
 
 const (

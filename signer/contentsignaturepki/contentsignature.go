@@ -1,4 +1,4 @@
-package contentsignaturepki // import "go.mozilla.org/autograph/signer/contentsignaturepki"
+package contentsignaturepki // import "github.com/mozilla-services/autograph/signer/contentsignaturepki"
 
 import (
 	"crypto"
@@ -12,8 +12,8 @@ import (
 	"io"
 	"time"
 
-	"go.mozilla.org/autograph/database"
-	"go.mozilla.org/autograph/signer"
+	"github.com/mozilla-services/autograph/database"
+	"github.com/mozilla-services/autograph/signer"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"

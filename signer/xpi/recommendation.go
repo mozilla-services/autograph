@@ -1,4 +1,4 @@
-package xpi // import "go.mozilla.org/autograph/signer/xpi"
+package xpi // import "github.com/mozilla-services/autograph/signer/xpi"
 
 import (
 	"encoding/json"

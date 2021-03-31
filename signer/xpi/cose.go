@@ -1,4 +1,4 @@
-package xpi // import "go.mozilla.org/autograph/signer/xpi"
+package xpi // import "github.com/mozilla-services/autograph/signer/xpi"
 
 import (
 	"bytes"
@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/cose"
 )
 

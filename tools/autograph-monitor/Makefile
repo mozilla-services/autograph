@@ -8,7 +8,7 @@ doc:
 doc-http:
 	godoc -http=:8080
 test:
-	go test -coverprofile monitor-coverage.out -covermode=count -count=1 go.mozilla.org/autograph/tools/autograph-monitor
+	go test -coverprofile monitor-coverage.out -covermode=count -count=1 github.com/mozilla-services/autograph/tools/autograph-monitor
 test-cover-report:
 	go tool cover -func=monitor-coverage.out
 test-cover-report-html:

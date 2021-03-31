@@ -4,7 +4,7 @@
 //
 // Contributor: Julien Vehent jvehent@mozilla.com [:ulfr]
 
-package signer // import "go.mozilla.org/autograph/signer"
+package signer // import "github.com/mozilla-services/autograph/signer"
 
 import (
 	"crypto"
@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"go.mozilla.org/autograph/database"
+	"github.com/mozilla-services/autograph/database"
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"

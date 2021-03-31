@@ -8,12 +8,12 @@ import (
 	"crypto/x509"
 	"hash"
 
-	"go.mozilla.org/autograph/formats"
+	"github.com/mozilla-services/autograph/formats"
 
 	"encoding/base64"
 	"testing"
 
-	"go.mozilla.org/autograph/signer"
+	"github.com/mozilla-services/autograph/signer"
 )
 
 func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *RSASigner {

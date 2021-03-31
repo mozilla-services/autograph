@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mozilla.org/autograph/formats"
-	"go.mozilla.org/autograph/signer/contentsignaturepki"
+	"github.com/mozilla-services/autograph/formats"
+	"github.com/mozilla-services/autograph/signer/contentsignaturepki"
 )
 
 // Certificates no longer in use but not yet removed from the autograph config.

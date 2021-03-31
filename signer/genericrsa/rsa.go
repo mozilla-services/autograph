@@ -11,10 +11,10 @@ import (
 	"hash"
 	"io"
 
-	"go.mozilla.org/autograph/formats"
+	"github.com/mozilla-services/autograph/formats"
 
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
-	"go.mozilla.org/autograph/signer"
 )
 
 const (

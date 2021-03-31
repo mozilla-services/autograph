@@ -1,4 +1,4 @@
-module go.mozilla.org/autograph
+module github.com/mozilla-services/autograph
 
 go 1.12
 

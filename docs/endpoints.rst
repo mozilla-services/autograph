@@ -262,7 +262,7 @@ Returns metadata about the autograph version.
 	Content-Type: text/plain; charset=utf-8
 
 	{
-	"source": "https://go.mozilla.org/autograph",
+	"source": "https://github.com/mozilla-services/autograph",
 	"version": "20160512.0-19fbb91",
 	"commit": "19fbb910e2bd81cdd71fba2d1a297852a3ca17e8",
 	"build": "https://travis-ci.org/mozilla-services/autograph"

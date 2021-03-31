@@ -1,4 +1,4 @@
-package contentsignature // import "go.mozilla.org/autograph/signer/contentsignature"
+package contentsignature // import "github.com/mozilla-services/autograph/signer/contentsignature"
 import (
 	"crypto/ecdsa"
 	"encoding/base64"

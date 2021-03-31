@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
-	"go.mozilla.org/autograph/signer"
 	"go.mozilla.org/pkcs7"
 )
 
