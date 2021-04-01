@@ -19,6 +19,10 @@ make generate test
 make -C tools/autograph-monitor test
 
 if [ "$REPORT_COVERAGE" = "true" ]; then
+    cp coverage.out combined-coverage.out
+    # skip 'mode: count' on the first line
+    tail -n +2 tools/autograph-monitor/monitor-coverage.out >> combined-coverage.out
+
     # report coverage
-    $GOPATH/bin/goveralls -coverprofile=coverage.out -service circle-ci
+    $GOPATH/bin/goveralls -coverprofile=combined-coverage.out -service circle-ci
 fi
