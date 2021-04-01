@@ -48,6 +48,7 @@ You can then place the certificate and private key in `autograph.yaml`:
 	signers:
     - id: some-android-app
       type: apk2
+      mode: v3enabled
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
@@ -58,6 +59,9 @@ You can then place the certificate and private key in `autograph.yaml`:
           MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
 		  ...
           -----END PRIVATE KEY-----
+
+Set the optional `mode` field to `v3enabled` to enable APK v3
+signatures (in addition to v1 and v2).
 
 Signature request
 -----------------
