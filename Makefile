@@ -65,7 +65,7 @@ showbenchmarkxpi:
 	go tool pprof -web cpu.out
 
 race:
-	go test -v -race $(PACKAGE_NAMES)
+	go test -race -covermode=atomic -count=1 $(PACKAGE_NAMES)
 
 staticcheck:
 	staticcheck $(PACKAGE_NAMES)

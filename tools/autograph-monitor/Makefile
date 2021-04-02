@@ -14,7 +14,7 @@ test-cover-report:
 test-cover-report-html:
 	go tool cover -html=monitor-coverage.out
 race:
-	go test -v -race -covermode=atomic -count=1 .
+	go test -race -covermode=atomic -count=1 .
 lint:
 	golint *.go
 vet:
