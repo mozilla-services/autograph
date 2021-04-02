@@ -25,14 +25,14 @@ go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f Focus-arm.apk -o fo
 go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f Focus-arm.apk -o focus-rsa.resigned.apk -k testapp-android
 
 # Sign Aligned APK with ECDSA
-go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f ../../signer/apk2/aligned-two-files.apk -o aligned-two-files.ecdsa.resigned.apk -k apk_cert_with_ecdsa_sha256
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f ../../signer/apk2/aligned-two-files.apk -o aligned-two-files.ecdsa.signed.apk -k apk_cert_with_ecdsa_sha256
 
 # Sign Aligned APK with RSA
-go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f ../../signer/apk2/aligned-two-files.apk -o aligned-two-files.rsa.resigned.apk -k testapp-android-legacy
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f ../../signer/apk2/aligned-two-files.apk -o aligned-two-files.rsa.signed.apk -k testapp-android-legacy
 
 VERIFY=${VERIFY:-"0"}
 if [ "$VERIFY" = "1" ]; then
-    for apk in $(ls *.resigned.apk); do
+    for apk in $(ls *.resigned.apk *.signed.apk); do
         echo "verifying ${apk}"
         java -jar /usr/share/java/apksigner.jar verify --verbose $apk
     done
