@@ -28,6 +28,7 @@ import (
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/apk"
+	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
@@ -582,7 +583,7 @@ func verifyAPKManifestSignature(input, sig string) error {
 	if err != nil {
 		return err
 	}
-	pkcs7Sig, err := apk.Unmarshal(sig, []byte(rawInput))
+	pkcs7Sig, err := apk2.Unmarshal(sig, []byte(rawInput))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -625,7 +626,7 @@ func verifyAPKSignature(signedAPK []byte) error {
 		}
 	}
 	// convert string format back to signature
-	sig, err := apk.Unmarshal(sigstr, sigdata)
+	sig, err := apk2.Unmarshal(sigstr, sigdata)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal signature: %v", err)
 	}

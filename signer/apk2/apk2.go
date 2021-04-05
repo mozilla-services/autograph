@@ -1,18 +1,22 @@
 package apk2
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
 	"os"
 	"os/exec"
 
 	"github.com/mozilla-services/autograph/signer"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"go.mozilla.org/pkcs7"
 )
 
 const (
@@ -152,4 +156,58 @@ func (s *APK2Signer) GetDefaultOptions() interface{} {
 // GetTestFile returns a valid test APK
 func (s *APK2Signer) GetTestFile() []byte {
 	return testAPK
+}
+
+// Signature is a PKCS7 detached signature
+type Signature struct {
+	p7       *pkcs7.PKCS7
+	Data     []byte
+	Finished bool
+}
+
+// Verify verifies an apk pkcs7 signature
+//
+// WARNING: this function does not verify the JAR manifests or
+// signature formats other than v1 JAR signing
+func (sig *Signature) Verify() error {
+	if !sig.Finished {
+		return errors.New("apk2.Verify: cannot verify unfinished signature")
+	}
+	return sig.p7.Verify()
+}
+
+// Marshal returns the base64 representation of a v1 JAR signature
+func (sig *Signature) Marshal() (string, error) {
+	if !sig.Finished {
+		return "", errors.New("apk2: cannot marshal unfinished signature")
+	}
+	if len(sig.Data) == 0 {
+		return "", errors.New("apk2: cannot marshal empty signature data")
+	}
+	return base64.StdEncoding.EncodeToString(sig.Data), nil
+}
+
+// Unmarshal takes the base64 representation of a v1 JAR PKCS7
+// detached signature and the content of the signed data, and returns
+// a PKCS7 struct
+func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
+	sig = new(Signature)
+	sig.Data, err = base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		return sig, errors.Wrap(err, "apk2.Unmarshal: failed to decode base64 signature")
+	}
+	sig.p7, err = pkcs7.Parse(sig.Data)
+	if err != nil {
+		return sig, errors.Wrap(err, "apk2.Unmarshal: failed to parse pkcs7 signature")
+	}
+	sig.p7.Content = content
+	sig.Finished = true
+	return
+}
+
+// String returns a PEM encoded PKCS7 block
+func (sig *Signature) String() string {
+	var buf bytes.Buffer
+	pem.Encode(&buf, &pem.Block{Type: "PKCS7", Bytes: sig.Data})
+	return string(buf.Bytes())
 }
