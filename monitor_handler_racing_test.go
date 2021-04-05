@@ -20,7 +20,6 @@ import (
 	"github.com/mozilla-services/autograph/signer/genericrsa"
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
-	"github.com/mozilla-services/autograph/signer/pgp"
 	"github.com/mozilla-services/autograph/signer/rsapss"
 	"github.com/mozilla-services/autograph/signer/xpi"
 	margo "go.mozilla.org/mar"
@@ -84,7 +83,7 @@ func TestMonitorPass(t *testing.T) {
 			err = verifyRsapssSignature(response.Signature, response.PublicKey)
 		case genericrsa.Type:
 			err = genericrsa.VerifyGenericRsaSignatureResponse(MonitoringInputData, response)
-		case pgp.Type, gpg2.Type:
+		case gpg2.Type:
 			// we don't verify pgp signatures. I don't feel good about this, but the openpgp
 			// package is very much a pain to deal with and requires putting the public key
 			// into a keyring to verify a signature.

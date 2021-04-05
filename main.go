@@ -38,7 +38,6 @@ import (
 	"github.com/mozilla-services/autograph/signer/genericrsa"
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
-	"github.com/mozilla-services/autograph/signer/pgp"
 	"github.com/mozilla-services/autograph/signer/rsapss"
 	"github.com/mozilla-services/autograph/signer/xpi"
 
@@ -453,11 +452,6 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 				log.Infof("Skipping signer %q from HSM", signerConf.ID)
 				continue
 			} else if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
-			}
-		case pgp.Type:
-			s, err = pgp.New(signerConf)
-			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
 		case gpg2.Type:

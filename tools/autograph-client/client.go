@@ -26,7 +26,6 @@ import (
 	"github.com/mozilla-services/autograph/signer/genericrsa"
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
-	"github.com/mozilla-services/autograph/signer/pgp"
 	"github.com/mozilla-services/autograph/signer/rsapss"
 	"github.com/mozilla-services/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
@@ -347,7 +346,7 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
-				case gpg2.Type, pgp.Type:
+				case gpg2.Type:
 					sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
 					sigData = []byte(response.Signature)
 				default:
