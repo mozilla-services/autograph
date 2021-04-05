@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 )
 
@@ -127,6 +128,58 @@ func TestSignFile(t *testing.T) {
 		}
 		t.Logf("APKSigner signature verification output:\n%s\n", out)
 	})
+}
+
+func TestMarshalEmptySignature(t *testing.T) {
+	t.Parallel()
+
+	sig := Signature{
+		Data:     []byte(""),
+		Finished: true,
+	}
+	_, err := sig.Marshal()
+	if err == nil {
+		t.Fatal("should have errored by didn't")
+	} else if err.Error() != "apk2: cannot marshal empty signature data" {
+		t.Fatalf("expected to fail marshalling empty signature but got error '%v'", err)
+	}
+}
+
+func TestUnmarshalBadSignatureBase64(t *testing.T) {
+	t.Parallel()
+
+	_, err := Unmarshal(`{{{{{`, []byte("foo"))
+	if err == nil {
+		t.Fatal("should have errored by didn't")
+	} else if !strings.HasPrefix(err.Error(), "apk2.Unmarshal: failed to decode base64 signature") {
+		t.Fatalf("expected to fail unmarshalling invalid base64 but got error '%v'", err)
+	}
+}
+
+func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
+	t.Parallel()
+
+	_, err := Unmarshal(`Y2FyaWJvdW1hdXJpY2UK`, []byte("foo"))
+	if err == nil {
+		t.Fatal("should have errored by didn't")
+	} else if !strings.HasPrefix(err.Error(), "apk2.Unmarshal: failed to parse pkcs7 signature") {
+		t.Fatalf("expected to fail parsing bad pkcs7 but got error '%v'", err)
+	}
+}
+
+func TestVerifyUnfinishedSignature(t *testing.T) {
+	t.Parallel()
+
+	sig := Signature{
+		Data:     []byte(""),
+		Finished: false,
+	}
+	err := sig.Verify()
+	if err == nil {
+		t.Fatal("should have errored by didn't")
+	} else if err.Error() != "apk2.Verify: cannot verify unfinished signature" {
+		t.Fatalf("expected to fail verify unfinished signature but got error '%v'", err)
+	}
 }
 
 var apk2signerconf = signer.Configuration{

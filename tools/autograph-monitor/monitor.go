@@ -14,7 +14,6 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/mozilla-services/autograph/formats"
-	"github.com/mozilla-services/autograph/signer/apk"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/contentsignaturepki"
@@ -179,9 +178,6 @@ func monitor() (err error) {
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature)
-		case apk.Type:
-			log.Printf("Verifying APK signature from signer %q", response.SignerID)
-			err = verifyAPKSignature(response.Signature)
 		case apk2.Type:
 			// we don't verify apk2 signatures because they can only be obtained on valid
 			// APK files, which is too big to fit in the monitoring logic

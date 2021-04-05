@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"github.com/mozilla-services/autograph/formats"
-	"github.com/mozilla-services/autograph/signer/apk"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/mar"
@@ -74,16 +73,6 @@ func TestSignaturePass(t *testing.T) {
 				formats.SignatureRequest{
 					Input: "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
 					KeyID: "appkey2",
-				},
-			},
-		},
-		{
-			// Sign an APK manifest
-			"/sign/data",
-			[]formats.SignatureRequest{
-				formats.SignatureRequest{
-					Input: "U2lnbmF0dXJlLVZlcnNpb246IDEuMApNRDUtRGlnZXN0LU1hbmlmZXN0OiA3d3RFNTF2bW00NlZQRmEvNkF0NWZ3PT0KU0hBMS1EaWdlc3QtTWFuaWZlc3Q6IEZMZEFIZHQvVjdFVHozK0JMUUtHcFFBenoyRT0KCg==",
-					KeyID: "testapp-android-legacy",
 				},
 			},
 		},
@@ -180,7 +169,7 @@ func TestSignaturePass(t *testing.T) {
 					response.PublicKey)
 			case xpi.Type:
 				err = verifyXPISignature(testcase.signaturerequests[j].Input, response.Signature)
-			case apk.Type, apk2.Type:
+			case apk2.Type:
 				if req.URL.RequestURI() == "/sign/data" {
 					// ok this is a bit of a hack but since apk signatures are really just pkcs7 we can
 					// reuse the xpi verification code here...

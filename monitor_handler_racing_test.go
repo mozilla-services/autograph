@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/mozilla-services/autograph/formats"
-	"github.com/mozilla-services/autograph/signer/apk"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/contentsignaturepki"
@@ -63,10 +62,6 @@ func TestMonitorPass(t *testing.T) {
 			err = contentsignaturepki.Verify(response.X5U, response.Signature, MonitoringInputData)
 		case xpi.Type:
 			err = verifyXPISignature(
-				base64.StdEncoding.EncodeToString(MonitoringInputData),
-				response.Signature)
-		case apk.Type:
-			err = verifyAPKManifestSignature(
 				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature)
 		case apk2.Type:

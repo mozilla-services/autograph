@@ -338,7 +338,7 @@ signers:
           -----END EC PRIVATE KEY-----
 
     - id: testapp-android-legacy
-      type: apk
+      type: apk2
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIDyTCCArGgAwIBAgIEVxuKpDANBgkqhkiG9w0BAQsFADCBlDELMAkGA1UEBhMC
@@ -393,44 +393,8 @@ signers:
           1KDtwVd+U8cK/z6UQxo8YQ==
           -----END PRIVATE KEY-----
 
-    - id: apk_cert_with_dsa_sha1
-      nopkcs7signedattributes: true
-      type: apk
-      certificate: |
-          -----BEGIN CERTIFICATE-----
-          MIIDNTCCAvOgAwIBAgIEPkN7ozALBgcqhkjOOAQDBQAwbDEQMA4GA1UEBhMHVW5r
-          bm93bjEQMA4GA1UECBMHVW5rbm93bjEQMA4GA1UEBxMHVW5rbm93bjEQMA4GA1UE
-          ChMHVW5rbm93bjEQMA4GA1UECxMHVW5rbm93bjEQMA4GA1UEAxMHVW5rbm93bjAe
-          Fw0xODEwMjUxODIxNThaFw00NjAzMTIxODIxNThaMGwxEDAOBgNVBAYTB1Vua25v
-          d24xEDAOBgNVBAgTB1Vua25vd24xEDAOBgNVBAcTB1Vua25vd24xEDAOBgNVBAoT
-          B1Vua25vd24xEDAOBgNVBAsTB1Vua25vd24xEDAOBgNVBAMTB1Vua25vd24wggG4
-          MIIBLAYHKoZIzjgEATCCAR8CgYEA/X9TgR11EilS30qcLuzk5/YRt1I870QAwx4/
-          gLZRJmlFXUAiUftZPY1Y+r/F9bow9subVWzXgTuAHTRv8mZgt2uZUKWkn5/oBHsQ
-          IsJPu6nX/rfGG/g7V+fGqKYVDwT7g/bTxR7DAjVUE1oWkTL2dfOuK2HXKu/yIgMZ
-          ndFIAccCFQCXYFCPFSMLzLKSuYKi64QL8Fgc9QKBgQD34aCF1ps93su8q1w2uFe5
-          eZSvu/o66oL5V0wLPQeCZ1FZV4661FlP5nEHEIGAtEkWcSPoTCgWE7fPCTKMyKbh
-          PBZ6i1R8jSjgo64eK7OmdZFuo38L+iE1YvH7YnoBJDvMpPG+qFGQiaiD3+Fa5Z8G
-          kotmXoB7VSVkAUw7/s9JKgOBhQACgYEAp6RH2AVNLclXnF5m4eGbzuIYGW67kYzK
-          08Qq1znWiVz0vSbkIXSxxCiSvsyuhlcxRNeAPy2eOuNyP46Ro42eOHD4fWFO+HG2
-          U5Cd5Ze6+ngGTV/knFMtQAh3vYAUCiPzvUkwmy/y3/GBuDlJaWamWIjktbxuZmCI
-          nWYHN60pC7GjITAfMB0GA1UdDgQWBBRw99lmXsOq/barDZWDCX2H+xs1GTALBgcq
-          hkjOOAQDBQADLwAwLAIUQ3+xH1ogvYhz7+8VnepK/8uktFsCFG9EIelgB9Q+XRbw
-          jDltmrkAEA+c
-          -----END CERTIFICATE-----
-      privatekey: |
-          -----BEGIN PRIVATE KEY-----
-          MIIBSwIBADCCASwGByqGSM44BAEwggEfAoGBAP1/U4EddRIpUt9KnC7s5Of2EbdS
-          PO9EAMMeP4C2USZpRV1AIlH7WT2NWPq/xfW6MPbLm1Vs14E7gB00b/JmYLdrmVCl
-          pJ+f6AR7ECLCT7up1/63xhv4O1fnxqimFQ8E+4P208UewwI1VBNaFpEy9nXzrith
-          1yrv8iIDGZ3RSAHHAhUAl2BQjxUjC8yykrmCouuEC/BYHPUCgYEA9+GghdabPd7L
-          vKtcNrhXuXmUr7v6OuqC+VdMCz0HgmdRWVeOutRZT+ZxBxCBgLRJFnEj6EwoFhO3
-          zwkyjMim4TwWeotUfI0o4KOuHiuzpnWRbqN/C/ohNWLx+2J6ASQ7zKTxvqhRkImo
-          g9/hWuWfBpKLZl6Ae1UlZAFMO/7PSSoEFgIUBKjr9eyGEjtYJ4Onyf3ITWeIHs8=
-          -----END PRIVATE KEY-----
-
     - id: legacy_apk_with_rsa
-      nopkcs7signedattributes: true
-      type: apk
+      type: apk2
       certificate: |
           -----BEGIN CERTIFICATE-----
           MIIDyTCCArGgAwIBAgIEVxuKpDANBgkqhkiG9w0BAQsFADCBlDELMAkGA1UEBhMC
@@ -1236,7 +1200,6 @@ authorizations:
           - webextensions-rsa
           - extensions-ecdsa
           - testapp-android-legacy
-          - apk_cert_with_dsa_sha1
           - legacy_apk_with_rsa
           - testapp-android
           - apk_cert_with_ecdsa_sha256

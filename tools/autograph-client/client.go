@@ -1,7 +1,6 @@
 package main
 
 import (
-	"archive/zip"
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
@@ -15,12 +14,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/mozilla-services/autograph/formats"
-	"github.com/mozilla-services/autograph/signer/apk"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/genericrsa"
@@ -64,12 +61,12 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, zipMethodOption string
-		iter, maxworkers, sa                                                                                        int
-		debug                                                                                                       bool
-		err                                                                                                         error
-		requests                                                                                                    []formats.SignatureRequest
-		algs                                                                                                        coseAlgs
+		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath string
+		iter, maxworkers, sa                                                                       int
+		debug                                                                                      bool
+		err                                                                                        error
+		requests                                                                                   []formats.SignatureRequest
+		algs                                                                                       coseAlgs
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -85,7 +82,7 @@ examples:
 	Number of signers: 1
 
 * sign an APK, returns a signed APK without compressing files in the ZIP that weren't already compressed
-	$ go run client.go -f signed.apk -o test.apk -k testapp-android -zip passthrough
+	$ go run client.go -f signed.apk -o test.apk -k testapp-android
 	$ /opt/android-sdk/build-tools/27.0.3/apksigner verify -v test.apk
 	Verifies
 	Verified using v1 scheme (JAR signing): true
@@ -140,7 +137,6 @@ examples:
 	flag.IntVar(&sa, "sa", 0, "when signing MAR hashes, sets the Signature Algorithm")
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
 	flag.StringVar(&pk7digest, "pk7digest", "", "an optional PK7 digest algorithm to use for XPI file signing, either 'sha1' (default) or 'sha256'.")
-	flag.StringVar(&zipMethodOption, "zip", "", "an optional param for APK file signing. Defaults to '' to compress all files (the other options are 'all' which does the same thing and 'passthrough' which doesn't change file compression")
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
 
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
@@ -181,19 +177,6 @@ examples:
 	if sa > 0 {
 		request.Options = mar.Options{
 			SigAlg: uint32(sa),
-		}
-	}
-
-	// if signing an APK file, set option for set files to compress
-	if zipMethodOption != "" {
-		request.Options = apk.Options{
-			ZIP: zipMethodOption,
-		}
-	}
-	// if we have a pk7digest but no cn, assume we're signing an APK
-	if pk7digest != "" && cn == "" {
-		request.Options = apk.Options{
-			PKCS7Digest: pk7digest,
 		}
 	}
 
@@ -307,12 +290,6 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
-				case apk.Type:
-					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
-					if err != nil {
-						log.Fatal(err)
-					}
-					sigStatus = verifyAPK(sigData)
 				case apk2.Type:
 					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
 					if err != nil {
@@ -352,9 +329,6 @@ examples:
 						log.Fatal(err)
 					}
 					log.Println("response written to", outfile)
-					if response.Type == apk.Type {
-						fmt.Fprintf(os.Stderr, "Don't forget to run 'zipalign -c -v 4 %s'\n", outfile)
-					}
 				}
 				if outkeyfile != "" {
 					err = ioutil.WriteFile(outkeyfile, []byte(response.PublicKey), 0644)
@@ -452,53 +426,6 @@ func verifyXPI(input []byte, req formats.SignatureRequest, resp formats.Signatur
 	default:
 		return false
 	}
-}
-
-func verifyAPK(signedAPK []byte) bool {
-	zipReader := bytes.NewReader(signedAPK)
-	r, err := zip.NewReader(zipReader, int64(len(signedAPK)))
-	if err != nil {
-		log.Fatal(err)
-	}
-	var (
-		sigstr  string
-		sigdata []byte
-	)
-	for _, f := range r.File {
-		switch f.Name {
-		case "META-INF/SIGNATURE.SF":
-			rc, err := f.Open()
-			defer rc.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-			sigdata, err = ioutil.ReadAll(rc)
-			if err != nil {
-				log.Fatal(err)
-			}
-		case "META-INF/SIGNATURE.RSA", "META-INF/SIGNATURE.DSA", "META-INF/SIGNATURE.EC":
-			rc, err := f.Open()
-			defer rc.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-			rawsig, err := ioutil.ReadAll(rc)
-			if err != nil {
-				log.Fatal(err)
-			}
-			sigstr = base64.StdEncoding.EncodeToString(rawsig)
-		}
-	}
-	// convert string format back to signature
-	sig, err := apk.Unmarshal(sigstr, sigdata)
-	if err != nil {
-		log.Fatalf("failed to unmarshal signature: %v", err)
-	}
-	// verify signature on input data
-	if sig.Verify() != nil {
-		log.Fatalf("failed to verify apk signature: %v", sig.Verify())
-	}
-	return true
 }
 
 func verifyMAR(signedMAR []byte) bool {
