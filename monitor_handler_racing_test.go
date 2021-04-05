@@ -20,7 +20,6 @@ import (
 	"github.com/mozilla-services/autograph/signer/genericrsa"
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
-	"github.com/mozilla-services/autograph/signer/rsapss"
 	"github.com/mozilla-services/autograph/signer/xpi"
 	margo "go.mozilla.org/mar"
 )
@@ -79,8 +78,6 @@ func TestMonitorPass(t *testing.T) {
 		case mar.Type:
 			err = verifyMARSignature(base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
-		case rsapss.Type:
-			err = verifyRsapssSignature(response.Signature, response.PublicKey)
 		case genericrsa.Type:
 			err = genericrsa.VerifyGenericRsaSignatureResponse(MonitoringInputData, response)
 		case gpg2.Type:

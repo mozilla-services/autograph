@@ -968,7 +968,10 @@ signers:
 
     - id: dummyrsapss
       # a test 2048-bit RSA key
-      type: rsapss
+      type: genericrsa
+      mode: pss
+      hash: sha1
+      saltlength: -1
       privatekey: |
         -----BEGIN RSA PRIVATE KEY-----
         MIIEpAIBAAKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE

@@ -38,7 +38,6 @@ import (
 	"github.com/mozilla-services/autograph/signer/genericrsa"
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
-	"github.com/mozilla-services/autograph/signer/rsapss"
 	"github.com/mozilla-services/autograph/signer/xpi"
 
 	"go.mozilla.org/sops"
@@ -461,11 +460,6 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			}
 		case genericrsa.Type:
 			s, err = genericrsa.New(signerConf)
-			if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
-			}
-		case rsapss.Type:
-			s, err = rsapss.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}
