@@ -31,7 +31,6 @@ import (
 
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/signer"
-	"github.com/mozilla-services/autograph/signer/apk"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/contentsignaturepki"
@@ -432,11 +431,6 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			}
 		case xpi.Type:
 			s, err = xpi.New(signerConf, statsClient)
-			if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
-			}
-		case apk.Type:
-			s, err = apk.New(signerConf)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
 			}

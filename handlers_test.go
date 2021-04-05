@@ -27,7 +27,6 @@ import (
 
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/formats"
-	"github.com/mozilla-services/autograph/signer/apk"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/xpi"

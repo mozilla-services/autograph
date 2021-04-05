@@ -3,7 +3,7 @@ Autograph is a cryptographic signature service that implements
 [Content-Signature](signer/contentsignaturepki/README.rst),
 [XPI Signing](signer/xpi/README.rst) for Firefox web extensions,
 [MAR Signing](signer/mar/README.rst) for Firefox updates,
-[APK V1 Signing](signer/apk/README.rst) for Android,
+[APK Signing](signer/apk2/README.rst) for Android,
 [GPG2](signer/gpg2/README.rst)
 and [RSA](signer/genericrsa/README.rst).
 
@@ -60,7 +60,7 @@ $ $GOPATH/bin/autograph-client -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9
 * [Content-Signature protocol](signer/contentsignature/README.rst)
 * [XPI Signing protocol](signer/xpi/README.rst)
 * [MAR protocol](signer/mar/README.rst)
-* [APK protocol](signer/apk/README.rst)
+* [APK protocol](signer/apk2/README.rst)
 * [HSM Support](docs/hsm.rst)
 
 ## Signing
