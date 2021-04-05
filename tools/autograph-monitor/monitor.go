@@ -21,7 +21,6 @@ import (
 	"github.com/mozilla-services/autograph/signer/genericrsa"
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
-	"github.com/mozilla-services/autograph/signer/pgp"
 	"github.com/mozilla-services/autograph/signer/rsapss"
 	"github.com/mozilla-services/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
@@ -198,7 +197,7 @@ func monitor() (err error) {
 		case rsapss.Type:
 			log.Printf("Verifying RSA-PSS signature from signer %q", response.SignerID)
 			err = verifyRsapssSignature(response.Signature, response.PublicKey)
-		case pgp.Type, gpg2.Type:
+		case gpg2.Type:
 			// we don't verify pgp signatures because that requires building a keyring
 			// using the public key which is hard to do using the current openpgp package
 			log.Printf("Skipping verification of PGP signature from signer %q (we can't verify those)", response.SignerID)
