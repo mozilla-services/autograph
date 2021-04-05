@@ -1,22 +1,12 @@
 package main
 
 import (
-	"crypto/sha1"
 	"crypto/sha256"
-	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"github.com/mozilla-services/autograph/signer/rsapss"
 )
-
-func verifyRsapssSignature(b64Sig, b64Key string) error {
-	shasum := sha1.Sum(MonitoringInputData)
-	digest := base64.StdEncoding.EncodeToString(shasum[:])
-	return rsapss.VerifySignatureFromB64(digest, b64Sig, b64Key)
-}
 
 func TestMonitorNoConfig(t *testing.T) {
 	t.Parallel()

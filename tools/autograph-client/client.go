@@ -26,7 +26,6 @@ import (
 	"github.com/mozilla-services/autograph/signer/genericrsa"
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
-	"github.com/mozilla-services/autograph/signer/rsapss"
 	"github.com/mozilla-services/autograph/signer/xpi"
 	"go.mozilla.org/hawk"
 )
@@ -330,16 +329,6 @@ examples:
 					err = genericrsa.VerifyGenericRsaSignatureResponse(input, response)
 					if err != nil {
 						log.Fatal(err)
-					}
-					sigStatus = true
-					sigData, err = base64.StdEncoding.DecodeString(response.Signature)
-					if err != nil {
-						log.Fatal(err)
-					}
-				case rsapss.Type:
-					err = rsapss.VerifySignatureFromB64(requests[i].Input, response.Signature, response.PublicKey)
-					if err != nil {
-						log.Fatalf("got error verifying RSA-PSS response: %s", err)
 					}
 					sigStatus = true
 					sigData, err = base64.StdEncoding.DecodeString(response.Signature)
