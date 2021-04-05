@@ -98,3 +98,56 @@ func TestMonitorPass(t *testing.T) {
 		}
 	}
 }
+
+func TestMonitorHasSignerParameters(t *testing.T) {
+	t.Parallel()
+
+	var empty []byte
+	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	authheader := getAuthHeader(req, monitorAuthID, conf.Monitoring.Key,
+		sha256.New, id(), "application/json", empty)
+	req.Header.Set("Authorization", authheader)
+	w := httptest.NewRecorder()
+	mo.handleMonitor(w, req)
+	if w.Code != http.StatusCreated || w.Body.String() == "" {
+		t.Fatalf("failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
+	}
+
+	dec := json.NewDecoder(w.Result().Body)
+	for {
+		// verify that we got a proper signature response, with a valid signature
+		var response formats.SignatureResponse
+		if err := dec.Decode(&response); err == io.EOF {
+			break
+		} else if err != nil {
+			t.Fatal(err)
+		}
+		switch response.Type {
+		case contentsignature.Type:
+			for _, s := range ag.getSigners() {
+				if response.SignerID == s.Config().ID {
+					if response.X5U != s.Config().X5U {
+						t.Fatalf("X5U in signature response does not match its signer: expected %q got %q",
+							s.Config().X5U, response.X5U)
+					}
+					if response.Type != s.Config().Type {
+						t.Fatalf("Type of signature response does not match its signer: expected %q got %q",
+							s.Config().Type, response.Type)
+					}
+					if response.Mode != s.Config().Mode {
+						t.Fatalf("Mode of signature response does not match its signer: expected %q got %q",
+							s.Config().Mode, response.Mode)
+					}
+					if response.PublicKey != s.Config().PublicKey {
+						t.Fatalf("Public Key of signature response does not match its signer: expected %q got %q",
+							s.Config().PublicKey, response.PublicKey)
+					}
+				}
+			}
+		}
+	}
+}
