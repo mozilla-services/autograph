@@ -18,6 +18,11 @@ make generate test
 # run monitor unit tests
 make -C tools/autograph-monitor test
 
+if [ "$RACE_TEST" = "1" ]; then
+    make race
+    make -C tools/autograph-monitor race
+fi
+
 if [ "$REPORT_COVERAGE" = "true" ]; then
     cp coverage.out combined-coverage.out
     # skip 'mode: count' on the first line
