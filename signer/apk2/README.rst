@@ -77,6 +77,22 @@ v2 zip file metadata signatures and returns a zip-aligned APK:
 		}
 	]
 
+
+Per the `zipalign docs`_ callers should align their APK before signing
+and verify alignment after signing:
+
+.. code:: bash
+
+	  zipalign -v <alignment> infile outfile
+
+	  # ... call /sign/file
+
+	  zipalign -v <alignment> signedfile
+
+
+.. _`zipalign docs`: https://developer.android.com/studio/command-line/zipalign
+
+
 Signature response
 ------------------
 
