@@ -91,7 +91,7 @@ func (s *APK2Signer) Config() signer.Configuration {
 	}
 }
 
-// SignFile takes a whole APK and returns a signed and aligned version
+// SignFile signs a whole aligned APK file with v1 and v2 signatures
 func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFile, error) {
 	keyPath, err := ioutil.TempFile("", fmt.Sprintf("apk2_%s.key", s.ID))
 	if err != nil {
