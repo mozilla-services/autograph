@@ -23,6 +23,9 @@ const (
 	// Type of this signer is "apk2" represents a signer that
 	// shells out to apksigner to sign artifacts
 	Type = "apk2"
+
+	// ModeV3Enabled
+	ModeV3Enabled = "v3enabled"
 )
 
 // APK2Signer holds the configuration of the signer
@@ -35,6 +38,9 @@ type APK2Signer struct {
 	minSdkVersion string
 
 	pkcs8Key []byte
+
+	// v3Enabled indicates whether to issue v3 signatures
+	v3Enabled bool
 }
 
 // New initializes an apk signer using a configuration
@@ -50,6 +56,17 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 		return nil, errors.New("apk2: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
+
+	switch conf.Mode {
+	case ModeV3Enabled:
+		log.Printf("apk2: %s: v3 signing enabled", s.ID)
+		s.v3Enabled = true
+	case "":
+		s.v3Enabled = false
+	default:
+		return nil, fmt.Errorf("apk2: invalid mode in signer configuration (must be empty or %s)", ModeV3Enabled)
+	}
+	s.Mode = conf.Mode
 
 	if conf.PrivateKey == "" {
 		return nil, errors.New("apk2: missing private key in signer configuration")
@@ -86,6 +103,7 @@ func (s *APK2Signer) Config() signer.Configuration {
 	return signer.Configuration{
 		ID:          s.ID,
 		Type:        s.Type,
+		Mode:        s.Mode,
 		PrivateKey:  s.PrivateKey,
 		Certificate: s.Certificate,
 	}
@@ -123,14 +141,25 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	defer os.Remove(tmpAPKFile.Name())
 	ioutil.WriteFile(tmpAPKFile.Name(), file, 0755)
 
-	apkSigCmd := exec.Command("java", "-jar", "/usr/bin/apksigner", "sign",
-		"--key", keyPath.Name(),
-		"--cert", certPath.Name(),
+	args := []string{
+		"-jar", "/usr/share/java/apksigner.jar", "sign",
 		"--v1-signing-enabled", "true",
 		"--v2-signing-enabled", "true",
+	}
+	if s.v3Enabled {
+		args = append(args, "--v3-signing-enabled", "true")
+	} else {
+		// apksigner signs with v3 if the minsdk version supports it
+		args = append(args, "--v3-signing-enabled", "false")
+	}
+	args = append(args,
+		"--key", keyPath.Name(),
+		"--cert", certPath.Name(),
 		"--min-sdk-version", s.minSdkVersion,
 		tmpAPKFile.Name(),
 	)
+	apkSigCmd := exec.Command("java", args...)
+
 	out, err := apkSigCmd.CombinedOutput()
 	if err != nil {
 		return nil, errors.Wrapf(err, "apk2: failed to sign\n%s", out)

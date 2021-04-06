@@ -10,7 +10,7 @@ import (
 )
 
 func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *APK2Signer {
-	s, err := New(apk2signerconf)
+	s, err := New(conf)
 	if s == nil {
 		t.Fatalf("%s: expected non-nil signer for valid conf, but got nil signer", t.Name())
 	}
@@ -33,10 +33,32 @@ func assertNewSignerWithConfErrs(t *testing.T, invalidConf signer.Configuration)
 func TestNewSigner(t *testing.T) {
 	t.Parallel()
 
-	t.Run("valid", func(t *testing.T) {
+	t.Run("valid no mode", func(t *testing.T) {
 		t.Parallel()
 
-		_ = assertNewSignerWithConfOK(t, apk2signerconf)
+		s := assertNewSignerWithConfOK(t, apk2signerconf)
+		if s.v3Enabled {
+			t.Fatalf("%s: unexpectedly enabled v3 signing", t.Name())
+		}
+	})
+
+	t.Run("valid empty mode", func(t *testing.T) {
+		t.Parallel()
+
+		apk2signerconf.Mode = ""
+		s := assertNewSignerWithConfOK(t, apk2signerconf)
+		if s.v3Enabled {
+			t.Fatalf("%s: unexpectedly enabled v3 signing", t.Name())
+		}
+	})
+
+	t.Run("valid v3enabled mode", func(t *testing.T) {
+		t.Parallel()
+
+		s := assertNewSignerWithConfOK(t, apk2signerconfModeV3enabled)
+		if !s.v3Enabled {
+			t.Fatalf("%s: did not enable v3 signing", t.Name())
+		}
 	})
 
 	t.Run("invalid type", func(t *testing.T) {
@@ -52,6 +74,14 @@ func TestNewSigner(t *testing.T) {
 
 		invalidConf := apk2signerconf
 		invalidConf.ID = ""
+		assertNewSignerWithConfErrs(t, invalidConf)
+	})
+
+	t.Run("invalid Mode", func(t *testing.T) {
+		t.Parallel()
+
+		invalidConf := apk2signerconf
+		invalidConf.Mode = "invalidEnabled"
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
 
@@ -75,16 +105,53 @@ func TestNewSigner(t *testing.T) {
 func TestConfig(t *testing.T) {
 	t.Parallel()
 
-	s := assertNewSignerWithConfOK(t, apk2signerconf)
+	type fields struct {
+		Configuration signer.Configuration
+		minSdkVersion string
+		pkcs8Key      []byte
+		v3Enabled     bool
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   signer.Configuration
+	}{
+		{
+			name: "config without mode",
+			fields: fields{
+				Configuration: apk2signerconf,
+			},
+			want: apk2signerconf,
+		},
+		{
+			name: "config v3enabled mode",
+			fields: fields{
+				Configuration: apk2signerconfModeV3enabled,
+			},
+			want: apk2signerconfModeV3enabled,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	if s.Config().Type != apk2signerconf.Type {
-		t.Fatalf("signer type %q does not match configuration %q", s.Config().Type, apk2signerconf.Type)
-	}
-	if s.Config().ID != apk2signerconf.ID {
-		t.Fatalf("signer id %q does not match configuration %q", s.Config().ID, apk2signerconf.ID)
-	}
-	if s.Config().PrivateKey != apk2signerconf.PrivateKey {
-		t.Fatalf("signer private key %q does not match configuration %q", s.Config().PrivateKey, apk2signerconf.PrivateKey)
+			s := assertNewSignerWithConfOK(t, tt.fields.Configuration)
+			got := s.Config()
+
+			if got.ID != tt.fields.Configuration.ID {
+				t.Fatalf("signer id %q does not match configuration %q", got.ID, tt.fields.Configuration.ID)
+			}
+			if got.Type != tt.fields.Configuration.Type {
+				t.Fatalf("signer type %q does not match configuration %q", got.Type, tt.fields.Configuration.Type)
+			}
+			if got.Mode != tt.fields.Configuration.Mode {
+				t.Fatalf("signer mode %q does not match configuration %q", got.Mode, tt.fields.Configuration.Mode)
+			}
+			if got.PrivateKey != tt.fields.Configuration.PrivateKey {
+				t.Fatalf("signer private key %q does not match configuration %q", got.PrivateKey, tt.fields.Configuration.PrivateKey)
+			}
+		})
+
 	}
 }
 
@@ -121,7 +188,7 @@ func TestSignFile(t *testing.T) {
 		ioutil.WriteFile(tmpApk.Name(), signedFile, 0755)
 
 		// call apksigner to verify the APK
-		apkSignerVerifySig := exec.Command("java", "-jar", "/usr/bin/apksigner", "verify", "--verbose", tmpApk.Name())
+		apkSignerVerifySig := exec.Command("java", "-jar", "/usr/share/java/apksigner.jar", "verify", "--verbose", tmpApk.Name())
 		out, err := apkSignerVerifySig.CombinedOutput()
 		if err != nil {
 			t.Fatalf("error verifying apk signature: %s\n%s", err, out)
@@ -182,10 +249,8 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 	}
 }
 
-var apk2signerconf = signer.Configuration{
-	ID:   "apk2test",
-	Type: Type,
-	PrivateKey: `-----BEGIN PRIVATE KEY-----
+var (
+	apk2TestPrivateKeyPEM = `-----BEGIN PRIVATE KEY-----
 MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCAUrUDTS86CuqV
 ctCo8jG8SSd4W/m/A4UF0J8T+la/pnJsZt2HhQ+Ma/+HmXF8QSeVax0LfrOaRmLy
 OnfwOakP7QIGYtFsBQoLV5TWJzOr2ieonQS3h9xF865lNv+i9YPRGQT+ijjtKc49
@@ -212,8 +277,8 @@ ljx2rIvQQOw2FiuXLVKATUxo6/cre9Rgpp9lIQN2Sq6maS9ZSJeur4k8NpQFJMGT
 Q9+gIrgtjJrWCw6SHF3pIB749A1J4NMlQ+0XjPhcwSMrxxkMTwmLhgSEHZcVl3C6
 zw097oFSo1ZF/8Qpe3cb3252I9MOWKSXWTJ1BP2iVlCp0jRteFCJj8SB2CAnay9F
 1KDtwVd+U8cK/z6UQxo8YQ==
------END PRIVATE KEY-----`,
-	Certificate: `-----BEGIN CERTIFICATE-----
+-----END PRIVATE KEY-----`
+	apk2TestCert = `-----BEGIN CERTIFICATE-----
 MIIDyTCCArGgAwIBAgIEVxuKpDANBgkqhkiG9w0BAQsFADCBlDELMAkGA1UEBhMC
 VVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcx
 HDAaBgNVBAoTE01vemlsbGEgQ29ycG9yYXRpb24xHDAaBgNVBAsTE1JlbGVhc2Ug
@@ -235,5 +300,18 @@ suWrrN6ireyvv+SoVYZHP6YxfcNlOos41wPG2548gL0OirAjdc7+3FRl2WAuseY5
 i+UaOY4AHXEAn1t3FuRW4J2W4tku4XmAZys9ATX0/LVbm/R3pqGYmTAqv0SDnStM
 Gg/He+3S+8Rq0zqXAbOVJDVSTCRV5C9ZOmTWedBzaqmykScsCxLSpmEffy2RrtBU
 dNKAPtSx4o34NaTpxg==
------END CERTIFICATE-----`,
-}
+-----END CERTIFICATE-----`
+	apk2signerconf = signer.Configuration{
+		ID:          "apk2test",
+		Type:        Type,
+		PrivateKey:  apk2TestPrivateKeyPEM,
+		Certificate: apk2TestCert,
+	}
+	apk2signerconfModeV3enabled = signer.Configuration{
+		ID:          "apk2testv3enabled",
+		Type:        Type,
+		Mode:        "v3enabled",
+		PrivateKey:  apk2TestPrivateKeyPEM,
+		Certificate: apk2TestCert,
+	}
+)

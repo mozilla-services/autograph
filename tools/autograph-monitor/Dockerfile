@@ -14,9 +14,11 @@ RUN addgroup --gid 10001 app \
       --home /app --shell /sbin/nologin \
       --disabled-password app \
       && \
+      echo 'deb http://deb.debian.org/debian buster-backports main' > /etc/apt/sources.list.d/buster-backports.list && \
       apt update && \
       apt -y upgrade && \
-      apt -y install gpg apksigner && \
+      apt -y install gpg && \
+      apt -y install -t buster-backports apksigner && \
       apt-get clean
 
 USER app
