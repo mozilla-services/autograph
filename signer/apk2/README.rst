@@ -8,12 +8,13 @@ APK is Android's application packaging format. It's basically a ZIP file that
 follows the `JAR Signing`_ specification, and stores a manifest of all file checksums
 that gets signed by a private RSA key.
 
-Android also supports a `v2 Signing`_ mechanism that puts a signature in the
-metadata of the zip file.
+Android also supports `v2 Signing`_ and `v3 Signing`_ (set `mode:
+v3enabled`) that put signatures in the metadata of the zip file.
 
 
 .. _`JAR Signing`: http://download.java.net/jdk7/archive/b125/docs/technotes/tools/solaris/jarsigner.html
 .. _`v2 Signing`: https://source.android.com/security/apksigning/v2
+.. _`v3 Signing`: https://source.android.com/security/apksigning/v3
 
 Configuration
 -------------
