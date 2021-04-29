@@ -1,0 +1,56 @@
+version: 2
+updates:
+- package-ecosystem: docker
+  directory: "/"
+  schedule:
+    interval: daily
+    timezone: UCT
+  open-pull-requests-limit: 99
+  reviewers:
+  - g-k
+  assignees:
+  - g-k
+  ignore:
+  - dependency-name: golang
+    versions:
+    - ">= 1.14.a, < 1.15"
+  - dependency-name: golang
+    versions:
+    - 1.16.0.pre.buster
+    - 1.16.1.pre.buster
+    - 1.16.2.pre.buster
+- package-ecosystem: docker
+  directory: "/database"
+  schedule:
+    interval: daily
+    timezone: UCT
+  open-pull-requests-limit: 99
+  reviewers:
+  - g-k
+  ignore:
+  - dependency-name: postgres
+    versions:
+    - ">= 12.a, < 13"
+  - dependency-name: postgres
+    versions:
+    - ">= 13.a, < 14"
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: weekly
+    day: sunday
+    timezone: UCT
+  open-pull-requests-limit: 99
+  reviewers:
+  - g-k
+- package-ecosystem: gomod
+  directory: "/tools/autograph-monitor"
+  schedule:
+    interval: weekly
+    day: sunday
+    timezone: UCT
+  open-pull-requests-limit: 99
+  reviewers:
+  - g-k
+  assignees:
+  - g-k
