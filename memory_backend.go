@@ -42,7 +42,7 @@ func (b *inMemoryBackend) addAuth(auth *authorization) (err error) {
 	_, getAuthErr := b.getAuthByID(auth.ID)
 	switch getAuthErr {
 	case nil:
-		return errors.Errorf("authorization id '%s' already defined, duplicates are not permitted", auth.ID)
+		return fmt.Errorf("authorization id '%s' already defined, duplicates are not permitted", auth.ID)
 	case ErrAuthNotFound:
 		// this is what we want
 	default:
@@ -68,9 +68,9 @@ func (b *inMemoryBackend) addMonitoringAuth(monitorKey string) error {
 	switch err {
 	case ErrAuthNotFound:
 	case nil:
-		return errors.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
+		return fmt.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
 	default:
-		return errors.Errorf("error fetching 'monitor' auth: %q", err)
+		return fmt.Errorf("error fetching 'monitor' auth: %q", err)
 	}
 	return b.addAuth(&authorization{
 		ID:  monitorAuthID,
@@ -85,9 +85,9 @@ func (b *inMemoryBackend) getSignerID(userid, keyid string) (int, error) {
 	tag := getSignerIndexTag(userid, keyid)
 	if _, ok := b.signerIndex[tag]; !ok {
 		if keyid == "" {
-			return -1, errors.Errorf("%q does not have a default signing key", userid)
+			return -1, fmt.Errorf("%q does not have a default signing key", userid)
 		}
-		return -1, errors.Errorf("%s is not authorized to sign with key ID %s", userid, keyid)
+		return -1, fmt.Errorf("%s is not authorized to sign with key ID %s", userid, keyid)
 	}
 	return b.signerIndex[tag], nil
 }
@@ -125,7 +125,7 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth *authorization) error {
 	}
 	// authorization must have a signer configured
 	if len(auth.Signers) < 1 {
-		return errors.Errorf("auth id %q must have at least one signer configured", auth.ID)
+		return fmt.Errorf("auth id %q must have at least one signer configured", auth.ID)
 	}
 	// add an authid+signerid entry for each signer the auth grants access to
 	for _, sid := range auth.Signers {
@@ -141,7 +141,7 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth *authorization) error {
 		}
 
 		if !sidExists {
-			return errors.Errorf("in auth id %q, signer id %q was not found in the list of known signers", auth.ID, sid)
+			return fmt.Errorf("in auth id %q, signer id %q was not found in the list of known signers", auth.ID, sid)
 		}
 	}
 	// add a default entry for the signer, such that if none is provided in

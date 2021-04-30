@@ -48,7 +48,7 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	s = new(APK2Signer)
 
 	if conf.Type != Type {
-		return nil, errors.Errorf("apk2: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("apk2: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 

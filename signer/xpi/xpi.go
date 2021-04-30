@@ -123,7 +123,7 @@ type XPISigner struct {
 func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, err error) {
 	s = new(XPISigner)
 	if conf.Type != Type {
-		return nil, errors.Errorf("xpi: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("xpi: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 	if conf.ID == "" {
@@ -181,7 +181,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		s.OU = "Production"
 		s.EndEntityCN = "firefox-hotfix@mozilla.org"
 	default:
-		return nil, errors.Errorf("xpi: unknown signer mode %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Mode)
+		return nil, fmt.Errorf("xpi: unknown signer mode %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Mode)
 	}
 	s.Mode = conf.Mode
 	s.stats = stats
@@ -204,7 +204,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	// length
 	if issuerKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {
 		if issuerKey.N.BitLen() < rsaKeyMinSize {
-			return nil, errors.Errorf("xpi: issuer RSA key must be at least %d bits", rsaKeyMinSize)
+			return nil, fmt.Errorf("xpi: issuer RSA key must be at least %d bits", rsaKeyMinSize)
 		}
 		if conf.RSACacheConfig.StatsSampleRate < 5*time.Second {
 			log.Warnf("xpi: sampling rsa cache as rate of %q (less than 5s)", conf.RSACacheConfig.StatsSampleRate)
@@ -350,10 +350,10 @@ func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signat
 		return nil, err
 	}
 	if len(opt.COSEAlgorithms) > 0 {
-		return nil, errors.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
+		return nil, fmt.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
 	}
 	if !(opt.PKCS7Digest == "" || strings.ToUpper(opt.PKCS7Digest) == "SHA1") {
-		return nil, errors.Errorf("xpi: can only use SHA1 digests with /sign/data. Use /sign/file instead")
+		return nil, fmt.Errorf("xpi: can only use SHA1 digests with /sign/data. Use /sign/file instead")
 	}
 
 	sigBytes, err := s.signDataWithPKCS7(sigfile, cn, pkcs7.OIDDigestAlgorithmSHA1)
@@ -426,7 +426,7 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 	for _, algStr := range o.COSEAlgorithms {
 		alg := stringToCOSEAlg(algStr)
 		if alg == nil {
-			return nil, errors.Errorf("xpi: invalid or unsupported COSE algorithm %q", algStr)
+			return nil, fmt.Errorf("xpi: invalid or unsupported COSE algorithm %q", algStr)
 		}
 		algs = append(algs, alg)
 	}
@@ -442,7 +442,7 @@ func (o *Options) RecommendationStates(allowedRecommendationStates map[string]bo
 
 	for _, rec := range o.Recommendations {
 		if val, ok := allowedRecommendationStates[rec]; !(ok && val) {
-			return nil, errors.Errorf("xpi: invalid or unsupported recommendation state %q", rec)
+			return nil, fmt.Errorf("xpi: invalid or unsupported recommendation state %q", rec)
 		}
 		states = append(states, rec)
 	}
@@ -575,16 +575,16 @@ func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x50
 	}
 	// verify signature on input data
 	if sig.VerifyWithChain(truststore) != nil {
-		return errors.Errorf("failed to verify xpi signature: %v", sig.VerifyWithChain(truststore))
+		return fmt.Errorf("failed to verify xpi signature: %v", sig.VerifyWithChain(truststore))
 	}
 
 	// make sure we still have the same string representation
 	sigStr2, err := sig.Marshal()
 	if err != nil {
-		return errors.Errorf("failed to re-marshal signature: %v", err)
+		return fmt.Errorf("failed to re-marshal signature: %v", err)
 	}
 	if sigStr != sigStr2 {
-		return errors.Errorf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
+		return fmt.Errorf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
 			sigStr, sigStr2)
 	}
 
@@ -601,7 +601,7 @@ func verifyPKCS7Manifest(signedXPI signer.SignedFile) error {
 
 	expectedMetaFilesInManifest := 3 // PK7 sig, manifest, and sigFile
 	if !(numZippedFiles > numManifestEntries && numZippedFiles-numManifestEntries == expectedMetaFilesInManifest) {
-		return errors.Errorf("mismatch in # PK7 manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
+		return fmt.Errorf("mismatch in # PK7 manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
 	}
 	return nil
 }
@@ -616,7 +616,7 @@ func verifyCOSEManifest(signedXPI signer.SignedFile) error {
 
 	// 5 from PK7 sig, manifest, and sigFile; and COSE sig and manifest
 	if !(numZippedFiles > numManifestEntries && numZippedFiles-numManifestEntries == 5) {
-		return errors.Errorf("mismatch in # COSE manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
+		return fmt.Errorf("mismatch in # COSE manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
 	}
 	return nil
 }

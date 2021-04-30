@@ -34,7 +34,7 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 	s = new(MARSigner)
 
 	if conf.Type != Type {
-		return nil, errors.Errorf("mar: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("mar: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 
@@ -68,7 +68,7 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 			return nil, fmt.Errorf("mar: elliptic curve %q is not supported", pubKey.Params().Name)
 		}
 	default:
-		return nil, errors.Errorf("mar: unsupported public key type %T", s.signingKey)
+		return nil, fmt.Errorf("mar: unsupported public key type %T", s.signingKey)
 	}
 	return
 }

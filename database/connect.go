@@ -85,7 +85,7 @@ func (db *Handler) CheckConnectionContext(ctx context.Context) error {
 		return errors.Wrap(err, "Database connection failed")
 	}
 	if one != 1 {
-		return errors.Errorf("Apparently the database doesn't know the meaning of one anymore")
+		return fmt.Errorf("Apparently the database doesn't know the meaning of one anymore")
 	}
 	return nil
 }

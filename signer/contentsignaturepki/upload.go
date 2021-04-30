@@ -86,7 +86,7 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		err = errors.Errorf("failed to retrieve x5u from %s: %s", x5u, resp.Status)
+		err = fmt.Errorf("failed to retrieve x5u from %s: %s", x5u, resp.Status)
 		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)

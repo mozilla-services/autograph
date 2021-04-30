@@ -245,7 +245,7 @@ func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKe
 		unmarshaledPub = privateKey.PubKey.(*rsa.PublicKey)
 
 	default:
-		err = errors.Errorf("unsupported private key type %T", priv)
+		err = fmt.Errorf("unsupported private key type %T", priv)
 		return
 	}
 
@@ -256,7 +256,7 @@ func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKe
 	}
 	publicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
 	if len(publicKey) < 50 {
-		err = errors.Errorf("encoded public key is shorter than 50char, which is impossible: %q", publicKey)
+		err = fmt.Errorf("encoded public key is shorter than 50char, which is impossible: %q", publicKey)
 		return
 	}
 	return
@@ -397,10 +397,10 @@ func (cfg *Configuration) PrivateKeyHasPEMPrefix() bool {
 // that fails or the private key is not an HSM key handle.
 func (cfg *Configuration) CheckHSMConnection() error {
 	if cfg.PrivateKeyHasPEMPrefix() {
-		return errors.Errorf("private key for signer %s has a PEM prefix and is not an HSM key label", cfg.ID)
+		return fmt.Errorf("private key for signer %s has a PEM prefix and is not an HSM key label", cfg.ID)
 	}
 	if !cfg.isHsmAvailable {
-		return errors.Errorf("HSM is not available for signer %s", cfg.ID)
+		return fmt.Errorf("HSM is not available for signer %s", cfg.ID)
 	}
 
 	privKey, err := cfg.GetPrivateKey()
@@ -411,7 +411,7 @@ func (cfg *Configuration) CheckHSMConnection() error {
 	if GetPrivKeyHandle(privKey) != 0 {
 		return nil
 	}
-	return errors.Errorf("Unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
+	return fmt.Errorf("Unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
 }
 
 // MakeKey generates a new key of type keyTpl and returns the priv and public interfaces.
@@ -445,7 +445,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 			pub = priv.(*crypto11.PKCS11PrivateKeyRSA).PubKey.(*rsa.PublicKey)
 			return
 		default:
-			return nil, nil, errors.Errorf("making key of type %T is not supported", keyTpl)
+			return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
 		}
 	}
 	// no hsm, make keys in memory
@@ -474,7 +474,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		pub = priv.(*rsa.PrivateKey).Public()
 		return
 	default:
-		return nil, nil, errors.Errorf("making key of type %T is not supported", keyTpl)
+		return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
 	}
 }
 
@@ -503,7 +503,7 @@ type StatsClient struct {
 // NewStatsClient makes a new stats client
 func NewStatsClient(signerConfig Configuration, stats *statsd.Client) (*StatsClient, error) {
 	if stats == nil {
-		return nil, errors.Errorf("xpi: statsd client is nil. Could not create StatsClient for signer %s", signerConfig.ID)
+		return nil, fmt.Errorf("xpi: statsd client is nil. Could not create StatsClient for signer %s", signerConfig.ID)
 	}
 	return &StatsClient{
 		stats: stats,

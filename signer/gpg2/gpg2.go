@@ -57,7 +57,7 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 	s = new(GPG2Signer)
 
 	if conf.Type != Type {
-		return nil, errors.Errorf("gpg2: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("gpg2: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 

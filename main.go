@@ -280,7 +280,7 @@ func (c *configuration) loadFromFile(path string) error {
 	}
 
 	if c.Heartbeat.DBCheckTimeout == time.Duration(int64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(int64(0)) {
-		return errors.Errorf("Missing required heartbeat config section with non-zero timeouts")
+		return fmt.Errorf("Missing required heartbeat config section with non-zero timeouts")
 	}
 	return nil
 }

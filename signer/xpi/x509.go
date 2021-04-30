@@ -121,7 +121,7 @@ func (s *XPISigner) makeTemplate(cn string) *x509.Certificate {
 func (s *XPISigner) getIssuerRSAKeySize() (size int, err error) {
 	rsaKey, ok := s.issuerPublicKey.(*rsa.PublicKey)
 	if !ok {
-		err = errors.Errorf("xpi: failed to cast public key to *rsa.PublicKey to get rsa key size")
+		err = fmt.Errorf("xpi: failed to cast public key to *rsa.PublicKey to get rsa key size")
 		return
 	}
 	return rsaKey.N.BitLen(), nil
@@ -131,7 +131,7 @@ func (s *XPISigner) getIssuerRSAKeySize() (size int, err error) {
 func (s *XPISigner) getIssuerECDSACurve() (curve elliptic.Curve, err error) {
 	ecKey, ok := s.issuerPublicKey.(*ecdsa.PublicKey)
 	if !ok {
-		err = errors.Errorf("xpi: failed to cast public key to *ecdsa.PublicKey to get curve")
+		err = fmt.Errorf("xpi: failed to cast public key to *ecdsa.PublicKey to get curve")
 		return
 	}
 	return ecKey.Curve, nil
@@ -184,7 +184,7 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		}
 		eePublicKey = newKey.Public()
 	default:
-		err = errors.Errorf("xpi: unrecognized issuer key type for EE: %T", issuerKey)
+		err = fmt.Errorf("xpi: unrecognized issuer key type for EE: %T", issuerKey)
 		return
 	}
 	return
@@ -231,7 +231,7 @@ func (s *XPISigner) MakeEndEntity(cn string, coseAlg *cose.Algorithm) (eeCert *x
 		return
 	}
 	if len(derCert) == 0 {
-		err = errors.Errorf("xpi.MakeEndEntity: certificate creation failed for an unknown reason")
+		err = fmt.Errorf("xpi.MakeEndEntity: certificate creation failed for an unknown reason")
 		return
 	}
 	eeCert, err = x509.ParseCertificate(derCert)

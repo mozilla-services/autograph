@@ -68,7 +68,7 @@ func (sig *ContentSignature) Marshal() (str string, err error) {
 // Note this function does not set the X5U value of a signature.
 func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	if len(signature) < 30 {
-		return nil, errors.Errorf("contentsignature: signature cannot be shorter than 30 characters, got %d", len(signature))
+		return nil, fmt.Errorf("contentsignature: signature cannot be shorter than 30 characters, got %d", len(signature))
 	}
 	// decode the actual signature into its R and S values
 	data, err := base64.RawURLEncoding.DecodeString(signature)
@@ -84,7 +84,7 @@ func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	case P384ECDSABYTESIZE:
 		sig.Mode = P384ECDSA
 	default:
-		return nil, errors.Errorf("contentsignature: unknown signature length %d", len(data))
+		return nil, fmt.Errorf("contentsignature: unknown signature length %d", len(data))
 	}
 	sig.HashName = getSignatureHash(sig.Mode)
 	// parse the signature into R and S value by splitting it in the middle

@@ -57,7 +57,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.PrivateKey = conf.PrivateKey
 	s.X5U = conf.X5U
 	if conf.Type != Type {
-		return nil, errors.Errorf("contentsignature: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("contentsignature: invalid type %q, must be %q", conf.Type, Type)
 	}
 	if conf.ID == "" {
 		return nil, errors.New("contentsignature: missing signer ID in signer configuration")
@@ -95,7 +95,7 @@ func (s *ContentSigner) Config() signer.Configuration {
 // The returned signature is of type ContentSignature and ready to be Marshalled.
 func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Signature, error) {
 	if len(input) < 10 {
-		return nil, errors.Errorf("contentsignature: refusing to sign input data shorter than 10 bytes")
+		return nil, fmt.Errorf("contentsignature: refusing to sign input data shorter than 10 bytes")
 	}
 	alg, hash := makeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
@@ -132,7 +132,7 @@ func makeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
 // has already been hashed with something like sha384
 func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Signature, error) {
 	if len(input) != 32 && len(input) != 48 && len(input) != 64 {
-		return nil, errors.Errorf("contentsignature: refusing to sign input hash. length %d, expected 32, 48 or 64", len(input))
+		return nil, fmt.Errorf("contentsignature: refusing to sign input hash. length %d, expected 32, 48 or 64", len(input))
 	}
 	var err error
 	csig := new(ContentSignature)
