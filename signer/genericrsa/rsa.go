@@ -78,7 +78,7 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, errors.New("genericrsa: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("genericrsa: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 

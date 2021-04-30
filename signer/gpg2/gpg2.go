@@ -62,27 +62,27 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, errors.New("gpg2: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("gpg2: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 
 	if conf.PrivateKey == "" {
-		return nil, errors.New("gpg2: missing private key in signer configuration")
+		return nil, fmt.Errorf("gpg2: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
 
 	if conf.PublicKey == "" {
-		return nil, errors.New("gpg2: missing public key in signer configuration")
+		return nil, fmt.Errorf("gpg2: missing public key in signer configuration")
 	}
 	s.PublicKey = conf.PublicKey
 
 	if conf.KeyID == "" {
-		return nil, errors.New("gpg2: missing gpg key ID in signer configuration")
+		return nil, fmt.Errorf("gpg2: missing gpg key ID in signer configuration")
 	}
 	// validate KeyID since it is injected into the temp dir
 	// prefix and could be used for command injection
 	if !isAlphanumeric(conf.KeyID) {
-		return nil, errors.New("gpg2: non-alphanumeric key ID in signer configuration")
+		return nil, fmt.Errorf("gpg2: non-alphanumeric key ID in signer configuration")
 	}
 	s.KeyID = conf.KeyID
 

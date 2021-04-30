@@ -60,10 +60,10 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 		return nil, fmt.Errorf("contentsignature: invalid type %q, must be %q", conf.Type, Type)
 	}
 	if conf.ID == "" {
-		return nil, errors.New("contentsignature: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("contentsignature: missing signer ID in signer configuration")
 	}
 	if conf.PrivateKey == "" {
-		return nil, errors.New("contentsignature: missing private key in signer configuration")
+		return nil, fmt.Errorf("contentsignature: missing private key in signer configuration")
 	}
 	s.rand = conf.GetRand()
 	s.priv, s.pub, s.PublicKey, err = conf.GetKeys()
@@ -73,7 +73,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	switch s.pub.(type) {
 	case *ecdsa.PublicKey:
 	default:
-		return nil, errors.New("contentsignature: invalid private key algorithm, must be ecdsa")
+		return nil, fmt.Errorf("contentsignature: invalid private key algorithm, must be ecdsa")
 	}
 	s.Mode = s.getModeFromCurve()
 	return

@@ -39,12 +39,12 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, errors.New("mar: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("mar: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 
 	if conf.PrivateKey == "" {
-		return nil, errors.New("mar: missing private key in signer configuration")
+		return nil, fmt.Errorf("mar: missing private key in signer configuration")
 	}
 
 	s.PrivateKey = conf.PrivateKey

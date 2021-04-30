@@ -53,7 +53,7 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, errors.New("apk2: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("apk2: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 
@@ -69,7 +69,7 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	s.Mode = conf.Mode
 
 	if conf.PrivateKey == "" {
-		return nil, errors.New("apk2: missing private key in signer configuration")
+		return nil, fmt.Errorf("apk2: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
 	priv, err := conf.GetPrivateKey()
@@ -92,7 +92,7 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	}
 
 	if conf.Certificate == "" {
-		return nil, errors.New("apk2: missing public cert in signer configuration")
+		return nil, fmt.Errorf("apk2: missing public cert in signer configuration")
 	}
 	s.Certificate = conf.Certificate
 	return
@@ -200,7 +200,7 @@ type Signature struct {
 // signature formats other than v1 JAR signing
 func (sig *Signature) Verify() error {
 	if !sig.Finished {
-		return errors.New("apk2.Verify: cannot verify unfinished signature")
+		return fmt.Errorf("apk2.Verify: cannot verify unfinished signature")
 	}
 	return sig.p7.Verify()
 }
@@ -208,10 +208,10 @@ func (sig *Signature) Verify() error {
 // Marshal returns the base64 representation of a v1 JAR signature
 func (sig *Signature) Marshal() (string, error) {
 	if !sig.Finished {
-		return "", errors.New("apk2: cannot marshal unfinished signature")
+		return "", fmt.Errorf("apk2: cannot marshal unfinished signature")
 	}
 	if len(sig.Data) == 0 {
-		return "", errors.New("apk2: cannot marshal empty signature data")
+		return "", fmt.Errorf("apk2: cannot marshal empty signature data")
 	}
 	return base64.StdEncoding.EncodeToString(sig.Data), nil
 }

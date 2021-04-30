@@ -9,7 +9,7 @@ import (
 
 var (
 	// ErrNoSuitableEEFound is returned when no suitable key is found in database
-	ErrNoSuitableEEFound = errors.New("no suitable key found in database")
+	ErrNoSuitableEEFound = fmt.Errorf("no suitable key found in database")
 )
 
 // BeginEndEntityOperations creates a database transaction that locks the endentities table,

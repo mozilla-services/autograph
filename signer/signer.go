@@ -298,7 +298,7 @@ func ParsePrivateKey(keyPEMBlock []byte) (key crypto.PrivateKey, err error) {
 		keyDERBlock, keyPEMBlock = pem.Decode(keyPEMBlock)
 		if keyDERBlock == nil {
 			if len(skippedBlockTypes) == 1 && skippedBlockTypes[0] == "CERTIFICATE" {
-				return nil, errors.New("signer: found a certificate rather than a key in the PEM for the private key")
+				return nil, fmt.Errorf("signer: found a certificate rather than a key in the PEM for the private key")
 			}
 			return nil, fmt.Errorf("signer: failed to find PEM block with type ending in \"PRIVATE KEY\" in key input after skipping PEM blocks of the following types: %v", skippedBlockTypes)
 
@@ -335,7 +335,7 @@ func ParsePrivateKey(keyPEMBlock []byte) (key crypto.PrivateKey, err error) {
 	}
 	savedErr = append(savedErr, "dsa: "+err.Error())
 
-	return nil, errors.New("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for (EC)DSA. errors: " + strings.Join(savedErr, ";;; "))
+	return nil, fmt.Errorf("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for (EC)DSA. errors: " + strings.Join(savedErr, ";;; "))
 }
 
 // parseDSAPKCS8PrivateKey returns a DSA private key from its ASN.1 DER encoding
@@ -350,7 +350,7 @@ func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
 		return nil, err
 	}
 	if len(rest) > 0 {
-		return nil, errors.New("garbage after DSA key")
+		return nil, fmt.Errorf("garbage after DSA key")
 	}
 	var params dsa.Parameters
 	_, err = asn1.Unmarshal(k.Algo.Parameters.FullBytes, &params)
@@ -361,7 +361,7 @@ func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
 	// tag in front of the X value of the DSA key, but doing it manually by
 	// stripping off the first two bytes and loading it as a bigint works
 	if len(k.Priv) < 22 {
-		return nil, errors.New("DSA key is too short")
+		return nil, fmt.Errorf("DSA key is too short")
 	}
 	x := new(big.Int).SetBytes(k.Priv[2:])
 	return &dsa.PrivateKey{
@@ -425,7 +425,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 			return nil, nil, errors.Wrap(err, "failed to list PKCS#11 Slots")
 		}
 		if len(slots) < 1 {
-			return nil, nil, errors.New("failed to find a usable slot in hsm context")
+			return nil, nil, fmt.Errorf("failed to find a usable slot in hsm context")
 		}
 		keyNameBytes := []byte(keyName)
 		switch keyTplType := keyTpl.(type) {

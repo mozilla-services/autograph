@@ -127,11 +127,11 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	}
 	s.Type = conf.Type
 	if conf.ID == "" {
-		return nil, errors.New("xpi: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("xpi: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 	if conf.PrivateKey == "" {
-		return nil, errors.New("xpi: missing private key in signer configuration")
+		return nil, fmt.Errorf("xpi: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
 
@@ -143,7 +143,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 
 	block, _ := pem.Decode([]byte(conf.Certificate))
 	if block == nil {
-		return nil, errors.New("xpi: failed to parse certificate PEM")
+		return nil, fmt.Errorf("xpi: failed to parse certificate PEM")
 	}
 	s.issuerCert, err = x509.ParseCertificate(block.Bytes)
 	if err != nil {
@@ -151,13 +151,13 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	}
 	// some sanity checks for the signer cert
 	if !s.issuerCert.IsCA {
-		return nil, errors.New("xpi: signer certificate must have CA constraint set to true")
+		return nil, fmt.Errorf("xpi: signer certificate must have CA constraint set to true")
 	}
 	if time.Now().Before(s.issuerCert.NotBefore) || time.Now().After(s.issuerCert.NotAfter) {
-		return nil, errors.New("xpi: signer certificate is not currently valid")
+		return nil, fmt.Errorf("xpi: signer certificate is not currently valid")
 	}
 	if s.issuerCert.KeyUsage&x509.KeyUsageCertSign == 0 {
-		return nil, errors.New("xpi: signer certificate is missing certificate signing key usage")
+		return nil, fmt.Errorf("xpi: signer certificate is missing certificate signing key usage")
 	}
 	hasCodeSigning := false
 	for _, eku := range s.issuerCert.ExtKeyUsage {
@@ -167,7 +167,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		}
 	}
 	if !hasCodeSigning {
-		return nil, errors.New("xpi: signer certificate does not have code signing EKU")
+		return nil, fmt.Errorf("xpi: signer certificate does not have code signing EKU")
 	}
 	switch conf.Mode {
 	case ModeAddOn, ModeAddOnWithRecommendation:
@@ -414,13 +414,13 @@ func (o *Options) CN(s *XPISigner) (cn string, err error) {
 	if o != nil && o.ID != "" {
 		return o.ID, nil
 	}
-	return "", errors.New("xpi: missing common name")
+	return "", fmt.Errorf("xpi: missing common name")
 }
 
 // Algorithms validates and returns COSE algorithms
 func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 	if o == nil {
-		err = errors.New("xpi: cannot get COSE Algorithms from nil Options")
+		err = fmt.Errorf("xpi: cannot get COSE Algorithms from nil Options")
 	}
 
 	for _, algStr := range o.COSEAlgorithms {
@@ -437,7 +437,7 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 // algorithms from the request
 func (o *Options) RecommendationStates(allowedRecommendationStates map[string]bool) (states []string, err error) {
 	if o == nil {
-		err = errors.New("xpi: cannot get recommendation states from nil Options")
+		err = fmt.Errorf("xpi: cannot get recommendation states from nil Options")
 	}
 
 	for _, rec := range o.Recommendations {
@@ -453,7 +453,7 @@ func (o *Options) RecommendationStates(allowedRecommendationStates map[string]bo
 // algorithm or an error
 func (o *Options) PK7Digest() (asn1.ObjectIdentifier, error) {
 	if o == nil {
-		return nil, errors.New("xpi: Cannot get PK7Digest from nil Options")
+		return nil, fmt.Errorf("xpi: Cannot get PK7Digest from nil Options")
 	}
 	switch strings.ToUpper(o.PKCS7Digest) {
 	case "SHA256":
@@ -461,7 +461,7 @@ func (o *Options) PK7Digest() (asn1.ObjectIdentifier, error) {
 	case "SHA1":
 		return pkcs7.OIDDigestAlgorithmSHA1, nil
 	default:
-		return nil, errors.New("xpi: Failed to recognize PK7Digest from Options")
+		return nil, fmt.Errorf("xpi: Failed to recognize PK7Digest from Options")
 	}
 }
 
@@ -495,10 +495,10 @@ type Signature struct {
 // signature or COSE Sign Message
 func (sig *Signature) Marshal() (string, error) {
 	if !sig.Finished {
-		return "", errors.New("xpi: cannot marshal unfinished signature")
+		return "", fmt.Errorf("xpi: cannot marshal unfinished signature")
 	}
 	if len(sig.Data) == 0 {
-		return "", errors.New("xpi: cannot marshal empty signature data")
+		return "", fmt.Errorf("xpi: cannot marshal empty signature data")
 	}
 	return base64.StdEncoding.EncodeToString(sig.Data), nil
 }
@@ -538,7 +538,7 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 // VerifyWithChain verifies an xpi signature using the provided truststore
 func (sig *Signature) VerifyWithChain(truststore *x509.CertPool) error {
 	if !sig.Finished {
-		return errors.New("xpi.VerifyWithChain: cannot verify unfinished signature")
+		return fmt.Errorf("xpi.VerifyWithChain: cannot verify unfinished signature")
 	}
 	return sig.p7.VerifyWithChain(truststore)
 }

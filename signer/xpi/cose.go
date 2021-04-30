@@ -104,7 +104,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 		eeKey = signer.PrivateKey
 		eePublicKey = eeKey.(*ecdsa.PrivateKey).Public()
 	case nil:
-		err = errors.New("xpi: cannot generate private key for nil cose Algorithm")
+		err = fmt.Errorf("xpi: cannot generate private key for nil cose Algorithm")
 	default:
 		err = fmt.Errorf("xpi: cannot generate private key for unsupported cose Algorithm %q", coseAlg.Name)
 	}
@@ -113,7 +113,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 
 func expectHeadersAndGetKeyIDAndAlg(actual, expected *cose.Headers) (kidValue interface{}, alg *cose.Algorithm, err error) {
 	if actual == nil || expected == nil {
-		err = errors.New("xpi: cannot compare nil COSE headers")
+		err = fmt.Errorf("xpi: cannot compare nil COSE headers")
 		return
 	}
 	if len(actual.Unprotected) != len(expected.Unprotected) {
@@ -170,7 +170,7 @@ var (
 // COSE signature bytes
 func validateCOSESignatureStructureAndGetEECertAndAlg(sig *cose.Signature) (eeCert *x509.Certificate, algValue *cose.Algorithm, err error) {
 	if sig == nil {
-		err = errors.New("xpi: cannot validate nil COSE Signature")
+		err = fmt.Errorf("xpi: cannot validate nil COSE Signature")
 		return
 	}
 
@@ -201,7 +201,7 @@ func validateCOSESignatureStructureAndGetEECertAndAlg(sig *cose.Signature) (eeCe
 // values. It does not verify the COSE signature bytes
 func validateCOSEMessageStructureAndGetCertsAndAlgs(msg *cose.SignMessage) (intermediateCerts, eeCerts []*x509.Certificate, algs []*cose.Algorithm, err error) {
 	if msg == nil {
-		err = errors.New("xpi: cannot validate nil COSE SignMessage")
+		err = fmt.Errorf("xpi: cannot validate nil COSE SignMessage")
 		return
 	}
 	if msg.Payload != nil {
@@ -342,13 +342,13 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 // after generating EE certs and signatures for the COSE algorithms
 func (s *XPISigner) issueCOSESignature(cn string, manifest []byte, algs []*cose.Algorithm) (coseSig []byte, err error) {
 	if s == nil {
-		return nil, errors.New("xpi: cannot issue COSE Signature from nil XPISigner")
+		return nil, fmt.Errorf("xpi: cannot issue COSE Signature from nil XPISigner")
 	}
 	if s.issuerCert == nil {
-		return nil, errors.New("xpi: cannot issue COSE Signature when XPISigner.issuerCert is nil")
+		return nil, fmt.Errorf("xpi: cannot issue COSE Signature when XPISigner.issuerCert is nil")
 	}
 	if len(s.issuerCert.Raw) < 1100 {
-		return nil, errors.New("xpi: cannot issue COSE Signature DER encoded XPISigner.issuerCert should be at least 1100 bytes long")
+		return nil, fmt.Errorf("xpi: cannot issue COSE Signature DER encoded XPISigner.issuerCert should be at least 1100 bytes long")
 	}
 
 	var (

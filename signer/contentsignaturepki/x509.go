@@ -77,7 +77,7 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 
 	block, _ := pem.Decode([]byte(s.IssuerCert))
 	if block == nil || block.Type != "CERTIFICATE" {
-		err = errors.New("no pem block found in signer public key configuration")
+		err = fmt.Errorf("no pem block found in signer public key configuration")
 		return
 	}
 	issuer, err := x509.ParseCertificate(block.Bytes)
@@ -121,7 +121,7 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	root := x509.NewCertPool()
 	ok := root.AppendCertsFromPEM([]byte(s.caCert))
 	if !ok {
-		err = errors.New("failed to load root cert")
+		err = fmt.Errorf("failed to load root cert")
 		return
 	}
 	inter := x509.NewCertPool()
