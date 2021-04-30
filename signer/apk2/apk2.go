@@ -74,7 +74,7 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	s.PrivateKey = conf.PrivateKey
 	priv, err := conf.GetPrivateKey()
 	if err != nil {
-		return nil, errors.Wrap(err, "apk2: failed to get private key from configuration")
+		return nil, fmt.Errorf("apk2: failed to get private key from configuration: %w", err)
 	}
 	switch priv.(type) {
 	case *ecdsa.PrivateKey:
@@ -88,7 +88,7 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	//apksigner wants a pkcs8 encoded privkey
 	s.pkcs8Key, err = x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
-		return nil, errors.Wrap(err, "apk2: failed to encode private key to pkcs8")
+		return nil, fmt.Errorf("apk2: failed to encode private key to pkcs8: %w", err)
 	}
 
 	if conf.Certificate == "" {
@@ -113,22 +113,22 @@ func (s *APK2Signer) Config() signer.Configuration {
 func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFile, error) {
 	keyPath, err := ioutil.TempFile("", fmt.Sprintf("apk2_%s.key", s.ID))
 	if err != nil {
-		return nil, errors.Wrap(err, "apk2: failed to create tempfile with private key")
+		return nil, fmt.Errorf("apk2: failed to create tempfile with private key: %w", err)
 	}
 	defer os.Remove(keyPath.Name())
 	err = ioutil.WriteFile(keyPath.Name(), []byte(s.pkcs8Key), 0400)
 	if err != nil {
-		return nil, errors.Wrap(err, "apk2: failed to write private key to tempfile")
+		return nil, fmt.Errorf("apk2: failed to write private key to tempfile: %w", err)
 	}
 
 	certPath, err := ioutil.TempFile("", fmt.Sprintf("apk2_%s.cert", s.ID))
 	if err != nil {
-		return nil, errors.Wrap(err, "apk2: failed to create tempfile for input to sign")
+		return nil, fmt.Errorf("apk2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer os.Remove(certPath.Name())
 	err = ioutil.WriteFile(certPath.Name(), []byte(s.Certificate), 0400)
 	if err != nil {
-		return nil, errors.Wrap(err, "apk2: failed to write public cert to tempfile")
+		return nil, fmt.Errorf("apk2: failed to write public cert to tempfile: %w", err)
 	}
 
 	// write the input to a temp file
@@ -136,7 +136,7 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	h.Write(file)
 	tmpAPKFile, err := ioutil.TempFile("", fmt.Sprintf("apk2_input_%x.apk", h.Sum(nil)))
 	if err != nil {
-		return nil, errors.Wrap(err, "apk2: failed to create tempfile for input to sign")
+		return nil, fmt.Errorf("apk2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer os.Remove(tmpAPKFile.Name())
 	ioutil.WriteFile(tmpAPKFile.Name(), file, 0755)
@@ -162,13 +162,13 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 
 	out, err := apkSigCmd.CombinedOutput()
 	if err != nil {
-		return nil, errors.Wrapf(err, "apk2: failed to sign\n%s", out)
+		return nil, fmt.Errorf("apk2: failed to sign\n%s: %w", out, err)
 	}
 	log.Debugf("signed as:\n%s\n", string(out))
 
 	signedApk, err := ioutil.ReadFile(tmpAPKFile.Name())
 	if err != nil {
-		return nil, errors.Wrap(err, "apk2: failed to read signed file")
+		return nil, fmt.Errorf("apk2: failed to read signed file: %w", err)
 	}
 	return signer.SignedFile(signedApk), nil
 }
@@ -223,11 +223,11 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 	sig = new(Signature)
 	sig.Data, err = base64.StdEncoding.DecodeString(signature)
 	if err != nil {
-		return sig, errors.Wrap(err, "apk2.Unmarshal: failed to decode base64 signature")
+		return sig, fmt.Errorf("apk2.Unmarshal: failed to decode base64 signature: %w", err)
 	}
 	sig.p7, err = pkcs7.Parse(sig.Data)
 	if err != nil {
-		return sig, errors.Wrap(err, "apk2.Unmarshal: failed to parse pkcs7 signature")
+		return sig, fmt.Errorf("apk2.Unmarshal: failed to parse pkcs7 signature: %w", err)
 	}
 	sig.p7.Content = content
 	sig.Finished = true

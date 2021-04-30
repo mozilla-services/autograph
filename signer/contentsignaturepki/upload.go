@@ -21,7 +21,7 @@ import (
 func (s *ContentSigner) upload(data, name string) error {
 	parsedURL, err := url.Parse(s.chainUploadLocation)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse chain upload location")
+		return fmt.Errorf("failed to parse chain upload location: %w", err)
 	}
 	switch parsedURL.Scheme {
 	case "s3":
@@ -55,7 +55,7 @@ func writeLocalFile(data, name string, target *url.URL) error {
 			// create the target directory
 			err = os.MkdirAll(target.Path, 0755)
 			if err != nil {
-				return errors.Wrap(err, "failed to make directory")
+				return fmt.Errorf("failed to make directory: %w", err)
 			}
 		} else {
 			return err
@@ -70,7 +70,7 @@ func writeLocalFile(data, name string, target *url.URL) error {
 func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 	parsedURL, err := url.Parse(x5u)
 	if err != nil {
-		err = errors.Wrap(err, "failed to parse chain upload location")
+		err = fmt.Errorf("failed to parse chain upload location: %w", err)
 		return
 	}
 	c := &http.Client{}
@@ -81,7 +81,7 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 	}
 	resp, err := c.Get(x5u)
 	if err != nil {
-		err = errors.Wrap(err, "failed to retrieve x5u")
+		err = fmt.Errorf("failed to retrieve x5u: %w", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -91,19 +91,19 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		err = errors.Wrap(err, "failed to parse x5u body")
+		err = fmt.Errorf("failed to parse x5u body: %w", err)
 		return
 	}
 	// verify the chain
 	// the first cert is the end entity, then the intermediate and the root
 	block, rest := pem.Decode(body)
 	if block == nil || block.Type != "CERTIFICATE" {
-		err = errors.Wrap(err, "failed to PEM decode ee certificate from chain")
+		err = fmt.Errorf("failed to PEM decode ee certificate from chain: %w", err)
 		return
 	}
 	ee, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		err = errors.Wrap(err, "failed to parse ee certificate from chain")
+		err = fmt.Errorf("failed to parse ee certificate from chain: %w", err)
 		return
 	}
 	certs = append(certs, ee)
@@ -111,12 +111,12 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 	// the second cert is the intermediate
 	block, rest = pem.Decode(rest)
 	if block == nil || block.Type != "CERTIFICATE" {
-		err = errors.Wrap(err, "failed to PEM decode intermediate certificate from chain")
+		err = fmt.Errorf("failed to PEM decode intermediate certificate from chain: %w", err)
 		return
 	}
 	inter, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		err = errors.Wrap(err, "failed to parse intermediate issuer certificate from chain")
+		err = fmt.Errorf("failed to parse intermediate issuer certificate from chain: %w", err)
 		return
 	}
 	inters := x509.NewCertPool()
@@ -126,12 +126,12 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 	// the third and last cert is the root
 	block, rest = pem.Decode(rest)
 	if block == nil || block.Type != "CERTIFICATE" {
-		err = errors.Wrap(err, "failed to PEM decode root certificate from chain")
+		err = fmt.Errorf("failed to PEM decode root certificate from chain: %w", err)
 		return
 	}
 	root, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		err = errors.Wrap(err, "failed to parse root certificate from chain")
+		err = fmt.Errorf("failed to parse root certificate from chain: %w", err)
 		return
 	}
 	if len(rest) != 0 {
@@ -149,7 +149,7 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 	}
 	_, err = ee.Verify(opts)
 	if err != nil {
-		err = errors.Wrap(err, "failed to verify certificate chain")
+		err = fmt.Errorf("failed to verify certificate chain: %w", err)
 		return
 	}
 	return

@@ -22,13 +22,13 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 	// if a db is present, first create a db transaction to lock the row for update
 	tx, err := db.Begin()
 	if err != nil {
-		err = errors.Wrap(err, "failed to create transaction")
+		err = fmt.Errorf("failed to create transaction: %w", err)
 		return nil, err
 	}
 	// lock the table
 	_, err = tx.Exec("LOCK TABLE endentities_lock IN ACCESS EXCLUSIVE MODE")
 	if err != nil {
-		err = errors.Wrap(err, "failed to lock endentities table")
+		err = fmt.Errorf("failed to lock endentities table: %w", err)
 		tx.Rollback()
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 		true).Scan(&id)
 	if err != nil {
 		tx.Rollback()
-		err = errors.Wrap(err, "failed to lock endentities table")
+		err = fmt.Errorf("failed to lock endentities table: %w", err)
 		return nil, err
 	}
 	return &Transaction{tx, id}, nil
@@ -72,14 +72,14 @@ func (tx *Transaction) InsertEE(x5u, label, signerID string, hsmHandle uint) (er
 				VALUES ($1, $2, $3, $4, $5)`, x5u, label, signerID, hsmHandle, true)
 	if err != nil {
 		tx.Rollback()
-		err = errors.Wrap(err, "failed to insert new key in database")
+		err = fmt.Errorf("failed to insert new key in database: %w", err)
 		return
 	}
 	// mark all other keys for this signer as no longer current
 	_, err = tx.Exec("UPDATE endentities SET is_current=FALSE WHERE signer_id=$1 and label!=$2",
 		signerID, label)
 	if err != nil {
-		err = errors.Wrap(err, "failed to update is_current status of keys in database")
+		err = fmt.Errorf("failed to update is_current status of keys in database: %w", err)
 		tx.Rollback()
 		return
 	}
@@ -90,13 +90,13 @@ func (tx *Transaction) InsertEE(x5u, label, signerID string, hsmHandle uint) (er
 func (tx *Transaction) End() error {
 	_, err := tx.Exec("UPDATE endentities_lock SET is_locked=FALSE, freed_at=NOW() WHERE id=$1", tx.ID)
 	if err != nil {
-		err = errors.Wrap(err, "failed to update is_current status of keys in database")
+		err = fmt.Errorf("failed to update is_current status of keys in database: %w", err)
 		tx.Rollback()
 		return err
 	}
 	err = tx.Commit()
 	if err != nil {
-		err = errors.Wrap(err, "failed to commit transaction in database")
+		err = fmt.Errorf("failed to commit transaction in database: %w", err)
 		tx.Rollback()
 		return err
 	}

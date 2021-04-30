@@ -73,7 +73,7 @@ func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	// decode the actual signature into its R and S values
 	data, err := base64.RawURLEncoding.DecodeString(signature)
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature")
+		return nil, fmt.Errorf("contentsignature: %w", err)
 	}
 	// Use the length to determine the mode
 	sig = new(ContentSignature)

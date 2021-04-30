@@ -145,22 +145,22 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		var size int
 		size, err = s.getIssuerRSAKeySize()
 		if err != nil {
-			err = errors.Wrapf(err, "xpi: failed to get rsa key size")
+			err = fmt.Errorf("xpi: failed to get rsa key size: %w", err)
 			return
 		}
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {
-			err = errors.Wrapf(err, "xpi: failed to generate rsa private key of size %d", size)
+			err = fmt.Errorf("xpi: failed to generate rsa private key of size %d: %w", size, err)
 			return
 		}
 		if eeKey == nil {
-			err = errors.Wrapf(err, "xpi: failed to get rsa private key of size %d", size)
+			err = fmt.Errorf("xpi: failed to get rsa private key of size %d: %w", size, err)
 			return
 		}
 
 		newKey, ok := eeKey.(*rsa.PrivateKey)
 		if !ok {
-			err = errors.Wrapf(err, "xpi: failed to cast generated key of size %d to *rsa.PrivateKey", size)
+			err = fmt.Errorf("xpi: failed to cast generated key of size %d to *rsa.PrivateKey: %w", size, err)
 			return
 		}
 		eePublicKey = newKey.Public()
@@ -168,18 +168,18 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 		var curve elliptic.Curve
 		curve, err = s.getIssuerECDSACurve()
 		if err != nil {
-			err = errors.Wrapf(err, "xpi: failed to get ecdsa curve")
+			err = fmt.Errorf("xpi: failed to get ecdsa curve: %w", err)
 			return
 		}
 		eeKey, err = ecdsa.GenerateKey(curve, s.rand)
 		if err != nil {
-			err = errors.Wrapf(err, "xpi: failed to generate ecdsa private key on curve %q", curve.Params().Name)
+			err = fmt.Errorf("xpi: failed to generate ecdsa private key on curve %q: %w", curve.Params().Name, err)
 			return
 		}
 
 		newKey, ok := eeKey.(*ecdsa.PrivateKey)
 		if !ok {
-			err = errors.Wrapf(err, "xpi: failed to cast generated key on curve %q to *ecdsa.PrivateKey", curve.Params().Name)
+			err = fmt.Errorf("xpi: failed to cast generated key on curve %q to *ecdsa.PrivateKey: %w", curve.Params().Name, err)
 			return
 		}
 		eePublicKey = newKey.Public()
@@ -214,20 +214,20 @@ func (s *XPISigner) MakeEndEntity(cn string, coseAlg *cose.Algorithm) (eeCert *x
 	if coseAlg == nil {
 		eeKey, eePublicKey, err = s.generateIssuerEEKeyPair()
 		if err != nil {
-			err = errors.Wrapf(err, "xpi.MakeEndEntity: error generating key matching issuer")
+			err = fmt.Errorf("xpi.MakeEndEntity: error generating key matching issuer: %w", err)
 			return
 		}
 	} else {
 		eeKey, eePublicKey, err = s.generateCOSEKeyPair(coseAlg)
 		if err != nil {
-			err = errors.Wrapf(err, "xpi.MakeEndEntity: error generating key matching COSE Algorithm type %q", coseAlg.Name)
+			err = fmt.Errorf("xpi.MakeEndEntity: error generating key matching COSE Algorithm type %q: %w", coseAlg.Name, err)
 			return
 		}
 	}
 
 	derCert, err = x509.CreateCertificate(s.rand, template, s.issuerCert, eePublicKey, s.issuerKey)
 	if err != nil {
-		err = errors.Wrapf(err, "xpi.MakeEndEntity: failed to create certificate")
+		err = fmt.Errorf("xpi.MakeEndEntity: failed to create certificate: %w", err)
 		return
 	}
 	if len(derCert) == 0 {
@@ -236,7 +236,7 @@ func (s *XPISigner) MakeEndEntity(cn string, coseAlg *cose.Algorithm) (eeCert *x
 	}
 	eeCert, err = x509.ParseCertificate(derCert)
 	if err != nil {
-		err = errors.Wrapf(err, "xpi.MakeEndEntity: certificate parsing failed")
+		err = fmt.Errorf("xpi.MakeEndEntity: certificate parsing failed: %w", err)
 	}
 	return
 }

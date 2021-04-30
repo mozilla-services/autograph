@@ -68,7 +68,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.rand = conf.GetRand()
 	s.priv, s.pub, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature: failed to retrieve signer")
+		return nil, fmt.Errorf("contentsignature: failed to retrieve signer: %w", err)
 	}
 	switch s.pub.(type) {
 	case *ecdsa.PublicKey:
@@ -145,12 +145,12 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 
 	asn1Sig, err := s.priv.(crypto.Signer).Sign(rand.Reader, input, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature: failed to sign hash")
+		return nil, fmt.Errorf("contentsignature: failed to sign hash: %w", err)
 	}
 	var ecdsaSig ecdsaAsn1Signature
 	_, err = asn1.Unmarshal(asn1Sig, &ecdsaSig)
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature: failed to parse signature")
+		return nil, fmt.Errorf("contentsignature: failed to parse signature: %w", err)
 	}
 	csig.R = ecdsaSig.R
 	csig.S = ecdsaSig.S

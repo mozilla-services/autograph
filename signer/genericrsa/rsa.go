@@ -102,7 +102,7 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 	s.rng = conf.GetRand()
 	s.key, s.pubKey, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrapf(err, "genericrsa: error fetching key for signer %q", s.ID)
+		return nil, fmt.Errorf("genericrsa: error fetching key for signer %q: %w", s.ID, err)
 	}
 	_, ok := s.pubKey.(*rsa.PublicKey)
 	if !ok {
@@ -172,7 +172,7 @@ func (s *RSASigner) SignHash(digest []byte, options interface{}) (signer.Signatu
 	}
 	sigBytes, err := s.key.(crypto.Signer).Sign(s.rng, digest, s.sigOpts)
 	if err != nil {
-		return nil, errors.Wrap(err, "genericrsa: error signing hash")
+		return nil, fmt.Errorf("genericrsa: error signing hash: %w", err)
 	}
 	sig := new(Signature)
 	sig.Data = sigBytes
@@ -255,20 +255,20 @@ func VerifyGenericRsaSignatureResponse(input []byte, sr formats.SignatureRespons
 	}
 	sig, err := Unmarshal(sr.Signature)
 	if err != nil {
-		return errors.Wrap(err, "genericrsa: failed to unmarshal rsa signature")
+		return fmt.Errorf("genericrsa: failed to unmarshal rsa signature: %w", err)
 	}
 	keyBytes, err := base64.StdEncoding.DecodeString(sr.PublicKey)
 	if err != nil {
-		return errors.Wrap(err, "genericrsa: failed to decode public key")
+		return fmt.Errorf("genericrsa: failed to decode public key: %w", err)
 	}
 	keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
 	if err != nil {
-		return errors.Wrap(err, "genericrsa: failed to parse pkix public key")
+		return fmt.Errorf("genericrsa: failed to parse pkix public key: %w", err)
 	}
 	pubKey := keyInterface.(*rsa.PublicKey)
 	err = VerifySignature(input, sig.(*Signature).Data, pubKey, sr.SignerOpts, sr.Mode)
 	if err != nil {
-		return errors.Wrap(err, "genericrsa: failed to verify signature")
+		return fmt.Errorf("genericrsa: failed to verify signature: %w", err)
 	}
 	return nil
 }

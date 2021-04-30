@@ -78,11 +78,11 @@ func (r *Recommendation) Validate(allowedRecommendationStates map[string]bool) e
 	}
 	err := validateValidityTime(r.Validity["not_before"])
 	if err != nil {
-		return errors.Wrapf(err, "xpi: validity not_before is invalid")
+		return fmt.Errorf("xpi: validity not_before is invalid: %w", err)
 	}
 	err = validateValidityTime(r.Validity["not_after"])
 	if err != nil {
-		return errors.Wrapf(err, "xpi: validity not_after is invalid")
+		return fmt.Errorf("xpi: validity not_after is invalid: %w", err)
 	}
 	if r.SchemaVersion != 1 {
 		return fmt.Errorf("xpi: recommendation schema_version %d must be 1", r.SchemaVersion)
@@ -94,7 +94,7 @@ func (r *Recommendation) Validate(allowedRecommendationStates map[string]bool) e
 func UnmarshalRecommendation(input []byte) (r *Recommendation, err error) {
 	err = json.Unmarshal(input, &r)
 	if err != nil {
-		return nil, errors.Wrapf(err, "xpi: failed to unmarshal recommendation from JSON")
+		return nil, fmt.Errorf("xpi: failed to unmarshal recommendation from JSON: %w", err)
 	}
 	return r, nil
 }
@@ -103,7 +103,7 @@ func UnmarshalRecommendation(input []byte) (r *Recommendation, err error) {
 func (r *Recommendation) Marshal() ([]byte, error) {
 	buf, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.Wrapf(err, "xpi: failed to marshal recommendation to JSON")
+		return nil, fmt.Errorf("xpi: failed to marshal recommendation to JSON: %w", err)
 	}
 	return buf, nil
 }
@@ -117,7 +117,7 @@ func (s *XPISigner) makeRecommendationFile(opt Options, cn string) ([]byte, erro
 
 	recommendedStatesRequested, err := opt.RecommendationStates(s.recommendationAllowedStates)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: error parsing recommendations from options")
+		return nil, fmt.Errorf("xpi: error parsing recommendations from options: %w", err)
 	}
 
 	now := time.Now().UTC().Truncate(time.Second)
@@ -127,7 +127,7 @@ func (s *XPISigner) makeRecommendationFile(opt Options, cn string) ([]byte, erro
 	rec := Recommend(cn, recommendedStatesRequested, notBefore, notAfter)
 	err = rec.Validate(s.recommendationAllowedStates)
 	if err != nil {
-		return nil, errors.Wrapf(err, "xpi: recommendation validation failed")
+		return nil, fmt.Errorf("xpi: recommendation validation failed: %w", err)
 	}
 	return rec.Marshal()
 }
@@ -138,15 +138,15 @@ func (s *XPISigner) makeRecommendationFile(opt Options, cn string) ([]byte, erro
 func (s *XPISigner) ReadAndVerifyRecommendationFile(signedXPI []byte) (recFileBytes []byte, err error) {
 	recFileBytes, err = readFileFromZIP(signedXPI, s.recommendationFilePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to read recommendation file from %q", s.recommendationFilePath)
+		return nil, fmt.Errorf("failed to read recommendation file from %q: %w", s.recommendationFilePath, err)
 	}
 	rec, err := UnmarshalRecommendation(recFileBytes)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to unmarshal recommendation file")
+		return nil, fmt.Errorf("failed to unmarshal recommendation file: %w", err)
 	}
 	err = rec.Validate(s.recommendationAllowedStates)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to validate recommendation")
+		return nil, fmt.Errorf("failed to validate recommendation: %w", err)
 	}
 	return recFileBytes, nil
 }

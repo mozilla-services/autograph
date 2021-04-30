@@ -251,7 +251,7 @@ func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKe
 
 	publicKeyBytes, err = x509.MarshalPKIXPublicKey(unmarshaledPub)
 	if err != nil {
-		err = errors.Wrap(err, "failed to asn1 marshal %T public key")
+		err = fmt.Errorf("failed to asn1 marshal %T public key: %w", err)
 		return
 	}
 	publicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
@@ -405,7 +405,7 @@ func (cfg *Configuration) CheckHSMConnection() error {
 
 	privKey, err := cfg.GetPrivateKey()
 	if err != nil {
-		return errors.Wrapf(err, "error fetching private key for signer %s", cfg.ID)
+		return fmt.Errorf("error fetching private key for signer %s: %w", cfg.ID, err)
 	}
 	// returns 0 if the key is not stored in the hsm
 	if GetPrivKeyHandle(privKey) != 0 {
@@ -422,7 +422,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		var slots []uint
 		slots, err = cfg.hsmCtx.GetSlotList(true)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to list PKCS#11 Slots")
+			return nil, nil, fmt.Errorf("failed to list PKCS#11 Slots: %w", err)
 		}
 		if len(slots) < 1 {
 			return nil, nil, fmt.Errorf("failed to find a usable slot in hsm context")
@@ -432,7 +432,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		case *ecdsa.PublicKey:
 			priv, err = crypto11.GenerateECDSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keyTplType)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in hsm")
+				return nil, nil, fmt.Errorf("failed to generate ecdsa key in hsm: %w", err)
 			}
 			pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).PubKey.(*ecdsa.PublicKey)
 			return
@@ -440,7 +440,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 			keySize := keyTplType.Size()
 			priv, err = crypto11.GenerateRSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keySize)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "failed to generate rsa key in hsm")
+				return nil, nil, fmt.Errorf("failed to generate rsa key in hsm: %w", err)
 			}
 			pub = priv.(*crypto11.PKCS11PrivateKeyRSA).PubKey.(*rsa.PublicKey)
 			return
@@ -461,7 +461,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 				keyTpl.(*ecdsa.PublicKey).Params().Name)
 		}
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in memory")
+			return nil, nil, fmt.Errorf("failed to generate ecdsa key in memory: %w", err)
 		}
 		pub = priv.(*ecdsa.PrivateKey).Public()
 		return
@@ -469,7 +469,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		keySize := keyTplType.Size()
 		priv, err = rsa.GenerateKey(rand.Reader, keySize)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to generate rsa key in memory")
+			return nil, nil, fmt.Errorf("failed to generate rsa key in memory: %w", err)
 		}
 		pub = priv.(*rsa.PrivateKey).Public()
 		return

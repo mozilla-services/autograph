@@ -451,7 +451,7 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 	zipReader := bytes.NewReader(signedXPI)
 	r, err := zip.NewReader(zipReader, int64(len(signedXPI)))
 	if err != nil {
-		return nil, errors.Wrap(err, "Error reading ZIP")
+		return nil, fmt.Errorf("Error reading ZIP: %w", err)
 	}
 
 	for _, f := range r.File {
@@ -459,11 +459,11 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
-				return nil, errors.Wrapf(err, "Error opening file %q in ZIP", filename)
+				return nil, fmt.Errorf("Error opening file %q in ZIP: %w", filename, err)
 			}
 			data, err := ioutil.ReadAll(rc)
 			if err != nil {
-				return nil, errors.Wrapf(err, "Error reading file %q in ZIP", filename)
+				return nil, fmt.Errorf("Error reading file %q in ZIP: %w", filename, err)
 			}
 			return data, nil
 		}
@@ -483,18 +483,18 @@ func readXPIContentsToMap(signedXPI []byte) (map[string][]byte, error) {
 	zipReader := bytes.NewReader(signedXPI)
 	r, err := zip.NewReader(zipReader, int64(len(signedXPI)))
 	if err != nil {
-		return nil, errors.Wrap(err, "Error reading ZIP")
+		return nil, fmt.Errorf("Error reading ZIP: %w", err)
 	}
 
 	for _, f := range r.File {
 		rc, err := f.Open()
 		defer rc.Close()
 		if err != nil {
-			return nil, errors.Wrapf(err, "Error opening file %q in ZIP", f.Name)
+			return nil, fmt.Errorf("Error opening file %q in ZIP: %w", f.Name, err)
 		}
 		data, err := ioutil.ReadAll(rc)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Error reading file %q in ZIP", f.Name)
+			return nil, fmt.Errorf("Error reading file %q in ZIP: %w", f.Name, err)
 		}
 		if _, ok = filenameToContents[f.Name]; ok {
 			return nil, fmt.Errorf("%q occurs twice in ZIP", f.Name)
@@ -585,10 +585,10 @@ func verifyAndCountManifest(signedXPI []byte, manifestPath string) (int, int, er
 
 	filenameToContents, err = readXPIContentsToMap(signedXPI)
 	if err != nil {
-		return -1, -1, errors.Wrapf(err, "error reading XPI contents to map")
+		return -1, -1, fmt.Errorf("error reading XPI contents to map: %w", err)
 	}
 	if manifestBytes, ok = filenameToContents[manifestPath]; !ok {
-		return -1, -1, errors.Wrapf(err, "did not find manifest %q in zip", manifestPath)
+		return -1, -1, fmt.Errorf("did not find manifest %q in zip: %w", manifestPath, err)
 	}
 
 	for _, entry := range bytes.Split(manifestBytes, []byte("\n\n")) {
@@ -599,7 +599,7 @@ func verifyAndCountManifest(signedXPI []byte, manifestPath string) (int, int, er
 		}
 		filename, fileSHA1, fileSHA256, err := parseManifestEntry(entry)
 		if err != nil {
-			return -1, -1, errors.Wrapf(err, "failed to parse manifest entry: %q", entry)
+			return -1, -1, fmt.Errorf("failed to parse manifest entry: %q: %w", entry, err)
 		}
 		if filename == "" || fileSHA1 == nil || fileSHA256 == nil {
 			return -1, -1, fmt.Errorf("failed to parse manifest entry: %q", entry)
@@ -617,7 +617,7 @@ func verifyAndCountManifest(signedXPI []byte, manifestPath string) (int, int, er
 
 		err = checkSHAsums(contents, fileSHA1, fileSHA256)
 		if err != nil {
-			return -1, -1, errors.Wrapf(err, "file %q hash mistmatch between manifest and computed", filename)
+			return -1, -1, fmt.Errorf("file %q hash mistmatch between manifest and computed: %w", filename, err)
 		}
 
 	}
