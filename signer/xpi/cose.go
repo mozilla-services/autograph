@@ -80,7 +80,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 		case *rsa.PublicKey:
 			pubKeySize, getKeySizeErr := s.getIssuerRSAKeySize()
 			if err != nil { // should never occur since we just checked it's type *rsa.PublicKey
-				err = fmt.Errorf(getKeySizeErr, "xpi: error determining issuerPublicKey rsa key size for key type %T", key)
+				err = fmt.Errorf("xpi: error determining issuerPublicKey rsa key size for key type %T: %w", key, getKeySizeErr)
 				return
 			}
 			if pubKeySize > size {
@@ -228,7 +228,7 @@ func validateCOSEMessageStructureAndGetCertsAndAlgs(msg *cose.SignMessage) (inte
 		}
 		intermediateCert, parseErr := x509.ParseCertificate(certBytes)
 		if parseErr != nil {
-			err = fmt.Errorf(parseErr, "xpi: SignMessage Signature Protected Headers kid value %d does not decode to a parseable X509 cert", i)
+			err = fmt.Errorf("xpi: SignMessage Signature Protected Headers kid value %d does not decode to a parseable X509 cert: %w", i, parseErr)
 			return
 		}
 		intermediateCerts = append(intermediateCerts, intermediateCert)
@@ -237,7 +237,7 @@ func validateCOSEMessageStructureAndGetCertsAndAlgs(msg *cose.SignMessage) (inte
 	for i, sig := range msg.Signatures {
 		eeCert, alg, sigErr := validateCOSESignatureStructureAndGetEECertAndAlg(&sig)
 		if sigErr != nil {
-			err = fmt.Errorf(sigErr, "xpi: cose signature %d is invalid", i)
+			err = fmt.Errorf("xpi: cose signature %d is invalid: %w", i, sigErr)
 			return
 		}
 		eeCerts = append(eeCerts, eeCert)
@@ -288,7 +288,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 
 	xpiSig, unmarshalErr := Unmarshal(base64.StdEncoding.EncodeToString(coseMsgBytes), nil)
 	if unmarshalErr != nil {
-		return fmt.Errorf(unmarshalErr, "xpi: error unmarshaling cose.sig")
+		return fmt.Errorf("xpi: error unmarshaling cose.sig: %w", unmarshalErr)
 	}
 	if xpiSig != nil && xpiSig.signMessage != nil && len(xpiSig.signMessage.Signatures) != len(signOptions.COSEAlgorithms) {
 		return fmt.Errorf("xpi: cose.sig contains %d signatures, but expected %d", len(xpiSig.signMessage.Signatures), len(signOptions.COSEAlgorithms))

@@ -45,7 +45,7 @@ func (b *inMemoryBackend) addAuth(auth *authorization) (err error) {
 	case ErrAuthNotFound:
 		// this is what we want
 	default:
-		return fmt.Errorf(getAuthErr, "error finding auth with id '%s'", auth.ID)
+		return fmt.Errorf("error finding auth with id '%s': %w", auth.ID, getAuthErr)
 	}
 	b.auths[auth.ID] = *auth
 	return b.addAuthToSignerIndex(auth)
