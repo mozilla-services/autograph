@@ -251,7 +251,7 @@ func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKe
 
 	publicKeyBytes, err = x509.MarshalPKIXPublicKey(unmarshaledPub)
 	if err != nil {
-		err = fmt.Errorf("failed to asn1 marshal %T public key: %w", err)
+		err = fmt.Errorf("failed to asn1 marshal %T public key: %w", unmarshaledPub, err)
 		return
 	}
 	publicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
