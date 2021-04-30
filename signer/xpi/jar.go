@@ -7,7 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"

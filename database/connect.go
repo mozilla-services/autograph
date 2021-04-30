@@ -13,8 +13,6 @@ import (
 
 	// lib/pq is the postgres driver
 	_ "github.com/lib/pq"
-
-	"github.com/pkg/errors"
 )
 
 func init() {

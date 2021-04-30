@@ -30,7 +30,7 @@ import (
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
 	"github.com/miekg/pkcs11"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 )
 

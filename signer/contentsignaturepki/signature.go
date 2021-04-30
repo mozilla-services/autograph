@@ -4,8 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/big"
-
-	"github.com/pkg/errors"
 )
 
 // ContentSignature contains the parsed representation of a signature

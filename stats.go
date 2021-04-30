@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 )
 

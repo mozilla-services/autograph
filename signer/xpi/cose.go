@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/mozilla-services/autograph/signer"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/cose"
 )

@@ -15,7 +15,6 @@ import (
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/signer"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/mozlogrus"
 )

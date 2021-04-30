@@ -3,8 +3,6 @@ package database // import "github.com/mozilla-services/autograph/database"
 import (
 	"database/sql"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 var (

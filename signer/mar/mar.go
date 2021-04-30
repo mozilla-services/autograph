@@ -11,7 +11,7 @@ import (
 	"io"
 
 	"github.com/mozilla-services/autograph/signer"
-	"github.com/pkg/errors"
+
 	margo "go.mozilla.org/mar"
 )
 

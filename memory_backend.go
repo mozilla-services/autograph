@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/mozilla-services/autograph/signer"

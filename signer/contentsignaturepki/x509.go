@@ -11,7 +11,6 @@ import (
 
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/signer"
-	"github.com/pkg/errors"
 )
 
 // findAndSetEE searches the database for an end-entity key that is currently

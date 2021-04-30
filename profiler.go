@@ -11,7 +11,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 )
 

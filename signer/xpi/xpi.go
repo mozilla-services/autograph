@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/mozilla-services/autograph/signer"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/cose"
 	"go.mozilla.org/pkcs7"

@@ -3,8 +3,6 @@ package xpi // import "github.com/mozilla-services/autograph/signer/xpi"
 import (
 	"encoding/json"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Recommendation represents an Addon Recommendation file

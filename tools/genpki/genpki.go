@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/ThalesIgnite/crypto11"
-	"github.com/pkg/errors"
 )
 
 func main() {

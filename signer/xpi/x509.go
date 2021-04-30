@@ -12,7 +12,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/cose"
 )

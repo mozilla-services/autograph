@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"go.mozilla.org/hawk"
