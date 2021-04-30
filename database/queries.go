@@ -2,6 +2,7 @@ package database // import "github.com/mozilla-services/autograph/database"
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 

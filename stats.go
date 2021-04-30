@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/DataDog/datadog-go/statsd"
 
 	log "github.com/sirupsen/logrus"

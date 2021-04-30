@@ -2,6 +2,7 @@ package xpi // import "github.com/mozilla-services/autograph/signer/xpi"
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
