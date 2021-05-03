@@ -11,7 +11,6 @@ import (
 
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/signer"
-	"github.com/pkg/errors"
 )
 
 // findAndSetEE searches the database for an end-entity key that is currently
@@ -34,7 +33,7 @@ func (s *ContentSigner) findAndSetEE(conf signer.Configuration) (err error) {
 	s.rand = conf.GetRand()
 	s.eePriv, s.eePub, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		err = errors.Wrapf(err, "found suitable end-entity labeled %q in database but not in hsm", s.eeLabel)
+		err = fmt.Errorf("found suitable end-entity labeled %q in database but not in hsm: %w", s.eeLabel, err)
 		return
 	}
 	return
@@ -46,16 +45,16 @@ func (s *ContentSigner) makeAndUploadChain() (err error) {
 	var fullChain, chainName string
 	fullChain, chainName, err = s.makeChain()
 	if err != nil {
-		return errors.Wrap(err, "failed to make chain")
+		return fmt.Errorf("failed to make chain: %w", err)
 	}
 	err = s.upload(fullChain, chainName)
 	if err != nil {
-		return errors.Wrap(err, "failed to upload chain")
+		return fmt.Errorf("failed to upload chain: %w", err)
 	}
 	newX5U := s.X5U + chainName
 	_, err = GetX5U(newX5U)
 	if err != nil {
-		return errors.Wrap(err, "failed to download new chain")
+		return fmt.Errorf("failed to download new chain: %w", err)
 	}
 	s.X5U = newX5U
 	return
@@ -77,12 +76,12 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 
 	block, _ := pem.Decode([]byte(s.IssuerCert))
 	if block == nil || block.Type != "CERTIFICATE" {
-		err = errors.New("no pem block found in signer public key configuration")
+		err = fmt.Errorf("no pem block found in signer public key configuration")
 		return
 	}
 	issuer, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		err = errors.Wrap(err, "failed to parse issuer certificate from chain")
+		err = fmt.Errorf("failed to parse issuer certificate from chain: %w", err)
 		return
 	}
 	crtTpl := &x509.Certificate{
@@ -105,14 +104,14 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 
 	certBytes, err := x509.CreateCertificate(s.rand, crtTpl, issuer, s.eePub, s.issuerPriv)
 	if err != nil {
-		err = errors.Wrap(err, "failed to issue end-entity cert")
+		err = fmt.Errorf("failed to issue end-entity cert: %w", err)
 		return
 	}
 
 	var certPem bytes.Buffer
 	err = pem.Encode(&certPem, &pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
 	if err != nil {
-		err = errors.Wrap(err, "failed to PEM encode end-entity cert")
+		err = fmt.Errorf("failed to PEM encode end-entity cert: %w", err)
 		return
 	}
 
@@ -121,7 +120,7 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	root := x509.NewCertPool()
 	ok := root.AppendCertsFromPEM([]byte(s.caCert))
 	if !ok {
-		err = errors.New("failed to load root cert")
+		err = fmt.Errorf("failed to load root cert")
 		return
 	}
 	inter := x509.NewCertPool()
@@ -133,12 +132,12 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	}
 	cert, err := x509.ParseCertificate(certBytes)
 	if err != nil {
-		err = errors.Wrap(err, "failed to parse end-entity certificate")
+		err = fmt.Errorf("failed to parse end-entity certificate: %w", err)
 		return
 	}
 	_, err = cert.Verify(opts)
 	if err != nil {
-		err = errors.Wrap(err, "failed to verify certificate")
+		err = fmt.Errorf("failed to verify certificate: %w", err)
 		return
 	}
 

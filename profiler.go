@@ -5,13 +5,14 @@
 package main
 
 import (
+	"fmt"
 	"net/http/pprof"
 	"os"
 	"runtime"
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -43,7 +44,7 @@ func setRuntimeConfig() (err error) {
 	if ok {
 		blockProfileRate, err = strconv.Atoi(val)
 		if err != nil {
-			return errors.Wrap(err, "failed to parse BLOCK_PROFILE_RATE as int")
+			return fmt.Errorf("failed to parse BLOCK_PROFILE_RATE as int: %w", err)
 		}
 		runtime.SetBlockProfileRate(blockProfileRate)
 		log.Infof("SetBlockProfileRate to %d", blockProfileRate)
@@ -54,7 +55,7 @@ func setRuntimeConfig() (err error) {
 	if ok {
 		mutexProfileFraction, err = strconv.Atoi(val)
 		if err != nil {
-			return errors.Wrap(err, "failed to parse MUTEX_PROFILE_FRACTION as int")
+			return fmt.Errorf("failed to parse MUTEX_PROFILE_FRACTION as int: %w", err)
 		}
 		runtime.SetMutexProfileFraction(mutexProfileFraction)
 		log.Infof("SetMutexProfileFraction to %d", mutexProfileFraction)

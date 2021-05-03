@@ -7,12 +7,11 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/asn1"
+	"fmt"
 	"hash"
 	"io"
 
 	"github.com/mozilla-services/autograph/signer"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -57,23 +56,23 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.PrivateKey = conf.PrivateKey
 	s.X5U = conf.X5U
 	if conf.Type != Type {
-		return nil, errors.Errorf("contentsignature: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("contentsignature: invalid type %q, must be %q", conf.Type, Type)
 	}
 	if conf.ID == "" {
-		return nil, errors.New("contentsignature: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("contentsignature: missing signer ID in signer configuration")
 	}
 	if conf.PrivateKey == "" {
-		return nil, errors.New("contentsignature: missing private key in signer configuration")
+		return nil, fmt.Errorf("contentsignature: missing private key in signer configuration")
 	}
 	s.rand = conf.GetRand()
 	s.priv, s.pub, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature: failed to retrieve signer")
+		return nil, fmt.Errorf("contentsignature: failed to retrieve signer: %w", err)
 	}
 	switch s.pub.(type) {
 	case *ecdsa.PublicKey:
 	default:
-		return nil, errors.New("contentsignature: invalid private key algorithm, must be ecdsa")
+		return nil, fmt.Errorf("contentsignature: invalid private key algorithm, must be ecdsa")
 	}
 	s.Mode = s.getModeFromCurve()
 	return
@@ -95,7 +94,7 @@ func (s *ContentSigner) Config() signer.Configuration {
 // The returned signature is of type ContentSignature and ready to be Marshalled.
 func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Signature, error) {
 	if len(input) < 10 {
-		return nil, errors.Errorf("contentsignature: refusing to sign input data shorter than 10 bytes")
+		return nil, fmt.Errorf("contentsignature: refusing to sign input data shorter than 10 bytes")
 	}
 	alg, hash := makeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
@@ -132,7 +131,7 @@ func makeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
 // has already been hashed with something like sha384
 func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Signature, error) {
 	if len(input) != 32 && len(input) != 48 && len(input) != 64 {
-		return nil, errors.Errorf("contentsignature: refusing to sign input hash. length %d, expected 32, 48 or 64", len(input))
+		return nil, fmt.Errorf("contentsignature: refusing to sign input hash. length %d, expected 32, 48 or 64", len(input))
 	}
 	var err error
 	csig := new(ContentSignature)
@@ -145,12 +144,12 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 
 	asn1Sig, err := s.priv.(crypto.Signer).Sign(rand.Reader, input, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature: failed to sign hash")
+		return nil, fmt.Errorf("contentsignature: failed to sign hash: %w", err)
 	}
 	var ecdsaSig ecdsaAsn1Signature
 	_, err = asn1.Unmarshal(asn1Sig, &ecdsaSig)
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature: failed to parse signature")
+		return nil, fmt.Errorf("contentsignature: failed to parse signature: %w", err)
 	}
 	csig.R = ecdsaSig.R
 	csig.S = ecdsaSig.S

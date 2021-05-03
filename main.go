@@ -21,7 +21,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
@@ -271,7 +270,7 @@ func (c *configuration) loadFromFile(path string) error {
 		// not an encrypted file
 		confData = data
 	} else {
-		return errors.Wrap(err, "failed to load sops encrypted configuration")
+		return fmt.Errorf("failed to load sops encrypted configuration: %w", err)
 	}
 
 	err = yaml.Unmarshal(confData, &c)
@@ -280,7 +279,7 @@ func (c *configuration) loadFromFile(path string) error {
 	}
 
 	if c.Heartbeat.DBCheckTimeout == time.Duration(int64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(int64(0)) {
-		return errors.Errorf("Missing required heartbeat config section with non-zero timeouts")
+		return fmt.Errorf("Missing required heartbeat config section with non-zero timeouts")
 	}
 	return nil
 }
@@ -411,7 +410,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		if a.stats != nil {
 			statsClient, err = signer.NewStatsClient(signerConf, a.stats)
 			if statsClient == nil || err != nil {
-				return errors.Wrapf(err, "failed to add signer stats client %q or got back nil statsClient", signerConf.ID)
+				return fmt.Errorf("failed to add signer stats client %q or got back nil statsClient: %w", signerConf.ID, err)
 			}
 		}
 		// give the database handler to the signer configuration
@@ -422,22 +421,22 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		case contentsignature.Type:
 			s, err = contentsignature.New(signerConf)
 			if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		case contentsignaturepki.Type:
 			s, err = contentsignaturepki.New(signerConf)
 			if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		case xpi.Type:
 			s, err = xpi.New(signerConf, statsClient)
 			if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		case apk2.Type:
 			s, err = apk2.New(signerConf)
 			if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		case mar.Type:
 			s, err = mar.New(signerConf)
@@ -445,17 +444,17 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 				log.Infof("Skipping signer %q from HSM", signerConf.ID)
 				continue
 			} else if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		case gpg2.Type:
 			s, err = gpg2.New(signerConf)
 			if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		case genericrsa.Type:
 			s, err = genericrsa.New(signerConf)
 			if err != nil {
-				return errors.Wrapf(err, "failed to add signer %q", signerConf.ID)
+				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		default:
 			return fmt.Errorf("unknown signer type %q", signerConf.Type)

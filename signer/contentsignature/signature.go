@@ -4,8 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/big"
-
-	"github.com/pkg/errors"
 )
 
 // ContentSignature contains the parsed representation of a signature
@@ -68,12 +66,12 @@ func (sig *ContentSignature) Marshal() (str string, err error) {
 // Note this function does not set the X5U value of a signature.
 func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	if len(signature) < 30 {
-		return nil, errors.Errorf("contentsignature: signature cannot be shorter than 30 characters, got %d", len(signature))
+		return nil, fmt.Errorf("contentsignature: signature cannot be shorter than 30 characters, got %d", len(signature))
 	}
 	// decode the actual signature into its R and S values
 	data, err := base64.RawURLEncoding.DecodeString(signature)
 	if err != nil {
-		return nil, errors.Wrap(err, "contentsignature")
+		return nil, fmt.Errorf("contentsignature: %w", err)
 	}
 	// Use the length to determine the mode
 	sig = new(ContentSignature)
@@ -86,7 +84,7 @@ func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	case P521ECDSABYTESIZE:
 		sig.Mode = P521ECDSA
 	default:
-		return nil, errors.Errorf("contentsignature: unknown signature length %d", len(data))
+		return nil, fmt.Errorf("contentsignature: unknown signature length %d", len(data))
 	}
 	sig.HashName = getSignatureHash(sig.Mode)
 	// parse the signature into R and S value by splitting it in the middle

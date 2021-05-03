@@ -30,7 +30,7 @@ import (
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
 	"github.com/miekg/pkcs11"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -245,18 +245,18 @@ func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKe
 		unmarshaledPub = privateKey.PubKey.(*rsa.PublicKey)
 
 	default:
-		err = errors.Errorf("unsupported private key type %T", priv)
+		err = fmt.Errorf("unsupported private key type %T", priv)
 		return
 	}
 
 	publicKeyBytes, err = x509.MarshalPKIXPublicKey(unmarshaledPub)
 	if err != nil {
-		err = errors.Wrap(err, "failed to asn1 marshal %T public key")
+		err = fmt.Errorf("failed to asn1 marshal %T public key: %w", unmarshaledPub, err)
 		return
 	}
 	publicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
 	if len(publicKey) < 50 {
-		err = errors.Errorf("encoded public key is shorter than 50char, which is impossible: %q", publicKey)
+		err = fmt.Errorf("encoded public key is shorter than 50char, which is impossible: %q", publicKey)
 		return
 	}
 	return
@@ -298,7 +298,7 @@ func ParsePrivateKey(keyPEMBlock []byte) (key crypto.PrivateKey, err error) {
 		keyDERBlock, keyPEMBlock = pem.Decode(keyPEMBlock)
 		if keyDERBlock == nil {
 			if len(skippedBlockTypes) == 1 && skippedBlockTypes[0] == "CERTIFICATE" {
-				return nil, errors.New("signer: found a certificate rather than a key in the PEM for the private key")
+				return nil, fmt.Errorf("signer: found a certificate rather than a key in the PEM for the private key")
 			}
 			return nil, fmt.Errorf("signer: failed to find PEM block with type ending in \"PRIVATE KEY\" in key input after skipping PEM blocks of the following types: %v", skippedBlockTypes)
 
@@ -335,7 +335,7 @@ func ParsePrivateKey(keyPEMBlock []byte) (key crypto.PrivateKey, err error) {
 	}
 	savedErr = append(savedErr, "dsa: "+err.Error())
 
-	return nil, errors.New("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for (EC)DSA. errors: " + strings.Join(savedErr, ";;; "))
+	return nil, fmt.Errorf("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for (EC)DSA. errors: " + strings.Join(savedErr, ";;; "))
 }
 
 // parseDSAPKCS8PrivateKey returns a DSA private key from its ASN.1 DER encoding
@@ -350,7 +350,7 @@ func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
 		return nil, err
 	}
 	if len(rest) > 0 {
-		return nil, errors.New("garbage after DSA key")
+		return nil, fmt.Errorf("garbage after DSA key")
 	}
 	var params dsa.Parameters
 	_, err = asn1.Unmarshal(k.Algo.Parameters.FullBytes, &params)
@@ -361,7 +361,7 @@ func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
 	// tag in front of the X value of the DSA key, but doing it manually by
 	// stripping off the first two bytes and loading it as a bigint works
 	if len(k.Priv) < 22 {
-		return nil, errors.New("DSA key is too short")
+		return nil, fmt.Errorf("DSA key is too short")
 	}
 	x := new(big.Int).SetBytes(k.Priv[2:])
 	return &dsa.PrivateKey{
@@ -397,21 +397,21 @@ func (cfg *Configuration) PrivateKeyHasPEMPrefix() bool {
 // that fails or the private key is not an HSM key handle.
 func (cfg *Configuration) CheckHSMConnection() error {
 	if cfg.PrivateKeyHasPEMPrefix() {
-		return errors.Errorf("private key for signer %s has a PEM prefix and is not an HSM key label", cfg.ID)
+		return fmt.Errorf("private key for signer %s has a PEM prefix and is not an HSM key label", cfg.ID)
 	}
 	if !cfg.isHsmAvailable {
-		return errors.Errorf("HSM is not available for signer %s", cfg.ID)
+		return fmt.Errorf("HSM is not available for signer %s", cfg.ID)
 	}
 
 	privKey, err := cfg.GetPrivateKey()
 	if err != nil {
-		return errors.Wrapf(err, "error fetching private key for signer %s", cfg.ID)
+		return fmt.Errorf("error fetching private key for signer %s: %w", cfg.ID, err)
 	}
 	// returns 0 if the key is not stored in the hsm
 	if GetPrivKeyHandle(privKey) != 0 {
 		return nil
 	}
-	return errors.Errorf("Unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
+	return fmt.Errorf("Unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
 }
 
 // MakeKey generates a new key of type keyTpl and returns the priv and public interfaces.
@@ -422,17 +422,17 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		var slots []uint
 		slots, err = cfg.hsmCtx.GetSlotList(true)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to list PKCS#11 Slots")
+			return nil, nil, fmt.Errorf("failed to list PKCS#11 Slots: %w", err)
 		}
 		if len(slots) < 1 {
-			return nil, nil, errors.New("failed to find a usable slot in hsm context")
+			return nil, nil, fmt.Errorf("failed to find a usable slot in hsm context")
 		}
 		keyNameBytes := []byte(keyName)
 		switch keyTplType := keyTpl.(type) {
 		case *ecdsa.PublicKey:
 			priv, err = crypto11.GenerateECDSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keyTplType)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in hsm")
+				return nil, nil, fmt.Errorf("failed to generate ecdsa key in hsm: %w", err)
 			}
 			pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).PubKey.(*ecdsa.PublicKey)
 			return
@@ -440,12 +440,12 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 			keySize := keyTplType.Size()
 			priv, err = crypto11.GenerateRSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keySize)
 			if err != nil {
-				return nil, nil, errors.Wrap(err, "failed to generate rsa key in hsm")
+				return nil, nil, fmt.Errorf("failed to generate rsa key in hsm: %w", err)
 			}
 			pub = priv.(*crypto11.PKCS11PrivateKeyRSA).PubKey.(*rsa.PublicKey)
 			return
 		default:
-			return nil, nil, errors.Errorf("making key of type %T is not supported", keyTpl)
+			return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
 		}
 	}
 	// no hsm, make keys in memory
@@ -461,7 +461,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 				keyTpl.(*ecdsa.PublicKey).Params().Name)
 		}
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to generate ecdsa key in memory")
+			return nil, nil, fmt.Errorf("failed to generate ecdsa key in memory: %w", err)
 		}
 		pub = priv.(*ecdsa.PrivateKey).Public()
 		return
@@ -469,12 +469,12 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		keySize := keyTplType.Size()
 		priv, err = rsa.GenerateKey(rand.Reader, keySize)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to generate rsa key in memory")
+			return nil, nil, fmt.Errorf("failed to generate rsa key in memory: %w", err)
 		}
 		pub = priv.(*rsa.PrivateKey).Public()
 		return
 	default:
-		return nil, nil, errors.Errorf("making key of type %T is not supported", keyTpl)
+		return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
 	}
 }
 
@@ -503,7 +503,7 @@ type StatsClient struct {
 // NewStatsClient makes a new stats client
 func NewStatsClient(signerConfig Configuration, stats *statsd.Client) (*StatsClient, error) {
 	if stats == nil {
-		return nil, errors.Errorf("xpi: statsd client is nil. Could not create StatsClient for signer %s", signerConfig.ID)
+		return nil, fmt.Errorf("xpi: statsd client is nil. Could not create StatsClient for signer %s", signerConfig.ID)
 	}
 	return &StatsClient{
 		stats: stats,

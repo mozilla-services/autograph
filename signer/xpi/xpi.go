@@ -9,12 +9,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"io"
 	"strings"
 	"time"
 
 	"github.com/mozilla-services/autograph/signer"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/cose"
 	"go.mozilla.org/pkcs7"
@@ -123,41 +124,41 @@ type XPISigner struct {
 func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, err error) {
 	s = new(XPISigner)
 	if conf.Type != Type {
-		return nil, errors.Errorf("xpi: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("xpi: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 	if conf.ID == "" {
-		return nil, errors.New("xpi: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("xpi: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 	if conf.PrivateKey == "" {
-		return nil, errors.New("xpi: missing private key in signer configuration")
+		return nil, fmt.Errorf("xpi: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
 
 	s.rand = conf.GetRand()
 	s.issuerKey, s.issuerPublicKey, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: GetKeys failed to retrieve signer")
+		return nil, fmt.Errorf("xpi: GetKeys failed to retrieve signer: %w", err)
 	}
 
 	block, _ := pem.Decode([]byte(conf.Certificate))
 	if block == nil {
-		return nil, errors.New("xpi: failed to parse certificate PEM")
+		return nil, fmt.Errorf("xpi: failed to parse certificate PEM")
 	}
 	s.issuerCert, err = x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: could not parse X.509 certificate")
+		return nil, fmt.Errorf("xpi: could not parse X.509 certificate: %w", err)
 	}
 	// some sanity checks for the signer cert
 	if !s.issuerCert.IsCA {
-		return nil, errors.New("xpi: signer certificate must have CA constraint set to true")
+		return nil, fmt.Errorf("xpi: signer certificate must have CA constraint set to true")
 	}
 	if time.Now().Before(s.issuerCert.NotBefore) || time.Now().After(s.issuerCert.NotAfter) {
-		return nil, errors.New("xpi: signer certificate is not currently valid")
+		return nil, fmt.Errorf("xpi: signer certificate is not currently valid")
 	}
 	if s.issuerCert.KeyUsage&x509.KeyUsageCertSign == 0 {
-		return nil, errors.New("xpi: signer certificate is missing certificate signing key usage")
+		return nil, fmt.Errorf("xpi: signer certificate is missing certificate signing key usage")
 	}
 	hasCodeSigning := false
 	for _, eku := range s.issuerCert.ExtKeyUsage {
@@ -167,7 +168,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		}
 	}
 	if !hasCodeSigning {
-		return nil, errors.New("xpi: signer certificate does not have code signing EKU")
+		return nil, fmt.Errorf("xpi: signer certificate does not have code signing EKU")
 	}
 	switch conf.Mode {
 	case ModeAddOn, ModeAddOnWithRecommendation:
@@ -181,7 +182,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		s.OU = "Production"
 		s.EndEntityCN = "firefox-hotfix@mozilla.org"
 	default:
-		return nil, errors.Errorf("xpi: unknown signer mode %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Mode)
+		return nil, fmt.Errorf("xpi: unknown signer mode %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Mode)
 	}
 	s.Mode = conf.Mode
 	s.stats = stats
@@ -204,7 +205,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	// length
 	if issuerKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {
 		if issuerKey.N.BitLen() < rsaKeyMinSize {
-			return nil, errors.Errorf("xpi: issuer RSA key must be at least %d bits", rsaKeyMinSize)
+			return nil, fmt.Errorf("xpi: issuer RSA key must be at least %d bits", rsaKeyMinSize)
 		}
 		if conf.RSACacheConfig.StatsSampleRate < 5*time.Second {
 			log.Warnf("xpi: sampling rsa cache as rate of %q (less than 5s)", conf.RSACacheConfig.StatsSampleRate)
@@ -255,7 +256,7 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 
 	opt, err = GetOptions(options)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot get options")
+		return nil, fmt.Errorf("xpi: cannot get options: %w", err)
 	}
 	cn, err := opt.CN(s)
 	if err != nil {
@@ -263,27 +264,27 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	}
 	coseSigAlgs, err = opt.Algorithms()
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: error parsing cose_algorithms options")
+		return nil, fmt.Errorf("xpi: error parsing cose_algorithms options: %w", err)
 	}
 
 	input, err = removeFileFromZIP(input, s.recommendationFilePath)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: error removing recommendation file from XPI")
+		return nil, fmt.Errorf("xpi: error removing recommendation file from XPI: %w", err)
 	}
 	if s.Mode == ModeAddOnWithRecommendation {
 		recFileBytes, err := s.makeRecommendationFile(opt, cn)
 		if err != nil {
-			return nil, errors.Wrap(err, "xpi: error making recommendation file from options")
+			return nil, fmt.Errorf("xpi: error making recommendation file from options: %w", err)
 		}
 		input, err = appendFileToZIP(input, s.recommendationFilePath, recFileBytes)
 		if err != nil {
-			return nil, errors.Wrap(err, "xpi: error append recommendation file to XPI")
+			return nil, fmt.Errorf("xpi: error append recommendation file to XPI: %w", err)
 		}
 	}
 
 	manifest, err = makeJARManifest(input)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest from XPI")
+		return nil, fmt.Errorf("xpi: cannot make JAR manifest from XPI: %w", err)
 	}
 
 	// when the optional COSE Algorithms params are not provided
@@ -295,7 +296,7 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 	} else {
 		coseSig, err = s.issueCOSESignature(cn, manifest, coseSigAlgs)
 		if err != nil {
-			return nil, errors.Wrap(err, "xpi: error signing cose message")
+			return nil, fmt.Errorf("xpi: error signing cose message: %w", err)
 		}
 
 		// add the cose files to the metafiles we'll add to the XPI
@@ -308,22 +309,22 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 		// add entries for the cose files to the manifest as cose.manifest and cose.sig
 		pkcs7Manifest, err = makePKCS7Manifest(input, metas)
 		if err != nil {
-			return nil, errors.Wrap(err, "xpi: error making PKCS7 manifest")
+			return nil, fmt.Errorf("xpi: error making PKCS7 manifest: %w", err)
 		}
 	}
 
 	sigfile, err := makeJARSignatureFile(pkcs7Manifest)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot make JAR manifest signature from XPI")
+		return nil, fmt.Errorf("xpi: cannot make JAR manifest signature from XPI: %w", err)
 	}
 	p7Digest, err := opt.PK7Digest()
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: error parsing PK7 Digest")
+		return nil, fmt.Errorf("xpi: error parsing PK7 Digest: %w", err)
 	}
 
 	p7sig, err := s.signDataWithPKCS7(sigfile, cn, p7Digest)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: failed to sign XPI")
+		return nil, fmt.Errorf("xpi: failed to sign XPI: %w", err)
 	}
 
 	metas = append(metas, []Metafile{
@@ -334,7 +335,7 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 
 	signedFile, err = repackJARWithMetafiles(input, metas)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: failed to repack XPI")
+		return nil, fmt.Errorf("xpi: failed to repack XPI: %w", err)
 	}
 	return signedFile, nil
 }
@@ -343,17 +344,17 @@ func (s *XPISigner) SignFile(input []byte, options interface{}) (signedFile sign
 func (s *XPISigner) SignData(sigfile []byte, options interface{}) (signer.Signature, error) {
 	opt, err := GetOptions(options)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot get options")
+		return nil, fmt.Errorf("xpi: cannot get options: %w", err)
 	}
 	cn, err := opt.CN(s)
 	if err != nil {
 		return nil, err
 	}
 	if len(opt.COSEAlgorithms) > 0 {
-		return nil, errors.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
+		return nil, fmt.Errorf("xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead")
 	}
 	if !(opt.PKCS7Digest == "" || strings.ToUpper(opt.PKCS7Digest) == "SHA1") {
-		return nil, errors.Errorf("xpi: can only use SHA1 digests with /sign/data. Use /sign/file instead")
+		return nil, fmt.Errorf("xpi: can only use SHA1 digests with /sign/data. Use /sign/file instead")
 	}
 
 	sigBytes, err := s.signDataWithPKCS7(sigfile, cn, pkcs7.OIDDigestAlgorithmSHA1)
@@ -374,17 +375,17 @@ func (s *XPISigner) signDataWithPKCS7(sigfile []byte, cn string, digest asn1.Obj
 
 	toBeSigned, err := pkcs7.NewSignedData(sigfile)
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot initialize signed data")
+		return nil, fmt.Errorf("xpi: cannot initialize signed data: %w", err)
 	}
 	toBeSigned.SetDigestAlgorithm(digest)
 	err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot sign")
+		return nil, fmt.Errorf("xpi: cannot sign: %w", err)
 	}
 	toBeSigned.Detach()
 	p7sig, err := toBeSigned.Finish()
 	if err != nil {
-		return nil, errors.Wrap(err, "xpi: cannot finish signing data")
+		return nil, fmt.Errorf("xpi: cannot finish signing data: %w", err)
 	}
 	return p7sig, nil
 }
@@ -414,19 +415,19 @@ func (o *Options) CN(s *XPISigner) (cn string, err error) {
 	if o != nil && o.ID != "" {
 		return o.ID, nil
 	}
-	return "", errors.New("xpi: missing common name")
+	return "", fmt.Errorf("xpi: missing common name")
 }
 
 // Algorithms validates and returns COSE algorithms
 func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 	if o == nil {
-		err = errors.New("xpi: cannot get COSE Algorithms from nil Options")
+		err = fmt.Errorf("xpi: cannot get COSE Algorithms from nil Options")
 	}
 
 	for _, algStr := range o.COSEAlgorithms {
 		alg := stringToCOSEAlg(algStr)
 		if alg == nil {
-			return nil, errors.Errorf("xpi: invalid or unsupported COSE algorithm %q", algStr)
+			return nil, fmt.Errorf("xpi: invalid or unsupported COSE algorithm %q", algStr)
 		}
 		algs = append(algs, alg)
 	}
@@ -437,12 +438,12 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 // algorithms from the request
 func (o *Options) RecommendationStates(allowedRecommendationStates map[string]bool) (states []string, err error) {
 	if o == nil {
-		err = errors.New("xpi: cannot get recommendation states from nil Options")
+		err = fmt.Errorf("xpi: cannot get recommendation states from nil Options")
 	}
 
 	for _, rec := range o.Recommendations {
 		if val, ok := allowedRecommendationStates[rec]; !(ok && val) {
-			return nil, errors.Errorf("xpi: invalid or unsupported recommendation state %q", rec)
+			return nil, fmt.Errorf("xpi: invalid or unsupported recommendation state %q", rec)
 		}
 		states = append(states, rec)
 	}
@@ -453,7 +454,7 @@ func (o *Options) RecommendationStates(allowedRecommendationStates map[string]bo
 // algorithm or an error
 func (o *Options) PK7Digest() (asn1.ObjectIdentifier, error) {
 	if o == nil {
-		return nil, errors.New("xpi: Cannot get PK7Digest from nil Options")
+		return nil, fmt.Errorf("xpi: Cannot get PK7Digest from nil Options")
 	}
 	switch strings.ToUpper(o.PKCS7Digest) {
 	case "SHA256":
@@ -461,7 +462,7 @@ func (o *Options) PK7Digest() (asn1.ObjectIdentifier, error) {
 	case "SHA1":
 		return pkcs7.OIDDigestAlgorithmSHA1, nil
 	default:
-		return nil, errors.New("xpi: Failed to recognize PK7Digest from Options")
+		return nil, fmt.Errorf("xpi: Failed to recognize PK7Digest from Options")
 	}
 }
 
@@ -495,10 +496,10 @@ type Signature struct {
 // signature or COSE Sign Message
 func (sig *Signature) Marshal() (string, error) {
 	if !sig.Finished {
-		return "", errors.New("xpi: cannot marshal unfinished signature")
+		return "", fmt.Errorf("xpi: cannot marshal unfinished signature")
 	}
 	if len(sig.Data) == 0 {
-		return "", errors.New("xpi: cannot marshal empty signature data")
+		return "", fmt.Errorf("xpi: cannot marshal empty signature data")
 	}
 	return base64.StdEncoding.EncodeToString(sig.Data), nil
 }
@@ -511,23 +512,23 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 	sig = new(Signature)
 	sig.Data, err = base64.StdEncoding.DecodeString(signature)
 	if err != nil {
-		return sig, errors.Wrap(err, "xpi.Unmarshal: failed to decode base64 signature")
+		return sig, fmt.Errorf("xpi.Unmarshal: failed to decode base64 signature: %w", err)
 	}
 
 	if cose.IsSignMessage(sig.Data) {
 		tmp, err := cose.Unmarshal(sig.Data)
 		if err != nil {
-			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to parse COSE Sign Message")
+			return sig, fmt.Errorf("xpi.Unmarshal: failed to parse COSE Sign Message: %w", err)
 		}
 		if msg, ok := tmp.(cose.SignMessage); ok {
 			sig.signMessage = &msg
 		} else {
-			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to cast COSE Sign Message")
+			return sig, fmt.Errorf("xpi.Unmarshal: failed to cast COSE Sign Message: %w", err)
 		}
 	} else {
 		sig.p7, err = pkcs7.Parse(sig.Data)
 		if err != nil {
-			return sig, errors.Wrap(err, "xpi.Unmarshal: failed to parse pkcs7 signature")
+			return sig, fmt.Errorf("xpi.Unmarshal: failed to parse pkcs7 signature: %w", err)
 		}
 		sig.p7.Content = content
 	}
@@ -538,7 +539,7 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 // VerifyWithChain verifies an xpi signature using the provided truststore
 func (sig *Signature) VerifyWithChain(truststore *x509.CertPool) error {
 	if !sig.Finished {
-		return errors.New("xpi.VerifyWithChain: cannot verify unfinished signature")
+		return fmt.Errorf("xpi.VerifyWithChain: cannot verify unfinished signature")
 	}
 	return sig.p7.VerifyWithChain(truststore)
 }
@@ -560,31 +561,31 @@ func (sig *Signature) String() string {
 func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x509.CertPool) error {
 	sigStrBytes, err := readFileFromZIP(signedFile, pkcs7SigPath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read PKCS7 signature META-INF/mozilla.rsa")
+		return fmt.Errorf("failed to read PKCS7 signature META-INF/mozilla.rsa: %w", err)
 	}
 	sigStr := base64.StdEncoding.EncodeToString(sigStrBytes)
 	sigData, err := readFileFromZIP(signedFile, pkcs7SignatureFilePath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read META-INF/mozilla.sf")
+		return fmt.Errorf("failed to read META-INF/mozilla.sf: %w", err)
 	}
 
 	// convert string format back to signature
 	sig, err := Unmarshal(sigStr, sigData)
 	if err != nil {
-		return errors.Wrapf(err, "failed to unmarshal PKCS7 signature")
+		return fmt.Errorf("failed to unmarshal PKCS7 signature: %w", err)
 	}
 	// verify signature on input data
 	if sig.VerifyWithChain(truststore) != nil {
-		return errors.Errorf("failed to verify xpi signature: %v", sig.VerifyWithChain(truststore))
+		return fmt.Errorf("failed to verify xpi signature: %v", sig.VerifyWithChain(truststore))
 	}
 
 	// make sure we still have the same string representation
 	sigStr2, err := sig.Marshal()
 	if err != nil {
-		return errors.Errorf("failed to re-marshal signature: %v", err)
+		return fmt.Errorf("failed to re-marshal signature: %v", err)
 	}
 	if sigStr != sigStr2 {
-		return errors.Errorf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
+		return fmt.Errorf("marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
 			sigStr, sigStr2)
 	}
 
@@ -596,12 +597,12 @@ func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x50
 func verifyPKCS7Manifest(signedXPI signer.SignedFile) error {
 	numZippedFiles, numManifestEntries, err := verifyAndCountManifest(signedXPI, pkcs7ManifestPath)
 	if err != nil {
-		return errors.Wrapf(err, "error validating PK7 manifest")
+		return fmt.Errorf("error validating PK7 manifest: %w", err)
 	}
 
 	expectedMetaFilesInManifest := 3 // PK7 sig, manifest, and sigFile
 	if !(numZippedFiles > numManifestEntries && numZippedFiles-numManifestEntries == expectedMetaFilesInManifest) {
-		return errors.Errorf("mismatch in # PK7 manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
+		return fmt.Errorf("mismatch in # PK7 manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
 	}
 	return nil
 }
@@ -611,12 +612,12 @@ func verifyPKCS7Manifest(signedXPI signer.SignedFile) error {
 func verifyCOSEManifest(signedXPI signer.SignedFile) error {
 	numZippedFiles, numManifestEntries, err := verifyAndCountManifest(signedXPI, coseManifestPath)
 	if err != nil {
-		return errors.Wrapf(err, "error validating COSE manifest")
+		return fmt.Errorf("error validating COSE manifest: %w", err)
 	}
 
 	// 5 from PK7 sig, manifest, and sigFile; and COSE sig and manifest
 	if !(numZippedFiles > numManifestEntries && numZippedFiles-numManifestEntries == 5) {
-		return errors.Errorf("mismatch in # COSE manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
+		return fmt.Errorf("mismatch in # COSE manifest entries %d and # files %d in XPI", numManifestEntries, numZippedFiles)
 	}
 	return nil
 }
@@ -627,21 +628,21 @@ func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, o
 	var err error
 	err = verifyPKCS7Manifest(signedFile)
 	if err != nil {
-		return errors.Wrap(err, "xpi: error verifying PKCS7 manifest for signed file")
+		return fmt.Errorf("xpi: error verifying PKCS7 manifest for signed file: %w", err)
 	}
 	err = verifyPKCS7SignatureRoundTrip(signedFile, truststore)
 	if err != nil {
-		return errors.Wrap(err, "xpi: error verifying PKCS7 signature for signed file")
+		return fmt.Errorf("xpi: error verifying PKCS7 signature for signed file: %w", err)
 	}
 
 	if len(opts.COSEAlgorithms) > 0 {
 		err = verifyCOSEManifest(signedFile)
 		if err != nil {
-			return errors.Wrap(err, "xpi: error verifying COSE manifest for signed file")
+			return fmt.Errorf("xpi: error verifying COSE manifest for signed file: %w", err)
 		}
 		err = verifyCOSESignatures(signedFile, truststore, opts)
 		if err != nil {
-			return errors.Wrap(err, "xpi: error verifying COSE signatures for signed file")
+			return fmt.Errorf("xpi: error verifying COSE signatures for signed file: %w", err)
 		}
 	}
 

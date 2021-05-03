@@ -8,13 +8,13 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"hash"
 	"io"
 
 	"github.com/mozilla-services/autograph/formats"
 
 	"github.com/mozilla-services/autograph/signer"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -73,12 +73,12 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 	s = new(RSASigner)
 
 	if conf.Type != Type {
-		return nil, errors.Errorf("genericrsa: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("genericrsa: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, errors.New("genericrsa: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("genericrsa: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 
@@ -86,27 +86,27 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 	case ModePSS, ModePKCS15:
 		s.Mode = conf.Mode
 	case "":
-		return nil, errors.Errorf("genericrsa: missing signer mode for signer %q, must be 'pkcs15' or 'pss'", s.ID)
+		return nil, fmt.Errorf("genericrsa: missing signer mode for signer %q, must be 'pkcs15' or 'pss'", s.ID)
 	default:
-		return nil, errors.Errorf("genericrsa: invalid signer mode %q for signer %q, must be 'pkcs15' or 'pss'", conf.Mode, s.ID)
+		return nil, fmt.Errorf("genericrsa: invalid signer mode %q for signer %q, must be 'pkcs15' or 'pss'", conf.Mode, s.ID)
 	}
 
 	if conf.PrivateKey == "" {
-		return nil, errors.Errorf("genericrsa: missing private key for signer %q", s.ID)
+		return nil, fmt.Errorf("genericrsa: missing private key for signer %q", s.ID)
 	}
 	s.PrivateKey = conf.PrivateKey
 
 	if conf.PublicKey == "" {
-		return nil, errors.Errorf("genericrsa: missing public key for signer %q", s.ID)
+		return nil, fmt.Errorf("genericrsa: missing public key for signer %q", s.ID)
 	}
 	s.rng = conf.GetRand()
 	s.key, s.pubKey, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, errors.Wrapf(err, "genericrsa: error fetching key for signer %q", s.ID)
+		return nil, fmt.Errorf("genericrsa: error fetching key for signer %q: %w", s.ID, err)
 	}
 	_, ok := s.pubKey.(*rsa.PublicKey)
 	if !ok {
-		return nil, errors.Errorf("genericrsa: unsupported public key type %T for signer %q, use RSA keys", s.pubKey, s.ID)
+		return nil, fmt.Errorf("genericrsa: unsupported public key type %T for signer %q, use RSA keys", s.pubKey, s.ID)
 	}
 
 	s.Hash = conf.Hash
@@ -119,7 +119,7 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 		hashID = crypto.SHA256
 		s.hashSize = sha256.Size
 	default:
-		return nil, errors.Errorf("genericrsa: unsupported hash %q for signer %q, must be 'sha1' or 'sha256'", s.Hash, s.ID)
+		return nil, fmt.Errorf("genericrsa: unsupported hash %q for signer %q, must be 'sha1' or 'sha256'", s.Hash, s.ID)
 	}
 
 	s.SaltLength = conf.SaltLength
@@ -131,7 +131,7 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 		}
 	case ModePKCS15:
 		if s.SaltLength != 0 {
-			return nil, errors.Errorf("genericrsa: signer %q uses mode %q and sets salt length to %d, which is only valid in 'pss' mode", s.ID, s.Mode, s.SaltLength)
+			return nil, fmt.Errorf("genericrsa: signer %q uses mode %q and sets salt length to %d, which is only valid in 'pss' mode", s.ID, s.Mode, s.SaltLength)
 		}
 		s.sigOpts = &Options{
 			Hash: hashID,
@@ -168,11 +168,11 @@ func (s *RSASigner) SignData(data []byte, options interface{}) (signer.Signature
 // SignHash takes an input hash and returns a signed base64 encoded hash
 func (s *RSASigner) SignHash(digest []byte, options interface{}) (signer.Signature, error) {
 	if len(digest) != s.hashSize {
-		return nil, errors.Errorf("genericrsa: refusing to sign input hash. Got length %d, expected %d", len(digest), s.hashSize)
+		return nil, fmt.Errorf("genericrsa: refusing to sign input hash. Got length %d, expected %d", len(digest), s.hashSize)
 	}
 	sigBytes, err := s.key.(crypto.Signer).Sign(s.rng, digest, s.sigOpts)
 	if err != nil {
-		return nil, errors.Wrap(err, "genericrsa: error signing hash")
+		return nil, fmt.Errorf("genericrsa: error signing hash: %w", err)
 	}
 	sig := new(Signature)
 	sig.Data = sigBytes
@@ -243,7 +243,7 @@ func VerifySignature(input, sigBytes []byte, pubKey *rsa.PublicKey, sigopt inter
 		hashed := h.Sum(nil)
 		return rsa.VerifyPKCS1v15(pubKey, opt.Hash, hashed, sigBytes)
 	default:
-		return errors.Errorf("genericrsa: invalid mode %q", mode)
+		return fmt.Errorf("genericrsa: invalid mode %q", mode)
 	}
 }
 
@@ -251,24 +251,24 @@ func VerifySignature(input, sigBytes []byte, pubKey *rsa.PublicKey, sigopt inter
 // an input and autograph signature response and verify its signature.
 func VerifyGenericRsaSignatureResponse(input []byte, sr formats.SignatureResponse) error {
 	if sr.Type != Type {
-		return errors.Errorf("genericrsa: signature response of type %q cannot be verified by %q", sr.Type, Type)
+		return fmt.Errorf("genericrsa: signature response of type %q cannot be verified by %q", sr.Type, Type)
 	}
 	sig, err := Unmarshal(sr.Signature)
 	if err != nil {
-		return errors.Wrap(err, "genericrsa: failed to unmarshal rsa signature")
+		return fmt.Errorf("genericrsa: failed to unmarshal rsa signature: %w", err)
 	}
 	keyBytes, err := base64.StdEncoding.DecodeString(sr.PublicKey)
 	if err != nil {
-		return errors.Wrap(err, "genericrsa: failed to decode public key")
+		return fmt.Errorf("genericrsa: failed to decode public key: %w", err)
 	}
 	keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
 	if err != nil {
-		return errors.Wrap(err, "genericrsa: failed to parse pkix public key")
+		return fmt.Errorf("genericrsa: failed to parse pkix public key: %w", err)
 	}
 	pubKey := keyInterface.(*rsa.PublicKey)
 	err = VerifySignature(input, sig.(*Signature).Data, pubKey, sr.SignerOpts, sr.Mode)
 	if err != nil {
-		return errors.Wrap(err, "genericrsa: failed to verify signature")
+		return fmt.Errorf("genericrsa: failed to verify signature: %w", err)
 	}
 	return nil
 }

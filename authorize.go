@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"go.mozilla.org/hawk"
@@ -64,7 +63,7 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 	}
 	_, err = a.getAuthByID(userid)
 	if err != nil {
-		return nil, "", errors.Wrapf(err, "error finding auth for id %s for hawk.MaxTimestampSkew", userid)
+		return nil, "", fmt.Errorf("error finding auth for id %s for hawk.MaxTimestampSkew: %w", userid, err)
 	}
 	hawk.MaxTimestampSkew = a.hawkMaxTimestampSkew
 	err = auth.Valid()

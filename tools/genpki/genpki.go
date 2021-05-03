@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/ThalesIgnite/crypto11"
-	"github.com/pkg/errors"
 )
 
 func main() {
@@ -144,11 +143,11 @@ func main() {
 	}
 	inter, err := x509.ParseCertificate(interCertBytes)
 	if err != nil {
-		log.Fatal(errors.Wrap(err, "failed to parse intermediate certificate"))
+		log.Fatal(fmt.Errorf("failed to parse intermediate certificate: %w"), err)
 	}
 	_, err = inter.Verify(opts)
 	if err != nil {
-		log.Fatal(errors.Wrap(err, "failed to verify intermediate chain to root"))
+		log.Fatal(fmt.Errorf("failed to verify intermediate chain to root: %w"), err)
 	}
 
 	rootTmpfile, err := ioutil.TempFile("", "csrootcert")

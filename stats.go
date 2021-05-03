@@ -1,15 +1,17 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 )
 
 func loadStatsd(conf configuration) (*statsd.Client, error) {
 	statsdClient, err := statsd.NewBuffered(conf.Statsd.Addr, conf.Statsd.Buflen)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error constructing statsdClient")
+		return nil, fmt.Errorf("Error constructing statsdClient: %w", err)
 	}
 	statsdClient.Namespace = conf.Statsd.Namespace
 

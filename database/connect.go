@@ -13,8 +13,6 @@ import (
 
 	// lib/pq is the postgres driver
 	_ "github.com/lib/pq"
-
-	"github.com/pkg/errors"
 )
 
 func init() {
@@ -61,7 +59,7 @@ func Connect(config Config) (*Handler, error) {
 	}
 	dbfd, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to open database connection")
+		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 	if config.MaxOpenConns > 0 {
 		dbfd.SetMaxOpenConns(config.MaxOpenConns)
@@ -82,10 +80,10 @@ func (db *Handler) CheckConnectionContext(ctx context.Context) error {
 	var one uint
 	err := db.QueryRowContext(ctx, "SELECT 1").Scan(&one)
 	if err != nil {
-		return errors.Wrap(err, "Database connection failed")
+		return fmt.Errorf("Database connection failed: %w", err)
 	}
 	if one != 1 {
-		return errors.Errorf("Apparently the database doesn't know the meaning of one anymore")
+		return fmt.Errorf("Apparently the database doesn't know the meaning of one anymore")
 	}
 	return nil
 }

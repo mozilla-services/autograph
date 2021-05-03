@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	"github.com/mozilla-services/autograph/signer"
-	"github.com/pkg/errors"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -57,32 +57,32 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 	s = new(GPG2Signer)
 
 	if conf.Type != Type {
-		return nil, errors.Errorf("gpg2: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("gpg2: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, errors.New("gpg2: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("gpg2: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 
 	if conf.PrivateKey == "" {
-		return nil, errors.New("gpg2: missing private key in signer configuration")
+		return nil, fmt.Errorf("gpg2: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
 
 	if conf.PublicKey == "" {
-		return nil, errors.New("gpg2: missing public key in signer configuration")
+		return nil, fmt.Errorf("gpg2: missing public key in signer configuration")
 	}
 	s.PublicKey = conf.PublicKey
 
 	if conf.KeyID == "" {
-		return nil, errors.New("gpg2: missing gpg key ID in signer configuration")
+		return nil, fmt.Errorf("gpg2: missing gpg key ID in signer configuration")
 	}
 	// validate KeyID since it is injected into the temp dir
 	// prefix and could be used for command injection
 	if !isAlphanumeric(conf.KeyID) {
-		return nil, errors.New("gpg2: non-alphanumeric key ID in signer configuration")
+		return nil, fmt.Errorf("gpg2: non-alphanumeric key ID in signer configuration")
 	}
 	s.KeyID = conf.KeyID
 
@@ -90,7 +90,7 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 
 	s.tmpDir, err = createKeyRing(s)
 	if err != nil {
-		return nil, errors.Wrap(err, "gpg2: error creating keyring")
+		return nil, fmt.Errorf("gpg2: error creating keyring: %w", err)
 	}
 	return
 }
@@ -104,29 +104,29 @@ func createKeyRing(s *GPG2Signer) (string, error) {
 
 	dir, err := ioutil.TempDir("", prefix)
 	if err != nil {
-		return "", errors.Wrap(err, "gpg2: error creating tempdir for keyring")
+		return "", fmt.Errorf("gpg2: error creating tempdir for keyring: %w", err)
 	}
 
 	// write the public key to a temp file in our signer's temp dir
 	tmpPublicKeyFile, err := ioutil.TempFile(dir, "gpg2_publickey")
 	if err != nil {
-		return "", errors.Wrap(err, "gpg2: error creating tempfile for public key")
+		return "", fmt.Errorf("gpg2: error creating tempfile for public key: %w", err)
 	}
 	defer os.Remove(tmpPublicKeyFile.Name())
 	err = ioutil.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
 	if err != nil {
-		return "", errors.Wrap(err, "gpg2: error writing public key to tempfile")
+		return "", fmt.Errorf("gpg2: error writing public key to tempfile: %w", err)
 	}
 
 	// write the private key to a temp file in our signer's temp dir
 	tmpPrivateKeyFile, err := ioutil.TempFile(dir, "gpg2_privatekey")
 	if err != nil {
-		return "", errors.Wrap(err, "gpg2: error creating tempfile for private key")
+		return "", fmt.Errorf("gpg2: error creating tempfile for private key: %w", err)
 	}
 	defer os.Remove(tmpPrivateKeyFile.Name())
 	err = ioutil.WriteFile(tmpPrivateKeyFile.Name(), []byte(s.PrivateKey), 0755)
 	if err != nil {
-		return "", errors.Wrap(err, "gpg2: error writing private key to tempfile")
+		return "", fmt.Errorf("gpg2: error writing private key to tempfile: %w", err)
 	}
 
 	keyRingPath := filepath.Join(dir, keyRingFilename)
@@ -144,7 +144,7 @@ func createKeyRing(s *GPG2Signer) (string, error) {
 	)
 	out, err := gpgLoadPublicKey.CombinedOutput()
 	if err != nil {
-		return "", errors.Wrapf(err, "gpg2: failed to load public key into keyring: %s\n%s", err, out)
+		return "", fmt.Errorf("gpg2: failed to load public key into keyring: %s\n%s", err, out)
 	}
 	log.Debugf(fmt.Sprintf("gpg2: loaded public key %s", string(out)))
 
@@ -158,7 +158,7 @@ func createKeyRing(s *GPG2Signer) (string, error) {
 		"--import", tmpPrivateKeyFile.Name())
 	out, err = gpgLoadPrivateKey.CombinedOutput()
 	if err != nil {
-		return "", errors.Wrapf(err, "gpg2: failed to load private key into keyring: %s\n%s", err, out)
+		return "", fmt.Errorf("gpg2: failed to load private key into keyring: %s\n%s", err, out)
 	}
 	log.Debugf(fmt.Sprintf("gpg2: loaded private key %s", string(out)))
 
@@ -194,7 +194,7 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	// write the input to a temp file
 	tmpContentFile, err := ioutil.TempFile(s.tmpDir, fmt.Sprintf("gpg2_%s_input", s.ID))
 	if err != nil {
-		return nil, errors.Wrap(err, "gpg2: failed to create tempfile for input to sign")
+		return nil, fmt.Errorf("gpg2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer os.Remove(tmpContentFile.Name())
 	ioutil.WriteFile(tmpContentFile.Name(), data, 0755)
@@ -219,13 +219,13 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	)
 	stdin, err := gpgVerifySig.StdinPipe()
 	if err != nil {
-		return nil, errors.Wrap(err, "gpg2: failed to create stdin pipe for sign cmd")
+		return nil, fmt.Errorf("gpg2: failed to create stdin pipe for sign cmd: %w", err)
 	}
 	io.WriteString(stdin, s.passphrase)
 	stdin.Close()
 	out, err := gpgVerifySig.CombinedOutput()
 	if err != nil {
-		return nil, errors.Wrapf(err, "gpg2: failed to sign input %s\n%s", err, out)
+		return nil, fmt.Errorf("gpg2: failed to sign input %s\n%s", err, out)
 	}
 	log.Debugf("signed as:\n%s\n", string(out))
 
