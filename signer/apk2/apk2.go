@@ -24,7 +24,7 @@ const (
 	// shells out to apksigner to sign artifacts
 	Type = "apk2"
 
-	// ModeV3Enabled
+	// ModeV3Enabled enables APK v3 signing
 	ModeV3Enabled = "v3enabled"
 )
 
