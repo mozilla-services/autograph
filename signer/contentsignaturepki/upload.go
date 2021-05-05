@@ -64,9 +64,10 @@ func writeLocalFile(data, name string, target *url.URL) error {
 	return ioutil.WriteFile(target.Path+name, []byte(data), 0755)
 }
 
-// GetX5U retrieves a chain of certs from upload location, parses and verifies it,
-// then returns the slice of parsed certificates.
-func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
+// GetX5U retrieves a chain file of certs from upload location, parses
+// and verifies it, then returns a byte slice of the response body and
+// a slice of parsed certificates.
+func GetX5U(x5u string) (body []byte, certs []*x509.Certificate, err error) {
 	parsedURL, err := url.Parse(x5u)
 	if err != nil {
 		err = fmt.Errorf("failed to parse chain upload location: %w", err)
@@ -88,7 +89,7 @@ func GetX5U(x5u string) (certs []*x509.Certificate, err error) {
 		err = fmt.Errorf("failed to retrieve x5u from %s: %s", x5u, resp.Status)
 		return
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		err = fmt.Errorf("failed to parse x5u body: %w", err)
 		return

@@ -41,7 +41,7 @@ func verifyContentSignature(notifier Notifier, rootHash string, response formats
 		log.Fatal(err)
 	}
 	if response.X5U != "" {
-		certs, err = contentsignaturepki.GetX5U(response.X5U)
+		_, certs, err = contentsignaturepki.GetX5U(response.X5U)
 		if err != nil {
 			return err
 		}

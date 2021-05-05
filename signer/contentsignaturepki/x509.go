@@ -52,7 +52,7 @@ func (s *ContentSigner) makeAndUploadChain() (err error) {
 		return fmt.Errorf("failed to upload chain: %w", err)
 	}
 	newX5U := s.X5U + chainName
-	_, err = GetX5U(newX5U)
+	_, _, err = GetX5U(newX5U)
 	if err != nil {
 		return fmt.Errorf("failed to download new chain: %w", err)
 	}

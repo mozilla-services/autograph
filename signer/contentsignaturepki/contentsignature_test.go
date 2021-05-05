@@ -71,7 +71,7 @@ func TestSign(t *testing.T) {
 		}
 
 		// verify the signature using the public key of the end entity
-		certs, err := GetX5U(s.X5U)
+		_, certs, err := GetX5U(s.X5U)
 		if err != nil {
 			t.Fatalf("testcase %d failed to get X5U %q: %v", i, s.X5U, err)
 		}

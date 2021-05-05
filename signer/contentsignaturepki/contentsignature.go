@@ -179,7 +179,7 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 	default:
 		return fmt.Errorf("contentsignaturepki %q: failed to find suitable end-entity: %w", s.ID, err)
 	}
-	_, err = GetX5U(s.X5U)
+	_, _, err = GetX5U(s.X5U)
 	if err != nil {
 		return fmt.Errorf("contentsignaturepki %q: failed to verify x5u: %w", s.ID, err)
 	}
@@ -318,7 +318,7 @@ func (s *ContentSigner) GetDefaultOptions() interface{} {
 // of the signature on the input data using the end-entity certificate
 // of the chain, and returns an error if it fails, or nil on success.
 func Verify(x5u, signature string, input []byte) error {
-	certs, err := GetX5U(x5u)
+	_, certs, err := GetX5U(x5u)
 	if err != nil {
 		return err
 	}
