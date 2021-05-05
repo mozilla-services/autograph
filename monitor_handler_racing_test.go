@@ -20,8 +20,11 @@ import (
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
 	"github.com/mozilla-services/autograph/signer/xpi"
+	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 	margo "go.mozilla.org/mar"
 )
+
+const autographDevRootHash = `5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`
 
 func TestMonitorPass(t *testing.T) {
 	t.Parallel()
@@ -59,7 +62,11 @@ func TestMonitorPass(t *testing.T) {
 				response.Signature,
 				response.PublicKey)
 		case contentsignaturepki.Type:
-			err = contentsignaturepki.Verify(response.X5U, response.Signature, MonitoringInputData)
+			body, _, err := contentsignaturepki.GetX5U(response.X5U)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = csigverifier.Verify(MonitoringInputData, body, response.Signature, autographDevRootHash)
 		case xpi.Type:
 			err = verifyXPISignature(
 				base64.StdEncoding.EncodeToString(MonitoringInputData),
