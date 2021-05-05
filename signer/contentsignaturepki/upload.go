@@ -1,18 +1,20 @@
 package contentsignaturepki
 
 import (
+	"crypto/sha256"
 	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
 
 // upload takes a string and a filename and puts it at the upload location
@@ -94,63 +96,20 @@ func GetX5U(x5u string) (body []byte, certs []*x509.Certificate, err error) {
 		err = fmt.Errorf("failed to parse x5u body: %w", err)
 		return
 	}
-	// verify the chain
-	// the first cert is the end entity, then the intermediate and the root
-	block, rest := pem.Decode(body)
-	if block == nil || block.Type != "CERTIFICATE" {
-		err = fmt.Errorf("failed to PEM decode ee certificate from chain: %w", err)
-		return
-	}
-	ee, err := x509.ParseCertificate(block.Bytes)
+	certs, err = csigverifier.ParseChain(body)
 	if err != nil {
-		err = fmt.Errorf("failed to parse ee certificate from chain: %w", err)
+		err = fmt.Errorf("failed to parse x5u : %w", err)
 		return
 	}
-	certs = append(certs, ee)
-
-	// the second cert is the intermediate
-	block, rest = pem.Decode(rest)
-	if block == nil || block.Type != "CERTIFICATE" {
-		err = fmt.Errorf("failed to PEM decode intermediate certificate from chain: %w", err)
-		return
-	}
-	inter, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		err = fmt.Errorf("failed to parse intermediate issuer certificate from chain: %w", err)
-		return
-	}
-	inters := x509.NewCertPool()
-	inters.AddCert(inter)
-	certs = append(certs, inter)
-
-	// the third and last cert is the root
-	block, rest = pem.Decode(rest)
-	if block == nil || block.Type != "CERTIFICATE" {
-		err = fmt.Errorf("failed to PEM decode root certificate from chain: %w", err)
-		return
-	}
-	root, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		err = fmt.Errorf("failed to parse root certificate from chain: %w", err)
-		return
-	}
-	if len(rest) != 0 {
-		err = fmt.Errorf("trailing data after root certificate in chain")
-		return
-	}
-	roots := x509.NewCertPool()
-	roots.AddCert(root)
-	certs = append(certs, root)
-
-	opts := x509.VerifyOptions{
-		Roots:         roots,
-		Intermediates: inters,
-		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
-	}
-	_, err = ee.Verify(opts)
+	rootHash := sha2Fingerprint(certs[2])
+	err = csigverifier.VerifyChain(rootHash, certs, time.Now())
 	if err != nil {
 		err = fmt.Errorf("failed to verify certificate chain: %w", err)
 		return
 	}
 	return
+}
+
+func sha2Fingerprint(cert *x509.Certificate) string {
+	return strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
 }
