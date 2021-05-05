@@ -17,12 +17,11 @@ fi
 make generate test
 # run monitor unit tests
 make -C tools/autograph-monitor test
-make -C verifier/contentsignature test
 
 if [ "$RACE_TEST" = "1" ]; then
     make race
     make -C tools/autograph-monitor race
-    make -C verifier/contentsignature test
+    make -C verifier/contentsignature race
 fi
 
 if [ "$REPORT_COVERAGE" = "true" ]; then

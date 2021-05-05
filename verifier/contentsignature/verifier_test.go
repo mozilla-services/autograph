@@ -45,9 +45,9 @@ func mustPEMToECKey(s string) *ecdsa.PrivateKey {
 	return key
 }
 
-// mustChainToCerts
-func mustChainToCerts(chain string) (certs []*x509.Certificate) {
-	certs, err := chainBytesToCerts([]byte(chain))
+// mustParseChain
+func mustParseChain(chain string) (certs []*x509.Certificate) {
+	certs, err := ParseChain([]byte(chain))
 	if err != nil {
 		log.Fatalf("error parsing chain: %q", err)
 	}
@@ -970,7 +970,7 @@ var NormandyDevChain2021Certs = []*x509.Certificate{
 
 // Tests -----------------------------------------------------------------
 
-func Test_chainBytesToCerts(t *testing.T) {
+func Test_ParseChain(t *testing.T) {
 	tests := []struct {
 		name       string
 		chain      []byte
@@ -1063,59 +1063,59 @@ func Test_chainBytesToCerts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotCerts, err := chainBytesToCerts(tt.chain)
+			gotCerts, err := ParseChain(tt.chain)
 			if tt.wantErr && (err != nil) && err.Error() != tt.wantErrStr {
-				t.Errorf("chainBytesToCerts() error.Error() = '%s', wanted wantErrStr '%s'", err, tt.wantErrStr)
+				t.Errorf("ParseChain() error.Error() = '%s', wanted wantErrStr '%s'", err, tt.wantErrStr)
 			}
 			if (err != nil) != tt.wantErr {
-				t.Errorf("chainBytesToCerts() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ParseChain() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
 			for i, cert := range gotCerts {
 				if cert.IsCA != tt.wantCerts[i].IsCA {
-					t.Errorf("chainBytesToCerts() certs[%d].IsCA = %#v, want %#v", i, gotCerts[i].IsCA, tt.wantCerts[i].IsCA)
+					t.Errorf("ParseChain() certs[%d].IsCA = %#v, want %#v", i, gotCerts[i].IsCA, tt.wantCerts[i].IsCA)
 				}
 				if !reflect.DeepEqual(cert.Subject.CommonName, tt.wantCerts[i].Subject.CommonName) {
-					t.Errorf("chainBytesToCerts() certs[%d].Subject.CommonName = %#v, want %#v", i, gotCerts[i].Subject.CommonName, tt.wantCerts[i].Subject.CommonName)
+					t.Errorf("ParseChain() certs[%d].Subject.CommonName = %#v, want %#v", i, gotCerts[i].Subject.CommonName, tt.wantCerts[i].Subject.CommonName)
 				}
 				if !reflect.DeepEqual(cert.Subject.Country, tt.wantCerts[i].Subject.Country) {
-					t.Errorf("chainBytesToCerts() certs[%d].Subject.Country = %#v, want %#v", i, gotCerts[i].Subject.Country, tt.wantCerts[i].Subject.Country)
+					t.Errorf("ParseChain() certs[%d].Subject.Country = %#v, want %#v", i, gotCerts[i].Subject.Country, tt.wantCerts[i].Subject.Country)
 				}
 				if !reflect.DeepEqual(cert.Subject.Province, tt.wantCerts[i].Subject.Province) {
-					t.Errorf("chainBytesToCerts() certs[%d].Subject.Province = %#v, want %#v", i, gotCerts[i].Subject.Province, tt.wantCerts[i].Subject.Province)
+					t.Errorf("ParseChain() certs[%d].Subject.Province = %#v, want %#v", i, gotCerts[i].Subject.Province, tt.wantCerts[i].Subject.Province)
 				}
 				if !reflect.DeepEqual(cert.Subject.Locality, tt.wantCerts[i].Subject.Locality) {
-					t.Errorf("chainBytesToCerts() certs[%d].Subject.Locality = %#v, want %#v", i, gotCerts[i].Subject.Locality, tt.wantCerts[i].Subject.Locality)
+					t.Errorf("ParseChain() certs[%d].Subject.Locality = %#v, want %#v", i, gotCerts[i].Subject.Locality, tt.wantCerts[i].Subject.Locality)
 				}
 				if !reflect.DeepEqual(cert.Subject.Organization, tt.wantCerts[i].Subject.Organization) {
-					t.Errorf("chainBytesToCerts() certs[%d].Subject.Organization = %#v, want %#v", i, gotCerts[i].Subject.Organization, tt.wantCerts[i].Subject.Organization)
+					t.Errorf("ParseChain() certs[%d].Subject.Organization = %#v, want %#v", i, gotCerts[i].Subject.Organization, tt.wantCerts[i].Subject.Organization)
 				}
 				if !reflect.DeepEqual(cert.Subject.OrganizationalUnit, tt.wantCerts[i].Subject.OrganizationalUnit) {
-					t.Errorf("chainBytesToCerts() certs[%d].Subject.OrganizationalUnit = %#v, want %#v", i, gotCerts[i].Subject.OrganizationalUnit, tt.wantCerts[i].Subject.OrganizationalUnit)
+					t.Errorf("ParseChain() certs[%d].Subject.OrganizationalUnit = %#v, want %#v", i, gotCerts[i].Subject.OrganizationalUnit, tt.wantCerts[i].Subject.OrganizationalUnit)
 				}
 				if !reflect.DeepEqual(cert.DNSNames, tt.wantCerts[i].DNSNames) {
-					t.Errorf("chainBytesToCerts() certs[%d].DNSNames = %#v, want %#v", i, gotCerts[i].DNSNames, tt.wantCerts[i].DNSNames)
+					t.Errorf("ParseChain() certs[%d].DNSNames = %#v, want %#v", i, gotCerts[i].DNSNames, tt.wantCerts[i].DNSNames)
 				}
 				if cert.NotBefore != tt.wantCerts[i].NotBefore {
-					t.Errorf("chainBytesToCerts() certs[%d].NotBefore = %s, want %s", i, gotCerts[i].NotBefore, tt.wantCerts[i].NotBefore)
+					t.Errorf("ParseChain() certs[%d].NotBefore = %s, want %s", i, gotCerts[i].NotBefore, tt.wantCerts[i].NotBefore)
 				}
 				if cert.NotAfter != tt.wantCerts[i].NotAfter {
-					t.Errorf("chainBytesToCerts() certs[%d].NotAfter = %s, want %s", i, gotCerts[i].NotAfter, tt.wantCerts[i].NotAfter)
+					t.Errorf("ParseChain() certs[%d].NotAfter = %s, want %s", i, gotCerts[i].NotAfter, tt.wantCerts[i].NotAfter)
 				}
 				if !reflect.DeepEqual(cert.KeyUsage, tt.wantCerts[i].KeyUsage) {
-					t.Errorf("chainBytesToCerts() certs[%d].KeyUsage = %+v, want %+v", i, gotCerts[i].KeyUsage, tt.wantCerts[i].KeyUsage)
+					t.Errorf("ParseChain() certs[%d].KeyUsage = %+v, want %+v", i, gotCerts[i].KeyUsage, tt.wantCerts[i].KeyUsage)
 				}
 				if !reflect.DeepEqual(cert.PermittedDNSDomains, tt.wantCerts[i].PermittedDNSDomains) {
-					t.Errorf("chainBytesToCerts() certs[%d].PermittedDNSDomains = %+v, want %+v", i, gotCerts[i].PermittedDNSDomains, tt.wantCerts[i].PermittedDNSDomains)
+					t.Errorf("ParseChain() certs[%d].PermittedDNSDomains = %+v, want %+v", i, gotCerts[i].PermittedDNSDomains, tt.wantCerts[i].PermittedDNSDomains)
 				}
 				if !reflect.DeepEqual(cert.ExcludedDNSDomains, tt.wantCerts[i].ExcludedDNSDomains) {
-					t.Errorf("chainBytesToCerts() certs[%d].ExcludedDNSDomains = %+v, want %+v", i, gotCerts[i].ExcludedDNSDomains, tt.wantCerts[i].ExcludedDNSDomains)
+					t.Errorf("ParseChain() certs[%d].ExcludedDNSDomains = %+v, want %+v", i, gotCerts[i].ExcludedDNSDomains, tt.wantCerts[i].ExcludedDNSDomains)
 				}
 			}
 			// TODO: test remaining attributes
 			// if !reflect.DeepEqual(gotCerts, tt.wantCerts) {
-			// 	t.Errorf("chainBytesToCerts() = %#v, want %#v", gotCerts, tt.wantCerts)
+			// 	t.Errorf("ParseChain() = %#v, want %#v", gotCerts, tt.wantCerts)
 			// }
 		})
 	}
@@ -1214,7 +1214,7 @@ func Test_verifyRoot(t *testing.T) {
 	}
 }
 
-func Test_verifyCertChain(t *testing.T) {
+func Test_VerifyChain(t *testing.T) {
 	type args struct {
 		rootHash    string
 		certs       []*x509.Certificate
@@ -1230,7 +1230,7 @@ func Test_verifyCertChain(t *testing.T) {
 			name: "valid chain NormandyDevChain2021 passes",
 			args: args{
 				rootHash:    normandyDev2021Roothash,
-				certs:       mustChainToCerts(NormandyDevChain2021),
+				certs:       mustParseChain(NormandyDevChain2021),
 				currentTime: mustParseUTC("2020-05-09T14:02:37Z"),
 			},
 			wantErr:   false,
@@ -1276,7 +1276,7 @@ func Test_verifyCertChain(t *testing.T) {
 			name: "wrongly ordered chain fails",
 			args: args{
 				rootHash:    sha2Fingerprint(testRoot),
-				certs:       mustChainToCerts(WronglyOrderedChain),
+				certs:       mustParseChain(WronglyOrderedChain),
 				currentTime: mustParseUTC("2021-05-09T14:02:37Z"),
 			},
 			wantErr:   true,
@@ -1380,17 +1380,17 @@ func Test_verifyCertChain(t *testing.T) {
 				err error
 			)
 
-			err = verifyCertChain(tt.args.rootHash, tt.args.certs, tt.args.currentTime)
+			err = VerifyChain(tt.args.rootHash, tt.args.certs, tt.args.currentTime)
 
 			if tt.wantErr == false && err != nil { // unexpected error
-				t.Errorf("verifyCertChain() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("VerifyChain() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.wantErr == true && err == nil { // unexpected pass
-				t.Errorf("verifyCertChain() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("VerifyChain() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.wantErr == true && !strings.Contains(err.Error(), tt.errSubStr) {
-				t.Fatalf("verifyCertChain() expected to fail with '%s' but failed with: '%v'", tt.errSubStr, err.Error())
+				t.Fatalf("VerifyChain() expected to fail with '%s' but failed with: '%v'", tt.errSubStr, err.Error())
 			}
 		})
 	}

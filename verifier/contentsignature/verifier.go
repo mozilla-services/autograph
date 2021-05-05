@@ -11,14 +11,14 @@ import (
 	"time"
 )
 
-// chainBytesToCerts parses a PEM-encoded certificate chain.
+// ParseChain parses a PEM-encoded certificate chain.
 //
 // It parses the end entity/leaf then the intermediate then the root
 // cert. It does not validate the certificates or the chain.
 //
 // It returns the slice of three certs or an empty slice and an error.
 //
-func chainBytesToCerts(chain []byte) (certs []*x509.Certificate, err error) {
+func ParseChain(chain []byte) (certs []*x509.Certificate, err error) {
 	block, rest := pem.Decode(chain)
 	if block == nil || block.Type != "CERTIFICATE" {
 		return nil, fmt.Errorf("failed to PEM decode EE/leaf certificate from chain")
@@ -96,13 +96,13 @@ func verifyRoot(rootHash string, cert *x509.Certificate) error {
 	return nil
 }
 
-// verifyCertChain checks certs in a three certificate chain [EE, intermediate, root] are:
+// VerifyChain checks certs in a three certificate chain [EE, intermediate, root] are:
 //
 // 1) signed by their parent/issuer/the next cert in the chain or all verifyRoot checks for the root
 // 2) valid for the current time i.e. cert NotBefore < current time < cert NotAfter
 // 3) the chain follows name constraints and extended key usage as checked by x509 Certificate.Verify
 //
-func verifyCertChain(rootHash string, certs []*x509.Certificate, currentTime time.Time) error {
+func VerifyChain(rootHash string, certs []*x509.Certificate, currentTime time.Time) error {
 	if len(certs) != 3 {
 		return fmt.Errorf("can only verify 3 certificate chain, got %d certs", len(certs))
 	}
@@ -174,7 +174,7 @@ func verifyCertChain(rootHash string, certs []*x509.Certificate, currentTime tim
 // It returns an error if it fails or nil on success.
 //
 func Verify(input, certChain []byte, signature, rootHash string) error {
-	certs, err := chainBytesToCerts(certChain)
+	certs, err := ParseChain(certChain)
 	if err != nil {
 		return fmt.Errorf("Error parsing cert chain: %w", err)
 	}
@@ -193,7 +193,7 @@ func Verify(input, certChain []byte, signature, rootHash string) error {
 		return fmt.Errorf("ECDSA signature verification failed")
 	}
 
-	err = verifyCertChain(rootHash, certs, time.Now())
+	err = VerifyChain(rootHash, certs, time.Now())
 	if err != nil {
 		return fmt.Errorf("Error verifying content signature certificate chain: %w", err)
 	}
