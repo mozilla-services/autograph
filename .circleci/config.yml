@@ -17,6 +17,7 @@ jobs:
             make install-golint lint check-no-crypto11-in-signers
             make show-lint
             make -C tools/autograph-monitor lint
+            make -C verifier/contentsignature lint
       - run:
           name: run gofmt
           command: |
@@ -32,6 +33,7 @@ jobs:
           command: |
             make vet
             make -C tools/autograph-monitor vet
+            make -C verifier/contentsignature vet
 
   unit-test:
     # based on the official golang image with more docker stuff
