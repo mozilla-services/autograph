@@ -551,32 +551,18 @@ func verifyContentSignature(rawInput string, resp formats.SignatureResponse, end
 		return err
 	}
 	pubKey := keyInterface.(*ecdsa.PublicKey)
-	if endpoint == "/sign/data" || endpoint == "/__monitor__" {
-		var templated []byte
-		templated = make([]byte, len(contentsignature.SignaturePrefix)+len(input))
-		copy(templated[:len(contentsignature.SignaturePrefix)], []byte(contentsignature.SignaturePrefix))
-		copy(templated[len(contentsignature.SignaturePrefix):], input)
-
-		var md hash.Hash
-		switch pubKey.Params().Name {
-		case "P-256":
-			md = sha256.New()
-		case "P-384":
-			md = sha512.New384()
-		case "P-521":
-			md = sha512.New()
-		default:
-			return fmt.Errorf("unsupported curve algorithm %q", pubKey.Params().Name)
-		}
-		md.Write(templated)
-		input = md.Sum(nil)
-	}
 	sig, err := contentsignature.Unmarshal(resp.Signature)
 	if err != nil {
 		return err
 	}
-	if !ecdsa.Verify(pubKey, input, sig.R, sig.S) {
-		return fmt.Errorf("ecdsa signature verification failed")
+	if endpoint == "/sign/data" || endpoint == "/__monitor__" {
+		if !sig.VerifyData(input, pubKey) {
+			return fmt.Errorf("ecdsa signature verification failed")
+		}
+	} else {
+		if !sig.VerifyHash(input, pubKey) {
+			return fmt.Errorf("ecdsa signature verification failed")
+		}
 	}
 	return nil
 }
