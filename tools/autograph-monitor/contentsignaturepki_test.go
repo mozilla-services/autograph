@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -167,6 +168,7 @@ func Test_verifyCertChain(t *testing.T) {
 		name                 string
 		args                 args
 		wantErr              bool
+		wantNotifications    []CertNotification
 		errSubStr            string
 		useMockNotifier      bool
 		mockNotifierCallback func(*mock_main.MockNotifier)
@@ -179,6 +181,13 @@ func Test_verifyCertChain(t *testing.T) {
 				certs:    mustChainToCerts(ExpiredEndEntityChain),
 			},
 			wantErr:         true,
+			wantNotifications: []CertNotification{
+				CertNotification{
+					CN:       "normandy.content-signature.mozilla.org",
+					Severity: "warning",
+					Message:  `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`,
+				},
+			},
 			errSubStr:       "expired",
 			useMockNotifier: false,
 		},
@@ -201,6 +210,13 @@ func Test_verifyCertChain(t *testing.T) {
 				certs:    []*x509.Certificate{selfSignedRootNotYetValid},
 			},
 			wantErr:         true,
+			wantNotifications: []CertNotification{
+				CertNotification{
+					CN:       "normandy.content-signature.mozilla.org",
+					Severity: "info",
+					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
+				},
+			},
 			errSubStr:       "is not yet valid",
 			useMockNotifier: false,
 		},
@@ -222,7 +238,24 @@ func Test_verifyCertChain(t *testing.T) {
 				rootHash: conf.rootHash,
 				certs:    mustChainToCerts(NormandyDevChain2021),
 			},
-			wantErr:         false,
+			wantErr: false,
+			wantNotifications: []CertNotification{
+				CertNotification{
+					CN:       "normandy.content-signature.mozilla.org",
+					Severity: "info",
+					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
+				},
+				CertNotification{
+					CN:       "Devzilla Signing Services Intermediate 1",
+					Severity: "info",
+					Message:  `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`,
+				},
+				CertNotification{
+					CN:       "dev.content-signature.root.ca",
+					Severity: "info",
+					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
+				},
+			},
 			errSubStr:       "",
 			useMockNotifier: false,
 		},
@@ -240,6 +273,13 @@ func Test_verifyCertChain(t *testing.T) {
 				m.EXPECT().Send("normandy.content-signature.mozilla.org", "warning", `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`)
 				return
 			},
+			wantNotifications: []CertNotification{
+				CertNotification{
+					CN:       "normandy.content-signature.mozilla.org",
+					Severity: "warning",
+					Message:  `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`,
+				},
+			},
 		},
 		{
 			name: "expired EE chain send warning errors",
@@ -249,6 +289,13 @@ func Test_verifyCertChain(t *testing.T) {
 				certs:    mustChainToCerts(ExpiredEndEntityChain),
 			},
 			wantErr:         true,
+			wantNotifications: []CertNotification{
+				CertNotification{
+					CN:       "normandy.content-signature.mozilla.org",
+					Severity: "info",
+					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
+				},
+			},
 			errSubStr:       "expired",
 			useMockNotifier: true,
 			mockNotifierCallback: func(m *mock_main.MockNotifier) {
@@ -264,6 +311,23 @@ func Test_verifyCertChain(t *testing.T) {
 				certs:    mustChainToCerts(NormandyDevChain2021),
 			},
 			wantErr:         false,
+			wantNotifications: []CertNotification{
+				CertNotification{
+					CN:       "normandy.content-signature.mozilla.org",
+					Severity: "info",
+					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
+				},
+				CertNotification{
+					CN:       "Devzilla Signing Services Intermediate 1",
+					Severity: "info",
+					Message:  `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`,
+				},
+				CertNotification{
+					CN:       "dev.content-signature.root.ca",
+					Severity: "info",
+					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
+				},
+			},
 			errSubStr:       "",
 			useMockNotifier: true,
 			mockNotifierCallback: func(m *mock_main.MockNotifier) {
@@ -283,7 +347,24 @@ func Test_verifyCertChain(t *testing.T) {
 				rootHash: conf.rootHash,
 				certs:    mustChainToCerts(NormandyDevChain2021),
 			},
-			wantErr:         false,
+			wantErr: false,
+			wantNotifications: []CertNotification{
+				CertNotification{
+					CN:       "normandy.content-signature.mozilla.org",
+					Severity: "info",
+					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
+				},
+				CertNotification{
+					CN:       "Devzilla Signing Services Intermediate 1",
+					Severity: "info",
+					Message:  `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`,
+				},
+				CertNotification{
+					CN:       "dev.content-signature.root.ca",
+					Severity: "info",
+					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
+				},
+			},
 			errSubStr:       "",
 			useMockNotifier: true,
 			mockNotifierCallback: func(m *mock_main.MockNotifier) {
@@ -312,7 +393,7 @@ func Test_verifyCertChain(t *testing.T) {
 				notifier = m
 			}
 
-			err = verifyCertChain(notifier, tt.args.rootHash, tt.args.certs)
+			notifications, err := verifyCertChain(notifier, tt.args.rootHash, tt.args.certs)
 
 			if tt.wantErr == false && err != nil { // unexpected error
 				t.Errorf("verifyCertChain() error = %v, wantErr %v", err, tt.wantErr)
@@ -322,6 +403,12 @@ func Test_verifyCertChain(t *testing.T) {
 			}
 			if tt.wantErr == true && !strings.Contains(err.Error(), tt.errSubStr) {
 				t.Fatalf("verifyCertChain() expected to fail with %s but failed with: %v", tt.errSubStr, err.Error())
+			}
+			if len(tt.wantNotifications) != len(notifications) {
+				t.Errorf("verifyCertChain() len(notifications) = %d, len(wantNotifications) %d", len(notifications), len(tt.wantNotifications))
+				if !reflect.DeepEqual(notifications, tt.wantNotifications) {
+					t.Errorf("verifyCertChain() notifications = %+v, wantNotifications %+v", notifications, tt.wantNotifications)
+				}
 			}
 		})
 	}

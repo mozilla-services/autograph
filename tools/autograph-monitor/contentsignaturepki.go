@@ -27,6 +27,17 @@ var ignoredCerts = map[string]bool{
 	// "focus-experiments.content-signature.mozilla.org":       true,
 }
 
+// CertNotification is a warning about a pending or resolved cert
+// expiration
+type CertNotification struct {
+	// cert.Subject.CommonName
+	CN string
+	// "warning" or "info"
+	Severity string
+	// Message is the notification message
+	Message string
+}
+
 // validate the signature and certificate chain of a content signature response
 //
 // If an X5U value was provided, use the public key from the end entity certificate
@@ -57,7 +68,15 @@ func verifyContentSignature(notifier Notifier, rootHash string, response formats
 	if !sig.VerifyData([]byte(inputdata), key) {
 		return fmt.Errorf("Signature verification failed")
 	}
-	err = verifyCertChain(notifier, rootHash, certs)
+	notifications, err := verifyCertChain(notifier, rootHash, certs)
+	if notifier != nil {
+		for _, notification := range notifications {
+			notifyErr := notifier.Send(notification.CN, notification.Severity, notification.Message)
+			if notifyErr != nil {
+				log.Printf("failed to send soft notification: %v", notifyErr)
+			}
+		}
+	}
 	if err != nil {
 		// check if we should ignore this cert
 		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
@@ -79,21 +98,23 @@ func verifyContentSignature(notifier Notifier, rootHash string, response formats
 // When an AWS SNS topic is configured it also sends a soft
 // notification for each cert expiring in less than 30 days.
 //
-func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certificate) error {
+func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certificate) (notifications []CertNotification, err error) {
 	for i, cert := range certs {
 		if (i + 1) == len(certs) {
-			err := verifyRoot(rootHash, cert)
+			err = verifyRoot(rootHash, cert)
 			if err != nil {
-				return fmt.Errorf("Certificate %d %q is root but fails validation: %v",
+				err = fmt.Errorf("Certificate %d %q is root but fails validation: %v",
 					i, cert.Subject.CommonName, err)
+				return
 			}
 			log.Printf("Certificate %d %q is a valid root", i, cert.Subject.CommonName)
 		} else {
 			// check that cert is signed by parent
-			err := cert.CheckSignatureFrom(certs[i+1])
-			if err != nil {
-				return fmt.Errorf("Certificate %d %q is not signed by parent certificate %d %q: %v",
-					i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName, err)
+			checkCertErr := cert.CheckSignatureFrom(certs[i+1])
+			if checkCertErr != nil {
+				err = fmt.Errorf("Certificate %d %q is not signed by parent certificate %d %q: %v",
+					i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName, checkCertErr)
+				return
 			}
 			log.Printf("Certificate %d %q has a valid signature from parent certificate %d %q",
 				i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName)
@@ -134,11 +155,16 @@ func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certifica
 				log.Printf("failed to send soft notification: %v", notifyErr)
 			}
 		}
+		notifications = append(notifications, CertNotification{
+			CN:       cert.Subject.CommonName,
+			Severity: notificationSeverity,
+			Message:  notificationMessage,
+		})
 		if err != nil {
-			return err
+			return notifications, err
 		}
 	}
-	return nil
+	return notifications, nil
 }
 
 // verifyRoot checks that a root cert is:
