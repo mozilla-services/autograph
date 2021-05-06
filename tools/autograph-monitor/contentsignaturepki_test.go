@@ -18,9 +18,7 @@ import (
 	"testing"
 	"time"
 
-	gomock "github.com/golang/mock/gomock"
 	"github.com/mozilla-services/autograph/formats"
-	"github.com/mozilla-services/autograph/tools/autograph-monitor/mock_main"
 )
 
 // helper funcs  -----------------------------------------------------------------
@@ -157,30 +155,24 @@ func TestVerifyContentSignature(t *testing.T) {
 }
 
 func Test_verifyCertChain(t *testing.T) {
-	var typedNilNotifier *PDEventNotifier = nil
-
 	type args struct {
-		notifier Notifier
 		rootHash string
 		certs    []*x509.Certificate
 	}
 	tests := []struct {
-		name                 string
-		args                 args
-		wantErr              bool
-		wantNotifications    []CertNotification
-		errSubStr            string
-		useMockNotifier      bool
-		mockNotifierCallback func(*mock_main.MockNotifier)
+		name              string
+		args              args
+		wantErr           bool
+		wantNotifications []CertNotification
+		errSubStr         string
 	}{
 		{
 			name: "expired end-entity chain fails",
 			args: args{
-				notifier: nil,
 				rootHash: conf.rootHash,
 				certs:    mustChainToCerts(ExpiredEndEntityChain),
 			},
-			wantErr:         true,
+			wantErr: true,
 			wantNotifications: []CertNotification{
 				CertNotification{
 					CN:       "normandy.content-signature.mozilla.org",
@@ -188,28 +180,24 @@ func Test_verifyCertChain(t *testing.T) {
 					Message:  `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`,
 				},
 			},
-			errSubStr:       "expired",
-			useMockNotifier: false,
+			errSubStr: "expired",
 		},
 		{
 			name: "invalid root chain fails",
 			args: args{
-				notifier: nil,
 				rootHash: conf.rootHash,
 				certs:    []*x509.Certificate{selfSignedRootNonCA},
 			},
-			wantErr:         true,
-			errSubStr:       "is root but fails validation",
-			useMockNotifier: false,
+			wantErr:   true,
+			errSubStr: "is root but fails validation",
 		},
 		{
 			name: "not yet valid chain fails",
 			args: args{
-				notifier: nil,
 				rootHash: conf.rootHash,
 				certs:    []*x509.Certificate{selfSignedRootNotYetValid},
 			},
-			wantErr:         true,
+			wantErr: true,
 			wantNotifications: []CertNotification{
 				CertNotification{
 					CN:       "normandy.content-signature.mozilla.org",
@@ -217,24 +205,20 @@ func Test_verifyCertChain(t *testing.T) {
 					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
 				},
 			},
-			errSubStr:       "is not yet valid",
-			useMockNotifier: false,
+			errSubStr: "is not yet valid",
 		},
 		{
 			name: "wrongly ordered chain fails",
 			args: args{
-				notifier: nil,
 				rootHash: conf.rootHash,
 				certs:    mustChainToCerts(WronglyOrderedChain),
 			},
-			wantErr:         true,
-			errSubStr:       "is not signed by parent certificate",
-			useMockNotifier: false,
+			wantErr:   true,
+			errSubStr: "is not signed by parent certificate",
 		},
 		{
 			name: "valid chain with typed nil notifier passes",
 			args: args{
-				notifier: typedNilNotifier,
 				rootHash: conf.rootHash,
 				certs:    mustChainToCerts(NormandyDevChain2021),
 			},
@@ -256,23 +240,16 @@ func Test_verifyCertChain(t *testing.T) {
 					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
 				},
 			},
-			errSubStr:       "",
-			useMockNotifier: false,
+			errSubStr: "",
 		},
 		{
 			name: "expired EE chain sends warning",
 			args: args{
-				notifier: nil,
 				rootHash: conf.rootHash,
 				certs:    mustChainToCerts(ExpiredEndEntityChain),
 			},
-			wantErr:         true,
-			errSubStr:       "expired",
-			useMockNotifier: true,
-			mockNotifierCallback: func(m *mock_main.MockNotifier) {
-				m.EXPECT().Send("normandy.content-signature.mozilla.org", "warning", `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`)
-				return
-			},
+			wantErr:   true,
+			errSubStr: "expired",
 			wantNotifications: []CertNotification{
 				CertNotification{
 					CN:       "normandy.content-signature.mozilla.org",
@@ -284,11 +261,10 @@ func Test_verifyCertChain(t *testing.T) {
 		{
 			name: "expired EE chain send warning errors",
 			args: args{
-				notifier: nil,
 				rootHash: conf.rootHash,
 				certs:    mustChainToCerts(ExpiredEndEntityChain),
 			},
-			wantErr:         true,
+			wantErr: true,
 			wantNotifications: []CertNotification{
 				CertNotification{
 					CN:       "normandy.content-signature.mozilla.org",
@@ -296,54 +272,11 @@ func Test_verifyCertChain(t *testing.T) {
 					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
 				},
 			},
-			errSubStr:       "expired",
-			useMockNotifier: true,
-			mockNotifierCallback: func(m *mock_main.MockNotifier) {
-				m.EXPECT().Send("normandy.content-signature.mozilla.org", "warning", `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error"))
-				return
-			},
+			errSubStr: "expired",
 		},
 		{
 			name: "valid chain resolves warnings",
 			args: args{
-				notifier: nil,
-				rootHash: conf.rootHash,
-				certs:    mustChainToCerts(NormandyDevChain2021),
-			},
-			wantErr:         false,
-			wantNotifications: []CertNotification{
-				CertNotification{
-					CN:       "normandy.content-signature.mozilla.org",
-					Severity: "info",
-					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
-				},
-				CertNotification{
-					CN:       "Devzilla Signing Services Intermediate 1",
-					Severity: "info",
-					Message:  `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`,
-				},
-				CertNotification{
-					CN:       "dev.content-signature.root.ca",
-					Severity: "info",
-					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
-				},
-			},
-			errSubStr:       "",
-			useMockNotifier: true,
-			mockNotifierCallback: func(m *mock_main.MockNotifier) {
-				// Should notifier.Send three times
-				gomock.InOrder(
-					m.EXPECT().Send("normandy.content-signature.mozilla.org", "info", `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`),
-					m.EXPECT().Send("Devzilla Signing Services Intermediate 1", "info", `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`),
-					m.EXPECT().Send("dev.content-signature.root.ca", "info", `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`),
-				)
-				return
-			},
-		},
-		{
-			name: "valid chain resolves warnings send errors",
-			args: args{
-				notifier: nil,
 				rootHash: conf.rootHash,
 				certs:    mustChainToCerts(NormandyDevChain2021),
 			},
@@ -365,35 +298,41 @@ func Test_verifyCertChain(t *testing.T) {
 					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
 				},
 			},
-			errSubStr:       "",
-			useMockNotifier: true,
-			mockNotifierCallback: func(m *mock_main.MockNotifier) {
-				// Should notifier.Send three times
-				gomock.InOrder(
-					m.EXPECT().Send("normandy.content-signature.mozilla.org", "info", `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`),
-					m.EXPECT().Send("Devzilla Signing Services Intermediate 1", "info", `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error")),
-					m.EXPECT().Send("dev.content-signature.root.ca", "info", `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`),
-				)
-				return
+			errSubStr: "",
+		},
+		{
+			name: "valid chain resolves warnings send errors",
+			args: args{
+				rootHash: conf.rootHash,
+				certs:    mustChainToCerts(NormandyDevChain2021),
 			},
+			wantErr: false,
+			wantNotifications: []CertNotification{
+				CertNotification{
+					CN:       "normandy.content-signature.mozilla.org",
+					Severity: "info",
+					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
+				},
+				CertNotification{
+					CN:       "Devzilla Signing Services Intermediate 1",
+					Severity: "info",
+					Message:  `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`,
+				},
+				CertNotification{
+					CN:       "dev.content-signature.root.ca",
+					Severity: "info",
+					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
+				},
+			},
+			errSubStr: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				err      error
-				notifier Notifier = tt.args.notifier
+				err error
 			)
-
-			if tt.useMockNotifier {
-				ctrl := gomock.NewController(t)
-				defer ctrl.Finish()
-				m := mock_main.NewMockNotifier(ctrl)
-				tt.mockNotifierCallback(m)
-				notifier = m
-			}
-
-			notifications, err := verifyCertChain(notifier, tt.args.rootHash, tt.args.certs)
+			notifications, err := verifyCertChain(tt.args.rootHash, tt.args.certs)
 
 			if tt.wantErr == false && err != nil { // unexpected error
 				t.Errorf("verifyCertChain() error = %v, wantErr %v", err, tt.wantErr)

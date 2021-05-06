@@ -68,7 +68,7 @@ func verifyContentSignature(notifier Notifier, rootHash string, response formats
 	if !sig.VerifyData([]byte(inputdata), key) {
 		return fmt.Errorf("Signature verification failed")
 	}
-	notifications, err := verifyCertChain(notifier, rootHash, certs)
+	notifications, err := verifyCertChain(rootHash, certs)
 	if notifier != nil {
 		for _, notification := range notifications {
 			notifyErr := notifier.Send(notification.CN, notification.Severity, notification.Message)
@@ -92,13 +92,11 @@ func verifyContentSignature(notifier Notifier, rootHash string, response formats
 // 1) signed by their parent/issuer/the next cert in the chain or if they're the last cert that they're self-signed and all func verifyRoot checks pass
 // 2) valid for the current time i.e. cert NotBefore < current time < cert NotAfter
 //
-// It returns an error if any of the above checks fail or any cert in
+// It returns cert notifications for each cert expiring in less than
+// 30 days and an error if any of the above checks fail or any cert in
 // the chain expires in 15 days or less.
 //
-// When an AWS SNS topic is configured it also sends a soft
-// notification for each cert expiring in less than 30 days.
-//
-func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certificate) (notifications []CertNotification, err error) {
+func verifyCertChain(rootHash string, certs []*x509.Certificate) (notifications []CertNotification, err error) {
 	for i, cert := range certs {
 		if (i + 1) == len(certs) {
 			err = verifyRoot(rootHash, cert)
@@ -148,12 +146,6 @@ func verifyCertChain(notifier Notifier, rootHash string, certs []*x509.Certifica
 			notificationMessage = fmt.Sprintf(fmt.Sprintf("Certificate %d %q is valid from %s to %s",
 				i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter))
 			log.Printf(notificationMessage)
-		}
-		if notifier != nil {
-			notifyErr := notifier.Send(cert.Subject.CommonName, notificationSeverity, notificationMessage)
-			if notifyErr != nil {
-				log.Printf("failed to send soft notification: %v", notifyErr)
-			}
 		}
 		notifications = append(notifications, CertNotification{
 			CN:       cert.Subject.CommonName,
