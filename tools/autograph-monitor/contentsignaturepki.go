@@ -13,6 +13,7 @@ import (
 
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/contentsignaturepki"
+	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
 
 // Certificates no longer in use but not yet removed from the autograph config.
@@ -36,7 +37,7 @@ func verifyContentSignature(notifier Notifier, rootHash string, response formats
 		err   error
 		certs []*x509.Certificate
 	)
-	sig, err := contentsignaturepki.Unmarshal(response.Signature)
+	sig, err := csigverifier.Unmarshal(response.Signature)
 	if err != nil {
 		log.Fatal(err)
 	}
