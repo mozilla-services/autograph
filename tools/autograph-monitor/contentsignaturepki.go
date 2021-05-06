@@ -16,9 +16,12 @@ import (
 	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
 
-// Certificates no longer in use but not yet removed from the autograph config.
-// we don't want to alert on those.
+// ignoredCerts maps EE/leaf certificate CNs to a bool for EE no
+// longer in use but not yet removed from the autograph config that we
+// don't want to alert on.
+//
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1466523
+//
 var ignoredCerts = map[string]bool{
 	// "fingerprinting-defenses.content-signature.mozilla.org": true,
 	// "fennec-dlc.content-signature.mozilla.org":              true,
