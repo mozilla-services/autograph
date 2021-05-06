@@ -33,13 +33,12 @@ var ignoredCerts = map[string]bool{
 // to verify the sig. Otherwise, use the PublicKey contained in the response.
 //
 // If the signature passes, verify the chain of trust maps.
-func verifyContentSignature(notifier Notifier, rootHash string, response formats.SignatureResponse) error {
+func verifyContentSignature(notifier Notifier, rootHash string, response formats.SignatureResponse) (err error) {
 	if response.X5U == "" {
 		return fmt.Errorf("content signature response is missing an X5U to fetch")
 	}
 	var (
 		key   *ecdsa.PublicKey
-		err   error
 		certs []*x509.Certificate
 	)
 	sig, err := csigverifier.Unmarshal(response.Signature)
