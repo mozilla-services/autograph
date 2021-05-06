@@ -413,7 +413,7 @@ func TestSignerAuthorized(t *testing.T) {
 				tid, len(responses), len(testcase.sgs))
 		}
 		for i, response := range responses {
-			err = verifyContentSignature(
+			err = verifyContentSignatureResponse(
 				testcase.sgs[i].Input,
 				response,
 				"/sign/data")
@@ -536,8 +536,10 @@ func verifyXPISignature(input, sig string) error {
 	return pkcs7Sig.VerifyWithChain(nil)
 }
 
-// verify an ecdsa signature
-func verifyContentSignature(rawInput string, resp formats.SignatureResponse, endpoint string) error {
+// verifyContentSignatureResponse base64 decodes the input data,
+// parses an ecdsa signature public key form the response, then
+// verifies the response data or hash
+func verifyContentSignatureResponse(rawInput string, resp formats.SignatureResponse, endpoint string) error {
 	input, err := base64.StdEncoding.DecodeString(rawInput)
 	if err != nil {
 		return err

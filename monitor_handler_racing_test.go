@@ -56,7 +56,7 @@ func TestMonitorPass(t *testing.T) {
 
 		switch response.Type {
 		case contentsignature.Type:
-			err = verifyContentSignature(
+			err = verifyContentSignatureResponse(
 				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response,
 				"/__monitor__")
