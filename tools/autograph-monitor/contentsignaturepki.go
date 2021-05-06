@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"strings"
@@ -35,6 +34,9 @@ var ignoredCerts = map[string]bool{
 //
 // If the signature passes, verify the chain of trust maps.
 func verifyContentSignature(notifier Notifier, rootHash string, response formats.SignatureResponse) error {
+	if response.X5U == "" {
+		return fmt.Errorf("content signature response is missing an X5U to fetch")
+	}
 	var (
 		key   *ecdsa.PublicKey
 		err   error
@@ -44,49 +46,27 @@ func verifyContentSignature(notifier Notifier, rootHash string, response formats
 	if err != nil {
 		log.Fatal(err)
 	}
-	if response.X5U != "" {
-		_, certs, err = contentsignaturepki.GetX5U(response.X5U)
-		if err != nil {
-			return err
-		}
-		if len(certs) < 2 {
-			return fmt.Errorf("Found %d certs in X5U, expected at least 2", len(certs))
-		}
-		// certs[0] is the end entity
-		key = certs[0].PublicKey.(*ecdsa.PublicKey)
-	} else {
-		key, err = parsePublicKeyFromB64(response.PublicKey)
-		if err != nil {
-			return err
-		}
+	_, certs, err = contentsignaturepki.GetX5U(response.X5U)
+	if err != nil {
+		return err
 	}
+	if len(certs) < 2 {
+		return fmt.Errorf("Found %d certs in X5U, expected at least 2", len(certs))
+	}
+	// certs[0] is the end entity
+	key = certs[0].PublicKey.(*ecdsa.PublicKey)
 	if !sig.VerifyData([]byte(inputdata), key) {
 		return fmt.Errorf("Signature verification failed")
 	}
-	if certs != nil {
-		err = verifyCertChain(notifier, rootHash, certs)
-		if err != nil {
-			// check if we should ignore this cert
-			if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
-				return nil
-			}
-			return err
+	err = verifyCertChain(notifier, rootHash, certs)
+	if err != nil {
+		// check if we should ignore this cert
+		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
+			return nil
 		}
+		return err
 	}
 	return nil
-}
-
-func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error) {
-	keyBytes, err := base64.StdEncoding.DecodeString(b64PubKey)
-	if err != nil {
-		return pubkey, fmt.Errorf("Failed to parse public key base64: %v", err)
-	}
-	keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
-	if err != nil {
-		return pubkey, fmt.Errorf("Failed to parse public key DER: %v", err)
-	}
-	pubkey = keyInterface.(*ecdsa.PublicKey)
-	return pubkey, nil
 }
 
 // verifyCertChain checks certs in a chain slice (usually [EE, intermediate, root]) are:
