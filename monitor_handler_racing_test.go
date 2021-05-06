@@ -58,9 +58,8 @@ func TestMonitorPass(t *testing.T) {
 		case contentsignature.Type:
 			err = verifyContentSignature(
 				base64.StdEncoding.EncodeToString(MonitoringInputData),
-				"/__monitor__",
-				response.Signature,
-				response.PublicKey)
+				response,
+				"/__monitor__")
 		case contentsignaturepki.Type:
 			body, _, err := contentsignaturepki.GetX5U(response.X5U)
 			if err != nil {

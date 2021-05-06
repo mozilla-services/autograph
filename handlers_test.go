@@ -415,9 +415,8 @@ func TestSignerAuthorized(t *testing.T) {
 		for i, response := range responses {
 			err = verifyContentSignature(
 				testcase.sgs[i].Input,
-				"/sign/data",
-				response.Signature,
-				response.PublicKey)
+				response,
+				"/sign/data")
 			if err != nil {
 				t.Fatalf("test case %d signature verification failed in response %d; request was: %+v",
 					tid, i, req)
@@ -538,40 +537,45 @@ func verifyXPISignature(input, sig string) error {
 }
 
 // verify an ecdsa signature
-func verifyContentSignature(input, endpoint, signature, pubkey string) error {
-	sig, err := contentsignature.Unmarshal(signature)
+func verifyContentSignature(rawInput string, resp formats.SignatureResponse, endpoint string) error {
+	input, err := base64.StdEncoding.DecodeString(rawInput)
 	if err != nil {
 		return err
 	}
-	key, err := parsePublicKeyFromB64(pubkey)
+	keyBytes, err := base64.StdEncoding.DecodeString(resp.PublicKey)
 	if err != nil {
 		return err
 	}
-	rawInput, err := base64.StdEncoding.DecodeString(input)
+	keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
 	if err != nil {
 		return err
 	}
+	pubKey := keyInterface.(*ecdsa.PublicKey)
 	if endpoint == "/sign/data" || endpoint == "/__monitor__" {
 		var templated []byte
-		templated = make([]byte, len(contentsignature.SignaturePrefix)+len(rawInput))
+		templated = make([]byte, len(contentsignature.SignaturePrefix)+len(input))
 		copy(templated[:len(contentsignature.SignaturePrefix)], []byte(contentsignature.SignaturePrefix))
-		copy(templated[len(contentsignature.SignaturePrefix):], rawInput)
+		copy(templated[len(contentsignature.SignaturePrefix):], input)
 
 		var md hash.Hash
-		switch sig.HashName {
-		case "sha256":
+		switch pubKey.Params().Name {
+		case "P-256":
 			md = sha256.New()
-		case "sha384":
+		case "P-384":
 			md = sha512.New384()
-		case "sha512":
+		case "P-521":
 			md = sha512.New()
 		default:
-			return fmt.Errorf("unsupported hash algorithm %q", sig.HashName)
+			return fmt.Errorf("unsupported curve algorithm %q", pubKey.Params().Name)
 		}
 		md.Write(templated)
-		rawInput = md.Sum(nil)
+		input = md.Sum(nil)
 	}
-	if !ecdsa.Verify(key, rawInput, sig.R, sig.S) {
+	sig, err := contentsignature.Unmarshal(resp.Signature)
+	if err != nil {
+		return err
+	}
+	if !ecdsa.Verify(pubKey, input, sig.R, sig.S) {
 		return fmt.Errorf("ecdsa signature verification failed")
 	}
 	return nil
