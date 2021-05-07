@@ -13,12 +13,7 @@ updates:
   ignore:
   - dependency-name: golang
     versions:
-    - ">= 1.14.a, < 1.15"
-  - dependency-name: golang
-    versions:
-    - 1.16.0.pre.buster
-    - 1.16.1.pre.buster
-    - 1.16.2.pre.buster
+    - ">= 1.16"
 - package-ecosystem: docker
   directory: "/database"
   schedule:
