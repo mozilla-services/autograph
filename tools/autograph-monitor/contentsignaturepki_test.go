@@ -140,15 +140,16 @@ func TestVerifyContentSignature(t *testing.T) {
 		fmt.Fprintf(w, NormandyDevChain2021)
 	}))
 	defer ts.Close()
+	x5uClient := &http.Client{}
 
 	ValidMonitoringContentSignature.X5U = ""
-	err := verifyContentSignature(nil, normandyDev2021Roothash, ValidMonitoringContentSignature)
+	err := verifyContentSignature(x5uClient, nil, normandyDev2021Roothash, ValidMonitoringContentSignature)
 	if err == nil {
 		t.Fatalf("verify monitoring content signature without X5U did not fail")
 	}
 
 	ValidMonitoringContentSignature.X5U = ts.URL
-	err = verifyContentSignature(nil, normandyDev2021Roothash, ValidMonitoringContentSignature)
+	err = verifyContentSignature(x5uClient, nil, normandyDev2021Roothash, ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}

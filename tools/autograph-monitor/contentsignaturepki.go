@@ -45,7 +45,7 @@ type CertNotification struct {
 // to verify the sig. Otherwise, use the PublicKey contained in the response.
 //
 // If the signature passes, verify the chain of trust maps.
-func verifyContentSignature(notifier Notifier, rootHash string, response formats.SignatureResponse) (err error) {
+func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash string, response formats.SignatureResponse) (err error) {
 	if response.X5U == "" {
 		return fmt.Errorf("content signature response is missing an X5U to fetch")
 	}
@@ -57,7 +57,7 @@ func verifyContentSignature(notifier Notifier, rootHash string, response formats
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, certs, err = contentsignaturepki.GetX5U(&http.Client{}, response.X5U)
+	_, certs, err = contentsignaturepki.GetX5U(x5uClient, response.X5U)
 	if err != nil {
 		return err
 	}

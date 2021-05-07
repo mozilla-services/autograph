@@ -158,6 +158,8 @@ func monitor() (err error) {
 		return fmt.Errorf("Request failed with %s: %s", resp.Status, resp.Body)
 	}
 
+	x5uClient := &http.Client{}
+
 	dec := json.NewDecoder(resp.Body)
 	failed := false
 	var failures []error
@@ -171,10 +173,10 @@ func monitor() (err error) {
 		switch response.Type {
 		case contentsignature.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
-			err = verifyContentSignature(conf.notifier, conf.contentSignatureRootHash, response)
+			err = verifyContentSignature(x5uClient, conf.notifier, conf.contentSignatureRootHash, response)
 		case contentsignaturepki.Type:
 			log.Printf("Verifying content signature pki from signer %q", response.SignerID)
-			err = verifyContentSignature(conf.notifier, conf.contentSignatureRootHash, response)
+			err = verifyContentSignature(x5uClient, conf.notifier, conf.contentSignatureRootHash, response)
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature)
