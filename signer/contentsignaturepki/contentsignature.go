@@ -179,7 +179,7 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 	default:
 		return fmt.Errorf("contentsignaturepki %q: failed to find suitable end-entity: %w", s.ID, err)
 	}
-	_, _, err = GetX5U(s.X5U)
+	_, _, err = GetX5U(buildHTTPClient(), s.X5U)
 	if err != nil {
 		return fmt.Errorf("contentsignaturepki %q: failed to verify x5u: %w", s.ID, err)
 	}

@@ -61,7 +61,7 @@ func TestMonitorPass(t *testing.T) {
 				response,
 				"/__monitor__")
 		case contentsignaturepki.Type:
-			body, _, err := contentsignaturepki.GetX5U(response.X5U)
+			body, _, err := contentsignaturepki.GetX5U(&http.Client{}, response.X5U)
 			if err != nil {
 				t.Fatal(err)
 			}

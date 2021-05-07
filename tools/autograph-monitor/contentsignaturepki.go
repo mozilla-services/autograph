@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -56,7 +57,7 @@ func verifyContentSignature(notifier Notifier, rootHash string, response formats
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, certs, err = contentsignaturepki.GetX5U(response.X5U)
+	_, certs, err = contentsignaturepki.GetX5U(&http.Client{}, response.X5U)
 	if err != nil {
 		return err
 	}

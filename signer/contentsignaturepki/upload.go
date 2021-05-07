@@ -66,22 +66,26 @@ func writeLocalFile(data, name string, target *url.URL) error {
 	return ioutil.WriteFile(target.Path+name, []byte(data), 0755)
 }
 
+// buildHTTPClient returns the default HTTP.Client for fetching X5Us
+func buildHTTPClient() *http.Client {
+	return &http.Client{}
+}
+
 // GetX5U retrieves a chain file of certs from upload location, parses
 // and verifies it, then returns a byte slice of the response body and
 // a slice of parsed certificates.
-func GetX5U(x5u string) (body []byte, certs []*x509.Certificate, err error) {
+func GetX5U(client *http.Client, x5u string) (body []byte, certs []*x509.Certificate, err error) {
 	parsedURL, err := url.Parse(x5u)
 	if err != nil {
 		err = fmt.Errorf("failed to parse chain upload location: %w", err)
 		return
 	}
-	c := &http.Client{}
 	if parsedURL.Scheme == "file" {
 		t := &http.Transport{}
 		t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
-		c.Transport = t
+		client.Transport = t
 	}
-	resp, err := c.Get(x5u)
+	resp, err := client.Get(x5u)
 	if err != nil {
 		err = fmt.Errorf("failed to retrieve x5u: %w", err)
 		return
