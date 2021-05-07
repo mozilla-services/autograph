@@ -142,13 +142,13 @@ func TestVerifyContentSignature(t *testing.T) {
 	defer ts.Close()
 
 	ValidMonitoringContentSignature.X5U = ""
-	err := verifyContentSignature(nil, conf.rootHash, ValidMonitoringContentSignature)
+	err := verifyContentSignature(nil, normandyDev2021Roothash, ValidMonitoringContentSignature)
 	if err == nil {
 		t.Fatalf("verify monitoring content signature without X5U did not fail")
 	}
 
 	ValidMonitoringContentSignature.X5U = ts.URL
-	err = verifyContentSignature(nil, conf.rootHash, ValidMonitoringContentSignature)
+	err = verifyContentSignature(nil, normandyDev2021Roothash, ValidMonitoringContentSignature)
 	if err != nil {
 		t.Fatalf("Failed to verify monitoring content signature: %v", err)
 	}
@@ -723,6 +723,8 @@ lS310HG3or1K8Nnu5Utfe7T6ppX8bLRMkS1/w0p7DKxHaf4D/GJcCtM9lcSt9JpW
 VsAEZI1u4EDg8e/C1nFqaH9gNMArAgquYIB9rve+hdprIMnva0S147pflWopBWcb
 jwzgpfquuYnnxe0CNBA=
 -----END CERTIFICATE-----`
+
+const normandyDev2021Roothash = `4C:35:B1:C3:E3:12:D9:55:E7:78:ED:D0:A7:E7:8A:38:83:04:EF:01:BF:FA:03:29:B2:46:9F:3C:C5:EC:36:04`
 
 var NormandyDevChain2021 = `-----BEGIN CERTIFICATE-----
 MIIGRTCCBC2gAwIBAgIEAQAABTANBgkqhkiG9w0BAQwFADBrMQswCQYDVQQGEwJV
