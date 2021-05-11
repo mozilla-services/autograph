@@ -16,13 +16,13 @@ import (
 	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
 
-// ignoredCerts maps EE/leaf certificate CNs to a bool for EE no
-// longer in use but not yet removed from the autograph config that we
-// don't want to alert on.
+// contentSignatureIgnoredLeafCertCNs maps EE/leaf certificate CNs to a bool
+// for EE no longer in use but not yet removed from the autograph
+// config that we don't want to alert on.
 //
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1466523
 //
-var ignoredCerts = map[string]bool{
+var contentSignatureIgnoredLeafCertCNs = map[string]bool{
 	// "fingerprinting-defenses.content-signature.mozilla.org": true,
 	// "fennec-dlc.content-signature.mozilla.org":              true,
 	// "focus-experiments.content-signature.mozilla.org":       true,
@@ -45,7 +45,7 @@ type CertNotification struct {
 // to verify the sig. Otherwise, use the PublicKey contained in the response.
 //
 // If the signature passes, verify the chain of trust maps.
-func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash string, response formats.SignatureResponse) (err error) {
+func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash string, ignoredCerts map[string]bool, response formats.SignatureResponse) (err error) {
 	if response.X5U == "" {
 		return fmt.Errorf("content signature response is missing an X5U to fetch")
 	}

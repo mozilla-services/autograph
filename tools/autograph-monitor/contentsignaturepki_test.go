@@ -162,10 +162,11 @@ func Test_verifyContentSignature(t *testing.T) {
 	var typedNilNotifier *PDEventNotifier = nil
 
 	type args struct {
-		x5uClient *http.Client
-		notifier  Notifier
-		rootHash  string
-		response  formats.SignatureResponse
+		x5uClient    *http.Client
+		notifier     Notifier
+		rootHash     string
+		ignoredCerts map[string]bool
+		response     formats.SignatureResponse
 	}
 	tests := []struct {
 		name                 string
@@ -237,7 +238,46 @@ func Test_verifyContentSignature(t *testing.T) {
 				)
 			},
 		},
+		{
+			name: "valid csig response with invalid root hash but ignored EE ok",
+			args: args{
+				x5uClient:    &http.Client{},
+				notifier:     nil,
+				rootHash:     "invalid root hash",
+				ignoredCerts: map[string]bool{"normandy.content-signature.mozilla.org": true},
+				response: formats.SignatureResponse{
+					Ref:       "1881ks1du39bi26cfmfczu6pf3",
+					Type:      "contentsignature",
+					Mode:      "p384ecdsa",
+					SignerID:  "normankey",
+					PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
+					Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
+					X5U:       ts.URL,
+				},
+			},
+			wantErr: false,
+		},
 		// failing test cases.
+		{
+			name: "valid csig response with invalid root hash fails",
+			args: args{
+				x5uClient:    &http.Client{},
+				notifier:     nil,
+				rootHash:     "invalid root hash",
+				ignoredCerts: map[string]bool{},
+				response: formats.SignatureResponse{
+					Ref:       "1881ks1du39bi26cfmfczu6pf3",
+					Type:      "contentsignature",
+					Mode:      "p384ecdsa",
+					SignerID:  "normankey",
+					PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
+					Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
+					X5U:       ts.URL,
+				},
+			},
+			wantErr:   true,
+			errSubStr: "hash does not match expected root",
+		},
 		{
 			name: "empty x5u fails",
 			args: args{
@@ -366,7 +406,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := verifyContentSignature(tt.args.x5uClient, notifier, tt.args.rootHash, tt.args.response)
+			err := verifyContentSignature(tt.args.x5uClient, notifier, tt.args.rootHash, tt.args.ignoredCerts, tt.args.response)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("verifyContentSignature() error = %v, wantErr %v", err, tt.wantErr)
