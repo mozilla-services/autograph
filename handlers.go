@@ -153,7 +153,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		case "/sign/hash":
 			hashSigner, ok := requestedSigner.(signer.HashSigner)
 			if !ok {
-				httpError(w, r, http.StatusBadRequest, "requested signer does not implement hash signing")
+				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement hash signing", requestedSignerConfig.ID)
 				return
 			}
 			sig, err = hashSigner.SignHash(input, sigreq.Options)
@@ -172,7 +172,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		case "/sign/data":
 			dataSigner, ok := requestedSigner.(signer.DataSigner)
 			if !ok {
-				httpError(w, r, http.StatusBadRequest, "requested signer does not implement data signing")
+				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement data signing", requestedSignerConfig.ID)
 				return
 			}
 			sig, err = dataSigner.SignData(input, sigreq.Options)
@@ -191,7 +191,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		case "/sign/file":
 			fileSigner, ok := requestedSigner.(signer.FileSigner)
 			if !ok {
-				httpError(w, r, http.StatusBadRequest, "requested signer does not implement file signing")
+				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement file signing", requestedSignerConfig.ID)
 				return
 			}
 			signedfile, err = fileSigner.SignFile(input, sigreq.Options)
