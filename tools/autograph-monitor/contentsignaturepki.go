@@ -55,17 +55,18 @@ func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash 
 	)
 	sig, err := csigverifier.Unmarshal(response.Signature)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error unmarshaling content signature signature: %w", err)
 	}
+	// GetX5U verifies chain contains three certs
 	_, certs, err = contentsignaturepki.GetX5U(x5uClient, response.X5U)
 	if err != nil {
-		return err
-	}
-	if len(certs) < 2 {
-		return fmt.Errorf("Found %d certs in X5U, expected at least 2", len(certs))
+		return fmt.Errorf("error fetching content signature signature x5u: %w", err)
 	}
 	// certs[0] is the end entity
-	key = certs[0].PublicKey.(*ecdsa.PublicKey)
+	key, ok := certs[0].PublicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return fmt.Errorf("Invalid EE/leaf cert public key type %T", certs[0].PublicKey)
+	}
 	if !sig.VerifyData([]byte(inputdata), key) {
 		return fmt.Errorf("Signature verification failed")
 	}
