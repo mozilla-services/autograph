@@ -471,15 +471,6 @@ func Test_verifyCertChain(t *testing.T) {
 			errSubStr: "expired",
 		},
 		{
-			name: "invalid root chain fails",
-			args: args{
-				rootHash: conf.rootHash,
-				certs:    []*x509.Certificate{testRootNonCA},
-			},
-			wantErr:   true,
-			errSubStr: "is root but fails validation",
-		},
-		{
 			name: "not yet valid chain fails",
 			args: args{
 				rootHash: conf.rootHash,
@@ -636,83 +627,6 @@ func Test_verifyCertChain(t *testing.T) {
 				if !reflect.DeepEqual(notifications, tt.wantNotifications) {
 					t.Errorf("verifyCertChain() notifications = %+v, wantNotifications %+v", notifications, tt.wantNotifications)
 				}
-			}
-		})
-	}
-}
-
-func Test_verifyRoot(t *testing.T) {
-	type args struct {
-		rootHash string
-		cert     *x509.Certificate
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "verify Firefox prod root",
-			args: args{
-				rootHash: firefoxPkiProdRootHash,
-				cert:     mustPEMToCert(firefoxPkiProdRoot),
-			},
-			wantErr: false,
-		},
-		{
-			name: "verify Firefox stage root",
-			args: args{
-				rootHash: firefoxPkiContentSignatureStageRootHash,
-				cert:     mustPEMToCert(firefoxPkiContentSignatureStageRoot),
-			},
-			wantErr: false,
-		},
-		{
-			name: "verify sign-signed root",
-			args: args{
-				rootHash: sha2Fingerprint(testRoot),
-				cert:     testRoot,
-			},
-			wantErr: false,
-		},
-		// error testcases
-		{
-			name: "root not self-signed errs",
-			args: args{
-				rootHash: sha2Fingerprint(mustPEMToCert(NormandyDevChain2021Intermediate)),
-				cert:     mustPEMToCert(NormandyDevChain2021Intermediate),
-			},
-			wantErr: true,
-		},
-		{
-			name: "root not CA errs",
-			args: args{
-				rootHash: sha2Fingerprint(testRootNonCA),
-				cert:     testRootNonCA,
-			},
-			wantErr: true,
-		},
-		{
-			name: "invalid root hash errs",
-			args: args{
-				rootHash: "foo",
-				cert:     mustPEMToCert(firefoxPkiProdRoot),
-			},
-			wantErr: true,
-		},
-		{
-			name: "root without code signing ext errs",
-			args: args{
-				rootHash: sha2Fingerprint(testRootNoExt),
-				cert:     testRootNoExt,
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := verifyRoot(tt.args.rootHash, tt.args.cert); (err != nil) != tt.wantErr {
-				t.Errorf("verifyRoot() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

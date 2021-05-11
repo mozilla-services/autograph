@@ -1,13 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"crypto/sha256"
 	"crypto/x509"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/mozilla-services/autograph/formats"
@@ -79,7 +76,7 @@ func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash 
 
 // verifyCertChain checks certs in a chain slice (usually [EE, intermediate, root]) are:
 //
-// 1) signed by their parent/issuer/the next cert in the chain or if they're the last cert that they're self-signed and all func verifyRoot checks pass
+// 1) signed by their parent/issuer/the next cert in the chain
 // 2) valid for the current time i.e. cert NotBefore < current time < cert NotAfter
 //
 // It returns cert notifications for each cert expiring in less than
@@ -89,12 +86,6 @@ func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash 
 func verifyCertChain(rootHash string, certs []*x509.Certificate) (notifications []CertNotification, err error) {
 	for i, cert := range certs {
 		if (i + 1) == len(certs) {
-			err = verifyRoot(rootHash, cert)
-			if err != nil {
-				err = fmt.Errorf("Certificate %d %q is root but fails validation: %v",
-					i, cert.Subject.CommonName, err)
-				return
-			}
 			log.Printf("Certificate %d %q is a valid root", i, cert.Subject.CommonName)
 		} else {
 			// check that cert is signed by parent
@@ -147,42 +138,4 @@ func verifyCertChain(rootHash string, certs []*x509.Certificate) (notifications 
 		}
 	}
 	return notifications, nil
-}
-
-// verifyRoot checks that a root cert is:
-//
-// 1) self-signed
-// 2) a CA
-// 3) has the x509v3 Extentions for CodeSigning use
-//
-// and SHA2 sum of raw bytes matches the provided rootHash param
-// (e.g. from openssl x509 -noout -text -fingerprint -sha256 -in ca.crt)
-func verifyRoot(rootHash string, cert *x509.Certificate) error {
-	// this is the last cert, it should be self signed
-	if !bytes.Equal(cert.RawSubject, cert.RawIssuer) {
-		return fmt.Errorf("subject does not match issuer, should be equal")
-	}
-	if !cert.IsCA {
-		return fmt.Errorf("missing IS CA extension")
-	}
-	if rootHash != "" {
-		rhash := strings.Replace(rootHash, ":", "", -1)
-		// We're configure to check the root hash matches expected value
-		h := sha256.Sum256(cert.Raw)
-		chash := fmt.Sprintf("%X", h[:])
-		if rhash != chash {
-			return fmt.Errorf("hash does not match expected root: expected=%s; got=%s", rhash, chash)
-		}
-	}
-	hasCodeSigningExtension := false
-	for _, ext := range cert.ExtKeyUsage {
-		if ext == x509.ExtKeyUsageCodeSigning {
-			hasCodeSigningExtension = true
-			break
-		}
-	}
-	if !hasCodeSigningExtension {
-		return fmt.Errorf("missing codeSigning key usage extension")
-	}
-	return nil
 }
