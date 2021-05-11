@@ -181,7 +181,7 @@ func Verify(input, certChain []byte, signature, rootHash string) error {
 	// Get the public key from the end-entity (certs[0] is the end entity)
 	key, ok := certs[0].PublicKey.(*ecdsa.PublicKey)
 	if !ok {
-		return fmt.Errorf("Cannot verify EE/leaf cert with non-ECDSA public key type: %T", key)
+		return fmt.Errorf("Cannot verify EE/leaf cert with non-ECDSA public key type: %T", certs[0].PublicKey)
 	}
 	// parse the json signature
 	sig, err := Unmarshal(signature)
