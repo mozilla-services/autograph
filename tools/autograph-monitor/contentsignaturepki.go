@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"fmt"
@@ -50,25 +49,21 @@ func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash 
 		return fmt.Errorf("content signature response is missing an X5U to fetch")
 	}
 	var (
-		key   *ecdsa.PublicKey
-		certs []*x509.Certificate
+		certChain []byte
+		certs     []*x509.Certificate
 	)
-	sig, err := csigverifier.Unmarshal(response.Signature)
-	if err != nil {
-		return fmt.Errorf("error unmarshaling content signature signature: %w", err)
-	}
 	// GetX5U verifies chain contains three certs
-	_, certs, err = contentsignaturepki.GetX5U(x5uClient, response.X5U)
+	certChain, certs, err = contentsignaturepki.GetX5U(x5uClient, response.X5U)
 	if err != nil {
 		return fmt.Errorf("error fetching content signature signature x5u: %w", err)
 	}
-	// certs[0] is the end entity
-	key, ok := certs[0].PublicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return fmt.Errorf("Invalid EE/leaf cert public key type %T", certs[0].PublicKey)
-	}
-	if !sig.VerifyData([]byte(inputdata), key) {
-		return fmt.Errorf("Signature verification failed")
+	err = csigverifier.Verify([]byte(inputdata), certChain, response.Signature, rootHash)
+	if err != nil {
+		// check if we should ignore this cert
+		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
+			return nil
+		}
+		return err
 	}
 	notifications, err := verifyCertChain(rootHash, certs)
 	if notifier != nil {
@@ -78,13 +73,6 @@ func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash 
 				log.Printf("failed to send soft notification: %v", notifyErr)
 			}
 		}
-	}
-	if err != nil {
-		// check if we should ignore this cert
-		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
-			return nil
-		}
-		return err
 	}
 	return nil
 }

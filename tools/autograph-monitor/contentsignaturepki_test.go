@@ -1,9 +1,11 @@
 package main
 
 import (
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -26,6 +28,22 @@ import (
 
 // helper funcs  -----------------------------------------------------------------
 
+func generateTestKey() *ecdsa.PrivateKey {
+	priv, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	if err != nil {
+		log.Fatalf("Could not generate private key: %v", err)
+	}
+	return priv
+}
+
+func generateTestRSAKey() *rsa.PrivateKey {
+	priv, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		log.Fatalf("Could not generate private key: %v", err)
+	}
+	return priv
+}
+
 func mustPEMToCert(s string) *x509.Certificate {
 	block, _ := pem.Decode([]byte(s))
 	if block == nil {
@@ -39,13 +57,18 @@ func mustPEMToCert(s string) *x509.Certificate {
 }
 
 type signOptions struct {
-	commonName   string
-	extKeyUsages []x509.ExtKeyUsage
-	privateKey   *ecdsa.PrivateKey
-	isCA         bool
-	issuer       *x509.Certificate
-	notBefore    time.Time
-	notAfter     time.Time
+	commonName                  string
+	extKeyUsages                []x509.ExtKeyUsage
+	keyUsage                    x509.KeyUsage
+	privateKey                  *ecdsa.PrivateKey
+	publicKey                   crypto.PublicKey
+	isCA                        bool
+	issuer                      *x509.Certificate
+	notBefore                   time.Time
+	notAfter                    time.Time
+	permittedDNSDomainsCritical bool
+	permittedDNSDomains         []string
+	DNSNames                    []string
 }
 
 func signTestCert(options signOptions) *x509.Certificate {
@@ -55,26 +78,28 @@ func signTestCert(options signOptions) *x509.Certificate {
 	certTpl := &x509.Certificate{
 		SerialNumber: big.NewInt(time.Now().UnixNano()),
 		Subject: pkix.Name{
-			Organization: []string{"Mozilla"},
-			// OrganizationalUnit: []string{"Cloud Services Autograph Unit Testing"},
-			Country:    []string{"US"},
-			Province:   []string{"CA"},
-			Locality:   []string{"Mountain View"},
-			CommonName: options.commonName,
+			Organization:       []string{"Mozilla"},
+			OrganizationalUnit: []string{"Cloud Services Autograph Unit Testing"},
+			Country:            []string{"US"},
+			Province:           []string{"CA"},
+			Locality:           []string{"Mountain View"},
+			CommonName:         options.commonName,
 		},
-		DNSNames:              []string{options.commonName},
-		NotBefore:             options.notBefore,
-		NotAfter:              options.notAfter,
-		SignatureAlgorithm:    x509.ECDSAWithSHA384,
-		IsCA:                  options.isCA,
-		BasicConstraintsValid: true,
-		ExtKeyUsage:           options.extKeyUsages,
-		KeyUsage:              x509.KeyUsageDigitalSignature,
+		DNSNames:                    options.DNSNames,
+		NotBefore:                   options.notBefore,
+		NotAfter:                    options.notAfter,
+		SignatureAlgorithm:          x509.ECDSAWithSHA384,
+		IsCA:                        options.isCA,
+		BasicConstraintsValid:       true,
+		ExtKeyUsage:                 options.extKeyUsages,
+		KeyUsage:                    options.keyUsage,
+		PermittedDNSDomainsCritical: options.permittedDNSDomainsCritical,
+		PermittedDNSDomains:         options.permittedDNSDomains,
 	}
 	if options.issuer == nil {
 		issuer = certTpl
 	}
-	certBytes, err := x509.CreateCertificate(rand.Reader, certTpl, issuer, options.privateKey.Public(), options.privateKey)
+	certBytes, err := x509.CreateCertificate(rand.Reader, certTpl, issuer, options.publicKey, options.privateKey)
 	if err != nil {
 		log.Fatalf("Could not self sign an X.509 root certificate: %v", err)
 	}
@@ -89,12 +114,11 @@ func sha2Fingerprint(cert *x509.Certificate) string {
 	return strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
 }
 
-func generateTestKey() *ecdsa.PrivateKey {
-	priv, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-	if err != nil {
-		log.Fatalf("Could not generate private key: %v", err)
+func mustCertsToChain(certs []*x509.Certificate) (chain []byte) {
+	for _, cert := range certs {
+		chain = append(chain, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})...)
 	}
-	return priv
+	return chain
 }
 
 func mustChainToCerts(chain string) (certs []*x509.Certificate) {
@@ -150,12 +174,12 @@ func Test_verifyContentSignature(t *testing.T) {
 	defer oneCertChainTestServer.Close()
 
 	rsaLeafChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, rsaLeafChain)
+		fmt.Fprintf(w, string(rsaLeafChain))
 	}))
 	defer rsaLeafChainTestServer.Close()
 
 	invalidEEKeyLeafChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, invalidEEKeyLeafChain)
+		fmt.Fprintf(w, string(invalidEEKeyLeafChain))
 	}))
 	defer invalidEEKeyLeafChainTestServer.Close()
 
@@ -335,7 +359,7 @@ func Test_verifyContentSignature(t *testing.T) {
 				},
 			},
 			wantErr:   true,
-			errSubStr: "error unmarshaling content signature",
+			errSubStr: "Error unmarshal content signature",
 		},
 		{
 			name: "one cert X5U chain fails",
@@ -373,7 +397,7 @@ func Test_verifyContentSignature(t *testing.T) {
 				},
 			},
 			wantErr:   true,
-			errSubStr: "Invalid EE/leaf cert public key type *rsa.PublicKey",
+			errSubStr: "Cannot verify EE/leaf cert with non-ECDSA public key type",
 		},
 		{
 			name: "invalid data fails",
@@ -392,7 +416,7 @@ func Test_verifyContentSignature(t *testing.T) {
 				},
 			},
 			wantErr:   true,
-			errSubStr: "Signature verification failed",
+			errSubStr: "ECDSA signature verification failed",
 		},
 	}
 	for _, tt := range tests {
@@ -450,7 +474,7 @@ func Test_verifyCertChain(t *testing.T) {
 			name: "invalid root chain fails",
 			args: args{
 				rootHash: conf.rootHash,
-				certs:    []*x509.Certificate{selfSignedRootNonCA},
+				certs:    []*x509.Certificate{testRootNonCA},
 			},
 			wantErr:   true,
 			errSubStr: "is root but fails validation",
@@ -459,7 +483,7 @@ func Test_verifyCertChain(t *testing.T) {
 			name: "not yet valid chain fails",
 			args: args{
 				rootHash: conf.rootHash,
-				certs:    []*x509.Certificate{selfSignedRootNotYetValid},
+				certs:    []*x509.Certificate{testRootNotYetValid},
 			},
 			wantErr: true,
 			wantNotifications: []CertNotification{
@@ -646,8 +670,8 @@ func Test_verifyRoot(t *testing.T) {
 		{
 			name: "verify sign-signed root",
 			args: args{
-				rootHash: sha2Fingerprint(selfSignedRoot),
-				cert:     selfSignedRoot,
+				rootHash: sha2Fingerprint(testRoot),
+				cert:     testRoot,
 			},
 			wantErr: false,
 		},
@@ -663,8 +687,8 @@ func Test_verifyRoot(t *testing.T) {
 		{
 			name: "root not CA errs",
 			args: args{
-				rootHash: sha2Fingerprint(selfSignedRootNonCA),
-				cert:     selfSignedRootNonCA,
+				rootHash: sha2Fingerprint(testRootNonCA),
+				cert:     testRootNonCA,
 			},
 			wantErr: true,
 		},
@@ -679,8 +703,8 @@ func Test_verifyRoot(t *testing.T) {
 		{
 			name: "root without code signing ext errs",
 			args: args{
-				rootHash: sha2Fingerprint(selfSignedRootNoExt),
-				cert:     selfSignedRootNoExt,
+				rootHash: sha2Fingerprint(testRootNoExt),
+				cert:     testRootNoExt,
 			},
 			wantErr: true,
 		},
@@ -697,43 +721,105 @@ func Test_verifyRoot(t *testing.T) {
 // fixtures -----------------------------------------------------------------
 
 var (
-	testKey        = generateTestKey()
-	selfSignedRoot = signTestCert(signOptions{
-		commonName:   "example.content-signature.mozilla.org",
+	testRootKey    = generateTestKey()
+	testInterKey   = generateTestKey()
+	testLeafKey    = generateTestKey()
+	testLeafRSAKey = generateTestRSAKey()
+
+	testRoot = signTestCert(signOptions{
+		commonName:   "autograph unit test self-signed root",
+		keyUsage:     x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
 		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
-		privateKey:   testKey,
+		privateKey:   testRootKey,
+		publicKey:    &testRootKey.PublicKey,
 		isCA:         true,
 		issuer:       nil, // self-sign
-		notBefore:    time.Now(),
+		notBefore:    time.Now().Add(-3 * 24 * time.Hour),
 		notAfter:     time.Now().Add(time.Hour),
 	})
-	selfSignedRootNonCA = signTestCert(signOptions{
-		commonName:   "example.content-signature.mozilla.org",
+	testRootNonCA = signTestCert(signOptions{
+		commonName:   "autograph unit test self-signed root",
 		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
-		privateKey:   testKey,
+		privateKey:   testRootKey,
+		publicKey:    &testRootKey.PublicKey,
 		isCA:         false,
 		issuer:       nil, // self-sign
 		notBefore:    time.Now(),
 		notAfter:     time.Now().Add(time.Hour),
 	})
-	selfSignedRootNoExt = signTestCert(signOptions{
-		commonName:   "example.content-signature.mozilla.org",
+	testRootNoExt = signTestCert(signOptions{
+		commonName:   "autograph unit test self-signed root",
 		extKeyUsages: []x509.ExtKeyUsage{},
-		privateKey:   testKey,
+		privateKey:   testRootKey,
+		publicKey:    &testRootKey.PublicKey,
 		isCA:         true,
 		issuer:       nil, // self-sign
 		notBefore:    time.Now(),
 		notAfter:     time.Now().Add(time.Hour),
 	})
-	selfSignedRootNotYetValid = signTestCert(signOptions{
-		commonName:   "example.content-signature.mozilla.org",
+	testRootExpired = signTestCert(signOptions{
+		commonName:   "autograph unit test self-signed root",
+		keyUsage:     x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
 		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
-		privateKey:   testKey,
+		privateKey:   testRootKey,
+		publicKey:    &testRootKey.PublicKey,
 		isCA:         true,
 		issuer:       nil, // self-sign
-		notBefore:    time.Now().Add(3 * time.Hour),
-		notAfter:     time.Now().Add(60 * 24 * time.Hour),
+		notBefore:    time.Now().Add(-2 * time.Hour),
+		notAfter:     time.Now().Add(-time.Hour),
 	})
+	testRootNotYetValid = signTestCert(signOptions{
+		commonName:   "autograph unit test self-signed root",
+		keyUsage:     x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
+		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		privateKey:   testRootKey,
+		publicKey:    &testRootKey.PublicKey,
+		isCA:         true,
+		issuer:       nil, // self-sign
+		notBefore:    time.Now().Add(2 * time.Hour),
+		notAfter:     time.Now().Add(4 * time.Hour),
+	})
+	testInter = signTestCert(signOptions{
+		commonName:                  "autograph unit test content signing intermediate",
+		extKeyUsages:                []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		keyUsage:                    x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
+		privateKey:                  testRootKey,
+		publicKey:                   &testInterKey.PublicKey,
+		isCA:                        true,
+		issuer:                      testRoot,
+		notBefore:                   time.Now().Add(-2 * 24 * time.Hour),
+		notAfter:                    time.Now().Add(time.Hour),
+		permittedDNSDomainsCritical: true,
+		permittedDNSDomains:         []string{".content-signature.mozilla.org", "content-signature.mozilla.org"},
+	})
+	testLeaf = signTestCert(signOptions{
+		commonName:   "example.content-signature.mozilla.org",
+		DNSNames:     []string{"example.content-signature.mozilla.org"},
+		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		keyUsage:     x509.KeyUsageDigitalSignature,
+		privateKey:   testInterKey,
+		publicKey:    &testLeafKey.PublicKey,
+		isCA:         false,
+		issuer:       testInter,
+		notBefore:    time.Now().Add(-2 * time.Hour),
+		notAfter:     time.Now().Add(time.Hour),
+	})
+	testLeafRSAPub = signTestCert(signOptions{
+		commonName:   "example.content-signature.mozilla.org",
+		DNSNames:     []string{"example.content-signature.mozilla.org"},
+		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		keyUsage:     x509.KeyUsageDigitalSignature,
+		privateKey:   testInterKey,
+		publicKey:    &testLeafRSAKey.PublicKey,
+		isCA:         false,
+		issuer:       testInter,
+		notBefore:    time.Now().Add(-2 * time.Hour),
+		notAfter:     time.Now().Add(time.Hour),
+	})
+
+	rsaLeafChain = mustCertsToChain([]*x509.Certificate{testLeafRSAPub, testInter, testRoot})
+	// invalid EE for the normandydev2021 chain
+	invalidEEKeyLeafChain = mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot})
 )
 
 // This chain has an expired end-entity certificate
@@ -1060,125 +1146,4 @@ wpr6I1yK8oZ2IdnNVfuABGMmGOhvSQ8r7//ea9WKhCsGNQawpVWVioY7hpyNAJ0O
 Vn4xqG5f6allz8lgpwAQ+AeEEClHca6hh6mj9KhD1Of1CC2Vx52GHNh/jMYEc3/g
 zLKniencBqn3Y2XH2daITGJddcleN09+a1NaTkT3hgr7LumxM8EVssPkC+z9j4Vf
 Gbste+8S5QCMhh00g5vR9QF8EaFqdxCdSxrsA4GmpCa5UQl8jtCnpp2DLKXuOh72
------END CERTIFICATE-----`
-
-// from verifier/contentsignature/verifier_test.go chain using
-// testRSALeaf
-const rsaLeafChain = `-----BEGIN CERTIFICATE-----
-MIIDPDCCAsKgAwIBAgIIFn4ZiJ6a9ZEwCgYIKoZIzj0EAwMwga8xCzAJBgNVBAYT
-AlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UE
-ChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dyYXBoIFVu
-aXQgVGVzdGluZzE5MDcGA1UEAxMwYXV0b2dyYXBoIHVuaXQgdGVzdCBjb250ZW50
-IHNpZ25pbmcgaW50ZXJtZWRpYXRlMB4XDTIxMDUxMTE3MjMxMFoXDTIxMDUxMTIw
-MjMxMFowgaQxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91
-bnRhaW4gVmlldzEQMA4GA1UEChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2Vy
-dmljZXMgQXV0b2dyYXBoIFVuaXQgVGVzdGluZzEuMCwGA1UEAxMlZXhhbXBsZS5j
-b250ZW50LXNpZ25hdHVyZS5tb3ppbGxhLm9yZzCBnzANBgkqhkiG9w0BAQEFAAOB
-jQAwgYkCgYEA7N8kgynFsifh3H5OdVDyHhmPLnfMieTQ03BBc0y/yz1sJv/lkoXh
-9brKqo96uIcclsBpWS78SzGIirjAN/w9J+RCUXW+x4d8MoYtU06cWOSzPlXJSVMo
-1odnvVr7bqyrVq0jqdrDPNDnrmbq5Y6Px4b4CiPaX6wANj/jh4nv1MMCAwEAAaOB
-iTCBhjAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDAYDVR0T
-AQH/BAIwADAfBgNVHSMEGDAWgBRnpaxUR96nWMy/B1SLeYTHrd3jWzAwBgNVHREE
-KTAngiVleGFtcGxlLmNvbnRlbnQtc2lnbmF0dXJlLm1vemlsbGEub3JnMAoGCCqG
-SM49BAMDA2gAMGUCMQCwbNnToTkAHgcBaUcmd+8Xe1Jdq8a7WM+ZWrNQ1xbGMeWH
-kPtdG4TnljK2UCjqLEQCMCKPwIJQZj6wnyQI2yLwr0nDX1tFdah+J4A+jSYcC5Gj
-tn1YA4TKbS/ipcgagRGSjw==
------END CERTIFICATE-----
------BEGIN CERTIFICATE-----
-MIIDVTCCAtqgAwIBAgIIFn4ZiJyt5dUwCgYIKoZIzj0EAwMwgaMxCzAJBgNVBAYT
-AlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UE
-ChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dyYXBoIFVu
-aXQgVGVzdGluZzEtMCsGA1UEAxMkYXV0b2dyYXBoIHVuaXQgdGVzdCBzZWxmLXNp
-Z25lZCByb290MB4XDTIxMDUwOTE5MjMxMFoXDTIxMDUxMTIwMjMxMFowga8xCzAJ
-BgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQ
-MA4GA1UEChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dy
-YXBoIFVuaXQgVGVzdGluZzE5MDcGA1UEAxMwYXV0b2dyYXBoIHVuaXQgdGVzdCBj
-b250ZW50IHNpZ25pbmcgaW50ZXJtZWRpYXRlMHYwEAYHKoZIzj0CAQYFK4EEACID
-YgAEds8YBfjzKPTuAPLYsowdIVkMFF7Uidbbk/f/0eepAJBc0T1gyt21FYo6IgQ2
-nBfrvShxyT9abSBVLQmlPmzvD80ap3Axw1kKAwQazOVuvobErqrV7ikb2w0wu3og
-P4lXo4HMMIHJMA4GA1UdDwEB/wQEAwIBhjATBgNVHSUEDDAKBggrBgEFBQcDAzAP
-BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRnpaxUR96nWMy/B1SLeYTHrd3jWzAf
-BgNVHSMEGDAWgBRHKB9Gf3yXR7WO3smtFl9Vx7U7fTBRBgNVHR4BAf8ERzBFoEMw
-IIIeLmNvbnRlbnQtc2lnbmF0dXJlLm1vemlsbGEub3JnMB+CHWNvbnRlbnQtc2ln
-bmF0dXJlLm1vemlsbGEub3JnMAoGCCqGSM49BAMDA2kAMGYCMQD76m7p/QSNrrL/
-pj0c1ml9IMS5EOArmb/cK66pG8yGpyD6dxvRvlvbkL8doXs4+vECMQDNJN8OkZEQ
-gKAGBFVjum4a1dkzGn9X3DH1aIDVrRX9xNMPLLrTwxz1h9dDIwHupfw=
------END CERTIFICATE-----
------BEGIN CERTIFICATE-----
-MIIC0TCCAligAwIBAgIIFn4ZiJvcHUAwCgYIKoZIzj0EAwMwgaMxCzAJBgNVBAYT
-AlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UE
-ChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dyYXBoIFVu
-aXQgVGVzdGluZzEtMCsGA1UEAxMkYXV0b2dyYXBoIHVuaXQgdGVzdCBzZWxmLXNp
-Z25lZCByb290MB4XDTIxMDUwODE5MjMxMFoXDTIxMDUxMTIwMjMxMFowgaMxCzAJ
-BgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQ
-MA4GA1UEChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dy
-YXBoIFVuaXQgVGVzdGluZzEtMCsGA1UEAxMkYXV0b2dyYXBoIHVuaXQgdGVzdCBz
-ZWxmLXNpZ25lZCByb290MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEI53YkVvtDHxa
-1dmXcjFaKGxjeQqzMhFIjWwatjV85sZpModPWa+93BkqCyvwCG8KRYQxRFKh8rFO
-GWQ73S4EZQCzi4fyqNTlM6hvGj3MVy88u5engSmzVTvqvJkQc0kvo1cwVTAOBgNV
-HQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/BAUwAwEB
-/zAdBgNVHQ4EFgQURygfRn98l0e1jt7JrRZfVce1O30wCgYIKoZIzj0EAwMDZwAw
-ZAIwOHhcXWvk5oEQpUtmJ5GWLI5s9quRUPZMXqU+LJ0qN1cl7/JfmRy/XT2H8BNY
-FdXPAjAhjhXWlmNYiUc4+4DRKJ/ZNLvayKozJ4cce2wd0G0m4V4eHsU93aomydPm
-NMIjCL4=
------END CERTIFICATE-----`
-
-// from verifier/contentsignature/verifier_test.go chain using
-// testLeaf
-const invalidEEKeyLeafChain = `-----BEGIN CERTIFICATE-----
-MIIDEjCCApigAwIBAgIIFn4aBwKIBm8wCgYIKoZIzj0EAwMwga8xCzAJBgNVBAYT
-AlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UE
-ChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dyYXBoIFVu
-aXQgVGVzdGluZzE5MDcGA1UEAxMwYXV0b2dyYXBoIHVuaXQgdGVzdCBjb250ZW50
-IHNpZ25pbmcgaW50ZXJtZWRpYXRlMB4XDTIxMDUxMTE3MzIxM1oXDTIxMDUxMTIw
-MzIxM1owgaQxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91
-bnRhaW4gVmlldzEQMA4GA1UEChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2Vy
-dmljZXMgQXV0b2dyYXBoIFVuaXQgVGVzdGluZzEuMCwGA1UEAxMlZXhhbXBsZS5j
-b250ZW50LXNpZ25hdHVyZS5tb3ppbGxhLm9yZzB2MBAGByqGSM49AgEGBSuBBAAi
-A2IABO6DP3sDoc+qrR8kIaib090onnxj1qhsBFAGRlZLkiML7XlSq3fI5wIx2Mgm
-mKSIPVaNdFp4V75vei9ygGzhOgsrt3zLSoWWSDH/kKnrPfuumnvzU3iFpQ4hq4zX
-g/gpTKOBiTCBhjAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwMw
-DAYDVR0TAQH/BAIwADAfBgNVHSMEGDAWgBTi05Q1r1nyz2xxxNwJg9qyR7jHSjAw
-BgNVHREEKTAngiVleGFtcGxlLmNvbnRlbnQtc2lnbmF0dXJlLm1vemlsbGEub3Jn
-MAoGCCqGSM49BAMDA2gAMGUCMQDhZZF633DdQfy0g8fAhXYeJ6zQx0R3imkuCQEQ
-HmzkhJ7tknbh6/yIdPoMpwxpx8QCMEtQzIfiSe6VNbUzf1ASvIpqTxrbEiz66UyS
-u7j/jkmzANG1orML+4xgrN5mwpeGWg==
------END CERTIFICATE-----
------BEGIN CERTIFICATE-----
-MIIDUzCCAtqgAwIBAgIIFn4aBwHCohMwCgYIKoZIzj0EAwMwgaMxCzAJBgNVBAYT
-AlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UE
-ChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dyYXBoIFVu
-aXQgVGVzdGluZzEtMCsGA1UEAxMkYXV0b2dyYXBoIHVuaXQgdGVzdCBzZWxmLXNp
-Z25lZCByb290MB4XDTIxMDUwOTE5MzIxM1oXDTIxMDUxMTIwMzIxM1owga8xCzAJ
-BgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQ
-MA4GA1UEChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dy
-YXBoIFVuaXQgVGVzdGluZzE5MDcGA1UEAxMwYXV0b2dyYXBoIHVuaXQgdGVzdCBj
-b250ZW50IHNpZ25pbmcgaW50ZXJtZWRpYXRlMHYwEAYHKoZIzj0CAQYFK4EEACID
-YgAEvb207L2jHjc3eW0c/sNXUkTN2IDBHkVUUvdEC8Uks+8t1kypm/DAQ/Eq1V1v
-8KXZKCcRJgaACw/bldZcNWEQMuqB/cTJ4GHvJFdv6w6uAPq+GIhcZUO4h5bDA2ux
-JViLo4HMMIHJMA4GA1UdDwEB/wQEAwIBhjATBgNVHSUEDDAKBggrBgEFBQcDAzAP
-BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBTi05Q1r1nyz2xxxNwJg9qyR7jHSjAf
-BgNVHSMEGDAWgBQ+ywBwBbNSFlflLQlWbTwhw2RHDDBRBgNVHR4BAf8ERzBFoEMw
-IIIeLmNvbnRlbnQtc2lnbmF0dXJlLm1vemlsbGEub3JnMB+CHWNvbnRlbnQtc2ln
-bmF0dXJlLm1vemlsbGEub3JnMAoGCCqGSM49BAMDA2cAMGQCMA6n8M1UYSrcJSfT
-QDdUXPnbDbm56mTo6VmHXZPsQ+JdA44F+nYwqXVAxN4Q3xSgIgIwOfNGkzFecmg+
-r2dev7UI/jqul7woLmjIsw2nCPjWBMRUTTJKmhrT5EC8Nr/uuU5P
------END CERTIFICATE-----
------BEGIN CERTIFICATE-----
-MIIC0zCCAligAwIBAgIIFn4aBwDh6W4wCgYIKoZIzj0EAwMwgaMxCzAJBgNVBAYT
-AlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQMA4GA1UE
-ChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dyYXBoIFVu
-aXQgVGVzdGluZzEtMCsGA1UEAxMkYXV0b2dyYXBoIHVuaXQgdGVzdCBzZWxmLXNp
-Z25lZCByb290MB4XDTIxMDUwODE5MzIxM1oXDTIxMDUxMTIwMzIxM1owgaMxCzAJ
-BgNVBAYTAlVTMQswCQYDVQQIEwJDQTEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEQ
-MA4GA1UEChMHTW96aWxsYTEuMCwGA1UECxMlQ2xvdWQgU2VydmljZXMgQXV0b2dy
-YXBoIFVuaXQgVGVzdGluZzEtMCsGA1UEAxMkYXV0b2dyYXBoIHVuaXQgdGVzdCBz
-ZWxmLXNpZ25lZCByb290MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAErmplOfta5Uxq
-L7JP1r3Xam8FZ24LRvGrLh4U82YfP2qNxyLc823gxqjxs0WbtPzXiaMNqr3tYWxk
-bk55qk6pALyRD0hvfv12ICoyIlTgNT6sss/cWgCqAT9qYC/FY/vRo1cwVTAOBgNV
-HQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/BAUwAwEB
-/zAdBgNVHQ4EFgQUPssAcAWzUhZX5S0JVm08IcNkRwwwCgYIKoZIzj0EAwMDaQAw
-ZgIxAOgDS+Er8NPIvyCAOXZFQhQCa5n2DfM3nfO4FQNEUNQfKonx1gE7aK4jBgw2
-d6hUdAIxAImWC7S1Hp44MjDWg85Mue1XmL/1CPsAbzf8BPHRW5bDYi6yn50hO7nj
-x0lFHoZtWQ==
 -----END CERTIFICATE-----`
