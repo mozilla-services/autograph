@@ -35,13 +35,29 @@ type CertNotification struct {
 	Message string
 }
 
-// validate the signature and certificate chain of a content signature response
+// day is one 24 hours period (approx is close enough to a calendar
+// day for our purposes)
+const day = 24 * time.Hour
+
+// week is 7 24h days (close enough to a calendar week for our
+// purposes)
+const week = 7 * day
+
+// month is 28 24h days (close enough to a calendar month for our
+// purposes)
+const month = 4 * week
+
+// verifyContentSignature validates the signature and certificate
+// chain of a content signature response.
 //
-// If an X5U value was provided, use the public key from the end entity certificate
-// to verify the sig. Otherwise, use the PublicKey contained in the response.
+// It fetches the X5U, sends soft notifications, verifies the content
+// signature data and certificate chain trust to the provided root
+// certificate SHA2 hash/fingerprint, and errors for pending
+// expirations.
 //
-// If the signature passes, verify the chain of trust maps.
-func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash string, ignoredCerts map[string]bool, response formats.SignatureResponse) (err error) {
+// Chains with leaf/EE CommonNames in ignoredCerts are ignored.
+//
+func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash string, ignoredCerts map[string]bool, response formats.SignatureResponse, input []byte) (err error) {
 	if response.X5U == "" {
 		return fmt.Errorf("content signature response is missing an X5U to fetch")
 	}
@@ -54,88 +70,107 @@ func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash 
 	if err != nil {
 		return fmt.Errorf("error fetching content signature signature x5u: %w", err)
 	}
-	err = csigverifier.Verify([]byte(inputdata), certChain, response.Signature, rootHash)
+	if notifier != nil {
+		notifications := certChainValidityNotifications(certs)
+		// check if we should ignore this cert
+		for i, notification := range notifications {
+			if i == 0 {
+				if _, ok := ignoredCerts[notification.CN]; ok {
+					log.Printf("ignoring notifications for chain EE CN: %q", notification.CN)
+					break
+				}
+			}
+			err = notifier.Send(notification.CN, notification.Severity, notification.Message)
+			if err != nil {
+				log.Printf("failed to send soft notification: %v", err)
+			}
+		}
+	}
+	// errors if an cert is expired or not yet valid, verifies data and trust map to root hash
+	err = csigverifier.Verify(input, certChain, response.Signature, rootHash)
 	if err != nil {
 		// check if we should ignore this cert
 		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
+			log.Printf("ignoring chain EE CN %q verify error: %q", certs[0].Subject.CommonName, err)
 			return nil
 		}
 		return err
 	}
-	notifications, err := verifyCertChain(rootHash, certs)
-	if notifier != nil {
-		for _, notification := range notifications {
-			notifyErr := notifier.Send(notification.CN, notification.Severity, notification.Message)
-			if notifyErr != nil {
-				log.Printf("failed to send soft notification: %v", notifyErr)
-			}
+	// errors for pending expirations
+	err = certChainPendingExpiration(certs)
+	if err != nil {
+		// check if we should ignore this cert
+		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
+			log.Printf("ignoring chain EE CN %q pending expiration error: %q", certs[0].Subject.CommonName, err)
+			return nil
 		}
+		return err
 	}
 	return nil
 }
 
-// verifyCertChain checks certs in a chain slice (usually [EE, intermediate, root]) are:
-//
-// 1) signed by their parent/issuer/the next cert in the chain
-// 2) valid for the current time i.e. cert NotBefore < current time < cert NotAfter
-//
-// It returns cert notifications for each cert expiring in less than
-// 30 days and an error if any of the above checks fail or any cert in
-// the chain expires in 15 days or less.
-//
-func verifyCertChain(rootHash string, certs []*x509.Certificate) (notifications []CertNotification, err error) {
+// certChainValidityNotifications checks the validity of a slice of
+// x509 certificates and returns notifications whether the cert is
+// valid, not yet valid, expired, or soon to expire
+func certChainValidityNotifications(certs []*x509.Certificate) (notifications []*CertNotification) {
 	for i, cert := range certs {
-		if (i + 1) == len(certs) {
-			log.Printf("Certificate %d %q is a valid root", i, cert.Subject.CommonName)
-		} else {
-			// check that cert is signed by parent
-			checkCertErr := cert.CheckSignatureFrom(certs[i+1])
-			if checkCertErr != nil {
-				err = fmt.Errorf("Certificate %d %q is not signed by parent certificate %d %q: %v",
-					i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName, checkCertErr)
-				return
-			}
-			log.Printf("Certificate %d %q has a valid signature from parent certificate %d %q",
-				i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName)
-		}
 		var (
-			notificationSeverity, notificationMessage string
-			err                                       error
-			timeToExpiration                          = cert.NotAfter.Sub(time.Now())
-			timeToValid                               = cert.NotBefore.Sub(time.Now())
+			severity, message string
+			timeToExpiration  = cert.NotAfter.Sub(time.Now())
+			timeToValid       = cert.NotBefore.Sub(time.Now())
 		)
-		if timeToExpiration < 30*24*time.Hour {
-			notificationSeverity = "warning"
-			// cert expires in less than 30 days, this is a soft error. send an email.
-			notificationMessage = fmt.Sprintf("Certificate %d for %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
-			log.Printf(notificationMessage)
+		switch {
+		case timeToValid > time.Nanosecond:
+			severity = "warning"
+			message = fmt.Sprintf("Certificate %d %q is not yet valid: notBefore=%s", i, cert.Subject.CommonName, cert.NotBefore)
+		case timeToExpiration < -time.Nanosecond:
+			severity = "warning"
+			message = fmt.Sprintf("Certificate %d %q expired: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
+		case timeToExpiration < 15*day:
+			severity = "warning"
+			message = fmt.Sprintf("Certificate %d %q expires in less than 15 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
+		case timeToExpiration < 30*day:
+			severity = "warning"
+			message = fmt.Sprintf("Certificate %d for %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
+		default:
+			severity = "info"
+			message = fmt.Sprintf(fmt.Sprintf("Certificate %d %q is valid from %s to %s", i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter))
 		}
-		if timeToExpiration < 15*24*time.Hour {
-			err = fmt.Errorf("Certificate %d %q expires in less than 15 days: notAfter=%s",
-				i, cert.Subject.CommonName, cert.NotAfter)
-		}
-		if timeToExpiration < -time.Nanosecond {
-			err = fmt.Errorf("Certificate %d %q expired: notAfter=%s",
-				i, cert.Subject.CommonName, cert.NotAfter)
-		}
-		if timeToValid > time.Nanosecond {
-			err = fmt.Errorf("Certificate %d %q is not yet valid: notBefore=%s",
-				i, cert.Subject.CommonName, cert.NotBefore)
-		}
-		if err == nil {
-			notificationSeverity = "info"
-			notificationMessage = fmt.Sprintf(fmt.Sprintf("Certificate %d %q is valid from %s to %s",
-				i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter))
-			log.Printf(notificationMessage)
-		}
-		notifications = append(notifications, CertNotification{
+		log.Printf(message)
+		notifications = append(notifications, &CertNotification{
 			CN:       cert.Subject.CommonName,
-			Severity: notificationSeverity,
-			Message:  notificationMessage,
+			Severity: severity,
+			Message:  message,
 		})
-		if err != nil {
-			return notifications, err
+	}
+	return notifications
+}
+
+// certChainPendingExpiration returns an error for the first pending
+// expiration in 3-cert chain. It errors earlier for intermediate and
+// root certs, since they're usually issued with a longer validity
+// period and require more work to rotate.
+//
+func certChainPendingExpiration(certs []*x509.Certificate) error {
+	for i, cert := range certs {
+		timeToExpiration := cert.NotAfter.Sub(time.Now())
+
+		switch i {
+		case 0:
+			if timeToExpiration < 15*day {
+				return fmt.Errorf("leaf/EE certificate %d %q expires in less than 15 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
+			}
+		case 1:
+			if timeToExpiration < 15*week { // almost 4 months
+				return fmt.Errorf("intermediate certificate %d %q expires in less than 15 weeks: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
+			}
+		case 2:
+			if timeToExpiration < 15*month { // ~5 quarters
+				return fmt.Errorf("root certificate %d %q expires in less than 15 months: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
+			}
+		default:
+			return fmt.Errorf("unexpected cert with index %d in chain ", i)
 		}
 	}
-	return notifications, nil
+	return nil
 }

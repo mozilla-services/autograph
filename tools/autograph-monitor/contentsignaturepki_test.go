@@ -15,7 +15,6 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -42,6 +41,18 @@ func generateTestRSAKey() *rsa.PrivateKey {
 		log.Fatalf("Could not generate private key: %v", err)
 	}
 	return priv
+}
+
+func mustPEMToECKey(s string) *ecdsa.PrivateKey {
+	block, _ := pem.Decode([]byte(s))
+	if block == nil {
+		log.Fatalf("Failed to parse EC key PEM")
+	}
+	key, err := x509.ParseECPrivateKey(block.Bytes)
+	if err != nil {
+		log.Fatalf("Could not parse EC key: %q", err)
+	}
+	return key
 }
 
 func mustPEMToCert(s string) *x509.Certificate {
@@ -178,10 +189,25 @@ func Test_verifyContentSignature(t *testing.T) {
 	}))
 	defer rsaLeafChainTestServer.Close()
 
-	invalidEEKeyLeafChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, string(invalidEEKeyLeafChain))
+	testLeafChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, string(testLeafChain))
 	}))
-	defer invalidEEKeyLeafChainTestServer.Close()
+	defer testLeafChainTestServer.Close()
+
+	testLeafExpiringSoonChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, string(mustCertsToChain([]*x509.Certificate{testLeaf7DaysToExpiration, testInter, testRoot})))
+	}))
+	defer testLeafExpiringSoonChainTestServer.Close()
+
+	testInterExpiringSoonChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, string(mustCertsToChain([]*x509.Certificate{testLeaf, testInter30DaysToExpiration, testRoot})))
+	}))
+	defer testInterExpiringSoonChainTestServer.Close()
+
+	testRootExpiringSoonChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, string(mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot16DaysToExpiration})))
+	}))
+	defer testRootExpiringSoonChainTestServer.Close()
 
 	var typedNilNotifier *PDEventNotifier = nil
 
@@ -191,6 +217,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		rootHash     string
 		ignoredCerts map[string]bool
 		response     formats.SignatureResponse
+		input        []byte
 	}
 	tests := []struct {
 		name                 string
@@ -205,16 +232,15 @@ func Test_verifyContentSignature(t *testing.T) {
 			args: args{
 				x5uClient: &http.Client{},
 				notifier:  nil,
-				rootHash:  normandyDev2021Roothash,
+				rootHash:  sha2Fingerprint(testRoot),
 				response: formats.SignatureResponse{
-					Ref:       "1881ks1du39bi26cfmfczu6pf3",
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
 					SignerID:  "normankey",
-					PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
-					Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
-					X5U:       ts.URL,
+					Signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+					X5U:       testLeafChainTestServer.URL,
 				},
+				input: signerTestData,
 			},
 			wantErr: false,
 		},
@@ -223,16 +249,15 @@ func Test_verifyContentSignature(t *testing.T) {
 			args: args{
 				x5uClient: &http.Client{},
 				notifier:  typedNilNotifier,
-				rootHash:  normandyDev2021Roothash,
+				rootHash:  sha2Fingerprint(testRoot),
 				response: formats.SignatureResponse{
-					Ref:       "1881ks1du39bi26cfmfczu6pf3",
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
 					SignerID:  "normankey",
-					PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
-					Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
-					X5U:       ts.URL,
+					Signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+					X5U:       testLeafChainTestServer.URL,
 				},
+				input: signerTestData,
 			},
 			wantErr: false,
 		},
@@ -241,24 +266,23 @@ func Test_verifyContentSignature(t *testing.T) {
 			args: args{
 				x5uClient: &http.Client{},
 				notifier:  nil,
-				rootHash:  normandyDev2021Roothash,
+				rootHash:  sha2Fingerprint(testRoot),
 				response: formats.SignatureResponse{
-					Ref:       "1881ks1du39bi26cfmfczu6pf3",
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
 					SignerID:  "normankey",
-					PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
-					Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
-					X5U:       ts.URL,
+					Signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+					X5U:       testLeafChainTestServer.URL,
 				},
+				input: signerTestData,
 			},
 			wantErr:         false,
 			useMockNotifier: true,
 			mockNotifierCallback: func(m *mock_main.MockNotifier) {
 				gomock.InOrder(
-					m.EXPECT().Send("normandy.content-signature.mozilla.org", "info", `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`).Return(fmt.Errorf("Notifier.send mock error")),
-					m.EXPECT().Send("Devzilla Signing Services Intermediate 1", "info", `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`),
-					m.EXPECT().Send("dev.content-signature.root.ca", "info", `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`),
+					m.EXPECT().Send("example.content-signature.mozilla.org", "info", fmt.Sprintf(`Certificate 0 "example.content-signature.mozilla.org" is valid from %s to %s`, testLeaf.NotBefore, testLeaf.NotAfter)).Return(fmt.Errorf("Notifier.send mock error")),
+					m.EXPECT().Send("autograph unit test content signing intermediate", "info", fmt.Sprintf(`Certificate 1 "autograph unit test content signing intermediate" is valid from %s to %s`, testInter.NotBefore, testInter.NotAfter)),
+					m.EXPECT().Send("autograph unit test self-signed root", "info", fmt.Sprintf(`Certificate 2 "autograph unit test self-signed root" is valid from %s to %s`, testRoot.NotBefore, testRoot.NotAfter)),
 				)
 			},
 		},
@@ -267,17 +291,16 @@ func Test_verifyContentSignature(t *testing.T) {
 			args: args{
 				x5uClient:    &http.Client{},
 				notifier:     nil,
-				rootHash:     "invalid root hash",
-				ignoredCerts: map[string]bool{"normandy.content-signature.mozilla.org": true},
+				rootHash:     "invalidroothash",
+				ignoredCerts: map[string]bool{"example.content-signature.mozilla.org": true},
 				response: formats.SignatureResponse{
-					Ref:       "1881ks1du39bi26cfmfczu6pf3",
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
 					SignerID:  "normankey",
-					PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
-					Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
-					X5U:       ts.URL,
+					Signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+					X5U:       testLeafChainTestServer.URL,
 				},
+				input: signerTestData,
 			},
 			wantErr: false,
 		},
@@ -285,19 +308,17 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response with invalid root hash fails",
 			args: args{
-				x5uClient:    &http.Client{},
-				notifier:     nil,
-				rootHash:     "invalid root hash",
-				ignoredCerts: map[string]bool{},
+				x5uClient: &http.Client{},
+				notifier:  nil,
+				rootHash:  "invalidroothash",
 				response: formats.SignatureResponse{
-					Ref:       "1881ks1du39bi26cfmfczu6pf3",
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
 					SignerID:  "normankey",
-					PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
-					Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
-					X5U:       ts.URL,
+					Signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+					X5U:       testLeafChainTestServer.URL,
 				},
+				input: signerTestData,
 			},
 			wantErr:   true,
 			errSubStr: "hash does not match expected root",
@@ -307,16 +328,11 @@ func Test_verifyContentSignature(t *testing.T) {
 			args: args{
 				x5uClient: &http.Client{},
 				notifier:  nil,
-				rootHash:  normandyDev2021Roothash,
+				rootHash:  "shouldnotmatter",
 				response: formats.SignatureResponse{
-					Ref:       "1881ks1du39bi26cfmfczu6pf3",
-					Type:      "contentsignature",
-					Mode:      "p384ecdsa",
-					SignerID:  "normankey",
-					PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
-					Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
-					X5U:       "",
+					X5U: "",
 				},
+				input: []byte(inputdata),
 			},
 			wantErr:   true,
 			errSubStr: "missing an X5U to fetch",
@@ -400,7 +416,7 @@ func Test_verifyContentSignature(t *testing.T) {
 			errSubStr: "Cannot verify EE/leaf cert with non-ECDSA public key type",
 		},
 		{
-			name: "invalid data fails",
+			name: "invalid data (wrong EE for normandyDev2021Roothash) fails",
 			args: args{
 				x5uClient: &http.Client{},
 				notifier:  nil,
@@ -412,11 +428,65 @@ func Test_verifyContentSignature(t *testing.T) {
 					SignerID:  "normankey",
 					PublicKey: "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVEKiCAIkwRg1VFsP8JOYdSF6a3qvgbRPoEK9eTuLbrB6QixozscKR4iWJ8ZOOX6RPCRgFdfVDoZqjFBFNJN9QtRBk0mVtHbnErx64d2vMF0oWencS1hyLW2whgOgOz7p",
 					Signature: "9M26T-1RCEzTAlCzDZk6CkEZxkVZkt-wUJfA4s4altKx3Vw-MfuE08bXy1TenbR0I87PzuuA9c1CNOZ8hzRbVuYvKnOH0z4kIbGzAMWzyOxwRgufaODHpcnSAKv2q3JM",
-					X5U:       invalidEEKeyLeafChainTestServer.URL,
+					X5U:       testLeafChainTestServer.URL,
 				},
 			},
 			wantErr:   true,
 			errSubStr: "ECDSA signature verification failed",
+		},
+		{
+			name: "expiring EE fails",
+			args: args{
+				x5uClient: &http.Client{},
+				notifier:  nil,
+				rootHash:  sha2Fingerprint(testRoot),
+				response: formats.SignatureResponse{
+					Type:      "contentsignature",
+					Mode:      "p384ecdsa",
+					SignerID:  "normankey",
+					Signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+					X5U:       testLeafExpiringSoonChainTestServer.URL,
+				},
+				input: signerTestData,
+			},
+			wantErr:   true,
+			errSubStr: `leaf/EE certificate 0 "example.content-signature.mozilla.org" expires in less than 15 days`,
+		},
+		{
+			name: "expiring inter fails",
+			args: args{
+				x5uClient: &http.Client{},
+				notifier:  nil,
+				rootHash:  sha2Fingerprint(testRoot),
+				response: formats.SignatureResponse{
+					Type:      "contentsignature",
+					Mode:      "p384ecdsa",
+					SignerID:  "normankey",
+					Signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+					X5U:       testInterExpiringSoonChainTestServer.URL,
+				},
+				input: signerTestData,
+			},
+			wantErr:   true,
+			errSubStr: `intermediate certificate 1 "autograph unit test content signing intermediate" expires in less than 15 weeks`,
+		},
+		{
+			name: "expiring root fails",
+			args: args{
+				x5uClient: &http.Client{},
+				notifier:  nil,
+				rootHash:  sha2Fingerprint(testRoot16DaysToExpiration),
+				response: formats.SignatureResponse{
+					Type:      "contentsignature",
+					Mode:      "p384ecdsa",
+					SignerID:  "normankey",
+					Signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+					X5U:       testRootExpiringSoonChainTestServer.URL,
+				},
+				input: signerTestData,
+			},
+			wantErr:   true,
+			errSubStr: `root certificate 2 "autograph unit test self-signed root" expires in less than 15 months`,
 		},
 	}
 	for _, tt := range tests {
@@ -430,7 +500,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := verifyContentSignature(tt.args.x5uClient, notifier, tt.args.rootHash, tt.args.ignoredCerts, tt.args.response)
+			err := verifyContentSignature(tt.args.x5uClient, notifier, tt.args.rootHash, tt.args.ignoredCerts, tt.args.response, tt.args.input)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("verifyContentSignature() error = %v, wantErr %v", err, tt.wantErr)
@@ -442,190 +512,143 @@ func Test_verifyContentSignature(t *testing.T) {
 	}
 }
 
-func Test_verifyCertChain(t *testing.T) {
+func Test_certChainValidityNotifications(t *testing.T) {
 	type args struct {
-		rootHash string
-		certs    []*x509.Certificate
+		certs []*x509.Certificate
 	}
 	tests := []struct {
-		name              string
-		args              args
-		wantErr           bool
-		wantNotifications []CertNotification
-		errSubStr         string
+		name string
+		args args
+		// NB: wantNotifications .Message matches on a
+		// substring to avoid hardcoding specific datetimes
+		wantNotifications []*CertNotification
 	}{
 		{
-			name: "expired end-entity chain fails",
+			name: "expired end-entity chain",
 			args: args{
-				rootHash: conf.rootHash,
-				certs:    mustChainToCerts(ExpiredEndEntityChain),
+				certs: mustChainToCerts(ExpiredEndEntityChain),
 			},
-			wantErr: true,
-			wantNotifications: []CertNotification{
-				CertNotification{
+			wantNotifications: []*CertNotification{
+				&CertNotification{
 					CN:       "normandy.content-signature.mozilla.org",
 					Severity: "warning",
-					Message:  `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`,
+					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" expired: notAfter=2017-11-07 14:02:37 +0000 UTC`,
+				},
+				&CertNotification{
+					CN:       "Content Signing Intermediate",
+					Severity: "warning",
+					Message:  `Certificate 1 "Content Signing Intermediate" expired: notAfter=2019-05-04 00:12:39 +0000 UTC`,
+				},
+				&CertNotification{
+					CN:       "root-ca-production-amo",
+					Severity: "info",
+					Message:  `Certificate 2 "root-ca-production-amo" is valid from 2015-03-17 22:53:57 +0000 UTC to 2025-03-14 22:53:57 +0000 UTC`,
 				},
 			},
-			errSubStr: "expired",
 		},
 		{
-			name: "not yet valid chain fails",
+			name: "not yet valid root",
 			args: args{
-				rootHash: conf.rootHash,
-				certs:    []*x509.Certificate{testRootNotYetValid},
+				certs: []*x509.Certificate{testRootNotYetValid},
 			},
-			wantErr: true,
-			wantNotifications: []CertNotification{
-				CertNotification{
-					CN:       "normandy.content-signature.mozilla.org",
-					Severity: "info",
-					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
+			wantNotifications: []*CertNotification{
+				&CertNotification{
+					CN:       "autograph unit test self-signed root",
+					Severity: "warning",
+					Message:  `Certificate 0 "autograph unit test self-signed root" is not yet valid: notBefore=`,
 				},
 			},
-			errSubStr: "is not yet valid",
 		},
 		{
-			name: "wrongly ordered chain fails",
+			name: "valid root expiring in <15 days",
 			args: args{
-				rootHash: conf.rootHash,
-				certs:    mustChainToCerts(WronglyOrderedChain),
+				certs: []*x509.Certificate{testRoot7DaysToExpiration},
 			},
-			wantErr:   true,
-			errSubStr: "is not signed by parent certificate",
+			wantNotifications: []*CertNotification{
+				&CertNotification{
+					CN:       "autograph unit test self-signed root",
+					Severity: "warning",
+					Message:  `Certificate 0 "autograph unit test self-signed root" expires in less than 15 days:`,
+				},
+			},
 		},
 		{
-			name: "valid chain with typed nil notifier passes",
+			name: "valid root expiring in <30 days",
 			args: args{
-				rootHash: conf.rootHash,
-				certs:    mustChainToCerts(NormandyDevChain2021),
+				certs: []*x509.Certificate{testRoot16DaysToExpiration},
 			},
-			wantErr: false,
-			wantNotifications: []CertNotification{
-				CertNotification{
-					CN:       "normandy.content-signature.mozilla.org",
-					Severity: "info",
-					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
-				},
-				CertNotification{
-					CN:       "Devzilla Signing Services Intermediate 1",
-					Severity: "info",
-					Message:  `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`,
-				},
-				CertNotification{
-					CN:       "dev.content-signature.root.ca",
-					Severity: "info",
-					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
+			wantNotifications: []*CertNotification{
+				&CertNotification{
+					CN:       "autograph unit test self-signed root",
+					Severity: "warning",
+					Message:  `Certificate 0 for "autograph unit test self-signed root" expires in less than 30 days:`,
 				},
 			},
-			errSubStr: "",
 		},
 		{
-			name: "expired EE chain sends warning",
+			name: "wrongly ordered chain",
 			args: args{
-				rootHash: conf.rootHash,
-				certs:    mustChainToCerts(ExpiredEndEntityChain),
+				certs: mustChainToCerts(WronglyOrderedChain),
 			},
-			wantErr:   true,
-			errSubStr: "expired",
-			wantNotifications: []CertNotification{
-				CertNotification{
+			wantNotifications: []*CertNotification{
+				&CertNotification{
+					CN:       "Content Signing Intermediate/emailAddress=foxsec@mozilla.com",
+					Severity: "info",
+					Message:  `Certificate 0 "Content Signing Intermediate/emailAddress=foxsec@mozilla.com" is valid from 2020-12-31 00:00:00 +0000 UTC to 2025-03-14 22:53:57 +0000 UTC`,
+				},
+				&CertNotification{
 					CN:       "normandy.content-signature.mozilla.org",
 					Severity: "warning",
-					Message:  `Certificate 0 for "normandy.content-signature.mozilla.org" expires in less than 30 days: notAfter=2017-11-07 14:02:37 +0000 UTC`,
+					Message:  `Certificate 1 "normandy.content-signature.mozilla.org" expired: notAfter=2017-11-07 14:02:37 +0000 UTC`,
+				},
+				&CertNotification{
+					CN:       "root-ca-production-amo",
+					Severity: "info",
+					Message:  `Certificate 2 "root-ca-production-amo" is valid from 2015-03-17 22:53:57 +0000 UTC to 2025-03-14 22:53:57 +0000 UTC`,
 				},
 			},
 		},
 		{
-			name: "expired EE chain send warning errors",
+			name: "NormandyDevChain2021",
 			args: args{
-				rootHash: conf.rootHash,
-				certs:    mustChainToCerts(ExpiredEndEntityChain),
+				certs: mustChainToCerts(NormandyDevChain2021),
 			},
-			wantErr: true,
-			wantNotifications: []CertNotification{
-				CertNotification{
+			wantNotifications: []*CertNotification{
+				&CertNotification{
 					CN:       "normandy.content-signature.mozilla.org",
 					Severity: "info",
 					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
 				},
-			},
-			errSubStr: "expired",
-		},
-		{
-			name: "valid chain resolves warnings",
-			args: args{
-				rootHash: conf.rootHash,
-				certs:    mustChainToCerts(NormandyDevChain2021),
-			},
-			wantErr: false,
-			wantNotifications: []CertNotification{
-				CertNotification{
-					CN:       "normandy.content-signature.mozilla.org",
-					Severity: "info",
-					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
-				},
-				CertNotification{
+				&CertNotification{
 					CN:       "Devzilla Signing Services Intermediate 1",
 					Severity: "info",
 					Message:  `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`,
 				},
-				CertNotification{
+				&CertNotification{
 					CN:       "dev.content-signature.root.ca",
 					Severity: "info",
 					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
 				},
 			},
-			errSubStr: "",
-		},
-		{
-			name: "valid chain resolves warnings send errors",
-			args: args{
-				rootHash: conf.rootHash,
-				certs:    mustChainToCerts(NormandyDevChain2021),
-			},
-			wantErr: false,
-			wantNotifications: []CertNotification{
-				CertNotification{
-					CN:       "normandy.content-signature.mozilla.org",
-					Severity: "info",
-					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
-				},
-				CertNotification{
-					CN:       "Devzilla Signing Services Intermediate 1",
-					Severity: "info",
-					Message:  `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`,
-				},
-				CertNotification{
-					CN:       "dev.content-signature.root.ca",
-					Severity: "info",
-					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
-				},
-			},
-			errSubStr: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var (
-				err error
-			)
-			notifications, err := verifyCertChain(tt.args.rootHash, tt.args.certs)
+			notifications := certChainValidityNotifications(tt.args.certs)
 
-			if tt.wantErr == false && err != nil { // unexpected error
-				t.Errorf("verifyCertChain() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if tt.wantErr == true && err == nil { // unexpected pass
-				t.Errorf("verifyCertChain() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if tt.wantErr == true && !strings.Contains(err.Error(), tt.errSubStr) {
-				t.Fatalf("verifyCertChain() expected to fail with %s but failed with: %v", tt.errSubStr, err.Error())
-			}
 			if len(tt.wantNotifications) != len(notifications) {
-				t.Errorf("verifyCertChain() len(notifications) = %d, len(wantNotifications) %d", len(notifications), len(tt.wantNotifications))
-				if !reflect.DeepEqual(notifications, tt.wantNotifications) {
-					t.Errorf("verifyCertChain() notifications = %+v, wantNotifications %+v", notifications, tt.wantNotifications)
+				t.Errorf("certChainValidityNotifications() len(notifications) = %d, len(wantNotifications) %d", len(notifications), len(tt.wantNotifications))
+				return
+			}
+			for i, notification := range notifications {
+				if notification.CN != tt.wantNotifications[i].CN {
+					t.Errorf("certChainValidityNotifications() notifications[%d].CN = %+v, wantNotifications[%d].CN %+v", i, notification.CN, i, tt.wantNotifications[i].CN)
+				}
+				if notification.Severity != tt.wantNotifications[i].Severity {
+					t.Errorf("certChainValidityNotifications() notifications[%d].Severity = %+v, wantNotifications[%d].Severity %+v", i, notification.Severity, i, tt.wantNotifications[i].Severity)
+				}
+				if !strings.Contains(notification.Message, tt.wantNotifications[i].Message) {
+					t.Errorf("certChainValidityNotifications() notifications[%d].Message does not contain '%s', got '%s'", i, tt.wantNotifications[i].Message, notification.Message)
 				}
 			}
 		})
@@ -634,10 +657,21 @@ func Test_verifyCertChain(t *testing.T) {
 
 // fixtures -----------------------------------------------------------------
 
+// P384ECDSA test signer from signer/contentsignature/contentsignature_test.go TestSign
+const testSignerP384PEM = `-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDART/nn3fKlhyENdc2u3klbvRJ5+odP0kWzt9p+v5hDyggbtVA4M1Mb
+fL9KoaiAAv2gBwYFK4EEACKhZANiAATugz97A6HPqq0fJCGom9PdKJ58Y9aobARQ
+BkZWS5IjC+15Uqt3yOcCMdjIJpikiD1WjXRaeFe+b3ovcoBs4ToLK7d8y0qFlkgx
+/5Cp6z37rpp781N4haUOIauM14P4KUw=
+-----END EC PRIVATE KEY-----`
+
 var (
+	// from signer/contentsignature/contentsignature_test.go TestSign
+	signerTestData = []byte("foobarbaz1234abcd")
+
 	testRootKey    = generateTestKey()
 	testInterKey   = generateTestKey()
-	testLeafKey    = generateTestKey()
+	testLeafKey    = mustPEMToECKey(testSignerP384PEM)
 	testLeafRSAKey = generateTestRSAKey()
 
 	testRoot = signTestCert(signOptions{
@@ -648,30 +682,10 @@ var (
 		publicKey:    &testRootKey.PublicKey,
 		isCA:         true,
 		issuer:       nil, // self-sign
-		notBefore:    time.Now().Add(-3 * 24 * time.Hour),
-		notAfter:     time.Now().Add(time.Hour),
+		notBefore:    time.Now().Add(-3 * day),
+		notAfter:     time.Now().Add(24 * month),
 	})
-	testRootNonCA = signTestCert(signOptions{
-		commonName:   "autograph unit test self-signed root",
-		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
-		privateKey:   testRootKey,
-		publicKey:    &testRootKey.PublicKey,
-		isCA:         false,
-		issuer:       nil, // self-sign
-		notBefore:    time.Now(),
-		notAfter:     time.Now().Add(time.Hour),
-	})
-	testRootNoExt = signTestCert(signOptions{
-		commonName:   "autograph unit test self-signed root",
-		extKeyUsages: []x509.ExtKeyUsage{},
-		privateKey:   testRootKey,
-		publicKey:    &testRootKey.PublicKey,
-		isCA:         true,
-		issuer:       nil, // self-sign
-		notBefore:    time.Now(),
-		notAfter:     time.Now().Add(time.Hour),
-	})
-	testRootExpired = signTestCert(signOptions{
+	testRoot7DaysToExpiration = signTestCert(signOptions{
 		commonName:   "autograph unit test self-signed root",
 		keyUsage:     x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
 		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
@@ -679,8 +693,19 @@ var (
 		publicKey:    &testRootKey.PublicKey,
 		isCA:         true,
 		issuer:       nil, // self-sign
-		notBefore:    time.Now().Add(-2 * time.Hour),
-		notAfter:     time.Now().Add(-time.Hour),
+		notBefore:    time.Now().Add(-3 * day),
+		notAfter:     time.Now().Add(7 * day),
+	})
+	testRoot16DaysToExpiration = signTestCert(signOptions{
+		commonName:   "autograph unit test self-signed root",
+		keyUsage:     x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
+		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		privateKey:   testRootKey,
+		publicKey:    &testRootKey.PublicKey,
+		isCA:         true,
+		issuer:       nil, // self-sign
+		notBefore:    time.Now().Add(-3 * day),
+		notAfter:     time.Now().Add(16 * day),
 	})
 	testRootNotYetValid = signTestCert(signOptions{
 		commonName:   "autograph unit test self-signed root",
@@ -701,11 +726,25 @@ var (
 		publicKey:                   &testInterKey.PublicKey,
 		isCA:                        true,
 		issuer:                      testRoot,
-		notBefore:                   time.Now().Add(-2 * 24 * time.Hour),
-		notAfter:                    time.Now().Add(time.Hour),
+		notBefore:                   time.Now().Add(-2 * day),
+		notAfter:                    time.Now().Add(6 * month),
 		permittedDNSDomainsCritical: true,
 		permittedDNSDomains:         []string{".content-signature.mozilla.org", "content-signature.mozilla.org"},
 	})
+	testInter30DaysToExpiration = signTestCert(signOptions{
+		commonName:                  "autograph unit test content signing intermediate",
+		extKeyUsages:                []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		keyUsage:                    x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
+		privateKey:                  testRootKey,
+		publicKey:                   &testInterKey.PublicKey,
+		isCA:                        true,
+		issuer:                      testRoot,
+		notBefore:                   time.Now().Add(-2 * day),
+		notAfter:                    time.Now().Add(30 * day),
+		permittedDNSDomainsCritical: true,
+		permittedDNSDomains:         []string{".content-signature.mozilla.org", "content-signature.mozilla.org"},
+	})
+
 	testLeaf = signTestCert(signOptions{
 		commonName:   "example.content-signature.mozilla.org",
 		DNSNames:     []string{"example.content-signature.mozilla.org"},
@@ -716,7 +755,19 @@ var (
 		isCA:         false,
 		issuer:       testInter,
 		notBefore:    time.Now().Add(-2 * time.Hour),
-		notAfter:     time.Now().Add(time.Hour),
+		notAfter:     time.Now().Add(60 * day),
+	})
+	testLeaf7DaysToExpiration = signTestCert(signOptions{
+		commonName:   "example.content-signature.mozilla.org",
+		DNSNames:     []string{"example.content-signature.mozilla.org"},
+		extKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},
+		keyUsage:     x509.KeyUsageDigitalSignature,
+		privateKey:   testInterKey,
+		publicKey:    &testLeafKey.PublicKey,
+		isCA:         false,
+		issuer:       testInter,
+		notBefore:    time.Now().Add(-2 * time.Hour),
+		notAfter:     time.Now().Add(7 * day),
 	})
 	testLeafRSAPub = signTestCert(signOptions{
 		commonName:   "example.content-signature.mozilla.org",
@@ -731,9 +782,8 @@ var (
 		notAfter:     time.Now().Add(time.Hour),
 	})
 
-	rsaLeafChain = mustCertsToChain([]*x509.Certificate{testLeafRSAPub, testInter, testRoot})
-	// invalid EE for the normandydev2021 chain
-	invalidEEKeyLeafChain = mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot})
+	rsaLeafChain  = mustCertsToChain([]*x509.Certificate{testLeafRSAPub, testInter, testRoot})
+	testLeafChain = mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot})
 )
 
 // This chain has an expired end-entity certificate
