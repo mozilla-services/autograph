@@ -210,41 +210,6 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 	}
 }
 
-func TestMarshalUnfinished(t *testing.T) {
-	var cs = &verifier.ContentSignature{
-		Finished: false,
-	}
-	_, err := cs.Marshal()
-	if err.Error() != "contentsignature.Marshal: unfinished cannot be encoded" {
-		t.Fatalf("expected to fail with 'unfinished cannot be encoded' but got %v", err)
-	}
-}
-
-func TestMarshalBadSigLen(t *testing.T) {
-	var cs = &verifier.ContentSignature{
-		Finished: true,
-		Len:      1,
-	}
-	_, err := cs.Marshal()
-	if err.Error() != "contentsignature.Marshal: invalid signature length 1" {
-		t.Fatalf("expected to fail with 'invalid signature length' but got %v", err)
-	}
-}
-
-func TestUnmarshalShortLen(t *testing.T) {
-	_, err := verifier.Unmarshal("")
-	if err.Error() != "contentsignature: signature cannot be shorter than 30 characters, got 0" {
-		t.Fatalf("expected to fail with 'signature cannot be shorter than 30 characters', but got %v", err)
-	}
-}
-
-func TestUnmarshalBadBase64(t *testing.T) {
-	_, err := verifier.Unmarshal("gZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaIgZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaI")
-	if err.Error() != "contentsignature: unknown signature length 192" {
-		t.Fatalf("expected to fail with 'unknown signature length', but got %v", err)
-	}
-}
-
 func TestNoShortData(t *testing.T) {
 	s, err := New(PASSINGTESTCASES[0].cfg)
 	if err != nil {
