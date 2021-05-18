@@ -158,7 +158,7 @@ func monitor() (err error) {
 		return fmt.Errorf("Request failed with %s: %s", resp.Status, resp.Body)
 	}
 
-	x5uClient := &http.Client{}
+	x5uClient := defaultX5UClient()
 
 	dec := json.NewDecoder(resp.Body)
 	failed := false
