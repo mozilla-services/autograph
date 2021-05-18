@@ -17,6 +17,7 @@ require (
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/miekg/pkcs11 v1.0.3
+	github.com/mozilla-services/autograph/verifier/contentsignature v0.0.0-20210505200649-cb56f0dcbdd1
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.6.1 // indirect
@@ -32,3 +33,5 @@ require (
 	google.golang.org/grpc v1.24.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )
+
+replace github.com/mozilla-services/autograph/verifier => ./verifier/

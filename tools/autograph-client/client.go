@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha256"
-	"crypto/sha512"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -24,6 +23,8 @@ import (
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
 	"github.com/mozilla-services/autograph/signer/xpi"
+	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
+
 	"go.mozilla.org/hawk"
 )
 
@@ -265,7 +266,7 @@ examples:
 				switch response.Type {
 				case contentsignature.Type:
 					sigStatus = verifyContentSignature(input, response, req.URL.RequestURI())
-					sig, err := contentsignature.Unmarshal(response.Signature)
+					sig, err := csigverifier.Unmarshal(response.Signature)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -374,31 +375,16 @@ func verifyContentSignature(input []byte, resp formats.SignatureResponse, endpoi
 		log.Fatal(err)
 	}
 	pubKey := keyInterface.(*ecdsa.PublicKey)
-	if endpoint == "/sign/data" {
-		var templated []byte
-		templated = make([]byte, len("Content-Signature:\x00")+len(input))
-		copy(templated[:len("Content-Signature:\x00")], []byte("Content-Signature:\x00"))
-		copy(templated[len("Content-Signature:\x00"):], input)
-
-		var md hash.Hash
-		switch pubKey.Params().Name {
-		case "P-256":
-			md = sha256.New()
-		case "P-384":
-			md = sha512.New384()
-		case "P-521":
-			md = sha512.New()
-		default:
-			log.Fatalf("unsupported curve algorithm %q", pubKey.Params().Name)
-		}
-		md.Write(templated)
-		input = md.Sum(nil)
-	}
-	sig, err := contentsignature.Unmarshal(resp.Signature)
+	sig, err := csigverifier.Unmarshal(resp.Signature)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return ecdsa.Verify(pubKey, input, sig.R, sig.S)
+	if endpoint == "/sign/data" {
+		return sig.VerifyData(input, pubKey)
+	} else {
+		return sig.VerifyHash(input, pubKey)
+	}
+	return true
 }
 
 func verifyXPI(input []byte, req formats.SignatureRequest, resp formats.SignatureResponse, reqType requestType, roots *x509.CertPool) bool {

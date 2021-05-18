@@ -162,11 +162,10 @@ func TestSignaturePass(t *testing.T) {
 		for j, response := range responses {
 			switch response.Type {
 			case contentsignature.Type:
-				err = verifyContentSignature(
+				err = verifyContentSignatureResponse(
 					testcase.signaturerequests[j].Input,
-					testcase.endpoint,
-					response.Signature,
-					response.PublicKey)
+					response,
+					testcase.endpoint)
 			case xpi.Type:
 				err = verifyXPISignature(testcase.signaturerequests[j].Input, response.Signature)
 			case apk2.Type:
