@@ -39,7 +39,18 @@ jobs:
     # based on the official golang image with more docker stuff
     docker:
       - image: circleci/golang:1.15-buster
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
     steps:
+      - run:
+          name: Login to Dockerhub
+          command: |
+            if [ "${DOCKER_USER}" == "" ] || [ "${DOCKER_PASS}" == "" ]; then
+              echo "Skipping Login to Dockerhub, credentials not available."
+            else
+              echo "${DOCKER_PASS}" | docker login -u="${DOCKER_USER}" --password-stdin
+            fi
       - checkout
       - setup_remote_docker
       - run:
@@ -58,7 +69,18 @@ jobs:
     # based on the official golang image with more docker stuff
     docker:
       - image: circleci/golang:1.15-buster
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
     steps:
+      - run:
+          name: Login to Dockerhub
+          command: |
+            if [ "${DOCKER_USER}" == "" ] || [ "${DOCKER_PASS}" == "" ]; then
+              echo "Skipping Login to Dockerhub, credentials not available."
+            else
+              echo "${DOCKER_PASS}" | docker login -u="${DOCKER_USER}" --password-stdin
+            fi
       - checkout
       - setup_remote_docker
       - run:
