@@ -30,6 +30,8 @@ import (
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/xpi"
+	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
+
 	"go.mozilla.org/hawk"
 
 	margo "go.mozilla.org/mar"
@@ -553,7 +555,7 @@ func verifyContentSignatureResponse(rawInput string, resp formats.SignatureRespo
 		return err
 	}
 	pubKey := keyInterface.(*ecdsa.PublicKey)
-	sig, err := contentsignature.Unmarshal(resp.Signature)
+	sig, err := csigverifier.Unmarshal(resp.Signature)
 	if err != nil {
 		return err
 	}

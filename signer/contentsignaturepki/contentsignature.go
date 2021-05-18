@@ -10,10 +10,12 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"math/big"
 	"time"
 
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/signer"
+	verifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 
 	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/mozlogrus"
@@ -62,6 +64,11 @@ type ContentSigner struct {
 	chain                       string
 	caCert                      string
 	db                          *database.Handler
+}
+
+// ecdsaAsn1Signature is a private struct to unmarshal asn1 signatures produced by crypto.Signer
+type ecdsaAsn1Signature struct {
+	R, S *big.Int
 }
 
 // New initializes a ContentSigner using a signer configuration
@@ -212,7 +219,7 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	}
 	alg, hash := MakeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
-	sig.(*ContentSignature).storeHashName(alg)
+	sig.(*verifier.ContentSignature).HashName = alg
 	return sig, err
 }
 
@@ -244,9 +251,11 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 	if len(input) != 32 && len(input) != 48 && len(input) != 64 {
 		return nil, fmt.Errorf("contentsignaturepki %q: refusing to sign input hash. length %d, expected 32, 48 or 64", s.ID, len(input))
 	}
-	var err error
-	csig := new(ContentSignature)
-	csig = &ContentSignature{
+	var (
+		err  error
+		csig *verifier.ContentSignature
+	)
+	csig = &verifier.ContentSignature{
 		Len:  getSignatureLen(s.Mode),
 		Mode: s.Mode,
 		X5U:  s.X5U,

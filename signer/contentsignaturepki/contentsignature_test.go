@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/mozilla-services/autograph/signer"
+	verifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
 
 func TestSign(t *testing.T) {
@@ -47,7 +48,7 @@ func TestSign(t *testing.T) {
 		}
 
 		// convert string format back to signature
-		cs, err := Unmarshal(sigstr)
+		cs, err := verifier.Unmarshal(sigstr)
 		if err != nil {
 			t.Fatalf("testcase %d failed to unmarshal signature: %v", i, err)
 		}
@@ -76,7 +77,7 @@ func TestSign(t *testing.T) {
 			t.Fatalf("testcase %d failed to get X5U %q: %v", i, s.X5U, err)
 		}
 		key := certs[0].PublicKey.(*ecdsa.PublicKey)
-		if !sig.(*ContentSignature).VerifyData([]byte(input), key) {
+		if !sig.(*verifier.ContentSignature).VerifyData([]byte(input), key) {
 			t.Fatalf("testcase %d failed to verify signature", i)
 		}
 	}
@@ -210,7 +211,7 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 }
 
 func TestMarshalUnfinished(t *testing.T) {
-	var cs = &ContentSignature{
+	var cs = &verifier.ContentSignature{
 		Finished: false,
 	}
 	_, err := cs.Marshal()
@@ -220,7 +221,7 @@ func TestMarshalUnfinished(t *testing.T) {
 }
 
 func TestMarshalBadSigLen(t *testing.T) {
-	var cs = &ContentSignature{
+	var cs = &verifier.ContentSignature{
 		Finished: true,
 		Len:      1,
 	}
@@ -231,14 +232,14 @@ func TestMarshalBadSigLen(t *testing.T) {
 }
 
 func TestUnmarshalShortLen(t *testing.T) {
-	_, err := Unmarshal("")
+	_, err := verifier.Unmarshal("")
 	if err.Error() != "contentsignature: signature cannot be shorter than 30 characters, got 0" {
 		t.Fatalf("expected to fail with 'signature cannot be shorter than 30 characters', but got %v", err)
 	}
 }
 
 func TestUnmarshalBadBase64(t *testing.T) {
-	_, err := Unmarshal("gZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaIgZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaI")
+	_, err := verifier.Unmarshal("gZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaIgZimwQAsuCj_JcgxrIjw1wzON8WYN9YKp3I5I9NmOgnGLOJJwHDxjOA2QEnzN7bXBGWFgn8HJ7fGRYxBy1SHiDMiF8VX7V49KkanO9MO-RRN1AyC9xmghuEcF4ndhQaI")
 	if err.Error() != "contentsignature: unknown signature length 192" {
 		t.Fatalf("expected to fail with 'unknown signature length', but got %v", err)
 	}

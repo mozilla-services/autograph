@@ -23,6 +23,8 @@ import (
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
 	"github.com/mozilla-services/autograph/signer/xpi"
+	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
+
 	"go.mozilla.org/hawk"
 )
 
@@ -264,7 +266,7 @@ examples:
 				switch response.Type {
 				case contentsignature.Type:
 					sigStatus = verifyContentSignature(input, response, req.URL.RequestURI())
-					sig, err := contentsignature.Unmarshal(response.Signature)
+					sig, err := csigverifier.Unmarshal(response.Signature)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -373,7 +375,7 @@ func verifyContentSignature(input []byte, resp formats.SignatureResponse, endpoi
 		log.Fatal(err)
 	}
 	pubKey := keyInterface.(*ecdsa.PublicKey)
-	sig, err := contentsignature.Unmarshal(resp.Signature)
+	sig, err := csigverifier.Unmarshal(resp.Signature)
 	if err != nil {
 		log.Fatal(err)
 	}
