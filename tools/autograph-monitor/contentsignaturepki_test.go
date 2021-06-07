@@ -608,29 +608,6 @@ func Test_certChainValidityNotifications(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "NormandyDevChain2021",
-			args: args{
-				certs: mustChainToCerts(NormandyDevChain2021),
-			},
-			wantNotifications: []*CertNotification{
-				&CertNotification{
-					CN:       "normandy.content-signature.mozilla.org",
-					Severity: "info",
-					Message:  `Certificate 0 "normandy.content-signature.mozilla.org" is valid from 2016-07-06 21:57:15 +0000 UTC to 2021-07-05 21:57:15 +0000 UTC`,
-				},
-				&CertNotification{
-					CN:       "Devzilla Signing Services Intermediate 1",
-					Severity: "info",
-					Message:  `Certificate 1 "Devzilla Signing Services Intermediate 1" is valid from 2016-07-06 21:49:26 +0000 UTC to 2021-07-05 21:49:26 +0000 UTC`,
-				},
-				&CertNotification{
-					CN:       "dev.content-signature.root.ca",
-					Severity: "info",
-					Message:  `Certificate 2 "dev.content-signature.root.ca" is valid from 2016-07-06 18:15:22 +0000 UTC to 2026-07-04 18:15:22 +0000 UTC`,
-				},
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
