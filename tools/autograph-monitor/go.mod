@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/PagerDuty/go-pagerduty v1.4.1
 	github.com/aws/aws-lambda-go v1.24.0
-	github.com/golang/mock v1.5.0
+	github.com/golang/mock v1.6.0
 	github.com/mozilla-services/autograph v0.0.0-20210518191135-68263fbe84f3
 	github.com/mozilla-services/autograph/verifier/contentsignature v0.0.0-20210505200649-cb56f0dcbdd1
 	go.mozilla.org/hawk v0.0.0-20190327210923-a483e4a7047e
