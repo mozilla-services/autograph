@@ -164,3 +164,14 @@ workflows:
               only: /[0-9]\.[0-9]+\.[0-9]+/
             branches:
               only: main
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 1 * * *"
+          filters:
+            branches:
+              only: main
+    jobs:
+      - lint-vet-fmt
+      - unit-test
+      - build-integrationtest-verify
