@@ -45,6 +45,21 @@ func hashSHA256AsHex(toHash []byte) string {
 	return fmt.Sprintf("%X", h.Sum(nil))
 }
 
+func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.SignatureResponse, rid, userid, inputHash string, starttime time.Time, err error) {
+	log.WithFields(log.Fields{
+		"rid":         rid,
+		"options":     sigreq.Options,
+		"mode":        sigresp.Mode,
+		"ref":         sigresp.Ref,
+		"type":        sigresp.Type,
+		"signer_id":   sigresp.SignerID,
+		"input_hash":  inputHash,
+		"output_hash": nil,
+		"user_id":     userid,
+		"t":           int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
+	}).Info(fmt.Sprintf("signing operation failed with error: %v", err))
+}
+
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
 // and calls the signers to generate signature responses.
 func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
@@ -156,8 +171,12 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement hash signing", requestedSignerConfig.ID)
 				return
 			}
+			// the input is already a hash just convert it to hex
+			inputHash = fmt.Sprintf("%X", input)
+
 			sig, err = hashSigner.SignHash(input, sigreq.Options)
 			if err != nil {
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
@@ -166,8 +185,6 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
 				return
 			}
-			// the input is already a hash just convert it to hex
-			inputHash = fmt.Sprintf("%X", input)
 			outputHash = "unimplemented"
 		case "/sign/data":
 			dataSigner, ok := requestedSigner.(signer.DataSigner)
@@ -175,8 +192,12 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement data signing", requestedSignerConfig.ID)
 				return
 			}
+			// calculate a hash of the input to store in the signing logs
+			inputHash = hashSHA256AsHex(input)
+
 			sig, err = dataSigner.SignData(input, sigreq.Options)
 			if err != nil {
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
@@ -185,8 +206,6 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
 				return
 			}
-			// calculate a hash of the input to store in the signing logs
-			inputHash = hashSHA256AsHex(input)
 			outputHash = hashSHA256AsHex([]byte(sigresps[i].Signature))
 		case "/sign/file":
 			fileSigner, ok := requestedSigner.(signer.FileSigner)
@@ -194,14 +213,16 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement file signing", requestedSignerConfig.ID)
 				return
 			}
+			// calculate a hash of the input to store in the signing logs
+			inputHash = hashSHA256AsHex(input)
+
 			signedfile, err = fileSigner.SignFile(input, sigreq.Options)
 			if err != nil {
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
 			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
-			// calculate a hash of the input to store in the signing logs
-			inputHash = hashSHA256AsHex(input)
 			outputHash = hashSHA256AsHex(signedfile)
 		}
 		log.WithFields(log.Fields{
