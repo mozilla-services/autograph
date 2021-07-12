@@ -158,7 +158,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 			sig, err = hashSigner.SignHash(input, sigreq.Options)
 			if err != nil {
-				httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
+				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
 			sigresps[i].Signature, err = sig.(signer.Signature).Marshal()
@@ -177,7 +177,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 			sig, err = dataSigner.SignData(input, sigreq.Options)
 			if err != nil {
-				httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
+				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
 			sigresps[i].Signature, err = sig.(signer.Signature).Marshal()
@@ -196,7 +196,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 			signedfile, err = fileSigner.SignFile(input, sigreq.Options)
 			if err != nil {
-				httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
+				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
 			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
