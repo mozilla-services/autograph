@@ -337,6 +337,39 @@ signers:
           IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
           -----END EC PRIVATE KEY-----
 
+    - id: extensions-ecdsa-expired-chain
+      # valid NotBefore 2019-06-14 18:40:21 UTC and NotAfter 2021-01-14 18:40:21 UTC
+      type: xpi
+      mode: extension
+      recommendation:
+        path: "mozilla-recommendation.json"
+      certificate: |
+          -----BEGIN CERTIFICATE-----
+          MIICaTCCAfCgAwIBAgIIFpJZf/0ls9swCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+          VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+          EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNjI2NDYwODIxMB4XDTE5MDYxNDE4
+          NDAyMVoXDTIxMDExNDE4NDAyMVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+          MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+          VQQDExFjc2ludGVyMTYyNjQ2MDgyMTB2MBAGByqGSM49AgEGBSuBBAAiA2IABDw3
+          +rbWEmoolOex/o83sErQIFzfiUk3rHH1jsjc6Y3JYApiS4kEi/9W6GB170eLevQX
+          tZlSzR/tQHZ9ckh5TdHDGCqzSW1bQS/Ve6GVBlIMLlL8Odvaiqs8bLtjXoLhb6N4
+          MHYwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+          /wQFMAMBAf8wHQYDVR0OBBYEFKEbMQtSCbmKeI0S0AFyN+MUq7WRMB8GA1UdIwQY
+          MBaAFIMp+z7aIARHJQK6dnqO46cgLFvqMAoGCCqGSM49BAMDA2cAMGQCMF8GvKhZ
+          9w7E9UEAo23EeImZGDXWP1BPQzLcKJEHNIxd/bBwvQcj4BAsE3xgWEbjCQIwGqed
+          v+d1uifbc8/SgGVWazxyofFhpRik7UJk5Hz4hebIwm08HT8FYFHvH+d2xIXw
+          -----END CERTIFICATE-----
+      privatekey: |
+          -----BEGIN EC PARAMETERS-----
+          BgUrgQQAIg==
+          -----END EC PARAMETERS-----
+          -----BEGIN EC PRIVATE KEY-----
+          MIGkAgEBBDAYedcRd6GfNMPT0bXcidNMReNy/v+cR9236bkm7sEEgJ2pD9WHK2i6
+          GJb5Zv3/scygBwYFK4EEACKhZANiAAQ8N/q21hJqKJTnsf6PN7BK0CBc34lJN6xx
+          9Y7I3OmNyWAKYkuJBIv/Vuhgde9Hi3r0F7WZUs0f7UB2fXJIeU3Rwxgqs0ltW0Ev
+          1XuhlQZSDC5S/Dnb2oqrPGy7Y16C4W8=
+          -----END EC PRIVATE KEY-----
+
     - id: testapp-android-legacy
       type: apk2
       certificate: |
@@ -1297,6 +1330,7 @@ authorizations:
           - remote-settings
           - webextensions-rsa
           - extensions-ecdsa
+          - extensions-ecdsa-expired-chain
           - testapp-android-legacy
           - legacy_apk_with_rsa
           - testapp-android

@@ -397,7 +397,7 @@ func TestSignFileWithRecommendation(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to sign file with rec: %v", err)
 		}
-		err = VerifySignedFile(signedXPI, nil, opts)
+		err = VerifySignedFile(signedXPI, nil, opts, time.Now().UTC())
 		if err != nil {
 			t.Fatalf("failed to verify signed file with rec: %v", err)
 		}
@@ -430,7 +430,7 @@ func TestSignFileWithRecommendation(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to sign file with rec: %v", err)
 		}
-		err = VerifySignedFile(signedXPI, truststore, opts)
+		err = VerifySignedFile(signedXPI, truststore, opts, time.Now().UTC())
 		if err != nil {
 			t.Fatalf("failed to verify signed file with rec: %v", err)
 		}
@@ -472,7 +472,7 @@ func TestSignFileWithRecommendation(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to sign file with rec: %v", err)
 		}
-		err = VerifySignedFile(signedXPI, nil, opts)
+		err = VerifySignedFile(signedXPI, nil, opts, time.Now().UTC())
 		if err != nil {
 			t.Fatalf("failed to verify signed file with rec: %v", err)
 		}

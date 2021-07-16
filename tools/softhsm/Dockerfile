@@ -26,6 +26,7 @@ ADD extensions-ecdsa-pk8.pem /app/src/autograph/tools/softhsm/
 # Import a key pair from the given path. The file must be in PKCS#8-format. Use with --slot or --token or --serial, --file-pin, --label, --id, --no-public-key, and --pxin.
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --id deadbeef --import /app/src/autograph/tools/softhsm/webextensions-rsa.pem
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 --id 12345678 --import /app/src/autograph/tools/softhsm/extensions-ecdsa-pk8.pem
+RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384-2 --id 11111111 --import /app/src/autograph/tools/softhsm/extensions-ecdsa-2-pk8.pem
 
 # genkeys
 RUN cd /app/src/autograph/tools/softhsm/ && go run genkeys.go

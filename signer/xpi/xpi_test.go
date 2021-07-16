@@ -68,7 +68,7 @@ func TestSignFile(t *testing.T) {
 			t.Fatalf("passing testcase %d %s: failed to sign file with detached PKCS7 sig: %v", i, testcase.ID, err)
 		}
 
-		err = VerifySignedFile(signedXPI, nil, opts)
+		err = VerifySignedFile(signedXPI, nil, opts, time.Now().UTC())
 		if err != nil {
 			t.Fatalf("passing testcase %d: failed to verify PKCS7 signed file: %v", i, err)
 		}
@@ -557,7 +557,7 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 		t.Fatalf("failed to add root cert to pool")
 	}
 
-	err = VerifySignedFile(signedXPI, roots, signOptions)
+	err = VerifySignedFile(signedXPI, roots, signOptions, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("failed to verify signed file: %v", err)
 	}
@@ -1102,6 +1102,39 @@ ASeHUIOWRHwu51tR74GyqMMI8ajyZ6QflvkVHJ7HbKY/dbsL/UVttnhjy2PDqLe3
 IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
 -----END EC PRIVATE KEY-----`,
 	},
+	// valid NotBefore 2019-06-14 18:40:21 UTC and NotAfter 2021-01-14 18:40:21 UTC
+	signer.Configuration{
+		ID:   "ecdsa addon expired intermediate",
+		Type: Type,
+		Mode: ModeAddOn,
+		Certificate: `
+-----BEGIN CERTIFICATE-----
+MIICaTCCAfCgAwIBAgIIFpJZf/0ls9swCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNjI2NDYwODIxMB4XDTE5MDYxNDE4
+NDAyMVoXDTIxMDExNDE4NDAyMVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTYyNjQ2MDgyMTB2MBAGByqGSM49AgEGBSuBBAAiA2IABDw3
++rbWEmoolOex/o83sErQIFzfiUk3rHH1jsjc6Y3JYApiS4kEi/9W6GB170eLevQX
+tZlSzR/tQHZ9ckh5TdHDGCqzSW1bQS/Ve6GVBlIMLlL8Odvaiqs8bLtjXoLhb6N4
+MHYwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+/wQFMAMBAf8wHQYDVR0OBBYEFKEbMQtSCbmKeI0S0AFyN+MUq7WRMB8GA1UdIwQY
+MBaAFIMp+z7aIARHJQK6dnqO46cgLFvqMAoGCCqGSM49BAMDA2cAMGQCMF8GvKhZ
+9w7E9UEAo23EeImZGDXWP1BPQzLcKJEHNIxd/bBwvQcj4BAsE3xgWEbjCQIwGqed
+v+d1uifbc8/SgGVWazxyofFhpRik7UJk5Hz4hebIwm08HT8FYFHvH+d2xIXw
+-----END CERTIFICATE-----
+`,
+		PrivateKey: `
+-----BEGIN EC PARAMETERS-----
+BgUrgQQAIg==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDAYedcRd6GfNMPT0bXcidNMReNy/v+cR9236bkm7sEEgJ2pD9WHK2i6
+GJb5Zv3/scygBwYFK4EEACKhZANiAAQ8N/q21hJqKJTnsf6PN7BK0CBc34lJN6xx
+9Y7I3OmNyWAKYkuJBIv/Vuhgde9Hi3r0F7WZUs0f7UB2fXJIeU3Rwxgqs0ltW0Ev
+1XuhlQZSDC5S/Dnb2oqrPGy7Y16C4W8=
+-----END EC PRIVATE KEY-----`,
+	},
 }
 
 var FAILINGTESTCASES = []struct {
@@ -1155,33 +1188,6 @@ j33X8KJMrfealADjl2gMtm12BfE3CfDN1o97mLBE4NgXV9O6nhuWiyICjk0Bb9uP
 zi8/SNl5RuDVAjGORJPEJpzAT+RlSSeVybQ6YhV4o9tJhkXTu8vDOOE/JdxU/9IE
 nqZfqrhFes4MpAjqvnpdqBTWCxCctgMfi8Va+2V6f5ftIXP/7Hz/OfH5I2EJ1/K2
 LFU3osZ2XbLIR6wt+zVFQ5QhMrOUsSEfbbPvVlHHsNo=
------END CERTIFICATE-----`,
-		PrivateKey: `
------BEGIN RSA PRIVATE KEY-----
-MIIBOwIBAAJBALN6oewBN6fJyDErP9IbvLJex6LcSAljchZdj4eGaWttgseYqrww
-xNVONln72JzOmZqXzxITxqi4tpFsrOqw780CAwEAAQJBAKMcSBvb32C1mSJWU+H3
-Iz5XtMbluvINVpnM3awlE5l0nmA9vt0DE6iwFIwOPdY8HuliuVE5uIMloR+P5th1
-IAECIQDlynpmy3WCApgfZS2CyYG7nOvWpCOpwgckm0uOjWQfAQIhAMfzIPOJBDli
-ogU63yRBtCOZDYKtMbaDvXvLfKjeIBzNAiEA4otLPzrJH6K1HQaf5rgI6dEcBWGP
-M1ZxulpMFD86/QECIAY+AuNXfbhE6gX7xoedPYB3AML5oTmvdzTsL2IePSZpAiBl
-w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
------END RSA PRIVATE KEY-----`,
-	}},
-	{err: "xpi: signer certificate is not currently valid", cfg: signer.Configuration{
-		Type: Type,
-		ID:   "abcd",
-		Certificate: `
------BEGIN CERTIFICATE-----
-MIIB0zCCAX2gAwIBAgIJAJixODIxqmZCMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
-BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
-aWRnaXRzIFB0eSBMdGQwHhcNMTcwNjA4MDQwMDAwWhcNMTcwNjA5MDQwMDAwWjBF
-MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
-ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAKgu
-iSzt4J9vRIZoM2IkyNYgxlgFpOrI9UO9G9/k0+cBSvU+J/5y4s+NxTpTf4BSQyYh
-D7eJb3FVTDKRxitN8q0CAwEAAaNQME4wHQYDVR0OBBYEFPp+V166Ajir3zqI+PM4
-HNGdv0MpMB8GA1UdIwQYMBaAFPp+V166Ajir3zqI+PM4HNGdv0MpMAwGA1UdEwQF
-MAMBAf8wDQYJKoZIhvcNAQELBQADQQB7XZ9mMBhHIg0/LcBCV/bOqq+lBWTSHmEr
-vsMB0O0GSnQhdUFzgVk3RsPX0uEuapJ8Qi6JldPD9+ZTh8xz3ys4
 -----END CERTIFICATE-----`,
 		PrivateKey: `
 -----BEGIN RSA PRIVATE KEY-----

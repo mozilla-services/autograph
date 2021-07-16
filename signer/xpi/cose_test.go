@@ -7,12 +7,24 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/hex"
+	"log"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mozilla-services/autograph/signer"
 	"go.mozilla.org/cose"
 )
+
+// mustParseTime is a test helper that parses an RFC3339 timestamp
+// (e.g. "2006-01-02T15:04:05Z") or panics
+func mustParseTime(rfc3339Timestamp string) time.Time {
+	parsed, err := time.Parse(time.RFC3339, rfc3339Timestamp)
+	if err != nil {
+		log.Fatalf("error parsing timestamp %q: %q", rfc3339Timestamp, err)
+	}
+	return parsed
+}
 
 func TestStringToCOSEAlg(t *testing.T) {
 	t.Parallel()
@@ -507,22 +519,26 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 	}
 
 	cases := []struct {
-		fin     signer.SignedFile
-		roots   *x509.CertPool
-		opts    Options
-		results []string
+		name             string
+		verificationTime time.Time
+		fin              signer.SignedFile
+		roots            *x509.CertPool
+		opts             Options
+		results          []string
 	}{
-		//0
 		{
-			fin:   nil,
-			roots: nil,
-			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
+			name:             "invalid empty zip",
+			verificationTime: time.Now().UTC(),
+			fin:              nil,
+			roots:            nil,
+			opts:             Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
 				"xpi: failed to read META-INF/cose.manifest from signed zip: Error reading ZIP: zip: not a valid zip file",
 			},
 		},
-		//1
 		{
+			name:             "invalid non-empty zip",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -535,8 +551,9 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				"xpi: failed to read META-INF/cose.sig from signed zip: failed to find \"META-INF/cose.sig\" in ZIP",
 			},
 		},
-		//2
 		{
+			name:             "invalid zip missing META-INF/manifest.mf",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -553,8 +570,9 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				"xpi: failed to read META-INF/manifest.mf from signed zip: failed to find \"META-INF/manifest.mf\" in ZIP",
 			},
 		},
-		//3
 		{
+			name:             "invalid pkcs7 manifest",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -575,8 +593,10 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				"xpi: pkcs7 manifest does not contain the line: \"Name: META-INF/cose.sig\"",
 			},
 		},
-		//4
 		{
+			// cose sig should include pk7 sig and not the other way around
+			name:             "cose.sig in pkcs7 manifest",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -597,8 +617,9 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				"xpi: cose manifest contains the line: \"Name: META-INF/cose.sig\"",
 			},
 		},
-		//5
 		{
+			name:             "invalid cose.sig",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -619,8 +640,9 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				"xpi: error unmarshaling cose.sig: xpi.Unmarshal: failed to parse pkcs7 signature: ber2der: BER tag length is more than available data",
 			},
 		},
-		//6
 		{
+			name:             "cose.sig missing second signature",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -644,8 +666,9 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				"xpi: cose.sig contains 1 signatures, but expected 2",
 			},
 		},
-		//7
 		{
+			name:             "invalid cose.sig SignMessage",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -669,8 +692,9 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				"xpi: cose.sig is not a valid COSE SignMessage: xpi: expected SignMessage payload to be nil, but got [98 108 97 104]",
 			},
 		},
-		//8
 		{
+			name:             "cose.sig addon ID with mismatched EE cert CN",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -694,8 +718,9 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				"xpi: EECert 0: id \"foo\" does not match cert cn \"jid1-Kt2kYYgi32zPuw@jetpack\"",
 			},
 		},
-		//9 - missing roots
 		{
+			name:             "missing root cert",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -719,8 +744,9 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				"xpi: failed to verify EECert 0: x509: certificate signed by unknown authority",
 			},
 		},
-		//10 - expired COSE sig; NB: Fx should not care if this is expired
 		{
+			name:             "expired COSE sig with invalid EC data verified for now errors",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -741,11 +767,38 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256"},
 			},
 			results: []string{
-				"xpi: failed to verify EECert 0: x509: certificate has expired or is not yet valid",
+				"xpi: failed to verify EECert 0: x509: certificate has expired or is not yet valid:",
 			},
 		},
-		//11
 		{
+			name:             "expired COSE sig with invalid EC data verified at valid time errs for invalid name",
+			verificationTime: mustParseTime("2019-01-01T15:04:05Z"),
+			fin: mustPackJAR(t, []Metafile{
+				Metafile{
+					Name: "META-INF/cose.manifest",
+					Body: []byte(""),
+				},
+				Metafile{
+					Name: "META-INF/cose.sig",
+					Body: expiredSigBytes,
+				},
+				Metafile{
+					Name: "META-INF/manifest.mf",
+					Body: []byte("Name: META-INF/cose.sig\nName: META-INF/cose.manifest"),
+				},
+			}),
+			roots: testCNRoots,
+			opts: Options{
+				ID:             "jid1-Kt2kYYgi32zPuw@jetpack",
+				COSEAlgorithms: []string{"ES256"},
+			},
+			results: []string{
+				"xpi: failed to verify EECert 0: x509: certificate is not valid for any names, but wanted to match a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
+			},
+		},
+		{
+			name:             "invalid EC data",
+			verificationTime: time.Now().UTC(),
 			fin: mustPackJAR(t, []Metafile{
 				Metafile{
 					Name: "META-INF/cose.manifest",
@@ -772,7 +825,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 	}
 
 	for i, testcase := range cases {
-		err := verifyCOSESignatures(testcase.fin, testcase.roots, testcase.opts)
+		err := verifyCOSESignatures(testcase.fin, testcase.roots, testcase.opts, testcase.verificationTime)
 		anyMatches := false
 		for _, result := range testcase.results {
 			if strings.HasPrefix(err.Error(), result) {
@@ -780,7 +833,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			}
 		}
 		if !anyMatches {
-			t.Fatalf("verifyCOSESignatures case %d returned '%v'", i, err)
+			t.Fatalf("verifyCOSESignatures case %q (%d) returned '%v'", testcase.name, i, err)
 		}
 	}
 }

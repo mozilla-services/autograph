@@ -163,7 +163,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		return nil, fmt.Errorf("xpi: signer certificate must have CA constraint set to true")
 	}
 	if time.Now().Before(s.issuerCert.NotBefore) || time.Now().After(s.issuerCert.NotAfter) {
-		return nil, fmt.Errorf("xpi: signer certificate is not currently valid")
+		log.Warnf("xpi: signer %s issuer certificate is not currently valid (cert valid NotBefore %s and NoteAfter %s", s.ID, s.issuerCert.NotBefore, s.issuerCert.NotAfter)
 	}
 	if s.issuerCert.KeyUsage&x509.KeyUsageCertSign == 0 {
 		return nil, fmt.Errorf("xpi: signer certificate is missing certificate signing key usage")
@@ -546,10 +546,18 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 
 // VerifyWithChain verifies an xpi signature using the provided truststore
 func (sig *Signature) VerifyWithChain(truststore *x509.CertPool) error {
+	return sig.VerifyWithChainAt(truststore, time.Now().UTC())
+}
+
+// VerifyWithChainAt verifies an xpi signature using the provided truststore at a given time.
+//
+// When truststore is not nil, it also verifies the chain of trust of the end-entity
+// signer cert to one of the root in the truststore.
+func (sig *Signature) VerifyWithChainAt(truststore *x509.CertPool, verificationTime time.Time) error {
 	if !sig.Finished {
 		return fmt.Errorf("xpi.VerifyWithChain: cannot verify unfinished signature")
 	}
-	return sig.p7.VerifyWithChain(truststore)
+	return sig.p7.VerifyWithChainAtTime(truststore, verificationTime)
 }
 
 // String returns a PEM encoded PKCS7 block
@@ -566,7 +574,7 @@ func (sig *Signature) String() string {
 // 3) the PKCS7 signatures
 // 4) the signature cert chain verifies when an optional non-nil truststore is provided
 //
-func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x509.CertPool) error {
+func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x509.CertPool, verificationTime time.Time) error {
 	sigStrBytes, err := readFileFromZIP(signedFile, pkcs7SigPath)
 	if err != nil {
 		return fmt.Errorf("failed to read PKCS7 signature META-INF/mozilla.rsa: %w", err)
@@ -582,9 +590,10 @@ func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x50
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal PKCS7 signature: %w", err)
 	}
-	// verify signature on input data
-	if sig.VerifyWithChain(truststore) != nil {
-		return fmt.Errorf("failed to verify xpi signature: %v", sig.VerifyWithChain(truststore))
+	// verify signature on input data at verificationTime
+	chainVerificationErr := sig.VerifyWithChainAt(truststore, verificationTime)
+	if chainVerificationErr != nil {
+		return fmt.Errorf("error verifying xpi signature at %s: %v", verificationTime, chainVerificationErr)
 	}
 
 	// make sure we still have the same string representation
@@ -632,13 +641,13 @@ func verifyCOSEManifest(signedXPI signer.SignedFile) error {
 
 // VerifySignedFile checks the XPI's PKCS7 signature and COSE
 // signatures if present
-func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, opts Options) error {
+func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, opts Options, verificationTime time.Time) error {
 	var err error
 	err = verifyPKCS7Manifest(signedFile)
 	if err != nil {
 		return fmt.Errorf("xpi: error verifying PKCS7 manifest for signed file: %w", err)
 	}
-	err = verifyPKCS7SignatureRoundTrip(signedFile, truststore)
+	err = verifyPKCS7SignatureRoundTrip(signedFile, truststore, verificationTime)
 	if err != nil {
 		return fmt.Errorf("xpi: error verifying PKCS7 signature for signed file: %w", err)
 	}
@@ -648,7 +657,7 @@ func VerifySignedFile(signedFile signer.SignedFile, truststore *x509.CertPool, o
 		if err != nil {
 			return fmt.Errorf("xpi: error verifying COSE manifest for signed file: %w", err)
 		}
-		err = verifyCOSESignatures(signedFile, truststore, opts)
+		err = verifyCOSESignatures(signedFile, truststore, opts, verificationTime)
 		if err != nil {
 			return fmt.Errorf("xpi: error verifying COSE signatures for signed file: %w", err)
 		}

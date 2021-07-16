@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/mozilla-services/autograph/signer"
 
@@ -254,10 +255,10 @@ func validateCOSEMessageStructureAndGetCertsAndAlgs(msg *cose.SignMessage) (inte
 // 3) the COSE and PKCS7 manifests do not include COSE files
 // 4) we can decode the COSE signature and it has the right format for an XPI
 // 5) the right number of signatures are present and all intermediate and end entity certs parse properly
-// 6) **when a non-nil truststore is provided** that there is a trusted path from the included COSE EE certs to the signer cert using the provided intermediates
+// 6) **when a non-nil truststore is provided** that there is a trusted path from the included COSE EE certs to the signer cert using the provided intermediates and that the cert chain is valid at verificationTime
 // 7) use the public keys from the EE certs to verify the COSE signature bytes
 //
-func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options) error {
+func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options, verificationTime time.Time) error {
 	coseManifest, err := readFileFromZIP(signedFile, coseManifestPath)
 	if err != nil {
 		return fmt.Errorf("xpi: failed to read META-INF/cose.manifest from signed zip: %w", err)
@@ -314,6 +315,7 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 			return fmt.Errorf("xpi: EECert %d: id %q does not match cert cn %q", i, signOptions.ID, eeCert.Subject.CommonName)
 		}
 		opts := x509.VerifyOptions{
+			CurrentTime:   verificationTime,
 			DNSName:       dnsName,
 			Roots:         truststore,
 			Intermediates: intermediates,
@@ -323,7 +325,6 @@ func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPoo
 		if _, err := eeCert.Verify(opts); err != nil {
 			return fmt.Errorf("xpi: failed to verify EECert %d: %w", i, err)
 		}
-
 		verifiers = append(verifiers, cose.Verifier{
 			PublicKey: eeCert.PublicKey,
 			Alg:       algs[i],
