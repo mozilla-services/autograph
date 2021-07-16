@@ -12,9 +12,11 @@ SIGNER_ID_PREFIX=${SIGNER_ID_PREFIX:-""}
 SIGNER_ID=${SIGNER_ID_PREFIX}webextensions-rsa \
 	 TRUST_ROOTS=dev-webext-rsa-root.pem \
 	 TARGET="$AUTOGRAPH_URL" \
+	 CONFIG=${SIGNER_ID_PREFIX}webextensions-rsa \
          ./build_test_xpis.sh /app/src/autograph/signer/xpi/test/fixtures/ublock_origin-1.33.2-an+fx.xpi
 
 SIGNER_ID=${SIGNER_ID_PREFIX}extensions-ecdsa \
 	 TRUST_ROOTS=dev-ext-ecdsa-root.pem \
 	 TARGET="$AUTOGRAPH_URL" \
+	 CONFIG=${SIGNER_ID_PREFIX}extensions-ecdsa \
 	 ./build_test_xpis.sh /app/src/autograph/signer/xpi/test/fixtures/ublock_origin-1.33.2-an+fx.xpi
