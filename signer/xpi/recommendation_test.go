@@ -1,6 +1,7 @@
 package xpi
 
 import (
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -406,33 +407,38 @@ func TestSignFileWithRecommendation(t *testing.T) {
 		}
 	})
 
-	// TODO: figure out why this fails with:
-	// recommendation_test.go:416: failed to verify signed file with rec: xpi: error verifying COSE signatures for signed file: xpi: failed to verify EECert 0: x509: certificate signed by unknown authority
-	// t.Run("signs unsignedbootstrap with PK7 and COSE", func(t *testing.T) {
-	// 	input := unsignedBootstrap
+	t.Run("signs unsignedbootstrap with PK7 and COSE", func(t *testing.T) {
+		input := unsignedBootstrap
 
-	// 	s, err := New(recTestCase, nil)
-	// 	if err != nil {
-	// 		t.Fatalf("signer initialization failed with: %v", err)
-	// 	}
+		// verify against the issuer/intermediate
+		truststore := x509.NewCertPool()
+		ok := truststore.AppendCertsFromPEM([]byte(recTestCase.Certificate))
+		if !ok {
+			t.Fatalf("failed to add issuer cert to pool")
+		}
 
-	// 	opts := s.GetDefaultOptions().(Options)
-	// 	opts.COSEAlgorithms = []string{"ES256"}
-	// 	opts.Recommendations = []string{"recommended"}
+		s, err := New(recTestCase, nil)
+		if err != nil {
+			t.Fatalf("signer initialization failed with: %v", err)
+		}
 
-	// 	signedXPI, err := s.SignFile(input, opts)
-	// 	if err != nil {
-	// 		t.Fatalf("failed to sign file with rec: %v", err)
-	// 	}
-	// 	err = VerifySignedFile(signedXPI, nil, opts)
-	// 	if err != nil {
-	// 		t.Fatalf("failed to verify signed file with rec: %v", err)
-	// 	}
-	// 	_, err = s.ReadAndVerifyRecommendationFile(signedXPI)
-	// 	if err != nil {
-	// 		t.Fatalf("failed to verify signed rec file: %v", err)
-	// 	}
-	// })
+		opts := s.GetDefaultOptions().(Options)
+		opts.COSEAlgorithms = []string{"ES256"}
+		opts.Recommendations = []string{"recommended"}
+
+		signedXPI, err := s.SignFile(input, opts)
+		if err != nil {
+			t.Fatalf("failed to sign file with rec: %v", err)
+		}
+		err = VerifySignedFile(signedXPI, truststore, opts)
+		if err != nil {
+			t.Fatalf("failed to verify signed file with rec: %v", err)
+		}
+		_, err = s.ReadAndVerifyRecommendationFile(signedXPI)
+		if err != nil {
+			t.Fatalf("failed to verify signed rec file: %v", err)
+		}
+	})
 
 	t.Run("signs unsignedbootstrap with PK7 fails for disallowed rec. state", func(t *testing.T) {
 		input := unsignedBootstrap
