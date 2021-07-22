@@ -86,9 +86,9 @@ generate:
 # app-hsm -> monitor-hsm-lambda-emulator (app-hsm writes chains and updated config to shared /tmp volume)
 #
 build: generate
-	docker-compose build --no-cache --parallel app db
-	docker-compose build --no-cache --parallel app-hsm monitor
-	docker-compose build --no-cache --parallel monitor-lambda-emulator monitor-hsm-lambda-emulator
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose build --no-cache --parallel app db
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose build --no-cache --parallel app-hsm monitor
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose build --no-cache --parallel monitor-lambda-emulator monitor-hsm-lambda-emulator
 
 integration-test:
 	./bin/run_integration_tests.sh
