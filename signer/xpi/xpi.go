@@ -162,7 +162,7 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	if !s.issuerCert.IsCA {
 		return nil, fmt.Errorf("xpi: signer certificate must have CA constraint set to true")
 	}
-	if time.Now().Before(s.issuerCert.NotBefore) || time.Now().After(s.issuerCert.NotAfter) {
+	if time.Now().UTC().Before(s.issuerCert.NotBefore) || time.Now().UTC().After(s.issuerCert.NotAfter) {
 		log.Warnf("xpi: signer %s issuer certificate is not currently valid (cert valid NotBefore %s and NoteAfter %s", s.ID, s.issuerCert.NotBefore, s.issuerCert.NotAfter)
 	}
 	if s.issuerCert.KeyUsage&x509.KeyUsageCertSign == 0 {
