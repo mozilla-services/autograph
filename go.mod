@@ -26,7 +26,7 @@ require (
 	go.mozilla.org/hawk v0.0.0-20190327210923-a483e4a7047e
 	go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d
 	go.mozilla.org/mozlogrus v2.0.0+incompatible
-	go.mozilla.org/pkcs7 v0.0.0-20210726155408-e21f020be13f
+	go.mozilla.org/pkcs7 v0.0.0-20210730143726-725912489c62
 	go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060
 	go.opencensus.io v0.22.1 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
