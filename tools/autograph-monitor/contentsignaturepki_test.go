@@ -209,7 +209,9 @@ func Test_verifyContentSignature(t *testing.T) {
 	}))
 	defer testRootExpiringSoonChainTestServer.Close()
 
-	var typedNilNotifier *PDEventNotifier = nil
+	// TODO: replace type with pointer to a notifier
+	// implementation when another is added
+	var typedNilNotifier Notifier = nil
 
 	type args struct {
 		x5uClient    *http.Client

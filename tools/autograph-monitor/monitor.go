@@ -97,14 +97,6 @@ func main() {
 		conf.contentSignatureRootHash = conf.rootHash
 		log.Printf("Using root hash from env var AUTOGRAPH_ROOT_HASH=%q\n", conf.rootHash)
 	}
-	if os.Getenv("AUTOGRAPH_PD_ROUTING_KEY") != "" {
-		conf.notifier = &PDEventNotifier{
-			RoutingKey:       os.Getenv("AUTOGRAPH_PD_ROUTING_KEY"),
-			PayloadSource:    os.Getenv("AWS_LAMBDA_FUNCTION_NAME"),
-			PayloadComponent: os.Getenv("AWS_LAMBDA_FUNCTION_VERSION"),
-		}
-		log.Println("Configured pagerduty notifier to send create low urgency alerts.")
-	}
 
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
