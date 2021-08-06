@@ -243,8 +243,8 @@ go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d h1:ACkLHkvZ4aS7QBgPbE8qNl+
 go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d/go.mod h1:BIzqT/Wm/HHBX0meahRdBRhJFXMa9F+G+AJluKduJJs=
 go.mozilla.org/mozlogrus v2.0.0+incompatible h1:V8aAmJPN07RQuTJZfsroehGglIERIpbj/C5ClwE6fao=
 go.mozilla.org/mozlogrus v2.0.0+incompatible/go.mod h1:bg4v22liQ+tLlQ6nI56e5C7Xe8AqEU4xDdEpWoCzQ6M=
-go.mozilla.org/pkcs7 v0.0.0-20200128120323-432b2356ecb1 h1:A/5uWzF44DlIgdm/PQFwfMkW0JX+cIcQi/SwLAmZP5M=
-go.mozilla.org/pkcs7 v0.0.0-20200128120323-432b2356ecb1/go.mod h1:SNgMg+EgDFwmvSmLRTNKC5fegJjB7v23qTQ0XLGUNHk=
+go.mozilla.org/pkcs7 v0.0.0-20210730143726-725912489c62 h1:WyR8exjHM07a8uwgpBCY83RID3Tcg/HKZuU82/bTWOE=
+go.mozilla.org/pkcs7 v0.0.0-20210730143726-725912489c62/go.mod h1:SNgMg+EgDFwmvSmLRTNKC5fegJjB7v23qTQ0XLGUNHk=
 go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060 h1:KnOZgR0z89tCwGympfPkpzXdlCmhksUP5ddQ+Iqo1FU=
 go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060/go.mod h1:StzH0aTTiss59GzhB1wiC9H5dqUqTTDZYfeurUrmJD8=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=

@@ -62,12 +62,13 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath string
-		iter, maxworkers, sa                                                                       int
-		debug                                                                                      bool
-		err                                                                                        error
-		requests                                                                                   []formats.SignatureRequest
-		algs                                                                                       coseAlgs
+		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, verificationTimeInput string
+		iter, maxworkers, sa                                                                                              int
+		debug                                                                                                             bool
+		err                                                                                                               error
+		requests                                                                                                          []formats.SignatureRequest
+		algs                                                                                                              coseAlgs
+		verificationTime                                                                                                  time.Time
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
@@ -110,8 +111,8 @@ examples:
 * sign an XPI file with SHA256 PKCS7 digest:
         $ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -pk7digest sha256 -o signed.xpi
 
-* sign an XPI file with one or more COSE signatures and verify against roots in roots.pem:
-	$ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -o signed.xpi -c ES384 -c PS256 -r roots.pem
+* sign an XPI file with one or more COSE signatures and verify against roots in roots.pem at 2006-01-02T15:04:05Z:
+	$ go run client.go -f unsigned.xpi -cn cariboumaurice -k webextensions-rsa -o signed.xpi -c ES384 -c PS256 -r roots.pem -vt '2006-01-02T15:04:05Z'
 
 * sign some data with gpg2:
         $ go run client.go -d $(echo 'hello' | base64) -k pgpsubkey -o /tmp/testsig.pgp -ko /tmp/testkey.asc
@@ -139,9 +140,22 @@ examples:
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
 	flag.StringVar(&pk7digest, "pk7digest", "", "an optional PK7 digest algorithm to use for XPI file signing, either 'sha1' (default) or 'sha256'.")
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
+	flag.StringVar(&verificationTimeInput, "vt", "", "Time to verify XPI signatures at in RFC3339 format. Defaults to time.Now().")
 
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
+
+	if verificationTimeInput == "" {
+		verificationTime = time.Now()
+		if debug {
+			fmt.Printf("Using default verification time: %q\n", verificationTime)
+		}
+	} else {
+		verificationTime = parseVerificationTime(verificationTimeInput)
+		if debug {
+			fmt.Printf("Using parsed verification time: %q\n", verificationTime)
+		}
+	}
 
 	if data != "base64(data)" {
 		log.Printf("signing data %q", data)
@@ -279,7 +293,7 @@ examples:
 					sigStr += sig.Mode + "=" + response.Signature + "\n"
 					sigData = []byte(sigStr)
 				case xpi.Type:
-					sigStatus = verifyXPI(input, request, response, reqType, roots)
+					sigStatus = verifyXPI(input, request, response, reqType, roots, verificationTime)
 					switch reqType {
 					case requestTypeData:
 						sigData, err = base64.StdEncoding.DecodeString(response.Signature)
@@ -350,6 +364,15 @@ examples:
 	}
 }
 
+// parseVerificationTime parses an RFC3339 timestamp or exits
+func parseVerificationTime(rfc3339Timestamp string) time.Time {
+	parsed, err := time.Parse(time.RFC3339, rfc3339Timestamp)
+	if err != nil {
+		log.Fatalf("error parsing verification timestamp %q: %q", rfc3339Timestamp, err)
+	}
+	return parsed
+}
+
 func getAuthHeader(req *http.Request, user, token string, hash func() hash.Hash, ext, contenttype string, payload []byte) string {
 	auth := hawk.NewRequestAuth(req,
 		&hawk.Credentials{
@@ -387,7 +410,7 @@ func verifyContentSignature(input []byte, resp formats.SignatureResponse, endpoi
 	return true
 }
 
-func verifyXPI(input []byte, req formats.SignatureRequest, resp formats.SignatureResponse, reqType requestType, roots *x509.CertPool) bool {
+func verifyXPI(input []byte, req formats.SignatureRequest, resp formats.SignatureResponse, reqType requestType, roots *x509.CertPool, verificationTime time.Time) bool {
 	switch reqType {
 	case requestTypeData:
 		sig, err := xpi.Unmarshal(resp.Signature, input)
@@ -404,7 +427,7 @@ func verifyXPI(input []byte, req formats.SignatureRequest, resp formats.Signatur
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = xpi.VerifySignedFile(signedFile, roots, req.Options.(xpi.Options))
+		err = xpi.VerifySignedFile(signedFile, roots, req.Options.(xpi.Options), verificationTime)
 		if err != nil {
 			log.Fatal(err)
 		}

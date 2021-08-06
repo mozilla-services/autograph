@@ -108,8 +108,8 @@ func (s *XPISigner) makeTemplate(cn string) *x509.Certificate {
 			Province:           []string{"CA"},
 			Locality:           []string{"Mountain View"},
 		},
-		NotBefore:          time.Now(),
-		NotAfter:           time.Now().Add(87600 * time.Hour), // ten year
+		NotBefore:          EENotBefore,
+		NotAfter:           EENotBefore.Add(87600 * time.Hour), // ten year
 		SignatureAlgorithm: s.issuerCert.SignatureAlgorithm,
 		KeyUsage:           x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageCodeSigning},

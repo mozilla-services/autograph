@@ -240,6 +240,27 @@ signers:
       2OqlM2hZQeI/FpHm2ZevdMYcyqmQD0uBE1DTcg==
       -----END CERTIFICATE-----
 
+  - id: hsm-extensions-ecdsa-expired-chain
+    type: xpi
+    mode: extension
+    privatekey: ext-ecdsa-p384-2
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      MIICaTCCAfCgAwIBAgIIFpJZf/0ls9swCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+      VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+      EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNjI2NDYwODIxMB4XDTE5MDYxNDE4
+      NDAyMVoXDTIxMDExNDE4NDAyMVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+      MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+      VQQDExFjc2ludGVyMTYyNjQ2MDgyMTB2MBAGByqGSM49AgEGBSuBBAAiA2IABDw3
+      +rbWEmoolOex/o83sErQIFzfiUk3rHH1jsjc6Y3JYApiS4kEi/9W6GB170eLevQX
+      tZlSzR/tQHZ9ckh5TdHDGCqzSW1bQS/Ve6GVBlIMLlL8Odvaiqs8bLtjXoLhb6N4
+      MHYwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+      /wQFMAMBAf8wHQYDVR0OBBYEFKEbMQtSCbmKeI0S0AFyN+MUq7WRMB8GA1UdIwQY
+      MBaAFIMp+z7aIARHJQK6dnqO46cgLFvqMAoGCCqGSM49BAMDA2cAMGQCMF8GvKhZ
+      9w7E9UEAo23EeImZGDXWP1BPQzLcKJEHNIxd/bBwvQcj4BAsE3xgWEbjCQIwGqed
+      v+d1uifbc8/SgGVWazxyofFhpRik7UJk5Hz4hebIwm08HT8FYFHvH+d2xIXw
+      -----END CERTIFICATE-----
+
 authorizations:
   - id: alice
     key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
@@ -251,6 +272,7 @@ authorizations:
       - hsm-webextensions-rsa
       - hsm-extensions-ecdsa
       - normandy
+      - hsm-extensions-ecdsa-expired-chain
 
 monitoring:
   key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
