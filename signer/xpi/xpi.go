@@ -386,6 +386,12 @@ func (s *XPISigner) signDataWithPKCS7(sigfile []byte, cn string, digest asn1.Obj
 		return nil, fmt.Errorf("xpi: cannot initialize signed data: %w", err)
 	}
 	toBeSigned.SetDigestAlgorithm(digest)
+	// AddSignerChain also sets the SigningTime authenticated
+	// attribute to UTC now
+	// https://github.com/mozilla-services/pkcs7/blob/725912489c62504be3ab0de6aec80bf3f4f66f56/sign.go#L161
+	// don't change this time, because Fx uses it in the Addons
+	// Blocklist
+	// https://searchfox.org/mozilla-central/rev/f71cb98fc35da418d2cb9ce31a0416d532dc9d69/toolkit/mozapps/extensions/Blocklist.jsm#1254-1259
 	err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
 	if err != nil {
 		return nil, fmt.Errorf("xpi: cannot sign: %w", err)
@@ -571,9 +577,13 @@ func (sig *Signature) String() string {
 //
 // 1) the signed XPI includes a PKCS7 signature and signature data
 // 2) the signature serializes and deserializes properly
-// 3) the PKCS7 signatures
+// 3) the PKCS7 EE signature is valid for the signature data
 // 4) the signature cert chain verifies when an optional non-nil truststore is provided
 //
+// Verifying an XPI signed with an expired EE cert will fail with a
+// 'pkcs7: signing time ... is outside of certificate validity' due to
+// https://github.com/mozilla-services/pkcs7/blob/725912489c62504be3ab0de6aec80bf3f4f66f56/verify.go#L148-L153,
+// but Fx will verify the install since it ignores the XPI EE cert.
 func verifyPKCS7SignatureRoundTrip(signedFile signer.SignedFile, truststore *x509.CertPool, verificationTime time.Time) error {
 	sigStrBytes, err := readFileFromZIP(signedFile, pkcs7SigPath)
 	if err != nil {
