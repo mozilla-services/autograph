@@ -64,7 +64,7 @@ func main() {
 	var (
 		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, verificationTimeInput string
 		iter, maxworkers, sa                                                                                              int
-		debug                                                                                                             bool
+		debug, noVerify                                                                                                   bool
 		err                                                                                                               error
 		requests                                                                                                          []formats.SignatureRequest
 		algs                                                                                                              coseAlgs
@@ -141,6 +141,7 @@ examples:
 	flag.StringVar(&pk7digest, "pk7digest", "", "an optional PK7 digest algorithm to use for XPI file signing, either 'sha1' (default) or 'sha256'.")
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
 	flag.StringVar(&verificationTimeInput, "vt", "", "Time to verify XPI signatures at in RFC3339 format. Defaults to at client invokation + 1 minute to account for time to transfer and sign the XPI")
+	flag.BoolVar(&noVerify, "noverify", false, "Skip verifying successful responses. Default false.")
 
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
@@ -279,7 +280,9 @@ examples:
 				)
 				switch response.Type {
 				case contentsignature.Type:
-					sigStatus = verifyContentSignature(input, response, req.URL.RequestURI())
+					if !noVerify {
+						sigStatus = verifyContentSignature(input, response, req.URL.RequestURI())
+					}
 					sig, err := csigverifier.Unmarshal(response.Signature)
 					if err != nil {
 						log.Fatal(err)
@@ -293,7 +296,9 @@ examples:
 					sigStr += sig.Mode + "=" + response.Signature + "\n"
 					sigData = []byte(sigStr)
 				case xpi.Type:
-					sigStatus = verifyXPI(input, request, response, reqType, roots, verificationTime)
+					if !noVerify {
+						sigStatus = verifyXPI(input, request, response, reqType, roots, verificationTime)
+					}
 					switch reqType {
 					case requestTypeData:
 						sigData, err = base64.StdEncoding.DecodeString(response.Signature)
@@ -310,33 +315,43 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
-					sigStatus = verifyAPK2(sigData)
+					if !noVerify {
+						sigStatus = verifyAPK2(sigData)
+					}
 				case mar.Type:
-					sigStatus = verifyMAR(input)
+					if !noVerify {
+						sigStatus = verifyMAR(input)
+					}
 					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
 					if err != nil {
 						log.Fatal(err)
 					}
 				case genericrsa.Type:
-					err = genericrsa.VerifyGenericRsaSignatureResponse(input, response)
-					if err != nil {
-						log.Fatal(err)
+					if !noVerify {
+						err = genericrsa.VerifyGenericRsaSignatureResponse(input, response)
+						if err != nil {
+							log.Fatal(err)
+						}
+						sigStatus = true
 					}
-					sigStatus = true
 					sigData, err = base64.StdEncoding.DecodeString(response.Signature)
 					if err != nil {
 						log.Fatal(err)
 					}
 				case gpg2.Type:
-					sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
+					if !noVerify {
+						sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
+					}
 					sigData = []byte(response.Signature)
 				default:
 					log.Fatalf("unsupported signature type: %s", response.Type)
 				}
-				if sigStatus {
-					log.Printf("signature %d from signer %q passes", i, response.SignerID)
-				} else {
-					log.Fatalf("response %d from signer %q does not pass!", i, response.SignerID)
+				if !noVerify {
+					if sigStatus {
+						log.Printf("signature %d from signer %q passes", i, response.SignerID)
+					} else {
+						log.Fatalf("response %d from signer %q does not pass!", i, response.SignerID)
+					}
 				}
 				if outfile != "" {
 					err = ioutil.WriteFile(outfile, sigData, 0644)
