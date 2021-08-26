@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"testing"
+	"time"
 
 	"go.mozilla.org/cose"
 )
@@ -90,6 +91,25 @@ func TestMakeEndEntity(t *testing.T) {
 		}
 	})
 
+	t.Run("should set EE NotBefore to UTC now", func(t *testing.T) {
+		t.Parallel()
+
+		s := initSigner(t, 3)
+
+		testid := "foo"
+		cert, _, err := s.MakeEndEntity(testid, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		timeSinceNotBefore := time.Now().UTC().Sub(cert.NotBefore)
+		if timeSinceNotBefore.Seconds() <= 0 {
+			t.Fatalf("cert is not yet valid; got %f seconds since EE NotBefore", timeSinceNotBefore.Seconds())
+		}
+		// see GH #739 for details
+		if timeSinceNotBefore.Minutes() > 5 {
+			t.Fatalf("more than five minutes since cert; got %f seconds since EE NotBefore", timeSinceNotBefore.Seconds())
+		}
+	})
 }
 
 func TestGetIssuerRSAKeySize(t *testing.T) {
