@@ -140,13 +140,13 @@ examples:
 	flag.Var(&algs, "c", "a COSE Signature algorithm to sign an XPI with can be used multiple times")
 	flag.StringVar(&pk7digest, "pk7digest", "", "an optional PK7 digest algorithm to use for XPI file signing, either 'sha1' (default) or 'sha256'.")
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
-	flag.StringVar(&verificationTimeInput, "vt", "", "Time to verify XPI signatures at in RFC3339 format. Defaults to time.Now().")
+	flag.StringVar(&verificationTimeInput, "vt", "", "Time to verify XPI signatures at in RFC3339 format. Defaults to at client invokation + 1 minute to account for time to transfer and sign the XPI")
 
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
 
 	if verificationTimeInput == "" {
-		verificationTime = time.Now()
+		verificationTime = time.Now().UTC().Add(time.Minute)
 		if debug {
 			fmt.Printf("Using default verification time: %q\n", verificationTime)
 		}
