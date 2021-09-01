@@ -25,5 +25,5 @@ SIGNER_ID=${SIGNER_ID_PREFIX}extensions-ecdsa-expired-chain \
 	 TRUST_ROOTS=dev-ext-ecdsa-expired-root.pem \
 	 TARGET="$AUTOGRAPH_URL" \
 	 CONFIG=${SIGNER_ID_PREFIX}extensions-ecdsa-expired-chain \
-	 VERIFICATION_TIME="2020-01-01T01:01:01Z" \
+	 VERIFY=0 \
 	 ./build_test_xpis.sh /app/src/autograph/signer/xpi/test/fixtures/ublock_origin-1.33.2-an+fx.xpi

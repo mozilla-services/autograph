@@ -26,6 +26,11 @@ else
     COMMON_ARGS="-t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k $SIGNER_ID -r $TRUST_ROOTS -vt $VERIFICATION_TIME"
 fi
 
+VERIFY=${VERIFY:-"1"}
+if [ "$VERIFY" = "0" ]; then
+    COMMON_ARGS="$COMMON_ARGS -noverify"
+fi
+
 # only PKCS7 SHA1
 go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1.zip
 

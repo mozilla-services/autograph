@@ -56,14 +56,6 @@ const (
 	rsaKeyMinSize = 2048
 )
 
-var (
-	// EENotBefore is the NotBefore value used in generated
-	// EE/leaf certs. Fx ignores EE certs when it verifies addons,
-	// but we pin it to 2020-01-01 so we can use existing chain
-	// verification logic in tests and the monitor
-	EENotBefore = time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
-)
-
 // An XPISigner is configured to issue detached PKCS7 and COSE
 // signatures for Firefox Add-ons of various types.
 type XPISigner struct {
