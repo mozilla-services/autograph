@@ -243,3 +243,50 @@ Content-Type: text/plain; charset=utf-8
 "build": "https://travis-ci.org/mozilla-services/autograph"
 }
 ```
+
+## /auths/:auth_id/keyids
+
+### Request
+
+Get the keyids an auth HAWK ID can sign with. Example:
+
+```bash
+GET /auths/alice/keyids
+Host: autograph.example.net
+Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="
+```
+
+### Response
+
+400 Bad Request when the request includes a non-empty body
+401 Unauthorized when the Authorization header is missing or HAWK authorization fails
+403 Forbidden when the auth ID does not match the HAWK ID from the authorization header. An authorization does not have permission to get keyids for other signers.
+404 Not Found when the auth ID does not match the [auth ID format](https://github.com/mozilla-services/autograph/blob/main/authorize.go#L29)
+405 Method Not Allowed when the request method is not GET
+200 OK when the authorization is valid and path and auth IDs match. Example response body with Content-Type application/json:
+
+```json
+    [
+        "apk_cert_with_ecdsa_sha256",
+        "apk_cert_with_ecdsa_sha256_v3",
+        "appkey1",
+        "appkey2",
+        "dummyrsa",
+        "dummyrsapss",
+        "extensions-ecdsa",
+        "extensions-ecdsa-expired-chain",
+        "legacy_apk_with_rsa",
+        "normandy",
+        "pgpsubkey",
+        "randompgp",
+        "remote-settings",
+        "testapp-android",
+        "testapp-android-legacy",
+        "testapp-android-v3",
+        "testauthenticode",
+        "testmar",
+        "testmarecdsa",
+        "webextensions-rsa",
+        "webextensions-rsa-with-recommendation"
+    ]
+```

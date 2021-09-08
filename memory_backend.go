@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -17,6 +19,7 @@ type authBackend interface {
 	addSigner(signer.Signer)
 	getSigners() []signer.Signer
 	getSignerForUser(userID, signerID string) (signer.Signer, error)
+	getSignerIDsForUser(userID string) []string
 }
 
 // inMemoryBackend is an authBackend that loads a config and stores
@@ -114,9 +117,30 @@ func (b *inMemoryBackend) getSignerForUser(userID, signerID string) (signer.Sign
 	return b.getSigners()[signerIndexID], nil
 }
 
+// getSignerIDsForUser returns all the signer IDs a user can sign with as a sorted slice
+func (b *inMemoryBackend) getSignerIDsForUser(userID string) []string {
+	signerIDs := []string{}
+	for tag := range b.signerIndex {
+		authID, signerID := splitSignerIndexTag(tag)
+		// ignore empty entries for the default signer
+		if authID == userID && authID != "" && signerID != "" {
+			signerIDs = append(signerIDs, signerID)
+		}
+	}
+	sort.Strings(signerIDs)
+	return signerIDs
+}
+
 // getSignerIndexTag returns the tag to lookup the signer for a hawk user
 func getSignerIndexTag(authID, signerID string) string {
 	return fmt.Sprintf("%s+%s", authID, signerID)
+}
+
+// splitSignerIndexTag returns the auth and signer IDs for a tag
+func splitSignerIndexTag(tag string) (authID, signerID string) {
+	splitTag := strings.Split(tag, "+")
+	authID, signerID = splitTag[0], splitTag[1]
+	return
 }
 
 // addAuthToSignerIndex
