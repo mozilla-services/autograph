@@ -171,6 +171,8 @@ examples:
 		filebytes, err := ioutil.ReadFile(infile)
 		if err != nil {
 			log.Fatal(err)
+	cli := getHTTPClient()
+
 		}
 		data = base64.StdEncoding.EncodeToString(filebytes)
 	}
@@ -201,10 +203,6 @@ examples:
 	if err != nil {
 		log.Fatal(err)
 	}
-	tr := &http.Transport{
-		DisableKeepAlives: false,
-	}
-	cli := &http.Client{Transport: tr}
 
 	var roots *x509.CertPool
 	if rootPath != "/path/to/root.pem" {
@@ -377,6 +375,13 @@ examples:
 		}
 		time.Sleep(time.Second)
 	}
+}
+
+func getHTTPClient() http.Client {
+	tr := &http.Transport{
+		DisableKeepAlives: false,
+	}
+	return &http.Client{Transport: tr}
 }
 
 // parseVerificationTime parses an RFC3339 timestamp or exits
