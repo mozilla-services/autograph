@@ -50,6 +50,24 @@ docker-compose logs monitor-lambda-emulator
 docker-compose exec monitor-hsm-lambda-emulator "/usr/local/bin/test_monitor.sh"
 docker-compose logs monitor-hsm-lambda-emulator
 
+echo "checking read-only API"
+# user bob doesn't exist in the softhsm config
+docker-compose run \
+	       --rm \
+	       --user 0 \
+	       -e CHECK_BOB=1 \
+	       -e AUTOGRAPH_URL=http://app:8000 \
+	       --workdir /app/src/autograph/tools/autograph-client \
+	       --entrypoint ./integration_test_api.sh \
+	       app
+docker-compose run \
+	       --rm \
+	       --user 0 \
+	       -e AUTOGRAPH_URL=http://app-hsm:8001 \
+	       --workdir /app/src/autograph/tools/autograph-client \
+	       --entrypoint ./integration_test_api.sh \
+	       app-hsm
+
 echo "checking XPI signing"
 docker-compose run \
 	       --rm \
