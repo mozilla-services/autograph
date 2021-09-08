@@ -38,6 +38,9 @@ func newInMemoryAuthBackend() (backend *inMemoryBackend) {
 
 // addAuth adds an authorization to the auth map or errors
 func (b *inMemoryBackend) addAuth(auth *authorization) (err error) {
+	if !authIDFormatRegexp.MatchString(auth.ID) {
+		return fmt.Errorf("authorization id '%s' is invalid, it must match %s", auth.ID, authIDFormat)
+	}
 	_, getAuthErr := b.getAuthByID(auth.ID)
 	switch getAuthErr {
 	case nil:

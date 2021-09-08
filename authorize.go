@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -23,6 +24,11 @@ type authorization struct {
 	Key     string
 	Signers []string
 }
+
+// authIDFormat is a regex for the format Authorization IDs must follow
+const authIDFormat = `^[a-zA-Z0-9-_]{1,255}$`
+
+var authIDFormatRegexp = regexp.MustCompile(authIDFormat)
 
 func abs(d time.Duration) time.Duration {
 	if d < 0 {
