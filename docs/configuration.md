@@ -1,9 +1,8 @@
 # Configuration
 
-
-The configuration lives in [autograph.yaml]{.title-ref} and is expected
-in [/etc/autograph/autograph.yaml]{.title-ref} (use flag
-[-c]{.title-ref} to provide an alternate location).
+The configuration lives in `autograph.yaml` at the default path
+`/etc/autograph/autograph.yaml` (use the flag `-c` to provide an
+alternate path).
 
 ## Server
 
@@ -19,7 +18,7 @@ server:
     writetimeout: 60s
 ```
 
-Use flag [-p]{.title-ref} to provide an alternate port and override any
+Use flag `-p` to provide an alternate port and override any
 port specified in the config.
 
 ## Statsd
@@ -59,7 +58,7 @@ heartbeat:
     dbchecktimeout: 15ms
 ```
 
-[heartbeat.dbchecktimeout]{.title-ref} is how long the heartbeat handler
+`heartbeat.dbchecktimeout` is how long the heartbeat handler
 should wait for the DB to return a response before erroring.
 
 ## Hardware Security Module (HSM)
@@ -84,7 +83,7 @@ heartbeat:
 Refer to each signer\'s configuration doc to know how they each make use
 of the HSM.
 
-[heartbeat.hsmchecktimeout]{.title-ref} is how long the heartbeat
+`heartbeat.hsmchecktimeout` is how long the heartbeat
 handler should wait for the HSM to return a response before erroring.
 
 ## Signers
@@ -94,10 +93,10 @@ respective README under the
 [autograph/signer/](https://github.com/mozilla-services/autograph/tree/main/signer)
 directory.
 
-All signers share the common field [id]{.title-ref}, which is a name
-unique to the installation to identify each signer. The [id]{.title-ref}
+All signers share the common field `id`, which is a name
+unique to the installation to identify each signer. The `id`
 is used in the authorization configurations for both
-[autograph]{.title-ref} and [autograph edge]{.title-ref}.
+autograph and autograph edge.
 
 ``` yaml
 signer:
@@ -110,8 +109,8 @@ signer:
 
 Authorizations map an arbitrary username and key to a list of signers.
 The key does not need to be generated in any special way. You can use
-[openssl]{.title-ref} or the tool in
-[tools/maketoken/main.go]{.title-ref} to obtain a random 256bits string:
+`openssl` or the tool in `tools/maketoken/main.go` to obtain a random
+256-bit string:
 
 ``` bash
 $ openssl rand -hex 32
@@ -137,18 +136,17 @@ authorizations:
           - appkey2
 ```
 
-The configuration above allows [alice]{.title-ref} to request signatures
-from both [appkey1]{.title-ref} and [appkey2]{.title-ref}, while
-[bob]{.title-ref} is only allowed to request signatures from
-[appkey2]{.title-ref}.
+The configuration above allows `alice` to request signatures from both
+`appkey1` and `appkey2`, while `bob` is only allowed to request
+signatures from `appkey2`.
 
-Note that, when a user is allowed to sign with more than one signer, and
-no specific signer key id is provided in the signing request, autograph
-will use the first signer in the list. For example, if alice requests a
-signature without providing a key id, the private key from
-[appkey1]{.title-ref} will be used to sign her request.
+Note that, when a user is allowed to sign with more than one signer,
+and no specific signer key id is provided in the signing request,
+autograph will use the first signer in the list. For example, if alice
+requests a signature without providing a key id, the private key from
+`appkey1` will be used to sign her request.
 
-The optional key [hawktimestampvalidity]{.title-ref} maps to a string
+The optional key `hawktimestampvalidity` maps to a string
 [parsed as a time.Duration](https://golang.org/pkg/time/#ParseDuration)
 and allows for different HAWK timestamp skews than the default of 1
 minute.
@@ -166,7 +164,7 @@ Build the autograph binary using make:
 $ make install
 ```
 
-The binary is located in [\$GOPATH/bin/autograph]{.title-ref} and can be
+The binary is located in `$GOPATH/bin/autograph` and can be
 started with the configuration file:
 
 ``` bash
@@ -183,7 +181,7 @@ ohai
 
 ## Test Key/Cert
 
-For dev and testing purposes, the private key [appkey1]{.title-ref} can
+For dev and testing purposes, the private key `appkey1` can
 be used with the following self-signed certificate:
 
 >     -----BEGIN CERTIFICATE-----

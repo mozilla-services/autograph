@@ -66,7 +66,7 @@ signature:
     intermediate issuer and the root of the Firefox private PKI. Firefox
     is configured to only accept signatures from the private PKI, as
     controlled via the
-    [security.content.signature.root_hash]{.title-ref} preference, where
+    `security.content.signature.root_hash` preference, where
     the value is the hexadecimal of the sha256 of the DER of the root
     certificate.
 
@@ -79,7 +79,7 @@ signing content for application B, Firefox verifies the subject
 alternate name of the end-entity certificate matches the one it expects.
 This is hardcoded for each component that uses content signature.
 Normandy, for example, uses the namespace
-[normandy.content-signature.mozilla.org]{.title-ref} and only end-entity
+`normandy.content-signature.mozilla.org` and only end-entity
 certificates that have this subject alternate name can issue signatures
 for the Normandy service.
 
@@ -186,10 +186,10 @@ signers:
 
 ## Signature requests
 
-This signer support both the [/sign/data]{.title-ref} and
-[/sign/hash]{.title-ref} endpoints. When signing data, the base64 of the
-data being signed must be passed in the [input]{.title-ref} field of the
-JSON signing request. When signing hashes, the [input]{.title-ref} field
+This signer support both the `/sign/data` and
+`/sign/hash` endpoints. When signing data, the base64 of the
+data being signed must be passed in the `input` field of the
+JSON signing request. When signing hashes, the `input` field
 must contain the base64 of the hash being signed.
 
 ``` json

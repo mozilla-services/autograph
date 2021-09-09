@@ -16,15 +16,15 @@ The type of this signer is **xpi**.
 
 The XPI signer in Autograph supports four types of addons. A signer is
 configured to issue signatures for a given type using the
-[mode]{.title-ref} parameter in the autograph configuration:
+`mode` parameter in the autograph configuration:
 
--   Regular addons use mode [add-on]{.title-ref}
+-   Regular addons use mode `add-on`
 -   Regular addons with recommendations use mode
-    [add-on-with-recommendation]{.title-ref}
--   Mozilla Extensions use mode [extension]{.title-ref}
--   Mozilla Components (aka. System Addons) use mode [system
-    add-on]{.title-ref}
--   Hotfixes use mode [hotfix]{.title-ref}
+    `add-on-with-recommendation`
+-   Mozilla Extensions use mode `extension`
+-   Mozilla Components (aka. System Addons) use mode `system
+    add-on`
+-   Hotfixes use mode `hotfix`
 
 Each signer must have a type, a mode and the certificate and private key
 of an intermediate CA issued by either the staging or root PKIs of AMO
@@ -95,9 +95,9 @@ signers:
 
 ## Signature Request
 
-Supports the [/sign/data]{.title-ref} and [/sign/file]{.title-ref}
+Supports the `/sign/data` and `/sign/file`
 endpoints for data and file signing respectively.
-[/sign/data]{.title-ref} uses the request format:
+`/sign/data` uses the request format:
 
 ``` json
 [
@@ -111,7 +111,7 @@ endpoints for data and file signing respectively.
 ]
 ```
 
-and [/sign/file]{.title-ref} uses the format:
+and `/sign/file` uses the format:
 
 ``` json
 [
@@ -135,63 +135,63 @@ and [/sign/file]{.title-ref} uses the format:
 
 Where options includes the following fields:
 
--   [id]{.title-ref} is the **required** ID of the addon to sign for
+-   `id` is the **required** ID of the addon to sign for
     both data and file signing. It must be decided client side, and is
     generally a string that looks like an email address, but when longer
     than 64 characters can be the hexadecimal encoding of a sha256 hash.
     This signer doesn\'t care about the content of the string, and uses
     it as received when generating the end-entity signing cert.
--   [pkcs7_digest]{.title-ref} is a **required** string representing a
-    supported PKCS7 digest algorithm ([\"SHA1\"]{.title-ref} or
-    [\"SHA256\"]{.title-ref}). Only [/sign/file]{.title-ref} supports
+-   `pkcs7_digest` is a **required** string representing a
+    supported PKCS7 digest algorithm (`\"SHA1\"` or
+    `\"SHA256\"`). Only `/sign/file` supports
     this field.
--   [cose_algorithms]{.title-ref} is an **optional** array of strings
+-   `cose_algorithms` is an **optional** array of strings
     representing supported [COSE
     Algorithms](https://www.iana.org/assignments/cose/cose.xhtml#table-header-algorithm-parameters)
-    (as of 2018-06-20 one of [\"ES256\"]{.title-ref},
-    [\"ES384\"]{.title-ref}, [\"ES512\"]{.title-ref}, or
-    [\"PS256\"]{.title-ref}) to sign the XPI with in addition to the
-    PKCS7 signature. Only [/sign/file]{.title-ref} supports this field.
--   [recommendations]{.title-ref} is an **optional** array of strings
+    (as of 2018-06-20 one of `\"ES256\"`,
+    `\"ES384\"`, `\"ES512\"`, or
+    `\"PS256\"`) to sign the XPI with in addition to the
+    PKCS7 signature. Only `/sign/file` supports this field.
+-   `recommendations` is an **optional** array of strings
     representing recommendation states to add to the recommendation file
-    for XPI signers in [add-on-with-recommendation]{.title-ref} mode.
-    Only [/sign/file]{.title-ref} supports this field.
+    for XPI signers in `add-on-with-recommendation` mode.
+    Only `/sign/file` supports this field.
 
-The [/sign/file]{.title-ref} endpoint takes a whole XPI encoded in
+The `/sign/file` endpoint takes a whole XPI encoded in
 base64. As described in [Extension Signing
 Algorithm](https://wiki.mozilla.org/Add-ons/Extension_Signing#Algorithm),
 it:
 
 -   unzips the XPI
 -   hashes each file to generate the manifest file
-    [manifest.mf]{.title-ref}
+    `manifest.mf`
 -   then when one or more supported COSE algorithms are in the options
-    [cose_algorithms]{.title-ref} field
-    -   writes the manifest file to [cose.manifest]{.title-ref}
+    `cose_algorithms` field
+    -   writes the manifest file to `cose.manifest`
     -   creates a COSE Sign Message and for each COSE algorithm:
         -   generates an end entity cert and key from the signer\'s
             intermediate
         -   signs the manifest with the end entity key using the COSE
             algorithm
         -   adds the detached signature to the Sign Message
-    -   writes the CBOR-encoded Sign Message to [cose.sig]{.title-ref}
-    -   hashes [cose.manifest]{.title-ref} and [cose.sig]{.title-ref}
-        and adds them to the manifest file [manifest.mf]{.title-ref}
+    -   writes the CBOR-encoded Sign Message to `cose.sig`
+    -   hashes `cose.manifest` and `cose.sig`
+        and adds them to the manifest file `manifest.mf`
 -   hashes the manifest file to generate the signature file
-    [mozilla.sf]{.title-ref}
+    `mozilla.sf`
 -   generates an RSA end entity cert from the signer\'s intermediate
 -   uses the generated cert to sign the signature file and create a
-    PKCS7 detached signature [mozilla.rsa]{.title-ref} using the
-    algorithm from [pkcs7_digest]{.title-ref}
+    PKCS7 detached signature `mozilla.rsa` using the
+    algorithm from `pkcs7_digest`
 -   adds the generated manifest, signature, and detached signature files
-    to the XPI [META-INF/]{.title-ref}
+    to the XPI `META-INF/`
 -   repacks and returns the ZIP/XPI
 
-The [/sign/data]{.title-ref} endpoint generates the end entity cert and
-signs the signature file. The [input]{.title-ref} field must contain the
-base64 encoding of a [mozilla.sf]{.title-ref} signature file and returns
-the PKCS7 detached signature [mozilla.rsa]{.title-ref} in the response
-[signature]{.title-ref} field. The caller is then responsible for
+The `/sign/data` endpoint generates the end entity cert and
+signs the signature file. The `input` field must contain the
+base64 encoding of a `mozilla.sf` signature file and returns
+the PKCS7 detached signature `mozilla.rsa` in the response
+`signature` field. The caller is then responsible for
 repacking the ZIP.
 
 ## Signature Response
@@ -203,9 +203,9 @@ stored in the file called **mozilla.rsa** in the META-INF folder of XPI
 archives.
 
 Autograph returns the base64 representation of the
-[mozilla.rsa]{.title-ref} file in its signature responses. Clients must
+`mozilla.rsa` file in its signature responses. Clients must
 decode the base64 from the autograph response and write it to a
-[mozilla.rsa]{.title-ref} file.
+`mozilla.rsa` file.
 
 ``` json
 [
@@ -226,8 +226,8 @@ end-entity that issued the signature.
 ### File Signing
 
 Like the data signing except the signed XPI is returned in the
-[signed_file]{.title-ref} field. Clients must decode the base64 from the
-autograph response and write it to a [signed_addon.xpi]{.title-ref}
+`signed_file` field. Clients must decode the base64 from the
+autograph response and write it to a `signed_addon.xpi`
 file.
 
 ``` json

@@ -1,9 +1,9 @@
 # API Endpoints
 
 Authorization: All API calls require a
-[hawk](https://github.com/hueniverse/hawk) Authorization header with
-payload signature enabled. Example code can be found in the
-[tools]{.title-ref} directory.
+[hawk](https://github.com/mozilla/hawk) Authorization header with
+payload signature enabled. Example code can be found in the `tools`
+directory.
 
 ## /sign/data
 
@@ -47,7 +47,7 @@ Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="som
 
 ### Response
 
-A successful request return a [201 Created]{.title-ref} with a response
+A successful request return a `201 Created` with a response
 body containing signature elements encoded in JSON. The ordering of the
 response array is identical to the request array, such that signing
 request 0 maps to signing response 0, etc.
@@ -70,15 +70,15 @@ Below is an example signing response for a content-signature request:
 
 Each signature response contains the following fields:
 
--   [ref]{.title-ref} is a random string that acts as a reference number
+-   `ref` is a random string that acts as a reference number
     for logging and tracking.
--   [type]{.title-ref} is the type of signer that issued the signature
--   [signer_id]{.title-ref} is ID of the signer in configuration.
--   [public_key]{.title-ref} is the DER encoded public key that maps to
+-   `type` is the type of signer that issued the signature
+-   `signer_id` is ID of the signer in configuration.
+-   `public_key` is the DER encoded public key that maps to
     the signing key used to generate the signature. This value can be
     used by clients to verify signatures. The DER format is supported by
     OpenSSL and most libraries.
--   [signature]{.title-ref} is the signature encoded in the proper
+-   `signature` is the signature encoded in the proper
     format. Each signer uses a different format, so refer to their
     documentation for more information.
 
@@ -124,16 +124,16 @@ Authorization: Hawk id="alice", mac="756lSgQEYLoc6V0Uv2wS8pRg/h+4WFUVKWQynCFvY8Y
 
 ### Response
 
-A successful request return a [201 Created]{.title-ref} with a response
+A successful request return a `201 Created` with a response
 body containing all signed files encoded in JSON. The ordering of the
 response array is identical to the request array, such that signing
 request 0 maps to signing response 0, etc.
 
-The response format is the same as [/sign/data]{.title-ref} except
-instead of the [signature]{.title-ref} field autograph returns the
+The response format is the same as `/sign/data` except
+instead of the `signature` field autograph returns the
 field:
 
--   [signed_file]{.title-ref} is the base64 encoded signed file data.
+-   `signed_file` is the base64 encoded signed file data.
     Each signer uses a different format, so refer to their documentation
     for more information.
 
@@ -169,30 +169,30 @@ Body format: The request body is a json array where each entry of the
 array is an object to sign. The parameters are:
 
 -   input: base64 encoded hash to sign
--   keyid: see [/sign/data]{.title-ref}
--   options: see [/sign/data]{.title-ref}
+-   keyid: see `/sign/data`
+-   options: see `/sign/data`
 
 ### Response
 
-See [/sign/data]{.title-ref}, the response format is identical.
+See `/sign/data`, the response format is identical.
 
 ### Response
 
-A successful request return a [201 Created]{.title-ref} with a response
+A successful request return a `201 Created` with a response
 body containing an S/MIME detached signature encoded with Base 64.
 
 ## /\_\_monitor\_\_
 
 This is a special endpoint designed to monitor the status of all signers
 without granting signing privileges to a monitoring client. It requires
-a special user named [monitor]{.title-ref} that can request a signature
-of the string [AUTOGRAPH MONITORING]{.title-ref} by all active signers.
+a special user named `monitor` that can request a signature
+of the string `AUTOGRAPH MONITORING` by all active signers.
 
 ### Request
 
 The endpoint accepts a GET request without query parameter or request
-body. The [Hawk]{.title-ref} authorization of the user named
-[monitor]{.title-ref} is required.
+body. The `Hawk` authorization of the user named
+`monitor` is required.
 
 ``` bash
 GET /__monitor__
@@ -206,7 +206,7 @@ Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="som
 
 One signing response per active signer is returned. The format follows
 the standard signing response format described in
-[/sign/data]{.title-ref}.
+`/sign/data`.
 
 The monitoring client should verify the signature returned with each
 response. If X5U values are provided, the monitoring client should

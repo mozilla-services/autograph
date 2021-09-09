@@ -1,19 +1,19 @@
 # PGP Signing with GPG2
 
 This signer implements the Pretty Good Privacy signature format. It
-accepts data on the [/sign/data]{.title-ref} interface and returns
-armored detached signatures like the [pgp]{.title-ref} signer.
+accepts data on the `/sign/data` interface and returns
+armored detached signatures like the `pgp` signer.
 
 **Try the \`pgp\` signer first since it keeps private keys in memory,
 which is more secure.**
 
-Only use the this signer if the [pgp]{.title-ref} signer doesn\'t
+Only use the this signer if the `pgp` signer doesn\'t
 understand your key format and you need to load private keys with
 passphrases exported with the [unsupported and non-standard gnu-dummy
 S2K algorithm](https://github.com/golang/go/issues/13605) and sign with
-a subkey. Also prefer the [pgp]{.title-ref} signer, since this signer 1)
+a subkey. Also prefer the `pgp` signer, since this signer 1)
 requires a the gpg2 binary with version \>2.1, 2) writes private keys to
-keyrings on disk, and 3) shells out to the [gpg2]{.title-ref} binary.
+keyrings on disk, and 3) shells out to the `gpg2` binary.
 
 Example Usage:
 
@@ -34,16 +34,16 @@ $ gpg --no-default-keyring --keyring /tmp/testkeyring.pgp \
 
 ## Configuration
 
-Add a signer to [autograph.yaml]{.title-ref} with the following
+Add a signer to `autograph.yaml` with the following
 **required** fields
 
-1.  a PGP public key (e.g. a key exported with [gpg \--armor \--export
-    \$KEYID]{.title-ref})
-2.  a PGP private key (e.g. a subkey exported with [gpg \--armor
-    \--export-secret-subkeys \$SUBKEYID]{.title-ref})
+1.  a PGP public key (e.g. a key exported with `gpg --armor --export
+    \$KEYID`)
+2.  a PGP private key (e.g. a subkey exported with `gpg --armor
+    --export-secret-subkeys \$SUBKEYID`)
 3.  a KeyID or fingerprint specifying which private key sign with (e.g.
-    [\$SUBKEYID]{.title-ref} from the above export or from [gpg
-    \--list-keys \--with-subkey-fingerprint]{.title-ref})
+    `\$SUBKEYID` from the above export or from `gpg
+    --list-keys --with-subkey-fingerprint`)
 4.  a passphrase to unlock the private key
 
 For example:
@@ -71,7 +71,7 @@ signers:
 
 ## Signature request
 
-This signer only supports the [/sign/data/]{.title-ref} endpoint.
+This signer only supports the `/sign/data/` endpoint.
 
 ``` json
 [

@@ -6,9 +6,9 @@ PKCS11 operations. Crypto11 wraps [Miekg\'s
 PKCS11](https://github.com/miekg/pkcs11/) package, which itself wraps
 the C library that talks to the HSM.
 
-PKCS11 depends on [ltdl]{.title-ref}. On Ubuntu, that\'s installed from
-[libltdl-dev]{.title-ref}. On Archlinux, use
-[libtool-ltdl-devel]{.title-ref}.
+PKCS11 depends on `ltdl`. On Ubuntu, that\'s installed from
+`libltdl-dev`. On Archlinux, use
+`libtool-ltdl-devel`.
 
 ## Setting up CloudHSM
 
@@ -53,17 +53,16 @@ it will be located under /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
 
 ## Setting up SoftHSM
 
--   On Ubuntu Xenial, install [softhsm2]{.title-ref} and create [mkdir
-    /var/lib/softhsm/tokens]{.title-ref}
--   On ArchLinux, install [softhsm]{.title-ref} from AUR
--   Then create a token with [\$ softhsm2-util \--init-token \--slot 0
-    \--label test \--pin 0000 \--so-pin 0000]{.title-ref}
+-   On Ubuntu Xenial, install `softhsm2` and create `mkdir /var/lib/softhsm/tokens`
+-   On ArchLinux, install `softhsm` from AUR
+-   Then create a token with `$ softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000`
 
 ### PKCS11 SoftHSM client
 
-The SO library is installed with the softhsm package and located: \*
-Ubuntu: [/usr/lib/softhsm/libsofthsm2.so]{.title-ref} \* ArchLinux:
-[/usr/lib/libsofthsm2.so]{.title-ref}
+The SO library is installed with the softhsm package and located:
+
+* Ubuntu: `/usr/lib/softhsm/libsofthsm2.so`
+* ArchLinux: `/usr/lib/libsofthsm2.so`
 
 ## Configuring Autograph
 
@@ -94,5 +93,5 @@ signers:
 
 Note that autograph does not generate slots or keys, this must be
 handled separately. For a full working example, take a look at
-[autograph.softhsm.yaml]{.title-ref} and how it is used by CircleCI in
-[.circleci/config.yaml]{.title-ref}.
+`autograph.softhsm.yaml` and how it is used by CircleCI in
+`.circleci/config.yaml`.

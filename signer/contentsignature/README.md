@@ -67,7 +67,7 @@ signature:
     issued the signature, and the last certificate is the root of the
     PKI. Firefox is configured to only accept signatures from the
     internal PKI shared with AMO. This is controlled via the
-    [security.content.signature.root_hash]{.title-ref} preference, where
+    `security.content.signature.root_hash` preference, where
     the value is the hexadecimal of the sha256 of the DER of the root
     certificate.
 
@@ -80,7 +80,7 @@ signing content for application B, Firefox verifies the subject
 alternate name of the end-entity certificate matches the one it expects.
 This is hardcoded for each component that uses content signature.
 Onecrl, for example, uses the namespace
-[onecrl.content-signature.mozilla.org]{.title-ref} and only end-entity
+`onecrl.content-signature.mozilla.org` and only end-entity
 certificates that have this subject alternate name can issue signatures
 for the OneCRL service.
 
@@ -109,7 +109,7 @@ ZosSXJrWEeyFmlp8GvDlOoZqd7xpW08=
 ```
 
 The output from OpenSSL must be copied under the
-[privatekey]{.title-ref} section of the signer, as follows:
+`privatekey` section of the signer, as follows:
 
 ``` yaml
 signers:
@@ -127,12 +127,12 @@ signers:
       -----END EC PRIVATE KEY-----
 ```
 
-Based on the [privatekey]{.title-ref}, autograph will return the
-corresponding [publickey]{.title-ref} in the JSON responses. If you\'re
+Based on the `privatekey`, autograph will return the
+corresponding `publickey` in the JSON responses. If you\'re
 using a PKI and want to verify signatures with a X.509 certificate, you
 can generate this certificate based on the private key, store it
 someplace, and tell autograph to return its location in the
-[x5u]{.title-ref} value.
+`x5u` value.
 
 ``` bash
 # first make a CSR based on the private key
@@ -143,8 +143,8 @@ $ openssl x509 -req -days 365 -in /tmp/autograph-dev.csr -signkey /tmp/autograph
 ```
 
 Store the CRT on
-[http://example.net/certs/autograph-dev.crt]{.title-ref} and set the x5u
-value in [autograph.yaml]{.title-ref}.
+`http://example.net/certs/autograph-dev.crt` and set the x5u
+value in `autograph.yaml`.
 
 ``` yaml
 signers:
@@ -158,10 +158,10 @@ signers:
 
 ## Signature requests
 
-This signer support both the [/sign/data]{.title-ref} and
-[/sign/hash]{.title-ref} endpoints. When signing data, the base64 of the
-data being signed must be passed in the [input]{.title-ref} field of the
-JSON signing request. When signing hashes, the [input]{.title-ref} field
+This signer support both the `/sign/data` and
+`/sign/hash` endpoints. When signing data, the base64 of the
+data being signed must be passed in the `input` field of the
+JSON signing request. When signing hashes, the `input` field
 must contain the base64 of the hash being signed.
 
 ``` json

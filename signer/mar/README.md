@@ -21,8 +21,8 @@ signers:
 
 ## Signature request
 
-This signer supports [/sign/hash]{.title-ref}, [/sign/data]{.title-ref}
-and [/sign/file]{.title-ref} endpoints. They all use the same request
+This signer supports `/sign/hash`, `/sign/data`
+and `/sign/file` endpoints. They all use the same request
 format:
 
 ``` json
@@ -34,16 +34,16 @@ format:
 ]
 ```
 
-The [/sign/file]{.title-ref} endpoint takes a whole MAR encoded in
+The `/sign/file` endpoint takes a whole MAR encoded in
 base64. It will parse the mar, sign it and return the signed file.
 
-The [/sign/data]{.title-ref} and [/sign/hash]{.title-ref} endpoint only
+The `/sign/data` and `/sign/hash` endpoint only
 does the signing step. They takes a MAR block already prepared for
-signature, calculate its digest (if [/sign/data]{.title-ref}) and return
+signature, calculate its digest (if `/sign/data`) and return
 the signature bytes to be inserted in the signature field. Because the
 signer needs to know which algorithm to use for signature, the signature
 algorithm can be specified in the signing request options. The
-acceptable value of the [sigalg]{.title-ref} field can be found in [the
+acceptable value of the `sigalg` field can be found in [the
 constants of the MAR
 package](https://godoc.org/go.mozilla.org/mar#pkg-constants).
 
@@ -64,7 +64,7 @@ package](https://godoc.org/go.mozilla.org/mar#pkg-constants).
 ### Data & Hash Signing
 
 The response to a data or hash signing request contains the base64 of
-the signature in the [signature]{.title-ref} field of the JSON response.
+the signature in the `signature` field of the JSON response.
 You should decode this base64 and insert it into the MAR\'s signature
 entry.
 
@@ -82,7 +82,7 @@ entry.
 ### File Signing
 
 The response to a file signing request contains the base64 of the signed
-MAR in the [signed_file]{.title-ref} field of the json response. You
+MAR in the `signed_file` field of the json response. You
 should base64 decode that field and write the output as a file.
 
 ``` json
@@ -98,7 +98,7 @@ should base64 decode that field and write the output as a file.
 
 ## Verifying signatures
 
-Firefox has a [signmar]{.title-ref} tool that can be used to verify MAR
+Firefox has a `signmar` tool that can be used to verify MAR
 signatures. Refer to [MAR Signing and
 Verification](https://wiki.mozilla.org/Software_Update:MAR_Signing_and_Verification)
 for more details.

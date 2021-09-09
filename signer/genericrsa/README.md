@@ -1,8 +1,8 @@
 # RSA Signing
 
 This signer implements RSA PSS and PKCS1.5 signing. It accepts SHA1 and
-SHA256 hashes on [/sign/hash]{.title-ref} and data to be hashed on
-[/sign/data]{.title-ref}.
+SHA256 hashes on `/sign/hash` and data to be hashed on
+`/sign/data`.
 
 Example Usage:
 

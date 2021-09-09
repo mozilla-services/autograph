@@ -65,7 +65,7 @@ signer, and returns the encoded signature back to the client.
 The authentication/authorization model is probably the most complex part
 of the autograph core. Clients are required to provide a Hawk
 authorization with payload signature issued by a user trusted by
-autograph. The [authorization]{.title-ref} section of the autograph.yaml
+autograph. The `authorization` section of the autograph.yaml
 configuration lists permitted users, along with the signers each is
 allowed to use.
 
@@ -76,7 +76,7 @@ authenticated user is permitted to use the requested signer. Should all
 these steps succeed, the signing request is passed along to a signer.
 
 Signers are separate Go packages defined under the
-[github.com/mozilla-services/autograph/signer/\...]{.title-ref} package.
+`github.com/mozilla-services/autograph/signer/\...` package.
 Each signer implements a specific type of signing, for example:
 
 -   **github.com/mozilla-services/autograph/signer/contentsignature**
@@ -95,10 +95,10 @@ Each signer implements a specific type of signing, for example:
     implementation in Autograph is described in the [xpi signer\'s
     README](https://github.com/mozilla-services/autograph/blob/main/signer/xpi/README.md).
 
-Signers can implement three interfaces: [FileSigner]{.title-ref},
-[DataSigner]{.title-ref} and [HashSigner]{.title-ref}, which correspond
-to the endpoints [/sign/file]{.title-ref}, [/sign/data]{.title-ref} and
-[/sign/hash]{.title-ref} respectively. When a signing request is
+Signers can implement three interfaces: `FileSigner`,
+`DataSigner` and `HashSigner`, which correspond
+to the endpoints `/sign/file`, `/sign/data` and
+`/sign/hash` respectively. When a signing request is
 received, autograph checks if the requested signer implements the
 interface for the type of signature requested. If the requested signer
 doesn\'t support a given mode (eg. the xpi signer doesn\'t support the
