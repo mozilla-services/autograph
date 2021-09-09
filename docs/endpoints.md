@@ -1,13 +1,4 @@
----
-title: API Endpoints
----
-
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
+# API Endpoints
 
 Authorization: All API calls require a
 [hawk](https://github.com/hueniverse/hawk) Authorization header with

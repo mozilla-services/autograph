@@ -1,13 +1,4 @@
----
-title: PKCS11 HSM Support
----
-
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
+# PKCS11 HSM Support
 
 Autograph uses [Thales\'
 Crypto11](https://github.com/ThalesIgnite/crypto11) package to support

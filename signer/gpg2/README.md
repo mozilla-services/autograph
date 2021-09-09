@@ -1,13 +1,4 @@
----
-title: PGP Signing with GPG2
----
-
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
+# PGP Signing with GPG2
 
 This signer implements the Pretty Good Privacy signature format. It
 accepts data on the [/sign/data]{.title-ref} interface and returns

@@ -1,13 +1,5 @@
----
-title: Configuration
----
+# Configuration
 
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
 
 The configuration lives in [autograph.yaml]{.title-ref} and is expected
 in [/etc/autograph/autograph.yaml]{.title-ref} (use flag

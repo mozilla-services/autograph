@@ -1,13 +1,4 @@
----
-title: Troubleshooting Autograph
----
-
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
+# Troubleshooting Autograph
 
 These procedures assume that:
 

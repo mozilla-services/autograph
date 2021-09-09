@@ -1,13 +1,4 @@
----
-title: MAR Signing
----
-
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
+# MAR Signing
 
 MAR is Firefox\'s update file format. For a full description, see
 [go.mozilla.org/mar](https://godoc.org/go.mozilla.org/mar).

@@ -1,13 +1,4 @@
----
-title: XPI Signing
----
-
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
+# XPI Signing
 
 XPI are zip files that contain Firefox extensions and addons. XPI
 signing uses the [JAR
@@ -256,7 +247,7 @@ file.
 This directed graphs represents the add-ons signature verification path
 in Firefox.
 
-``` 
+```
 graph LR
   Firefox-->loadManifest
   loadManifest -->verifySignedState

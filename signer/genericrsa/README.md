@@ -1,13 +1,4 @@
----
-title: RSA Signing
----
-
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
+# RSA Signing
 
 This signer implements RSA PSS and PKCS1.5 signing. It accepts SHA1 and
 SHA256 hashes on [/sign/hash]{.title-ref} and data to be hashed on

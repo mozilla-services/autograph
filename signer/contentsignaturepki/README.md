@@ -1,13 +1,4 @@
----
-title: Content Signature
----
-
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
+# Content Signature
 
 # Rationale
 

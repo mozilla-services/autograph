@@ -1,13 +1,5 @@
----
-title: Autograph Architecture
----
+# Autograph Architecture
 
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
 
 # Overview
 

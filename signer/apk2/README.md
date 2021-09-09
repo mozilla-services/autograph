@@ -1,13 +1,4 @@
----
-title: APK Signing
----
-
-::: sectnum
-:::
-
-::: contents
-Table of Contents
-:::
+# APK Signing
 
 APK is Android\'s application packaging format. It\'s basically a ZIP
 file that follows the [JAR
