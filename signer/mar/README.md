@@ -3,7 +3,7 @@
 MAR is Firefox\'s update file format. For a full description, see
 [go.mozilla.org/mar](https://godoc.org/go.mozilla.org/mar).
 
-# Configuration
+## Configuration
 
 The only thing needed to configure a MAR signer is a private key, either
 RSA or ECDSA P256/P384.
@@ -19,7 +19,7 @@ signers:
       -----END PRIVATE KEY-----
 ```
 
-# Signature request
+## Signature request
 
 This signer supports [/sign/hash]{.title-ref}, [/sign/data]{.title-ref}
 and [/sign/file]{.title-ref} endpoints. They all use the same request
@@ -59,9 +59,9 @@ package](https://godoc.org/go.mozilla.org/mar#pkg-constants).
 ]
 ```
 
-# Signature response
+## Signature response
 
-## Data & Hash Signing
+### Data & Hash Signing
 
 The response to a data or hash signing request contains the base64 of
 the signature in the [signature]{.title-ref} field of the JSON response.
@@ -79,7 +79,7 @@ entry.
 ]
 ```
 
-## File Signing
+### File Signing
 
 The response to a file signing request contains the base64 of the signed
 MAR in the [signed_file]{.title-ref} field of the json response. You
@@ -96,7 +96,7 @@ should base64 decode that field and write the output as a file.
 ]
 ```
 
-# Verifying signatures
+## Verifying signatures
 
 Firefox has a [signmar]{.title-ref} tool that can be used to verify MAR
 signatures. Refer to [MAR Signing and

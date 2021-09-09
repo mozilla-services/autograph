@@ -1,6 +1,6 @@
 # Content Signature
 
-# Rationale
+## Rationale
 
 As we rapidly increase the number of services that send configuration
 data to Firefox agents, we also increase the probability of a service
@@ -27,7 +27,7 @@ below:
 
 [![image](https://img.youtube.com/vi/b2kPo8YdLTw/0.jpg)](https://www.youtube.com/watch?v=b2kPo8YdLTw)
 
-# Signature
+## Signature
 
 Content signatures are computed on data and served to Firefox either via
 a HTTP response header or through a separate signature field in the data
@@ -83,7 +83,7 @@ Normandy, for example, uses the namespace
 certificates that have this subject alternate name can issue signatures
 for the Normandy service.
 
-# Configuration
+## Configuration
 
 The type of this signer is **contentsignaturepki**.
 
@@ -184,7 +184,7 @@ signers:
     -----END CERTIFICATE-----
 ```
 
-# Signature requests
+## Signature requests
 
 This signer support both the [/sign/data]{.title-ref} and
 [/sign/hash]{.title-ref} endpoints. When signing data, the base64 of the

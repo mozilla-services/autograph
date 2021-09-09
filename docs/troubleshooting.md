@@ -5,9 +5,9 @@ These procedures assume that:
 -   Production has been deployed successfully
 -   Production has passed all post deployment QA checks
 
-# Reported Issue
+## Reported Issue
 
-## Report of 401 error
+### Report of 401 error
 
 Collect the following information from reporter:
 
@@ -29,9 +29,9 @@ Process:
 3.  [Verify signing works](#verify-signing-works) for the specific
     [key_id]{.title-ref}. If not, likely configuration error.
 
-# Procedures
+## Procedures
 
-## Verify Credentials Work
+### Verify Credentials Work
 
 These steps need to be done on a box that can connect to the production
 instance. The easiest approach is to have a production instance
@@ -60,7 +60,7 @@ go run client.go \
     -k signer-id-from-reporter-or-hawk-key_id
 ```
 
-## Verify signing works
+### Verify signing works
 
 Use the same setup as for [Verify Credentials
 Work](#verify-credentials-work), but ensure you provide the correct

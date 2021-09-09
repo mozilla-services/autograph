@@ -12,7 +12,7 @@ Signing](https://source.android.com/security/apksigning/v3) (set [mode:
 v3enabled]{.title-ref}) that put signatures in the metadata of the zip
 file.
 
-# Configuration
+## Configuration
 
 To generate a key and certificate using the standard
 [keytool]{.title-ref} approach, use the following command:
@@ -61,7 +61,7 @@ signers:
 Set the optional [mode]{.title-ref} field to [v3enabled]{.title-ref} to
 enable APK v3 signatures (in addition to v1 and v2).
 
-# Signature request
+## Signature request
 
 This signer only supports the [/sign/file]{.title-ref} endpoint.
 
@@ -92,9 +92,9 @@ zipalign -v <alignment> infile outfile
 zipalign -v <alignment> signedfile
 ```
 
-# Signature response
+## Signature response
 
-## Data Signing
+### Data Signing
 
 The response to a file signing request contains the base64 of the signed
 and aligned APK in the [signed_file]{.title-ref} field of the json
@@ -112,7 +112,7 @@ file.
 ]
 ```
 
-# Verifying signatures
+## Verifying signatures
 
 The android SDK has a tool called [apksigner]{.title-ref} that can
 verify both signature versions, as well as the zip alignment. Note that

@@ -5,7 +5,7 @@ The configuration lives in [autograph.yaml]{.title-ref} and is expected
 in [/etc/autograph/autograph.yaml]{.title-ref} (use flag
 [-c]{.title-ref} to provide an alternate location).
 
-# Server
+## Server
 
 Define an address and port for the API to listen on and an optional HAWK
 nonce cache size to prevent replay attacks:
@@ -22,7 +22,7 @@ server:
 Use flag [-p]{.title-ref} to provide an alternate port and override any
 port specified in the config.
 
-# Statsd
+## Statsd
 
 Optionally, configure statsd with:
 
@@ -38,7 +38,7 @@ statsd:
     buflen: 1
 ```
 
-# Database
+## Database
 
 Optionally, configure postgres using the sample below. Use the schema in
 database/schema.sql to initialize the db. Make sure to set a user with
@@ -62,7 +62,7 @@ heartbeat:
 [heartbeat.dbchecktimeout]{.title-ref} is how long the heartbeat handler
 should wait for the DB to return a response before erroring.
 
-# Hardware Security Module (HSM)
+## Hardware Security Module (HSM)
 
 Several signers support key operations using an HSM. To configure it
 globally, set the following config where:
@@ -87,7 +87,7 @@ of the HSM.
 [heartbeat.hsmchecktimeout]{.title-ref} is how long the heartbeat
 handler should wait for the HSM to return a response before erroring.
 
-# Signers
+## Signers
 
 The detailed configuration for each signer is described in their
 respective README under the
@@ -106,7 +106,7 @@ signer:
     # rest of object depends on the signer type
 ```
 
-# Authorizations
+## Authorizations
 
 Authorizations map an arbitrary username and key to a list of signers.
 The key does not need to be generated in any special way. You can use
@@ -158,7 +158,7 @@ linked in the configurations.
 
 ![image of relationships between authorization objects](statics/a-h-s.dot.svg?sanitize=true)
 
-# Building and running
+## Building and running
 
 Build the autograph binary using make:
 
@@ -181,7 +181,7 @@ $ curl localhost:8000/__heartbeat__
 ohai
 ```
 
-# Test Key/Cert
+## Test Key/Cert
 
 For dev and testing purposes, the private key [appkey1]{.title-ref} can
 be used with the following self-signed certificate:

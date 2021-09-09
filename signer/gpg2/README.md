@@ -32,7 +32,7 @@ $ gpg --no-default-keyring --keyring /tmp/testkeyring.pgp \
   --verify /tmp/testsig.pgp /tmp/pgpinput.txt
 ```
 
-# Configuration
+## Configuration
 
 Add a signer to [autograph.yaml]{.title-ref} with the following
 **required** fields
@@ -69,7 +69,7 @@ signers:
     -----END PGP PUBLIC KEY BLOCK-----
 ```
 
-# Signature request
+## Signature request
 
 This signer only supports the [/sign/data/]{.title-ref} endpoint.
 
@@ -82,7 +82,7 @@ This signer only supports the [/sign/data/]{.title-ref} endpoint.
 ]
 ```
 
-# Signature response
+## Signature response
 
 The response to a data signing request contains a PGP armored detached
 signature in its raw form with newlines preserved but wrapped on a

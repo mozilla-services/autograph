@@ -1,7 +1,6 @@
 # Autograph Architecture
 
-
-# Overview
+## Overview
 
 Autograph exists to consolidate the storage and operations of
 cryptographic key inside a high-security service, and avoid having
@@ -48,7 +47,7 @@ itself.
 Autograph is stateless, but some signers rely on a Postgres database to
 manage their configurations.
 
-# Implementation
+## Implementation
 
 Autograph is written in Go because it is a clean and safe language, its
 crypto standard library is top-notch, and we have in-house expertise.
@@ -105,7 +104,7 @@ interface for the type of signature requested. If the requested signer
 doesn\'t support a given mode (eg. the xpi signer doesn\'t support the
 HashSigner interface), then an error is returned to the client.
 
-# Threat Model
+## Threat Model
 
 -   An attacker who gains access to Hawk credentials and is in a
     position to make requests to the autograph service can sign

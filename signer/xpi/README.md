@@ -10,7 +10,7 @@ found [on the Mozilla
 wiki](https://wiki.mozilla.org/Add-ons/Extension_Signing). This readme
 focuses on the autograph implementation.
 
-# Configuration
+## Configuration
 
 The type of this signer is **xpi**.
 
@@ -93,7 +93,7 @@ signers:
         -----END PRIVATE KEY-----
 ```
 
-# Signature Request
+## Signature Request
 
 Supports the [/sign/data]{.title-ref} and [/sign/file]{.title-ref}
 endpoints for data and file signing respectively.
@@ -194,9 +194,9 @@ the PKCS7 detached signature [mozilla.rsa]{.title-ref} in the response
 [signature]{.title-ref} field. The caller is then responsible for
 repacking the ZIP.
 
-# Signature Response
+## Signature Response
 
-## Data Signing
+### Data Signing
 
 XPI signatures are binary files encoded using the PKCS7 format and
 stored in the file called **mozilla.rsa** in the META-INF folder of XPI
@@ -223,7 +223,7 @@ Note that the **public_key** field is empty in signature responses
 because PKCS7 files already contain the public certificate of the
 end-entity that issued the signature.
 
-## File Signing
+### File Signing
 
 Like the data signing except the signed XPI is returned in the
 [signed_file]{.title-ref} field. Clients must decode the base64 from the
@@ -242,7 +242,7 @@ file.
 ]
 ```
 
-## Appendix A: Firefox add-on signature verification
+### Appendix A: Firefox add-on signature verification
 
 This directed graphs represents the add-ons signature verification path
 in Firefox.

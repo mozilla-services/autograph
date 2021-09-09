@@ -38,7 +38,7 @@ $ openssl pkeyutl -verify \
 Signature Verified Successfully
 ```
 
-# Configuration
+## Configuration
 
 Requires PEM encoded public and private RSA keys.
 
@@ -78,7 +78,7 @@ Both Hash and SaltLength are returned in the signature response so
 clients know how signing was performed and can pass those options to
 their verification logic.
 
-# Signature response
+## Signature response
 
 Returns base64-encoded public key (DER) and signature (hex). The public
 key is from the config.

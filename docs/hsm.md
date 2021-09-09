@@ -10,9 +10,9 @@ PKCS11 depends on [ltdl]{.title-ref}. On Ubuntu, that\'s installed from
 [libltdl-dev]{.title-ref}. On Archlinux, use
 [libtool-ltdl-devel]{.title-ref}.
 
-# Setting up CloudHSM
+## Setting up CloudHSM
 
-## HSM init
+### HSM init
 
 -   First activate the cluster with
     <https://docs.aws.amazon.com/cloudhsm/latest/userguide/activate-cluster.html>
@@ -45,13 +45,13 @@ Node id 0 and err state 0x00000000 : HSM Return: SUCCESS
 * Command:  quit
 ```
 
-## PKCS11 CloudHSM client
+### PKCS11 CloudHSM client
 
 Install the so library from
 <https://docs.aws.amazon.com/cloudhsm/latest/userguide/pkcs11-library-install.html>,
 it will be located under /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
 
-# Setting up SoftHSM
+## Setting up SoftHSM
 
 -   On Ubuntu Xenial, install [softhsm2]{.title-ref} and create [mkdir
     /var/lib/softhsm/tokens]{.title-ref}
@@ -59,13 +59,13 @@ it will be located under /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
 -   Then create a token with [\$ softhsm2-util \--init-token \--slot 0
     \--label test \--pin 0000 \--so-pin 0000]{.title-ref}
 
-## PKCS11 SoftHSM client
+### PKCS11 SoftHSM client
 
 The SO library is installed with the softhsm package and located: \*
 Ubuntu: [/usr/lib/softhsm/libsofthsm2.so]{.title-ref} \* ArchLinux:
 [/usr/lib/libsofthsm2.so]{.title-ref}
 
-# Configuring Autograph
+## Configuring Autograph
 
 When using an HSM, tell autograph where to find the C library, then
 indicate the label of each key in the HSM in their respective signer

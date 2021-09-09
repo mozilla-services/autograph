@@ -5,9 +5,9 @@ Authorization: All API calls require a
 payload signature enabled. Example code can be found in the
 [tools]{.title-ref} directory.
 
-# /sign/data
+## /sign/data
 
-## Request
+### Request
 
 Request a signature on raw data. The data to sign is passed in the
 request body using the JSON format described below.
@@ -45,7 +45,7 @@ Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="som
 ]
 ```
 
-## Response
+### Response
 
 A successful request return a [201 Created]{.title-ref} with a response
 body containing signature elements encoded in JSON. The ordering of the
@@ -82,9 +82,9 @@ Each signature response contains the following fields:
     format. Each signer uses a different format, so refer to their
     documentation for more information.
 
-# /sign/file
+## /sign/file
 
-## Request
+### Request
 
 Request for a signature on signed files. This can be useful to add hash
 manifests to files and reduce the number of round trips for file formats
@@ -122,7 +122,7 @@ Authorization: Hawk id="alice", mac="756lSgQEYLoc6V0Uv2wS8pRg/h+4WFUVKWQynCFvY8Y
 ]
 ```
 
-## Response
+### Response
 
 A successful request return a [201 Created]{.title-ref} with a response
 body containing all signed files encoded in JSON. The ordering of the
@@ -137,9 +137,9 @@ field:
     Each signer uses a different format, so refer to their documentation
     for more information.
 
-# /sign/hash
+## /sign/hash
 
-## Request
+### Request
 
 Request a signature on a hash. The hash is provided as a base64 encoded
 bytes array, and is not manipulated at all by autograph before signing.
@@ -172,23 +172,23 @@ array is an object to sign. The parameters are:
 -   keyid: see [/sign/data]{.title-ref}
 -   options: see [/sign/data]{.title-ref}
 
-## Response
+### Response
 
 See [/sign/data]{.title-ref}, the response format is identical.
 
-## Response
+### Response
 
 A successful request return a [201 Created]{.title-ref} with a response
 body containing an S/MIME detached signature encoded with Base 64.
 
-# /\_\_monitor\_\_
+## /\_\_monitor\_\_
 
 This is a special endpoint designed to monitor the status of all signers
 without granting signing privileges to a monitoring client. It requires
 a special user named [monitor]{.title-ref} that can request a signature
 of the string [AUTOGRAPH MONITORING]{.title-ref} by all active signers.
 
-## Request
+### Request
 
 The endpoint accepts a GET request without query parameter or request
 body. The [Hawk]{.title-ref} authorization of the user named
@@ -202,7 +202,7 @@ Content-type: application/json
 Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="
 ```
 
-## Response
+### Response
 
 One signing response per active signer is returned. The format follows
 the standard signing response format described in
@@ -213,7 +213,7 @@ response. If X5U values are provided, the monitoring client should
 verify that certificate chains are hosted at those locations, and that
 certificate are not too close to their expiration date.
 
-# /\_\_heartbeat\_\_ and /\_\_lbheartbeat\_\_
+## /\_\_heartbeat\_\_ and /\_\_lbheartbeat\_\_
 
 Heartbeating endpoints designed to answer load balancers with a 200 OK.
 
@@ -226,7 +226,7 @@ Content-Type: text/plain; charset=utf-8
 ohai
 ```
 
-# /\_\_version\_\_
+## /\_\_version\_\_
 
 Returns metadata about the autograph version.
 
