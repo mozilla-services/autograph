@@ -103,7 +103,7 @@ an S3 bucket).
 
 To achieve this, it makes use of a Postgres database which must be
 configured in the main autograph configuration file (refer to
-*docs/configuration.rst* for details). The database allows multiple
+*docs/configuration.md* for details). The database allows multiple
 autograph instances in a cluster to collaborate in creating only one
 end-entity at a time. Without a database, Autograph will also create new
 end-entity certificates at startup because it has no way of knowing if

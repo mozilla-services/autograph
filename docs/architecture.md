@@ -96,13 +96,13 @@ Each signer implements a specific type of signing, for example:
     Content-Signature](http://wiki.mozilla.org/Security/Content-Signature).
     The implementation in Autograph is described in the
     [content-signature signer\'s
-    README](https://github.com/mozilla-services/autograph/blob/main/signer/contentsignature/README.rst).
+    README](https://github.com/mozilla-services/autograph/blob/main/signer/contentsignature/README.md).
 -   **github.com/mozilla-services/autograph/signer/xpi** implements the
     PKCS7/SMIME detached signature protocol used to sign Firefox
     add-ons. The protocol is described in details in [Add-ons/Extension
     Signing](https://wiki.mozilla.org/Add-ons/Extension_Signing). The
     implementation in Autograph is described in the [xpi signer\'s
-    README](https://github.com/mozilla-services/autograph/blob/main/signer/xpi/README.rst).
+    README](https://github.com/mozilla-services/autograph/blob/main/signer/xpi/README.md).
 
 Signers can implement three interfaces: [FileSigner]{.title-ref},
 [DataSigner]{.title-ref} and [HashSigner]{.title-ref}, which correspond

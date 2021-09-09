@@ -1,11 +1,11 @@
 # Autograph
 Autograph is a cryptographic signature service that implements
-[Content-Signature](signer/contentsignaturepki/README.rst),
-[XPI Signing](signer/xpi/README.rst) for Firefox web extensions,
-[MAR Signing](signer/mar/README.rst) for Firefox updates,
-[APK Signing](signer/apk2/README.rst) for Android,
-[GPG2](signer/gpg2/README.rst)
-and [RSA](signer/genericrsa/README.rst).
+[Content-Signature](signer/contentsignaturepki/README.md),
+[XPI Signing](signer/xpi/README.md) for Firefox web extensions,
+[MAR Signing](signer/mar/README.md) for Firefox updates,
+[APK Signing](signer/apk2/README.md) for Android,
+[GPG2](signer/gpg2/README.md)
+and [RSA](signer/genericrsa/README.md).
 
 [![CircleCI](https://circleci.com/gh/mozilla-services/autograph/tree/main.svg?style=svg)](https://circleci.com/gh/mozilla-services/autograph/tree/main)
 [![Coverage Status](https://coveralls.io/repos/github/mozilla-services/autograph/badge.svg?branch=main)](https://coveralls.io/github/mozilla-services/autograph?branch=main)
@@ -54,20 +54,20 @@ $ $GOPATH/bin/autograph-client -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9
 
 ## Documentation
 
-* [Architecture](docs/architecture.rst)
-* [Configuration](docs/configuration.rst)
-* [Endpoints](docs/endpoints.rst)
-* [HSM Support](docs/hsm.rst)
+* [Architecture](docs/architecture.md)
+* [Configuration](docs/configuration.md)
+* [Endpoints](docs/endpoints.md)
+* [HSM Support](docs/hsm.md)
 
 ### Signers
 
-* [APK](signer/apk2/README.rst)
-* [Content-Signature PKI](signer/contentsignaturepki/README.rst)
-* [Content-Signature protocol](signer/contentsignature/README.rst)
-* [GPG](signer/gpg2/README.rst)
-* [MAR](signer/mar/README.rst)
-* [RSA](signer/genericrsa/README.rst)
-* [XPI Signing protocol](signer/xpi/README.rst)
+* [APK](signer/apk2/README.md)
+* [Content-Signature PKI](signer/contentsignaturepki/README.md)
+* [Content-Signature protocol](signer/contentsignature/README.md)
+* [GPG](signer/gpg2/README.md)
+* [MAR](signer/mar/README.md)
+* [RSA](signer/genericrsa/README.md)
+* [XPI Signing protocol](signer/xpi/README.md)
 
 ## Signing
 
