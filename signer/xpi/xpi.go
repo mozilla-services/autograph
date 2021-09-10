@@ -378,11 +378,10 @@ func (s *XPISigner) signDataWithPKCS7(sigfile []byte, cn string, digest asn1.Obj
 		return nil, fmt.Errorf("xpi: cannot initialize signed data: %w", err)
 	}
 	toBeSigned.SetDigestAlgorithm(digest)
-	// AddSignerChain also sets the SigningTime authenticated
-	// attribute to UTC now
+	// AddSignerChain also sets the SigningTime authenticated attribute to UTC now at:
 	// https://github.com/mozilla-services/pkcs7/blob/725912489c62504be3ab0de6aec80bf3f4f66f56/sign.go#L161
-	// don't change this time, because Fx uses it in the Addons
-	// Blocklist
+	// Fx uses the EE cert's NotBefore for the Addons Blocklist, but may
+	// use SigningTime in the future (depending on the outcome of bug 1549018)
 	// https://searchfox.org/mozilla-central/rev/f71cb98fc35da418d2cb9ce31a0416d532dc9d69/toolkit/mozapps/extensions/Blocklist.jsm#1254-1259
 	err = toBeSigned.AddSignerChain(eeCert, eeKey, []*x509.Certificate{s.issuerCert}, pkcs7.SignerInfoConfig{})
 	if err != nil {
