@@ -18,6 +18,7 @@ require (
 	github.com/lib/pq v1.10.3
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
+	github.com/mattn/goveralls v0.0.9 // indirect
 	github.com/miekg/pkcs11 v1.0.3
 	github.com/mozilla-services/autograph/verifier/contentsignature v0.0.0-20210505200649-cb56f0dcbdd1
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
@@ -31,6 +32,9 @@ require (
 	go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060
 	go.opencensus.io v0.22.1 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
+	golang.org/x/mod v0.5.0 // indirect
+	golang.org/x/tools v0.1.5 // indirect
 	google.golang.org/api v0.11.0 // indirect
 	google.golang.org/grpc v1.24.0 // indirect
 )

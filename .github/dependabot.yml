@@ -13,7 +13,7 @@ updates:
   ignore:
   - dependency-name: golang
     versions:
-    - ">= 1.16"
+    - ">= 1.17"
 - package-ecosystem: docker
   directory: "/database"
   schedule:
