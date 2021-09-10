@@ -38,12 +38,12 @@ Add a signer to `autograph.yaml` with the following
 **required** fields
 
 1.  a PGP public key (e.g. a key exported with `gpg --armor --export
-    \$KEYID`)
+    $KEYID`)
 2.  a PGP private key (e.g. a subkey exported with `gpg --armor
-    --export-secret-subkeys \$SUBKEYID`)
-3.  a KeyID or fingerprint specifying which private key sign with (e.g.
-    `\$SUBKEYID` from the above export or from `gpg
-    --list-keys --with-subkey-fingerprint`)
+    --export-secret-subkeys $SUBKEYID`)
+3.  a KeyID or fingerprint specifying which private key sign with
+    (e.g. `$SUBKEYID` from the above export or from `gpg --list-keys
+    --with-subkey-fingerprint`)
 4.  a passphrase to unlock the private key
 
 For example:

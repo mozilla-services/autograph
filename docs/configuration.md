@@ -68,7 +68,7 @@ globally, set the following config where:
 
 -   *path* is the file system path to a pkcs11 library
 -   *tokenlabel* is set by the type of hsm (cavium for cloudhsm)
--   *pin* is the credentials to use the hsm (\$user:\$pass for cloudhsm)
+-   *pin* is the credentials to use the hsm (`$user:$pass` for cloudhsm)
 
 ``` yaml
 hsm:

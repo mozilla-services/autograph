@@ -142,15 +142,15 @@ Where options includes the following fields:
     This signer doesn\'t care about the content of the string, and uses
     it as received when generating the end-entity signing cert.
 -   `pkcs7_digest` is a **required** string representing a
-    supported PKCS7 digest algorithm (`\"SHA1\"` or
-    `\"SHA256\"`). Only `/sign/file` supports
+    supported PKCS7 digest algorithm (`"SHA1"` or
+    `"SHA256"`). Only `/sign/file` supports
     this field.
 -   `cose_algorithms` is an **optional** array of strings
     representing supported [COSE
     Algorithms](https://www.iana.org/assignments/cose/cose.xhtml#table-header-algorithm-parameters)
-    (as of 2018-06-20 one of `\"ES256\"`,
-    `\"ES384\"`, `\"ES512\"`, or
-    `\"PS256\"`) to sign the XPI with in addition to the
+    (as of 2018-06-20 one of `"ES256"`,
+    `"ES384"`, `"ES512"`, or
+    `"PS256"`) to sign the XPI with in addition to the
     PKCS7 signature. Only `/sign/file` supports this field.
 -   `recommendations` is an **optional** array of strings
     representing recommendation states to add to the recommendation file
