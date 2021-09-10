@@ -1,6 +1,6 @@
 module github.com/mozilla-services/autograph
 
-go 1.12
+go 1.16
 
 require (
 	github.com/Azure/azure-sdk-for-go v32.6.0+incompatible // indirect
