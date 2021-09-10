@@ -10,7 +10,9 @@ require (
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/DataDog/datadog-go v3.7.2+incompatible
 	github.com/ThalesIgnite/crypto11 v0.1.0
+	github.com/aws/aws-lambda-go v1.26.0
 	github.com/aws/aws-sdk-go v1.40.37
+	github.com/golang/mock v1.3.1
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/lib/pq v1.10.3
@@ -20,7 +22,6 @@ require (
 	github.com/mozilla-services/autograph/verifier/contentsignature v0.0.0-20210505200649-cb56f0dcbdd1
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/youtube/vitess v2.1.1+incompatible // indirect
 	go.mozilla.org/cose v0.0.0-20200221144611-2ea72a6b3de3
 	go.mozilla.org/hawk v0.0.0-20190327210923-a483e4a7047e
@@ -32,7 +33,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	google.golang.org/api v0.11.0 // indirect
 	google.golang.org/grpc v1.24.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )
 
 replace github.com/mozilla-services/autograph/verifier => ./verifier/
