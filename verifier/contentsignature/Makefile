@@ -1,11 +1,11 @@
 .DEFAULT_GOAL := all
-all: lint vet fmt-fix test race
+all: staticcheck vet fmt-fix test race
 doc:
 	go doc .
 fmt-fix:
 	go fmt .
-lint:
-	golint .
+staticcheck:
+	staticcheck .
 race:
 	go test -race -covermode=atomic -count=1 .
 showcoverage: test

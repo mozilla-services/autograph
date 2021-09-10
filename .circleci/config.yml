@@ -12,12 +12,12 @@ jobs:
     steps:
       - checkout
       - run:
-          name: run golint
+          name: run staticcheck
           command: |
-            make install-golint lint check-no-crypto11-in-signers
+            make install-staticcheck staticcheck check-no-crypto11-in-signers
             make show-lint
-            make -C tools/autograph-monitor lint
-            make -C verifier/contentsignature lint
+            make -C tools/autograph-monitor staticcheck
+            make -C verifier/contentsignature staticcheck
       - run:
           name: run gofmt
           command: |

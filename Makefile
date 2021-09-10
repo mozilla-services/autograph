@@ -3,16 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-services/autograph/database github.com/mozilla-services/autograph/formats github.com/mozilla-services/autograph/signer github.com/mozilla-services/autograph/signer/apk2 github.com/mozilla-services/autograph/signer/contentsignature github.com/mozilla-services/autograph/signer/contentsignaturepki github.com/mozilla-services/autograph/signer/genericrsa github.com/mozilla-services/autograph/signer/gpg2 github.com/mozilla-services/autograph/signer/mar github.com/mozilla-services/autograph/signer/xpi github.com/mozilla-services/autograph/verifier/contentsignature
 
-all: generate test vet lint install
+all: generate test vet staticcheck install
 
 # update the vendored version of the wait-for-it.sh script
 install-wait-for-it:
 	curl -o bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
 	sha256sum -c bin/wait-for-it.sh.sha256
 	chmod +x bin/wait-for-it.sh
-
-install-golint:
-	go get -u golang.org/x/lint/golint
 
 install-cover:
 	go get -u golang.org/x/tools/cmd/cover
@@ -26,7 +23,7 @@ install-staticcheck:
 install-go-mod-upgrade:
 	go get -u github.com/oligot/go-mod-upgrade
 
-install-dev-deps: install-golint install-cover install-goveralls install-go-mod-upgrade
+install-dev-deps: install-staticcheck install-cover install-goveralls install-go-mod-upgrade
 
 install:
 	go install github.com/mozilla-services/autograph
@@ -37,17 +34,13 @@ vendor:
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
-lint:
-	golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
-	test 0 -eq $(shell cat /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
-
 # refs: https://github.com/mozilla-services/autograph/issues/247
 check-no-crypto11-in-signers:
 	test 0 -eq $(shell grep -Ri crypto11 signer/*/ | tee /tmp/autograph-crypto11-check.txt | wc -l)
 
 show-lint:
-	cat /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
-	rm -f /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
+	cat /tmp/autograph-staticcheck.txt /tmp/autograph-crypto11-check.txt
+	rm -f /tmp/autograph-staticcheck.txt /tmp/autograph-crypto11-check.txt
 
 vet:
 	go vet $(PACKAGE_NAMES)
@@ -69,7 +62,7 @@ race:
 	go test -race -covermode=atomic -count=1 $(PACKAGE_NAMES)
 
 staticcheck:
-	staticcheck $(PACKAGE_NAMES)
+	staticcheck -go 1.15 $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
 
 test:
 	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)
