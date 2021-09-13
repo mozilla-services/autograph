@@ -12,10 +12,15 @@ jobs:
     steps:
       - checkout
       - run:
+          name: check crypto11 not used in signers
+          command: |
+            make check-no-crypto11-in-signers
+            make show-lints
+      - run:
           name: run golint
           command: |
-            make install-golint lint check-no-crypto11-in-signers
-            make show-lint
+            make install-golint lint
+            make show-lints
             make -C tools/autograph-monitor lint
             make -C verifier/contentsignature lint
       - run:
@@ -34,6 +39,13 @@ jobs:
             make vet
             make -C tools/autograph-monitor vet
             make -C verifier/contentsignature vet
+      - run:
+          name: run staticcheck
+          command: |
+            make install-staticcheck staticcheck
+            make show-lints
+            make -C tools/autograph-monitor staticcheck
+            make -C verifier/contentsignature staticcheck
 
   unit-test:
     # based on the official golang image with more docker stuff
