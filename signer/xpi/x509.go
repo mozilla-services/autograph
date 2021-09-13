@@ -152,10 +152,6 @@ func (s *XPISigner) generateIssuerEEKeyPair() (eeKey crypto.PrivateKey, eePublic
 			err = fmt.Errorf("xpi: failed to generate rsa private key of size %d: %w", size, err)
 			return
 		}
-		if eeKey == nil {
-			err = fmt.Errorf("xpi: failed to get rsa private key of size %d: %w", size, err)
-			return
-		}
 
 		newKey, ok := eeKey.(*rsa.PrivateKey)
 		if !ok {
