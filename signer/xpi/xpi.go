@@ -561,7 +561,7 @@ func (sig *Signature) VerifyWithChainAt(truststore *x509.CertPool, verificationT
 func (sig *Signature) String() string {
 	var buf bytes.Buffer
 	pem.Encode(&buf, &pem.Block{Type: "PKCS7", Bytes: sig.Data})
-	return string(buf.Bytes())
+	return buf.String()
 }
 
 // verifyPKCS7SignatureRoundTrip checks that
