@@ -55,18 +55,6 @@ func mustPEMToECKey(s string) *ecdsa.PrivateKey {
 	return key
 }
 
-func mustPEMToCert(s string) *x509.Certificate {
-	block, _ := pem.Decode([]byte(s))
-	if block == nil {
-		log.Fatalf("Failed to parse certificate PEM")
-	}
-	certX509, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		log.Fatalf("Could not parse X.509 certificate: %v", err)
-	}
-	return certX509
-}
-
 type signOptions struct {
 	commonName                  string
 	extKeyUsages                []x509.ExtKeyUsage
