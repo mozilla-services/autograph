@@ -180,7 +180,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
-			sigresps[i].Signature, err = sig.(signer.Signature).Marshal()
+			sigresps[i].Signature, err = sig.Marshal()
 			if err != nil {
 				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
 				return
@@ -201,7 +201,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
-			sigresps[i].Signature, err = sig.(signer.Signature).Marshal()
+			sigresps[i].Signature, err = sig.Marshal()
 			if err != nil {
 				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
 				return
