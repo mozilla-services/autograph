@@ -117,18 +117,18 @@ func VerifyChain(rootHash string, certs []*x509.Certificate, currentTime time.Ti
 			timeToValid      = cert.NotBefore.Sub(currentTime)
 		)
 		if timeToExpiration < -time.Nanosecond {
-			return fmt.Errorf("Certificate %d %q expired: notAfter=%s",
+			return fmt.Errorf("certificate %d %q expired: notAfter=%s",
 				i, cert.Subject.CommonName, cert.NotAfter)
 		}
 		if timeToValid > time.Nanosecond {
-			return fmt.Errorf("Certificate %d %q is not yet valid: notBefore=%s",
+			return fmt.Errorf("certificate %d %q is not yet valid: notBefore=%s",
 				i, cert.Subject.CommonName, cert.NotBefore)
 		}
 		switch i {
 		case 2: // the last cert is the root
 			err := verifyRoot(rootHash, cert)
 			if err != nil {
-				return fmt.Errorf("Certificate %d %q is root but fails validation: %w",
+				return fmt.Errorf("certificate %d %q is root but fails validation: %w",
 					i, cert.Subject.CommonName, err)
 			}
 			roots.AddCert(cert)
@@ -141,7 +141,7 @@ func VerifyChain(rootHash string, certs []*x509.Certificate, currentTime time.Ti
 			// check that cert is signed by parent
 			err := cert.CheckSignatureFrom(certs[i+1])
 			if err != nil {
-				return fmt.Errorf("Certificate %d %q is not signed by parent certificate %d %q: %v",
+				return fmt.Errorf("certificate %d %q is not signed by parent certificate %d %q: %v",
 					i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName, err)
 			}
 		}
@@ -176,26 +176,26 @@ func VerifyChain(rootHash string, certs []*x509.Certificate, currentTime time.Ti
 func Verify(input, certChain []byte, signature, rootHash string) error {
 	certs, err := ParseChain(certChain)
 	if err != nil {
-		return fmt.Errorf("Error parsing cert chain: %w", err)
+		return fmt.Errorf("error parsing cert chain: %w", err)
 	}
 	// Get the public key from the end-entity (certs[0] is the end entity)
 	key, ok := certs[0].PublicKey.(*ecdsa.PublicKey)
 	if !ok {
-		return fmt.Errorf("Cannot verify EE/leaf cert with non-ECDSA public key type: %T", certs[0].PublicKey)
+		return fmt.Errorf("cannot verify EE/leaf cert with non-ECDSA public key type: %T", certs[0].PublicKey)
 	}
 	// parse the json signature
 	sig, err := Unmarshal(signature)
 	if err != nil {
-		return fmt.Errorf("Error unmarshal content signature: %w", err)
+		return fmt.Errorf("error unmarshal content signature: %w", err)
 	}
 	// make a templated hash
 	if !sig.VerifyData(input, key) {
-		return fmt.Errorf("ECDSA signature verification failed")
+		return fmt.Errorf("ecdsa signature verification failed")
 	}
 
 	err = VerifyChain(rootHash, certs, time.Now())
 	if err != nil {
-		return fmt.Errorf("Error verifying content signature certificate chain: %w", err)
+		return fmt.Errorf("error verifying content signature certificate chain: %w", err)
 	}
 	return nil
 }
