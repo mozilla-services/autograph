@@ -481,11 +481,11 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 // GetPrivKeyHandle returns the hsm handler object id of a key stored in the hsm,
 // or 0 if the key is not stored in the hsm
 func GetPrivKeyHandle(priv crypto.PrivateKey) uint {
-	switch priv.(type) {
+	switch key := priv.(type) {
 	case *crypto11.PKCS11PrivateKeyECDSA:
-		return uint(priv.(*crypto11.PKCS11PrivateKeyECDSA).Handle)
+		return uint(key.Handle)
 	case *crypto11.PKCS11PrivateKeyRSA:
-		return uint(priv.(*crypto11.PKCS11PrivateKeyRSA).Handle)
+		return uint(key.Handle)
 	}
 	return 0
 }
