@@ -116,8 +116,8 @@ func certChainValidityNotifications(certs []*x509.Certificate) (notifications []
 	for i, cert := range certs {
 		var (
 			severity, message string
-			timeToExpiration  = cert.NotAfter.Sub(time.Now())
-			timeToValid       = cert.NotBefore.Sub(time.Now())
+			timeToExpiration  = time.Until(cert.NotAfter)
+			timeToValid       = time.Until(cert.NotBefore)
 		)
 		switch {
 		case timeToValid > time.Nanosecond:
@@ -153,7 +153,7 @@ func certChainValidityNotifications(certs []*x509.Certificate) (notifications []
 //
 func certChainPendingExpiration(certs []*x509.Certificate) error {
 	for i, cert := range certs {
-		timeToExpiration := cert.NotAfter.Sub(time.Now())
+		timeToExpiration := time.Until(cert.NotAfter)
 
 		switch i {
 		case 0:
