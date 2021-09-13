@@ -44,7 +44,7 @@ jobs:
           command: |
             make install-staticcheck staticcheck || true
             make show-lints
-            make -C tools/autograph-monitor staticcheck || true
+            make -C tools/autograph-monitor staticcheck
             make -C verifier/contentsignature staticcheck
 
   unit-test:
