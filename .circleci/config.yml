@@ -45,7 +45,7 @@ jobs:
             make install-staticcheck staticcheck || true
             make show-lints
             make -C tools/autograph-monitor staticcheck || true
-            make -C verifier/contentsignature staticcheck || true
+            make -C verifier/contentsignature staticcheck
 
   unit-test:
     # based on the official golang image with more docker stuff
