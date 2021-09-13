@@ -533,7 +533,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots:            nil,
 			opts:             Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: failed to read META-INF/cose.manifest from signed zip: Error reading ZIP: zip: not a valid zip file",
+				"xpi: failed to read META-INF/cose.manifest from signed zip: error reading ZIP: zip: not a valid zip file",
 			},
 		},
 		{
@@ -833,7 +833,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			}
 		}
 		if !anyMatches {
-			t.Fatalf("verifyCOSESignatures case %q (%d) returned '%v'", testcase.name, i, err)
+			t.Fatalf("verifyCOSESignatures case %q (%d) returned '%v' expected a prefix from %q", testcase.name, i, err, testcase.results)
 		}
 	}
 }

@@ -80,10 +80,10 @@ func (db *Handler) CheckConnectionContext(ctx context.Context) error {
 	var one uint
 	err := db.QueryRowContext(ctx, "SELECT 1").Scan(&one)
 	if err != nil {
-		return fmt.Errorf("Database connection failed: %w", err)
+		return fmt.Errorf("database connection failed: %w", err)
 	}
 	if one != 1 {
-		return fmt.Errorf("Apparently the database doesn't know the meaning of one anymore")
+		return fmt.Errorf("apparently the database doesn't know the meaning of one anymore")
 	}
 	return nil
 }

@@ -11,7 +11,7 @@ import (
 func loadStatsd(conf configuration) (*statsd.Client, error) {
 	statsdClient, err := statsd.NewBuffered(conf.Statsd.Addr, conf.Statsd.Buflen)
 	if err != nil {
-		return nil, fmt.Errorf("Error constructing statsdClient: %w", err)
+		return nil, fmt.Errorf("error constructing statsdClient: %w", err)
 	}
 	statsdClient.Namespace = conf.Statsd.Namespace
 

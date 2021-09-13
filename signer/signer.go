@@ -411,7 +411,7 @@ func (cfg *Configuration) CheckHSMConnection() error {
 	if GetPrivKeyHandle(privKey) != 0 {
 		return nil
 	}
-	return fmt.Errorf("Unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
+	return fmt.Errorf("unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
 }
 
 // MakeKey generates a new key of type keyTpl and returns the priv and public interfaces.

@@ -71,7 +71,7 @@ func formatFilename(filename []byte) (formatted []byte, err error) {
 func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err error) {
 	for _, f := range metafiles {
 		if !f.IsNameValid() {
-			err = fmt.Errorf("Cannot makePKCS7Manifest with metafile at invalid path %q", f.Name)
+			err = fmt.Errorf("cannot makePKCS7Manifest with metafile at invalid path %q", f.Name)
 			return
 		}
 	}
@@ -194,7 +194,7 @@ func (m *Metafile) IsNameValid() bool {
 func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, err error) {
 	for _, f := range metafiles {
 		if !f.IsNameValid() {
-			err = fmt.Errorf("Cannot pack metafile with invalid path %q", f.Name)
+			err = fmt.Errorf("cannot pack metafile with invalid path %q", f.Name)
 			return
 		}
 	}
@@ -451,7 +451,7 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 	zipReader := bytes.NewReader(signedXPI)
 	r, err := zip.NewReader(zipReader, int64(len(signedXPI)))
 	if err != nil {
-		return nil, fmt.Errorf("Error reading ZIP: %w", err)
+		return nil, fmt.Errorf("error reading ZIP: %w", err)
 	}
 
 	for _, f := range r.File {
@@ -459,11 +459,11 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
-				return nil, fmt.Errorf("Error opening file %q in ZIP: %w", filename, err)
+				return nil, fmt.Errorf("error opening file %q in ZIP: %w", filename, err)
 			}
 			data, err := ioutil.ReadAll(rc)
 			if err != nil {
-				return nil, fmt.Errorf("Error reading file %q in ZIP: %w", filename, err)
+				return nil, fmt.Errorf("error reading file %q in ZIP: %w", filename, err)
 			}
 			return data, nil
 		}
@@ -483,18 +483,18 @@ func readXPIContentsToMap(signedXPI []byte) (map[string][]byte, error) {
 	zipReader := bytes.NewReader(signedXPI)
 	r, err := zip.NewReader(zipReader, int64(len(signedXPI)))
 	if err != nil {
-		return nil, fmt.Errorf("Error reading ZIP: %w", err)
+		return nil, fmt.Errorf("error reading ZIP: %w", err)
 	}
 
 	for _, f := range r.File {
 		rc, err := f.Open()
 		defer rc.Close()
 		if err != nil {
-			return nil, fmt.Errorf("Error opening file %q in ZIP: %w", f.Name, err)
+			return nil, fmt.Errorf("error opening file %q in ZIP: %w", f.Name, err)
 		}
 		data, err := ioutil.ReadAll(rc)
 		if err != nil {
-			return nil, fmt.Errorf("Error reading file %q in ZIP: %w", f.Name, err)
+			return nil, fmt.Errorf("error reading file %q in ZIP: %w", f.Name, err)
 		}
 		if _, ok = filenameToContents[f.Name]; ok {
 			return nil, fmt.Errorf("%q occurs twice in ZIP", f.Name)

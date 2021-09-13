@@ -297,7 +297,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		}()
 		select {
 		case <-time.After(hsmHBTimeout):
-			err = fmt.Errorf("Checking HSM connection for signer %s private key timed out", hsmSignerConf.ID)
+			err = fmt.Errorf("checking HSM connection for signer %s private key timed out", hsmSignerConf.ID)
 		case err = <-checkResult:
 		}
 
