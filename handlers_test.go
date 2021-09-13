@@ -649,16 +649,3 @@ func verifyMARSignature(b64Input, b64Sig, b64Key string, sigalg uint32) error {
 	}
 	return margo.VerifySignature(input, sig, sigalg, key)
 }
-
-func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error) {
-	keyBytes, err := base64.StdEncoding.DecodeString(b64PubKey)
-	if err != nil {
-		return pubkey, fmt.Errorf("Failed to parse public key base64: %v", err)
-	}
-	keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
-	if err != nil {
-		return pubkey, fmt.Errorf("Failed to parse public key DER: %v", err)
-	}
-	pubkey = keyInterface.(*ecdsa.PublicKey)
-	return pubkey, nil
-}

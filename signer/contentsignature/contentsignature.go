@@ -184,20 +184,6 @@ func getSignatureLen(mode string) int {
 	return -1
 }
 
-// getSignatureHash returns the name of the hash function used by a given mode,
-// or an empty string if the mode is unknown
-func getSignatureHash(mode string) string {
-	switch mode {
-	case P256ECDSA:
-		return "sha256"
-	case P384ECDSA:
-		return "sha384"
-	case P521ECDSA:
-		return "sha512"
-	}
-	return ""
-}
-
 // getModeFromCurve returns a content signature algorithm name, or an empty string if the mode is unknown
 func (s *ContentSigner) getModeFromCurve() string {
 	switch s.pub.(*ecdsa.PublicKey).Params().Name {

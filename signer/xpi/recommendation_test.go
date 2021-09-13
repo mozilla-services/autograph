@@ -556,10 +556,3 @@ var unsignedWithRec = []byte(
 		"\x54\x05\x00\x03\xCA\x2E\xE6\x5B\x75\x78\x0B\x00\x01\x04\xE8\x03" +
 		"\x00\x00\x04\xE8\x03\x00\x00\x50\x4B\x05\x06\x00\x00\x00\x00\x03" +
 		"\x00\x03\x00\x00\x01\x00\x00\x07\x02\x00\x00\x00\x00")
-
-// this is unsignedWithRec with signed with:
-// go run client.go
-//
-// and converted with:
-// hexdump -v -e '16/1 "_x%02X" "\n"' /tmp/fakeapk/fakeapk.zip | sed 's/_/\\/g; s/\\x  //g; s/.*/    "&"/'
-var signedWithRec = []byte("")
