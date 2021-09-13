@@ -70,6 +70,8 @@ race:
 
 staticcheck:
 	staticcheck -go 1.16 $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
+	# SA1019 is for DSA being deprecated refs: GH #667
+	test 0 -eq $(shell cat /tmp/autograph-staticcheck.txt | grep -Pv 'SA1019' | wc -l)
 
 test:
 	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)
