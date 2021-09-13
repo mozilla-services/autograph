@@ -595,7 +595,10 @@ func verifyAPKSignature(signedAPK []byte) error {
 	)
 	for _, f := range r.File {
 		switch f.Name {
-		case "META-INF/SIGNATURE.SF", "META-INF/APK2_TES.SF":
+		case "META-INF/SIGNATURE.SF",
+			"META-INF/APK2_TES.SF",
+			"META-INF/APK2_LEG.SF",
+			"META-INF/APK2_APK.SF":
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
@@ -605,7 +608,10 @@ func verifyAPKSignature(signedAPK []byte) error {
 			if err != nil {
 				return err
 			}
-		case "META-INF/SIGNATURE.RSA", "META-INF/APK2_TES.RSA":
+		case "META-INF/SIGNATURE.RSA",
+			"META-INF/APK2_TES.RSA",
+			"META-INF/APK2_LEG.RSA",
+			"META-INF/APK2_APK.EC":
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
