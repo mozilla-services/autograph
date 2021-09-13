@@ -163,37 +163,37 @@ func mustChainToCerts(chain string) (certs []*x509.Certificate) {
 
 func Test_verifyContentSignature(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, NormandyDevChain2021)
+		fmt.Fprint(w, NormandyDevChain2021)
 	}))
 	defer ts.Close()
 
 	oneCertChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, NormandyDevChain2021Intermediate)
+		fmt.Fprint(w, NormandyDevChain2021Intermediate)
 	}))
 	defer oneCertChainTestServer.Close()
 
 	rsaLeafChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, string(rsaLeafChain))
+		fmt.Fprint(w, string(rsaLeafChain))
 	}))
 	defer rsaLeafChainTestServer.Close()
 
 	testLeafChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, string(testLeafChain))
+		fmt.Fprint(w, string(testLeafChain))
 	}))
 	defer testLeafChainTestServer.Close()
 
 	testLeafExpiringSoonChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, string(mustCertsToChain([]*x509.Certificate{testLeaf7DaysToExpiration, testInter, testRoot})))
+		fmt.Fprint(w, string(mustCertsToChain([]*x509.Certificate{testLeaf7DaysToExpiration, testInter, testRoot})))
 	}))
 	defer testLeafExpiringSoonChainTestServer.Close()
 
 	testInterExpiringSoonChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, string(mustCertsToChain([]*x509.Certificate{testLeaf, testInter30DaysToExpiration, testRoot})))
+		fmt.Fprint(w, string(mustCertsToChain([]*x509.Certificate{testLeaf, testInter30DaysToExpiration, testRoot})))
 	}))
 	defer testInterExpiringSoonChainTestServer.Close()
 
 	testRootExpiringSoonChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, string(mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot16DaysToExpiration})))
+		fmt.Fprint(w, string(mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot16DaysToExpiration})))
 	}))
 	defer testRootExpiringSoonChainTestServer.Close()
 

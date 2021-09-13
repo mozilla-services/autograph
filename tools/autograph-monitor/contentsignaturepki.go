@@ -134,9 +134,9 @@ func certChainValidityNotifications(certs []*x509.Certificate) (notifications []
 			message = fmt.Sprintf("Certificate %d for %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
 		default:
 			severity = "info"
-			message = fmt.Sprintf(fmt.Sprintf("Certificate %d %q is valid from %s to %s", i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter))
+			message = fmt.Sprintf("Certificate %d %q is valid from %s to %s", i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter)
 		}
-		log.Printf(message)
+		log.Println(message)
 		notifications = append(notifications, &CertNotification{
 			CN:       cert.Subject.CommonName,
 			Severity: severity,
