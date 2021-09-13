@@ -119,7 +119,7 @@ func Handler() (err error) {
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1621133
 		t1 := time.Now()
 		runtime.GC()
-		log.Println("Garbage collected in", time.Now().Sub(t1))
+		log.Println("Garbage collected in", time.Since(t1))
 	}()
 	return monitor()
 }
