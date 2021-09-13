@@ -300,13 +300,11 @@ func newAutographer(cachesize int) (a *autographer) {
 // enableDebug enables debug logging
 func (a *autographer) enableDebug() {
 	a.debug = true
-	return
 }
 
 // disableDebug disables debug logging
 func (a *autographer) disableDebug() {
 	a.debug = false
-	return
 }
 
 // getAuthByID returns an authorization if it exists or nil. Call

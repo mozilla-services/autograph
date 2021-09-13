@@ -34,5 +34,4 @@ func httpError(w http.ResponseWriter, r *http.Request, errorCode int, errorMessa
 		r.Body.Close()
 	}
 	http.Error(w, msg, errorCode)
-	return
 }
