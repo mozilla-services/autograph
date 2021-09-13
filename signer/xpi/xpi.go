@@ -427,6 +427,10 @@ func (o *Options) CN(s *XPISigner) (cn string, err error) {
 func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 	if o == nil {
 		err = fmt.Errorf("xpi: cannot get COSE Algorithms from nil Options")
+		return
+	}
+	if o.COSEAlgorithms == nil {
+		o.COSEAlgorithms = []string{}
 	}
 
 	for _, algStr := range o.COSEAlgorithms {
@@ -444,6 +448,10 @@ func (o *Options) Algorithms() (algs []*cose.Algorithm, err error) {
 func (o *Options) RecommendationStates(allowedRecommendationStates map[string]bool) (states []string, err error) {
 	if o == nil {
 		err = fmt.Errorf("xpi: cannot get recommendation states from nil Options")
+		return
+	}
+	if o.Recommendations == nil {
+		o.Recommendations = []string{}
 	}
 
 	for _, rec := range o.Recommendations {
