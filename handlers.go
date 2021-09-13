@@ -305,7 +305,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 			log.WithFields(log.Fields{
 				"rid":     rid,
 				"t":       int32(time.Since(hsmHeartbeatStartTs) / time.Millisecond),
-				"timeout": fmt.Sprintf("%s", hsmHBTimeout),
+				"timeout": hsmHBTimeout.String(),
 			}).Info("HSM heartbeat completed successfully")
 			result["hsmAccessible"] = true
 			status = http.StatusOK
@@ -328,7 +328,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 			log.WithFields(log.Fields{
 				"rid":     rid,
 				"t":       int32(time.Since(dbHeartbeatStartTs) / time.Millisecond),
-				"timeout": fmt.Sprintf("%s", a.heartbeatConf.DBCheckTimeout),
+				"timeout": a.heartbeatConf.DBCheckTimeout.String(),
 			}).Info("DB heartbeat completed successfully")
 			result["dbAccessible"] = true
 		} else {
