@@ -122,7 +122,7 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 
 	// generate the manifest file by calculating a sha1 and sha256 hashes for each zip entry
 	mw := bytes.NewBuffer(manifest)
-	manifest = []byte(fmt.Sprintf("Manifest-Version: 1.0\n\n"))
+	manifest = []byte("Manifest-Version: 1.0\n\n")
 
 	for _, f := range r.File {
 		if isJARSignatureFile(f.Name) || isCOSESignatureFile(f.Name) {
