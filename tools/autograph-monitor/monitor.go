@@ -147,7 +147,7 @@ func monitor() (err error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("Request failed with %s: %s", resp.Status, resp.Body)
+		return fmt.Errorf("request failed with %s: %s", resp.Status, resp.Body)
 	}
 
 	x5uClient := defaultX5UClient()
