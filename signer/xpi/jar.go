@@ -457,10 +457,10 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 	for _, f := range r.File {
 		if f.Name == filename {
 			rc, err := f.Open()
-			defer rc.Close()
 			if err != nil {
 				return nil, fmt.Errorf("error opening file %q in ZIP: %w", filename, err)
 			}
+			defer rc.Close()
 			data, err := ioutil.ReadAll(rc)
 			if err != nil {
 				return nil, fmt.Errorf("error reading file %q in ZIP: %w", filename, err)
@@ -488,10 +488,10 @@ func readXPIContentsToMap(signedXPI []byte) (map[string][]byte, error) {
 
 	for _, f := range r.File {
 		rc, err := f.Open()
-		defer rc.Close()
 		if err != nil {
 			return nil, fmt.Errorf("error opening file %q in ZIP: %w", f.Name, err)
 		}
+		defer rc.Close()
 		data, err := ioutil.ReadAll(rc)
 		if err != nil {
 			return nil, fmt.Errorf("error reading file %q in ZIP: %w", f.Name, err)
