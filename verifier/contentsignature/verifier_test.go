@@ -1366,11 +1366,7 @@ func Test_VerifyChain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var (
-				err error
-			)
-
-			err = VerifyChain(tt.args.rootHash, tt.args.certs, tt.args.currentTime)
+			err := VerifyChain(tt.args.rootHash, tt.args.certs, tt.args.currentTime)
 
 			if tt.wantErr == false && err != nil { // unexpected error
 				t.Errorf("VerifyChain() error = %v, wantErr %v", err, tt.wantErr)
