@@ -42,7 +42,7 @@ jobs:
       - run:
           name: run staticcheck
           command: |
-            make install-staticcheck staticcheck || true
+            make install-staticcheck staticcheck
             make show-lints
             make -C tools/autograph-monitor staticcheck
             make -C verifier/contentsignature staticcheck
