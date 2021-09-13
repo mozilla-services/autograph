@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/mozilla-services/autograph/formats"
@@ -88,10 +89,12 @@ func TestMonitorPass(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to base64 decode signed file")
 			}
-			err = verifyAPKSignature(signedfile)
-			if err != nil {
-				t.Logf("%+v", response)
-				t.Fatalf("verification of monitoring response failed: %v", err)
+			// TODO: add support for EC keys and verification to mozilla/pkcs7
+			if !strings.HasPrefix(response.SignerID, "apk_cert_with_ecdsa") {
+				err = verifyAPKSignature(signedfile)
+				if err != nil {
+					t.Fatalf("verification of monitoring response failed: %v", err)
+				}
 			}
 		case mar.Type:
 			err = verifyMARSignature(base64.StdEncoding.EncodeToString(MonitoringInputData),
