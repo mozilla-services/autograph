@@ -99,7 +99,6 @@ func (db *Handler) Monitor(pollInterval time.Duration, quit chan bool) {
 			err := db.CheckConnectionContext(context.Background())
 			if err != nil {
 				log.Error(err)
-				break
 			}
 		case <-quit:
 			log.Info("Shutting down DB monitor")
