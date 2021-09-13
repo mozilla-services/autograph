@@ -311,7 +311,7 @@ func TestRecommendationMarshalsAndUnmarshalsToJSON(t *testing.T) {
 			t.Fatalf("failed to marshal recommendation. Got err: %q", err)
 		}
 
-		rec, err = UnmarshalRecommendation(recFileBytes)
+		_, err = UnmarshalRecommendation(recFileBytes)
 		if err != nil {
 			t.Fatalf("failed to unmarshal recommendation file back to rec. Got err: %q", err)
 		}
@@ -363,6 +363,9 @@ func TestRecommendationNotIncludedInOtherSignerModes(t *testing.T) {
 				PKCS7Digest: "SHA1",
 			}
 			signedXPI, err := s.SignFile(input, signOptions)
+			if err != nil {
+				t.Fatalf("signer %q in mode %q failed to sign file %q", tc.ID, tc.Mode, err)
+			}
 			_, err = readFileFromZIP(signedXPI, s.recommendationFilePath)
 			if err == nil {
 				t.Fatalf("signer %q in mode %q did not remove recommendations file at %q", tc.ID, tc.Mode, s.recommendationFilePath)

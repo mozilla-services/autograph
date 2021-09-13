@@ -112,7 +112,7 @@ func TestDuplicateNonce(t *testing.T) {
 	authheader := getAuthHeader(req, auth.ID, auth.Key, sha256.New, id(), "application/json", body)
 	req.Header.Set("Authorization", authheader)
 	// run it once
-	_, _, err = ag.authorizeHeader(req)
+	_, _, _ = ag.authorizeHeader(req)
 	// and run it twice
 	_, _, err = ag.authorizeHeader(req)
 	if err == nil {

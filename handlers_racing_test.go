@@ -196,6 +196,10 @@ func TestSignaturePass(t *testing.T) {
 							i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
 					}
 					err = marFile.VerifySignature(key)
+					if err != nil {
+						t.Fatalf("in test case %d on endpoint %q, error verifying mar signature '%v' in response %d;\nrequest was: %+v\nresponse was: %+v",
+							i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
+					}
 				default:
 					err = verifyMARSignature(testcase.signaturerequests[j].Input, response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
 				}

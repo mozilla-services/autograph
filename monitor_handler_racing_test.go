@@ -60,27 +60,51 @@ func TestMonitorPass(t *testing.T) {
 				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response,
 				"/__monitor__")
+			if err != nil {
+				t.Logf("%+v", response)
+				t.Fatalf("verification of monitoring response failed: %v", err)
+			}
 		case contentsignaturepki.Type:
 			body, _, err := contentsignaturepki.GetX5U(&http.Client{}, response.X5U)
 			if err != nil {
 				t.Fatal(err)
 			}
 			err = csigverifier.Verify(MonitoringInputData, body, response.Signature, autographDevRootHash)
+			if err != nil {
+				t.Logf("%+v", response)
+				t.Fatalf("verification of monitoring response failed: %v", err)
+			}
 		case xpi.Type:
 			err = verifyXPISignature(
 				base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature)
+			if err != nil {
+				t.Logf("%+v", response)
+				t.Fatalf("verification of monitoring response failed: %v", err)
+			}
 		case apk2.Type:
 			signedfile, err := base64.StdEncoding.DecodeString(response.SignedFile)
 			if err != nil {
 				t.Fatalf("failed to base64 decode signed file")
 			}
 			err = verifyAPKSignature(signedfile)
+			if err != nil {
+				t.Logf("%+v", response)
+				t.Fatalf("verification of monitoring response failed: %v", err)
+			}
 		case mar.Type:
 			err = verifyMARSignature(base64.StdEncoding.EncodeToString(MonitoringInputData),
 				response.Signature, response.PublicKey, margo.SigAlgRsaPkcs1Sha384)
+			if err != nil {
+				t.Logf("%+v", response)
+				t.Fatalf("verification of monitoring response failed: %v", err)
+			}
 		case genericrsa.Type:
 			err = genericrsa.VerifyGenericRsaSignatureResponse(MonitoringInputData, response)
+			if err != nil {
+				t.Logf("%+v", response)
+				t.Fatalf("verification of monitoring response failed: %v", err)
+			}
 		case gpg2.Type:
 			// we don't verify pgp signatures. I don't feel good about this, but the openpgp
 			// package is very much a pain to deal with and requires putting the public key
@@ -88,10 +112,6 @@ func TestMonitorPass(t *testing.T) {
 			continue
 		default:
 			t.Fatalf("unsupported signature type %q", response.Type)
-		}
-		if err != nil {
-			t.Logf("%+v", response)
-			t.Fatalf("verification of monitoring response failed: %v", err)
 		}
 	}
 }
