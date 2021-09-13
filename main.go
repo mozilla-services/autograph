@@ -317,7 +317,7 @@ func (a *autographer) getAuthByID(id string) (authorization, error) {
 // signals and run signer AtExit functions
 func (a *autographer) startCleanupHandler() {
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		sig := <-c
