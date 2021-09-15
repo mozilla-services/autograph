@@ -199,12 +199,12 @@ func TestSignaturePass(t *testing.T) {
 						t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v",
 							i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
 					}
-					key, err := x509.ParsePKIXPublicKey(rawKey)
+					pubkey, err := x509.ParsePKIXPublicKey(rawKey)
 					if err != nil {
 						t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v",
 							i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
 					}
-					err = marFile.VerifySignature(key)
+					err = marFile.VerifySignature(pubkey)
 					if err != nil {
 						t.Fatalf("in test case %d on endpoint %q, error verifying mar signature '%v' in response %d;\nrequest was: %+v\nresponse was: %+v",
 							i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
