@@ -126,7 +126,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	if a.debug {
 		fmt.Printf("signature request\n-----------------\n%s\n", body)
 	}
-	sigresps := make([]formats.SignatureResponse, len(sigreqs))
+	sigReqsCount := len(sigreqs)
+	sigresps := make([]formats.SignatureResponse, sigReqsCount)
 	// Each signature requested in the http request body is processed individually.
 	// For each, a signer is looked up, and used to compute a raw signature
 	// the signature is then encoded appropriately, and added to the response slice
@@ -249,7 +250,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(respdata)
-	log.WithFields(log.Fields{"rid": rid}).Info("signing request completed successfully")
+	log.WithFields(log.Fields{
+		"rid":                  rid,
+		"num_signing_requests": sigReqsCount,
+	}).Info("signing request completed successfully")
 }
 
 // handleLBHeartbeat returns a simple message indicating that the API is alive and well
