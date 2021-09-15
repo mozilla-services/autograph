@@ -92,7 +92,7 @@ func (sig *ContentSignature) Marshal() (str string, err error) {
 	copy(rs[Rstart:Rend], sig.R.Bytes())
 	copy(rs[Sstart:Send], sig.S.Bytes())
 	encodedsig := base64.RawURLEncoding.EncodeToString(rs)
-	return fmt.Sprintf("%s", encodedsig), nil
+	return encodedsig, nil
 }
 
 // Unmarshal parses a base64 url encoded content signature

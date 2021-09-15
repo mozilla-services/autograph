@@ -180,7 +180,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
-			sigresps[i].Signature, err = sig.(signer.Signature).Marshal()
+			sigresps[i].Signature, err = sig.Marshal()
 			if err != nil {
 				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
 				return
@@ -201,7 +201,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
-			sigresps[i].Signature, err = sig.(signer.Signature).Marshal()
+			sigresps[i].Signature, err = sig.Marshal()
 			if err != nil {
 				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
 				return
@@ -297,7 +297,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		}()
 		select {
 		case <-time.After(hsmHBTimeout):
-			err = fmt.Errorf("Checking HSM connection for signer %s private key timed out", hsmSignerConf.ID)
+			err = fmt.Errorf("checking HSM connection for signer %s private key timed out", hsmSignerConf.ID)
 		case err = <-checkResult:
 		}
 
@@ -305,7 +305,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 			log.WithFields(log.Fields{
 				"rid":     rid,
 				"t":       int32(time.Since(hsmHeartbeatStartTs) / time.Millisecond),
-				"timeout": fmt.Sprintf("%s", hsmHBTimeout),
+				"timeout": hsmHBTimeout.String(),
 			}).Info("HSM heartbeat completed successfully")
 			result["hsmAccessible"] = true
 			status = http.StatusOK
@@ -328,7 +328,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 			log.WithFields(log.Fields{
 				"rid":     rid,
 				"t":       int32(time.Since(dbHeartbeatStartTs) / time.Millisecond),
-				"timeout": fmt.Sprintf("%s", a.heartbeatConf.DBCheckTimeout),
+				"timeout": a.heartbeatConf.DBCheckTimeout.String(),
 			}).Info("DB heartbeat completed successfully")
 			result["dbAccessible"] = true
 		} else {

@@ -279,7 +279,7 @@ func (c *configuration) loadFromFile(path string) error {
 	}
 
 	if c.Heartbeat.DBCheckTimeout == time.Duration(int64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(int64(0)) {
-		return fmt.Errorf("Missing required heartbeat config section with non-zero timeouts")
+		return fmt.Errorf("missing required heartbeat config section with non-zero timeouts")
 	}
 	return nil
 }
@@ -300,13 +300,11 @@ func newAutographer(cachesize int) (a *autographer) {
 // enableDebug enables debug logging
 func (a *autographer) enableDebug() {
 	a.debug = true
-	return
 }
 
 // disableDebug disables debug logging
 func (a *autographer) disableDebug() {
 	a.debug = false
-	return
 }
 
 // getAuthByID returns an authorization if it exists or nil. Call
@@ -319,7 +317,7 @@ func (a *autographer) getAuthByID(id string) (authorization, error) {
 // signals and run signer AtExit functions
 func (a *autographer) startCleanupHandler() {
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		sig := <-c

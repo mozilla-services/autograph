@@ -23,9 +23,9 @@ func verifyMARSignature(b64Sig, b64Key string) error {
 		return err
 	}
 	sigalg := margo.SigAlgRsaPkcs1Sha384
-	switch key.(type) {
+	switch pubKey := key.(type) {
 	case *ecdsa.PublicKey:
-		switch key.(*ecdsa.PublicKey).Params().Name {
+		switch pubKey.Params().Name {
 		case elliptic.P256().Params().Name:
 			sigalg = margo.SigAlgEcdsaP256Sha256
 		case elliptic.P384().Params().Name:

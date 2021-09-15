@@ -595,7 +595,10 @@ func verifyAPKSignature(signedAPK []byte) error {
 	)
 	for _, f := range r.File {
 		switch f.Name {
-		case "META-INF/SIGNATURE.SF", "META-INF/APK2_TES.SF":
+		case "META-INF/SIGNATURE.SF",
+			"META-INF/APK2_TES.SF",
+			"META-INF/APK2_LEG.SF",
+			"META-INF/APK2_APK.SF":
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
@@ -605,7 +608,10 @@ func verifyAPKSignature(signedAPK []byte) error {
 			if err != nil {
 				return err
 			}
-		case "META-INF/SIGNATURE.RSA", "META-INF/APK2_TES.RSA":
+		case "META-INF/SIGNATURE.RSA",
+			"META-INF/APK2_TES.RSA",
+			"META-INF/APK2_LEG.RSA",
+			"META-INF/APK2_APK.EC":
 			rc, err := f.Open()
 			defer rc.Close()
 			if err != nil {
@@ -648,17 +654,4 @@ func verifyMARSignature(b64Input, b64Sig, b64Key string, sigalg uint32) error {
 		return err
 	}
 	return margo.VerifySignature(input, sig, sigalg, key)
-}
-
-func parsePublicKeyFromB64(b64PubKey string) (pubkey *ecdsa.PublicKey, err error) {
-	keyBytes, err := base64.StdEncoding.DecodeString(b64PubKey)
-	if err != nil {
-		return pubkey, fmt.Errorf("Failed to parse public key base64: %v", err)
-	}
-	keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
-	if err != nil {
-		return pubkey, fmt.Errorf("Failed to parse public key DER: %v", err)
-	}
-	pubkey = keyInterface.(*ecdsa.PublicKey)
-	return pubkey, nil
 }

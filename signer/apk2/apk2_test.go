@@ -107,9 +107,6 @@ func TestConfig(t *testing.T) {
 
 	type fields struct {
 		Configuration signer.Configuration
-		minSdkVersion string
-		pkcs8Key      []byte
-		v3Enabled     bool
 	}
 	tests := []struct {
 		name   string

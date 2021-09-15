@@ -144,6 +144,9 @@ func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 
 	// sign input data with bad option
 	sig, err := s.SignData(input, struct{ ID string }{ID: "foo@bar.net"})
+	if err != nil {
+		t.Fatalf("failed to sign data: %v", err)
+	}
 	pkcs7Sig := sig.(*Signature).String()
 
 	// write the signature to a temp file
@@ -375,6 +378,9 @@ func TestMarshalUnfinishedSignature(t *testing.T) {
 	}
 	// sign input data with bad option
 	sig, err := s.SignData(input, struct{ ID string }{ID: "foo@bar.net"})
+	if err != nil {
+		t.Fatalf("failed to sign data: %v", err)
+	}
 	sig.(*Signature).Finished = false
 	_, err = sig.Marshal()
 	if err == nil {
@@ -395,6 +401,9 @@ func TestMarshalEmptySignature(t *testing.T) {
 	}
 	// sign input data with bad option
 	sig, err := s.SignData(input, struct{ ID string }{ID: "foo@bar.net"})
+	if err != nil {
+		t.Fatalf("failed to sign data: %v", err)
+	}
 	sig.(*Signature).Data = []byte("")
 	_, err = sig.Marshal()
 	if err == nil {
@@ -437,6 +446,9 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 	}
 	// sign input data with bad option
 	sig, err := s.SignData(input, struct{ ID string }{ID: "foo@bar.net"})
+	if err != nil {
+		t.Fatalf("failed to sign data: %v", err)
+	}
 	sig.(*Signature).Finished = false
 	err = sig.(*Signature).VerifyWithChain(nil)
 	if err == nil {

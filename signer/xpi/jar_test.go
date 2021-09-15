@@ -142,10 +142,10 @@ func TestRepack(t *testing.T) {
 	var fileCount int
 	for _, f := range r.File {
 		rc, err := f.Open()
-		defer rc.Close()
 		if err != nil {
 			t.Fatal(err)
 		}
+		defer rc.Close()
 		data, err := ioutil.ReadAll(rc)
 		if err != nil {
 			t.Fatal(err)
@@ -206,10 +206,10 @@ func TestRepackEmptyCOSE(t *testing.T) {
 	var fileCount int
 	for _, f := range r.File {
 		rc, err := f.Open()
-		defer rc.Close()
 		if err != nil {
 			t.Fatal(err)
 		}
+		defer rc.Close()
 		data, err := ioutil.ReadAll(rc)
 		if err != nil {
 			t.Fatal(err)

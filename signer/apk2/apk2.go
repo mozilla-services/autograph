@@ -238,5 +238,5 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 func (sig *Signature) String() string {
 	var buf bytes.Buffer
 	pem.Encode(&buf, &pem.Block{Type: "PKCS7", Bytes: sig.Data})
-	return string(buf.Bytes())
+	return buf.String()
 }

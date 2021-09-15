@@ -7,7 +7,6 @@
 package main
 
 import (
-	"crypto/ecdsa"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -18,10 +17,9 @@ import (
 )
 
 var (
-	ag     *autographer
-	mo     *monitor
-	pubkey *ecdsa.PublicKey
-	conf   configuration
+	ag   *autographer
+	mo   *monitor
+	conf configuration
 )
 
 func TestMain(m *testing.M) {

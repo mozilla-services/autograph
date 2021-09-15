@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-services/autograph/database github.com/mozilla-services/autograph/formats github.com/mozilla-services/autograph/signer github.com/mozilla-services/autograph/signer/apk2 github.com/mozilla-services/autograph/signer/contentsignature github.com/mozilla-services/autograph/signer/contentsignaturepki github.com/mozilla-services/autograph/signer/genericrsa github.com/mozilla-services/autograph/signer/gpg2 github.com/mozilla-services/autograph/signer/mar github.com/mozilla-services/autograph/signer/xpi github.com/mozilla-services/autograph/verifier/contentsignature
 
-all: generate test vet lint install
+all: generate test vet lint staticcheck install
 
 # update the vendored version of the wait-for-it.sh script
 install-wait-for-it:
@@ -26,7 +26,7 @@ install-staticcheck:
 install-go-mod-upgrade:
 	go get -u github.com/oligot/go-mod-upgrade
 
-install-dev-deps: install-golint install-cover install-goveralls install-go-mod-upgrade
+install-dev-deps: install-golint install-staticcheck install-cover install-goveralls install-go-mod-upgrade
 
 install:
 	go install github.com/mozilla-services/autograph
@@ -45,9 +45,9 @@ lint:
 check-no-crypto11-in-signers:
 	test 0 -eq $(shell grep -Ri crypto11 signer/*/ | tee /tmp/autograph-crypto11-check.txt | wc -l)
 
-show-lint:
-	cat /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
-	rm -f /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt
+show-lints:
+	-cat /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt /tmp/autograph-staticcheck.txt
+	-rm -f /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt /tmp/autograph-staticcheck.txt
 
 vet:
 	go vet $(PACKAGE_NAMES)
@@ -69,7 +69,10 @@ race:
 	go test -race -covermode=atomic -count=1 $(PACKAGE_NAMES)
 
 staticcheck:
-	staticcheck $(PACKAGE_NAMES)
+	staticcheck -go 1.16 $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
+	# ignore errors in pkgs
+	# ignore SA1019 for DSA being deprecated refs: GH #667
+	test 0 -eq $(shell cat /tmp/autograph-staticcheck.txt | grep -Pv '^/go/pkg/mod/|SA1019' | wc -l)
 
 test:
 	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)

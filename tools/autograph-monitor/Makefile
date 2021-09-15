@@ -17,6 +17,8 @@ race:
 	go test -race -covermode=atomic -count=1 .
 lint:
 	golint *.go
+staticcheck:
+	staticcheck -go 1.16 *.go
 vet:
 	go vet *.go
 clean:

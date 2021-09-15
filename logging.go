@@ -24,7 +24,7 @@ func logRequest() Middleware {
 			rid := getRequestID(r)
 			// calculate the processing time
 			t1 := getRequestStartTime(r)
-			procTs := time.Now().Sub(t1)
+			procTs := time.Since(t1)
 			log.WithFields(log.Fields{
 				"remoteAddress":      r.RemoteAddr,
 				"remoteAddressChain": "[" + r.Header.Get("X-Forwarded-For") + "]",

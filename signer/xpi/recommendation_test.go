@@ -311,7 +311,7 @@ func TestRecommendationMarshalsAndUnmarshalsToJSON(t *testing.T) {
 			t.Fatalf("failed to marshal recommendation. Got err: %q", err)
 		}
 
-		rec, err = UnmarshalRecommendation(recFileBytes)
+		_, err = UnmarshalRecommendation(recFileBytes)
 		if err != nil {
 			t.Fatalf("failed to unmarshal recommendation file back to rec. Got err: %q", err)
 		}
@@ -363,6 +363,9 @@ func TestRecommendationNotIncludedInOtherSignerModes(t *testing.T) {
 				PKCS7Digest: "SHA1",
 			}
 			signedXPI, err := s.SignFile(input, signOptions)
+			if err != nil {
+				t.Fatalf("signer %q in mode %q failed to sign file %q", tc.ID, tc.Mode, err)
+			}
 			_, err = readFileFromZIP(signedXPI, s.recommendationFilePath)
 			if err == nil {
 				t.Fatalf("signer %q in mode %q did not remove recommendations file at %q", tc.ID, tc.Mode, s.recommendationFilePath)
@@ -556,10 +559,3 @@ var unsignedWithRec = []byte(
 		"\x54\x05\x00\x03\xCA\x2E\xE6\x5B\x75\x78\x0B\x00\x01\x04\xE8\x03" +
 		"\x00\x00\x04\xE8\x03\x00\x00\x50\x4B\x05\x06\x00\x00\x00\x00\x03" +
 		"\x00\x03\x00\x00\x01\x00\x00\x07\x02\x00\x00\x00\x00")
-
-// this is unsignedWithRec with signed with:
-// go run client.go
-//
-// and converted with:
-// hexdump -v -e '16/1 "_x%02X" "\n"' /tmp/fakeapk/fakeapk.zip | sed 's/_/\\/g; s/\\x  //g; s/.*/    "&"/'
-var signedWithRec = []byte("")

@@ -116,8 +116,8 @@ func certChainValidityNotifications(certs []*x509.Certificate) (notifications []
 	for i, cert := range certs {
 		var (
 			severity, message string
-			timeToExpiration  = cert.NotAfter.Sub(time.Now())
-			timeToValid       = cert.NotBefore.Sub(time.Now())
+			timeToExpiration  = time.Until(cert.NotAfter)
+			timeToValid       = time.Until(cert.NotBefore)
 		)
 		switch {
 		case timeToValid > time.Nanosecond:
@@ -134,9 +134,9 @@ func certChainValidityNotifications(certs []*x509.Certificate) (notifications []
 			message = fmt.Sprintf("Certificate %d for %q expires in less than 30 days: notAfter=%s", i, cert.Subject.CommonName, cert.NotAfter)
 		default:
 			severity = "info"
-			message = fmt.Sprintf(fmt.Sprintf("Certificate %d %q is valid from %s to %s", i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter))
+			message = fmt.Sprintf("Certificate %d %q is valid from %s to %s", i, cert.Subject.CommonName, cert.NotBefore, cert.NotAfter)
 		}
-		log.Printf(message)
+		log.Println(message)
 		notifications = append(notifications, &CertNotification{
 			CN:       cert.Subject.CommonName,
 			Severity: severity,
@@ -153,7 +153,7 @@ func certChainValidityNotifications(certs []*x509.Certificate) (notifications []
 //
 func certChainPendingExpiration(certs []*x509.Certificate) error {
 	for i, cert := range certs {
-		timeToExpiration := cert.NotAfter.Sub(time.Now())
+		timeToExpiration := time.Until(cert.NotAfter)
 
 		switch i {
 		case 0:
