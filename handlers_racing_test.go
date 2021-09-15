@@ -183,9 +183,17 @@ func TestSignaturePass(t *testing.T) {
 				case "/sign/file":
 					// use the margo pkg to calculate the signable block of the mar file
 					// as input for the signature verification
-					rawInput, _ := base64.StdEncoding.DecodeString(testcase.signaturerequests[j].Input)
+					rawInput, err := base64.StdEncoding.DecodeString(testcase.signaturerequests[j].Input)
+					if err != nil {
+						t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v failed to decode input",
+							i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
+					}
 					var marFile margo.File
-					margo.Unmarshal(rawInput, &marFile)
+					err = margo.Unmarshal(rawInput, &marFile)
+					if err != nil {
+						t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v failed to unmarshal mar sig",
+							i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
+					}
 					rawKey, err := base64.StdEncoding.DecodeString(response.PublicKey)
 					if err != nil {
 						t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v",
