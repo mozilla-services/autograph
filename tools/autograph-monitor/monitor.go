@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -147,7 +148,11 @@ func monitor() (err error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("request failed with %s: %s", resp.Status, resp.Body)
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("error reading failed monitor response body: %s", err)
+		}
+		return fmt.Errorf("monitor request failed with status %s and body: %s", resp.Status, body)
 	}
 
 	x5uClient := defaultX5UClient()
