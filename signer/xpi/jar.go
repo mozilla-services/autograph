@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
@@ -245,6 +246,15 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 		_, err = fw.Write(data)
 		if err != nil {
 			return
+		}
+		if f.Name == webextManifestPath {
+			addonID, version, err := extractAddonIDAndVersionFromWebextManifest(data)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"addon_id":      addonID,
+					"addon_version": version,
+				}).Infof("repacking addon")
+			}
 		}
 		rc.Close()
 	}
@@ -622,4 +632,39 @@ func verifyAndCountManifest(signedXPI []byte, manifestPath string) (int, int, er
 
 	}
 	return len(filenameToContents), len(manifestEntryNames), nil
+}
+
+// extractAddonIDAndVersionFromWebextManifest unmarshals an addon
+// manifest.json and returns the addon ID and version.
+//
+// It returns an error for invalid JSON, and may either or both of ID
+// and version as empty strings.
+//
+// In jq filter syntax, it looks for .version and
+// .browser_specific_settings.gecko.id or .applications.gecko.id if a
+// browser_specific_settings ID isn't found.
+func extractAddonIDAndVersionFromWebextManifest(manifestBytes []byte) (addonID string, version string, err error) {
+	var manifest struct {
+		Version      string `json:"version"`
+		Applications struct {
+			Gecko struct {
+				ID string `json:"id"`
+			} `json:"gecko"`
+		} `json:"applications"`
+		BrowserSpecificSettings struct {
+			Gecko struct {
+				ID string `json:"id"`
+			} `json:"gecko"`
+		} `json:"browser_specific_settings"`
+	}
+	err = json.Unmarshal(manifestBytes, &manifest)
+	if err != nil {
+		return
+	}
+	if manifest.BrowserSpecificSettings.Gecko.ID != "" {
+		addonID = manifest.BrowserSpecificSettings.Gecko.ID
+	} else if manifest.Applications.Gecko.ID != "" {
+		addonID = manifest.Applications.Gecko.ID
+	}
+	return addonID, manifest.Version, nil
 }

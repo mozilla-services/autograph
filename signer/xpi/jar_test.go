@@ -345,6 +345,143 @@ func TestRepackJARWithMetafilesValidatesMetafileName(t *testing.T) {
 	}
 }
 
+func TestExtractAddonIDAndVersionFromWebextManifest(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name            string
+		addonBytes      []byte
+		manifestBytes   []byte
+		expectedErrStr  string
+		expectedID      string
+		expectedVersion string
+	}{
+		{
+			name:           "empty manifest",
+			expectedErrStr: "unexpected end of JSON input",
+		},
+		{
+			name:           "invalid JSON",
+			manifestBytes:  []byte("{"),
+			expectedErrStr: "unexpected end of JSON input",
+		},
+		{
+			name:           "only int version in JSON",
+			manifestBytes:  []byte("{\"version\":42}"),
+			expectedErrStr: "json: cannot unmarshal number into Go struct field .version of type string",
+		},
+		{
+			name:            "only str version in JSON",
+			manifestBytes:   []byte("{\"version\":\"42\"}"),
+			expectedErrStr:  "",
+			expectedID:      "",
+			expectedVersion: "42",
+		},
+		{
+			name:            "only ID in JSON",
+			manifestBytes:   []byte("{\"browser_specific_settings\":{\"gecko\":{\"id\":\"foo\"}}}"),
+			expectedErrStr:  "",
+			expectedID:      "foo",
+			expectedVersion: "",
+		},
+		{
+			name:            "empty browser_specific_settings in JSON",
+			manifestBytes:   []byte("{\"browser_specific_settings\":{}}"),
+			expectedErrStr:  "",
+			expectedID:      "",
+			expectedVersion: "",
+		},
+		{
+			name:            "empty browser_specific_settings.gecko in JSON",
+			manifestBytes:   []byte("{\"browser_specific_settings\":{\"gecko\":{}}}"),
+			expectedErrStr:  "",
+			expectedID:      "",
+			expectedVersion: "",
+		},
+		{
+			name:            "empty str for browser_specific_settings.gecko.id in JSON",
+			manifestBytes:   []byte("{\"browser_specific_settings\":{\"gecko\":{\"id\":\"\"}}}"),
+			expectedErrStr:  "",
+			expectedID:      "",
+			expectedVersion: "",
+		},
+		{
+			name:            "empty applications in JSON",
+			manifestBytes:   []byte("{\"applications\":{}}"),
+			expectedErrStr:  "",
+			expectedID:      "",
+			expectedVersion: "",
+		},
+		{
+			name:            "empty applications.gecko in JSON",
+			manifestBytes:   []byte("{\"applications\":{\"gecko\":{}}}"),
+			expectedErrStr:  "",
+			expectedID:      "",
+			expectedVersion: "",
+		},
+		{
+			name:            "empty str for applications.gecko.id in JSON",
+			manifestBytes:   []byte("{\"applications\":{\"gecko\":{\"id\":\"\"}}}"),
+			expectedErrStr:  "",
+			expectedID:      "",
+			expectedVersion: "",
+		},
+		{
+			name:            "applications.gecko.id set in JSON",
+			manifestBytes:   []byte("{\"applications\":{\"gecko\":{\"id\":\"addon@example.com\"}}}"),
+			expectedErrStr:  "",
+			expectedID:      "addon@example.com",
+			expectedVersion: "",
+		},
+		{
+			// addons-linter will reject having both set for AMO web-ext signing
+			name:            "version with applications.gecko.id and browser_specific_settings.gecko.id both set in JSON prefers browser_specific_settings id",
+			manifestBytes:   []byte("{\"applications\":{\"gecko\":{\"id\":\"addon@example.com\"}},\"browser_specific_settings\":{\"gecko\":{\"id\":\"{5ae54d6f-bcb2-48ec-b98c-7a19e983283f}\"}},\"version\":\"1.2.3\"}"),
+			expectedErrStr:  "",
+			expectedID:      "{5ae54d6f-bcb2-48ec-b98c-7a19e983283f}",
+			expectedVersion: "1.2.3",
+		},
+		{
+			name:            "ublock_origin-1.33.2-an+fx.xpi",
+			addonBytes:      ublockOrigin,
+			expectedID:      "uBlock0@raymondhill.net",
+			expectedVersion: "1.33.2",
+		},
+	}
+	for _, testcase := range testcases {
+		testcase := testcase
+		t.Run(testcase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var err error
+			if len(testcase.addonBytes) > 0 {
+				testcase.manifestBytes, err = readFileFromZIP(testcase.addonBytes, webextManifestPath)
+				if err != nil {
+					t.Fatalf("error reading manifest: %q", err)
+				}
+			}
+
+			id, version, err := extractAddonIDAndVersionFromWebextManifest(testcase.manifestBytes)
+			if id != testcase.expectedID {
+				t.Fatalf("gecko id %q did not match expected %q", id, testcase.expectedID)
+			}
+			if version != testcase.expectedVersion {
+				t.Fatalf("version %q did not match expected %q", version, testcase.expectedVersion)
+			}
+			if len(testcase.expectedErrStr) > 0 {
+				if err == nil {
+					t.Fatalf("testcase did not fail as expected")
+				}
+				if err.Error() != testcase.expectedErrStr {
+					t.Fatalf("testcase failed with %q not expected %q", err.Error(), testcase.expectedErrStr)
+				}
+			} else if err != nil {
+				t.Fatalf("testcase returned unexpected err: %q", err)
+			}
+		})
+	}
+}
+
 // a copy of toolkit/mozapps/extensions/test/xpcshell/data/signing_checks/unsigned_bootstrap_2.xpi
 //
 // $ unzip -l test/fixtures/unsigned_bootstrap_2.xpi
