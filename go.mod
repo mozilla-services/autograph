@@ -31,6 +31,8 @@ require (
 	go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060
 	go.opencensus.io v0.22.1 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
+	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
 	google.golang.org/api v0.11.0 // indirect
 	google.golang.org/grpc v1.24.0 // indirect
 )

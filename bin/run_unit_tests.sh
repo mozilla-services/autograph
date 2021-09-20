@@ -30,5 +30,6 @@ if [ "$REPORT_COVERAGE" = "true" ]; then
     tail -n +2 tools/autograph-monitor/monitor-coverage.out >> combined-coverage.out
 
     # report coverage
-    $GOPATH/bin/goveralls -coverprofile=combined-coverage.out -service circle-ci
+    # ignore failures while coveralls is down for maintenance
+    $GOPATH/bin/goveralls -coverprofile=combined-coverage.out -service circle-ci || true
 fi
