@@ -25,6 +25,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/apk2"
@@ -509,6 +511,211 @@ func TestDebug(t *testing.T) {
 	ag.disableDebug()
 	if ag.debug {
 		t.Fatalf("expected debug mode to be disabled, but is enabled")
+	}
+}
+
+func TestHandleGetAuthKeyIDs(t *testing.T) {
+	t.Parallel()
+
+	var testcases = []struct {
+		name   string
+		method string
+		url    string
+
+		// urlRouteVars are https://pkg.go.dev/github.com/gorilla/mux#Vars
+		// as configured with the handler at /auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids
+		// there should only be an auth_id var and it should match the url value
+		urlRouteVars map[string]string
+
+		// headers are additional http headers to set
+		headers *http.Header
+
+		// user/auth ID to build an Authorization header for
+		authorizeID string
+		nilBody     bool
+		body        string
+
+		expectedStatus  int
+		expectedHeaders http.Header
+		expectedBody    string
+	}{
+		{
+			name:            "invalid method POST returns 405",
+			method:          "POST",
+			url:             "http://foo.bar/auths/alice/keyids",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "POST method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "invalid method PUT returns 405",
+			method:          "PUT",
+			url:             "http://foo.bar/auths/alice/keyids",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "PUT method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "invalid method OPTIONS returns 405",
+			method:          "OPTIONS",
+			url:             "http://foo.bar/auths/alice/keyids",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "OPTIONS method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "invalid method HEAD returns 405",
+			method:          "HEAD",
+			url:             "http://foo.bar/auths/alice/keyids",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "HEAD method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with empty body returns 200",
+			method:          "GET",
+			url:             "http://foo.bar/auths/alice/keyids",
+			urlRouteVars:    map[string]string{"auth_id": "alice"},
+			nilBody:         false,
+			body:            "",
+			authorizeID:     "alice",
+			expectedStatus:  http.StatusOK,
+			expectedBody:    "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"randompgp\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]",
+			expectedHeaders: http.Header{"Content-Type": []string{"application/json"}},
+		},
+		{
+			name:            "GET with non-empty body returns 400",
+			method:          "GET",
+			url:             "http://foo.bar/auths/alice/keyids",
+			urlRouteVars:    map[string]string{"auth_id": "alice"},
+			nilBody:         false,
+			body:            "foobar/---",
+			expectedStatus:  http.StatusBadRequest,
+			expectedBody:    "endpoint received unexpected request body\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with misconfigured auth_id route param returns 500",
+			method:          "GET",
+			url:             "http://foo.bar/auths/alice/keyids",
+			urlRouteVars:    map[string]string{}, // missing auth_id
+			nilBody:         true,
+			expectedStatus:  http.StatusInternalServerError,
+			expectedBody:    "route is improperly configured\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET missing Authorization header returns 401",
+			method:          "GET",
+			url:             "http://foo.bar/auths/alice/keyids",
+			urlRouteVars:    map[string]string{"auth_id": "alice"},
+			nilBody:         true,
+			expectedStatus:  http.StatusUnauthorized,
+			expectedBody:    "authorization verification failed: missing Authorization header\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with invalid Authorization header returns 401",
+			method:          "GET",
+			url:             "http://foo.bar/auths/alice/keyids",
+			urlRouteVars:    map[string]string{"auth_id": "alice"},
+			headers:         &http.Header{"Authorization": []string{`Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="`}},
+			nilBody:         true,
+			expectedStatus:  http.StatusUnauthorized,
+			expectedBody:    "authorization verification failed: hawk: credential error with id dh37fgj492je and app : unknown id\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with invalid auth id url param returns 400",
+			method:          "GET",
+			url:             "http://foo.bar/auths//keyids",
+			urlRouteVars:    map[string]string{"auth_id": ""},
+			nilBody:         true,
+			expectedStatus:  http.StatusBadRequest,
+			expectedBody:    "auth_id in URL path '' is invalid, it must match ^[a-zA-Z0-9-_]{1,255}$\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with auth returns 403 for mismatched auth ids (alice cannot get bob's keyids)",
+			method:          "GET",
+			url:             "http://foo.bar/auths/bob/keyids",
+			urlRouteVars:    map[string]string{"auth_id": "bob"},
+			nilBody:         true,
+			authorizeID:     "alice",
+			expectedStatus:  http.StatusForbidden,
+			expectedBody:    "Authorized user \"alice\" cannot request keyids for user \"bob\"\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with auth returns 200",
+			method:          "GET",
+			url:             "http://foo.bar/auths/alice/keyids",
+			urlRouteVars:    map[string]string{"auth_id": "alice"},
+			nilBody:         true,
+			authorizeID:     "alice",
+			expectedStatus:  http.StatusOK,
+			expectedBody:    "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"randompgp\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]",
+			expectedHeaders: http.Header{"Content-Type": []string{"application/json"}},
+		},
+	}
+	for i, testcase := range testcases {
+		// test request setup
+		var (
+			req *http.Request
+			err error
+		)
+		if testcase.nilBody {
+			req, err = http.NewRequest(testcase.method, testcase.url, nil)
+		} else {
+			req, err = http.NewRequest(testcase.method, testcase.url, strings.NewReader(testcase.body))
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		req = mux.SetURLVars(req, testcase.urlRouteVars)
+
+		if testcase.headers != nil {
+			req.Header = *testcase.headers
+		}
+		if testcase.authorizeID != "" {
+			auth, err := ag.getAuthByID(testcase.authorizeID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// getAuthHeader requires a content type and body
+			req.Header.Set("Authorization", hawk.NewRequestAuth(req,
+				&hawk.Credentials{
+					ID:   auth.ID,
+					Key:  auth.Key,
+					Hash: sha256.New},
+				0).RequestHeader())
+		}
+
+		// run the request
+		w := httptest.NewRecorder()
+		ag.handleGetAuthKeyIDs(w, req)
+
+		// validate response
+		if w.Code != testcase.expectedStatus {
+			t.Fatalf("test case %s (%d): got code %d but expected %d",
+				testcase.name, i, w.Code, testcase.expectedStatus)
+		}
+		if w.Body.String() != testcase.expectedBody {
+			t.Fatalf("test case %s (%d): got body %q expected %q", testcase.name, i, w.Body.String(), testcase.expectedBody)
+		}
+		for expectedHeader, expectedHeaderVals := range testcase.expectedHeaders {
+			vals, ok := w.Header()[expectedHeader]
+			if !ok {
+				t.Fatalf("test case %s (%d): expected header %q not found", testcase.name, i, expectedHeader)
+			}
+			if strings.Join(vals, "") != strings.Join(expectedHeaderVals, "") {
+				t.Fatalf("test case %s (%d): header vals %q did not match expected %q ", testcase.name, i, vals, expectedHeaderVals)
+			}
+		}
 	}
 }
 

@@ -187,28 +187,104 @@ func TestDefaultSignerNotFound(t *testing.T) {
 	}
 }
 
-// Two authorizations sharing the same ID should fail
-func TestAddDuplicateAuthorization(t *testing.T) {
+func TestAutographerAddAuthorizationsFails(t *testing.T) {
 	t.Parallel()
 
-	var authorizations = []authorization{
+	testcases := []struct {
+		name   string
+		auths  []authorization
+		errStr string
+	}{
 		{
-			ID: "alice",
+			name: "two authorizations with same ID fails",
+			auths: []authorization{
+				{
+					ID:      "alice",
+					Signers: []string{"appkey1"},
+				},
+				{
+					ID:      "alice",
+					Signers: []string{"appkey2"},
+				},
+			},
+			errStr: `authorization id 'alice' already defined, duplicates are not permitted`,
 		},
 		{
-			ID: "alice",
+			name: "authorization without a signer ID fails",
+			auths: []authorization{
+				{
+					ID:      "alice",
+					Signers: []string{},
+				},
+			},
+			errStr: `auth id "alice" must have at least one signer configured`,
+		},
+		{
+			name: "invalid empty string auth ID fails",
+			auths: []authorization{
+				{
+					ID:      "",
+					Signers: []string{"appkey1"},
+				},
+			},
+			errStr: `authorization id '' is invalid, it must match ^[a-zA-Z0-9-_]{1,255}$`,
+		},
+		{
+			name: "invalid long auth ID fails",
+			auths: []authorization{
+				{
+					ID:      "fe3b321f83bf7a09c9199d118915f74ffef8de9b7abcc2dae93ea83cf0541a0c127bc91d1a0ba028af781553abad2bb4101ea1f84559e395d6f301308b4ead9956ef4ccd1ea7c8ce50a422cc78e7ddc1518ef8e54a08141e277808638b4104acf3e6211189222feea199c7da25d9aff5b55c02f6f686f2f1e91ea97dda6b33135593c5c4f80106d5836646557e2b001b3c531d10a4e9f6b7a6b4bd99303bce40592e13d1a8daad93f5cfd2fa78f423ae3dcad40303a0d9d85a166142e09f507904fee326470d1d50af28e2f4348f307d2f76b9c5dd3f9f9b3537c7ef86e63b606b1c57b408c8ae687e7d5c969002203777240029d4998644dbc347fc8f666c5b",
+					Signers: []string{"appkey1"},
+				},
+			},
+			errStr: `authorization id 'fe3b321f83bf7a09c9199d118915f74ffef8de9b7abcc2dae93ea83cf0541a0c127bc91d1a0ba028af781553abad2bb4101ea1f84559e395d6f301308b4ead9956ef4ccd1ea7c8ce50a422cc78e7ddc1518ef8e54a08141e277808638b4104acf3e6211189222feea199c7da25d9aff5b55c02f6f686f2f1e91ea97dda6b33135593c5c4f80106d5836646557e2b001b3c531d10a4e9f6b7a6b4bd99303bce40592e13d1a8daad93f5cfd2fa78f423ae3dcad40303a0d9d85a166142e09f507904fee326470d1d50af28e2f4348f307d2f76b9c5dd3f9f9b3537c7ef86e63b606b1c57b408c8ae687e7d5c969002203777240029d4998644dbc347fc8f666c5b' is invalid, it must match ^[a-zA-Z0-9-_]{1,255}$`,
+		},
+		{
+			name: "invalid auth ID with symbols fails",
+			auths: []authorization{
+				{
+					ID:      "%!@",
+					Signers: []string{"appkey1"},
+				},
+			},
+			errStr: `authorization id '%!@' is invalid, it must match ^[a-zA-Z0-9-_]{1,255}$`,
+		},
+		{
+			name: "invalid auth ID with newline fails",
+			auths: []authorization{
+				{
+					ID:      "\n",
+					Signers: []string{"appkey1"},
+				},
+			},
+			errStr: `authorization id '
+' is invalid, it must match ^[a-zA-Z0-9-_]{1,255}$`,
+		},
+		{
+			name: "invalid auth ID with period fails",
+			auths: []authorization{
+				{
+					ID:      ".",
+					Signers: []string{"appkey1"},
+				},
+			},
+			errStr: `authorization id '.' is invalid, it must match ^[a-zA-Z0-9-_]{1,255}$`,
 		},
 	}
-	defer func() {
-		if e := recover(); e != nil {
-			if e != `authorization id 'alice' already defined, duplicates are not permitted` {
-				t.Fatalf("expected authorization loading to fail with duplicate error but got: %v", e)
+
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			tmpag := newAutographer(1)
+			tmpag.addSigners(conf.Signers)
+			err := tmpag.addAuthorizations(testcase.auths)
+			if err == nil {
+				t.Fatalf("%s: addAuthorizations did not fail as expected", testcase.name)
 			}
-		}
-	}()
-	tmpag := newAutographer(1)
-	tmpag.addSigners(conf.Signers)
-	tmpag.addAuthorizations(authorizations)
+			if err.Error() != testcase.errStr {
+				t.Fatalf("%s: addAuthorizations failed with %q instead of expected error %q", testcase.name, err.Error(), testcase.errStr)
+			}
+		})
+	}
 }
 
 // set an authorization with a ts validity of 2 seconds, then sleep 5 seconds

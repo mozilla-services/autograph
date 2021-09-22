@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -64,17 +65,21 @@ func main() {
 	var (
 		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, verificationTimeInput string
 		iter, maxworkers, sa                                                                                              int
-		debug, noVerify                                                                                                   bool
+		debug, listKeyIDs, noVerify                                                                                       bool
 		err                                                                                                               error
 		requests                                                                                                          []formats.SignatureRequest
 		algs                                                                                                              coseAlgs
 		verificationTime                                                                                                  time.Time
 	)
 	flag.Usage = func() {
-		fmt.Print("autograph-client - simple command line client to the autograph service\n\n")
+		fmt.Print("autograph-client - command line client to the autograph service\n\n")
 		flag.PrintDefaults()
 		fmt.Print(`
 examples:
+
+* pretty print keyids for a user to stdout
+	$ go run client.go -listkeyids -u alice
+
 * sign an APK, returns a signed APK
 	$ go run client.go -f signed.apk -o test.apk -k testapp-android
 	$ /opt/android-sdk/build-tools/27.0.3/apksigner verify -v test.apk
@@ -142,6 +147,7 @@ examples:
 	flag.StringVar(&rootPath, "r", "/path/to/root.pem", "Path to a PEM file of root certificates")
 	flag.StringVar(&verificationTimeInput, "vt", "", "Time to verify XPI signatures at in RFC3339 format. Defaults to at client invokation + 1 minute to account for time to transfer and sign the XPI")
 	flag.BoolVar(&noVerify, "noverify", false, "Skip verifying successful responses. Default false.")
+	flag.BoolVar(&listKeyIDs, "listkeyids", false, "List key IDs for the signer")
 
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
@@ -156,6 +162,12 @@ examples:
 		if debug {
 			fmt.Printf("Using parsed verification time: %q\n", verificationTime)
 		}
+	}
+
+	cli := getHTTPClient()
+	if listKeyIDs {
+		listKeyIDsForCurrentUser(cli, debug, url, userid, pass)
+		os.Exit(0)
 	}
 
 	if data != "base64(data)" {
@@ -174,6 +186,7 @@ examples:
 		}
 		data = base64.StdEncoding.EncodeToString(filebytes)
 	}
+
 	request := formats.SignatureRequest{
 		Input: data,
 		KeyID: keyid,
@@ -201,10 +214,6 @@ examples:
 	if err != nil {
 		log.Fatal(err)
 	}
-	tr := &http.Transport{
-		DisableKeepAlives: false,
-	}
-	cli := &http.Client{Transport: tr}
 
 	var roots *x509.CertPool
 	if rootPath != "/path/to/root.pem" {
@@ -377,6 +386,60 @@ examples:
 		}
 		time.Sleep(time.Second)
 	}
+}
+
+func getHTTPClient() *http.Client {
+	tr := &http.Transport{
+		DisableKeepAlives: false,
+	}
+	return &http.Client{Transport: tr}
+}
+
+func listKeyIDsForCurrentUser(cli *http.Client, debug bool, url, userid, pass string) {
+	url = url + "/auths/" + userid + "/keyids"
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.Header.Set("Authorization", hawk.NewRequestAuth(req,
+		&hawk.Credentials{
+			ID:   userid,
+			Key:  pass,
+			Hash: sha256.New},
+		0).RequestHeader())
+	if debug {
+		fmt.Printf("DEBUG: sending request\nDEBUG: %+v\n", req)
+	}
+	resp, err := cli.Do(req)
+	if err != nil || resp == nil {
+		log.Fatal(err)
+	}
+	if debug {
+		fmt.Printf("DEBUG: received response\nDEBUG: %+v\n", resp)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if debug {
+		fmt.Printf("DEBUG: %s\n", body)
+	}
+	if resp.StatusCode != http.StatusOK {
+		log.Fatalf("%s %s", resp.Status, body)
+	}
+	// pretty print output
+	var keyIDs []string
+	err = json.Unmarshal(body, &keyIDs)
+	if err != nil {
+		log.Fatalf("error unmarshaling JSON %q", err)
+	}
+	indentedJSON, err := json.MarshalIndent(keyIDs, "", "    ")
+	if err != nil {
+		log.Fatalf("error marshal indenting JSON %q", err)
+	}
+	fmt.Println(string(indentedJSON))
 }
 
 // parseVerificationTime parses an RFC3339 timestamp or exits

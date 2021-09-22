@@ -18,6 +18,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer"
 	log "github.com/sirupsen/logrus"
@@ -375,4 +377,55 @@ func handleVersion(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	http.ServeContent(w, r, "version.json", stat.ModTime(), f)
+}
+
+// handleGetAuthKeyIDs returns the signer (keyID param for the API)
+// for the authenticated user
+func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		return
+	}
+	if r.Body != nil {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
+			return
+		}
+		if len(body) > 0 {
+			httpError(w, r, http.StatusBadRequest, "endpoint received unexpected request body")
+			return
+		}
+	}
+
+	pathAuthID, ok := mux.Vars(r)["auth_id"]
+	if !ok {
+		httpError(w, r, http.StatusInternalServerError, "route is improperly configured")
+		return
+	}
+	if !authIDFormatRegexp.MatchString(pathAuthID) {
+		httpError(w, r, http.StatusBadRequest, "auth_id in URL path '%s' is invalid, it must match %s", pathAuthID, authIDFormat)
+		return
+	}
+	_, headerAuthID, err := a.authorizeHeader(r)
+	if err != nil {
+		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
+		return
+	}
+
+	if headerAuthID != pathAuthID {
+		httpError(w, r, http.StatusForbidden, "Authorized user %q cannot request keyids for user %q", headerAuthID, pathAuthID)
+		return
+	}
+
+	signerIDsJSON, err := json.Marshal(a.authBackend.getSignerIDsForUser(pathAuthID))
+	if err != nil {
+		log.Errorf("handleGetAuthKeyIDs failed to marshal JSON with error: %s", err)
+		httpError(w, r, http.StatusInternalServerError, "error marshaling response JSON")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(signerIDsJSON)
 }

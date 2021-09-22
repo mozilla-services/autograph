@@ -213,6 +213,7 @@ func run(conf configuration, listen string, debug bool) {
 	router.HandleFunc("/sign/file", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/data", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
+	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", ag.handleGetAuthKeyIDs).Methods("GET")
 	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
 		err = setRuntimeConfig()
 		if err != nil {
