@@ -1,7 +1,6 @@
 package xpi
 
 import (
-	"io/ioutil"
 	"testing"
 	"time"
 
@@ -9,22 +8,8 @@ import (
 )
 
 func BenchmarkResignOmnija(b *testing.B) {
-	var (
-		err                             error = nil
-		omnijaBytes, browserOmnijaBytes []byte
-	)
-
-	omnijaBytes, err = ioutil.ReadFile("test/fixtures/firefox-70.0.1/omni.ja")
-	if err != nil {
-		b.Fatalf("failed to read omni.ja test file with: %s", err)
-	}
-	browserOmnijaBytes, err = ioutil.ReadFile("test/fixtures/firefox-70.0.1/browser/omni.ja")
-	if err != nil {
-		b.Fatalf("failed to read omni.ja test file with: %s", err)
-	}
-
 	// initialize a system addon signer with an RSA key
-	testcase := PASSINGTESTCASES[1]
+	testcase := validSignerConfigs[1]
 
 	// don't use an RSA key cache
 	testcase.RSACacheConfig = signer.RSACacheConfig{
@@ -47,11 +32,11 @@ func BenchmarkResignOmnija(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		// sign both omni.ja files once
-		_, err = s.SignFile(omnijaBytes, signOptions)
+		_, err = s.SignFile(fxOmnija, signOptions)
 		if err != nil {
 			b.Fatalf("failed to sign omni.ja: %v", err)
 		}
-		_, err = s.SignFile(browserOmnijaBytes, signOptions)
+		_, err = s.SignFile(fxBrowserOmnija, signOptions)
 		if err != nil {
 			b.Fatalf("failed to sign browser/omni.ja: %v", err)
 		}

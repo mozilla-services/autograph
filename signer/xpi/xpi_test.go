@@ -21,62 +21,86 @@ import (
 func TestSignFile(t *testing.T) {
 	t.Parallel()
 
+	inputs := []struct {
+		name    string
+		content []byte
+	}{
+		{
+			name:    "unsigned_bootstrap_2.xpi",
+			content: unsignedBootstrap,
+		},
+		{
+			name:    "ublock_origin-1.33.2-an+fx.xpi",
+			content: ublockOrigin,
+		},
+		{
+			name:    "omni.ja.zip",
+			content: fxOmnija,
+		},
+		{
+			name:    "browser/omni.ja.zip",
+			content: fxBrowserOmnija,
+		},
+	}
+
 	for i, testcase := range PASSINGTESTCASES {
-		t.Run(fmt.Sprintf("test sign file signer id %s (%d)", testcase.ID, i), func(t *testing.T) {
-			t.Parallel()
+		for _, input := range inputs {
+			inputBytes := input.content
+			t.Run(fmt.Sprintf("test sign file %s signer id %s (%d)", input.name, testcase.ID, i), func(t *testing.T) {
+				t.Parallel()
 
-			input := unsignedBootstrap
-			// initialize a signer
-			testcase.RSACacheConfig = signer.RSACacheConfig{
-				NumKeys:                5,
-				NumGenerators:          2,
-				GeneratorSleepDuration: time.Minute,
-				FetchTimeout:           100 * time.Millisecond,
-				StatsSampleRate:        10 * time.Second,
-			}
+				// initialize a signer
+				testcase.RSACacheConfig = signer.RSACacheConfig{
+					NumKeys:                5,
+					NumGenerators:          2,
+					GeneratorSleepDuration: time.Minute,
+					FetchTimeout:           100 * time.Millisecond,
+					StatsSampleRate:        10 * time.Second,
+				}
 
-			statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
-			if err != nil {
-				t.Fatalf("passing testcase %d: Error constructing statsdClient: %v", i, err)
-			}
-			statsdClient.Namespace = "test_autograph_stats_ns"
-			signerStatsClient, err := signer.NewStatsClient(testcase, statsdClient)
-			if err != nil {
-				t.Fatalf("passing testcase %d: Error constructing signer.StatsdClient: %v", i, err)
-			}
+				statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
+				if err != nil {
+					t.Fatalf("passing testcase %d: Error constructing statsdClient: %v", i, err)
+				}
+				statsdClient.Namespace = "test_autograph_stats_ns"
+				signerStatsClient, err := signer.NewStatsClient(testcase, statsdClient)
+				if err != nil {
+					t.Fatalf("passing testcase %d: Error constructing signer.StatsdClient: %v", i, err)
+				}
 
-			s, err := New(testcase, signerStatsClient)
-			if err != nil {
-				t.Fatalf("passing testcase %d: signer initialization failed with: %v", i, err)
-			}
-			if s.Config().Type != testcase.Type {
-				t.Fatalf("passing testcase %d: signer type %q does not match configuration %q", i, s.Config().Type, testcase.Type)
-			}
-			if s.Config().ID != testcase.ID {
-				t.Fatalf("passing testcase %d: signer id %q does not match configuration %q", i, s.Config().ID, testcase.ID)
-			}
-			if s.Config().PrivateKey != testcase.PrivateKey {
-				t.Fatalf("passing testcase %d: signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.PrivateKey)
-			}
-			if s.Config().Mode != testcase.Mode {
-				t.Fatalf("passing testcase %d: signer category %q does not match configuration %q", i, s.Config().Mode, testcase.Mode)
-			}
+				s, err := New(testcase, signerStatsClient)
+				if err != nil {
+					t.Fatalf("passing testcase %d: signer initialization failed with: %v", i, err)
+				}
+				if s.Config().Type != testcase.Type {
+					t.Fatalf("passing testcase %d: signer type %q does not match configuration %q", i, s.Config().Type, testcase.Type)
+				}
+				if s.Config().ID != testcase.ID {
+					t.Fatalf("passing testcase %d: signer id %q does not match configuration %q", i, s.Config().ID, testcase.ID)
+				}
+				if s.Config().PrivateKey != testcase.PrivateKey {
+					t.Fatalf("passing testcase %d: signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.PrivateKey)
+				}
+				if s.Config().Mode != testcase.Mode {
+					t.Fatalf("passing testcase %d: signer category %q does not match configuration %q", i, s.Config().Mode, testcase.Mode)
+				}
 
-			// sign input data
-			opts := s.GetDefaultOptions().(Options)
-			if testcase.Mode == ModeAddOnWithRecommendation {
-				opts.Recommendations = []string{"recommended"}
-			}
-			signedXPI, err := s.SignFile(input, opts)
-			if err != nil {
-				t.Fatalf("passing testcase %d %s: failed to sign file with detached PKCS7 sig: %v", i, testcase.ID, err)
-			}
+				// sign input data
+				opts := s.GetDefaultOptions().(Options)
+				if testcase.Mode == ModeAddOnWithRecommendation {
+					opts.Recommendations = []string{"recommended"}
+				}
+				signedXPI, err := s.SignFile(inputBytes, opts)
+				if err != nil {
+					t.Fatalf("passing testcase %d %s: failed to sign file with detached PKCS7 sig: %v", i, testcase.ID, err)
+				}
 
-			err = VerifySignedFile(signedXPI, nil, opts, time.Now().UTC())
-			if err != nil {
-				t.Fatalf("passing testcase %d: failed to verify PKCS7 signed file: %v", i, err)
-			}
-		})
+				err = VerifySignedFile(signedXPI, nil, opts, time.Now().UTC())
+				if err != nil {
+					t.Fatalf("passing testcase %d: failed to verify PKCS7 signed file: %v", i, err)
+				}
+			})
+		}
 	}
 }
 
