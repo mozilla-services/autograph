@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -80,54 +81,58 @@ func TestSignData(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	for i, testcase := range PASSINGTESTCASES {
-		// initialize a signer
-		s, err := New(testcase, nil)
-		if err != nil {
-			t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
-		}
-		if s.Config().Type != testcase.Type {
-			t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Config().Type, testcase.Type)
-		}
-		if s.Config().ID != testcase.ID {
-			t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.Config().ID, testcase.ID)
-		}
-		if s.Config().PrivateKey != testcase.PrivateKey {
-			t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.PrivateKey)
-		}
-		if s.Config().Mode != testcase.Mode {
-			t.Fatalf("testcase %d signer category %q does not match configuration %q", i, s.Config().Mode, testcase.Mode)
-		}
+		t.Run(fmt.Sprintf("test sign data signer id %s (%d)", testcase.ID, i), func(t *testing.T) {
+			t.Parallel()
 
-		// sign input data
-		sig, err := s.SignData(input, s.GetDefaultOptions())
-		if err != nil {
-			t.Fatalf("testcase %d failed to sign data: %v", i, err)
-		}
-		// convert signature to string format
-		sigstr, err := sig.Marshal()
-		if err != nil {
-			t.Fatalf("testcase %d failed to marshal signature: %v", i, err)
-		}
+			// initialize a signer
+			s, err := New(testcase, nil)
+			if err != nil {
+				t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
+			}
+			if s.Config().Type != testcase.Type {
+				t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Config().Type, testcase.Type)
+			}
+			if s.Config().ID != testcase.ID {
+				t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.Config().ID, testcase.ID)
+			}
+			if s.Config().PrivateKey != testcase.PrivateKey {
+				t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.PrivateKey)
+			}
+			if s.Config().Mode != testcase.Mode {
+				t.Fatalf("testcase %d signer category %q does not match configuration %q", i, s.Config().Mode, testcase.Mode)
+			}
 
-		// convert string format back to signature
-		sig2, err := Unmarshal(sigstr, input)
-		if err != nil {
-			t.Fatalf("testcase %d failed to unmarshal signature: %v", i, err)
-		}
+			// sign input data
+			sig, err := s.SignData(input, s.GetDefaultOptions())
+			if err != nil {
+				t.Fatalf("testcase %d failed to sign data: %v", i, err)
+			}
+			// convert signature to string format
+			sigstr, err := sig.Marshal()
+			if err != nil {
+				t.Fatalf("testcase %d failed to marshal signature: %v", i, err)
+			}
 
-		// make sure we still have the same string representation
-		sigstr2, err := sig2.Marshal()
-		if err != nil {
-			t.Fatalf("testcase %d failed to re-marshal signature: %v", i, err)
-		}
-		if sigstr != sigstr2 {
-			t.Fatalf("testcase %d marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
-				i, sigstr, sigstr2)
-		}
-		// verify signature on input data
-		if sig2.VerifyWithChain(nil) != nil {
-			t.Fatalf("testcase %d failed to verify xpi signature", i)
-		}
+			// convert string format back to signature
+			sig2, err := Unmarshal(sigstr, input)
+			if err != nil {
+				t.Fatalf("testcase %d failed to unmarshal signature: %v", i, err)
+			}
+
+			// make sure we still have the same string representation
+			sigstr2, err := sig2.Marshal()
+			if err != nil {
+				t.Fatalf("testcase %d failed to re-marshal signature: %v", i, err)
+			}
+			if sigstr != sigstr2 {
+				t.Fatalf("testcase %d marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
+					i, sigstr, sigstr2)
+			}
+			// verify signature on input data
+			if sig2.VerifyWithChain(nil) != nil {
+				t.Fatalf("testcase %d failed to verify xpi signature", i)
+			}
+		})
 	}
 }
 
