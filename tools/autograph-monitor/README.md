@@ -53,8 +53,6 @@ AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs \
 2019/04/09 09:41:13 Response 5 from signer "extensions-ecdsa" passes verification
 2019/04/09 09:41:13 Verifying APK signature from signer "testapp-android"
 2019/04/09 09:41:13 Response 6 from signer "testapp-android" passes verification
-2019/04/09 09:41:13 Verifying APK signature from signer "apk_cert_with_dsa_sha1"
-2019/04/09 09:41:13 Response 7 from signer "apk_cert_with_dsa_sha1" passes verification
 2019/04/09 09:41:13 Verifying APK signature from signer "legacy_apk_with_rsa"
 2019/04/09 09:41:13 Response 8 from signer "legacy_apk_with_rsa" passes verification
 2019/04/09 09:41:13 Verifying APK signature from signer "apk_cert_with_ecdsa_sha256"

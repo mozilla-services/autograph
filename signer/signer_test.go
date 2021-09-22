@@ -90,22 +90,6 @@ Uk7hsSrmYvDod8D71KCWhZAV1otVxjDUwCvmRoozqSl4EtzKdTWvWeDY
 -----END PRIVATE KEY-----
 `
 
-func TestParseDSAPKCS8PrivateKey(t *testing.T) {
-	_, err := ParsePrivateKey([]byte(dsaPKCS8PrivateKey))
-	if err != nil {
-		t.Fatalf("failed to parse DSA private key: %v", err)
-	}
-}
-
-var dsaPKCS8PrivateKey = `
------BEGIN PRIVATE KEY-----
-MIHIAgEAMIGpBgcqhkjOOAQBMIGdAkEA5Kz55zU3Yk1rgLsZvBNrkFZs1++7JcuM
-FGSfH3gkwiAeHo+5ztHyWD8P45cvxOTR4ouLMeCdwrAohlnF9+D39QIVAJ7QMH/e
-wcC0UBkjEb/G03cx9drnAkEA2d97oKn6wdNrHJWRTlmZl0OOBmjWmNnGgONfGNdb
-ycNNRmj++eB2/YBnmGX/iqP4h6Z58t45o4dVbUIvtcXxkQQXAhUAg9FLooZTFelx
-yclfvxtmlCSZQsA=
------END PRIVATE KEY-----`
-
 func TestParseInvalidPrivateKey(t *testing.T) {
 	var TESTCASES = []struct {
 		name string
@@ -131,7 +115,7 @@ CcZjuTAfBgNVHSMEGDAWgBQkKZzE8sgvxJPq5i9nh03GCcZjuTAMBgNVHRMEBTAD
 AQH/MAoGCCqGSM49BAMCA0gAMEUCIQD6+Hys0Tu7U3HUzwO9NJ4ElU70D4rbyaPU
 TH3zjxA6+gIgM0uXspkAbNgyO0qYkOQeoIfIXTan0uqt7b5PbLcGlh8=
 -----END CERTIFICATE----`)},
-		// we can parse DSA keys in PKCS8 format, but not in PKCS1
+		// we cannot parse DSA keys in PKCS1 format
 		{"dsa pkcs1 private key", []byte(`
 -----BEGIN DSA PRIVATE KEY-----
 MIH6AgEAAkEA5Kz55zU3Yk1rgLsZvBNrkFZs1++7JcuMFGSfH3gkwiAeHo+5ztHy
@@ -141,6 +125,15 @@ iqP4h6Z58t45o4dVbUIvtcXxkQJBALP5X9dHxQeY53HTpkb3dDQdtjOadU6ik86l
 O1xhS+jXsaR+8bXu5ImcgivKkpDYGX048p4mR654t09GWkohT7ICFQCD0UuihlMV
 6XHJyV+/G2aUJJlCwA==
 -----END DSA PRIVATE KEY-----`)},
+		// we will not parse DSA keys in PKCS8 format
+		{"dsa pkcs8 private key", []byte(`
+------BEGIN PRIVATE KEY-----
+-MIHIAgEAMIGpBgcqhkjOOAQBMIGdAkEA5Kz55zU3Yk1rgLsZvBNrkFZs1++7JcuM
+-FGSfH3gkwiAeHo+5ztHyWD8P45cvxOTR4ouLMeCdwrAohlnF9+D39QIVAJ7QMH/e
+-wcC0UBkjEb/G03cx9drnAkEA2d97oKn6wdNrHJWRTlmZl0OOBmjWmNnGgONfGNdb
+-ycNNRmj++eB2/YBnmGX/iqP4h6Z58t45o4dVbUIvtcXxkQQXAhUAg9FLooZTFelx
+-yclfvxtmlCSZQsA=
+------END PRIVATE KEY-----`)},
 	}
 	for i, testcase := range TESTCASES {
 		_, err := ParsePrivateKey(testcase.pkey)

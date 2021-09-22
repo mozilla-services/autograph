@@ -8,19 +8,15 @@ package signer // import "github.com/mozilla-services/autograph/signer"
 
 import (
 	"crypto"
-	"crypto/dsa"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"crypto/x509/pkix"
-	"encoding/asn1"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"io"
-	"math/big"
 	"regexp"
 	"strings"
 	"time"
@@ -330,50 +326,7 @@ func ParsePrivateKey(keyPEMBlock []byte) (key crypto.PrivateKey, err error) {
 	}
 	savedErr = append(savedErr, "ecdsa: "+err.Error())
 
-	if key, err = parseDSAPKCS8PrivateKey(keyDERBlock.Bytes); err == nil {
-		return key, nil
-	}
-	savedErr = append(savedErr, "dsa: "+err.Error())
-
-	return nil, fmt.Errorf("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for (EC)DSA. errors: " + strings.Join(savedErr, ";;; "))
-}
-
-// parseDSAPKCS8PrivateKey returns a DSA private key from its ASN.1 DER encoding
-func parseDSAPKCS8PrivateKey(der []byte) (*dsa.PrivateKey, error) {
-	var k struct {
-		Version int
-		Algo    pkix.AlgorithmIdentifier
-		Priv    []byte
-	}
-	rest, err := asn1.Unmarshal(der, &k)
-	if err != nil {
-		return nil, err
-	}
-	if len(rest) > 0 {
-		return nil, fmt.Errorf("garbage after DSA key")
-	}
-	var params dsa.Parameters
-	_, err = asn1.Unmarshal(k.Algo.Parameters.FullBytes, &params)
-	if err != nil {
-		return nil, err
-	}
-	// FIXME: couldn't get asn1.Unmarshal to properly parse the OCTET STRING
-	// tag in front of the X value of the DSA key, but doing it manually by
-	// stripping off the first two bytes and loading it as a bigint works
-	if len(k.Priv) < 22 {
-		return nil, fmt.Errorf("DSA key is too short")
-	}
-	x := new(big.Int).SetBytes(k.Priv[2:])
-	return &dsa.PrivateKey{
-		PublicKey: dsa.PublicKey{
-			Parameters: dsa.Parameters{
-				P: params.P,
-				Q: params.Q,
-				G: params.G,
-			},
-		},
-		X: x,
-	}, nil
+	return nil, fmt.Errorf("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for ECDSA. errors: " + strings.Join(savedErr, ";;; "))
 }
 
 func removePrivateKeyNewlines(confPrivateKey string) string {
