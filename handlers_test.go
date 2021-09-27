@@ -50,42 +50,91 @@ func TestBadRequest(t *testing.T) {
 		// missing request body
 		{`/sign/data`, `POST`, ``},
 		{`/sign/hash`, `POST`, ``},
+		{`/sign/file`, `POST`, ``},
+		{`/sign/files`, `POST`, ``},
 		// invalid json body
 		{`/sign/data`, `POST`, `{|||...........`},
 		{`/sign/hash`, `POST`, `{|||...........`},
+		{`/sign/file`, `POST`, `{|||...........`},
+		{`/sign/files`, `POST`, `{|||...........`},
 		// missing input
-		{`/sign/data`, `POST`, `[{"input": "", "keyid": "abcd"}]`},
-		{`/sign/hash`, `POST`, `[{"input": "", "keyid": "abcd"}]`},
+		{`/sign/data`, `POST`, `[{"input": ""}]`},
+		{`/sign/hash`, `POST`, `[{"input": ""}]`},
+		{`/sign/file`, `POST`, `[{"input": ""}]`},
+		{`/sign/files`, `POST`, `[{"input": ""}]`},
 		// input not in base64
 		{`/sign/data`, `POST`, `[{"input": "......."}]`},
 		{`/sign/hash`, `POST`, `[{"input": "......."}]`},
-		// asking for a xpi signature using a hash will fail
+		{`/sign/file`, `POST`, `[{"input": "......."}]`},
+		{`/sign/files`, `POST`, `[{"input": "......."}]`},
+
+		// missing files
+		{`/sign/files`, `POST`, `[{"input": "aGVsbG8=", "keyid": "randompgp-debsign"}]`},
+		// files is an empty string
+		{`/sign/files`, `POST`, `[{"files": "", "keyid": "randompgp-debsign"}]`},
+		// files is a base64 string
+		{`/sign/files`, `POST`, `[{"files": "aGVsbG8=", "keyid": "randompgp-debsign"}]`},
+		// files is an empty array
+		{`/sign/files`, `POST`, `[{"files": [], "keyid": "randompgp-debsign"}]`},
+		// files content is not valid base64
+		{`/sign/files`, `POST`, `[{"files": [{"name": "0", "content":"...."}], "keyid": "randompgp-debsign"}]`},
+		// file name includes relative current directory: ./foo.dsc
+		{`/sign/files`, `POST`, `[{"files": [{"name": "./foo.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name includes relative parent directory: ../../foo.dsc
+		{`/sign/files`, `POST`, `[{"files": [{"name": "../../foo.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name includes relative parent directory following a filename: cwd/../../foo.dsc
+		{`/sign/files`, `POST`, `[{"files": [{"name": "cwd/../../foo.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name includes two dots with otherwise valid chars: cwd..foo.dsc
+		{`/sign/files`, `POST`, `[{"files": [{"name": "cwd..foo.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name starts with dot: .bashrc.dsc
+		{`/sign/files`, `POST`, `[{"files": [{"name": ".bashrc.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name starts with /: /etc
+		{`/sign/files`, `POST`, `[{"files": [{"name": "/etc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name is path spam/eggs/foo.dsc
+		{`/sign/files`, `POST`, `[{"files": [{"name": "spam/eggs/foo.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name is windows path
+		{`/sign/files`, `POST`, `[{"files": [{"name": "C:\spam\eggs\foo.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name is >255 chars (404 long)
+		{`/sign/files`, `POST`, `[{"files": [{"name": "spamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspam.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+
+		// files has too many files (33)
+		{`/sign/files`, `POST`, `[{"files": [{"name": "0", "content":"aGVsbG8="}, {"name": "1", "content":"aGVsbG8="}, {"name": "2", "content":"aGVsbG8="}, {"name": "3", "content":"aGVsbG8="}, {"name": "4", "content":"aGVsbG8="}, {"name": "5", "content":"aGVsbG8="}, {"name": "6", "content":"aGVsbG8="}, {"name": "7", "content":"aGVsbG8="}, {"name": "8", "content":"aGVsbG8="}, {"name": "9", "content":"aGVsbG8="}, {"name": "10", "content":"aGVsbG8="}, {"name": "11", "content":"aGVsbG8="}, {"name": "12", "content":"aGVsbG8="}, {"name": "13", "content":"aGVsbG8="}, {"name": "14", "content":"aGVsbG8="}, {"name": "15", "content":"aGVsbG8="}, {"name": "16", "content":"aGVsbG8="}, {"name": "17", "content":"aGVsbG8="}, {"name": "18", "content":"aGVsbG8="}, {"name": "19", "content":"aGVsbG8="}, {"name": "20", "content":"aGVsbG8="}, {"name": "21", "content":"aGVsbG8="}, {"name": "22", "content":"aGVsbG8="}, {"name": "23", "content":"aGVsbG8="}, {"name": "24", "content":"aGVsbG8="}, {"name": "25", "content":"aGVsbG8="}, {"name": "26", "content":"aGVsbG8="}, {"name": "27", "content":"aGVsbG8="}, {"name": "28", "content":"aGVsbG8="}, {"name": "29", "content":"aGVsbG8="}, {"name": "30", "content":"aGVsbG8="}, {"name": "31", "content":"aGVsbG8="}, {"name": "32", "content":"aGVsbG8="}, {"name": "33", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+
+		// asking for a xpi signature using /sign/hash fails
 		{`/sign/hash`, `POST`, `[{"input": "Y2FyaWJvdW1hdXJpY2UK", "keyid": "webextensions-rsa"}]`},
 	}
 	for i, testcase := range TESTCASES {
-		body := strings.NewReader(testcase.body)
-		req, err := http.NewRequest(testcase.method, "http://foo.bar"+testcase.endpoint, body)
-		if err != nil {
-			t.Fatal(err)
-		}
-		req.Header.Set("Content-Type", "application/json")
-		auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
-		if err != nil {
-			t.Fatal(err)
-		}
+		i := i
+		testcase := testcase
 
-		authheader := getAuthHeader(req,
-			auth.ID,
-			auth.Key,
-			sha256.New, id(),
-			"application/json",
-			[]byte(testcase.body))
-		req.Header.Set("Authorization", authheader)
-		w := httptest.NewRecorder()
-		ag.handleSignature(w, req)
-		if w.Code == http.StatusCreated {
-			t.Fatalf("test case %d should have failed, but succeeded with %d: %s", i, w.Code, w.Body.String())
-		}
+		t.Run(fmt.Sprintf("returns 400 for invalid %s %s %s", testcase.method, testcase.endpoint, testcase.body), func(t *testing.T) {
+			t.Parallel()
+
+			body := strings.NewReader(testcase.body)
+			req, err := http.NewRequest(testcase.method, "http://foo.bar"+testcase.endpoint, body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+			auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			authheader := getAuthHeader(req,
+				auth.ID,
+				auth.Key,
+				sha256.New, id(),
+				"application/json",
+				[]byte(testcase.body))
+			req.Header.Set("Authorization", authheader)
+			w := httptest.NewRecorder()
+			ag.handleSignature(w, req)
+			if w.Code != http.StatusBadRequest {
+				t.Fatalf("test case %d %s %s %q should have failed, but succeeded with %d: %s", i, testcase.method, testcase.endpoint, testcase.body, w.Code, w.Body.String())
+			}
+			// t.Logf("failed with %d: %s", w.Code, w.Body.String())
+		})
 	}
 }
 

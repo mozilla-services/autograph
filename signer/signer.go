@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/mozilla-services/autograph/database"
+	"github.com/mozilla-services/autograph/formats"
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/ThalesIgnite/crypto11"
@@ -186,6 +187,13 @@ type FileSigner interface {
 	GetDefaultOptions() interface{}
 }
 
+// MultipleFileSigner is an interface to a signer that signs multiple
+// files in one signing operation
+type MultipleFileSigner interface {
+	SignFiles(files []NamedUnsignedFile, options interface{}) ([]NamedSignedFile, error)
+	GetDefaultOptions() interface{}
+}
+
 // Signature is an interface to a digital signature
 type Signature interface {
 	Marshal() (signature string, err error)
@@ -193,6 +201,58 @@ type Signature interface {
 
 // SignedFile is an []bytes that contains file data
 type SignedFile []byte
+
+type namedFile struct {
+	Name  string
+	Bytes []byte
+}
+
+// NamedUnsignedFile is a file with a name to sign
+type NamedUnsignedFile namedFile
+
+// NamedSignedFile is a file with a name that's been signed
+type NamedSignedFile namedFile
+
+// isValidUnsignedFilename
+func isValidUnsignedFilename(filename string) error {
+	if !regexp.MustCompile(`^[a-zA-z0-9]`).MatchString(filename) {
+		return fmt.Errorf("unsigned filename must start with an alphanumeric character")
+	}
+	if !regexp.MustCompile(`^[-_\.a-zA-Z0-9]{1,256}$`).MatchString(filename) {
+		return fmt.Errorf(`unsigned filename must match ^[-_\.a-zA-Z0-9]{1,256}$`)
+	}
+	if regexp.MustCompile(`\.\.`).MatchString(filename) {
+		return fmt.Errorf("unsigned filename must not include ..")
+	}
+	return nil
+}
+
+// NewNamedUnsignedFile allocates and returns a ref to a new
+// NamedUnsignedFile from a REST format SigningFile. It base64 decodes
+// the REST SigningFile.Content into NamedUnsignedFile.Bytes.
+func NewNamedUnsignedFile(restSigningFile formats.SigningFile) (*NamedUnsignedFile, error) {
+	if err := isValidUnsignedFilename(restSigningFile.Name); err != nil {
+		return nil, fmt.Errorf("invalid named file name: %w", err)
+	}
+	fileBytes, err := base64.StdEncoding.DecodeString(restSigningFile.Content)
+	if err != nil {
+		return nil, err
+	}
+	return &NamedUnsignedFile{
+		Name:  restSigningFile.Name,
+		Bytes: fileBytes,
+	}, nil
+}
+
+// RESTSigningFile allocates and returns a ref to a new REST
+// SigningFile from a NamedSignedFile. It base64 encodes
+// NamedSignedFile.Bytes into the REST SigningFile.Content.
+func (nsf *NamedSignedFile) RESTSigningFile() *formats.SigningFile {
+	return &formats.SigningFile{
+		Name:    nsf.Name,
+		Content: base64.StdEncoding.EncodeToString(nsf.Bytes),
+	}
+}
 
 // TestFileGetter returns a test file a signer will accept in its
 // SignFile interface

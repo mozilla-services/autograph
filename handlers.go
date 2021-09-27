@@ -25,6 +25,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	// MinNamedFiles is the minimum number of named files a single
+	// multi-file signing request can include
+	MinNamedFiles = 1
+
+	// MaxNamedFiles is the maximum number of named files a single
+	// multi-file signing request can include
+	MaxNamedFiles = 32
+)
+
 // heartbeatConfig configures the heartbeat handler. It sets timeouts
 // for each backing service to check.
 //
@@ -47,18 +57,20 @@ func hashSHA256AsHex(toHash []byte) string {
 	return fmt.Sprintf("%X", h.Sum(nil))
 }
 
-func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.SignatureResponse, rid, userid, inputHash string, starttime time.Time, err error) {
+func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.SignatureResponse, rid, userid, inputHash string, inputHashes []string, starttime time.Time, err error) {
 	log.WithFields(log.Fields{
-		"rid":         rid,
-		"options":     sigreq.Options,
-		"mode":        sigresp.Mode,
-		"ref":         sigresp.Ref,
-		"type":        sigresp.Type,
-		"signer_id":   sigresp.SignerID,
-		"input_hash":  inputHash,
-		"output_hash": nil,
-		"user_id":     userid,
-		"t":           int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
+		"rid":           rid,
+		"options":       sigreq.Options,
+		"mode":          sigresp.Mode,
+		"ref":           sigresp.Ref,
+		"type":          sigresp.Type,
+		"signer_id":     sigresp.SignerID,
+		"input_hash":    inputHash,
+		"input_hashes":  inputHashes,
+		"output_hash":   nil,
+		"output_hashes": nil,
+		"user_id":       userid,
+		"t":             int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 	}).Info(fmt.Sprintf("signing operation failed with error: %v", err))
 }
 
@@ -121,7 +133,21 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for i, sigreq := range sigreqs {
-		if sigreq.Input == "" {
+		if r.URL.RequestURI() == "/sign/files" {
+			if sigreq.Input != "" {
+				httpError(w, r, http.StatusBadRequest, fmt.Sprintf("input should be empty in sign files signature request %d", i))
+			}
+			if sigreq.Files == nil {
+				httpError(w, r, http.StatusBadRequest, fmt.Sprintf("missing Files in sign files signature request %d", i))
+			}
+			if len(sigreq.Files) < MinNamedFiles {
+				httpError(w, r, http.StatusBadRequest, "Did not receive enough files to sign. Need at least %d", MinNamedFiles)
+				return
+			} else if len(sigreq.Files) > MaxNamedFiles {
+				httpError(w, r, http.StatusBadRequest, "Received too many files to sign (max is %d)", MaxNamedFiles)
+				return
+			}
+		} else if sigreq.Input == "" {
 			httpError(w, r, http.StatusBadRequest, fmt.Sprintf("missing input in signature request %d", i))
 		}
 	}
@@ -135,17 +161,34 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	// the signature is then encoded appropriately, and added to the response slice
 	for i, sigreq := range sigreqs {
 		var (
-			input                 []byte
-			sig                   signer.Signature
-			signedfile            []byte
-			inputHash, outputHash string
+			input                     []byte
+			unsignedNamedFiles        []signer.NamedUnsignedFile
+			sig                       signer.Signature
+			signedfile                []byte
+			signedfiles               []signer.NamedSignedFile
+			inputHash, outputHash     string
+			inputHashes, outputHashes []string
 		)
 
-		// Decode the base64 input data
-		input, err = base64.StdEncoding.DecodeString(sigreq.Input)
-		if err != nil {
-			httpError(w, r, http.StatusBadRequest, "%v", err)
-			return
+		if r.URL.RequestURI() == "/sign/files" {
+			for i, inputFile := range sigreq.Files {
+				log.Debugf("base64 decoding file %d", i)
+				unsignedNamedFile, err := signer.NewNamedUnsignedFile(inputFile)
+				if err != nil {
+					httpError(w, r, http.StatusBadRequest, "%q", err)
+					return
+				}
+				log.Debugf("base64 decoded unsigned named file %d: %s", i, unsignedNamedFile.Name)
+				unsignedNamedFiles = append(unsignedNamedFiles, *unsignedNamedFile)
+			}
+			log.Debugf("signing %d unsigned named files", len(unsignedNamedFiles))
+		} else {
+			// Decode the base64 input data
+			input, err = base64.StdEncoding.DecodeString(sigreq.Input)
+			if err != nil {
+				httpError(w, r, http.StatusBadRequest, "%v", err)
+				return
+			}
 		}
 
 		// returns an error if the signer is not found or if
@@ -179,7 +222,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 			sig, err = hashSigner.SignHash(input, sigreq.Options)
 			if err != nil {
-				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, starttime, err)
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, inputHashes, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
@@ -200,7 +243,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 			sig, err = dataSigner.SignData(input, sigreq.Options)
 			if err != nil {
-				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, starttime, err)
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, inputHashes, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
@@ -221,24 +264,47 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 			signedfile, err = fileSigner.SignFile(input, sigreq.Options)
 			if err != nil {
-				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, starttime, err)
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, inputHashes, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
 			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
 			outputHash = hashSHA256AsHex(signedfile)
+		case "/sign/files":
+			multiFileSigner, ok := requestedSigner.(signer.MultipleFileSigner)
+			if !ok {
+				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement multiple file signing", requestedSignerConfig.ID)
+				return
+			}
+			// calculate a hash of the input files to log
+			for _, inputFile := range unsignedNamedFiles {
+				inputHashes = append(inputHashes, hashSHA256AsHex(inputFile.Bytes))
+			}
+
+			signedfiles, err = multiFileSigner.SignFiles(unsignedNamedFiles, sigreq.Options)
+			if err != nil {
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, inputHashes, starttime, err)
+				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
+				return
+			}
+			for _, signedFile := range signedfiles {
+				outputHashes = append(outputHashes, hashSHA256AsHex(signedFile.Bytes))
+				sigresps[i].SignedFiles = append(sigresps[i].SignedFiles, *signedFile.RESTSigningFile())
+			}
 		}
 		log.WithFields(log.Fields{
-			"rid":         rid,
-			"options":     sigreq.Options,
-			"mode":        sigresps[i].Mode,
-			"ref":         sigresps[i].Ref,
-			"type":        sigresps[i].Type,
-			"signer_id":   sigresps[i].SignerID,
-			"input_hash":  inputHash,
-			"output_hash": outputHash,
-			"user_id":     userid,
-			"t":           int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
+			"rid":           rid,
+			"options":       sigreq.Options,
+			"mode":          sigresps[i].Mode,
+			"ref":           sigresps[i].Ref,
+			"type":          sigresps[i].Type,
+			"signer_id":     sigresps[i].SignerID,
+			"input_hash":    inputHash,
+			"input_hashes":  inputHashes,
+			"output_hash":   outputHash,
+			"output_hashes": outputHashes,
+			"user_id":       userid,
+			"t":             int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("signing operation succeeded")
 	}
 	respdata, err := json.Marshal(sigresps)
