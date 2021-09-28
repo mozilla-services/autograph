@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -20,57 +21,85 @@ import (
 func TestSignFile(t *testing.T) {
 	t.Parallel()
 
-	for i, testcase := range PASSINGTESTCASES {
-		input := unsignedBootstrap
-		// initialize a signer
-		testcase.RSACacheConfig = signer.RSACacheConfig{
-			NumKeys:                5,
-			NumGenerators:          2,
-			GeneratorSleepDuration: time.Minute,
-			FetchTimeout:           100 * time.Millisecond,
-			StatsSampleRate:        10 * time.Second,
-		}
+	inputs := []struct {
+		name    string
+		content []byte
+	}{
+		{
+			name:    "unsigned_bootstrap_2.xpi",
+			content: unsignedBootstrap,
+		},
+		{
+			name:    "ublock_origin-1.33.2-an+fx.xpi",
+			content: ublockOrigin,
+		},
+		{
+			name:    "omni.ja.zip",
+			content: fxOmnija,
+		},
+		{
+			name:    "browser/omni.ja.zip",
+			content: fxBrowserOmnija,
+		},
+	}
 
-		statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
-		if err != nil {
-			t.Fatalf("passing testcase %d: Error constructing statsdClient: %v", i, err)
-		}
-		statsdClient.Namespace = "test_autograph_stats_ns"
-		signerStatsClient, err := signer.NewStatsClient(testcase, statsdClient)
-		if err != nil {
-			t.Fatalf("passing testcase %d: Error constructing signer.StatsdClient: %v", i, err)
-		}
+	for i, testcase := range validSignerConfigs {
+		for _, input := range inputs {
+			inputBytes := input.content
+			t.Run(fmt.Sprintf("test sign file %s signer id %s (%d)", input.name, testcase.ID, i), func(t *testing.T) {
+				t.Parallel()
 
-		s, err := New(testcase, signerStatsClient)
-		if err != nil {
-			t.Fatalf("passing testcase %d: signer initialization failed with: %v", i, err)
-		}
-		if s.Config().Type != testcase.Type {
-			t.Fatalf("passing testcase %d: signer type %q does not match configuration %q", i, s.Config().Type, testcase.Type)
-		}
-		if s.Config().ID != testcase.ID {
-			t.Fatalf("passing testcase %d: signer id %q does not match configuration %q", i, s.Config().ID, testcase.ID)
-		}
-		if s.Config().PrivateKey != testcase.PrivateKey {
-			t.Fatalf("passing testcase %d: signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.PrivateKey)
-		}
-		if s.Config().Mode != testcase.Mode {
-			t.Fatalf("passing testcase %d: signer category %q does not match configuration %q", i, s.Config().Mode, testcase.Mode)
-		}
+				// initialize a signer
+				testcase.RSACacheConfig = signer.RSACacheConfig{
+					NumKeys:                5,
+					NumGenerators:          2,
+					GeneratorSleepDuration: time.Minute,
+					FetchTimeout:           100 * time.Millisecond,
+					StatsSampleRate:        10 * time.Second,
+				}
 
-		// sign input data
-		opts := s.GetDefaultOptions().(Options)
-		if testcase.Mode == ModeAddOnWithRecommendation {
-			opts.Recommendations = []string{"recommended"}
-		}
-		signedXPI, err := s.SignFile(input, opts)
-		if err != nil {
-			t.Fatalf("passing testcase %d %s: failed to sign file with detached PKCS7 sig: %v", i, testcase.ID, err)
-		}
+				statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
+				if err != nil {
+					t.Fatalf("passing testcase %d: Error constructing statsdClient: %v", i, err)
+				}
+				statsdClient.Namespace = "test_autograph_stats_ns"
+				signerStatsClient, err := signer.NewStatsClient(testcase, statsdClient)
+				if err != nil {
+					t.Fatalf("passing testcase %d: Error constructing signer.StatsdClient: %v", i, err)
+				}
 
-		err = VerifySignedFile(signedXPI, nil, opts, time.Now().UTC())
-		if err != nil {
-			t.Fatalf("passing testcase %d: failed to verify PKCS7 signed file: %v", i, err)
+				s, err := New(testcase, signerStatsClient)
+				if err != nil {
+					t.Fatalf("passing testcase %d: signer initialization failed with: %v", i, err)
+				}
+				if s.Config().Type != testcase.Type {
+					t.Fatalf("passing testcase %d: signer type %q does not match configuration %q", i, s.Config().Type, testcase.Type)
+				}
+				if s.Config().ID != testcase.ID {
+					t.Fatalf("passing testcase %d: signer id %q does not match configuration %q", i, s.Config().ID, testcase.ID)
+				}
+				if s.Config().PrivateKey != testcase.PrivateKey {
+					t.Fatalf("passing testcase %d: signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.PrivateKey)
+				}
+				if s.Config().Mode != testcase.Mode {
+					t.Fatalf("passing testcase %d: signer category %q does not match configuration %q", i, s.Config().Mode, testcase.Mode)
+				}
+
+				// sign input data
+				opts := s.GetDefaultOptions().(Options)
+				if testcase.Mode == ModeAddOnWithRecommendation {
+					opts.Recommendations = []string{"recommended"}
+				}
+				signedXPI, err := s.SignFile(inputBytes, opts)
+				if err != nil {
+					t.Fatalf("passing testcase %d %s: failed to sign file with detached PKCS7 sig: %v", i, testcase.ID, err)
+				}
+
+				err = VerifySignedFile(signedXPI, nil, opts, time.Now().UTC())
+				if err != nil {
+					t.Fatalf("passing testcase %d: failed to verify PKCS7 signed file: %v", i, err)
+				}
+			})
 		}
 	}
 }
@@ -79,55 +108,59 @@ func TestSignData(t *testing.T) {
 	t.Parallel()
 
 	input := []byte("foobarbaz1234abcd")
-	for i, testcase := range PASSINGTESTCASES {
-		// initialize a signer
-		s, err := New(testcase, nil)
-		if err != nil {
-			t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
-		}
-		if s.Config().Type != testcase.Type {
-			t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Config().Type, testcase.Type)
-		}
-		if s.Config().ID != testcase.ID {
-			t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.Config().ID, testcase.ID)
-		}
-		if s.Config().PrivateKey != testcase.PrivateKey {
-			t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.PrivateKey)
-		}
-		if s.Config().Mode != testcase.Mode {
-			t.Fatalf("testcase %d signer category %q does not match configuration %q", i, s.Config().Mode, testcase.Mode)
-		}
+	for i, testcase := range validSignerConfigs {
+		t.Run(fmt.Sprintf("test sign data signer id %s (%d)", testcase.ID, i), func(t *testing.T) {
+			t.Parallel()
 
-		// sign input data
-		sig, err := s.SignData(input, s.GetDefaultOptions())
-		if err != nil {
-			t.Fatalf("testcase %d failed to sign data: %v", i, err)
-		}
-		// convert signature to string format
-		sigstr, err := sig.Marshal()
-		if err != nil {
-			t.Fatalf("testcase %d failed to marshal signature: %v", i, err)
-		}
+			// initialize a signer
+			s, err := New(testcase, nil)
+			if err != nil {
+				t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
+			}
+			if s.Config().Type != testcase.Type {
+				t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Config().Type, testcase.Type)
+			}
+			if s.Config().ID != testcase.ID {
+				t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.Config().ID, testcase.ID)
+			}
+			if s.Config().PrivateKey != testcase.PrivateKey {
+				t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.Config().PrivateKey, testcase.PrivateKey)
+			}
+			if s.Config().Mode != testcase.Mode {
+				t.Fatalf("testcase %d signer category %q does not match configuration %q", i, s.Config().Mode, testcase.Mode)
+			}
 
-		// convert string format back to signature
-		sig2, err := Unmarshal(sigstr, input)
-		if err != nil {
-			t.Fatalf("testcase %d failed to unmarshal signature: %v", i, err)
-		}
+			// sign input data
+			sig, err := s.SignData(input, s.GetDefaultOptions())
+			if err != nil {
+				t.Fatalf("testcase %d failed to sign data: %v", i, err)
+			}
+			// convert signature to string format
+			sigstr, err := sig.Marshal()
+			if err != nil {
+				t.Fatalf("testcase %d failed to marshal signature: %v", i, err)
+			}
 
-		// make sure we still have the same string representation
-		sigstr2, err := sig2.Marshal()
-		if err != nil {
-			t.Fatalf("testcase %d failed to re-marshal signature: %v", i, err)
-		}
-		if sigstr != sigstr2 {
-			t.Fatalf("testcase %d marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
-				i, sigstr, sigstr2)
-		}
-		// verify signature on input data
-		if sig2.VerifyWithChain(nil) != nil {
-			t.Fatalf("testcase %d failed to verify xpi signature", i)
-		}
+			// convert string format back to signature
+			sig2, err := Unmarshal(sigstr, input)
+			if err != nil {
+				t.Fatalf("testcase %d failed to unmarshal signature: %v", i, err)
+			}
+
+			// make sure we still have the same string representation
+			sigstr2, err := sig2.Marshal()
+			if err != nil {
+				t.Fatalf("testcase %d failed to re-marshal signature: %v", i, err)
+			}
+			if sigstr != sigstr2 {
+				t.Fatalf("testcase %d marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
+					i, sigstr, sigstr2)
+			}
+			// verify signature on input data
+			if sig2.VerifyWithChain(nil) != nil {
+				t.Fatalf("testcase %d failed to verify xpi signature", i)
+			}
+		})
 	}
 }
 
@@ -137,7 +170,7 @@ func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 
 	// init a signer
-	s, err := New(PASSINGTESTCASES[3], nil)
+	s, err := New(validSignerConfigs[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -210,7 +243,7 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 	t.Parallel()
 
 	input := []byte("foobarbaz1234abcd")
-	testcase := PASSINGTESTCASES[3]
+	testcase := validSignerConfigs[3]
 
 	s, err := New(testcase, nil)
 	if err != nil {
@@ -245,7 +278,7 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 func TestNewFailure(t *testing.T) {
 	t.Parallel()
 
-	for i, testcase := range FAILINGTESTCASES {
+	for i, testcase := range invalidSignerConfigs {
 		_, err := New(testcase.cfg, nil)
 		if !strings.Contains(err.Error(), testcase.err) {
 			t.Fatalf("testcase %d expected to fail with '%v' but failed with '%v' instead", i, testcase.err, err)
@@ -259,7 +292,7 @@ func TestNewFailure(t *testing.T) {
 func TestOptionsP7Digest(t *testing.T) {
 	t.Parallel()
 
-	testcase := PASSINGTESTCASES[3]
+	testcase := validSignerConfigs[3]
 	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
@@ -296,7 +329,7 @@ func TestNoID(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3], nil)
+	s, err := New(validSignerConfigs[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -314,7 +347,7 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3], nil)
+	s, err := New(validSignerConfigs[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -350,7 +383,7 @@ func TestBadPKCS7DigestErrs(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3], nil)
+	s, err := New(validSignerConfigs[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -372,7 +405,7 @@ func TestMarshalUnfinishedSignature(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3], nil)
+	s, err := New(validSignerConfigs[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -395,7 +428,7 @@ func TestMarshalEmptySignature(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3], nil)
+	s, err := New(validSignerConfigs[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -440,7 +473,7 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(PASSINGTESTCASES[3], nil)
+	s, err := New(validSignerConfigs[3], nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -462,7 +495,7 @@ func TestRsaCaching(t *testing.T) {
 	t.Parallel()
 
 	// initialize an RSA signer with cache
-	testcase := PASSINGTESTCASES[0]
+	testcase := validSignerConfigs[0]
 	testcase.RSACacheConfig.NumKeys = 2
 	testcase.RSACacheConfig.NumGenerators = 0 // we'll run populateRsaCache directly
 	s, err := New(testcase, nil)
@@ -529,7 +562,7 @@ func TestRSACacheSizeMonitor(t *testing.T) {
 		t.Parallel()
 
 		// initialize an RSA signer with cache
-		testcase := PASSINGTESTCASES[0]
+		testcase := validSignerConfigs[0]
 		s, err := New(testcase, nil)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
@@ -546,7 +579,7 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 
 	input := unsignedBootstrap
 	// initialize a signer
-	testcase := PASSINGTESTCASES[0]
+	testcase := validSignerConfigs[0]
 	s, err := New(testcase, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
@@ -585,7 +618,7 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 	}
 }
 
-var PASSINGTESTCASES = []signer.Configuration{
+var validSignerConfigs = []signer.Configuration{
 	signer.Configuration{
 		ID:   "rsa addon",
 		Type: Type,
@@ -1149,7 +1182,7 @@ GJb5Zv3/scygBwYFK4EEACKhZANiAAQ8N/q21hJqKJTnsf6PN7BK0CBc34lJN6xx
 	},
 }
 
-var FAILINGTESTCASES = []struct {
+var invalidSignerConfigs = []struct {
 	err string
 	cfg signer.Configuration
 }{

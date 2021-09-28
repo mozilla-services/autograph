@@ -176,7 +176,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 	t.Parallel()
 
 	var recTestCase signer.Configuration
-	for _, testcase := range PASSINGTESTCASES {
+	for _, testcase := range validSignerConfigs {
 		if testcase.Mode == ModeAddOnWithRecommendation {
 			recTestCase = testcase
 			break
@@ -220,7 +220,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		t.Parallel()
 
 		// initialize a signer
-		s, err := New(PASSINGTESTCASES[0], nil)
+		s, err := New(validSignerConfigs[0], nil)
 		if err != nil {
 			t.Fatalf("testcase %d signer initialization failed with: %v", 0, err)
 		}
@@ -337,7 +337,7 @@ func TestRecommendationNotIncludedInOtherSignerModes(t *testing.T) {
 
 	input := unsignedWithRec
 
-	for i, testcase := range PASSINGTESTCASES {
+	for i, testcase := range validSignerConfigs {
 		// skip signers that support recommendations
 		if testcase.Mode == ModeAddOnWithRecommendation {
 			continue
@@ -378,7 +378,7 @@ func TestSignFileWithRecommendation(t *testing.T) {
 	t.Parallel()
 
 	var recTestCase signer.Configuration
-	for _, testcase := range PASSINGTESTCASES {
+	for _, testcase := range validSignerConfigs {
 		if testcase.Mode == ModeAddOnWithRecommendation {
 			recTestCase = testcase
 			break

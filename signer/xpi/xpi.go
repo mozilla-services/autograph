@@ -52,6 +52,12 @@ const (
 	pkcs7SignatureFilePath = "META-INF/mozilla.sf"
 	pkcs7SigPath           = "META-INF/mozilla.rsa"
 
+	// webextManifestPath is the path to the WebExtension API
+	// manifest
+	//
+	// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json
+	webextManifestPath = "manifest.json"
+
 	// rsaKeyMinSize is the minimum RSA Key size for issuer keys and new EE RSA keys
 	rsaKeyMinSize = 2048
 )

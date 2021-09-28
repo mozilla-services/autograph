@@ -75,7 +75,7 @@ func TestIntToCOSEAlg(t *testing.T) {
 func TestGenerateCOSEKeyPair(t *testing.T) {
 	// returns an initialized XPI signer
 	initSigner := func(t *testing.T) *XPISigner {
-		testcase := PASSINGTESTCASES[0]
+		testcase := validSignerConfigs[0]
 		s, err := New(testcase, nil)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
@@ -503,7 +503,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 		t.Fatalf("error unmarshaling invalidSigBytes %q", err)
 	}
 
-	s, err := New(PASSINGTESTCASES[0], nil)
+	s, err := New(validSignerConfigs[0], nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %q", err)
 	}
@@ -513,7 +513,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 	}
 
 	testCNRoots := x509.NewCertPool()
-	ok := testCNRoots.AppendCertsFromPEM([]byte(PASSINGTESTCASES[0].Certificate))
+	ok := testCNRoots.AppendCertsFromPEM([]byte(validSignerConfigs[0].Certificate))
 	if !ok {
 		t.Fatalf("failed to add root cert to pool")
 	}
@@ -841,7 +841,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 func TestIssueCOSESignatureErrs(t *testing.T) {
 	t.Parallel()
 
-	signer, err := New(PASSINGTESTCASES[0], nil)
+	signer, err := New(validSignerConfigs[0], nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
