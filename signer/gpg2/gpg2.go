@@ -197,7 +197,10 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 		return nil, fmt.Errorf("gpg2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer os.Remove(tmpContentFile.Name())
-	ioutil.WriteFile(tmpContentFile.Name(), data, 0755)
+	err = ioutil.WriteFile(tmpContentFile.Name(), data, 0755)
+	if err != nil {
+		return nil, fmt.Errorf("gpg2: failed to write tempfile for input to sign: %w", err)
+	}
 
 	// take a mutex to prevent multiple invocations of gpg in parallel
 	serializeSigning.Lock()
