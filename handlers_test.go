@@ -94,6 +94,14 @@ func TestBadRequest(t *testing.T) {
 		{`/sign/files`, `POST`, `[{"files": [{"name": "spam/eggs/foo.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
 		// file name is windows path
 		{`/sign/files`, `POST`, `[{"files": [{"name": "C:\spam\eggs\foo.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name is file:// url
+		{`/sign/files`, `POST`, `[{"files": [{"name": "file:///etc/hosts", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name with @
+		{`/sign/files`, `POST`, `[{"files": [{"name": "file@localhost.wtf", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name beginning with \0
+		{`/sign/files`, `POST`, `[{"files": [{"name": "\0file", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
+		// file name containing \0
+		{`/sign/files`, `POST`, `[{"files": [{"name": "\0/file", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
 		// file name is >255 chars (404 long)
 		{`/sign/files`, `POST`, `[{"files": [{"name": "spamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspamspam.dsc", "content":"aGVsbG8="}], "keyid": "randompgp-debsign"}]`},
 
@@ -566,6 +574,8 @@ func TestDebug(t *testing.T) {
 func TestHandleGetAuthKeyIDs(t *testing.T) {
 	t.Parallel()
 
+	const autographDevAliceKeyIDsJSON = "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"pgpsubkey-debsign\",\"randompgp\",\"randompgp-debsign\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]"
+
 	var testcases = []struct {
 		name   string
 		method string
@@ -633,7 +643,7 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 			body:            "",
 			authorizeID:     "alice",
 			expectedStatus:  http.StatusOK,
-			expectedBody:    "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"randompgp\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]",
+			expectedBody:    autographDevAliceKeyIDsJSON,
 			expectedHeaders: http.Header{"Content-Type": []string{"application/json"}},
 		},
 		{
@@ -707,7 +717,7 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 			nilBody:         true,
 			authorizeID:     "alice",
 			expectedStatus:  http.StatusOK,
-			expectedBody:    "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"randompgp\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]",
+			expectedBody:    autographDevAliceKeyIDsJSON,
 			expectedHeaders: http.Header{"Content-Type": []string{"application/json"}},
 		},
 	}

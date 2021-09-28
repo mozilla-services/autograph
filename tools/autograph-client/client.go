@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -36,6 +37,7 @@ const (
 	requestTypeData
 	requestTypeHash
 	requestTypeFile
+	requestTypeFiles
 )
 
 type coseAlgs []string
@@ -56,6 +58,8 @@ func urlToRequestType(url string) requestType {
 		return requestTypeHash
 	} else if strings.HasSuffix(url, "/sign/file") {
 		return requestTypeFile
+	} else if strings.HasSuffix(url, "/sign/files") {
+		return requestTypeFiles
 	}
 	log.Fatalf("Unrecognized request type for url %q", url)
 	return requestTypeNone
@@ -63,13 +67,13 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, outkeyfile, keyid, cn, pk7digest, rootPath, verificationTimeInput string
-		iter, maxworkers, sa                                                                                              int
-		debug, listKeyIDs, noVerify                                                                                       bool
-		err                                                                                                               error
-		requests                                                                                                          []formats.SignatureRequest
-		algs                                                                                                              coseAlgs
-		verificationTime                                                                                                  time.Time
+		userid, pass, data, hash, url, infile, outfile, outkeyfile, outFilesPrefix, keyid, cn, pk7digest, rootPath, verificationTimeInput string
+		iter, maxworkers, sa                                                                                                              int
+		debug, listKeyIDs, noVerify                                                                                                       bool
+		err                                                                                                                               error
+		requests                                                                                                                          []formats.SignatureRequest
+		algs                                                                                                                              coseAlgs
+		verificationTime                                                                                                                  time.Time
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - command line client to the autograph service\n\n")
@@ -122,6 +126,9 @@ examples:
 * sign some data with gpg2:
         $ go run client.go -d $(echo 'hello' | base64) -k pgpsubkey -o /tmp/testsig.pgp -ko /tmp/testkey.asc
 
+* sign some files with debsign and write signed output files to signed_foo_*:
+        $ go run client.go -k pgpsubkey-debsign -outfilesprefix signed_foo_ foo.dsc foo.buildinfo foo.changes
+
 * sign SHA1 hashed data with rsa pss:
         $ go run client.go -D -a $(echo hi | sha1sum -b | cut -d ' ' -f 1 | xxd -r -p | base64) -k dummyrsapss -o signed-hash.out -ko /tmp/testkey.pub
 
@@ -136,6 +143,7 @@ examples:
 	flag.StringVar(&infile, "f", "/path/to/file", "Input file to sign, will use the /sign/file endpoint")
 	flag.StringVar(&outfile, "o", ``, "Output file. If set, writes the signature or file to this location")
 	flag.StringVar(&outkeyfile, "ko", ``, "Key Output file. If set, writes the public key to a file at this location")
+	flag.StringVar(&outFilesPrefix, "outfilesprefix", `signed_`, "Prefix to use for output filenames when signing multiple files. Defaults to 'signed_'")
 	flag.StringVar(&keyid, "k", ``, "Key ID to request a signature from a specific signer")
 	flag.StringVar(&url, "t", `http://localhost:8000`, "target server, do not specific a URI or trailing slash")
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
@@ -170,6 +178,10 @@ examples:
 		os.Exit(0)
 	}
 
+	var (
+		inputFiles []formats.SigningFile
+		request    formats.SignatureRequest
+	)
 	if data != "base64(data)" {
 		log.Printf("signing data %q", data)
 		url = url + "/sign/data"
@@ -185,11 +197,31 @@ examples:
 			log.Fatal(err)
 		}
 		data = base64.StdEncoding.EncodeToString(filebytes)
+	} else {
+		log.Printf("signing files %q", flag.Args())
+		url = url + "/sign/files"
+		for _, inputFilename := range flag.Args() {
+			inputFileBytes, err := ioutil.ReadFile(inputFilename)
+			if err != nil {
+				log.Fatal(err)
+			}
+			inputFiles = append(inputFiles, formats.SigningFile{
+				Name:    filepath.Base(inputFilename),
+				Content: base64.StdEncoding.EncodeToString(inputFileBytes),
+			})
+		}
 	}
 
-	request := formats.SignatureRequest{
-		Input: data,
-		KeyID: keyid,
+	if strings.HasSuffix(url, "/sign/files") {
+		request = formats.SignatureRequest{
+			Files: inputFiles,
+			KeyID: keyid,
+		}
+	} else {
+		request = formats.SignatureRequest{
+			Input: data,
+			KeyID: keyid,
+		}
 	}
 	// if signing an xpi, the CN, COSEAlgorithms, and PKCS7Digest are set in the options
 	if cn != "" {
@@ -279,14 +311,18 @@ examples:
 			}
 			reqType := urlToRequestType(url)
 			for i, response := range responses {
-				input, err := base64.StdEncoding.DecodeString(requests[i].Input)
-				if err != nil {
-					log.Fatal(err)
-				}
 				var (
-					sigStatus bool
-					sigData   []byte
+					input       []byte
+					signedFiles []formats.SigningFile
+					sigStatus   bool
+					sigData     []byte
 				)
+				if reqType != requestTypeFiles {
+					input, err = base64.StdEncoding.DecodeString(requests[i].Input)
+					if err != nil {
+						log.Fatal(err)
+					}
+				}
 				switch response.Type {
 				case contentsignature.Type:
 					if !noVerify {
@@ -348,10 +384,18 @@ examples:
 						log.Fatal(err)
 					}
 				case gpg2.Type:
-					if !noVerify {
-						sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
+					if reqType == requestTypeFiles {
+						// TODO: implement verify pgp clearsigned
+						if !noVerify {
+							sigStatus = true
+						}
+						signedFiles = response.SignedFiles
+					} else {
+						if !noVerify {
+							sigStatus = verifyPGP(input, response.Signature, response.PublicKey)
+						}
+						sigData = []byte(response.Signature)
 					}
-					sigData = []byte(response.Signature)
 				default:
 					log.Fatalf("unsupported signature type: %s", response.Type)
 				}
@@ -375,6 +419,18 @@ examples:
 						log.Fatal(err)
 					}
 					log.Println("public key written to", outkeyfile)
+				}
+				for _, signedFile := range signedFiles {
+					signedOutputFilename := fmt.Sprintf("%s%s", outFilesPrefix, signedFile.Name)
+					signedFileBytes, err := base64.StdEncoding.DecodeString(signedFile.Content)
+					if err != nil {
+						log.Fatal(err)
+					}
+					err = ioutil.WriteFile(signedOutputFilename, signedFileBytes, 0644)
+					if err != nil {
+						log.Fatal(err)
+					}
+					log.Printf("wrote signed file %s", signedOutputFilename)
 				}
 			}
 			workers--

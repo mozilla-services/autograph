@@ -1,19 +1,13 @@
 # PGP Signing with GPG2
 
-This signer implements the Pretty Good Privacy signature format. It
-accepts data on the `/sign/data` interface and returns
-armored detached signatures like the `pgp` signer.
+This signer implements the Pretty Good Privacy signature format and
+Debian GPG signing using `debsign`.
 
-**Try the \`pgp\` signer first since it keeps private keys in memory,
-which is more secure.**
+When configured in `gpg2` mode it accepts data on the `/sign/data`
+interface and returns armored detached signatures.
 
-Only use the this signer if the `pgp` signer doesn\'t
-understand your key format and you need to load private keys with
-passphrases exported with the [unsupported and non-standard gnu-dummy
-S2K algorithm](https://github.com/golang/go/issues/13605) and sign with
-a subkey. Also prefer the `pgp` signer, since this signer 1)
-requires a the gpg2 binary with version \>2.1, 2) writes private keys to
-keyrings on disk, and 3) shells out to the `gpg2` binary.
+In `debsign` mode it accepts files on the `/sign/files` interface and
+returns the clearsigned files.
 
 Example Usage:
 
@@ -69,15 +63,61 @@ signers:
     -----END PGP PUBLIC KEY BLOCK-----
 ```
 
+The **optional** field `mode` it can be either `gpg2` or
+`debsign`. When empty or missing it defaults to `gpg2` and should use
+the full key fingerprint in the `keyid` field. For example:
+
+```yaml
+- id: some-pgp-key
+  type: gpg2
+  mode: debsign
+  keyid: A2910E4FBEA076009BCDE536DD0A5D99AAAB1F1A
+  passphrase: abcdef123
+  privatekey: |
+    -----BEGIN PGP PRIVATE KEY BLOCK-----
+
+    lQOYBFuW9xABCACzCLYHwgGba7hi+lwhD/Hr5qqpg+UuN+88NclYgLWyl1nPpx2D
+    ...
+    HQASoA7mirON
+    =vJUu
+    -----END PGP PRIVATE KEY BLOCK-----
+  publickey: |
+    -----BEGIN PGP PUBLIC KEY BLOCK-----
+    ...
+    =459B
+    -----END PGP PUBLIC KEY BLOCK-----
+```
+
 ## Signature request
 
-This signer only supports the `/sign/data/` endpoint.
+This signer only supports the `/sign/data/` endpoint in `gpg2` mode:
 
 ``` json
 [
     {
         "input": "Y2FyaWJvdW1hdXJpY2UK",
         "keyid": "pgpsubkey"
+    }
+]
+```
+
+This signer only supports the `/sign/files/` endpoint in `debsign` mode:
+
+``` json
+[
+    {
+        "input": "",
+        "keyid": "pgpsubkey-debsign",
+        "signed_files": [
+          {
+            "name": "sphinx_1.7.2-1.dsc",
+            "content": "LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQpIYXNoOiBTS..."
+          },
+          {
+            "name": "sphinx_1.7.2-1_amd64.buildinfo",
+            "content": "LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQpIYXNoOiBTS..."
+          }
+        ]
     }
 ]
 ```
@@ -97,6 +137,30 @@ recover the standard armored signature that gnupg expects.
     "signer_id": "some-pgp-key",
     "public_key":"-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxsBNBFuW9xABCACzCLYHwg...",
     "signature":"-----BEGIN PGP SIGNATURE-----\n\nwsBcBAABCAAQBQJbt3KqCRDdCl2Z...."
+  }
+]
+```
+
+In `debsign` mode responses are at the field `signed_files`:
+
+```json
+[
+  {
+    "ref": "boxfa5qavzf11p6zme2pd74tn",
+    "type": "gpg2",
+    "mode": "debsign",
+    "signer_id": "pgpsubkey-debsign",
+    "public_key": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBFwaoDMBEAC0FVHFLTVYFSr8ZpCWOKyF+Xrpcr032pOr3p3rBH6Ld9ZTpaLS...",
+    "signed_files": [
+      {
+        "name": "sphinx_1.7.2-1.dsc",
+        "content": "LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQpIYXNoOiBTS..."
+      },
+      {
+        "name": "sphinx_1.7.2-1_amd64.buildinfo",
+        "content": "LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQpIYXNoOiBTS..."
+      }
+    ]
   }
 ]
 ```

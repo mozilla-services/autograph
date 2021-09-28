@@ -121,7 +121,7 @@ cannot occur next to each other in the file name.
 example:
 
 ``` bash
-POST /sign/file
+POST /sign/files
 Host: autograph.example.net
 Content-type: application/json
 Authorization: Hawk id="alice", mac="756lSgQEYLoc6V0Uv2wS8pRg/h+4WFUVKWQynCFvY8Y=", ts="1524487134", nonce="MrpGL35q", hash="9m3WhtGQDuHermi5fDYBGJlOqNeK5B3nk0lKreZ+YSw=", ext="933126753"

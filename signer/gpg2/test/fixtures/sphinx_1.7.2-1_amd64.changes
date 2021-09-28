@@ -1,0 +1,74 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Fri, 13 Apr 2018 22:52:25 +0100
+Source: sphinx
+Binary: python-sphinx python3-sphinx sphinx-common sphinx-doc libjs-sphinxdoc
+Architecture: source all
+Version: 1.7.2-1
+Distribution: UNRELEASED
+Urgency: medium
+Maintainer: Debian Python Modules Team <python-modules-team@lists.alioth.debian.org>
+Changed-By: Chris Lamb <lamby@debian.org>
+Description:
+ libjs-sphinxdoc - JavaScript support for Sphinx documentation
+ python-sphinx - documentation generator for Python projects (implemented in Pytho
+ python3-sphinx - documentation generator for Python projects (implemented in Pytho
+ sphinx-common - documentation generator for Python projects - common data
+ sphinx-doc - documentation generator for Python projects - documentation
+Changes:
+ sphinx (1.7.2-1) UNRELEASED; urgency=medium
+ .
+   [ Chris Lamb ]
+   * New upstream release.
+ .
+   [ Dmitry Shachnev ]
+   * Merge 1.6.7-2 upload from unstable.
+Checksums-Sha1:
+ 3c7ba10ca6e46b80044fea71f2486d98c4aebbd1 3754 sphinx_1.7.2-1.dsc
+ 1d1fa6954ae216cd44ea52dfc67063f26939c8f5 4719536 sphinx_1.7.2.orig.tar.gz
+ facfa686a3a0bc98c269e16e66427f96e00889ad 34268 sphinx_1.7.2-1.debian.tar.xz
+ 36a42125afd83731e05596d7037314399622e400 88720 libjs-sphinxdoc_1.7.2-1_all.deb
+ 8c2ecdf4e4ffd1f4880b486e53c99207c4d69dbc 443380 python-sphinx_1.7.2-1_all.deb
+ e518d97dceb77d827734d48ac02313fc0ed4b08c 441676 python3-sphinx_1.7.2-1_all.deb
+ 01e65d2e2c45121e06aff6f46427d6a31251e67c 432892 sphinx-common_1.7.2-1_all.deb
+ 8bec16b4db2ddf6776f7cfdcf04cd07fe32269ed 1198352 sphinx-doc_1.7.2-1_all.deb
+ 9c3194ba6dab7409b0e95b76ab5bd5cd6da21fd8 15238 sphinx_1.7.2-1_amd64.buildinfo
+Checksums-Sha256:
+ 01b74eed4619d52a75707961004f738b6985bd993962b948645dcd061235fe66 3754 sphinx_1.7.2-1.dsc
+ 5a1c9a0fec678c24b9a2f5afba240c04668edb7f45c67ce2ed008996b3f21ae2 4719536 sphinx_1.7.2.orig.tar.gz
+ a6a825914b19cfdbc22df858b0cecc497765dad2058deae20a88a6a2f9d57d24 34268 sphinx_1.7.2-1.debian.tar.xz
+ c6267177819e0a27b8f9296b1d5106e253e84cf0722fbdf8d2bff489befb81d8 88720 libjs-sphinxdoc_1.7.2-1_all.deb
+ c55dc8f59798a835e6f78adfd95d73f9cf3382e440cdf96b2edbdb1990280f23 443380 python-sphinx_1.7.2-1_all.deb
+ 3f2b279b572d2fc36d9cc84c9fcded242ed930d42350e1d980c4aed45ee4ae2a 441676 python3-sphinx_1.7.2-1_all.deb
+ ece661af9ca87723169f48e68a45af0b5157da4b724a185b99ef42ed22e5f378 432892 sphinx-common_1.7.2-1_all.deb
+ 67722aa0934b9ebce8a870a34542104017491766c2515665c07128ad46b4e6b7 1198352 sphinx-doc_1.7.2-1_all.deb
+ f3e9782a2995a51a91a3c51ab0a306fc1f61c1b3d92d488aa8e5fbb9d8fe2d30 15238 sphinx_1.7.2-1_amd64.buildinfo
+Files:
+ db1177999615f0aaeed19bf8fc850fc9 3754 python optional sphinx_1.7.2-1.dsc
+ 21a08e994e6a289ed14eecefde2b4f2f 4719536 python optional sphinx_1.7.2.orig.tar.gz
+ e147e2afa47e7e58d1288ad8818c3de0 34268 python optional sphinx_1.7.2-1.debian.tar.xz
+ 4a4df0c2ce6f087414a5dc5802885fd2 88720 javascript optional libjs-sphinxdoc_1.7.2-1_all.deb
+ 15b065a197e938715bf501b33066adf2 443380 python optional python-sphinx_1.7.2-1_all.deb
+ 942189b1dd93faa36faa3552a9d40042 441676 python optional python3-sphinx_1.7.2-1_all.deb
+ f6a5889bd4e807800239721d365a5f62 432892 python optional sphinx-common_1.7.2-1_all.deb
+ 86497c90b6cda029576933778357004e 1198352 doc optional sphinx-doc_1.7.2-1_all.deb
+ fb16629356705f593b80b2df8fa8fa19 15238 python optional sphinx_1.7.2-1_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEQw+hF5tfsLeq16ge4J9rT55v3MsFAmFV/kEACgkQ4J9rT55v
+3Mvx5xAAlHMdr9vwp3LCAWwW4flbhhYtDyJo5fSPUAK5L32BhGeXBsMQr2nVzLWC
+lqzHIHbjIaeznsGCuv0FJ03bU8GHHlpkBa2URLOedcR6ylGjUjphtB7rZaPplryY
+K2piL5krdCfr/HzxOWxulJNTWApe5/OO81gIZLVOTGqMlCtgb7Qy8a+lT0ZNEEYq
+gpIyakx6RwbJ8zahhdEV8gXOR958HuBTMy/2TICbdJgtyvcdeJMSN9t+Azw+AZNK
+6CR0i42A4O8IojV7O6KDoLrVNpb4/0RMBYEyLqjp4IFRblPxma2Ar/0+sGeaqZUc
+2qj/qQIqNOyf7M0E0R4y9C1WUkIywL5Pxf67O9I2AaTz9WjO8Tbc+1NRVozTn8Wi
+rrarkAEzilXwWAM7JaIw0vDR2zGm7Eggmlsuz+XwrkAkt5XbxjDgWN902lg+1B8+
+9tnFtjbvVQATTnJ1qWzNV78klQaRbBPM+aH720yTTUjplUYZiyUvRd3QuEPl1m/b
+7Gs+F4WnhnLVD0DZfN1SM9K6HX5X+troqqwmSSewu3Xb1+AX1Hgpr8hIOS8q4W7k
+cExvpihedWoKtTlXX4eRHJrx2tSiJXQ/bO8k/ArPqigsZTUIFTU46QJsoMnlKRI+
+npB7Z4KvRd3nHl+9A/Ulwnyi0nqiZlA1M9DOcL2iXwAwRZSv3kY=
+=i0IL
+-----END PGP SIGNATURE-----
