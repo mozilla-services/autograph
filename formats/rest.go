@@ -1,9 +1,18 @@
 package formats
 
+// SigningFile is a file to sign when included in a request to sign
+// multiple files or a signed file when included in a response to
+// signing multiple files
+type SigningFile struct {
+	Name    string `json:"name"`
+	Content string `json:"content"`
+}
+
 // SignatureRequest is sent by a client to request a signature on input data
 type SignatureRequest struct {
-	Input   string `json:"input"`
-	KeyID   string `json:"keyid,omitempty"`
+	Input   string        `json:"input"`
+	Files   []SigningFile `json:"files,omitempty"`
+	KeyID   string        `json:"keyid,omitempty"`
 	Options interface{}
 }
 
