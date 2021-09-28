@@ -139,7 +139,10 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 		return nil, fmt.Errorf("apk2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer os.Remove(tmpAPKFile.Name())
-	ioutil.WriteFile(tmpAPKFile.Name(), file, 0755)
+	err = ioutil.WriteFile(tmpAPKFile.Name(), file, 0755)
+	if err != nil {
+		return nil, fmt.Errorf("apk2: failed to write tempfile for input to sign: %w", err)
+	}
 
 	args := []string{
 		"-jar", "/usr/share/java/apksigner.jar", "sign",

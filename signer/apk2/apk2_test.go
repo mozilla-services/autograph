@@ -182,7 +182,10 @@ func TestSignFile(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer os.Remove(tmpApk.Name())
-		ioutil.WriteFile(tmpApk.Name(), signedFile, 0755)
+		err = ioutil.WriteFile(tmpApk.Name(), signedFile, 0755)
+		if err != nil {
+			t.Fatalf("error writing file %s: %q", tmpApk.Name(), err)
+		}
 
 		// call apksigner to verify the APK
 		apkSignerVerifySig := exec.Command("java", "-jar", "/usr/share/java/apksigner.jar", "verify", "--verbose", tmpApk.Name())

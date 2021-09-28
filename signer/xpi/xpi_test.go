@@ -187,14 +187,20 @@ func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ioutil.WriteFile(tmpSignatureFile.Name(), []byte(pkcs7Sig), 0755)
+	err = ioutil.WriteFile(tmpSignatureFile.Name(), []byte(pkcs7Sig), 0755)
+	if err != nil {
+		t.Fatalf("error writing file %s: %q", tmpSignatureFile.Name(), err)
+	}
 
 	// write the input to a temp file
 	tmpContentFile, err := ioutil.TempFile("", "TestSignDataAndVerifyWithOpenSSL_input")
 	if err != nil {
 		t.Fatal(err)
 	}
-	ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
+	err = ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// write the issuer cert to a temp file
 	tmpIssuerCertFile, err := ioutil.TempFile("", "TestSignDataAndVerifyWithOpenSSL_issuer")

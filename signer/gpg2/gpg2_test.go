@@ -157,15 +157,22 @@ func TestSignData(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer os.Remove(tmpSignatureFile.Name())
-		ioutil.WriteFile(tmpSignatureFile.Name(), []byte(sigstr), 0755)
+		err = ioutil.WriteFile(tmpSignatureFile.Name(), []byte(sigstr), 0755)
+		if err != nil {
+			t.Fatalf("error writing file %s: %q", tmpSignatureFile.Name(), err)
+		}
 
 		// write the input to a temp file
 		tmpContentFile, err := ioutil.TempFile("", "gpg2_TestSignPGPAndVerifyWithGnuPG_input")
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		defer os.Remove(tmpContentFile.Name())
-		ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
+		err = ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		// write the public key to a temp file
 		tmpPublicKeyFile, err := ioutil.TempFile("", "gpg2_TestSignPGPAndVerifyWithGnuPG_publickey")
@@ -174,7 +181,10 @@ func TestSignData(t *testing.T) {
 		}
 		defer os.Remove(tmpPublicKeyFile.Name())
 		// fmt.Printf("loading %s\n", s.PublicKey)
-		ioutil.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
+		err = ioutil.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		defer os.Remove("/tmp/autograph_test_gpg2_keyring.gpg")
 		defer os.Remove("/tmp/autograph_test_gpg2_secring.gpg")
