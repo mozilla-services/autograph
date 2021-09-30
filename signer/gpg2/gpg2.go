@@ -224,8 +224,12 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	if err != nil {
 		return nil, fmt.Errorf("gpg2: failed to create stdin pipe for sign cmd: %w", err)
 	}
-	io.WriteString(stdin, s.passphrase)
-	stdin.Close()
+	if _, err = io.WriteString(stdin, s.passphrase); err != nil {
+		return nil, fmt.Errorf("gpg2: failed to write passphrase to stdin pipe for sign cmd: %w", err)
+	}
+	if err = stdin.Close(); err != nil {
+		return nil, fmt.Errorf("gpg2: failed to close to stdin pipe for sign cmd: %w", err)
+	}
 	out, err := gpgVerifySig.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("gpg2: failed to sign input %s\n%s", err, out)
