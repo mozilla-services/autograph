@@ -47,7 +47,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid type", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := gpg2signerconf
+		invalidConf := pgpsubkeyGPG2SignerConf
 		invalidConf.Type = "badType"
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -55,7 +55,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid ID", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := gpg2signerconf
+		invalidConf := pgpsubkeyGPG2SignerConf
 		invalidConf.ID = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -63,7 +63,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid PrivateKey", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := gpg2signerconf
+		invalidConf := pgpsubkeyGPG2SignerConf
 		invalidConf.PrivateKey = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -71,7 +71,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid PublicKey", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := gpg2signerconf
+		invalidConf := pgpsubkeyGPG2SignerConf
 		invalidConf.PublicKey = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -79,7 +79,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid KeyID", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := gpg2signerconf
+		invalidConf := pgpsubkeyGPG2SignerConf
 		invalidConf.KeyID = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -87,7 +87,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("non-alphnumeric KeyID", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := gpg2signerconf
+		invalidConf := pgpsubkeyGPG2SignerConf
 		invalidConf.KeyID = "!?;\\"
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -244,7 +244,7 @@ var randompgpPrivateKey string
 //go:embed "test/fixtures/randompgp.pub"
 var randompgpPublicKey string
 
-var randompgpconf = signer.Configuration{
+var randompgpGPG2SignerConf = signer.Configuration{
 	ID:         "gpg2test-randompgp",
 	Type:       Type,
 	KeyID:      "0xDD0A5D99AAAB1F1A",
@@ -259,7 +259,7 @@ var pgpsubkeyPrivateKey string
 //go:embed "test/fixtures/pgpsubkey.pub"
 var pgpsubkeyPublicKey string
 
-var gpg2signerconf = signer.Configuration{
+var pgpsubkeyGPG2SignerConf = signer.Configuration{
 	ID:         "gpg2test",
 	Type:       Type,
 	KeyID:      "0xE09F6B4F9E6FDCCB",
@@ -269,6 +269,6 @@ var gpg2signerconf = signer.Configuration{
 }
 
 var validSignerConfigs = []signer.Configuration{
-	randompgpconf,
-	gpg2signerconf,
+	randompgpGPG2SignerConf,
+	randompgpDebsignSignerConf,
 }
