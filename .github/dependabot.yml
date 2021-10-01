@@ -25,10 +25,7 @@ updates:
   ignore:
   - dependency-name: postgres
     versions:
-    - ">= 12.a, < 13"
-  - dependency-name: postgres
-    versions:
-    - ">= 13.a, < 14"
+    - ">= 12.a"
 - package-ecosystem: gomod
   directory: "/"
   schedule:
