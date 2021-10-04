@@ -27,6 +27,7 @@ ADD version.json /app
 RUN cd /app/src/autograph && go install .
 
 RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autograph-monitor .
+RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograph-client .
 
 USER app
 WORKDIR /app
