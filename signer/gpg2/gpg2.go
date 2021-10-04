@@ -206,7 +206,7 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	serializeSigning.Lock()
 	defer serializeSigning.Unlock()
 
-	gpgVerifySig := exec.Command("gpg",
+	gpgDetachSign := exec.Command("gpg",
 		"--no-default-keyring",
 		"--keyring", keyRingPath,
 		"--secret-keyring", secRingPath,
@@ -220,7 +220,7 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 		"--passphrase-fd", "0",
 		"--detach-sign", tmpContentFile.Name(),
 	)
-	stdin, err := gpgVerifySig.StdinPipe()
+	stdin, err := gpgDetachSign.StdinPipe()
 	if err != nil {
 		return nil, fmt.Errorf("gpg2: failed to create stdin pipe for sign cmd: %w", err)
 	}
@@ -230,7 +230,7 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	if err = stdin.Close(); err != nil {
 		return nil, fmt.Errorf("gpg2: failed to close to stdin pipe for sign cmd: %w", err)
 	}
-	out, err := gpgVerifySig.CombinedOutput()
+	out, err := gpgDetachSign.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("gpg2: failed to sign input %s\n%s", err, out)
 	}
