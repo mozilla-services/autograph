@@ -9,7 +9,7 @@ FENNEC_NIGHTLY_URL=https://archive.mozilla.org/pub/mobile/nightly/2018/10/2018-1
 FENNEC_BETA_URL=https://archive.mozilla.org/pub/mobile/releases/64.0b9/android-api-16/en-US/fennec-64.0b9.en-US.android-arm.apk
 FOCUS_LATEST_URL=https://archive.mozilla.org/pub/android/focus/latest/Focus-arm.apk
 
-wget -t 5 $FENNEC_NIGHTLY_URL $FENNEC_BETA_URL $FOCUS_LATEST_URL
+wget –-quiet -t 5 $FENNEC_NIGHTLY_URL $FENNEC_BETA_URL $FOCUS_LATEST_URL
 
 HAWK_USER=${HAWK_USER:-alice}
 HAWK_SECRET=${HAWK_SECRET:-fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu}
