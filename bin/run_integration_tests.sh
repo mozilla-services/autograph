@@ -59,14 +59,16 @@ docker-compose run \
 	       -e AUTOGRAPH_URL=http://app:8000 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_api.sh \
-	       app
+	       app &
+CHECK_API_PID=$!
 docker-compose run \
 	       --rm \
 	       --user 0 \
 	       -e AUTOGRAPH_URL=http://app-hsm:8001 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_api.sh \
-	       app-hsm
+	       app-hsm &
+CHECK_API_HSM_PID=$!
 
 echo "checking XPI signing"
 docker-compose run \
@@ -75,7 +77,8 @@ docker-compose run \
 	       -e AUTOGRAPH_URL=http://app:8000 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_xpis.sh \
-	       app
+	       app &
+CHECK_XPI_PID=$!
 docker-compose run \
 	       --rm \
 	       --user 0 \
@@ -83,7 +86,8 @@ docker-compose run \
 	       -e SIGNER_ID_PREFIX="hsm-" \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_xpis.sh \
-	       app-hsm
+	       app-hsm &
+CHECK_XPI_HSM_PID=$!
 
 echo "checking APK signing"
 docker-compose run \
@@ -93,5 +97,12 @@ docker-compose run \
                -e VERIFY=1 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./build_test_apks.sh \
-	       app
+	       app &
+CHECK_APK_PID=$!
 # TODO: add HSM support for APK signing keys and test here
+
+wait $CHECK_API_PID
+wait $CHECK_API_HSM_PID
+wait $CHECK_XPI_PID
+wait $CHECK_XPI_HSM_PID
+wait $CHECK_APK_PID
