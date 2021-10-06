@@ -14,12 +14,12 @@ docker-compose rm -f db
 docker-compose up -d --force-recreate db app app-hsm
 
 echo "waiting for autograph-app to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
+while test "true" != "$(docker inspect -f '{{.State.Running}}' autograph-app)"; do
   echo -n "."
   sleep 1 # wait before checking again
 done
 echo "waiting for autograph-app-hsm to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"; do
+while test "true" != "$(docker inspect -f '{{.State.Running}}' autograph-app-hsm)"; do
   echo -n "."
   sleep 1 # wait before checking again
 done
@@ -33,12 +33,12 @@ docker-compose up -d monitor-lambda-emulator
 AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH docker-compose up -d monitor-hsm-lambda-emulator
 
 echo "waiting for monitor-lambda-emulator to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-lambda-emulator)"; do
+while test "true" != "$(docker inspect -f '{{.State.Running}}' autograph-monitor-lambda-emulator)"; do
   echo -n "."
   sleep 1 # wait before checking again
 done
 echo "waiting for monitor-hsm-lambda-emulator to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-hsm-lambda-emulator)"; do
+while test "true" != "$(docker inspect -f '{{.State.Running}}' autograph-monitor-hsm-lambda-emulator)"; do
   echo -n "."
   sleep 1 # wait before checking again
 done
