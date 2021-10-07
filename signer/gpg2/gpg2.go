@@ -299,7 +299,11 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	if err != nil {
 		return nil, fmt.Errorf("gpg2: failed to create tempfile for input to sign: %w", err)
 	}
-	defer os.Remove(tmpContentFile.Name())
+	defer func() {
+		if err := os.Remove(tmpContentFile.Name()); err != nil {
+			log.Warnf("gpg2: error removing content file %q: %q", tmpContentFile.Name(), err)
+		}
+	}()
 	err = ioutil.WriteFile(tmpContentFile.Name(), data, 0755)
 	if err != nil {
 		return nil, fmt.Errorf("gpg2: failed to write tempfile for input to sign: %w", err)
@@ -391,7 +395,11 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 		err = fmt.Errorf("gpg2: error creating tempdir for debsign: %w", err)
 		return
 	}
-	defer os.RemoveAll(inputsTmpDir)
+	defer func() {
+		if err := os.RemoveAll(inputsTmpDir); err != nil {
+			log.Warnf("gpg2: error removing sign files inputs directory %q: %q", inputsTmpDir, err)
+		}
+	}()
 
 	// write the inputs to their tmp dir
 	var inputFilePaths []string
