@@ -14,12 +14,12 @@ docker-compose rm -f db
 docker-compose up -d --force-recreate db app app-hsm
 
 echo "waiting for autograph-app to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
+while test "true" != "$(docker inspect -f '{{.State.Running}}' autograph-app)"; do
   echo -n "."
   sleep 1 # wait before checking again
 done
 echo "waiting for autograph-app-hsm to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"; do
+while test "true" != "$(docker inspect -f '{{.State.Running}}' autograph-app-hsm)"; do
   echo -n "."
   sleep 1 # wait before checking again
 done
@@ -33,12 +33,12 @@ docker-compose up -d monitor-lambda-emulator
 AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH docker-compose up -d monitor-hsm-lambda-emulator
 
 echo "waiting for monitor-lambda-emulator to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-lambda-emulator)"; do
+while test "true" != "$(docker inspect -f '{{.State.Running}}' autograph-monitor-lambda-emulator)"; do
   echo -n "."
   sleep 1 # wait before checking again
 done
 echo "waiting for monitor-hsm-lambda-emulator to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-hsm-lambda-emulator)"; do
+while test "true" != "$(docker inspect -f '{{.State.Running}}' autograph-monitor-hsm-lambda-emulator)"; do
   echo -n "."
   sleep 1 # wait before checking again
 done
@@ -59,14 +59,16 @@ docker-compose run \
 	       -e AUTOGRAPH_URL=http://app:8000 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_api.sh \
-	       app
+	       app &
+CHECK_API_PID=$!
 docker-compose run \
 	       --rm \
 	       --user 0 \
 	       -e AUTOGRAPH_URL=http://app-hsm:8001 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_api.sh \
-	       app-hsm
+	       app-hsm &
+CHECK_API_HSM_PID=$!
 
 echo "checking XPI signing"
 docker-compose run \
@@ -75,7 +77,8 @@ docker-compose run \
 	       -e AUTOGRAPH_URL=http://app:8000 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_xpis.sh \
-	       app
+	       app &
+CHECK_XPI_PID=$!
 docker-compose run \
 	       --rm \
 	       --user 0 \
@@ -83,7 +86,8 @@ docker-compose run \
 	       -e SIGNER_ID_PREFIX="hsm-" \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_xpis.sh \
-	       app-hsm
+	       app-hsm &
+CHECK_XPI_HSM_PID=$!
 
 echo "checking APK signing"
 docker-compose run \
@@ -93,5 +97,12 @@ docker-compose run \
                -e VERIFY=1 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./build_test_apks.sh \
-	       app
+	       app &
+CHECK_APK_PID=$!
 # TODO: add HSM support for APK signing keys and test here
+
+wait $CHECK_API_PID
+wait $CHECK_API_HSM_PID
+wait $CHECK_XPI_PID
+wait $CHECK_XPI_HSM_PID
+wait $CHECK_APK_PID
