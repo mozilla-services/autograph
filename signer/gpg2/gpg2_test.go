@@ -22,6 +22,48 @@ func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *GPG2Sig
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
+
+	matches, err := filepath.Glob(filepath.Join(s.tmpDir, "*"))
+	if err != nil {
+		t.Fatalf("signer initialization failed to find files in temp dir: %v", err)
+	}
+	// t.Logf("found files %s", matches)
+
+	// check keyring exists
+	foundKeyring := false
+	for _, filename := range matches {
+		if filepath.Base(filename) == keyRingFilename {
+			foundKeyring = true
+		}
+	}
+	if !foundKeyring {
+		t.Fatalf("signer initialization failed to create keyring in signer temp dir")
+	}
+
+	// check for gpg.conf written for debsign
+	if s.Mode == ModeDebsign {
+		foundConf := false
+		for _, filename := range matches {
+			if filepath.Base(filename) == gpgConfFilename {
+				foundConf = true
+			}
+		}
+		if !foundConf {
+			t.Fatalf("signer initialization failed to create gpg.conf in signer temp dir for debsign")
+		}
+	}
+
+	// check private key is not left on disk
+	for _, filename := range matches {
+		matched, err := filepath.Match("gpg2_privatekey*", filepath.Base(filename))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if matched {
+			t.Fatalf("signer initialization failed to remove temp gpg private key: %s", filename)
+		}
+	}
+
 	return s
 }
 
@@ -172,6 +214,26 @@ func TestNewSigner(t *testing.T) {
 	})
 }
 
+func TestSignerAtExit(t *testing.T) {
+	t.Parallel()
+
+	for _, conf := range validSignerConfigs {
+		t.Run(fmt.Sprintf("signer %s AtExit clean signer temp dir", conf.ID), func(t *testing.T) {
+			t.Parallel()
+
+			s := assertNewSignerWithConfOK(t, conf)
+			if err := s.AtExit(); err != nil {
+				t.Fatal(err)
+			}
+			// check AtExit cleans up s.tmpDir
+			_, err := os.Stat(s.tmpDir)
+			if !os.IsNotExist(err) {
+				t.Fatalf("AtExit failed to clean temp dir %s", s.tmpDir)
+			}
+		})
+	}
+}
+
 func TestConfig(t *testing.T) {
 	t.Parallel()
 
@@ -229,6 +291,13 @@ func TestSignData(t *testing.T) {
 			}
 			if err != nil {
 				t.Fatalf("failed to sign data: %v", err)
+			}
+			matches, err := filepath.Glob(filepath.Join(s.tmpDir, "gpg2_*input*"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(matches) != 0 {
+				t.Fatalf("sign data did not clean up temp input files: %s", matches)
 			}
 
 			// convert signature to string format
@@ -463,6 +532,14 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 
 			assertClearSignedFilesVerify(t, s, "verify-debsigned-files", gotSignedFiles)
 		})
+	}
+
+	matches, err := filepath.Glob("/tmp/autograph_*sign_files*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 0 {
+		t.Fatalf("sign files did not clean up its temp input directories: %s", matches)
 	}
 }
 
