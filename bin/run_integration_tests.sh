@@ -68,6 +68,16 @@ docker-compose run \
 	       --entrypoint ./integration_test_api.sh \
 	       app-hsm
 
+echo "checking gpg signing"
+docker-compose run \
+	       --rm \
+	       --user 0 \
+	       -e AUTOGRAPH_URL=http://app:8000 \
+	       --workdir /app/src/autograph/tools/autograph-client \
+	       --entrypoint ./integration_test_gpg2_signer.sh \
+	       app
+# TODO(GH-785): add HSM support for GPG signing keys and test here
+
 echo "checking XPI signing"
 docker-compose run \
 	       --rm \
@@ -94,4 +104,4 @@ docker-compose run \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./build_test_apks.sh \
 	       app
-# TODO: add HSM support for APK signing keys and test here
+# TODO(GH-381): add HSM support for APK signing keys and test here

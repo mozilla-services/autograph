@@ -210,6 +210,7 @@ func run(conf configuration, listen string, debug bool) {
 	router.HandleFunc("/__lbheartbeat__", handleLBHeartbeat).Methods("GET")
 	router.HandleFunc("/__version__", handleVersion).Methods("GET")
 	router.HandleFunc("/__monitor__", monitor.handleMonitor).Methods("GET")
+	router.HandleFunc("/sign/files", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/file", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/data", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
