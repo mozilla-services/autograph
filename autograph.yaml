@@ -125,7 +125,7 @@ signers:
         yhRZrsaFZybKjZnBwG7lN9AkrjpKC1h2z4naOXX3
         -----END CERTIFICATE-----
 
-    # Development remote settings content signer. Will issue a certificate
+    # Signer for local remote settings development. Will issue a certificate
     # valid for remote-settings.content-signature.mozilla.org. To use this
     # with Firefox, set security.content.signature.root_hash to
     # 5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE
