@@ -101,6 +101,9 @@ build: generate
 integration-test:
 	./bin/run_integration_tests.sh
 
+unit-test:
+	docker-compose run unit-test
+
 dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
