@@ -8,7 +8,8 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.4.0 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.3.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
-	github.com/DataDog/datadog-go v3.7.2+incompatible
+	github.com/DataDog/datadog-go v4.8.3+incompatible
+	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/ThalesIgnite/crypto11 v0.1.0
 	github.com/aws/aws-lambda-go v1.27.0
 	github.com/aws/aws-sdk-go v1.42.15
