@@ -9,7 +9,7 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.3.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/DataDog/datadog-go v3.7.2+incompatible
-	github.com/ThalesIgnite/crypto11 v0.1.0
+	github.com/ThalesIgnite/crypto11 v1.2.5
 	github.com/aws/aws-lambda-go v1.27.0
 	github.com/aws/aws-sdk-go v1.42.15
 	github.com/golang/mock v1.6.0
@@ -22,7 +22,6 @@ require (
 	github.com/mozilla-services/autograph/verifier/contentsignature v0.0.0-20210505200649-cb56f0dcbdd1
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/sirupsen/logrus v1.8.1
-	github.com/youtube/vitess v2.1.1+incompatible // indirect
 	go.mozilla.org/cose v0.0.0-20200221144611-2ea72a6b3de3
 	go.mozilla.org/hawk v0.0.0-20190327210923-a483e4a7047e
 	go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d
