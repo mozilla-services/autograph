@@ -1,3 +1,3 @@
 module github.com/mozilla-services/autograph/verifier/contentsignature
 
-go 1.16
+go 1.17

@@ -18,7 +18,7 @@ race:
 lint:
 	golint *.go
 staticcheck:
-	staticcheck -go 1.16 *.go
+	staticcheck -go 1.17 *.go
 vet:
 	go vet *.go
 clean:

@@ -8,7 +8,7 @@ version: 2.1
 jobs:
   lint-vet-fmt:
     docker:
-      - image: golang:1.16-buster
+      - image: golang:1.17-buster
     steps:
       - checkout
       - run:
@@ -50,7 +50,7 @@ jobs:
   unit-test:
     # based on the official golang image with more docker stuff
     docker:
-      - image: circleci/golang:1.16-buster
+      - image: circleci/golang:1.17-buster
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -80,7 +80,7 @@ jobs:
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
     docker:
-      - image: circleci/golang:1.16-buster
+      - image: circleci/golang:1.17-buster
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
