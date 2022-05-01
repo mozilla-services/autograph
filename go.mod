@@ -10,7 +10,7 @@ require (
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/DataDog/datadog-go v3.7.2+incompatible
 	github.com/ThalesIgnite/crypto11 v0.1.0
-	github.com/aws/aws-lambda-go v1.27.0
+	github.com/aws/aws-lambda-go v1.31.1
 	github.com/aws/aws-sdk-go v1.42.15
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
