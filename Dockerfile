@@ -1,4 +1,4 @@
-FROM golang:1.16.10-buster
+FROM golang:1.17rc2-buster
 EXPOSE 8000
 
 ENV GODEBUG=x509ignoreCN=0
