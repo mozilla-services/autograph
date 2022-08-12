@@ -143,6 +143,8 @@ recover the standard armored signature that gnupg expects.
 
 In `debsign` mode responses are at the field `signed_files`:
 
+<!-- Document: verify response -- no signature shown -->
+
 ```json
 [
   {
