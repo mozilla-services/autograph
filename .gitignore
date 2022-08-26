@@ -35,3 +35,4 @@ tools/sign-addon/venv/*
 
 vendor/go.mozilla.org/cose/samples/*
 version.json
+.cache/

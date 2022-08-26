@@ -1,0 +1,43 @@
+# configure a stack for offline testing of configuration files
+# it is intended as deploy time modifications to the base
+# `docker-compose.yml` file.
+
+services:
+  db:
+    profiles:
+      - config-test
+
+  app:
+    profiles:
+      - config-test
+    volumes:
+      - apptmpdir:/tmp/
+      - ${ACD}:/config
+    command: 
+    ##      - "ls"
+    ##      - "-l"
+    ##      - "/config/"
+    ##      - "/config/type"
+    - "/go/bin/autograph"
+    - "-c"
+    - "/config/type/autograph.app.autographprod.yaml"
+
+  app-hsm:
+    profiles:
+      - config-test
+
+  monitor:
+    profiles:
+      - unused
+
+  monitor-lambda-emulator:
+    profiles:
+      - unused
+
+  monitor-hsm-lambda-emulator:
+    profiles:
+      - unused
+
+  unit-test:
+    profiles:
+      - unused
