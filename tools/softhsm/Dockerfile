@@ -34,7 +34,7 @@ RUN cd /app/src/autograph/tools/softhsm/ && go run genkeys.go
 # make a pki in softhsm
 # then update the config
 # then write the generated config and new root hash to /tmp
-# docker-compose mounts /tmp for the monitor-hsm service
+# docker compose mounts /tmp for the monitor-hsm service
 RUN cd /app/src/autograph/tools/genpki/ && \
       go run genpki.go > /app/genpki.out && \
       cd /app/src/autograph/tools/configurator && \
