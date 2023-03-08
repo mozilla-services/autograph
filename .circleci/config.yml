@@ -50,7 +50,7 @@ jobs:
   unit-test:
     # based on the official golang image with more docker stuff
     docker:
-      - image: circleci/golang:1.16-buster
+      - image: cimg/go:1.16-buster
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -80,7 +80,7 @@ jobs:
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
     docker:
-      - image: circleci/golang:1.16-buster
+      - image: cimg/go:1.16-buster
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -176,14 +176,16 @@ workflows:
               only: /[0-9]\.[0-9]+\.[0-9]+/
             branches:
               only: main
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 1 * * *"
-          filters:
-            branches:
-              only: main
-    jobs:
-      - lint-vet-fmt
-      - unit-test
-      - build-integrationtest-verify
+##  # disable until tests green -- all the failed runs make good runs
+##  # hard to spot
+##  nightly:
+##    triggers:
+##      - schedule:
+##          cron: "0 1 * * *"
+##          filters:
+##            branches:
+##              only: main
+##    jobs:
+##      - lint-vet-fmt
+##      - unit-test
+##      - build-integrationtest-verify
