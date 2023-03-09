@@ -107,16 +107,17 @@ jobs:
       #
       # Use /go/src/app since we don't have permissions to make
       # directories in other locations
+      # CircleCI NextGen images moved this to $HOME/go/...
       - run:
           name: docker save built images
           no_output_timeout: 30m
           command: |
-            mkdir -p /go/src/app/cache
-            docker save "autograph-app" | gzip -c > /go/src/app/cache/docker.tgz
+            mkdir -p $HOME/go/src/app/cache
+            docker save "autograph-app" | gzip -c > $HOME/go/src/app/cache/docker.tgz
       - save_cache:
           key: v4-{{ .Branch }}-{{ epoch }}
           paths:
-            - /go/src/app/cache/docker.tgz
+            - $HOME/go/src/app/cache/docker.tgz
 
   deploy:
     docker:
@@ -127,7 +128,7 @@ jobs:
           key: v4-{{.Branch}}
       - run:
           name: Restore Docker image cache
-          command: gunzip -c /go/src/app/cache/docker.tgz | docker load
+          command: gunzip -c $HOME/go/src/app/cache/docker.tgz | docker load
 
       - run:
           name: Deploy to Dockerhub
