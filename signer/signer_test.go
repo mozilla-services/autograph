@@ -269,7 +269,7 @@ ZkJ9hRz+l4ZVOsgNPHXPEi0AXWnDV6zrRQBpDYyiGhY=
 
 func TestAcceptedFilenames(t *testing.T) {
 	for _, testcase := range acceptedFileNames {
-		err := isValidUnsignedFilename(testcase);
+		err := isValidUnsignedFilename(testcase)
 		if err != nil {
 			t.Fatalf("failed to accept: %s reason: %v", testcase, err)
 		}
@@ -278,21 +278,21 @@ func TestAcceptedFilenames(t *testing.T) {
 
 func TestRejectedFilenames(t *testing.T) {
 	for _, testcase := range rejectedFileNames {
-		err := isValidUnsignedFilename(testcase);
+		err := isValidUnsignedFilename(testcase)
 		if err == nil {
 			t.Fatalf("failed to reject: %s", testcase)
 		}
 	}
 }
 
-var acceptedFileNames = []string {
+var acceptedFileNames = []string{
 	"simple.txt",
 	"example_1.2.3-456.dsc",
 	"complex-example123_4.5a.7~alpha1.buildinfo",
 	"complex+example456_6.a6.6~beta2+fix3.changes",
-};
+}
 
-var rejectedFileNames = []string {
+var rejectedFileNames = []string{
 	".dotfile",
 	"~tempfile",
 	"tempfile~",
@@ -305,4 +305,4 @@ var rejectedFileNames = []string {
 	"control^chars",
 	"control*chars",
 	"_non_alpha_start",
-};
+}
