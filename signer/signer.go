@@ -221,8 +221,10 @@ func isValidUnsignedFilename(filename string) error {
 	if !regexp.MustCompile(`[a-zA-Z0-9]$`).MatchString(filename) {
 		return fmt.Errorf("unsigned filename must end with an alphanumeric character")
 	}
+	// support debian version conventions as documented at:
+	//    https://www.debian.org/doc/debian-policy/ch-controlfields.html#version
 	if !regexp.MustCompile(`^[-_\.+~a-zA-Z0-9]{1,256}$`).MatchString(filename) {
-		return fmt.Errorf(`unsigned filename must match ^[-_\.a-zA-Z0-9]{1,256}$`)
+		return fmt.Errorf(`unsigned filename must match ^[-_\.+~a-zA-Z0-9]{1,256}$`)
 	}
 	if regexp.MustCompile(`\.\.`).MatchString(filename) {
 		return fmt.Errorf("unsigned filename must not include ..")
