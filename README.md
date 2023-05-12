@@ -21,36 +21,28 @@ Why is it called "autograph"? Because it's a service to sign stuff.
 
 This will download the latest build of autograph from DockerHub and run it with its dev configuration.
 
-### Using go get
+### Using Docker Compose
 
-If you don't yet have a GOPATH, export one:
-```bash
-$ export GOPATH=$HOME/go
-$ mkdir $GOPATH
+Autograph writes to /tmp and relies on the apksigner and gpg2 binaries
+being in specific locations, so it's cleanest to develop it in a
+container.
+
+1. copy over the local dev config to run the server in debug mode with
+   the host repo mounted to `/host`:
+
+```sh
+cp docker-compose.override.yml.example docker-compose.override.yml
 ```
 
-Install ltdl:
-* on Ubuntu: ltdl-dev
-* on RHEL/Fedora/Arch: libtool-ltdl-devel
-* on MacOS: libtool (NB: this might require `brew unlink libtool && brew link libtool`)
+1. run `make build` to build the docker images
 
-Then download and build autograph:
-```bash
-$ go get github.com/mozilla-services/autograph
-```
+1. run `docker-compose up -d db app` to start the app and db (`app-hsm`
+   runs the app using softhsm)
 
-The resulting binary will be placed in `$GOPATH/bin/autograph`. To run autograph with the example conf, do:
-```bash
-$ cd $GOPATH/src/github.com/mozilla-services/autograph
-$ $GOPATH/bin/autograph -c autograph.yaml
-```
-
-Example clients are in the `tools` directory. You can install the Go one like this:
-```bash
-$ go get github.com/mozilla-services/autograph/tools/autograph-client
-$ $GOPATH/bin/autograph-client -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu -t http://localhost:8000/sign/data -r '[{"input": "Y2FyaWJvdW1hdXJpY2UK"}]'
-2016/08/23 17:25:55 signature 0 pass
-```
+1. run `make unit-test` or `make integration-test` to test changes
+   1. alternatively run `docker-compose exec -w /host -u 0 -- app
+      /bin/bash` then `make test` to run unit tests without having to
+      rebuild the `unit-test` image
 
 ## Documentation
 
