@@ -15,13 +15,38 @@ Why is it called "autograph"? Because it's a service to sign stuff.
 
 ## Installation
 
+Use Docker whenever possible. The golang version on your machine is likely _not_ the corect version for autograph.
+
 ### Using Docker
 
 `docker pull mozilla/autograph && docker run mozilla/autograph`
 
 This will download the latest build of autograph from DockerHub and run it with its dev configuration.
 
+#### Local Development with Docker
+
+|    |    |
+|----|----|
+| **WARNING!** | These tests may break or delete your gpg setup. |
+|    |    |
+
+If your are lucky, it will leave you alone. (It starts a number of `gpg-agent`
+processes, then does a `killall gpg-agent` to clean up.) However, I've lost my
+entire `~/.gnupg` setup. I _strongly_ recommend: `tar czf ~/gnupg.tgz ~/.gnupg`
+before starting.
+
+After making any changes, please test locally by:
+```bash
+make build             # updates local docker images
+make integration-test  # must pass
+docker compose up      # runs unit tests in container, must pass
+```
+
+As of 2023-06-26, only the integration tests will pass on Circle CI. See [Issue 853](https://github.com/mozilla-services/autograph/issues/853) for details.
+
 ### Using go get
+
+_**Do Not Use** unless you are an experienced golang developer._
 
 If you don't yet have a GOPATH, export one:
 ```bash
