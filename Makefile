@@ -77,6 +77,14 @@ staticcheck:
 test:
 	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)
 
+test-in-docker:
+	$(SHELL) -c " \
+		docker compose up 2>&1 | tee test-in-docker.log \
+		| (grep --silent 'autograph-unit-test exited with code' && docker compose down; \
+		grep 'autograph-unit-test' test-in-docker.log >unit-test.log ; \
+		tail -2 unit-test.log)"
+
+
 showcoverage: test
 	go tool cover -html=coverage.out
 
@@ -105,4 +113,4 @@ dummy-statsd:
 	nc -kluvw 0 localhost 8125
 
 .SUFFIXES:            # Delete the default suffixes
-.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers
+.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers test-in-docker
