@@ -41,6 +41,14 @@ make build             # updates local docker images
 make integration-test  # must pass
 docker compose up      # runs unit tests in container, must pass
 ```
+_Note: you must monitor the output of docker to detect when the unit tests have
+completed. Otherwise, it will run forever with heartbeat messages. The following
+pipeline is useful:_
+```bash
+docker compose up 2>&1 | tee compose.log \
+    | (grep --silent "autograph-unit-test exited with code" && docker compose down; \
+       grep "autograph-unit-test" compose.log)
+```
 
 As of 2023-06-26, only the integration tests will pass on Circle CI. See [Issue 853](https://github.com/mozilla-services/autograph/issues/853) for details.
 
