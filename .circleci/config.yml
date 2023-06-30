@@ -43,16 +43,16 @@ jobs:
             # Passing as of 2023-06-30
             make -C verifier/contentsignature vet 
       - run:
-          name: run staticcheck
+          name: XFAIL! run staticcheck
           command: |
-            make install-staticcheck staticcheck || ec=$?
-            echo "${ec:=0} after 'make install-staticcheck staticcheck'" ; ec=0
-            make show-lints || ec=$?
-            echo "${ec:=0} after 'make show-lints'" ; ec=0
-            make -C tools/autograph-monitor staticcheck || ec=$?
-            echo "${ec:=0} after 'make -C tools/autograph-monitor staticcheck'" ; ec=0
-            make -C verifier/contentsignature staticcheck || ec=$?
-            echo "${ec:=0} after 'make -C verifier/contentsignature staticcheck'" ; ec=0
+            # Failing as of 2023-06-30
+            make install-staticcheck staticcheck && false || true
+            # Passing as of 2023-06-30
+            make show-lints
+            # Failing as of 2023-06-30
+            make -C tools/autograph-monitor staticcheck && false || true
+            # Failing as of 2023-06-30
+            make -C verifier/contentsignature staticcheck && false || true
 
   unit-test:
     # based on the official golang image with more docker stuff
