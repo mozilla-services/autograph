@@ -66,10 +66,7 @@ signature:
     PEM format, where the first certificate is the end-entity that
     issued the signature, and the last certificate is the root of the
     PKI. Firefox is configured to only accept signatures from the
-    internal PKI shared with AMO. This is controlled via the
-    `security.content.signature.root_hash` preference, where
-    the value is the hexadecimal of the sha256 of the DER of the root
-    certificate.
+    internal PKI shared with AMO.
 
 When Firefox verifies a content signature, it first retrieves the X5U
 and checks the signature validity using the end-entity certificate, the
