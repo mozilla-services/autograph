@@ -17,7 +17,7 @@ class CertInfo(pydantic.BaseModel):
     fp_sha256: str | None
 
 class Signer(pydantic.BaseModel):
-    id_: str
+    signer: str     # "id" in yaml, but "signer" in authorizations
     type_: str
     mode: str | None
     # for apks, etc
@@ -31,17 +31,20 @@ class Signer(pydantic.BaseModel):
     fp_sha256: str | None
 
 class AuthorizationBase(pydantic.BaseModel):
-    key: str
+    # empty super class
+    ...
 
 
 class AuthorizationEdge(AuthorizationBase):
-    client_token: str
+    client_token: str   # this is the API key, so mask
     signer: str
+    user_app: str   # this matches the key, which is secret, so don't include
 
 
 class AuthorizationApp(AuthorizationBase):
-    id_: str
-    signers: List[str]
+    user_app: str       # this is "id" in yaml, but is effectively the user
+    # Signers is an array in the yaml, but I need to expand to multiple rows
+    signer: str
 
 
 def sanitize(secret: str) -> str | None:
@@ -58,12 +61,13 @@ def gather_authorizations_app(doc:dict) -> List[AuthorizationApp]:
                 assert "id" not in data
                 continue
             try:
-                auth = AuthorizationApp(
-                        id_=data.get("id"),
-                        key=sanitize(data.get("key")),
-                        signers=data.get("signers"),
-                        )
-                authorizations.append(auth)
+                id_=str(data.get("id"))        # some ids are numeric
+                for signer in [str(x) for x in data.get("signers")]:
+                    auth = AuthorizationApp(
+                            user_app=id_,
+                            signer=signer,
+                            )
+                    authorizations.append(auth)
             except Exception as e:
                 print(f"choked on {data}")
                 raise
@@ -79,9 +83,9 @@ def gather_authorizations_edge(doc:dict) -> List[AuthorizationEdge]:
                 continue
             try:
                 auth = AuthorizationEdge(
-                        client_token=data.get("client_token"),
-                        key=sanitize(data.get("key")),
+                        client_token=sanitize(data.get("client_token")),
                         signer=data.get("signer"),
+                        user_app=data["user"],
                         )
                 authorizations.append(auth)
             except Exception as e:
@@ -115,7 +119,7 @@ def gather_signers(doc:dict) -> List[Signer]:
             try:
                 cert_info = extract_cert_info(data.get("certificate"))
                 signer = Signer(
-                        id_=data["id"],
+                        signer=str(data["id"]),        # a few ids are numeric
                         type_=data["type"],
                         mode=data.get("mode"),
                         private_key=sanitize(data.get("privatekey")),
