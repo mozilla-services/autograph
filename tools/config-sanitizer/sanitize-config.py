@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import csv
+import datetime
 import hashlib
 import sys
 from typing import List
@@ -15,6 +16,8 @@ class CertInfo(pydantic.BaseModel):
     pem_hash: str | None
     fp_sha1: str | None
     fp_sha256: str | None
+    date_start: datetime.datetime | None
+    date_end: datetime.datetime | None
 
 class Signer(pydantic.BaseModel):
     signer: str     # "id" in yaml, but "signer" in authorizations
@@ -29,6 +32,8 @@ class Signer(pydantic.BaseModel):
     cacert: str | None
     fp_sha1: str | None
     fp_sha256: str | None
+    date_start: str | None
+    date_end: str | None
 
 class AuthorizationBase(pydantic.BaseModel):
     # empty super class
@@ -97,7 +102,8 @@ def gather_authorizations_edge(doc:dict) -> List[AuthorizationEdge]:
 def extract_cert_info(data: str | None) -> CertInfo:
     if not data:
         cert_info = CertInfo(pem=None, pem_hash=None, fp_sha1=None,
-                             fp_sha256=None)
+                             fp_sha256=None, date_start=None,
+                             date_end=None,)
     else:
         cert = x509.load_pem_x509_certificate(data.encode())
         cert_info = CertInfo(
@@ -107,6 +113,8 @@ def extract_cert_info(data: str | None) -> CertInfo:
                                                             bytes_per_sep=1),
                 fp_sha256=cert.fingerprint(hashes.SHA256()).hex(sep=":",
                                                                 bytes_per_sep=1),
+                date_start=cert.not_valid_before,
+                date_end=cert.not_valid_after,
                 )
     return cert_info
 
@@ -129,6 +137,8 @@ def gather_signers(doc:dict) -> List[Signer]:
                         cacert=sanitize(data.get("cacert")),
                         fp_sha1=cert_info.fp_sha1,
                         fp_sha256=cert_info.fp_sha256,
+                        date_start=cert_info.date_start and cert_info.date_start.isoformat(),
+                        date_end=cert_info.date_end and cert_info.date_end.isoformat(),
                         )
                 signers.append(signer)
             except Exception as e:
