@@ -1,2 +1,4 @@
 *.yaml
 *.csv
+.venv
+autograph-config-sanitizer/dist
