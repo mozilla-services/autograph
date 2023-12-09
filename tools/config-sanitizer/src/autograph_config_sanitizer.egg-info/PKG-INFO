@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: autograph-config-sanitizer
+Version: 1.0.0
+Requires-Python: >=3.9
+Requires-Dist: PyYAML
+Requires-Dist: pydantic
+Requires-Dist: cryptography

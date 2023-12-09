@@ -7,12 +7,12 @@ import csv
 import datetime
 import hashlib
 import sys
-from typing import List
 
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes
 import pydantic
 import yaml
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+
 
 class CertInfo(pydantic.BaseModel):
     pem: str | None
@@ -61,7 +61,7 @@ def sanitize(secret: str) -> str | None:
         return None
     return hashlib.sha256(secret.encode()).hexdigest()
 
-def gather_authorizations_app(doc:dict) -> List[AuthorizationApp]:
+def gather_authorizations_app(doc:dict) -> list[AuthorizationApp]:
     authorizations = []
     if "authorizations" in doc:
         for data in doc["authorizations"]:
@@ -76,13 +76,13 @@ def gather_authorizations_app(doc:dict) -> List[AuthorizationApp]:
                             signer=signer,
                             )
                     authorizations.append(auth)
-            except Exception as e:
+            except Exception:
                 print(f"choked on {data}")
                 raise
     return authorizations
 
 
-def gather_authorizations_edge(doc:dict) -> List[AuthorizationEdge]:
+def gather_authorizations_edge(doc:dict) -> list[AuthorizationEdge]:
     authorizations = []
     if "authorizations" in doc:
         for data in doc["authorizations"]:
@@ -96,7 +96,7 @@ def gather_authorizations_edge(doc:dict) -> List[AuthorizationEdge]:
                         user_app=data["user"],
                         )
                 authorizations.append(auth)
-            except Exception as e:
+            except Exception:
                 print(f"choked on {data}")
                 raise
     return authorizations
@@ -123,7 +123,7 @@ def extract_cert_info(data: str | None) -> CertInfo:
 
 
 
-def gather_signers(doc:dict) -> List[Signer]:
+def gather_signers(doc:dict) -> list[Signer]:
     signers = []
     if "signers" in doc:
         for data in doc["signers"]:
@@ -144,12 +144,12 @@ def gather_signers(doc:dict) -> List[Signer]:
                         date_end=cert_info.date_end and cert_info.date_end.isoformat(),
                         )
                 signers.append(signer)
-            except Exception as e:
+            except Exception:
                 print(f"choked on {data}")
                 raise
     return signers
 
-def output_signers(signers: List[Signer]) -> None:
+def output_signers(signers: list[Signer]) -> None:
     if not len(signers):
         return
     with open("signers.csv", "w", newline="") as csvfile:
@@ -160,7 +160,7 @@ def output_signers(signers: List[Signer]) -> None:
             writer.writerow(s.model_dump())
 
 
-def output_authorizations(authorizations: List[AuthorizationBase]) -> None:
+def output_authorizations(authorizations: list[AuthorizationBase]) -> None:
     if not len(authorizations):
         return
     if isinstance(authorizations[0], AuthorizationApp):
@@ -168,7 +168,7 @@ def output_authorizations(authorizations: List[AuthorizationBase]) -> None:
     elif isinstance(authorizations[0], AuthorizationEdge):
         domain = "edge"
     else:
-        raise TypeError(f"Unexpected type: {type(authorizations[0])}")
+        raise TypeError("Unexpected type: " + type(authorizations[0]))
     with open(f"authorizations_{domain}.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile,
                                 fieldnames=authorizations[0].model_dump().keys())
@@ -191,7 +191,7 @@ def main() -> int:
     Returns:
         int: Unix style exit code
     """
-    
+
     signers = []
     authorizations_app = []
     authorizations_edge = []
@@ -207,8 +207,8 @@ def main() -> int:
     output_signers(signers)
     output_authorizations(authorizations_app)
     output_authorizations(authorizations_edge)
-    
+
     return 0
 
-if __name__ == '__main__':
-    exit(main())
+if __name__ == "__main__":
+    sys.exit(main())
