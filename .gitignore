@@ -36,3 +36,9 @@ tools/sign-addon/venv/*
 
 vendor/go.mozilla.org/cose/samples/*
 version.json
+
+# Python dev stuff
+**/.venv*
+**/venv*
+**/__pycache__
+**/*.egg-info
