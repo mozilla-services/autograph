@@ -39,6 +39,10 @@ function make() {
     command make --makefile="${makefile}" "$@"
 }
 export -f make
+# and add completion for targets to our ~/.bashrc to make life easier
+cat >>~/.bashrc <<EOF
+complete -W "\`grep -oE '^[a-zA-Z0-9_-]+:([^=]|$)' "${makefile}" | sed 's/[^a-zA-Z0-9_-]*$//'\`" make
+EOF
 
 # and put that dir on the path
 export PATH="${prog_dir}":$PATH

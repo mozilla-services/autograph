@@ -9,6 +9,9 @@ IN_CONTAINER := $(shell test "$$(cat /proc/self/cgroup | cut -d: -f3 | sort -u )
 RD_PATH := $(shell $(IN_CONTAINER) && echo /secrets || echo $(RAM_DISK))
 
 CONTAINER_VERSION ?= latest
+# for testing, use 'autograph-app' for the locally build image from
+# 'make build' at the workspace root
+CONTAINER_IMAGE ?= mozilla/autograph
 
 .DEFAULT_GOAL := help
 .PHONY: help
@@ -33,5 +36,5 @@ docker-run:  ## Start docker container
 	@! $(IN_CONTAINER) || { echo "ERROR: already in container" ; false ; }
 	docker run -it --rm \
 		-v $(RAM_DISK):/secrets \
-		mozilla/autograph:$(CONTAINER_VERSION) \
+		$(CONTAINER_IMAGE):$(CONTAINER_VERSION) \
 		bash -c /app/src/autograph/tools/android-store/start-container-shell.sh
