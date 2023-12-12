@@ -58,8 +58,19 @@ ${gen_cert} || { ! [[ -r "${certificate}" ]] && usage "Can't find certificate '$
 ${gen_key} && ! ${gen_cert} && usage "You must supply a private key when supplying a certificate."
 
 # check for tooling for pepk, if requested
-${pepk} && ! [[ -r ../pepk.jar ]] && usage "Can't find utility 'pepk.jar'. (Do you want the '--no-pepk' option?)"
-${pepk} && ! [[ -r ${wrap_key} ]] && usage "Can't find wrap key '${wrap_key}'."
+if ${pepk} ; then
+    ! [[ -r ../pepk.jar ]] && usage "Can't find utility 'pepk.jar'. (Do you want the '--no-pepk' option?)"
+    ! [[ -r ${wrap_key} ]] && usage "Can't find wrap key '${wrap_key}'."
+    # the output format of pepk depends on whether or not we need to include the
+    # certificate. We do if we're not reusing an existing certificate.
+    if ${gen_cert} ; then
+        pepk_file_extension="zip"
+        pepk_include_cert_option="--include-cert"
+    else
+        pepk_file_extension="pepk"
+        pepk_include_cert_option=""
+    fi
+fi
 
 
 # setup defaults
@@ -106,10 +117,7 @@ EOS
 
 # Now generate the 'pepk' format if requested
 if ${pepk} ; then
-    # ouput file name *must* have extension of '.zip' to be generated correctly.
-    # Otherwise, and incorrect format file (possibly with unencrypted secret)
-    # will be created.
-    playstore_upload_file="${app_name}.zip"
+    playstore_upload_file="${app_name}.${pepk_file_extension}"
     rm -f temp.keystore "${playstore_upload_file}"
     openssl pkcs12 -export \
         -caname root -passout pass:def \
@@ -128,14 +136,15 @@ if ${pepk} ; then
             --rsa-aes-encryption \
             --keystore=temp.keystore \
             --alias="${app_name}" \
-            --include-cert \
+            ${pepk_include_cert_option} \
             --encryption-key-path="${wrap_key}" \
             --output="${playstore_upload_file}"
-    # Double check we got a zip file
-    if file "${playstore_upload_file}" | grep "Zip archive data" &>/dev/null ; then
-        echo "    PEPK file:   ${playstore_upload_file}"
+    # Double check we got a zip file, if that's whate we expected
+    if [[ ${pepk_file_extension} == "zip" ]] \
+            && ! file "${playstore_upload_file}" | grep "Zip archive data" &>/dev/null ; then
+        die "ERROR: Did not generate an expected pepk zip file: '${playstore_upload_file}'"
     else
-        die "ERROR: Did not generate a pepk zip file: '${playstore_upload_file}'"
+        echo "    PEPK file:   ${playstore_upload_file}"
     fi
 
     # cleanup
