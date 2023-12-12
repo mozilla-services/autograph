@@ -29,6 +29,7 @@ check-prerequisites:  ## Verify utilities available
 	@type -ap java &>/dev/null ||  echo "Warning: missing java - needed for pepk" 
 	@type -ap ../pepk.jar &>/dev/null || echo "Warning: missing ../pepk.jar - needed for pepk" 
 	@test -w $(RD_PATH)/t || { echo "ERROR: $(RD_PATH)/t is not writable" ; false ; }
+	@{ ! $(IN_CONTAINER) && type -ap docker &>/dev/null ; } || { echo "ERROR: docker not available" ; false ; }
 	@$(IN_CONTAINER) || echo "Warning: not running in a container"
 
 .PHONY: docker-run
