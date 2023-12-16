@@ -16,6 +16,7 @@ Options:
     --certificate   Existing certificate to use for wrapping
     --key           Existing key to use for wrapping
     --no-pepk       Do not generate the '.pepk' file needed by Google Play
+    --pepk          Specify pepk.jar path (default ../pepk.jar)
     --wrap-key      App specific wrap key to use with 'pepk'
                     Defaults to '../encryption_public_key.pem'
     -h|--help       output this help
@@ -31,15 +32,17 @@ gen_key=true
 gen_cert=true
 private_key=""      # no key signifies to generate one
 certificate=""
-pepk=true
+use_pepk=true
 wrap_key=../encryption_public_key.pem
+pepk=../pepk.jar
 
 # Parse options
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --certificate) gen_cert=false ; certificate="$2" ; shift ;;
         --key) gen_key=false ; private_key="$2" ; shift ;;
-        --no-pepk) pepk=false ;;
+        --no-pepk) use_pepk=false ;;
+        --pepk) pepk="$2" ; shift ;;
         --wrap-key) wrap_key="$2" ; shift ;;
         -h|--help) usage ;;
         -*) usage "Unknown option '$1'" ;;
@@ -58,8 +61,8 @@ ${gen_cert} || { ! [[ -r "${certificate}" ]] && usage "Can't find certificate '$
 ${gen_key} && ! ${gen_cert} && usage "You must supply a private key when supplying a certificate."
 
 # check for tooling for pepk, if requested
-if ${pepk} ; then
-    ! [[ -r ../pepk.jar ]] && usage "Can't find utility 'pepk.jar'. (Do you want the '--no-pepk' option?)"
+if ${use_pepk} ; then
+    ! [[ -r ${pepk} ]] && usage "Can't find utility 'pepk.jar'. (Do you want the '--no-pepk' option?)"
     ! [[ -r ${wrap_key} ]] && usage "Can't find wrap key '${wrap_key}'."
     # the output format of pepk depends on whether or not we need to include the
     # certificate. We do if we're not reusing an existing certificate.
@@ -97,7 +100,8 @@ if ${gen_cert} ; then
         -subj "${subject}" \
         -extensions "usr_cert" \
         -days 10000 \
-        -out "${app_name}"-signing-cert.pem
+        -out "${app_name}"-signing-cert.pem \
+        2>/dev/null
 else
     # only need to copy the cert to the expected name - fails if already named
     # that, so ignore any error (we know it's readable from above)
@@ -116,7 +120,7 @@ $( # Get the certificate dates (since this has caused a bug)
 EOS
 
 # Now generate the 'pepk' format if requested
-if ${pepk} ; then
+if ${use_pepk} ; then
     playstore_upload_file="${app_name}.${pepk_file_extension}"
     rm -f temp.keystore "${playstore_upload_file}"
     openssl pkcs12 -export \
@@ -132,7 +136,7 @@ if ${pepk} ; then
     #Create the wrapped key
 
     echo use abcdef as the password when prompted
-    java -jar ../pepk.jar \
+    java -jar ${pepk} \
             --rsa-aes-encryption \
             --keystore=temp.keystore \
             --alias="${app_name}" \
