@@ -23,6 +23,21 @@ following command sequence is recommended:
 Only the `docker` command is needed to be working on your machine. (Docker
 desktop is not needed, the Community Edition cli tool is sufficient.)
 
+## Development
+
+If you're working on modifying the script `gen-apk-key.sh`, or otherwise want to
+test the latest & greatest, you'll want to use a locally built container image.
+
+To build a container with the current files from you working directory:
+```bash
+make -C ../.. build
+```
+That will produce a fresh image `autograph-app`. You can have the Makefile use
+that image by export the image name:
+```bash
+export CONTAINER_IMAGE="autograph-app"
+```
+
 
 [repo]: https://github.com/mozilla-services/autograph
 [runbook]: https://mozilla-hub.atlassian.net/wiki/spaces/SECENGOPS/pages/27922135/Autograph#Autograph-AndroidAPKOperations
