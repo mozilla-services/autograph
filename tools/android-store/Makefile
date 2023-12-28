@@ -24,21 +24,6 @@ CONTAINER_IMAGE ?= mozilla/autograph
 SCRIPT ?= $(shell type -p gen-apk-key.sh || echo ./gen-apk-key.sh)
 PEPK ?= $(RD_PATH)/pepk.jar
 
-# only prompt for APP_NAME value if 'help' or 'status' isn't the only target
-ifeq ($(shell tty -s),0)
-ifneq ($(MAKECMDGOALS),)
-ifneq ($(MAKECMDGOALS),help)
-ifneq ($(MAKECMDGOALS),status)
-ifeq ($(origin APP_NAME), undefined)
-### N.B. we need simple expansion here, so can't use recursive "?="
-### assignment operator
-APP_NAME ::= $(shell read -p "enter app name: " ; echo $$REPLY)
-endif
-endif
-endif
-endif
-endif
-
 # The rest of the defaults depend on the APP_NAME. We don't test for
 # existance here, as they may not be needed.
 PRIVATE_KEY ?= ../$(APP_NAME)-private-key.pem
@@ -92,11 +77,15 @@ docker-run:  ## Start docker container (from host)
 		$(CONTAINER_IMAGE):$(CONTAINER_VERSION) \
 		bash -c /app/src/autograph/tools/android-store/start-container-shell.sh
 
+.PHONY: _check_app_name
+_check_app_name:  # check that we have a definition from somewhere
+	@test -n "$(APP_NAME)" || { echo "Please supply APP_NAME on command line or via env var" ; false ; }
+
 .PHONY: _check_key_inputs
-_check_key_inputs:  # Check that the inputs are where we expect them
+_check_key_inputs:  _check_app_name # Check that the inputs are where we expect them
 	@test -r "$(PRIVATE_KEY)" || { echo "Can't read private key '$(PRIVATE_KEY)'" ; false ; }
 	@test -r "$(PUBLIC_CERT)" || { echo "Can't read certificate '$(PUBLIC_CERT)'" ; false ; }
-	@test -r "$(WRAP_KEY)" || { echo "Can't read wrap key '$(WRAP_KEY)'" ; false ; }
+	@test -r "$(WRAP_KEY)"    || { echo "Can't read wrap key '$(WRAP_KEY)'" ; false ; }
 
 ##################################################################################
 #
@@ -104,7 +93,7 @@ _check_key_inputs:  # Check that the inputs are where we expect them
 #
 ##################################################################################
 .PHONY: apk-new-app-create-key
-apk-new-app-create-key: _check-prerequisites  ## Create signing key for NEW Android app (step 1 of 2)
+apk-new-app-create-key: _check-prerequisites _check_app_name  ## Create signing key for NEW Android app (step 1 of 2)
 	$(SCRIPT) --no-pepk "$(APP_NAME)"
 
 .PHONY: apk-new-app-wrap-key apk-existing-app-wrap-key _wrap_key
