@@ -22,15 +22,19 @@ CONTAINER_IMAGE ?= mozilla/autograph
 # Set up variables possibly needed by script, for both running in debug
 # and from container
 SCRIPT ?= $(shell type -p gen-apk-key.sh || echo ./gen-apk-key.sh)
-PEPK ?= ../pepk.jar
+PEPK ?= $(RD_PATH)/pepk.jar
 
-# only prompt for APP_NAME value if 'help' isn't the only target
+# only prompt for APP_NAME value if 'help' or 'status' isn't the only target
+ifeq ($(shell tty -s),0)
 ifneq ($(MAKECMDGOALS),)
 ifneq ($(MAKECMDGOALS),help)
+ifneq ($(MAKECMDGOALS),status)
 ifeq ($(origin APP_NAME), undefined)
-# N.B. we need simple expansion here, so can't use recursive "?="
-# assignment operator
+### N.B. we need simple expansion here, so can't use recursive "?="
+### assignment operator
 APP_NAME ::= $(shell read -p "enter app name: " ; echo $$REPLY)
+endif
+endif
 endif
 endif
 endif
@@ -41,6 +45,12 @@ PRIVATE_KEY ?= ../$(APP_NAME)-private-key.pem
 PUBLIC_CERT ?= ../$(APP_NAME)-signing-cert.pem
 WRAP_KEY ?= ../encryption_public_key.pem
 
+
+##################################################################################
+#
+#     Workspace Setup
+#
+##################################################################################
 .PHONY: status
 status: _check-prerequisites _check-for-pepk  ## Report on readiness to perform tasks
 	@echo "In container: $(IN_CONTAINER)"
@@ -49,15 +59,30 @@ status: _check-prerequisites _check-for-pepk  ## Report on readiness to perform 
 .PHONY: _check-for-pepk
 _check-for-pepk:  # Check if pepk.jar is available
 	@type -ap java &>/dev/null ||  { echo "ERROR: missing java - needed for pepk" ; false ; }
-	@type -ap $(PEPK) &>/dev/null || { echo "ERROR: missing $(PEPK)" ; false ; }
+	@test -r  $(PEPK) &>/dev/null || { echo "ERROR: missing $(PEPK) (try: make download-pepk)" ; false ; }
 
 .PHONY: _check-prerequisites
 _check-prerequisites:  # Verify utilities available
 	@type -ap openssl &>/dev/null || { echo "ERROR: Missing openssl" ; false ; }
 	@type $(SCRIPT) &>/dev/null || { echo "ERROR: not available $(SCRIPT)" ; false ; }
-	@test -w $(RD_PATH)/t || { echo "ERROR: $(RD_PATH)/t is not writable" ; false ; }
+	@test -w $(RD_PATH)/t || { echo "ERROR: $(RD_PATH)/t is not writable (try: make setup-ramdisk)" ; false ; }
 	@{ ! $(IN_CONTAINER) && type -ap docker &>/dev/null ; } || { echo "ERROR: docker not available" ; false ; }
 	@$(IN_CONTAINER) || echo "Warning: not running in a container"
+
+.PHONY: download-pepk
+download-pepk: $(PEPK)	## Download pepk.jar
+$(PEPK):
+	@curl --silent --fail \
+		--output $@ \
+		https://www.gstatic.com/play-apps-publisher-rapid/signing-tool/prod/pepk.jar
+	@echo Downloaded to $(PEPK)
+
+.PHONY: setup-ramdisk
+setup-ramdisk: $(RD_PATH)/t	## Create a container writeable directory
+$(RD_PATH)/t:
+	@mkdir $@
+	@chmod a+w $@
+	@echo "Container writeable directory configured"
 
 .PHONY: docker-run
 docker-run:  ## Start docker container (from host)
@@ -67,23 +92,28 @@ docker-run:  ## Start docker container (from host)
 		$(CONTAINER_IMAGE):$(CONTAINER_VERSION) \
 		bash -c /app/src/autograph/tools/android-store/start-container-shell.sh
 
-.PHONY: apk-new-app-create-key
-apk-new-app-create-key: _check-prerequisites  ## Create signing key for NEW Android app (step 1 of 2)
-	$(SCRIPT) --no-pepk "$(APP_NAME)"
-
 .PHONY: _check_key_inputs
 _check_key_inputs:  # Check that the inputs are where we expect them
 	@test -r "$(PRIVATE_KEY)" || { echo "Can't read private key '$(PRIVATE_KEY)'" ; false ; }
 	@test -r "$(PUBLIC_CERT)" || { echo "Can't read certificate '$(PUBLIC_CERT)'" ; false ; }
 	@test -r "$(WRAP_KEY)" || { echo "Can't read wrap key '$(WRAP_KEY)'" ; false ; }
 
-.PHONY: apk-new-app-wrap-key apk-existing-app-wrap-key
-apk-existing-app-wrap-key: _check-prerequisites _check_key_inputs _check-for-pepk ## Wrap signing key for existing Android app
-apk-new-app-wrap-key: _check-prerequisites _check_key_inputs _check-for-pepk ## Wrap signing key for NEW Android app (step 2 of 2)
-	# By convention, all the inputs will be up a level
+##################################################################################
+#
+#     Key Manipulation
+#
+##################################################################################
+.PHONY: apk-new-app-create-key
+apk-new-app-create-key: _check-prerequisites  ## Create signing key for NEW Android app (step 1 of 2)
+	$(SCRIPT) --no-pepk "$(APP_NAME)"
+
+.PHONY: apk-new-app-wrap-key apk-existing-app-wrap-key _wrap_key
+_wrap_key: _check-prerequisites _check_key_inputs _check-for-pepk # Wrap signing key
 	$(SCRIPT) \
 		--key "$(PRIVATE_KEY)" \
 		--certificate "$(PUBLIC_CERT)" \
 		--wrap-key "$(WRAP_KEY)" \
 		--pepk "$(PEPK)" \
 		"$(APP_NAME)"
+apk-existing-app-wrap-key: _wrap_key ## Wrap signing key for existing Android app
+apk-new-app-wrap-key: _wrap_key ## Wrap signing key for NEW Android app (step 2 of 2)
