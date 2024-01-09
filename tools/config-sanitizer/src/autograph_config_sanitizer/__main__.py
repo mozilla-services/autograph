@@ -13,6 +13,8 @@ import yaml
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 
+# Prefix to prepend to hashes of secrets
+safe_prefix = "safe_"
 
 class CertInfo(pydantic.BaseModel):
     pem: str | None
@@ -59,7 +61,7 @@ def sanitize(secret: str) -> str | None:
     if secret is None:
         # None is None -- don't hash it!
         return None
-    return hashlib.sha256(secret.encode()).hexdigest()
+    return safe_prefix + hashlib.sha256(secret.encode()).hexdigest()
 
 def gather_authorizations_app(doc:dict) -> list[AuthorizationApp]:
     authorizations = []
