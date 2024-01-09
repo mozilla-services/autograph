@@ -42,3 +42,9 @@ docker-run: ## run $(SCRIPT)
 
 docker-debug:  ## run bash in generated container
 	docker run -it --rm $(SCRIPT):latest bash
+
+test:  ## smoke test the script
+	$(SCRIPT) < ../../autograph.yaml
+	test bd5d37ce116edf18ee1a3c1d7078bfad == $$(md5sum <authorizations_app.csv | cut -d\  -f1)
+	test 1c7399b06f2ac1b973681453e9e12317 == $$(md5sum <signers.csv | cut -d\  -f1)
+	
