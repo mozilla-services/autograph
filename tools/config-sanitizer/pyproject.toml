@@ -1,10 +1,11 @@
 [build-system]
-#requires = ["setuptools", "setuptools-scm", "wheel"]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools", "setuptools_scm", "wheel"]
+#requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 # can be empty if no extra settings are needed, presence enables setuptools_scm
+root = "../.."  # use tags of project
 
 [project]
 name = "autograph-config-sanitizer"
