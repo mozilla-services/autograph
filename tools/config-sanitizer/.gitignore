@@ -3,3 +3,4 @@
 .venv
 dist
 src/autograph_config_sanitizer.egg-info
+build
