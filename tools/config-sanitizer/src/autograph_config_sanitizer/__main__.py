@@ -13,13 +13,15 @@ import yaml
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 
-# Prefix to prepend to hashes of secrets
+# Prefix to prepend to generated hashes. We hash for 2 reasons:
+#   1. to protect secrets, while still allowing equality testing
+#   2. to identify large objects for equality testing (e.g. x509 certificate)
 safe_prefix = "safe_"
 
 class CertInfo(pydantic.BaseModel):
     pem: str | None
     pem_hash: str | None
-    fp_sha1: str | None
+    fp_sha1: str | None  # Google Play reports SHA1 of cert, so needed to compare
     fp_sha256: str | None
     date_start: datetime.datetime | None
     date_end: datetime.datetime | None
@@ -29,10 +31,10 @@ class Signer(pydantic.BaseModel):
     type_: str
     mode: str | None
     # for apks, etc
-    private_key: str | None
+    private_key: str | None     ### SECRET ###
     certificate: str | None
     # for content signature (type `contentsignaturepki`)
-    issuerprivatekey: str | None
+    issuerprivatekey: str | None     ### SECRET ###
     issuercert: str | None
     cacert: str | None
     fp_sha1: str | None
@@ -46,9 +48,9 @@ class AuthorizationBase(pydantic.BaseModel):
 
 
 class AuthorizationEdge(AuthorizationBase):
-    client_token: str   # this is the API key, so mask
+    client_token: str   # this is the API key, so mask     ### SECRET ###
     signer: str
-    user_app: str   # this matches the key, which is secret, so don't include
+    user_app: str   # this matches the key, which is secret     ### SECRET ###
 
 
 class AuthorizationApp(AuthorizationBase):
@@ -114,6 +116,7 @@ def extract_cert_info(data: str | None) -> CertInfo:
         cert_info = CertInfo(
                 pem=data,
                 pem_hash=sanitize(data),
+                # Format hashes as commonly emitted by other tooling, especially, Google Play UI
                 fp_sha1=cert.fingerprint(hashes.SHA1()).hex(sep=":",
                                                             bytes_per_sep=1),
                 fp_sha256=cert.fingerprint(hashes.SHA256()).hex(sep=":",
