@@ -1,0 +1,11 @@
+language: go
+
+go:
+  - 1.5
+  - 1.6
+  - tip
+
+go_import_path: go.mozilla.org/mozlogrus
+
+before_install:
+  - go get github.com/stretchr/testify/assert
