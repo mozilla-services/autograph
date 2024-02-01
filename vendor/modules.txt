@@ -33,7 +33,7 @@ github.com/DataDog/datadog-go/statsd
 # github.com/ThalesIgnite/crypto11 v0.1.0
 ## explicit
 github.com/ThalesIgnite/crypto11
-# github.com/aws/aws-lambda-go v1.27.0
+# github.com/aws/aws-lambda-go v1.46.0
 ## explicit
 github.com/aws/aws-lambda-go/lambda
 github.com/aws/aws-lambda-go/lambda/handlertrace
