@@ -128,7 +128,7 @@ github.com/hashicorp/golang-lru/simplelru
 github.com/howeyc/gopass
 # github.com/jmespath/go-jmespath v0.4.0
 github.com/jmespath/go-jmespath
-# github.com/lib/pq v1.10.4
+# github.com/lib/pq v1.10.9
 ## explicit
 github.com/lib/pq
 github.com/lib/pq/oid
