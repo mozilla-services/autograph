@@ -115,7 +115,7 @@ github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/googleapis/gax-go/v2 v2.0.5
 github.com/googleapis/gax-go/v2
-# github.com/gorilla/mux v1.8.0
+# github.com/gorilla/mux v1.8.1
 ## explicit
 github.com/gorilla/mux
 # github.com/goware/prefixer v0.0.0-20160118172347-395022866408
