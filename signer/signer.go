@@ -115,6 +115,11 @@ type Configuration struct {
 	// e.g. 0xA2B637F535A86009 for the gpg2 signer type
 	KeyID string `json:"keyid,omitempty"`
 
+	// SubdomainOverride is to override the subdomain of the leaf certificates
+	// created. This is mostly for contentsignaturepki. If this isn't set, the
+	// `KeyID` is used as the subdomain, instead.
+	SubdomainOverride string `json:"subdomain_override,omitempty"`
+
 	// Passphrase is the optional passphrase to use decrypt the
 	// gpg secret key for the gpg2 signer type
 	Passphrase string `json:"passphrase,omitempty"`
