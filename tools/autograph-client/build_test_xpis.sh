@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -eu
 
 # produces signed XPIs with various params for testing using the
 # autograph go client
@@ -11,7 +11,7 @@ set -e
 #
 INPUT_FILE=$1
 
-OUTPUT_BASENAME=autograph-$(git rev-parse --short HEAD)-$CONFIG-$(basename $INPUT_FILE '.zip')-PKCS7
+OUTPUT_BASENAME=autograph-$(git rev-parse --short HEAD)-${CONFIG:-x}-$(basename $INPUT_FILE '.zip')-PKCS7
 
 HAWK_USER=${HAWK_USER:-alice}
 HAWK_SECRET=${HAWK_SECRET:-fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu}
@@ -20,16 +20,24 @@ VERIFICATION_TIME=${VERIFICATION_TIME:-""}
 
 TARGET=${TARGET:-'http://127.0.0.1:8000'}
 
-if [[ "$VERIFICATION_TIME" = "" ]]; then
-    COMMON_ARGS="-t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k $SIGNER_ID -r $TRUST_ROOTS"
-else
-    COMMON_ARGS="-t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k $SIGNER_ID -r $TRUST_ROOTS -vt $VERIFICATION_TIME"
-fi
+# build up common args, skipping things that aren't defined 
+COMMON_ARGS=" -f ${INPUT_FILE}"
+[[ -n ${TARGET:-} ]]              && COMMON_ARGS+=" -t ${TARGET}"
+[[ -n ${HAWK_USER:-} ]]           && COMMON_ARGS+=" -u ${HAWK_USER}"
+[[ -n ${HAWK_SECRET:-} ]]         && COMMON_ARGS+=" -p ${HAWK_SECRET}"
+[[ -n ${CN:-} ]]                  && COMMON_ARGS+=" -cn ${CN}"
+[[ -n ${SIGNER_ID:-} ]]           && COMMON_ARGS+=" -k ${SIGNER_ID}"
+[[ -n ${TRUST_ROOTS:-} ]]         && COMMON_ARGS+=" -r ${TRUST_ROOTS}"
+[[ -n ${VERIFICATION_TIME:-} ]]   && COMMON_ARGS+=" -vt ${VERIFICATION_TIME}"
 
+
+# TODO should throw error if VERIFICATION_TIME doesn't match VERIFY
 VERIFY=${VERIFY:-"1"}
 if [ "$VERIFY" = "0" ]; then
     COMMON_ARGS="$COMMON_ARGS -noverify"
 fi
+#COMMON_ARGS+=" -D"      # debug
+echo "using common args: '${COMMON_ARGS}'"
 
 # only PKCS7 SHA1
 go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1.zip
