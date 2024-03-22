@@ -43,7 +43,7 @@ docker compose up      # runs unit tests in container, must pass
 ```
 _Note: you must monitor the output of docker to detect when the unit tests have
 completed. Otherwise, it will run forever with heartbeat messages. The following
-pipeline is useful:_
+pipeline is useful (and available in the Makefile as target `test-in-docker`):_
 ```bash
 docker compose up 2>&1 | tee compose.log \
     | (grep --silent "autograph-unit-test exited with code" && docker compose down; \

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm", "wheel"]
+#requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+# can be empty if no extra settings are needed, presence enables setuptools_scm
+root = "../.."  # use tags of project
+
+[project]
+name = "autograph-config-sanitizer"
+dynamic = ["version"]
+description = "Extract signer authentication information, converting secrets to their hash. (Hashes maintain linkages.)"
+requires-python = ">= 3.9"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "PyYAML",
+    "pydantic",
+    "cryptography",
+]
+license = { text = "Apache 2.0"}
+
+[project.scripts]
+autograph-config-sanitizer = "autograph_config_sanitizer.__main__:main"

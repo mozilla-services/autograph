@@ -63,6 +63,7 @@ type ContentSigner struct {
 	chainUploadLocation         string
 	caCert                      string
 	db                          *database.Handler
+	subdomainOverride           string
 }
 
 // ecdsaAsn1Signature is a private struct to unmarshal asn1 signatures produced by crypto.Signer
@@ -83,6 +84,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.chainUploadLocation = conf.ChainUploadLocation
 	s.caCert = conf.CaCert
 	s.db = conf.DB
+	s.subdomainOverride = conf.SubdomainOverride
 
 	if conf.Type != Type {
 		return nil, fmt.Errorf("contentsignaturepki %q: invalid type %q, must be %q", s.ID, conf.Type, Type)

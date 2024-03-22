@@ -12,19 +12,19 @@ install-wait-for-it:
 	chmod +x bin/wait-for-it.sh
 
 install-golint:
-	go get -u golang.org/x/lint/golint
+	go get golang.org/x/lint/golint
 
 install-cover:
-	go get -u golang.org/x/tools/cmd/cover
+	go get golang.org/x/tools/cmd/cover
 
 install-goveralls:
-	go get -u github.com/mattn/goveralls
+	go get github.com/mattn/goveralls
 
 install-staticcheck:
-	go get -u honnef.co/go/tools/cmd/staticcheck
+	go get honnef.co/go/tools/cmd/staticcheck
 
 install-go-mod-upgrade:
-	go get -u github.com/oligot/go-mod-upgrade
+	go get github.com/oligot/go-mod-upgrade
 
 install-dev-deps: install-golint install-staticcheck install-cover install-goveralls install-go-mod-upgrade
 
