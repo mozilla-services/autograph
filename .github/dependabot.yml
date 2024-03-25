@@ -7,9 +7,9 @@ updates:
     timezone: UCT
   open-pull-requests-limit: 99
   reviewers:
-  - g-k, kkleemola, pwnbus
+  - kkleemola, pwnbus
   assignees:
-  - g-k, kkleemola, pwnbus
+  - kkleemola, pwnbus
   ignore:
   - dependency-name: golang
     versions:
@@ -21,7 +21,7 @@ updates:
     timezone: UCT
   open-pull-requests-limit: 99
   reviewers:
-  - g-k, kkleemola, pwnbus
+  - kkleemola, pwnbus
   ignore:
   - dependency-name: postgres
     versions:
@@ -34,7 +34,7 @@ updates:
     timezone: UCT
   open-pull-requests-limit: 99
   reviewers:
-  - g-k, kkleemola, pwnbus
+  - kkleemola, pwnbus
 - package-ecosystem: gomod
   directory: "/tools/autograph-monitor"
   schedule:
@@ -43,6 +43,6 @@ updates:
     timezone: UCT
   open-pull-requests-limit: 99
   reviewers:
-  - g-k, kkleemola, pwnbus
+  - kkleemola, pwnbus
   assignees:
-  - g-k, kkleemola, pwnbus
+  - kkleemola, pwnbus
