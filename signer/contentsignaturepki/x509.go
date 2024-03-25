@@ -11,7 +11,6 @@ import (
 
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/signer"
-	log "github.com/sirupsen/logrus"
 )
 
 // findAndSetEE searches the database for an end-entity key that is currently
@@ -43,13 +42,11 @@ func (s *ContentSigner) findAndSetEE(conf signer.Configuration) (err error) {
 // makeAndUploadChain makes a certificate using the end-entity public key,
 // uploads the chain to its destination and creates an X5U download URL
 func (s *ContentSigner) makeAndUploadChain() (err error) {
-	log.Printf("in ContentSigner.makeAndUploadChain 1, signer id: %#v, subdomainOverride: %#v", s.ID, s.subdomainOverride)
 	var fullChain, chainName string
 	fullChain, chainName, err = s.makeChain()
 	if err != nil {
 		return fmt.Errorf("failed to make chain: %w", err)
 	}
-	log.Printf("in ContentSigner.makeAndUploadChain 5, uploading fullChain: %#v, chainName: %#v", fullChain, chainName)
 	err = s.upload(fullChain, chainName)
 	if err != nil {
 		return fmt.Errorf("failed to upload chain: %w", err)
@@ -146,13 +143,11 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 
 	// return a chain with the EE cert first then the issuers
 	chain = certPem.String() + s.IssuerCert + s.caCert
-	log.Printf("in ContentSigner.makeChain, signer id: %#v, subdomainOverride: %#v, cert.Subject.CommonName: %#v", s.ID, s.subdomainOverride, cert.Subject.CommonName)
 	name = fmt.Sprintf("%s-%s.chain", cert.Subject.CommonName, cert.NotAfter.Format("2006-01-02-15-04-05"))
 	return
 }
 
 func (s *ContentSigner) domainForLeafCert() string {
-	log.Printf("in ContentSigner.domainForLeafCert, signer id: %#v, subdomainOverride: %#v", s.ID, s.subdomainOverride)
 	subdomain := s.ID
 	if s.subdomainOverride != "" {
 		subdomain = s.subdomainOverride
