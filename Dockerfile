@@ -16,9 +16,10 @@ RUN addgroup --gid 10001 app \
       apt -y install -t buster-backports apksigner && \
       apt-get clean
 
-# fetch the RDS CA bundle
-# https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts.General.SSL
-RUN curl -o /usr/local/share/rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
+# fetch the RDS CA bundles
+# https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificatesAllRegions
+RUN curl -o /usr/local/share/rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem \
+      curl https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem >> /usr/local/share/rds-combined-ca-bundle.pem
 
 ADD . /app/src/autograph
 ADD autograph.yaml /app
