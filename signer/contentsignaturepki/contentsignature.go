@@ -86,8 +86,6 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.db = conf.DB
 	s.subdomainOverride = conf.SubdomainOverride
 
-	log.Printf("in contentsignaturepki.New 1, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
-
 	if conf.Type != Type {
 		return nil, fmt.Errorf("contentsignaturepki %q: invalid type %q, must be %q", s.ID, conf.Type, Type)
 	}
@@ -98,13 +96,11 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 		return nil, fmt.Errorf("contentsignaturepki %q: missing issuer private key in signer configuration", s.ID)
 	}
 	s.rand = conf.GetRand()
-	log.Printf("in contentsignaturepki.New 5, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 	// make a temporary config since we need to retrieve the
 	// issuer private key from the hsm
 	tmpconf := conf
 	tmpconf.PrivateKey = conf.IssuerPrivKey
 	s.issuerPriv, s.issuerPub, _, err = tmpconf.GetKeys()
-	log.Printf("in contentsignaturepki.New 10, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 	if err != nil {
 		return nil, fmt.Errorf("contentsignaturepki %q: failed to get keys: %w", s.ID, err)
 	}
@@ -121,13 +117,10 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	}
 	s.Mode = s.getModeFromCurve()
 
-	log.Printf("in contentsignaturepki.New 80, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 	err = s.initEE(conf)
 	if err != nil {
-		log.Printf("in contentsignaturepki.New 95, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 		return nil, fmt.Errorf("contentsignaturepki %q: failed to initialize end-entity: %w", s.ID, err)
 	}
-	log.Printf("in contentsignaturepki.New 100, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 	return
 }
 
@@ -135,16 +128,13 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 // for signing. It will try to retrieve an existing one from db/hsm, and if
 // no suitable candidate can be found, a new one will be created.
 func (s *ContentSigner) initEE(conf signer.Configuration) error {
-	log.Printf("in ContentSigner.initEE 1, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 	err := s.findAndSetEE(conf)
 	switch err {
 	case nil:
 		log.Printf("contentsignaturepki %q: reusing existing EE %q", s.ID, s.eeLabel)
-		log.Printf("in ContentSigner.initEE 5, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 	case database.ErrNoSuitableEEFound:
 		// No suitable end-entity found, making a new chain
 		log.Printf("contentsignaturepki %q: making new end-entity", s.ID)
-		log.Printf("in ContentSigner.initEE 10, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 		var tx *database.Transaction
 		if s.db != nil {
 			tx, err = s.db.BeginEndEntityOperations()
@@ -155,7 +145,6 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 		// to prevent race conditions, we perform another set of the EE just in case
 		// someone else created it before we managed to obtain the lock
 		err = s.findAndSetEE(conf)
-		log.Printf("in ContentSigner.initEE 20, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 		switch err {
 		case nil:
 			// alright we found a suitable EE this time to don't make one
@@ -174,7 +163,6 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 			return fmt.Errorf("contentsignaturepki %q: failed to generate end entity: %w", s.ID, err)
 		}
 		// make the certificate and upload the chain
-		log.Printf("in ContentSigner.initEE 30, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 		err = s.makeAndUploadChain()
 		if err != nil {
 			return fmt.Errorf("contentsignaturepki %q: failed to make chain and x5u: %w", s.ID, err)
@@ -184,30 +172,25 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 			hsmHandle := signer.GetPrivKeyHandle(s.eePriv)
 			err = tx.InsertEE(s.X5U, s.eeLabel, s.ID, hsmHandle)
 			if err != nil {
-				log.Printf("in ContentSigner.initEE 80, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 				return fmt.Errorf("contentsignaturepki %q: failed to insert EE into database: %w", s.ID, err)
 			}
 			log.Printf("contentsignaturepki %q: generated private key labeled %q with hsm handle %d and x5u %q", s.ID, s.eeLabel, hsmHandle, s.X5U)
-			log.Printf("in ContentSigner.initEE 85, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 		}
 	releaseLock:
 		if tx != nil {
 			// close the transaction
 			err = tx.End()
 			if err != nil {
-				log.Printf("in ContentSigner.initEE 90, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 				return fmt.Errorf("contentsignaturepki %q: failed to commit end-entity operations in database: %w", s.ID, err)
 			}
 		}
 	default:
-		log.Printf("in ContentSigner.initEE 95, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 		return fmt.Errorf("contentsignaturepki %q: failed to find suitable end-entity: %w", s.ID, err)
 	}
 	_, _, err = GetX5U(buildHTTPClient(), s.X5U)
 	if err != nil {
 		return fmt.Errorf("contentsignaturepki %q: failed to verify x5u: %w", s.ID, err)
 	}
-	log.Printf("in ContentSigner.initEE 100, signer id (s.ID): %#v, subdomainOverride (s.SubdomainOverride): %#v, signer id (conf.ID): %#v, (conf.SubdomainOverride) subdomainOverride: %#v", s.ID, s.SubdomainOverride, conf.ID, conf.SubdomainOverride)
 	return nil
 }
 
