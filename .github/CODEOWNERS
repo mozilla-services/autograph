@@ -1,7 +1,7 @@
 *       @g-k, @kkleemola, @pwnbus
 
 # the AMO team should review changes that impact Addon signing
-signer/xpi/	@willdurand
+signer/xpi/	@diox
 
 # TODO: check with Mathieu
 # signer/contentsignature	@leplatrem
