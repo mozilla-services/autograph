@@ -188,8 +188,8 @@ mpvOMOT3falDgXh0iOgdIA==
 		ID:                  "testsigner1",
 		SubdomainOverride:   "anothersigner1",
 		Mode:                P256ECDSA,
-		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
-		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
+		X5U:                 "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
+		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
 		IssuerPrivKey: `
 -----BEGIN EC PRIVATE KEY-----
 MHcCAQEEIEABir6WMfkbG2ZyKKDCij1PlSBldaaJqPQ/9ioWvCM5oAoGCCqGSM49
