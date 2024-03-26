@@ -92,7 +92,7 @@ generate:
 	go generate
 
 gpg-test-clean:
-	rm -rf ~/.gnupg /tmp/autograph_gpg2*
+	rm -rf /tmp/autograph_gpg2*
 	killall gpg-agent
 
 # image build order:
