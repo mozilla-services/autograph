@@ -69,16 +69,16 @@ func Connect(config Config) (*Handler, error) {
 	return nil, outerErr
 }
 
-// connString is a PostgreSQL database connection URL. This type is mostly to
-// prevent the internal API here being too stringly-typed.
+// connString is a PostgreSQL database connection URL or DSN. This type is
+// mostly to prevent the internal API here being too stringly-typed.
 type connString string
 
-// constructConnStrings returns a list of connection URLs to try connecting to
-// PostgreSQL databases with. If an AUTOGRAPH_DB_DSN env var is set, the list
-// will contain only it. Otherwise, it will create a DSN for each certificate
-// that autograph is configured to try when verifiying the TLS connection. This
-// is to allow us to switch to a new AWS RDS certificate without extended
-// downtime.
+// constructConnStrings returns a list of connection URLs or DSNs to try
+// connecting to PostgreSQL databases with. If an AUTOGRAPH_DB_DSN env var is
+// set, the list will contain only it. Otherwise, it will create a DSN for each
+// certificate that autograph is configured to try when verifiying the TLS
+// connection. This is to allow us to switch to a new AWS RDS certificate
+// without extended downtime.
 func constructConnStrings(config Config) []connString {
 	if os.Getenv("AUTOGRAPH_DB_DSN") != "" {
 		return []connString{connString(os.Getenv("AUTOGRAPH_DB_DSN"))}
