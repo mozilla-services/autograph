@@ -52,6 +52,9 @@ type Config struct {
 // Connect creates a database connection and returns a handler
 func Connect(config Config) (*Handler, error) {
 	connStrings := constructConnStrings(config)
+	if len(connStrings) == 0 {
+		return nil, fmt.Errorf("database.Connect: no postgresql connection strings specified in either YAML config or AUTOGRAPH_DB_DSN")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
@@ -63,7 +66,6 @@ func Connect(config Config) (*Handler, error) {
 		}
 		outerErr = err
 	}
-	log.Printf("HERE %#v", outerErr)
 	return nil, outerErr
 }
 
