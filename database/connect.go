@@ -51,54 +51,55 @@ type Config struct {
 
 // Connect creates a database connection and returns a handler
 func Connect(config Config) (*Handler, error) {
-	dsns := constructDSNStrings(config)
+	connStrings := constructConnStrings(config)
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	var outerErr error
-	for _, dsn := range dsns {
-		h, err := connect(ctx, config, dsn)
+	for _, cs := range connStrings {
+		h, err := connect(ctx, config, cs)
 		if err == nil {
 			return h, nil
 		}
 		outerErr = err
 	}
+	log.Printf("HERE %#v", outerErr)
 	return nil, outerErr
 }
 
-// dsnString is a PostgreSQL database connection string. It's mostly to prevent
-// the internal API here being too stringly-typed.
-type dsnString string
+// connString is a PostgreSQL database connection URL. This type is mostly to
+// prevent the internal API here being too stringly-typed.
+type connString string
 
-// construcDSNStrings returns a list of DSN strings to try connecting to the
-// PostgreSQL database with. If an AUTOGRAPH_DB_DSN env var is set, the list
+// constructConnStrings returns a list of connection URLs to try connecting to
+// PostgreSQL databases with. If an AUTOGRAPH_DB_DSN env var is set, the list
 // will contain only it. Otherwise, it will create a DSN for each certificate
 // that autograph is configured to try when verifiying the TLS connection. This
 // is to allow us to switch to a new AWS RDS certificate without extended
 // downtime.
-func constructDSNStrings(config Config) []dsnString {
+func constructConnStrings(config Config) []connString {
 	if os.Getenv("AUTOGRAPH_DB_DSN") != "" {
-		return []dsnString{dsnString(os.Getenv("AUTOGRAPH_DB_DSN"))}
+		return []connString{connString(os.Getenv("AUTOGRAPH_DB_DSN"))}
 	}
 	var rootCerts []string
 	if config.SSLRootCert != "" {
 		rootCerts = append(rootCerts, config.SSLRootCert)
 	}
 	rootCerts = append(rootCerts, config.SSLRootCertificates...)
-	var dsns []dsnString
+	var urls []connString
 	for _, rootCert := range rootCerts {
 		userPass := url.UserPassword(config.User, config.Password)
 		if config.SSLMode == "" {
 			config.SSLMode = "disable"
 		}
-		dsn := fmt.Sprintf("postgres://%s@%s/%s?sslmode=%s&sslrootcert=%s",
+		u := fmt.Sprintf("postgres://%s@%s/%s?sslmode=%s&sslrootcert=%s",
 			userPass.String(), config.Host, config.Name, config.SSLMode, rootCert)
-		dsns = append(dsns, dsnString(dsn))
+		urls = append(urls, connString(u))
 	}
-	return dsns
+	return urls
 }
 
-func connect(ctx context.Context, config Config, dsn dsnString) (*Handler, error) {
+func connect(ctx context.Context, config Config, dsn connString) (*Handler, error) {
 	dbfd, err := sql.Open("postgres", string(dsn))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
