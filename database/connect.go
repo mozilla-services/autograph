@@ -88,17 +88,26 @@ func constructConnStrings(config Config) []connString {
 		rootCerts = append(rootCerts, config.SSLRootCert)
 	}
 	rootCerts = append(rootCerts, config.SSLRootCertificates...)
+	if len(rootCerts) == 0 {
+		// No root certificates configured, so just include an empty one that'll
+		// be ignored by postgres
+		return []connString{constructConnStringWithRootCert(config, "")}
+	}
 	var urls []connString
 	for _, rootCert := range rootCerts {
-		userPass := url.UserPassword(config.User, config.Password)
-		if config.SSLMode == "" {
-			config.SSLMode = "disable"
-		}
-		u := fmt.Sprintf("postgres://%s@%s/%s?sslmode=%s&sslrootcert=%s",
-			userPass.String(), config.Host, config.Name, config.SSLMode, rootCert)
-		urls = append(urls, connString(u))
+		urls = append(urls, constructConnStringWithRootCert(config, rootCert))
 	}
 	return urls
+}
+
+func constructConnStringWithRootCert(config Config, rootCert string) connString {
+	userPass := url.UserPassword(config.User, config.Password)
+	if config.SSLMode == "" {
+		config.SSLMode = "disable"
+	}
+	u := fmt.Sprintf("postgres://%s@%s/%s?sslmode=%s&sslrootcert=%s",
+		userPass.String(), config.Host, config.Name, config.SSLMode, rootCert)
+	return connString(u)
 }
 
 func connect(ctx context.Context, config Config, dsn connString) (*Handler, error) {
