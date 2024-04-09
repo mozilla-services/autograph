@@ -75,7 +75,7 @@ type connString string
 
 // constructConnStrings returns a list of connection URLs or DSNs to try
 // connecting to PostgreSQL databases with. If an AUTOGRAPH_DB_DSN env var is
-// set, the list will contain only it. Otherwise, it will create a DSN for each
+// set, the list will contain only it. Otherwise, it will create a URL for each
 // certificate that autograph is configured to try when verifiying the TLS
 // connection. This is to allow us to switch to a new AWS RDS certificate
 // without extended downtime.
