@@ -10,11 +10,13 @@ RUN addgroup --gid 10001 app \
       --disabled-password app \
       && \
       echo 'deb http://deb.debian.org/debian buster-backports main' > /etc/apt/sources.list.d/buster-backports.list && \
-      apt update && \
-      apt -y upgrade && \
       apt -y install libltdl-dev gpg libncurses5 devscripts && \
       apt -y install -t buster-backports apksigner && \
       apt-get clean
+
+      # removed upgrade to see if that changes behavior on circle ci
+      #apt update && \
+      #apt -y upgrade && \
 
 # fetch the RDS CA bundle
 # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts.General.SSL

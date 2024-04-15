@@ -7,5 +7,8 @@
         "issuerprivatekey",
         "pipx",
         "virtualenv"
-    ]
+    ],
+    "gopls": {
+        "ui.semanticTokens": true
+    }
 }
