@@ -2,6 +2,7 @@ FROM debian:bookworm
 EXPOSE 8000
 
 ENV DEBIAN_FRONTEND='noninteractive' \
+    PATH="${PATH}:/go/bin" \
     GOPATH='/go'
 
 RUN useradd --uid 10001 --home-dir /app \
