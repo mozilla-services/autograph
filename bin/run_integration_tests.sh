@@ -2,6 +2,15 @@
 
 set -e
 set -o pipefail
+unalias -a
+
+# docker-compose as a standalone binary was deprecated, but its functionality
+# still exists as a docker subcommand. Create an alias to workaround it if we
+# can't find docker-compose.
+if ! which docker-compose; then
+  shopt -s expand_aliases
+  alias docker-compose="docker compose"
+fi
 
 # stop everything currently running
 docker-compose down -v
