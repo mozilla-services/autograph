@@ -1,8 +1,7 @@
 FROM debian:bookworm
 EXPOSE 8000
 
-ENV GODEBUG=x509ignoreCN=0 \
-    DEBIAN_FRONTEND='noninteractive' \
+ENV DEBIAN_FRONTEND='noninteractive' \
     GOPATH='/go'
 
 RUN useradd --uid 10001 --home-dir /app \
