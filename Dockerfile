@@ -1,20 +1,17 @@
-FROM golang:1.16.10-buster
+FROM debian:bookworm
 EXPOSE 8000
 
-ENV GODEBUG=x509ignoreCN=0
+ENV GODEBUG=x509ignoreCN=0 \
+    DEBIAN_FRONTEND='noninteractive' \
+    GOPATH='/go'
 
-RUN addgroup --gid 10001 app \
-      && \
-      adduser --gid 10001 --uid 10001 \
-      --home /app --shell /sbin/nologin \
-      --disabled-password app \
-      && \
-      echo 'deb http://archive.debian.org/debian buster-backports main' > /etc/apt/sources.list.d/buster-backports.list && \
-      apt update && \
-      apt -y upgrade && \
-      apt -y install libltdl-dev gpg libncurses5 devscripts && \
-      apt -y install -t buster-backports apksigner && \
-      apt-get clean
+RUN useradd --uid 10001 --home-dir /app \
+        --shell /sbin/nologin app
+
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get -y install libltdl-dev gpg libncurses5 devscripts apksigner golang && \
+    apt-get clean
 
 # fetch the RDS CA bundle
 # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts.General.SSL

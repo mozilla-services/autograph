@@ -1,11 +1,10 @@
 FROM autograph-app
 
 USER root
-RUN apt update && \
-      apt -y upgrade && \
-      apt -y install jq softhsm2 python3 python3-pip python3-ruamel.yaml && \
-      apt-get clean && \
-      python3 -m pip install yq
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get -y install jq yq softhsm2 python3 python3-ruamel.yaml && \
+    apt-get clean
 
 # copy the config
 ADD autograph.softhsm.yaml /app/
