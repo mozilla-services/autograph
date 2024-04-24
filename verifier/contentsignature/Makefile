@@ -11,7 +11,7 @@ fmt-fix:
 lint:
 	$(GOPATH)/bin/golint .
 staticcheck:
-	staticcheck -go 1.16 .
+	$(GOPATH)/bin/staticcheck -go 1.16 .
 race:
 	go test -race -covermode=atomic -count=1 .
 showcoverage: test
