@@ -25,7 +25,7 @@ install-cover:
 	go get golang.org/x/tools/cmd/cover
 
 install-goveralls:
-	go get github.com/mattn/goveralls
+	go get github.com/mattn/goveralls@v0.0.11
 
 install-staticcheck:
 	go get honnef.co/go/tools/cmd/staticcheck
