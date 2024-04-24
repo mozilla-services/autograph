@@ -54,7 +54,7 @@ jobs:
             # Failing as of 2023-06-30
             make -C verifier/contentsignature staticcheck && false || true
 
-  XFAIL-unit-test:
+  unit-test:
     # based on the official golang image with more docker stuff
     docker:
       - image: circleci/golang:1.16-buster
@@ -80,7 +80,7 @@ jobs:
           command: |
             docker-compose build --no-cache unit-test
       - run:
-          name: XFAIL run XFAIL-unit-test docker image and report coverage
+          name: run unit-test docker image and report coverage
           command: |
             docker-compose run unit-test && false || true
 
@@ -162,7 +162,7 @@ workflows:
             tags:
               only: /.*/
 
-      - XFAIL-unit-test:
+      - unit-test:
           filters:
             tags:
               only: /.*/
@@ -192,5 +192,5 @@ workflows:
               only: main
     jobs:
       - XFAIL-lint-vet-fmt
-      - XFAIL-unit-test
+      - unit-test
       - build-integrationtest-verify
