@@ -28,7 +28,7 @@ install-goveralls:
 	go install github.com/mattn/goveralls@v0.0.11
 
 install-staticcheck:
-	go install honnef.co/go/tools/cmd/staticcheck@v0.0.0-20190523083050-ea95bdfd59fc
+	go install honnef.co/go/tools/cmd/staticcheck@v0.4.7
 
 install-go-mod-upgrade:
 	go get github.com/oligot/go-mod-upgrade
