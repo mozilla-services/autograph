@@ -6,7 +6,7 @@ PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-servic
 # docker-compose as a standalone binary was deprecated, but its functionality
 # still exists as a docker subcommand.
 COMPOSE_COMMAND := $(shell which docker-compose 2>/dev/null)
-ifeq (${DOCKER_CMD},)
+ifeq (${COMPOSE_COMMAND},)
 COMPOSE_COMMAND := docker compose
 endif
 
