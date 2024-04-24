@@ -21,9 +21,6 @@ install-wait-for-it:
 install-golint:
 	go get golang.org/x/lint/golint
 
-install-cover:
-	go get golang.org/x/tools/cmd/cover
-
 install-goveralls:
 	go get github.com/mattn/goveralls@v0.0.11
 
@@ -33,7 +30,7 @@ install-staticcheck:
 install-go-mod-upgrade:
 	go get github.com/oligot/go-mod-upgrade
 
-install-dev-deps: install-golint install-staticcheck install-cover install-goveralls install-go-mod-upgrade
+install-dev-deps: install-golint install-staticcheck install-goveralls install-go-mod-upgrade
 
 install:
 	go install github.com/mozilla-services/autograph

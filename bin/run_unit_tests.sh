@@ -11,7 +11,7 @@ set -o pipefail
 
 REPORT_COVERAGE=${CI:-""}
 if [ "$REPORT_COVERAGE" = "true" ]; then
-    make install-goveralls install-cover
+    make install-goveralls
 fi
 # run app unit tests
 make generate test
