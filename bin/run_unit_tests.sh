@@ -31,5 +31,5 @@ if [ "$REPORT_COVERAGE" = "true" ]; then
 
     # report coverage
     # ignore failures while coveralls is down for maintenance
-    $GOPATH/bin/goveralls -coverprofile=combined-coverage.out -service circle-ci || true
+    $(go env GOPATH)/bin/goveralls -coverprofile=combined-coverage.out -service circle-ci || true
 fi
