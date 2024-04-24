@@ -10,6 +10,9 @@ ifeq (${COMPOSE_COMMAND},)
 COMPOSE_COMMAND := docker compose
 endif
 
+# The GOPATH isn't always on the path.
+GOPATH := $(shell go env GOPATH)
+
 all: generate test vet lint staticcheck install
 
 # update the vendored version of the wait-for-it.sh script
@@ -19,7 +22,7 @@ install-wait-for-it:
 	chmod +x bin/wait-for-it.sh
 
 install-golint:
-	go get golang.org/x/lint/golint
+	go install golang.org/x/lint/golint@v0.0.0-20190409202823-959b441ac422
 
 install-goveralls:
 	go install github.com/mattn/goveralls@v0.0.11
@@ -42,7 +45,7 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
+	$(GOPATH)/bin/golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
 	test 0 -eq $(shell cat /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
 
 # refs: https://github.com/mozilla-services/autograph/issues/247
