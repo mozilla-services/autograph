@@ -29,7 +29,7 @@ if [ "$#" -eq 0 ]; then
 
     if [ "$VERIFY" = "1" ]; then
 	# import the public key returned by autograph into a temp keyring
-	gpg --no-options --homedir "${test_dir}" --no-default-keyring --keyring "${test_dir}/testkeyring.pgp" --secret-keyring "${test_dir}/testsecring.gpg" --import "${test_dir}/testkey.asc"
+	gpg --no-options --homedir "${test_dir}" --no-default-keyring --keyring "${test_dir}/testkeyring.pgp" --import "${test_dir}/testkey.asc"
 
 	# verify the signature using the temp keyring
 	echo "running: gpg --no-options --homedir \"${test_dir}\" --no-default-keyring --keyring \"${test_dir}/testkeyring.pgp\" --verify \"${test_dir}/testsig.pgp\" <(base64 -d \"${test_dir}/pgpinput.txt\")"
@@ -42,7 +42,7 @@ else
 
     if [ "$VERIFY" = "1" ]; then
 	# import the public key returned by autograph into a temp keyring
-	gpg --no-options --homedir "${test_dir}" --no-default-keyring --keyring "${test_dir}/testkeyring.pgp" --secret-keyring "${test_dir}/testsecring.gpg" --import "${test_dir}/testkey.asc"
+	gpg --no-options --homedir "${test_dir}" --no-default-keyring --keyring "${test_dir}/testkeyring.pgp" --import "${test_dir}/testkey.asc"
 
 	# verify the signature using the temp keyring
 	for signed in signed_*; do
