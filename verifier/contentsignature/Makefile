@@ -1,11 +1,15 @@
 .DEFAULT_GOAL := all
+
+# The GOPATH isn't always on the path.
+GOPATH := $(shell go env GOPATH)
+
 all: lint staticcheck vet fmt-fix test race
 doc:
 	go doc .
 fmt-fix:
 	go fmt .
 lint:
-	golint .
+	$(GOPATH)/bin/golint .
 staticcheck:
 	staticcheck -go 1.16 .
 race:

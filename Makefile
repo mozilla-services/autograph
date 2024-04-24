@@ -3,6 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-services/autograph/database github.com/mozilla-services/autograph/formats github.com/mozilla-services/autograph/signer github.com/mozilla-services/autograph/signer/apk2 github.com/mozilla-services/autograph/signer/contentsignature github.com/mozilla-services/autograph/signer/contentsignaturepki github.com/mozilla-services/autograph/signer/genericrsa github.com/mozilla-services/autograph/signer/gpg2 github.com/mozilla-services/autograph/signer/mar github.com/mozilla-services/autograph/signer/xpi github.com/mozilla-services/autograph/verifier/contentsignature
 
+# The GOPATH isn't always on the path.
+GOPATH := $(shell go env GOPATH)
+
 all: generate test vet lint staticcheck install
 
 # update the vendored version of the wait-for-it.sh script
@@ -12,7 +15,7 @@ install-wait-for-it:
 	chmod +x bin/wait-for-it.sh
 
 install-golint:
-	go get golang.org/x/lint/golint
+	go install golang.org/x/lint/golint@v0.0.0-20190409202823-959b441ac422
 
 install-goveralls:
 	go install github.com/mattn/goveralls@v0.0.11
@@ -35,7 +38,7 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
+	$(GOPATH)/bin/golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
 	test 0 -eq $(shell cat /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
 
 # refs: https://github.com/mozilla-services/autograph/issues/247

@@ -1,3 +1,6 @@
+# The GOPATH isn't always on the path.
+GOPATH := $(shell go env GOPATH)
+
 build:
 	go build -o autograph-monitor *.go
 	zip -r autograph-monitor.zip autograph-monitor
@@ -16,7 +19,7 @@ test-cover-report-html:
 race:
 	go test -race -covermode=atomic -count=1 .
 lint:
-	golint *.go
+	$(GOPATH)/bin/golint *.go
 staticcheck:
 	staticcheck -go 1.16 *.go
 vet:
