@@ -18,7 +18,6 @@ require (
 	github.com/lib/pq v1.10.4
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
-	github.com/mattn/goveralls v0.0.11 // indirect
 	github.com/miekg/pkcs11 v1.0.3
 	github.com/mozilla-services/autograph/verifier/contentsignature v0.0.0-20210505200649-cb56f0dcbdd1
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
