@@ -33,7 +33,6 @@ const (
 	ModeDebsign = "debsign"
 
 	keyRingFilename = "autograph_gpg2_keyring.gpg"
-	secRingFilename = "autograph_gpg2_secring.gpg"
 	gpgConfFilename = "gpg.conf"
 
 	// gpgConfContentsHead is the static part of the gpg config
@@ -204,7 +203,6 @@ func createKeyRing(s *GPG2Signer) (dir string, err error) {
 	}
 
 	keyRingPath := filepath.Join(dir, keyRingFilename)
-	secRingPath := filepath.Join(dir, secRingFilename)
 
 	// call gpg to create a new keyring and load the public key in it
 	gpgLoadPublicKey := exec.Command("gpg",
@@ -213,7 +211,6 @@ func createKeyRing(s *GPG2Signer) (dir string, err error) {
 		"--homedir", dir,
 		"--no-default-keyring",
 		"--keyring", keyRingPath,
-		"--secret-keyring", secRingPath,
 		"--no-tty",
 		"--batch",
 		"--yes",
@@ -233,7 +230,6 @@ func createKeyRing(s *GPG2Signer) (dir string, err error) {
 		"--no-options",
 		"--homedir", dir,
 		"--keyring", keyRingPath,
-		"--secret-keyring", secRingPath,
 		"--no-tty",
 		"--batch",
 		"--yes",
@@ -292,7 +288,6 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 		return nil, fmt.Errorf("gpg2: can only sign monitor data in %s mode", ModeGPG2)
 	}
 	keyRingPath := filepath.Join(s.tmpDir, keyRingFilename)
-	secRingPath := filepath.Join(s.tmpDir, secRingFilename)
 
 	// write the input to a temp file
 	tmpContentFile, err := ioutil.TempFile(s.tmpDir, fmt.Sprintf("gpg2_%s_input", s.ID))
@@ -319,7 +314,6 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 		"--homedir", s.tmpDir,
 		"--no-default-keyring",
 		"--keyring", keyRingPath,
-		"--secret-keyring", secRingPath,
 		"--armor",
 		"--no-tty",
 		"--batch",
