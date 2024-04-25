@@ -235,7 +235,7 @@ func isValidUnsignedFilename(filename string) error {
 		return fmt.Errorf(`unsigned filename must match ^[-_\.+~a-zA-Z0-9]{1,256}$`)
 	}
 	if regexp.MustCompile(`\.\.`).MatchString(filename) {
-		return fmt.Errorf("unsigned filename must not include ..")
+		return fmt.Errorf("unsigned filename must not include '..'")
 	}
 	return nil
 }
