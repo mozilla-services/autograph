@@ -8,9 +8,14 @@ version: 2.1
 jobs:
   lint-vet-fmt:
     docker:
-      - image: golang:1.16-buster
+      - image: debian:bookworm
     steps:
       - checkout
+      - run:
+          name: install golang
+          command: |
+            apt-get update
+            apt-get install -y golang build-essential
       - run:
           name: check crypto11 not used in signers
           command: |
