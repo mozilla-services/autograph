@@ -39,7 +39,7 @@ tag: all
 
 lint:
 	$(GOPATH)/bin/golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
-	test 0 -eq $(shell cat /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
+	test 0 -eq $$(grep -c -Pv 'stutters|suggestions' /tmp/autograph-golint.txt)
 
 # refs: https://github.com/mozilla-services/autograph/issues/247
 check-no-crypto11-in-signers:
@@ -72,7 +72,7 @@ staticcheck:
 	$(GOPATH)/bin/staticcheck -go 1.16 $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
 	# ignore errors in pkgs
 	# ignore SA1019 for DSA being deprecated refs: GH #667
-	test 0 -eq $(shell cat /tmp/autograph-staticcheck.txt | grep -Pv '^/go/pkg/mod/|SA1019' | wc -l)
+	test 0 -eq $$(grep -c -Pv '^/go/pkg/mod/|SA1019' /tmp/autograph-staticcheck.txt)
 
 test:
 	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)
