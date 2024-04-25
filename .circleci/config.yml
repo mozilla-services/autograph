@@ -75,7 +75,7 @@ jobs:
       - run:
           name: run unit-test docker image and report coverage
           command: |
-            docker compose run unit-test && false || true
+            docker compose run unit-test
 
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
