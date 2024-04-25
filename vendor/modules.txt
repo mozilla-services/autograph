@@ -146,7 +146,7 @@ github.com/miekg/pkcs11
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/go-wordwrap v1.0.0
 github.com/mitchellh/go-wordwrap
-# github.com/mozilla-services/autograph/verifier/contentsignature v0.0.0-20210505200649-cb56f0dcbdd1
+# github.com/mozilla-services/autograph/verifier/contentsignature v0.0.0-00010101000000-000000000000 => ./verifier/contentsignature/
 ## explicit
 github.com/mozilla-services/autograph/verifier/contentsignature
 # github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
@@ -317,4 +317,4 @@ google.golang.org/grpc/status
 google.golang.org/grpc/tap
 # gopkg.in/yaml.v2 v2.2.8
 gopkg.in/yaml.v2
-# github.com/mozilla-services/autograph/verifier => ./verifier/
+# github.com/mozilla-services/autograph/verifier/contentsignature => ./verifier/contentsignature/
