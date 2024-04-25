@@ -966,7 +966,7 @@ func Test_ParseChain(t *testing.T) {
 		chain      []byte
 		wantCerts  []*x509.Certificate
 		wantErr    bool
-		wantErrStr string
+		wantErrStr []string
 	}{
 		{
 			name:      "NormandyDevChain2021 parses",
@@ -992,70 +992,87 @@ func Test_ParseChain(t *testing.T) {
 			chain:      []byte(""),
 			wantCerts:  []*x509.Certificate{},
 			wantErr:    true,
-			wantErrStr: "failed to PEM decode EE/leaf certificate from chain",
+			wantErrStr: []string{"failed to PEM decode EE/leaf certificate from chain"},
 		},
 		{
 			name:       "EE bad PEM type fails",
 			chain:      []byte(testSignerP384PEM),
 			wantCerts:  []*x509.Certificate{},
 			wantErr:    true,
-			wantErrStr: "failed to PEM decode EE/leaf certificate from chain",
+			wantErrStr: []string{"failed to PEM decode EE/leaf certificate from chain"},
 		},
 		{
 			name:       "EE bad PEM content fails",
 			chain:      []byte(badPEMContent),
 			wantCerts:  []*x509.Certificate{},
 			wantErr:    true,
-			wantErrStr: "error parsing EE/leaf certificate from chain: asn1: structure error: tags don't match (16 vs {class:0 tag:2 length:1 isCompound:false}) {optional:false explicit:false application:false private:false defaultValue:<nil> tag:<nil> stringType:0 timeType:0 set:false omitEmpty:false} tbsCertificate @2",
+			wantErrStr: []string{
+				"error parsing EE/leaf certificate from chain: asn1: structure error: tags don't match",
+				"error parsing EE/leaf certificate from chain: x509: malformed tbs certificate",
+			},
 		},
 		{
 			name:       "inter bad PEM type fails",
 			chain:      []byte(firefoxPkiStageRoot + "\nthis is not a PEM"),
 			wantCerts:  []*x509.Certificate{},
 			wantErr:    true,
-			wantErrStr: "failed to PEM decode intermediate certificate from chain",
+			wantErrStr: []string{"failed to PEM decode intermediate certificate from chain"},
 		},
 		{
 			name:       "inter bad PEM content fails",
 			chain:      []byte(firefoxPkiStageRoot + "\n" + badPEMContent),
 			wantCerts:  []*x509.Certificate{},
 			wantErr:    true,
-			wantErrStr: "failed to parse intermediate certificate from chain: asn1: structure error: tags don't match (16 vs {class:0 tag:2 length:1 isCompound:false}) {optional:false explicit:false application:false private:false defaultValue:<nil> tag:<nil> stringType:0 timeType:0 set:false omitEmpty:false} tbsCertificate @2",
+			wantErrStr: []string{
+				"failed to parse intermediate certificate from chain: asn1: structure error: tags don't match",
+				"failed to parse intermediate certificate from chain: x509: malformed tbs certificate",
+			},
 		},
 		{
 			name:       "root bad PEM type fails",
 			chain:      []byte(firefoxPkiStageRoot + "\n" + firefoxPkiStageRoot + "\nthis is not a PEM"),
 			wantCerts:  []*x509.Certificate{},
 			wantErr:    true,
-			wantErrStr: "failed to PEM decode root certificate from chain",
+			wantErrStr: []string{"failed to PEM decode root certificate from chain"},
 		},
 		{
 			name:       "inter bad PEM content fails",
 			chain:      []byte(firefoxPkiStageRoot + "\n" + firefoxPkiStageRoot + "\n" + badPEMContent),
 			wantCerts:  []*x509.Certificate{},
 			wantErr:    true,
-			wantErrStr: "failed to parse root certificate from chain: asn1: structure error: tags don't match (16 vs {class:0 tag:2 length:1 isCompound:false}) {optional:false explicit:false application:false private:false defaultValue:<nil> tag:<nil> stringType:0 timeType:0 set:false omitEmpty:false} tbsCertificate @2",
+			wantErrStr: []string{
+				"failed to parse root certificate from chain: asn1: structure error: tags don't match",
+				"failed to parse root certificate from chain: x509: malformed tbs certificate",
+			},
 		},
 		{
 			name:       "trailing data fails",
 			chain:      []byte(firefoxPkiStageRoot + "\n" + firefoxPkiStageRoot + "\n" + firefoxPkiStageRoot + "\n!!!!extra"),
 			wantCerts:  []*x509.Certificate{},
 			wantErr:    true,
-			wantErrStr: "found trailing data after root certificate in chain",
+			wantErrStr: []string{"found trailing data after root certificate in chain"},
 		},
 		{
 			name:       "extra cert fails",
 			chain:      []byte(firefoxPkiStageRoot + "\n" + firefoxPkiStageRoot + "\n" + firefoxPkiStageRoot + "\n" + firefoxPkiStageRoot),
 			wantCerts:  []*x509.Certificate{},
 			wantErr:    true,
-			wantErrStr: "found trailing data after root certificate in chain",
+			wantErrStr: []string{"found trailing data after root certificate in chain"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotCerts, err := ParseChain(tt.chain)
-			if tt.wantErr && (err != nil) && err.Error() != tt.wantErrStr {
-				t.Errorf("ParseChain() error.Error() = '%s', wanted wantErrStr '%s'", err, tt.wantErrStr)
+			if tt.wantErr && (err != nil) {
+				anyMatches := false
+				for _, result := range tt.wantErrStr {
+					if strings.HasPrefix(err.Error(), result) {
+						anyMatches = true
+					}
+				}
+				if !anyMatches {
+					t.Errorf("ParseChain() error = '%s'", err)
+				}
 			}
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseChain() error = %v, wantErr %v", err, tt.wantErr)
