@@ -11,10 +11,10 @@ jobs:
       - image: debian:bookworm
     steps:
       - run:
-          name: install golang
+          name: install dependencies
           command: |
             apt-get update
-            apt-get install -y golang build-essential git ca-certificates
+            apt-get install -y golang build-essential git ca-certificates libltdl-dev
       - checkout
       - run:
           name: check crypto11 not used in signers
@@ -33,11 +33,6 @@ jobs:
           command: |
             make -s fmt-diff | tee fmt.diff
             test -z "$(cat fmt.diff)"
-      - run:
-          name: install packages for crypto11 headers for go vet
-          command: |
-            apt-get update
-            apt-get install -y libltdl-dev
       - run:
           name: run go vet
           command: |
