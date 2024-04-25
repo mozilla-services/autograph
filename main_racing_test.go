@@ -13,8 +13,8 @@ func TestLogLevelParsing(t *testing.T) {
 	t.Parallel()
 
 	var (
-		debug bool
-		fatal bool = false
+		debug = false
+		fatal = false
 	)
 	_, _, debug = parseArgsAndLoadConfig([]string{"-l", "debug"})
 	if !(debug == true && log.GetLevel() == log.DebugLevel) {
