@@ -46,7 +46,7 @@ tag: all
 
 lint:
 	$(GOPATH)/bin/golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
-	test 0 -eq $(shell cat /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
+	test 0 -eq $$(grep -c -Pv 'stutters|suggestions' /tmp/autograph-golint.txt)
 
 # refs: https://github.com/mozilla-services/autograph/issues/247
 check-no-crypto11-in-signers:
