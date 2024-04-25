@@ -1,10 +1,11 @@
 // This code requires a configuration file to initialize the crypto11
 // library. Use the following config in a file named "crypto11.config"
-//      {
-//      "Path" : "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so",
-//      "TokenLabel": "cavium",
-//      "Pin" : "$CRYPTO_USER:$PASSWORD"
-//      }
+//
+//	{
+//	"Path" : "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so",
+//	"TokenLabel": "cavium",
+//	"Pin" : "$CRYPTO_USER:$PASSWORD"
+//	}
 package main
 
 import (

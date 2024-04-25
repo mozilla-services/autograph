@@ -981,7 +981,6 @@ aab7940071a3a8187052499ae6768b2e601da12b5e1869bd56ee`
 // go run client.go -f "pomodoro_clock-1.1.1-an+fx-windows.xpi" -u alice -p fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu -cn "jid1-Kt2kYYgi32zPuw@jetpack" -pk7digest sha256 -k "webextensions-rsa" -r dev-webext-rsa-root.pem -o signed-SHA2-ES256.zip -c "ES256"
 // unzip signed-SHA2-ES256.zip
 // xxd -p META-INF/cose.sig
-//
 const validCOSESig = `
 d862845907dda104815907d7308207d3308205bba003020102020101300d
 06092a864886f70d01010b05003081bc310b300906035504061302555331

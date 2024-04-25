@@ -257,7 +257,6 @@ func validateCOSEMessageStructureAndGetCertsAndAlgs(msg *cose.SignMessage) (inte
 // 5) the right number of signatures are present and all intermediate and end entity certs parse properly
 // 6) **when a non-nil truststore is provided** that there is a trusted path from the included COSE EE certs to the signer cert using the provided intermediates and that the cert chain is valid at verificationTime
 // 7) use the public keys from the EE certs to verify the COSE signature bytes
-//
 func verifyCOSESignatures(signedFile signer.SignedFile, truststore *x509.CertPool, signOptions Options, verificationTime time.Time) error {
 	coseManifest, err := readFileFromZIP(signedFile, coseManifestPath)
 	if err != nil {
