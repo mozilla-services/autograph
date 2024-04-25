@@ -71,11 +71,11 @@ jobs:
       - run:
           name: build unit-test docker images
           command: |
-            docker-compose build --no-cache unit-test
+            docker compose build --no-cache unit-test
       - run:
           name: run unit-test docker image and report coverage
           command: |
-            docker-compose run unit-test && false || true
+            docker compose run unit-test && false || true
 
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
