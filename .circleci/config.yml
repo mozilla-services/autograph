@@ -34,13 +34,10 @@ jobs:
             apt-get update
             apt-get install -y libltdl-dev
       - run:
-          name: XFAIL! run go vet
+          name: run go vet
           command: |
-            # Failing as of 2023-06-30
-            make vet && false || true
-            # Failing as of 2023-06-30
-            make -C tools/autograph-monitor vet && false || true
-            # Passing as of 2023-06-30
+            make vet
+            make -C tools/autograph-monitor vet
             make -C verifier/contentsignature vet 
       - run:
           name: XFAIL! run staticcheck
