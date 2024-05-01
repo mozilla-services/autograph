@@ -364,7 +364,7 @@ func Test_verifyContentSignature(t *testing.T) {
 				input: signerTestData,
 			},
 			wantErr:   true,
-			errSubStr: "Error unmarshal content signature",
+			errSubStr: "error unmarshal content signature",
 		},
 		{
 			name: "one cert X5U chain fails",
@@ -402,7 +402,7 @@ func Test_verifyContentSignature(t *testing.T) {
 				},
 			},
 			wantErr:   true,
-			errSubStr: "Cannot verify EE/leaf cert with non-ECDSA public key type",
+			errSubStr: "cannot verify EE/leaf cert with non-ECDSA public key type",
 		},
 		{
 			name: "invalid data (wrong EE for normandyDev2021Roothash) fails",
@@ -421,7 +421,7 @@ func Test_verifyContentSignature(t *testing.T) {
 				},
 			},
 			wantErr:   true,
-			errSubStr: "ECDSA signature verification failed",
+			errSubStr: "ecdsa signature verification failed",
 		},
 		{
 			name: "expiring EE fails",
