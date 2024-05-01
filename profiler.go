@@ -27,7 +27,7 @@ func setRuntimeConfig() (err error) {
 		// To include every blocking event in the profile, pass rate = 1. To turn off profiling entirely, pass rate <= 0.
 		//
 		// https://golang.org/pkg/runtime/#SetBlockProfileRate
-		blockProfileRate int = 0
+		blockProfileRate int
 
 		// mutexProfileFraction is the rate of mutex contention events
 		// that are reported in the mutex profile. On average 1/rate
@@ -38,7 +38,7 @@ func setRuntimeConfig() (err error) {
 		// sampling may change.)
 		//
 		// https://golang.org/pkg/runtime/#SetMutexProfileFraction
-		mutexProfileFraction int = 0
+		mutexProfileFraction int
 	)
 	val, ok := os.LookupEnv("BLOCK_PROFILE_RATE")
 	if ok {

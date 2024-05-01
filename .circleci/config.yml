@@ -6,7 +6,7 @@
 #
 version: 2.1
 jobs:
-  XFAIL-lint-vet-fmt:
+  lint-vet-fmt:
     docker:
       - image: golang:1.16-buster
     steps:
@@ -34,27 +34,20 @@ jobs:
             apt-get update
             apt-get install -y libltdl-dev
       - run:
-          name: XFAIL! run go vet
+          name: run go vet
           command: |
-            # Failing as of 2023-06-30
-            make vet && false || true
-            # Failing as of 2023-06-30
-            make -C tools/autograph-monitor vet && false || true
-            # Passing as of 2023-06-30
+            make vet
+            make -C tools/autograph-monitor vet
             make -C verifier/contentsignature vet 
       - run:
-          name: XFAIL! run staticcheck
+          name: run staticcheck
           command: |
-            # Failing as of 2023-06-30
-            make install-staticcheck staticcheck && false || true
-            # Passing as of 2023-06-30
+            make install-staticcheck staticcheck
             make show-lints
-            # Failing as of 2023-06-30
-            make -C tools/autograph-monitor staticcheck && false || true
-            # Failing as of 2023-06-30
-            make -C verifier/contentsignature staticcheck && false || true
+            make -C tools/autograph-monitor staticcheck
+            make -C verifier/contentsignature staticcheck
 
-  XFAIL-unit-test:
+  unit-test:
     # based on the official golang image with more docker stuff
     docker:
       - image: circleci/golang:1.16-buster
@@ -80,9 +73,9 @@ jobs:
           command: |
             docker-compose build --no-cache unit-test
       - run:
-          name: XFAIL run XFAIL-unit-test docker image and report coverage
+          name: run unit-test docker image and report coverage
           command: |
-            docker-compose run unit-test && false || true
+            docker-compose run unit-test
 
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
@@ -157,12 +150,12 @@ workflows:
   version: 2
   check-code-quality:
     jobs:
-      - XFAIL-lint-vet-fmt:
+      - lint-vet-fmt:
           filters:
             tags:
               only: /.*/
 
-      - XFAIL-unit-test:
+      - unit-test:
           filters:
             tags:
               only: /.*/
@@ -191,6 +184,6 @@ workflows:
             branches:
               only: main
     jobs:
-      - XFAIL-lint-vet-fmt
-      - XFAIL-unit-test
+      - lint-vet-fmt
+      - unit-test
       - build-integrationtest-verify
