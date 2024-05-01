@@ -76,15 +76,21 @@ func TestSign(t *testing.T) {
 		if err != nil {
 			t.Fatalf("testcase %d failed to get X5U %q: %v", i, s.X5U, err)
 		}
-		key := certs[0].PublicKey.(*ecdsa.PublicKey)
+		leaf := certs[0]
+		key := leaf.PublicKey.(*ecdsa.PublicKey)
 		if !sig.(*verifier.ContentSignature).VerifyData([]byte(input), key) {
 			t.Fatalf("testcase %d failed to verify signature", i)
+		}
+
+		if leaf.Subject.CommonName != testcase.expectedCommonName {
+			t.Errorf("testcase %d expected common name %#v, got %#v", i, testcase.expectedCommonName, leaf.Subject.CommonName)
 		}
 	}
 }
 
 var PASSINGTESTCASES = []struct {
-	cfg signer.Configuration
+	cfg                signer.Configuration
+	expectedCommonName string
 }{
 	{cfg: signer.Configuration{
 		Type:                Type,
@@ -130,7 +136,9 @@ BAUwAwEB/zAKBggqhkjOPQQDAwNoADBlAjB3fOCz2SQvxNZ65juSotQNRvXhB4TZ
 nsbYLErV5grBhN+UxzmY9YwlOl6j6CoBiNkCMQCVBh9UBkWNkUfMUGImrCNDLvlw
 //Vb8kLBsJmLQjZNbXt+ikjYkWGqppp2pVwwgf4=
 -----END CERTIFICATE-----`,
-	}},
+	},
+		expectedCommonName: "testsigner0.content-signature.mozilla.org",
+	},
 	{cfg: signer.Configuration{
 		Type:                Type,
 		ID:                  "testsigner1",
@@ -172,7 +180,54 @@ CCsGAQUFBwMDMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDSAAwRQIgIBgf
 KkmH7TerRPn/517v/41o/sF9Hd9iGBilyWtVMggCIQClvRXiMM6DrabvybPGHWTt
 mpvOMOT3falDgXh0iOgdIA==
 -----END CERTIFICATE-----`,
-	}},
+	},
+		expectedCommonName: "testsigner1.content-signature.mozilla.org",
+	},
+	{cfg: signer.Configuration{
+		Type:                Type,
+		ID:                  "testsigner1",
+		SubdomainOverride:   "anothersigner1",
+		Mode:                P256ECDSA,
+		X5U:                 "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
+		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
+		IssuerPrivKey: `
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIEABir6WMfkbG2ZyKKDCij1PlSBldaaJqPQ/9ioWvCM5oAoGCCqGSM49
+AwEHoUQDQgAED0x4GeyH3nxaCVQqPFbRkoBg1BJePxTSg1oaRWIgBbrMYaB/TKpL
+WoBQZFUwn11IFDP5y1B6Tt9U5DxQ3tgt+w==
+-----END EC PRIVATE KEY-----`,
+		IssuerCert: `
+-----BEGIN CERTIFICATE-----
+MIICIDCCAcWgAwIBAgIIFYW+N1jIJvAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMTE2
+NTk1MVoXDTI5MDIyMjE2NTk1MVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTU1MDg1NDc5MTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IA
+BA9MeBnsh958WglUKjxW0ZKAYNQSXj8U0oNaGkViIAW6zGGgf0yqS1qAUGRVMJ9d
+SBQz+ctQek7fVOQ8UN7YLfujajBoMA4GA1UdDwEB/wQEAwIBhjATBgNVHSUEDDAK
+BggrBgEFBQcDAzAPBgNVHRMBAf8EBTADAQH/MDAGA1UdHgEB/wQmMCSgIjAggh4u
+Y29udGVudC1zaWduYXR1cmUubW96aWxsYS5vcmcwCgYIKoZIzj0EAwMDSQAwRgIh
+AJYQbM1zDA9RkmNwEc4LafBwL98Z+aGy31z80HeC5Y8hAiEA4KEG+ZNinz5yZItW
+NYDcA5Hvd1xXeRQi6SWj6Z2qT7w=
+-----END CERTIFICATE-----`,
+		CaCert: `
+-----BEGIN CERTIFICATE-----
+MIIB7DCCAZKgAwIBAgIIFYW+N1i+RHgwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMDE2
+NTk1MVoXDTQ5MDIyMjE2NTk1MVowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
+VQQDExBjc3Jvb3QxNTUwODU0NzkxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
+SZakSnBD3qkp15bQ+qzcKCn2+OmoOJKVgrSezyrx7IHjtEbCYUz8Zp+HhKg3NXLY
+6ZMjO0zYnq3gTdAzH3amOqM4MDYwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoG
+CCsGAQUFBwMDMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDSAAwRQIgIBgf
+KkmH7TerRPn/517v/41o/sF9Hd9iGBilyWtVMggCIQClvRXiMM6DrabvybPGHWTt
+mpvOMOT3falDgXh0iOgdIA==
+-----END CERTIFICATE-----`,
+	},
+		expectedCommonName: "anothersigner1.content-signature.mozilla.org",
+	},
 }
 
 func TestNewFailure(t *testing.T) {

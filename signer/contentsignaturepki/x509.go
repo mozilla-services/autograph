@@ -65,7 +65,7 @@ func (s *ContentSigner) makeAndUploadChain() (err error) {
 // returns the entire chain of certificate, its name (based on the ee cn &
 // expiration) and an error.
 func (s *ContentSigner) makeChain() (chain string, name string, err error) {
-	cn := s.ID + CSNameSpace
+	cn := s.domainForLeafCert()
 
 	// cert is backdated to allow for clock skew tolerance
 	notBefore := time.Now().UTC().Add(-s.clockSkewTolerance)
@@ -145,4 +145,12 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	chain = certPem.String() + s.IssuerCert + s.caCert
 	name = fmt.Sprintf("%s-%s.chain", cert.Subject.CommonName, cert.NotAfter.Format("2006-01-02-15-04-05"))
 	return
+}
+
+func (s *ContentSigner) domainForLeafCert() string {
+	subdomain := s.ID
+	if s.subdomainOverride != "" {
+		subdomain = s.subdomainOverride
+	}
+	return subdomain + CSNameSpace
 }

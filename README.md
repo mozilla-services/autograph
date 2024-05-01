@@ -25,15 +25,8 @@ This will download the latest build of autograph from DockerHub and run it with 
 
 #### Local Development with Docker
 
-|    |    |
-|----|----|
-| **WARNING!** | These tests may break or delete your gpg setup. |
-|    |    |
-
-If your are lucky, it will leave you alone. (It starts a number of `gpg-agent`
-processes, then does a `killall gpg-agent` to clean up.) However, I've lost my
-entire `~/.gnupg` setup. I _strongly_ recommend: `tar czf ~/gnupg.tgz ~/.gnupg`
-before starting.
+(This process will start a number of `gpg-agent` processes on your host machine,
+then does a `killall gpg-agent` to clean up.)
 
 After making any changes, please test locally by:
 ```bash

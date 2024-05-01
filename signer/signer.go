@@ -83,25 +83,25 @@ type RecommendationConfig struct {
 	ValidityDuration time.Duration `yaml:"duration,omitempty"`
 }
 
-// Configuration defines the parameters of a signer
+// Configuration defines the parameters of a signer.
 type Configuration struct {
-	ID            string            `json:"id"`
-	Type          string            `json:"type"`
-	Mode          string            `json:"mode"`
-	PrivateKey    string            `json:"privatekey,omitempty"`
-	PublicKey     string            `json:"publickey,omitempty"`
-	IssuerPrivKey string            `json:"issuerprivkey,omitempty"`
-	IssuerCert    string            `json:"issuercert,omitempty"`
-	Certificate   string            `json:"certificate,omitempty"`
-	DB            *database.Handler `json:"-"`
+	ID            string            `json:"id" yaml:"id"`
+	Type          string            `json:"type" yaml:"type"`
+	Mode          string            `json:"mode" yaml:"mode"`
+	PrivateKey    string            `json:"privatekey,omitempty" yaml:"privatekey,omitempty"`
+	PublicKey     string            `json:"publickey,omitempty" yaml:"publickey,omitempty"`
+	IssuerPrivKey string            `json:"issuerprivkey,omitempty" yaml:"issuerprivkey,omitempty"`
+	IssuerCert    string            `json:"issuercert,omitempty" yaml:"issuercert,omitempty"`
+	Certificate   string            `json:"certificate,omitempty" yaml:"certificate,omitempty"`
+	DB            *database.Handler `json:"-" yaml:"-"`
 
 	// X5U (X.509 URL) is a URL that points to an X.509 public key
 	// certificate chain to validate a content signature
-	X5U string `json:"x5u,omitempty"`
+	X5U string `json:"x5u,omitempty" yaml:"x5u,omitempty"`
 
 	// RSACacheConfig for XPI signers this specifies config for an
 	// RSA cache
-	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty"`
+	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty" yaml:"rsacacheconfig,omitempty"`
 
 	// RecommendationConfig specifies config values for
 	// recommendations files for XPI signers
@@ -109,43 +109,51 @@ type Configuration struct {
 
 	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
 	// attributes and use a legacy PKCS7 digest
-	NoPKCS7SignedAttributes bool `json:"nopkcs7signedattributes,omitempty"`
+	NoPKCS7SignedAttributes bool `json:"nopkcs7signedattributes,omitempty" yaml:"nopkcs7signedattributes,omitempty"`
 
 	// KeyID is the fingerprint of the gpg key or subkey to use
 	// e.g. 0xA2B637F535A86009 for the gpg2 signer type
-	KeyID string `json:"keyid,omitempty"`
+	KeyID string `json:"keyid,omitempty" yaml:"keyid,omitempty"`
+
+	// SubdomainOverride is to override the subdomain of the leaf certificates
+	// created. This is mostly for contentsignaturepki. If this isn't set, the
+	// `KeyID` is used as the subdomain, instead. When setting this value to
+	// match another extant signer id, also be sure to set the X5U and
+	// ChainUploadLocations of this signer configuration to avoid uploading
+	// chains that share the same file name.
+	SubdomainOverride string `json:"subdomain_override,omitempty" yaml:"subdomainoverride,omitempty"`
 
 	// Passphrase is the optional passphrase to use decrypt the
 	// gpg secret key for the gpg2 signer type
-	Passphrase string `json:"passphrase,omitempty"`
+	Passphrase string `json:"passphrase,omitempty" yaml:"passphrase,omitempty"`
 
 	// Validity is the lifetime of a end-entity certificate
-	Validity time.Duration `json:"validity,omitempty"`
+	Validity time.Duration `json:"validity,omitempty" yaml:"validity,omitempty"`
 
 	// ClockSkewTolerance increase the lifetime of a certificate
 	// to account for clients with skewed clocks by adding days
 	// to the notbefore and notafter values. For example, a certificate
 	// with a validity of 30d and a clock skew tolerance of 10 days will
 	// have a total validity of 10+30+10=50 days.
-	ClockSkewTolerance time.Duration `json:"clock_skew_tolerance,omitempty"`
+	ClockSkewTolerance time.Duration `json:"clock_skew_tolerance,omitempty" yaml:"clockskewtolerance,omitempty"`
 
 	// ChainUploadLocation is the target a certificate chain should be
 	// uploaded to in order for clients to find it at the x5u location.
-	ChainUploadLocation string `json:"chain_upload_location,omitempty"`
+	ChainUploadLocation string `json:"chain_upload_location,omitempty" yaml:"chainuploadlocation,omitempty"`
 
 	// CaCert is the certificate of the root of the pki, when used
-	CaCert string `json:"cacert,omitempty"`
+	CaCert string `json:"cacert,omitempty" yaml:"cacert,omitempty"`
 
 	// Hash is a hash algorithm like 'sha1' or 'sha256'
-	Hash string `json:"hash,omitempty"`
+	Hash string `json:"hash,omitempty" yaml:"hash,omitempty"`
 
 	// SaltLength controls the length of the salt used in a RSA PSS
 	// signature. It can either be a number of bytes, or one of the special
 	// PSSSaltLength constants from the rsa package.
-	SaltLength int `json:"saltlength,omitempty"`
+	SaltLength int `json:"saltlength,omitempty" yaml:"saltlength,omitempty"`
 
 	// SignerOpts contains options for signing with a Signer
-	SignerOpts crypto.SignerOpts `json:"signer_opts,omitempty"`
+	SignerOpts crypto.SignerOpts `json:"signer_opts,omitempty" yaml:"signeropts,omitempty"`
 
 	isHsmAvailable bool
 	hsmCtx         *pkcs11.Ctx
