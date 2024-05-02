@@ -41,7 +41,7 @@ database:
 # The keys below are testing keys that do not grant any power
 #
 # NB: the softhsm Dockerfile generates and overwrites certs and keys
-# for the kinto and normandy signers for the app-hsm docker-compose
+# for the kinto and normandy signers for the app-hsm docker compose
 # service
 #
 signers:
