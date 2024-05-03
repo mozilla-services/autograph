@@ -17,7 +17,6 @@ import (
 // config that we don't want to alert on.
 //
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1466523
-//
 var contentSignatureIgnoredLeafCertCNs = map[string]bool{
 	// "fingerprinting-defenses.content-signature.mozilla.org": true,
 	// "fennec-dlc.content-signature.mozilla.org":              true,
@@ -56,7 +55,6 @@ const month = 4 * week
 // expirations.
 //
 // Chains with leaf/EE CommonNames in ignoredCerts are ignored.
-//
 func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash string, ignoredCerts map[string]bool, response formats.SignatureResponse, input []byte) (err error) {
 	if response.X5U == "" {
 		return fmt.Errorf("content signature response is missing an X5U to fetch")
@@ -150,7 +148,6 @@ func certChainValidityNotifications(certs []*x509.Certificate) (notifications []
 // expiration in 3-cert chain. It errors earlier for intermediate and
 // root certs, since they're usually issued with a longer validity
 // period and require more work to rotate.
-//
 func certChainPendingExpiration(certs []*x509.Certificate) error {
 	for i, cert := range certs {
 		timeToExpiration := time.Until(cert.NotAfter)

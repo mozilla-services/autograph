@@ -522,7 +522,6 @@ func readXPIContentsToMap(signedXPI []byte) (map[string][]byte, error) {
 // Digest-Algorithms: SHA1 SHA256
 // SHA1-Digest: 8mPWZnQPS9arW9Tu/vmC+JHgnYA=
 // SHA256-Digest: 8usFS0xIHQV5njGLlVZofDfPreYQP4+qWMMvYF5fvNw=
-//
 func parseManifestEntry(entry []byte) (filename string, fileSHA1, fileSHA256 []byte, err error) {
 	// unwrap long lines (TODO: use ReplaceAll after upgrading to 1.12)
 	entry = bytes.Replace(entry, []byte("\n "), []byte(""), -1)

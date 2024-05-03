@@ -48,7 +48,7 @@ func setRequestStartTime() Middleware {
 	}
 }
 
-//  Run the request through all middlewares
+// Run the request through all middlewares
 func handleMiddlewares(h http.Handler, adapters ...Middleware) http.Handler {
 	// To make the middleware run in the order in which they are specified,
 	// we reverse through them in the Middleware function, rather than just
