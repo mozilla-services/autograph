@@ -486,13 +486,18 @@ func TestExtractAddonIDAndVersionFromWebextManifest(t *testing.T) {
 //
 // $ unzip -l test/fixtures/unsigned_bootstrap_2.xpi
 // Archive:  test/fixtures/unsigned_bootstrap_2.xpi
-//   Length      Date    Time    Name
+//
+//	Length      Date    Time    Name
+//
 // ---------  ---------- -----   ----
-//      1195  04-02-2015 16:11   bootstrap.js
-//       688  04-02-2015 16:10   install.rdf
-//        55  04-02-2015 16:12   test.txt
+//
+//	1195  04-02-2015 16:11   bootstrap.js
+//	 688  04-02-2015 16:10   install.rdf
+//	  55  04-02-2015 16:12   test.txt
+//
 // ---------                     -------
-//      1938                     3 files
+//
+//	1938                     3 files
 //
 //go:embed "test/fixtures/unsigned_bootstrap_2.xpi"
 var unsignedBootstrap []byte
@@ -532,13 +537,18 @@ var unsignedBootstrapSignature = []byte("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0
 // invalid sig
 // $ unzip -l cose-empty.zip
 // Archive:  cose-empty.zip
-//   Length      Date    Time    Name
+//
+//	Length      Date    Time    Name
+//
 // ---------  ---------- -----   ----
-//         0  2019-03-13 14:24   META-INF/
-//        13  2019-03-13 13:58   META-INF/cose.manifest
-//        12  2019-03-13 13:58   META-INF/cose.sig
+//
+//	 0  2019-03-13 14:24   META-INF/
+//	13  2019-03-13 13:58   META-INF/cose.manifest
+//	12  2019-03-13 13:58   META-INF/cose.sig
+//
 // ---------                     -------
-//        25                     3 files
+//
+//	25                     3 files
 //
 //go:embed "test/fixtures/cose-empty.zip"
 var unsignedEmptyCOSE []byte
@@ -547,6 +557,7 @@ var unsignedEmptyCOSEManifest = []byte("Manifest-Version: 1.0\n\n")
 var unsignedEmptyCOSESig = []byte("dummy signature")
 
 // files with PK7 and COSE signatures
+//
 //go:embed "test/fixtures/firefox-70.0.1/omni.ja.zip"
 var fxOmnija []byte
 
