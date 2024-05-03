@@ -104,9 +104,6 @@ jobs:
       # save the built docker container to CircleCI's cache since
       # CircleCI Workflows do not have the same remote docker
       # instance.
-      #
-      # Use /go/src/app since we don't have permissions to make
-      # directories in other locations
       - run:
           name: docker save built images
           no_output_timeout: 30m
