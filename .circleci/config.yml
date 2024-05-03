@@ -120,7 +120,7 @@ jobs:
 
   deploy:
     docker:
-      - image: docker:18.06.3-ce
+      - image: cimg/deploy:2024.03.1
     steps:
       - setup_remote_docker
       - restore_cache:
