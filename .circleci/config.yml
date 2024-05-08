@@ -6,7 +6,7 @@
 #
 version: 2.1
 jobs:
-  XFAIL-lint-vet-fmt:
+  lint-vet-fmt:
     docker:
       - image: golang:1.16-buster
     steps:
@@ -34,30 +34,23 @@ jobs:
             apt-get update
             apt-get install -y libltdl-dev
       - run:
-          name: XFAIL! run go vet
+          name: run go vet
           command: |
-            # Failing as of 2023-06-30
-            make vet && false || true
-            # Failing as of 2023-06-30
-            make -C tools/autograph-monitor vet && false || true
-            # Passing as of 2023-06-30
+            make vet
+            make -C tools/autograph-monitor vet
             make -C verifier/contentsignature vet 
       - run:
-          name: XFAIL! run staticcheck
+          name: run staticcheck
           command: |
-            # Failing as of 2023-06-30
-            make install-staticcheck staticcheck && false || true
-            # Passing as of 2023-06-30
+            make install-staticcheck staticcheck
             make show-lints
-            # Failing as of 2023-06-30
-            make -C tools/autograph-monitor staticcheck && false || true
-            # Failing as of 2023-06-30
-            make -C verifier/contentsignature staticcheck && false || true
+            make -C tools/autograph-monitor staticcheck
+            make -C verifier/contentsignature staticcheck
 
-  XFAIL-unit-test:
+  unit-test:
     # based on the official golang image with more docker stuff
     docker:
-      - image: circleci/golang:1.16-buster
+      - image: cimg/go:1.16
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -78,16 +71,16 @@ jobs:
       - run:
           name: build unit-test docker images
           command: |
-            docker-compose build --no-cache unit-test
+            docker compose build --no-cache unit-test
       - run:
-          name: XFAIL run XFAIL-unit-test docker image and report coverage
+          name: run unit-test docker image and report coverage
           command: |
-            docker-compose run unit-test && false || true
+            docker compose run unit-test
 
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
     docker:
-      - image: circleci/golang:1.16-buster
+      - image: cimg/go:1.16
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -111,30 +104,27 @@ jobs:
       # save the built docker container to CircleCI's cache since
       # CircleCI Workflows do not have the same remote docker
       # instance.
-      #
-      # Use /go/src/app since we don't have permissions to make
-      # directories in other locations
       - run:
           name: docker save built images
           no_output_timeout: 30m
           command: |
-            mkdir -p /go/src/app/cache
-            docker save "autograph-app" | gzip -c > /go/src/app/cache/docker.tgz
+            mkdir -p docker-cache
+            docker save "autograph-app" | gzip -c > docker-cache/autograph-app.tgz
       - save_cache:
           key: v4-{{ .Branch }}-{{ epoch }}
           paths:
-            - /go/src/app/cache/docker.tgz
+            - docker-cache/
 
   deploy:
     docker:
-      - image: docker:18.06.3-ce
+      - image: cimg/deploy:2024.03.1
     steps:
       - setup_remote_docker
       - restore_cache:
           key: v4-{{.Branch}}
       - run:
           name: Restore Docker image cache
-          command: gunzip -c /go/src/app/cache/docker.tgz | docker load
+          command: gunzip -c docker-cache/autograph-app.tgz | docker load
 
       - run:
           name: Deploy to Dockerhub
@@ -157,12 +147,12 @@ workflows:
   version: 2
   check-code-quality:
     jobs:
-      - XFAIL-lint-vet-fmt:
+      - lint-vet-fmt:
           filters:
             tags:
               only: /.*/
 
-      - XFAIL-unit-test:
+      - unit-test:
           filters:
             tags:
               only: /.*/
@@ -191,6 +181,6 @@ workflows:
             branches:
               only: main
     jobs:
-      - XFAIL-lint-vet-fmt
-      - XFAIL-unit-test
+      - lint-vet-fmt
+      - unit-test
       - build-integrationtest-verify

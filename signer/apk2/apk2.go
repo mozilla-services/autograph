@@ -158,27 +158,14 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	args = append(args,
 		"--key", keyPath.Name(),
 		"--cert", certPath.Name(),
+		"--min-sdk-version", s.minSdkVersion,
 		tmpAPKFile.Name(),
 	)
 	apkSigCmd := exec.Command("java", args...)
 
 	out, err := apkSigCmd.CombinedOutput()
 	if err != nil {
-		if !bytes.Contains(out, []byte("com.android.apksig.apk.MinSdkVersionException")) {
-			return nil, fmt.Errorf("apk2: failed to sign\n%s: %w", out, err)
-		} else {
-			log.Printf("apk2: APK does not provide minSdkVersion. Attempting to sign again with: --min-sdk-version %s", s.minSdkVersion)
-
-			args = insertIntoSliceAtIndex(args, "--min-sdk-version", len(args)-1)
-			args = insertIntoSliceAtIndex(args, s.minSdkVersion, len(args)-1)
-
-			apkSigCmd = exec.Command("java", args...)
-			out, err = apkSigCmd.CombinedOutput()
-
-			if err != nil {
-				return nil, fmt.Errorf("apk2: failed to sign even when forcing --min-sdk-version\n%s: %w", out, err)
-			}
-		}
+		return nil, fmt.Errorf("apk2: failed to sign\n%s: %w", out, err)
 	}
 	log.Debugf("signed as:\n%s\n", string(out))
 
@@ -187,19 +174,6 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 		return nil, fmt.Errorf("apk2: failed to read signed file: %w", err)
 	}
 	return signer.SignedFile(signedApk), nil
-}
-
-// go 1.16 doesn't support generics.
-// TODO: Replace string by T in function signature once we use go 1.18+
-func insertIntoSliceAtIndex(destination []string, element string, index int) []string {
-	if len(destination) == index {
-		return append(destination, element)
-	}
-
-	destination = append(destination[:index+1], destination[index:]...) // index < len(a)
-	destination[index] = element
-
-	return destination
 }
 
 // Options are not implemented for this signer

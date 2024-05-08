@@ -25,15 +25,8 @@ This will download the latest build of autograph from DockerHub and run it with 
 
 #### Local Development with Docker
 
-|    |    |
-|----|----|
-| **WARNING!** | These tests may break or delete your gpg setup. |
-|    |    |
-
-If your are lucky, it will leave you alone. (It starts a number of `gpg-agent`
-processes, then does a `killall gpg-agent` to clean up.) However, I've lost my
-entire `~/.gnupg` setup. I _strongly_ recommend: `tar czf ~/gnupg.tgz ~/.gnupg`
-before starting.
+(This process will start a number of `gpg-agent` processes on your host machine,
+then does a `killall gpg-agent` to clean up.)
 
 After making any changes, please test locally by:
 ```bash
@@ -43,7 +36,7 @@ docker compose up      # runs unit tests in container, must pass
 ```
 _Note: you must monitor the output of docker to detect when the unit tests have
 completed. Otherwise, it will run forever with heartbeat messages. The following
-pipeline is useful:_
+pipeline is useful (and available in the Makefile as target `test-in-docker`):_
 ```bash
 docker compose up 2>&1 | tee compose.log \
     | (grep --silent "autograph-unit-test exited with code" && docker compose down; \

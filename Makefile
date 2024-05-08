@@ -3,6 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-services/autograph/database github.com/mozilla-services/autograph/formats github.com/mozilla-services/autograph/signer github.com/mozilla-services/autograph/signer/apk2 github.com/mozilla-services/autograph/signer/contentsignature github.com/mozilla-services/autograph/signer/contentsignaturepki github.com/mozilla-services/autograph/signer/genericrsa github.com/mozilla-services/autograph/signer/gpg2 github.com/mozilla-services/autograph/signer/mar github.com/mozilla-services/autograph/signer/xpi github.com/mozilla-services/autograph/verifier/contentsignature
 
+# The GOPATH isn't always on the path.
+GOPATH := $(shell go env GOPATH)
+
 all: generate test vet lint staticcheck install
 
 # update the vendored version of the wait-for-it.sh script
@@ -12,21 +15,18 @@ install-wait-for-it:
 	chmod +x bin/wait-for-it.sh
 
 install-golint:
-	go get -u golang.org/x/lint/golint
-
-install-cover:
-	go get -u golang.org/x/tools/cmd/cover
+	go install golang.org/x/lint/golint@v0.0.0-20190409202823-959b441ac422
 
 install-goveralls:
-	go get -u github.com/mattn/goveralls
+	go install github.com/mattn/goveralls@v0.0.11
 
 install-staticcheck:
-	go get -u honnef.co/go/tools/cmd/staticcheck
+	go install honnef.co/go/tools/cmd/staticcheck@v0.2.2
 
 install-go-mod-upgrade:
-	go get -u github.com/oligot/go-mod-upgrade
+	go get github.com/oligot/go-mod-upgrade
 
-install-dev-deps: install-golint install-staticcheck install-cover install-goveralls install-go-mod-upgrade
+install-dev-deps: install-golint install-staticcheck install-goveralls install-go-mod-upgrade
 
 install:
 	go install github.com/mozilla-services/autograph
@@ -38,8 +38,8 @@ tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
 lint:
-	golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
-	test 0 -eq $(shell cat /tmp/autograph-golint.txt | grep -Pv 'stutters|suggestions' | wc -l)
+	$(GOPATH)/bin/golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
+	test 0 -eq $$(grep -c -Pv 'stutters|suggestions' /tmp/autograph-golint.txt)
 
 # refs: https://github.com/mozilla-services/autograph/issues/247
 check-no-crypto11-in-signers:
@@ -69,10 +69,10 @@ race:
 	go test -race -covermode=atomic -count=1 $(PACKAGE_NAMES)
 
 staticcheck:
-	staticcheck -go 1.16 $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
+	$(GOPATH)/bin/staticcheck -go 1.16 $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
 	# ignore errors in pkgs
 	# ignore SA1019 for DSA being deprecated refs: GH #667
-	test 0 -eq $(shell cat /tmp/autograph-staticcheck.txt | grep -Pv '^/go/pkg/mod/|SA1019' | wc -l)
+	test 0 -eq $$(grep -c -Pv '^/go/pkg/mod/|SA1019' /tmp/autograph-staticcheck.txt)
 
 test:
 	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)
@@ -92,7 +92,7 @@ generate:
 	go generate
 
 gpg-test-clean:
-	rm -rf ~/.gnupg /tmp/autograph_gpg2*
+	rm -rf /tmp/autograph_gpg2*
 	killall gpg-agent
 
 # image build order:
@@ -102,9 +102,9 @@ gpg-test-clean:
 # app-hsm -> monitor-hsm-lambda-emulator (app-hsm writes chains and updated config to shared /tmp volume)
 #
 build: generate
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose build --no-cache --parallel app db
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose build --no-cache --parallel app-hsm monitor
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose build --no-cache --parallel monitor-lambda-emulator monitor-hsm-lambda-emulator
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel app db
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel app-hsm monitor
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel monitor-lambda-emulator monitor-hsm-lambda-emulator
 
 integration-test:
 	./bin/run_integration_tests.sh

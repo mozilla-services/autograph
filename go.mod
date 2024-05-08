@@ -19,7 +19,6 @@ require (
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/miekg/pkcs11 v1.0.3
-	github.com/mozilla-services/autograph/verifier/contentsignature v0.0.0-20210505200649-cb56f0dcbdd1
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/sirupsen/logrus v1.8.1
 	github.com/youtube/vitess v2.1.1+incompatible // indirect
@@ -37,4 +36,4 @@ require (
 	google.golang.org/grpc v1.24.0 // indirect
 )
 
-replace github.com/mozilla-services/autograph/verifier => ./verifier/
+replace github.com/mozilla-services/autograph/verifier/contentsignature => ./verifier/contentsignature/
