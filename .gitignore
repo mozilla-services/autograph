@@ -33,6 +33,7 @@ signer/*/*.html
 
 tools/autograph-lambda-python-healthcheck/*
 tools/sign-addon/venv/*
+tools/confcheck/confcheck
 
 vendor/go.mozilla.org/cose/samples/*
 version.json
