@@ -85,7 +85,7 @@ func verify(config *configuration) ([]configError, error) {
 			errors = append(errors, errs...)
 		}
 		// FIXME only run this in prod and only for a lil while
-		errs = checkShouldHaveMigratingSigners(auth, signerIDs, origToNewSignerID)
+		errs = checkShouldHaveMigratingSigners(auth, origToNewSignerID)
 		if len(errs) > 0 {
 			errors = append(errors, errs...)
 		}
@@ -141,7 +141,7 @@ func migratingSignerIds(signerIDs map[signerID]bool) map[signerID]signerID {
 	}
 	return oldIDToNewID
 }
-func checkShouldHaveMigratingSigners(auth authorization, signerIDs map[signerID]bool, origToNewSignerID map[signerID]signerID) []configError {
+func checkShouldHaveMigratingSigners(auth authorization, origToNewSignerID map[signerID]signerID) []configError {
 	var errors []configError
 	authSigners := make(map[signerID]bool)
 	for _, signer := range auth.Signers {
