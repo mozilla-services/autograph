@@ -128,10 +128,12 @@ func checkMissingSigners(auth authorization, signerIDs map[signerID]bool) []conf
 
 func migratingSignerIds(signerIDs map[signerID]bool) map[signerID]signerID {
 	oldIDToNewID := make(map[signerID]signerID)
+	// Quick heuristic instead of a full list. Please don't rely on this in the future
 	dateSuffixes := []string{"_202402", "_202404"}
 	for _, dateSuffix := range dateSuffixes {
 		for signer, _ := range signerIDs {
-			if strings.HasSuffix(string(signer), dateSuffix) {
+			// Has the suffix
+			if strings.HasSuffix(string(signer), dateSuffix) && !strings.HasSuffix(string(signer), "_dep"+dateSuffix) {
 				origId := signer[:len(signer)-len(dateSuffix)]
 				if _, ok := signerIDs[origId]; ok {
 					oldIDToNewID[origId] = signer
