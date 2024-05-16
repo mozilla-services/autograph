@@ -132,7 +132,9 @@ func migratingSignerIds(signerIDs map[signerID]bool) map[signerID]signerID {
 	dateSuffixes := []string{"_202402", "_202404"}
 	for _, dateSuffix := range dateSuffixes {
 		for signer, _ := range signerIDs {
-			// Has the suffix
+			// Has the suffix and isn't for a non-release signer. The "_dep" is
+			// a special case for non-release builds of Firefox that need
+			// signing but won't work in "real" builds.
 			if strings.HasSuffix(string(signer), dateSuffix) && !strings.HasSuffix(string(signer), "_dep"+dateSuffix) {
 				origId := signer[:len(signer)-len(dateSuffix)]
 				if _, ok := signerIDs[origId]; ok {
