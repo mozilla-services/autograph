@@ -15,7 +15,7 @@ Why is it called "autograph"? Because it's a service to sign stuff.
 
 ## Installation
 
-Use Docker whenever possible. The golang version on your machine is likely _not_ the corect version for autograph.
+Use Docker whenever possible. The golang version on your machine is likely _not_ the correct version for autograph.
 
 ### Using Docker
 
