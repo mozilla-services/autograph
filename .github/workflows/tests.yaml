@@ -1,0 +1,37 @@
+name: Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Restrict tests to the most recent commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+ 
+      - name: Build images
+        shell: bash
+        run: make generate build
+
+      - name: Save images
+        shell: bash
+        run: |
+            mkdir -p docker-cache
+            docker save "autograph-app" | gzip -c > docker-cache/autograph-app.tgz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: autograph-app-${{ github.sha }}
+          compression-level: 0
+          path: docker-cache/autograph-app.tgz
