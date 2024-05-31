@@ -28,10 +28,52 @@ jobs:
         shell: bash
         run: |
             mkdir -p docker-cache
-            docker save "autograph-app" | gzip -c > docker-cache/autograph-app.tgz
+            docker save autograph-app autograph-app-hsm | gzip -c > docker-cache/autograph-images.tgz
 
       - uses: actions/upload-artifact@v4
         with:
-          name: autograph-app-${{ github.sha }}
+          name: autograph-images-${{ github.sha }}
           compression-level: 0
-          path: docker-cache/autograph-app.tgz
+          path: docker-cache/
+
+  unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-22.04
+    needs:
+      - build
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: autograph-images-${{ github.sha }}
+          path: docker-cache/
+      
+      - name: Load images
+        shell: bash
+        run: gunzip -c docker-cache/autograph-images.tgz | docker load
+
+      - name: Run Tests
+        shell: bash
+        run: docker compose run unit-test
+
+  integration-tests:
+    runs-on: ubuntu-22.04
+    needs:
+      - build
+    name: Run Integration Tests
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: autograph-images-${{ github.sha }}
+          path: docker-cache/
+      
+      - name: Load images
+        shell: bash
+        run: gunzip -c docker-cache/autograph-images.tgz | docker load
+      
+      # FIXME: This could be done so much better with a matrix job.
+      - name: Run Tests
+        shell: bash
+        run: ./bin/run_integration_tests.sh
