@@ -4,6 +4,7 @@ ARG GO_VERSION=1.19
 # Build Stage
 #------------------------------------------------------------------------------
 FROM debian:bookworm as builder
+ARG GO_VERSION
 
 ENV DEBIAN_FRONTEND='noninteractive' \
     PATH="${PATH}:/usr/lib/go-${GO_VERSION}/bin:/go/bin" \
@@ -33,6 +34,7 @@ RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograp
 # Deployment Stage
 #------------------------------------------------------------------------------
 FROM debian:bookworm
+ARG GO_VERSION
 EXPOSE 8000
 
 ENV DEBIAN_FRONTEND='noninteractive' \
