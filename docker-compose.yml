@@ -1,6 +1,8 @@
 volumes:
   apptmpdir:
   hsmtmpdir:
+include:
+  - tools/autograph-client/integration-tests.yml
 services:
   db:
     container_name: autograph-db
