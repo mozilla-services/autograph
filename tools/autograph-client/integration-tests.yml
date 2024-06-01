@@ -1,0 +1,56 @@
+services:
+  test-api-app:
+    container_name: test-api-app
+    image: autograph-app
+    user: "0"
+    links:
+      - app
+    depends_on:
+      - app
+    environment:
+      - CHECK_BOB=1
+      - AUTOGRAPH_URL=http://app:8000
+    working_dir: "/app/src/autograph/tools/autograph-client"
+    command: [ "./integration_test_api.sh" ]
+
+  test-api-hsm:
+    container_name: test-api-hsm
+    image: autograph-app
+    user: "0"
+    links:
+      - app-hsm
+    depends_on:
+      - app-hsm
+    environment:
+      - AUTOGRAPH_URL=http://app-hsm:8001
+    working_dir: "/app/src/autograph/tools/autograph-client"
+    command: [ "./integration_test_api.sh" ]
+
+  test-gpg-signing:
+    container_name: test-gpg-signing
+    extends:
+      service: test-api-app
+    command: [ "./integration_test_gpg2_signer.sh" ]
+
+  test-xpi-signing:
+    container_name: test-xpi-signing
+    extends:
+      service: test-api-app
+    command: [ "./integration_test_xpis.sh" ]
+
+  test-xpi-signing-hsm:
+    container_name: test-xpi-signing-hsm
+    extends:
+      service: test-api-hsm
+    environment:
+      - SIGNER_ID_PREFIX=hsm-
+    command: [ "./integration_test_xpis.sh" ]
+
+  test-apk-signing:
+    container_name: test-apk-signing
+    extends:
+      service: test-api-app
+    environment:
+      - TARGET=http://app:8000
+      - VERIFY=1
+    command: [ "./build_test_apks.sh" ]
