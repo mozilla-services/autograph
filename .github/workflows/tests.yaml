@@ -16,6 +16,8 @@ jobs:
   build:
     name: Build Docker Images
     runs-on: ubuntu-22.04
+    outputs:
+      testcases: ${{ steps.enum-tests.outputs.testcases }}
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
@@ -29,6 +31,13 @@ jobs:
         run: |
             mkdir -p docker-cache
             docker save autograph-app autograph-app-hsm | gzip -c > docker-cache/autograph-images.tgz
+
+      - name: Enumerate tests
+        id: enum-tests
+        shell: bash
+        run: |
+            echo -n "testcases=" >> $GITHUB_OUTPUT
+            yq -o=json '.services | keys' tools/autograph-client/integration-tests.yml | jq -c >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v4
         with:
@@ -88,10 +97,14 @@ jobs:
             autograph-app ./bin/run_unit_tests.sh
 
   integration-tests:
+    name: Run Integration Tests
     runs-on: ubuntu-22.04
     needs:
       - build
-    name: Run Integration Tests
+    strategy:
+      fail-fast: false # Don't cancel other jobs if a test fails
+      matrix:
+        testcase: ${{ fromJSON(needs.build.outputs.testcases) }}
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
@@ -106,6 +119,6 @@ jobs:
         run: gunzip -c docker-cache/autograph-images.tgz | docker load
       
       # FIXME: This could be done so much better with a matrix job.
-      - name: Run Tests
+      - name: Running ${{ matrix.testcase }}
         shell: bash
-        run: ./bin/run_integration_tests.sh
+        run: docker compose run ${{ matrix.testcase }}
