@@ -7,6 +7,7 @@ services:
       - app
     depends_on:
       - app
+    entrypoint: ./test-entrypoint.sh
     environment:
       - CHECK_BOB=1
       - AUTOGRAPH_URL=http://app:8000
@@ -21,6 +22,7 @@ services:
       - app-hsm
     depends_on:
       - app-hsm
+    entrypoint: ./test-entrypoint.sh
     environment:
       - AUTOGRAPH_URL=http://app-hsm:8001
     working_dir: "/app/src/autograph/tools/autograph-client"
