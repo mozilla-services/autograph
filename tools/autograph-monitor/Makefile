@@ -21,7 +21,7 @@ race:
 lint:
 	$(GOPATH)/bin/golint *.go
 staticcheck:
-	$(GOPATH)/bin/staticcheck -go 1.16 *.go
+	$(GOPATH)/bin/staticcheck *.go
 vet:
 	go vet *.go
 clean:
