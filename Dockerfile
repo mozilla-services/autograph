@@ -1,11 +1,17 @@
+ARG GO_VERSION=1.19
+
 #------------------------------------------------------------------------------
 # Build Stage
 #------------------------------------------------------------------------------
 FROM debian:bookworm as builder
 
 ENV DEBIAN_FRONTEND='noninteractive' \
-    PATH="${PATH}:/go/bin" \
+    PATH="${PATH}:/usr/lib/go-${GO_VERSION}/bin:/go/bin" \
     GOPATH='/go'
+
+## Enable bookworm-backports
+RUN echo "deb http://deb.debian.org/debian/ bookworm-backports main" > /etc/apt/sources.list.d/bookworm-backports.list
+RUN echo "deb-src http://deb.debian.org/debian/ bookworm-backports main" >> /etc/apt/sources.list.d/bookworm-backports.list
 
 RUN apt-get update && \
     apt-get -y upgrade && \
@@ -14,7 +20,7 @@ RUN apt-get update && \
         gpg libncurses5 \
         devscripts \
         apksigner \
-        golang \
+        golang-${GO_VERSION} \
         build-essential
 
 ADD . /app/src/autograph
@@ -30,8 +36,12 @@ FROM debian:bookworm
 EXPOSE 8000
 
 ENV DEBIAN_FRONTEND='noninteractive' \
-    PATH="${PATH}:/go/bin" \
+    PATH="${PATH}:/usr/lib/go-${GO_VERSION}/bin:/go/bin" \
     GOPATH='/go'
+
+## Enable bookworm-backports
+RUN echo "deb http://deb.debian.org/debian/ bookworm-backports main" > /etc/apt/sources.list.d/bookworm-backports.list
+RUN echo "deb-src http://deb.debian.org/debian/ bookworm-backports main" >> /etc/apt/sources.list.d/bookworm-backports.list
 
 # Install required packages
 RUN apt-get update && \
@@ -42,7 +52,7 @@ RUN apt-get update && \
         libncurses5 \
         devscripts \
         apksigner \
-        golang \
+        golang-${GO_VERSION} \
         build-essential \
         curl \
         jq
