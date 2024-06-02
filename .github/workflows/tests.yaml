@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
             mkdir -p docker-cache
-            docker save autograph-app autograph-app-hsm | gzip -c > docker-cache/autograph-images.tgz
+            docker save -o docker-cache/autograph-images.tar autograph-app autograph-app-hsm
 
       - name: Enumerate tests
         id: enum-tests
@@ -42,7 +42,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: autograph-images-${{ github.sha }}
-          compression-level: 0
           path: docker-cache/
 
   unit-tests:
@@ -79,7 +78,7 @@ jobs:
 
       - name: Load images
         shell: bash
-        run: gunzip -c docker-cache/autograph-images.tgz | docker load
+        run: docker load -i docker-cache/autograph-images.tar
 
       - name: Run Tests
         shell: bash
@@ -114,7 +113,7 @@ jobs:
 
       - name: Load images
         shell: bash
-        run: gunzip -c docker-cache/autograph-images.tgz | docker load
+        run: docker load -i docker-cache/autograph-images.tar
 
       - name: Running ${{ matrix.testcase }}
         shell: bash
