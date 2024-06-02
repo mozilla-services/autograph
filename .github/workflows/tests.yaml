@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
- 
+
       - name: Build images
         shell: bash
         run: make generate build
@@ -53,7 +53,7 @@ jobs:
     env:
       DBNAME: autograph
       PGPASSWORD: myautographdbpassword
-    
+
     services:
       database:
         image: postgres:11
@@ -72,7 +72,7 @@ jobs:
         with:
           name: autograph-images-${{ github.sha }}
           path: docker-cache/
-      
+
       - name: Initialize database
         shell: bash
         run: psql -h localhost -p 5432 -U postgres --no-password -f database/schema.sql ${{ env.DBNAME }}
@@ -84,12 +84,10 @@ jobs:
       - name: Run Tests
         shell: bash
         env:
-          AUTOGRAPH_DB_DSN: host=localhost user=myautographdbuser dbname=${{ env.DBNAME }} password=${{ env.PGPASSWORD }} sslmode=disable
-          AUTOGRAPH_DB_HOST: localhost
+          AUTOGRAPH_DB_DSN: postgres://myautographdbuser:${{ env.PGPASSWORD }}@localhost/${{ env.DBNAME }}?sslmode=disable
         run: |
           docker run \
             --env AUTOGRAPH_DB_DSN \
-            --env AUTOGRAPH_DB_HOST \
             --env RACE_TEST=0 \
             --workdir /app/src/autograph \
             --net=host \
@@ -113,12 +111,11 @@ jobs:
         with:
           name: autograph-images-${{ github.sha }}
           path: docker-cache/
-      
+
       - name: Load images
         shell: bash
         run: gunzip -c docker-cache/autograph-images.tgz | docker load
-      
-      # FIXME: This could be done so much better with a matrix job.
+
       - name: Running ${{ matrix.testcase }}
         shell: bash
         run: docker compose run ${{ matrix.testcase }}
