@@ -89,7 +89,7 @@ showcoverage: test
 	go tool cover -html=coverage.out
 
 generate:
-	go generate
+	./version.sh
 
 gpg-test-clean:
 	rm -rf /tmp/autograph_gpg2*
