@@ -21,7 +21,7 @@ install-goveralls:
 	go install github.com/mattn/goveralls@v0.0.11
 
 install-staticcheck:
-	go install honnef.co/go/tools/cmd/staticcheck@v0.2.2
+	go install honnef.co/go/tools/cmd/staticcheck@v0.4.7
 
 install-go-mod-upgrade:
 	go get github.com/oligot/go-mod-upgrade
@@ -69,7 +69,7 @@ race:
 	go test -race -covermode=atomic -count=1 $(PACKAGE_NAMES)
 
 staticcheck:
-	$(GOPATH)/bin/staticcheck -go 1.16 $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
+	$(GOPATH)/bin/staticcheck $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
 	# ignore errors in pkgs
 	# ignore SA1019 for DSA being deprecated refs: GH #667
 	test 0 -eq $$(grep -c -Pv '^/go/pkg/mod/|SA1019' /tmp/autograph-staticcheck.txt)

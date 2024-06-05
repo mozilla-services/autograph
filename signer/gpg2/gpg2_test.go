@@ -100,7 +100,6 @@ func assertClearSignedFilesVerify(t *testing.T, signer *GPG2Signer, testname str
 		"--homedir", tmpDir,
 		"--no-default-keyring",
 		"--keyring", filepath.Join(tmpDir, "autograph_test_gpg2_keyring.gpg"),
-		"--secret-keyring", filepath.Join(tmpDir, "autograph_test_gpg2_secring.gpg"),
 		"--import", publicKeyPath)
 	out, err := gnupgCreateKeyring.CombinedOutput()
 	if err != nil {
@@ -122,7 +121,6 @@ func assertClearSignedFilesVerify(t *testing.T, signer *GPG2Signer, testname str
 			"--homedir", tmpDir,
 			"--no-default-keyring",
 			"--keyring", filepath.Join(tmpDir, "autograph_test_gpg2_keyring.gpg"),
-			"--secret-keyring", filepath.Join(tmpDir, "autograph_test_gpg2_secring.gpg"),
 			"--batch",
 			"--yes",
 			"--pinentry-mode", "error",
@@ -366,7 +364,6 @@ func TestSignData(t *testing.T) {
 				// call gnupg to create a new keyring, load the key in it
 				gnupgCreateKeyring := exec.Command("gpg", "--no-default-keyring",
 					"--keyring", "/tmp/autograph_test_gpg2_keyring.gpg",
-					"--secret-keyring", "/tmp/autograph_test_gpg2_secring.gpg",
 					"--import", tmpPublicKeyFile.Name())
 				out, err := gnupgCreateKeyring.CombinedOutput()
 				if err != nil {
@@ -376,7 +373,6 @@ func TestSignData(t *testing.T) {
 				// verify the signature
 				gnupgVerifySig := exec.Command("gpg", "--no-default-keyring",
 					"--keyring", "/tmp/autograph_test_gpg2_keyring.gpg",
-					"--secret-keyring", "/tmp/autograph_test_gpg2_secring.gpg",
 					"--verify", tmpSignatureFile.Name(), tmpContentFile.Name())
 				out, err = gnupgVerifySig.CombinedOutput()
 				if err != nil {

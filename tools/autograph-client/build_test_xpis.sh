@@ -11,14 +11,15 @@ set -e
 #
 INPUT_FILE=$1
 
-OUTPUT_BASENAME=autograph-$(git rev-parse --short HEAD)-$CONFIG-$(basename $INPUT_FILE '.zip')-PKCS7
+TARGET=${TARGET:-'http://127.0.0.1:8000'}
+
+PROJECT_SHORTHASH=$(curl -s "${TARGET}/__version__" | jq -r '.commit' | head -c8)
+OUTPUT_BASENAME=autograph-$PROJECT_SHORTHASH-$CONFIG-$(basename $INPUT_FILE '.zip')-PKCS7
 
 HAWK_USER=${HAWK_USER:-alice}
 HAWK_SECRET=${HAWK_SECRET:-fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu}
 CN=${CN:-testaddon@allizom}
 VERIFICATION_TIME=${VERIFICATION_TIME:-""}
-
-TARGET=${TARGET:-'http://127.0.0.1:8000'}
 
 if [[ "$VERIFICATION_TIME" = "" ]]; then
     COMMON_ARGS="-t $TARGET -f $INPUT_FILE -u $HAWK_USER -p $HAWK_SECRET -cn $CN -k $SIGNER_ID -r $TRUST_ROOTS"

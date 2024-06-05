@@ -9,20 +9,22 @@ FENNEC_NIGHTLY_URL=https://archive.mozilla.org/pub/mobile/nightly/2018/10/2018-1
 FENNEC_BETA_URL=https://archive.mozilla.org/pub/mobile/releases/64.0b9/android-api-16/en-US/fennec-64.0b9.en-US.android-arm.apk
 FOCUS_LATEST_URL=https://archive.mozilla.org/pub/android/focus/latest/Focus-arm.apk
 
-wget -t 5 $FENNEC_NIGHTLY_URL $FENNEC_BETA_URL $FOCUS_LATEST_URL
+curl --retry 5 $FENNEC_NIGHTLY_URL -o fennec-nightly.apk
+curl --retry 5 $FENNEC_BETA_URL -o fennec-beta.apk
+curl --retry 5 $FOCUS_LATEST_URL -o focus-latest.apk
 
 HAWK_USER=${HAWK_USER:-alice}
 HAWK_SECRET=${HAWK_SECRET:-fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu}
 TARGET=${TARGET:-'http://127.0.0.1:8000'}
 
 # Sign Fennec Beta
-go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-64.0b9.en-US.android-arm.apk -o fennec-legacy-sha1.resigned.apk -k legacy_apk_with_rsa -pk7digest sha1
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f fennec-beta.apk -o fennec-legacy-sha1.resigned.apk -k legacy_apk_with_rsa -pk7digest sha1
 
 # Sign with ECDSA
-go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f Focus-arm.apk -o focus-ecdsa.v2.resigned.apk -k apk_cert_with_ecdsa_sha256
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f focus-latest.apk -o focus-ecdsa.v2.resigned.apk -k apk_cert_with_ecdsa_sha256
 
 # Sign with RSA
-go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f Focus-arm.apk -o focus-rsa.v2.resigned.apk -k testapp-android
+go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f focus-latest.apk -o focus-rsa.v2.resigned.apk -k testapp-android
 
 # Sign Aligned APK with ECDSA
 go run client.go -t $TARGET -u $HAWK_USER -p $HAWK_SECRET -f ../../signer/apk2/aligned-two-files.apk -o aligned-two-files.ecdsa.v2.signed.apk -k apk_cert_with_ecdsa_sha256

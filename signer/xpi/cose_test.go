@@ -312,7 +312,8 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 			},
 			results: []string{
 				"xpi: COSE Signature kid value is not a byte array",
-				"xpi: failed to parse X509 EE certificate from COSE Signature: asn1: structure error: tags don't match (16 vs {class:1 tag:15 length:75 isCompound:false})",
+				"xpi: failed to parse X509 EE certificate from COSE Signature: asn1: structure error: tags don't match",
+				"xpi: failed to parse X509 EE certificate from COSE Signature: x509: malformed certificate",
 			},
 		},
 		//9
@@ -326,7 +327,8 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: failed to parse X509 EE certificate from COSE Signature: asn1: structure error: tags don't match (16 vs {class:1 tag:15 length:75 isCompound:false})",
+				"xpi: failed to parse X509 EE certificate from COSE Signature: asn1: structure error: tags don't match",
+				"xpi: failed to parse X509 EE certificate from COSE Signature: x509: malformed certificate",
 			},
 		},
 	}
@@ -398,7 +400,8 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 			},
 			results: []string{
 				"xpi: expected SignMessage Protected Headers kid value 0 to be a byte slice got <nil> with type <nil>",
-				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match (16 vs {class:1 tag:14 length:111 isCompound:true})",
+				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match",
+				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: x509: malformed certificate",
 			},
 		},
 		//5
@@ -415,7 +418,8 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match (16 vs {class:1 tag:14 length:111 isCompound:true})",
+				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match",
+				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: x509: malformed certificate",
 			},
 		},
 		//6

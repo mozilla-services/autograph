@@ -14,7 +14,7 @@ if [ "$REPORT_COVERAGE" = "true" ]; then
     make install-goveralls
 fi
 # run app unit tests
-make generate test
+make test
 # run monitor unit tests
 make -C tools/autograph-monitor test
 

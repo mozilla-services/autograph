@@ -8,8 +8,13 @@ version: 2.1
 jobs:
   lint-vet-fmt:
     docker:
-      - image: golang:1.16-buster
+      - image: debian:bookworm
     steps:
+      - run:
+          name: install dependencies
+          command: |
+            apt-get update
+            apt-get install -y golang build-essential git ca-certificates libltdl-dev
       - checkout
       - run:
           name: check crypto11 not used in signers
@@ -29,11 +34,6 @@ jobs:
             make -s fmt-diff | tee fmt.diff
             test -z "$(cat fmt.diff)"
       - run:
-          name: install packages for crypto11 headers for go vet
-          command: |
-            apt-get update
-            apt-get install -y libltdl-dev
-      - run:
           name: run go vet
           command: |
             make vet
@@ -50,7 +50,7 @@ jobs:
   unit-test:
     # based on the official golang image with more docker stuff
     docker:
-      - image: cimg/go:1.16
+      - image: cimg/go:1.19
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -80,7 +80,7 @@ jobs:
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
     docker:
-      - image: cimg/go:1.16
+      - image: cimg/go:1.19
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS

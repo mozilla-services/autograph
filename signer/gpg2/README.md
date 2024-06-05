@@ -18,11 +18,10 @@ $ go run client.go -d $(base64 /tmp/pgpinput.txt) -k pgpsubkey \
 
 # import the public key returned by autograph into a temp keyring
 $ gpg --no-default-keyring --keyring /tmp/testkeyring.pgp \
-  --secret-keyring /tmp/testsecring.gpg --import /tmp/testkey.asc
+  --import /tmp/testkey.asc
 
 # verify the signature using the temp keyring
 $ gpg --no-default-keyring --keyring /tmp/testkeyring.pgp \
-  --secret-keyring /tmp/testsecring.gpg \
   --verify /tmp/testsig.pgp /tmp/pgpinput.txt
 ```
 
