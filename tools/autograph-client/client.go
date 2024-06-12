@@ -67,7 +67,7 @@ func urlToRequestType(url string) requestType {
 
 func main() {
 	var (
-		userid, pass, data, hash, url, infile, outfile, outkeyfile, outFilesPrefix, keyid, cn, pk7digest, rootPath, verificationTimeInput string
+		userid, pass, data, hash, url, infile, outfile, outkeyfile, outFilesPrefix, keyid, cn, pk7digest, rootPath, verificationTimeInput, listConfig string
 		iter, maxworkers, sa                                                                                                              int
 		debug, listKeyIDs, noVerify                                                                                                       bool
 		err                                                                                                                               error
@@ -156,6 +156,7 @@ examples:
 	flag.StringVar(&verificationTimeInput, "vt", "", "Time to verify XPI signatures at in RFC3339 format. Defaults to at client invokation + 1 minute to account for time to transfer and sign the XPI")
 	flag.BoolVar(&noVerify, "noverify", false, "Skip verifying successful responses. Default false.")
 	flag.BoolVar(&listKeyIDs, "listkeyids", false, "List key IDs for the signer")
+	flag.StringVar(&listConfig, "listconfig", "", "List signer config")
 
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
@@ -175,6 +176,11 @@ examples:
 	cli := getHTTPClient()
 	if listKeyIDs {
 		listKeyIDsForCurrentUser(cli, debug, url, userid, pass)
+		os.Exit(0)
+	}
+
+	if listConfig != "" {
+		listSignerConfig(cli, debug, url, userid, pass, listConfig)
 		os.Exit(0)
 	}
 
@@ -496,6 +502,50 @@ func listKeyIDsForCurrentUser(cli *http.Client, debug bool, url, userid, pass st
 		log.Fatalf("error marshal indenting JSON %q", err)
 	}
 	fmt.Println(string(indentedJSON))
+}
+
+func listSignerConfig(cli *http.Client, debug bool, url, userid, pass string, keyid string) {
+	url = url + "/config/" + keyid
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.Header.Set("Authorization", hawk.NewRequestAuth(req,
+		&hawk.Credentials{
+			ID:   userid,
+			Key:  pass,
+			Hash: sha256.New},
+		0).RequestHeader())
+	if debug {
+		fmt.Printf("DEBUG: sending request\nDEBUG: %+v\n", req)
+	}
+	resp, err := cli.Do(req)
+	if err != nil || resp == nil {
+		log.Fatal(err)
+	}
+	if debug {
+		fmt.Printf("DEBUG: received response\nDEBUG: %+v\n", resp)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if debug {
+		fmt.Printf("DEBUG: %s\n", body)
+	}
+	if resp.StatusCode != http.StatusOK {
+		log.Fatalf("%s %s", resp.Status, body)
+	}
+
+	// pretty print output
+	var indentedJSON bytes.Buffer
+	err = json.Indent(&indentedJSON, body, "", "  ")
+	if err != nil {
+		log.Fatalf("error unmarshaling JSON %q", err)
+	}
+	fmt.Println(indentedJSON.String())
 }
 
 // parseVerificationTime parses an RFC3339 timestamp or exits

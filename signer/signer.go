@@ -34,6 +34,8 @@ import (
 // IDFormat is a regex for the format IDs must follow
 const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 
+var IDFormatRegexp = regexp.MustCompile(IDFormat)
+
 // RSACacheConfig is a config for the RSAKeyCache
 type RSACacheConfig struct {
 	// NumKeys is the number of RSA keys matching the issuer size
@@ -101,11 +103,11 @@ type Configuration struct {
 
 	// RSACacheConfig for XPI signers this specifies config for an
 	// RSA cache
-	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty" yaml:"rsacacheconfig,omitempty"`
+	RSACacheConfig RSACacheConfig `json:"-" yaml:"rsacacheconfig,omitempty"`
 
 	// RecommendationConfig specifies config values for
 	// recommendations files for XPI signers
-	RecommendationConfig RecommendationConfig `yaml:"recommendation,omitempty"`
+	RecommendationConfig RecommendationConfig `json:"-" yaml:"recommendation,omitempty"`
 
 	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
 	// attributes and use a legacy PKCS7 digest
@@ -157,6 +159,27 @@ type Configuration struct {
 
 	isHsmAvailable bool
 	hsmCtx         *pkcs11.Ctx
+}
+
+// Returns a copy of the configuration stripped of any private values.
+func (cfg *Configuration) Sanitize() *Configuration {
+	return &Configuration{
+		ID:                  cfg.ID,
+		Type:                cfg.Type,
+		Mode:                cfg.Mode,
+		PublicKey:           cfg.PublicKey,
+		IssuerCert:          cfg.IssuerCert,
+		Certificate:         cfg.Certificate,
+		X5U:                 cfg.X5U,
+		KeyID:               cfg.KeyID,
+		SubdomainOverride:   cfg.SubdomainOverride,
+		Validity:            cfg.Validity,
+		ClockSkewTolerance:  cfg.ClockSkewTolerance,
+		ChainUploadLocation: cfg.ChainUploadLocation,
+		CaCert:              cfg.CaCert,
+		Hash:                cfg.Hash,
+		SaltLength:          cfg.SaltLength,
+	}
 }
 
 // InitHSM indicates that an HSM has been initialized

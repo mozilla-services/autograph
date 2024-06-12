@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -214,6 +213,7 @@ func run(conf configuration, listen string, debug bool) {
 	router.HandleFunc("/sign/data", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/sign/hash", ag.handleSignature).Methods("POST")
 	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", ag.handleGetAuthKeyIDs).Methods("GET")
+	router.HandleFunc("/config/{keyid:[a-zA-Z0-9-_]{1,64}}", ag.handleGetConfig).Methods("GET")
 	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
 		err = setRuntimeConfig()
 		if err != nil {
@@ -388,7 +388,7 @@ func (a *autographer) initHSM(conf configuration) {
 func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 	sids := make(map[string]bool)
 	for _, signerConf := range signerConfs {
-		if !regexp.MustCompile(signer.IDFormat).MatchString(signerConf.ID) {
+		if !signer.IDFormatRegexp.MatchString(signerConf.ID) {
 			return fmt.Errorf("signer ID %q does not match the permitted format %q",
 				signerConf.ID, signer.IDFormat)
 		}

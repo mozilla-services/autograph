@@ -495,3 +495,55 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 	w.Write(signerIDsJSON)
 }
+
+// handleGetConfig returns the public signer configuration (keyID param for the API)
+func (a *autographer) handleGetConfig(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		return
+	}
+	if r.Body != nil {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
+			return
+		}
+		if len(body) > 0 {
+			httpError(w, r, http.StatusBadRequest, "endpoint received unexpected request body")
+			return
+		}
+	}
+
+	pathKeyID, ok := mux.Vars(r)["keyid"]
+	if !ok {
+		httpError(w, r, http.StatusInternalServerError, "route is improperly configured")
+		return
+	}
+	if !signer.IDFormatRegexp.MatchString(pathKeyID) {
+		httpError(w, r, http.StatusBadRequest, "keyid in URL path '%s' is invalid, it must match %s", pathKeyID, signer.IDFormat)
+		return
+	}
+	_, headerAuthID, err := a.authorizeHeader(r)
+	if err != nil {
+		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
+		return
+	}
+
+	requestedSigner, err := a.authBackend.getSignerForUser(headerAuthID, pathKeyID)
+	if err != nil {
+		httpError(w, r, http.StatusNotFound, "%v", err)
+		return
+	}
+
+	requestedConfig := requestedSigner.Config()
+	signerConfigJSON, err := json.Marshal(requestedConfig.Sanitize())
+	if err != nil {
+		log.Errorf("handleGetConfig failed to marshal JSON with error: %s", err)
+		httpError(w, r, http.StatusInternalServerError, "error marshaling response JSON")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(signerConfigJSON)
+}
