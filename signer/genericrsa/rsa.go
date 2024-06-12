@@ -121,6 +121,7 @@ func New(conf signer.Configuration) (s *RSASigner, err error) {
 	default:
 		return nil, fmt.Errorf("genericrsa: unsupported hash %q for signer %q, must be 'sha1' or 'sha256'", s.Hash, s.ID)
 	}
+	s.Hash = conf.Hash
 
 	s.SaltLength = conf.SaltLength
 	switch s.Mode {
@@ -149,6 +150,7 @@ func (s *RSASigner) Config() signer.Configuration {
 		PrivateKey: s.PrivateKey,
 		PublicKey:  s.PublicKey,
 		SignerOpts: s.sigOpts,
+		Hash:       s.Hash,
 	}
 }
 
