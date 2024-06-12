@@ -145,7 +145,7 @@ examples:
 	flag.StringVar(&outkeyfile, "ko", ``, "Key Output file. If set, writes the public key to a file at this location")
 	flag.StringVar(&outFilesPrefix, "outfilesprefix", `signed_`, "Prefix to use for output filenames when signing multiple files. Defaults to 'signed_'")
 	flag.StringVar(&keyid, "k", ``, "Key ID to request a signature from a specific signer")
-	flag.StringVar(&url, "t", `http://localhost:8000`, "target server, do not specific a URI or trailing slash")
+	flag.StringVar(&url, "t", `http://localhost:8000`, "target server URL")
 	flag.IntVar(&iter, "i", 1, "number of signatures to request")
 	flag.IntVar(&maxworkers, "m", 1, "maximum number of parallel workers")
 	flag.StringVar(&cn, "cn", "", "when signing XPI, sets the CN to the add-on ID")
@@ -160,6 +160,9 @@ examples:
 
 	flag.BoolVar(&debug, "D", false, "debug logs: show raw requests & responses")
 	flag.Parse()
+
+	// Strip trailing slashes from the URL, if any.
+	url = strings.TrimRight(url, "/")
 
 	if verificationTimeInput == "" {
 		verificationTime = time.Now().UTC().Add(time.Minute)
