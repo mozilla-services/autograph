@@ -278,6 +278,7 @@ func (s *GPG2Signer) Config() signer.Configuration {
 		PrivateKey: s.PrivateKey,
 		PublicKey:  s.PublicKey,
 		Mode:       s.Mode,
+		KeyID:      s.KeyID,
 	}
 }
 
