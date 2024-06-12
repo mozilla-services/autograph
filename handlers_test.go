@@ -28,6 +28,7 @@ import (
 
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/formats"
+	"github.com/mozilla-services/autograph/signer"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/xpi"
@@ -756,6 +757,245 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 		// run the request
 		w := httptest.NewRecorder()
 		ag.handleGetAuthKeyIDs(w, req)
+
+		// validate response
+		if w.Code != testcase.expectedStatus {
+			t.Fatalf("test case %s (%d): got code %d but expected %d",
+				testcase.name, i, w.Code, testcase.expectedStatus)
+		}
+		if w.Body.String() != testcase.expectedBody {
+			t.Fatalf("test case %s (%d): got body %q expected %q", testcase.name, i, w.Body.String(), testcase.expectedBody)
+		}
+		for expectedHeader, expectedHeaderVals := range testcase.expectedHeaders {
+			vals, ok := w.Header()[expectedHeader]
+			if !ok {
+				t.Fatalf("test case %s (%d): expected header %q not found", testcase.name, i, expectedHeader)
+			}
+			if strings.Join(vals, "") != strings.Join(expectedHeaderVals, "") {
+				t.Fatalf("test case %s (%d): header vals %q did not match expected %q ", testcase.name, i, vals, expectedHeaderVals)
+			}
+		}
+	}
+}
+
+func TestHandleGetConfig(t *testing.T) {
+	t.Parallel()
+
+	var autographDummyRsaConfig = signer.SanitizedConfig{
+		ID: "dummyrsa",
+		Type: "genericrsa",
+		Mode: "pss",
+		PublicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4SlEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3yi62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PYyUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cRmwIDAQAB",
+		Hash: "sha256",
+		PrivateKey: "a4087b340c1770b70cf5192413c6d7d7dbfc0a9db09b167965f133d672412c75",
+	}
+	autographDummyRsaJSON, _ := json.Marshal(autographDummyRsaConfig)
+
+	var autographAppKey2Config = signer.SanitizedConfig{
+		ID: "appkey2",
+		Type: "contentsignature",
+		Mode: "p256ecdsa",
+		PublicKey: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==",
+		PrivateKey: "e41a1fb2466a1ba6c690ca6e3030c157745cfebe3c650f60c4c807ad781dd979",
+	}
+	autographAppKey2JSON, _ := json.Marshal(autographAppKey2Config)
+
+	var testcases = []struct {
+		name   string
+		method string
+		url    string
+
+		// urlRouteVars are https://pkg.go.dev/github.com/gorilla/mux#Vars
+		// as configured with the handler at /config/{keyid:[a-zA-Z0-9-_]{1,64}}
+		// there should only be a keyid var and it should match the url value
+		urlRouteVars map[string]string
+
+		// headers are additional http headers to set
+		headers *http.Header
+
+		// user/auth ID to build an Authorization header for
+		authorizeID string
+		nilBody     bool
+		body        string
+
+		expectedStatus  int
+		expectedHeaders http.Header
+		expectedBody    string
+	}{
+		{
+			name:            "invalid method POST returns 405",
+			method:          "POST",
+			url:             "http://foo.bar/config/dummyrsa",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "POST method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "invalid method PUT returns 405",
+			method:          "PUT",
+			url:             "http://foo.bar/config/dummyrsa",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "PUT method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "invalid method OPTIONS returns 405",
+			method:          "OPTIONS",
+			url:             "http://foo.bar/config/dummyrsa",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "OPTIONS method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "invalid method HEAD returns 405",
+			method:          "HEAD",
+			url:             "http://foo.bar/config/dummyrsa",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "HEAD method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with empty body returns 200",
+			method:          "GET",
+			url:             "http://foo.bar/config/dummyrsa",
+			urlRouteVars:    map[string]string{"keyid": "dummyrsa"},
+			nilBody:         false,
+			body:            "",
+			authorizeID:     "alice",
+			expectedStatus:  http.StatusOK,
+			expectedBody:    string(autographDummyRsaJSON),
+			expectedHeaders: http.Header{"Content-Type": []string{"application/json"}},
+		},
+		{
+			name:            "GET with non-empty body returns 400",
+			method:          "GET",
+			url:             "http://foo.bar/config/dummyrsa",
+			urlRouteVars:    map[string]string{"keyid": "dummyrsa"},
+			nilBody:         false,
+			body:            "foobar/---",
+			expectedStatus:  http.StatusBadRequest,
+			expectedBody:    "endpoint received unexpected request body\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with misconfigured keyid route param returns 500",
+			method:          "GET",
+			url:             "http://foo.bar/config/dummyrsa",
+			urlRouteVars:    map[string]string{}, // missing keyid
+			nilBody:         true,
+			expectedStatus:  http.StatusInternalServerError,
+			expectedBody:    "route is improperly configured\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET missing Authorization header returns 401",
+			method:          "GET",
+			url:             "http://foo.bar/config/dummyrsa",
+			urlRouteVars:    map[string]string{"keyid": "dummyrsa"},
+			nilBody:         true,
+			expectedStatus:  http.StatusUnauthorized,
+			expectedBody:    "authorization verification failed: missing Authorization header\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with invalid Authorization header returns 401",
+			method:          "GET",
+			url:             "http://foo.bar/config/dummyrsa",
+			urlRouteVars:    map[string]string{"keyid": "dummyrsa"},
+			headers:         &http.Header{"Authorization": []string{`Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="`}},
+			nilBody:         true,
+			expectedStatus:  http.StatusUnauthorized,
+			expectedBody:    "authorization verification failed: hawk: credential error with id dh37fgj492je and app : unknown id\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with invalid auth id url param returns 400",
+			method:          "GET",
+			url:             "http://foo.bar/config/",
+			urlRouteVars:    map[string]string{"keyid": ""},
+			nilBody:         true,
+			expectedStatus:  http.StatusBadRequest,
+			expectedBody:    "keyid in URL path '' is invalid, it must match ^[a-zA-Z0-9-_]{1,64}$\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with auth returns 404 for unknown keyid",
+			method:          "GET",
+			url:             "http://foo.bar/config/unknown",
+			urlRouteVars:    map[string]string{"keyid": "unknown"},
+			nilBody:         true,
+			authorizeID:     "alice",
+			expectedStatus:  http.StatusNotFound,
+			// TODO: I do not like this response body
+			expectedBody:    "alice is not authorized to sign with key ID unknown\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with auth returns 404 for mismatched auth ids (bob cannot get alice's keyids)",
+			method:          "GET",
+			url:             "http://foo.bar/config/dummyrsa",
+			urlRouteVars:    map[string]string{"keyid": "dummyrsa"},
+			nilBody:         true,
+			authorizeID:     "bob",
+			expectedStatus:  http.StatusNotFound,
+			// TODO: I do not like this response body
+			expectedBody:    "bob is not authorized to sign with key ID dummyrsa\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with empty body returns 200 (bob can fetch their own keyids)",
+			method:          "GET",
+			url:             "http://foo.bar/config/appkey2",
+			urlRouteVars:    map[string]string{"keyid": "appkey2"},
+			nilBody:         false,
+			body:            "",
+			authorizeID:     "bob",
+			expectedStatus:  http.StatusOK,
+			expectedBody:    string(autographAppKey2JSON),
+			expectedHeaders: http.Header{"Content-Type": []string{"application/json"}},
+		},
+	}
+
+	for i, testcase := range testcases {
+		// test request setup
+		var (
+			req *http.Request
+			err error
+		)
+		if testcase.nilBody {
+			req, err = http.NewRequest(testcase.method, testcase.url, nil)
+		} else {
+			req, err = http.NewRequest(testcase.method, testcase.url, strings.NewReader(testcase.body))
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		req = mux.SetURLVars(req, testcase.urlRouteVars)
+
+		if testcase.headers != nil {
+			req.Header = *testcase.headers
+		}
+		if testcase.authorizeID != "" {
+			auth, err := ag.getAuthByID(testcase.authorizeID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// getAuthHeader requires a content type and body
+			req.Header.Set("Authorization", hawk.NewRequestAuth(req,
+				&hawk.Credentials{
+					ID:   auth.ID,
+					Key:  auth.Key,
+					Hash: sha256.New},
+				0).RequestHeader())
+		}
+
+		// run the request
+		w := httptest.NewRecorder()
+		ag.handleGetConfig(w, req)
 
 		// validate response
 		if w.Code != testcase.expectedStatus {
