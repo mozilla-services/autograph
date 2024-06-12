@@ -4,9 +4,12 @@ USER root
 
 RUN cp /app/src/autograph/bin/test_monitor.sh /usr/local/bin/test_monitor.sh
 RUN curl -Lo /usr/local/bin/aws-lambda-rie \
-    https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie \
-    && \
-    chmod +x /usr/local/bin/aws-lambda-rie /usr/local/bin/test_monitor.sh
+        https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie && \
+    chmod +x /usr/local/bin/aws-lambda-rie
+
+# Use an entrypoint to determine the AUTOGRAPH_ROOT_HASH
+COPY lambda-setup-entrypoint.sh /usr/local/bin/lambda-setup-entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/lambda-setup-entrypoint.sh"]
 
 USER app
-CMD ["/usr/local/bin/aws-lambda-rie", "/go/bin/autograph-monitor"]
+CMD ["/go/bin/autograph-monitor"]
