@@ -380,3 +380,33 @@ Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="som
         "webextensions-rsa-with-recommendation"
     ]
 ```
+
+## /config/:keyid
+
+### Request
+
+Get the public configuration of a configured signer. For example:
+
+```bash
+GET /config/dummyrsa
+Host: autograph.example.net
+Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="
+```
+
+### Response
+
+400 Bad Request when the request includes a non-empty body
+401 Unauthorized when the Authorization header is missing or HAWK authorization fails
+404 Not Found when the keyid does not exist, or an authorization does not have permission to access the signer.
+405 Method Not Allowed when the request method is not GET
+200 OK when the authorization is valid and path and signer ID is found. Example response body with Content-Type application/json:
+
+```json
+{
+  "id": "dummyrsa",
+  "type": "genericrsa",
+  "mode": "pss",
+  "publickey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4SlEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3yi62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PYyUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cRmwIDAQAB",
+  "hash": "sha256"
+}
+```
