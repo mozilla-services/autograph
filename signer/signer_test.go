@@ -8,6 +8,7 @@ package signer
 
 import (
 	"crypto/rsa"
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -305,4 +306,71 @@ var rejectedFileNames = []string{
 	"control^chars",
 	"control*chars",
 	"_non_alpha_start",
+}
+
+func TestSanitizedConfig(t *testing.T) {
+	for _, testcase := range sanitizerTestCases {
+		r := testcase.cfg.Sanitize()
+		if testcase.result != *r {
+			expect, _ := json.MarshalIndent(testcase.result, "", "  ")
+			actual, _ := json.MarshalIndent(r, "", "  ")
+			t.Logf("expected: %s", expect)
+			t.Logf("actual: %s", actual)
+			t.Fatalf("Sanitized config failed for: %s", testcase.cfg.ID)
+		}
+	}
+}
+
+var sanitizerTestCases = []struct {
+	cfg Configuration
+	result SanitizedConfig
+}{
+	// All the fields are copied over.
+	{cfg: Configuration{
+		ID: "copy-public-values",
+		Type: "bar",
+		Mode: "qux",
+		PublicKey: "This is a public key",
+		IssuerCert: "This is an issuer",
+		Certificate: "This is a certificate",
+		X5U: "http://example.com/",
+		KeyID: "This is a keyid",
+		SubdomainOverride: "allizom.com",
+		Validity: 12345,
+		ClockSkewTolerance: 555,
+		ChainUploadLocation: "file:///somewhere/over/the/rainbow",
+		CaCert: "The root of evil",
+		Hash: "sha666",
+		SaltLength: 9001,
+	},
+    result: SanitizedConfig{
+		ID: "copy-public-values",
+		Type: "bar",
+		Mode: "qux",
+		PublicKey: "This is a public key",
+		IssuerCert: "This is an issuer",
+		Certificate: "This is a certificate",
+		X5U: "http://example.com/",
+		KeyID: "This is a keyid",
+		SubdomainOverride: "allizom.com",
+		Validity: 12345,
+		ClockSkewTolerance: 555,
+		ChainUploadLocation: "file:///somewhere/over/the/rainbow",
+		CaCert: "The root of evil",
+		Hash: "sha666",
+		SaltLength: 9001,
+	}},
+	// Private keys are hashed with SHA256
+	{cfg: Configuration{
+		ID: "private-key-example",
+		PrivateKey: "hello world",
+		IssuerPrivKey: "Lorem Ipsum",
+	},
+	result: SanitizedConfig{
+		ID: "private-key-example",
+		// echo -n "hello world" | sha256sum
+		PrivateKey: "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+		// echo -n "Lorem Ipsum" | sha256sum
+		IssuerPrivKey: "030dc1f936c3415aff3f3357163515190d347a28e758e1f717d17bae453541c9",
+	}},
 }

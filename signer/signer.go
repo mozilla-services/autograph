@@ -173,7 +173,6 @@ type SanitizedConfig struct {
 	X5U                 string        `json:"x5u,omitempty" yaml:"x5u,omitempty"`
 	KeyID               string        `json:"keyid,omitempty" yaml:"keyid,omitempty"`
 	SubdomainOverride   string        `json:"subdomain_override,omitempty" yaml:"subdomainoverride,omitempty"`
-	Passphrase          string        `json:"passphrase,omitempty" yaml:"passphrase,omitempty"`
 	Validity            time.Duration `json:"validity,omitempty" yaml:"validity,omitempty"`
 	ClockSkewTolerance  time.Duration `json:"clock_skew_tolerance,omitempty" yaml:"clockskewtolerance,omitempty"`
 	ChainUploadLocation string        `json:"chain_upload_location,omitempty" yaml:"chainuploadlocation,omitempty"`
@@ -197,7 +196,7 @@ func hashSecretString(secret string) string {
 
 	h := sha256.New()
 	h.Write([]byte(secret))
-	return fmt.Sprintf("%X", h.Sum(nil))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 // Returns a copy of the configuration stripped of any private values.
