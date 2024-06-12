@@ -12,6 +12,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
@@ -103,11 +104,11 @@ type Configuration struct {
 
 	// RSACacheConfig for XPI signers this specifies config for an
 	// RSA cache
-	RSACacheConfig RSACacheConfig `json:"-" yaml:"rsacacheconfig,omitempty"`
+	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty" yaml:"rsacacheconfig,omitempty"`
 
 	// RecommendationConfig specifies config values for
 	// recommendations files for XPI signers
-	RecommendationConfig RecommendationConfig `json:"-" yaml:"recommendation,omitempty"`
+	RecommendationConfig RecommendationConfig `json:"recommendation,omitempty" yaml:"recommendation,omitempty"`
 
 	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
 	// attributes and use a legacy PKCS7 digest
@@ -161,9 +162,48 @@ type Configuration struct {
 	hsmCtx         *pkcs11.Ctx
 }
 
+type SanitizedConfig struct {
+	// These fields are copied verbatim from signer.Configuration
+	ID                  string        `json:"id" yaml:"id"`
+	Type                string        `json:"type" yaml:"type"`
+	Mode                string        `json:"mode" yaml:"mode"`
+	PublicKey           string        `json:"publickey,omitempty" yaml:"publickey,omitempty"`
+	IssuerCert          string        `json:"issuercert,omitempty" yaml:"issuercert,omitempty"`
+	Certificate         string        `json:"certificate,omitempty" yaml:"certificate,omitempty"`
+	X5U                 string        `json:"x5u,omitempty" yaml:"x5u,omitempty"`
+	KeyID               string        `json:"keyid,omitempty" yaml:"keyid,omitempty"`
+	SubdomainOverride   string        `json:"subdomain_override,omitempty" yaml:"subdomainoverride,omitempty"`
+	Passphrase          string        `json:"passphrase,omitempty" yaml:"passphrase,omitempty"`
+	Validity            time.Duration `json:"validity,omitempty" yaml:"validity,omitempty"`
+	ClockSkewTolerance  time.Duration `json:"clock_skew_tolerance,omitempty" yaml:"clockskewtolerance,omitempty"`
+	ChainUploadLocation string        `json:"chain_upload_location,omitempty" yaml:"chainuploadlocation,omitempty"`
+	CaCert              string        `json:"cacert,omitempty" yaml:"cacert,omitempty"`
+	Hash                string        `json:"hash,omitempty" yaml:"hash,omitempty"`
+	SaltLength          int           `json:"saltlength,omitempty" yaml:"saltlength,omitempty"`
+
+	// Hash digests of the private keys.
+	PrivateKey          string        `json:"privatekey,omitempty" yaml:"privatekey,omitempty"`
+	IssuerPrivKey       string        `json:"issuerprivkey,omitempty" yaml:"issuerprivkey,omitempty"`
+
+	// TODO: To fully replace the config-sanitizer tool, we should also include
+	// fingerprints and expiration times of the certificate (if present).
+}
+
+func hashSecretString(secret string) string {
+	// Empty strings should stay empty
+	if secret == "" {
+		return ""
+	}
+
+	h := sha256.New()
+	h.Write([]byte(secret))
+	return fmt.Sprintf("%X", h.Sum(nil))
+}
+
 // Returns a copy of the configuration stripped of any private values.
-func (cfg *Configuration) Sanitize() *Configuration {
-	return &Configuration{
+func (cfg *Configuration) Sanitize() *SanitizedConfig {
+	return &SanitizedConfig{
+		// Copy public values verbatim.
 		ID:                  cfg.ID,
 		Type:                cfg.Type,
 		Mode:                cfg.Mode,
@@ -179,6 +219,10 @@ func (cfg *Configuration) Sanitize() *Configuration {
 		CaCert:              cfg.CaCert,
 		Hash:                cfg.Hash,
 		SaltLength:          cfg.SaltLength,
+
+		// Hash private keys, if present.
+		PrivateKey:          hashSecretString(cfg.PrivateKey),
+		IssuerPrivKey:       hashSecretString(cfg.IssuerPrivKey),
 	}
 }
 
