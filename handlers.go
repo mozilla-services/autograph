@@ -531,7 +531,8 @@ func (a *autographer) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 
 	requestedSigner, err := a.authBackend.getSignerForUser(headerAuthID, pathKeyID)
 	if err != nil {
-		httpError(w, r, http.StatusNotFound, "%v", err)
+		log.Infof("user authorization failed: %s", err)
+		httpError(w, r, http.StatusNotFound, "keyid %s was not found for user %s", pathKeyID, headerAuthID)
 		return
 	}
 

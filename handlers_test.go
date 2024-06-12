@@ -781,6 +781,7 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 func TestHandleGetConfig(t *testing.T) {
 	t.Parallel()
 
+	// A signer that alice can access
 	var autographDummyRsaConfig = signer.SanitizedConfig{
 		ID: "dummyrsa",
 		Type: "genericrsa",
@@ -791,6 +792,7 @@ func TestHandleGetConfig(t *testing.T) {
 	}
 	autographDummyRsaJSON, _ := json.Marshal(autographDummyRsaConfig)
 
+	// A signer that both alice and bob can access
 	var autographAppKey2Config = signer.SanitizedConfig{
 		ID: "appkey2",
 		Type: "contentsignature",
@@ -930,8 +932,7 @@ func TestHandleGetConfig(t *testing.T) {
 			nilBody:         true,
 			authorizeID:     "alice",
 			expectedStatus:  http.StatusNotFound,
-			// TODO: I do not like this response body
-			expectedBody:    "alice is not authorized to sign with key ID unknown\r\nrequest-id: -\n",
+			expectedBody:    "keyid unknown was not found for user alice\r\nrequest-id: -\n",
 			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
 		},
 		{
@@ -942,8 +943,7 @@ func TestHandleGetConfig(t *testing.T) {
 			nilBody:         true,
 			authorizeID:     "bob",
 			expectedStatus:  http.StatusNotFound,
-			// TODO: I do not like this response body
-			expectedBody:    "bob is not authorized to sign with key ID dummyrsa\r\nrequest-id: -\n",
+			expectedBody:    "keyid dummyrsa was not found for user bob\r\nrequest-id: -\n",
 			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
 		},
 		{
