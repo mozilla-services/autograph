@@ -24,13 +24,9 @@ while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"
   sleep 1 # wait before checking again
 done
 
-# fetch the updated root hash from the app-hsm service
-docker cp autograph-app-hsm:/tmp/normandy_dev_root_hash.txt .
-APP_HSM_NORMANDY_ROOT_HASH=$(grep '[0-9A-F]' normandy_dev_root_hash.txt | tr -d '\r\n')
-
 # start the monitor lambda emulators
 docker compose up -d monitor-lambda-emulator
-AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH docker compose up -d monitor-hsm-lambda-emulator
+docker compose up -d monitor-hsm-lambda-emulator
 
 echo "waiting for monitor-lambda-emulator to start"
 while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-lambda-emulator)"; do
@@ -43,7 +39,6 @@ while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-h
   sleep 1 # wait before checking again
 done
 
-echo "checking monitoring using hsm root hash:" "$APP_HSM_NORMANDY_ROOT_HASH"
 # exec in containers to workaround https://circleci.com/docs/2.0/building-docker-images/#accessing-services
 docker compose exec monitor-lambda-emulator "/usr/local/bin/test_monitor.sh"
 docker compose logs monitor-lambda-emulator

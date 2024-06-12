@@ -12,10 +12,13 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"hash"
 	"io"
 	"regexp"
 	"strings"
@@ -33,6 +36,9 @@ import (
 
 // IDFormat is a regex for the format IDs must follow
 const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
+
+// IDFormatRegexp is the compiled regex from IDFormat
+var IDFormatRegexp = regexp.MustCompile(IDFormat)
 
 // RSACacheConfig is a config for the RSAKeyCache
 type RSACacheConfig struct {
@@ -157,6 +163,92 @@ type Configuration struct {
 
 	isHsmAvailable bool
 	hsmCtx         *pkcs11.Ctx
+}
+
+// SanitizedConfig allows the export of public signer configuration
+type SanitizedConfig struct {
+	// These fields are copied verbatim from signer.Configuration
+	ID                  string        `json:"id" yaml:"id"`
+	Type                string        `json:"type" yaml:"type"`
+	Mode                string        `json:"mode" yaml:"mode"`
+	PublicKey           string        `json:"publickey,omitempty" yaml:"publickey,omitempty"`
+	IssuerCert          string        `json:"issuercert,omitempty" yaml:"issuercert,omitempty"`
+	Certificate         string        `json:"certificate,omitempty" yaml:"certificate,omitempty"`
+	X5U                 string        `json:"x5u,omitempty" yaml:"x5u,omitempty"`
+	KeyID               string        `json:"keyid,omitempty" yaml:"keyid,omitempty"`
+	SubdomainOverride   string        `json:"subdomain_override,omitempty" yaml:"subdomainoverride,omitempty"`
+	Validity            time.Duration `json:"validity,omitempty" yaml:"validity,omitempty"`
+	ClockSkewTolerance  time.Duration `json:"clock_skew_tolerance,omitempty" yaml:"clockskewtolerance,omitempty"`
+	ChainUploadLocation string        `json:"chain_upload_location,omitempty" yaml:"chainuploadlocation,omitempty"`
+	CaCert              string        `json:"cacert,omitempty" yaml:"cacert,omitempty"`
+	Hash                string        `json:"hash,omitempty" yaml:"hash,omitempty"`
+	SaltLength          int           `json:"saltlength,omitempty" yaml:"saltlength,omitempty"`
+
+	// Hash digests of the private keys.
+	PrivateKey    string `json:"privatekey,omitempty" yaml:"privatekey,omitempty"`
+	IssuerPrivKey string `json:"issuerprivkey,omitempty" yaml:"issuerprivkey,omitempty"`
+
+	// If a certificate is present, add fingerprints and expiration dates.
+	CertFingerprintSha1   string `json:"cert_sha1,omitempty" yaml:"cert_sha1,omitempty"`
+	CertFingerprintSha256 string `json:"cert_sha256,omitempty" yaml:"cert_sha256,omitempty"`
+	CertDateStart         string `json:"cert_date_start,omitempty" yaml:"cert_date_start,omitempty"`
+	CertDateEnd           string `json:"cert_date_end,omitempty" yaml:"cert_date_end,omitempty"`
+}
+
+func hashFingerprint(secret []byte, algorithm hash.Hash) string {
+	// Empty strings should stay empty
+	if len(secret) == 0 {
+		return ""
+	}
+
+	algorithm.Write(secret)
+	return fmt.Sprintf("%x", algorithm.Sum(nil))
+}
+
+// Sanitize configuration to make it suitable for public export
+func (cfg *Configuration) Sanitize() *SanitizedConfig {
+	result := &SanitizedConfig{
+		// Copy public values verbatim.
+		ID:                  cfg.ID,
+		Type:                cfg.Type,
+		Mode:                cfg.Mode,
+		PublicKey:           cfg.PublicKey,
+		IssuerCert:          cfg.IssuerCert,
+		Certificate:         cfg.Certificate,
+		X5U:                 cfg.X5U,
+		KeyID:               cfg.KeyID,
+		SubdomainOverride:   cfg.SubdomainOverride,
+		Validity:            cfg.Validity,
+		ClockSkewTolerance:  cfg.ClockSkewTolerance,
+		ChainUploadLocation: cfg.ChainUploadLocation,
+		CaCert:              cfg.CaCert,
+		Hash:                cfg.Hash,
+		SaltLength:          cfg.SaltLength,
+
+		// Hash private keys, if present.
+		PrivateKey:    hashFingerprint([]byte(cfg.PrivateKey), sha256.New()),
+		IssuerPrivKey: hashFingerprint([]byte(cfg.IssuerPrivKey), sha256.New()),
+	}
+
+	// If a certificate exists - parse it.
+	certDER, _ := pem.Decode([]byte(cfg.Certificate))
+	if certDER != nil && certDER.Type == "CERTIFICATE" {
+		certX509, err := x509.ParseCertificate(certDER.Bytes)
+		if err == nil {
+			result.CertFingerprintSha1 = hashFingerprint(certDER.Bytes, sha1.New())
+			result.CertFingerprintSha256 = hashFingerprint(certDER.Bytes, sha256.New())
+			start, err := certX509.NotBefore.MarshalText()
+			if err == nil {
+				result.CertDateStart = string(start)
+			}
+			end, err := certX509.NotAfter.MarshalText()
+			if err == nil {
+				result.CertDateEnd = string(end)
+			}
+		}
+	}
+
+	return result
 }
 
 // InitHSM indicates that an HSM has been initialized
