@@ -68,12 +68,12 @@ func urlToRequestType(url string) requestType {
 func main() {
 	var (
 		userid, pass, data, hash, url, infile, outfile, outkeyfile, outFilesPrefix, keyid, cn, pk7digest, rootPath, verificationTimeInput, listConfig string
-		iter, maxworkers, sa                                                                                                              int
-		debug, listKeyIDs, noVerify                                                                                                       bool
-		err                                                                                                                               error
-		requests                                                                                                                          []formats.SignatureRequest
-		algs                                                                                                                              coseAlgs
-		verificationTime                                                                                                                  time.Time
+		iter, maxworkers, sa                                                                                                                          int
+		debug, listKeyIDs, noVerify                                                                                                                   bool
+		err                                                                                                                                           error
+		requests                                                                                                                                      []formats.SignatureRequest
+		algs                                                                                                                                          coseAlgs
+		verificationTime                                                                                                                              time.Time
 	)
 	flag.Usage = func() {
 		fmt.Print("autograph-client - command line client to the autograph service\n\n")

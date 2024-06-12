@@ -35,6 +35,7 @@ import (
 // IDFormat is a regex for the format IDs must follow
 const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 
+// IDFormatRegexp is the compiled regex from IDFormat
 var IDFormatRegexp = regexp.MustCompile(IDFormat)
 
 // RSACacheConfig is a config for the RSAKeyCache
@@ -108,7 +109,7 @@ type Configuration struct {
 
 	// RecommendationConfig specifies config values for
 	// recommendations files for XPI signers
-	RecommendationConfig RecommendationConfig `json:"recommendation,omitempty" yaml:"recommendation,omitempty"`
+	RecommendationConfig RecommendationConfig `yaml:"recommendation,omitempty"`
 
 	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
 	// attributes and use a legacy PKCS7 digest
@@ -162,6 +163,7 @@ type Configuration struct {
 	hsmCtx         *pkcs11.Ctx
 }
 
+// SanitizedConfig allows the export of public signer configuration
 type SanitizedConfig struct {
 	// These fields are copied verbatim from signer.Configuration
 	ID                  string        `json:"id" yaml:"id"`
@@ -181,8 +183,8 @@ type SanitizedConfig struct {
 	SaltLength          int           `json:"saltlength,omitempty" yaml:"saltlength,omitempty"`
 
 	// Hash digests of the private keys.
-	PrivateKey          string        `json:"privatekey,omitempty" yaml:"privatekey,omitempty"`
-	IssuerPrivKey       string        `json:"issuerprivkey,omitempty" yaml:"issuerprivkey,omitempty"`
+	PrivateKey    string `json:"privatekey,omitempty" yaml:"privatekey,omitempty"`
+	IssuerPrivKey string `json:"issuerprivkey,omitempty" yaml:"issuerprivkey,omitempty"`
 
 	// TODO: To fully replace the config-sanitizer tool, we should also include
 	// fingerprints and expiration times of the certificate (if present).
@@ -199,7 +201,7 @@ func hashSecretString(secret string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-// Returns a copy of the configuration stripped of any private values.
+// Sanitize configuration to make it suitable for public export
 func (cfg *Configuration) Sanitize() *SanitizedConfig {
 	return &SanitizedConfig{
 		// Copy public values verbatim.
@@ -220,8 +222,8 @@ func (cfg *Configuration) Sanitize() *SanitizedConfig {
 		SaltLength:          cfg.SaltLength,
 
 		// Hash private keys, if present.
-		PrivateKey:          hashSecretString(cfg.PrivateKey),
-		IssuerPrivKey:       hashSecretString(cfg.IssuerPrivKey),
+		PrivateKey:    hashSecretString(cfg.PrivateKey),
+		IssuerPrivKey: hashSecretString(cfg.IssuerPrivKey),
 	}
 }
 

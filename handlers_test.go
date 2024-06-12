@@ -783,21 +783,21 @@ func TestHandleGetConfig(t *testing.T) {
 
 	// A signer that alice can access
 	var autographDummyRsaConfig = signer.SanitizedConfig{
-		ID: "dummyrsa",
-		Type: "genericrsa",
-		Mode: "pss",
-		PublicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4SlEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3yi62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PYyUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cRmwIDAQAB",
-		Hash: "sha256",
+		ID:         "dummyrsa",
+		Type:       "genericrsa",
+		Mode:       "pss",
+		PublicKey:  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE8XCK+ap/c5so87XngLLfacB3zZhGxIOut/4SlEBOAUmVNCfnTO+YkRk3A8OyJ4XNqdn+/ov78ZbssGf+0zws2BcwZYwhtuTvro3yi62FQ7T1TpT5VjljH7sHW/iZnS/RKiY4DwqAN799gkB+Gwovtroabh2w5OX0P+PYyUbJLFQeo5uiAQ8cAXTlHqCkj11GYgU4ttVDuFGotKRyaRn1F+yKxE4LQcAULx7s0KzvS35mNU+MoywLWjy9a4TcjK0nq+BjspKX4UkNwVstvH18hQWun7E+dxTi59cRmwIDAQAB",
+		Hash:       "sha256",
 		PrivateKey: "a4087b340c1770b70cf5192413c6d7d7dbfc0a9db09b167965f133d672412c75",
 	}
 	autographDummyRsaJSON, _ := json.Marshal(autographDummyRsaConfig)
 
 	// A signer that both alice and bob can access
 	var autographAppKey2Config = signer.SanitizedConfig{
-		ID: "appkey2",
-		Type: "contentsignature",
-		Mode: "p256ecdsa",
-		PublicKey: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==",
+		ID:         "appkey2",
+		Type:       "contentsignature",
+		Mode:       "p256ecdsa",
+		PublicKey:  "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==",
 		PrivateKey: "e41a1fb2466a1ba6c690ca6e3030c157745cfebe3c650f60c4c807ad781dd979",
 	}
 	autographAppKey2JSON, _ := json.Marshal(autographAppKey2Config)
