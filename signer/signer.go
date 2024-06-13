@@ -12,11 +12,13 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"hash"
 	"io"
 	"regexp"
 	"strings"
@@ -186,24 +188,26 @@ type SanitizedConfig struct {
 	PrivateKey    string `json:"privatekey,omitempty" yaml:"privatekey,omitempty"`
 	IssuerPrivKey string `json:"issuerprivkey,omitempty" yaml:"issuerprivkey,omitempty"`
 
-	// TODO: To fully replace the config-sanitizer tool, we should also include
-	// fingerprints and expiration times of the certificate (if present).
+	// If a certificate is present, add fingerprints and expiration dates.
+	CertFingerprintSha1   string `json:"cert_sha1,omitempty" yaml:"cert_sha1,omitempty"`
+	CertFingerprintSha256 string `json:"cert_sha256,omitempty" yaml:"cert_sha256,omitempty"`
+	CertDateStart         string `json:"cert_date_start,omitempty" yaml:"cert_date_start,omitempty"`
+	CertDateEnd           string `json:"cert_date_end,omitempty" yaml:"cert_date_end,omitempty"`
 }
 
-func hashSecretString(secret string) string {
+func hashFingerprint(secret []byte, algorithm hash.Hash) string {
 	// Empty strings should stay empty
-	if secret == "" {
+	if len(secret) == 0 {
 		return ""
 	}
 
-	h := sha256.New()
-	h.Write([]byte(secret))
-	return fmt.Sprintf("%x", h.Sum(nil))
+	algorithm.Write(secret)
+	return fmt.Sprintf("%x", algorithm.Sum(nil))
 }
 
 // Sanitize configuration to make it suitable for public export
 func (cfg *Configuration) Sanitize() *SanitizedConfig {
-	return &SanitizedConfig{
+	result := &SanitizedConfig{
 		// Copy public values verbatim.
 		ID:                  cfg.ID,
 		Type:                cfg.Type,
@@ -222,9 +226,29 @@ func (cfg *Configuration) Sanitize() *SanitizedConfig {
 		SaltLength:          cfg.SaltLength,
 
 		// Hash private keys, if present.
-		PrivateKey:    hashSecretString(cfg.PrivateKey),
-		IssuerPrivKey: hashSecretString(cfg.IssuerPrivKey),
+		PrivateKey:    hashFingerprint([]byte(cfg.PrivateKey), sha256.New()),
+		IssuerPrivKey: hashFingerprint([]byte(cfg.IssuerPrivKey), sha256.New()),
 	}
+
+	// If a certificate exists - parse it.
+	certDER, _ := pem.Decode([]byte(cfg.Certificate))
+	if certDER != nil && certDER.Type == "CERTIFICATE" {
+		certX509, err := x509.ParseCertificate(certDER.Bytes)
+		if err == nil {
+			result.CertFingerprintSha1 = hashFingerprint(certDER.Bytes, sha1.New())
+			result.CertFingerprintSha256 = hashFingerprint(certDER.Bytes, sha256.New())
+			start, err := certX509.NotBefore.MarshalText()
+			if err == nil {
+				result.CertDateStart = string(start)
+			}
+			end, err := certX509.NotAfter.MarshalText()
+			if err == nil {
+				result.CertDateEnd = string(end)
+			}
+		}
+	}
+
+	return result
 }
 
 // InitHSM indicates that an HSM has been initialized

@@ -385,7 +385,7 @@ Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="som
 
 ### Request
 
-Get the public configuration of a configured signer. For example:
+Get the sanitized configuration of a signer. For example:
 
 ```bash
 GET /config/dummyrsa
@@ -410,3 +410,12 @@ Authorization: Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="som
   "hash": "sha256"
 }
 ```
+
+The returned configuration should be a subset of the internal configuration with the following differences:
+ - Public values, such as the `id`, `publickey` and `certificate` are copied verbatim.
+ - Private keys are hashed, and return only the SHA256 checksum of the secret value.
+ - The `certificate`, if present is parsed and the following additional fields are added:
+   + `cert_sha1`: Contains the SHA1 fingerprint of the DER certificate.
+   + `cert_sha256`: Contains the SHA256 fingerprint of the DER certificate.
+   + `cert_start`: Contains the certificate `NotBefore` time in RFC 3339 format.
+   + `cert_end`: Contains the certificate `NotAfter` time in RFC 3339 format.
