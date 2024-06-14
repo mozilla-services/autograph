@@ -163,10 +163,10 @@ func TestSignaturePass(t *testing.T) {
 		for j, response := range responses {
 			switch response.Type {
 			case contentsignature.Type:
-				rawInput, err := base64.StdEncoding.DecodeString(testcase.signaturerequests[j].Input)
-				if err != nil {
+				rawInput, decodeErr := base64.StdEncoding.DecodeString(testcase.signaturerequests[j].Input)
+				if decodeErr != nil {
 					t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v failed to decode input",
-						i, testcase.endpoint, err, j, testcase.signaturerequests[j], response)
+						i, testcase.endpoint, decodeErr, j, testcase.signaturerequests[j], response)
 				}
 				err = contentsignature.VerifyResponseHash(rawInput, response)
 			case xpi.Type:
