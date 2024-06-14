@@ -67,7 +67,9 @@ services:
       - monitor-lambda-emulator
     depends_on:
       - monitor-lambda-emulator
-    command: [ "curl", "-XPOST", "http://monitor-lambda-emulator:8080/2015-03-31/functions/function/invocations", "-d{}" ]
+    volumes:
+      - apptmpdir:/tmp/
+    command: [ "./integration_test_monitor.sh", "http://monitor-lambda-emulator:8080" ]
 
   test-monitor-hsm:
     container_name: test-monitor-hsm
@@ -77,4 +79,6 @@ services:
       - monitor-hsm-lambda-emulator
     depends_on:
       - monitor-hsm-lambda-emulator
-    command: [ "curl", "-XPOST", "http://monitor-hsm-lambda-emulator:8080/2015-03-31/functions/function/invocations", "-d{}" ]
+    volumes:
+      - hsmtmpdir:/tmp/
+    command: [ "./integration_test_monitor.sh", "http://monitor-hsm-lambda-emulator:8080" ]

@@ -3,8 +3,15 @@
 set -e
 set -o pipefail
 
+MONITOR_ENDPOINT=${1:-"http://localhost:8080"}
+
 # invoke a test monitor run in a lambda monitor
-MONITOR_ERROR=$(curl -w '\n' -X POST 'http://localhost:8080/2015-03-31/functions/function/invocations' -d '{}')
+MONITOR_ERROR=$(curl --silent -w '\n' -X POST "${MONITOR_ENDPOINT}/2015-03-31/functions/function/invocations" -d '{}')
+
+# Dump the log file, if it exists
+if [ -f "/tmp/autograph-lambda-logs.txt" ]; then
+    cat /tmp/autograph-lambda-logs.txt
+fi
 
 # If the result was null - then we succeeded!
 if [ "${MONITOR_ERROR}" == "null" ]; then

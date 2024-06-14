@@ -3,6 +3,9 @@
 set -e
 set -o pipefail
 
+# Duplicate the console output to a file.
+exec &> >(tee /tmp/autograph-lambda-logs.txt)
+
 # Wait for the heartbeat
 HEARTBEAT=$(curl --silent \
                  --connect-timeout 5 \

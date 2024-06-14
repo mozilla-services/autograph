@@ -2,7 +2,6 @@ FROM autograph-app
 
 USER root
 
-RUN cp /app/src/autograph/bin/test_monitor.sh /usr/local/bin/test_monitor.sh
 RUN curl -Lo /usr/local/bin/aws-lambda-rie \
         https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie && \
     chmod +x /usr/local/bin/aws-lambda-rie
