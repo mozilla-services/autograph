@@ -169,8 +169,8 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 	return csig, nil
 }
 
-// VerifyResponse validates the ECDSA signature of a content signature response
-func VerifyResponse(input []byte, sr formats.SignatureResponse) error {
+// VerifyResponseHash validates the ECDSA signature of a content signature response to SignHash()
+func VerifyResponseHash(hash []byte, sr formats.SignatureResponse) error {
 	// parse the encoded ECDSA signature
 	sig, err := verifier.Unmarshal(sr.Signature)
 	if err != nil {
@@ -188,16 +188,21 @@ func VerifyResponse(input []byte, sr formats.SignatureResponse) error {
 	}
 	pubKey := keyInterface.(*ecdsa.PublicKey)
 
-	// make a templated hash of the input data.
-	// TODO: How can we tell if this is a result of SignHash() or SignData()
-	// as the hashing is different. For now assume SignData() was called.
-	_, hash := makeTemplatedHash(input, sr.Mode)
-
 	// Verify the signature
 	if !ecdsa.Verify(pubKey, hash, sig.R, sig.S) {
 		return fmt.Errorf("ecdsa signature verification failed")
 	}
 	return nil
+}
+
+// VerifyResponse validates the ECDSA signature of a content signature response to SignData()
+func VerifyResponse(input []byte, sr formats.SignatureResponse) error {
+	// make a templated hash of the input data.
+	// TODO: How can we tell if this is a result of SignHash() or SignData()
+	// as the hashing is different. It would be convenient if we could combine
+	// these two Verification methods.
+	_, hash := makeTemplatedHash(input, sr.Mode)
+	return VerifyResponseHash(hash, sr)
 }
 
 // getSignatureLen returns the size of an ECDSA signature issued by the signer,
