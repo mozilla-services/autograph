@@ -6,12 +6,15 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
+	"crypto/x509"
 	"encoding/asn1"
+	"encoding/base64"
 	"fmt"
 	"hash"
 	"io"
 	"math/big"
 
+	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer"
 	verifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
@@ -164,6 +167,37 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 	csig.S = ecdsaSig.S
 	csig.Finished = true
 	return csig, nil
+}
+
+// VerifyResponse validates the ECDSA signature of a content signature response
+func VerifyResponse(input []byte, sr formats.SignatureResponse) error {
+	// parse the encoded ECDSA signature
+	sig, err := verifier.Unmarshal(sr.Signature)
+	if err != nil {
+		return fmt.Errorf("error unmarshal content signature: %w", err)
+	}
+
+	// Parse the ECDSA public key
+	keyBytes, err := base64.StdEncoding.DecodeString(sr.PublicKey)
+	if err != nil {
+		return err
+	}
+	keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
+	if err != nil {
+		return err
+	}
+	pubKey := keyInterface.(*ecdsa.PublicKey)
+
+	// make a templated hash of the input data.
+	// TODO: How can we tell if this is a result of SignHash() or SignData()
+	// as the hashing is different. For now assume SignData() was called.
+	_, hash := makeTemplatedHash(input, sr.Mode)
+
+	// Verify the signature
+	if !ecdsa.Verify(pubKey, hash, sig.R, sig.S) {
+		return fmt.Errorf("ecdsa signature verification failed")
+	}
+	return nil
 }
 
 // getSignatureLen returns the size of an ECDSA signature issued by the signer,

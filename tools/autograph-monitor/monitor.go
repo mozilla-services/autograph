@@ -169,7 +169,12 @@ func monitor() (err error) {
 		switch response.Type {
 		case contentsignature.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
-			err = verifyContentSignature(x5uClient, conf.notifier, conf.contentSignatureRootHash, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
+			if response.X5U == "" {
+				// The X5U is optional for contentsignature signers.
+				err = contentsignature.VerifyResponse([]byte(inputdata), response)
+			} else {
+				err = verifyContentSignature(x5uClient, conf.notifier, conf.contentSignatureRootHash, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
+			}
 		case contentsignaturepki.Type:
 			log.Printf("Verifying content signature pki from signer %q", response.SignerID)
 			err = verifyContentSignature(x5uClient, conf.notifier, conf.contentSignatureRootHash, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
