@@ -11,9 +11,9 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
+	"os"
 	"time"
 
 	"github.com/ThalesIgnite/crypto11"
@@ -150,7 +150,7 @@ func main() {
 		log.Fatal(fmt.Errorf("failed to verify intermediate chain to root: %w"), err)
 	}
 
-	rootTmpfile, err := ioutil.TempFile("", "csrootcert")
+	rootTmpfile, err := os.CreateTemp("", "csrootcert")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -161,7 +161,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	interTmpfile, err := ioutil.TempFile("", "csintercert")
+	interTmpfile, err := os.CreateTemp("", "csintercert")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -185,7 +185,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		rootPrivTmpfile, err := ioutil.TempFile("", "csrootkey")
+		rootPrivTmpfile, err := os.CreateTemp("", "csrootkey")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -206,7 +206,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		interPrivTmpfile, err := ioutil.TempFile("", "csinterkey")
+		interPrivTmpfile, err := os.CreateTemp("", "csinterkey")
 		if err != nil {
 			log.Fatal(err)
 		}

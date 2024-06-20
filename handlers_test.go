@@ -16,7 +16,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -836,7 +836,7 @@ func verifyAPKSignature(signedAPK []byte) error {
 			if err != nil {
 				return err
 			}
-			sigdata, err = ioutil.ReadAll(rc)
+			sigdata, err = io.ReadAll(rc)
 			if err != nil {
 				return err
 			}
@@ -849,7 +849,7 @@ func verifyAPKSignature(signedAPK []byte) error {
 			if err != nil {
 				return err
 			}
-			rawsig, err := ioutil.ReadAll(rc)
+			rawsig, err := io.ReadAll(rc)
 			if err != nil {
 				return err
 			}

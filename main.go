@@ -12,7 +12,6 @@ import (
 	"crypto/sha256"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -254,7 +253,7 @@ func (c *configuration) loadFromFile(path string) error {
 		confSHA        [32]byte
 		err            error
 	)
-	data, err = ioutil.ReadFile(path)
+	data, err = os.ReadFile(path)
 	if err != nil {
 		return err
 	}

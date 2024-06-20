@@ -8,7 +8,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -197,7 +196,7 @@ authorizations:
 	for i, testcase := range testcases {
 		var conf configuration
 		// write conf file to /tmp and read it back
-		fd, err := ioutil.TempFile("", "autographtestconf")
+		fd, err := os.CreateTemp("", "autographtestconf")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -228,7 +227,7 @@ func TestDuplicateSigners(t *testing.T) {
 
 	var conf configuration
 	// write conf file to /tmp and read it back
-	fd, err := ioutil.TempFile("", "autographtestconf")
+	fd, err := os.CreateTemp("", "autographtestconf")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,7 +282,7 @@ func TestDuplicateAuthorization(t *testing.T) {
 
 	var conf configuration
 	// write conf file to /tmp and read it back
-	fd, err := ioutil.TempFile("", "autographtestconf")
+	fd, err := os.CreateTemp("", "autographtestconf")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -353,7 +352,7 @@ func TestUnknownSignerInAuthorization(t *testing.T) {
 
 	var conf configuration
 	// write conf file to /tmp and read it back
-	fd, err := ioutil.TempFile("", "autographtestconf")
+	fd, err := os.CreateTemp("", "autographtestconf")
 	if err != nil {
 		t.Fatal(err)
 	}

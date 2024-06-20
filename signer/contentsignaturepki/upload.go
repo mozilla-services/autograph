@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -63,7 +63,7 @@ func writeLocalFile(data, name string, target *url.URL) error {
 		}
 	}
 	// write the file into the target dir
-	return ioutil.WriteFile(target.Path+name, []byte(data), 0755)
+	return os.WriteFile(target.Path+name, []byte(data), 0755)
 }
 
 // buildHTTPClient returns the default HTTP.Client for fetching X5Us
@@ -95,7 +95,7 @@ func GetX5U(client *http.Client, x5u string) (body []byte, certs []*x509.Certifi
 		err = fmt.Errorf("failed to retrieve x5u from %s: %s", x5u, resp.Status)
 		return
 	}
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		err = fmt.Errorf("failed to parse x5u body: %w", err)
 		return

@@ -1,12 +1,12 @@
 package apk2
 
 import (
-	"github.com/mozilla-services/autograph/signer"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/mozilla-services/autograph/signer"
 )
 
 func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *APK2Signer {
@@ -177,12 +177,12 @@ func TestSignFile(t *testing.T) {
 		t.Parallel()
 
 		// write the signature to a temp file
-		tmpApk, err := ioutil.TempFile("", "apk2_TestSignedApkFile")
+		tmpApk, err := os.CreateTemp("", "apk2_TestSignedApkFile")
 		if err != nil {
 			t.Fatal(err)
 		}
 		defer os.Remove(tmpApk.Name())
-		err = ioutil.WriteFile(tmpApk.Name(), signedFile, 0755)
+		err = os.WriteFile(tmpApk.Name(), signedFile, 0755)
 		if err != nil {
 			t.Fatalf("error writing file %s: %q", tmpApk.Name(), err)
 		}

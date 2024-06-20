@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -158,13 +157,13 @@ func createKeyRing(s *GPG2Signer) (dir string, err error) {
 	// reuse keyring in tempdir
 	prefix := fmt.Sprintf("autograph_%s_%s_%s_", s.Type, s.KeyID, s.Mode)
 
-	dir, err = ioutil.TempDir("", prefix)
+	dir, err = os.MkdirTemp("", prefix)
 	if err != nil {
 		return "", fmt.Errorf("gpg2: error creating tempdir for keyring: %w", err)
 	}
 
 	// write the public key to a temp file in our signer's temp dir
-	tmpPublicKeyFile, err := ioutil.TempFile(dir, "gpg2_publickey")
+	tmpPublicKeyFile, err := os.CreateTemp(dir, "gpg2_publickey")
 	if err != nil {
 		err = fmt.Errorf("gpg2: error creating tempfile for public key: %w", err)
 		return "", err
@@ -177,14 +176,14 @@ func createKeyRing(s *GPG2Signer) (dir string, err error) {
 		}
 	}()
 
-	err = ioutil.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
+	err = os.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
 	if err != nil {
 		err = fmt.Errorf("gpg2: error writing public key to tempfile: %w", err)
 		return "", err
 	}
 
 	// write the private key to a temp file in our signer's temp dir
-	tmpPrivateKeyFile, err := ioutil.TempFile(dir, "gpg2_privatekey")
+	tmpPrivateKeyFile, err := os.CreateTemp(dir, "gpg2_privatekey")
 	if err != nil {
 		err = fmt.Errorf("gpg2: error creating tempfile for private key: %w", err)
 		return "", err
@@ -196,7 +195,7 @@ func createKeyRing(s *GPG2Signer) (dir string, err error) {
 			err = fmt.Errorf("gpg2: error removing temp private key file %q %w", tmpPrivateKeyFile.Name(), cleanErr)
 		}
 	}()
-	err = ioutil.WriteFile(tmpPrivateKeyFile.Name(), []byte(s.PrivateKey), 0755)
+	err = os.WriteFile(tmpPrivateKeyFile.Name(), []byte(s.PrivateKey), 0755)
 	if err != nil {
 		err = fmt.Errorf("gpg2: error writing private key to tempfile: %w", err)
 		return "", err
@@ -253,7 +252,7 @@ func writeGPGConf(gpgHomeDir string) error {
 	gpgConfPath := filepath.Join(gpgHomeDir, gpgConfFilename)
 	gpgConfContents := fmt.Sprintf("%s\nkeyring %s\nhomedir %s\n", gpgConfContentsHead, keyRingPath, gpgHomeDir)
 
-	err := ioutil.WriteFile(gpgConfPath, []byte(gpgConfContents), 0600)
+	err := os.WriteFile(gpgConfPath, []byte(gpgConfContents), 0600)
 	if err != nil {
 		return err
 	}
@@ -290,7 +289,7 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	keyRingPath := filepath.Join(s.tmpDir, keyRingFilename)
 
 	// write the input to a temp file
-	tmpContentFile, err := ioutil.TempFile(s.tmpDir, fmt.Sprintf("gpg2_%s_input", s.ID))
+	tmpContentFile, err := os.CreateTemp(s.tmpDir, fmt.Sprintf("gpg2_%s_input", s.ID))
 	if err != nil {
 		return nil, fmt.Errorf("gpg2: failed to create tempfile for input to sign: %w", err)
 	}
@@ -299,7 +298,7 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 			log.Warnf("gpg2: error removing content file %q: %q", tmpContentFile.Name(), err)
 		}
 	}()
-	err = ioutil.WriteFile(tmpContentFile.Name(), data, 0755)
+	err = os.WriteFile(tmpContentFile.Name(), data, 0755)
 	if err != nil {
 		return nil, fmt.Errorf("gpg2: failed to write tempfile for input to sign: %w", err)
 	}
@@ -384,7 +383,7 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 	}
 
 	// create a tmp dir outside the signer GPG home
-	inputsTmpDir, err := ioutil.TempDir("", fmt.Sprintf("autograph_%s_%s_%s_sign_files", s.Type, s.KeyID, s.Mode))
+	inputsTmpDir, err := os.MkdirTemp("", fmt.Sprintf("autograph_%s_%s_%s_sign_files", s.Type, s.KeyID, s.Mode))
 	if err != nil {
 		err = fmt.Errorf("gpg2: error creating tempdir for debsign: %w", err)
 		return
@@ -403,7 +402,7 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 			return nil, fmt.Errorf("gpg2: cannot sign file %d. Files missing extension .buildinfo, .dsc, or .changes", i)
 		}
 		inputFilePath := filepath.Join(inputsTmpDir, input.Name)
-		err := ioutil.WriteFile(inputFilePath, input.Bytes, 0644)
+		err := os.WriteFile(inputFilePath, input.Bytes, 0644)
 		if err != nil {
 			return nil, fmt.Errorf("gpg2: failed to write tempfile %d for debsign to sign: %w", i, err)
 		}
@@ -449,7 +448,7 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 
 	// read the signed tempfiles
 	for i, inputFilePath := range inputFilePaths {
-		signedFileBytes, err := ioutil.ReadFile(inputFilePath)
+		signedFileBytes, err := os.ReadFile(inputFilePath)
 		if err != nil {
 			return nil, fmt.Errorf("gpg2: failed to read %d %q signed by debsign: %w", i, inputFilePath, err)
 		}
