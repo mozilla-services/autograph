@@ -1,9 +1,9 @@
 ARG GO_VERSION=1.19
 
 #------------------------------------------------------------------------------
-# Build Stage
+# Base Debian Image
 #------------------------------------------------------------------------------
-FROM debian:bookworm as builder
+FROM debian:bookworm as base
 ARG GO_VERSION
 
 ENV DEBIAN_FRONTEND='noninteractive' \
@@ -16,13 +16,27 @@ RUN echo "deb-src http://deb.debian.org/debian/ bookworm-backports main" >> /etc
 
 RUN apt-get update && \
     apt-get -y upgrade && \
-    apt-get -y install \
+    apt-get -y install --no-install-recommends \
         libltdl-dev \
-        gpg libncurses5 \
+        gpg \
+        libncurses5 \
         devscripts \
         apksigner \
         golang-${GO_VERSION} \
-        build-essential
+        gcc \
+        g++ \
+        libc6-dev \
+        pkg-config \
+        curl \
+        jq
+
+# Cleanup after package installation
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+#------------------------------------------------------------------------------
+# Build Stage
+#------------------------------------------------------------------------------
+FROM base as builder
 
 ADD . /app/src/autograph
 
@@ -33,35 +47,8 @@ RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograp
 #------------------------------------------------------------------------------
 # Deployment Stage
 #------------------------------------------------------------------------------
-FROM debian:bookworm
-ARG GO_VERSION
+FROM base
 EXPOSE 8000
-
-ENV DEBIAN_FRONTEND='noninteractive' \
-    PATH="${PATH}:/usr/lib/go-${GO_VERSION}/bin:/go/bin" \
-    GOPATH='/go'
-
-## Enable bookworm-backports
-RUN echo "deb http://deb.debian.org/debian/ bookworm-backports main" > /etc/apt/sources.list.d/bookworm-backports.list
-RUN echo "deb-src http://deb.debian.org/debian/ bookworm-backports main" >> /etc/apt/sources.list.d/bookworm-backports.list
-
-# Install required packages
-RUN apt-get update && \
-    apt-get -y upgrade && \
-    apt-get -y install --no-install-recommends \
-        libltdl-dev \
-        gpg \
-        libncurses5 \
-        devscripts \
-        apksigner \
-        golang-${GO_VERSION} \
-        build-essential \
-        curl \
-        jq
-
-# Cleanup after package installation
-RUN apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
 # fetch the RDS CA bundles
 # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificatesAllRegions
@@ -80,3 +67,4 @@ RUN useradd --uid 10001 --home-dir /app --shell /sbin/nologin app
 USER app
 WORKDIR /app
 CMD /go/bin/autograph
+
