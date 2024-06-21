@@ -117,4 +117,4 @@ jobs:
 
       - name: Running ${{ matrix.testcase }}
         shell: bash
-        run: docker compose run ${{ matrix.testcase }}
+        run: docker compose -f tools/autograph-client/integration-tests.yml run ${{ matrix.testcase }}
