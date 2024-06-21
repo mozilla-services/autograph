@@ -3,7 +3,6 @@ package apk2
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 
 	"crypto/ecdsa"
 	"crypto/sha256"
@@ -111,22 +110,22 @@ func (s *APK2Signer) Config() signer.Configuration {
 
 // SignFile signs a whole aligned APK file with v1 and v2 signatures
 func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFile, error) {
-	keyPath, err := ioutil.TempFile("", fmt.Sprintf("apk2_%s.key", s.ID))
+	keyPath, err := os.CreateTemp("", fmt.Sprintf("apk2_%s.key", s.ID))
 	if err != nil {
 		return nil, fmt.Errorf("apk2: failed to create tempfile with private key: %w", err)
 	}
 	defer os.Remove(keyPath.Name())
-	err = ioutil.WriteFile(keyPath.Name(), []byte(s.pkcs8Key), 0400)
+	err = os.WriteFile(keyPath.Name(), []byte(s.pkcs8Key), 0400)
 	if err != nil {
 		return nil, fmt.Errorf("apk2: failed to write private key to tempfile: %w", err)
 	}
 
-	certPath, err := ioutil.TempFile("", fmt.Sprintf("apk2_%s.cert", s.ID))
+	certPath, err := os.CreateTemp("", fmt.Sprintf("apk2_%s.cert", s.ID))
 	if err != nil {
 		return nil, fmt.Errorf("apk2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer os.Remove(certPath.Name())
-	err = ioutil.WriteFile(certPath.Name(), []byte(s.Certificate), 0400)
+	err = os.WriteFile(certPath.Name(), []byte(s.Certificate), 0400)
 	if err != nil {
 		return nil, fmt.Errorf("apk2: failed to write public cert to tempfile: %w", err)
 	}
@@ -134,12 +133,12 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	// write the input to a temp file
 	h := sha256.New()
 	h.Write(file)
-	tmpAPKFile, err := ioutil.TempFile("", fmt.Sprintf("apk2_input_%x.apk", h.Sum(nil)))
+	tmpAPKFile, err := os.CreateTemp("", fmt.Sprintf("apk2_input_%x.apk", h.Sum(nil)))
 	if err != nil {
 		return nil, fmt.Errorf("apk2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer os.Remove(tmpAPKFile.Name())
-	err = ioutil.WriteFile(tmpAPKFile.Name(), file, 0755)
+	err = os.WriteFile(tmpAPKFile.Name(), file, 0755)
 	if err != nil {
 		return nil, fmt.Errorf("apk2: failed to write tempfile for input to sign: %w", err)
 	}
@@ -169,7 +168,7 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	}
 	log.Debugf("signed as:\n%s\n", string(out))
 
-	signedApk, err := ioutil.ReadFile(tmpAPKFile.Name())
+	signedApk, err := os.ReadFile(tmpAPKFile.Name())
 	if err != nil {
 		return nil, fmt.Errorf("apk2: failed to read signed file: %w", err)
 	}

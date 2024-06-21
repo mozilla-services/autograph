@@ -9,11 +9,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	"io"
-	"io/ioutil"
 	"strings"
 	"unicode/utf8"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // consts and vars for formatFilename
@@ -138,7 +138,7 @@ func makeJARManifest(input []byte) (manifest []byte, err error) {
 		if err != nil {
 			return manifest, err
 		}
-		data, err := ioutil.ReadAll(rc)
+		data, err := io.ReadAll(rc)
 		if err != nil {
 			return manifest, err
 		}
@@ -239,7 +239,7 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 		if err != nil {
 			return
 		}
-		data, err = ioutil.ReadAll(rc)
+		data, err = io.ReadAll(rc)
 		if err != nil {
 			return
 		}
@@ -365,7 +365,7 @@ func appendFileToZIP(input []byte, filepath string, filecontents []byte) (output
 		if err != nil {
 			return
 		}
-		data, err = ioutil.ReadAll(rc)
+		data, err = io.ReadAll(rc)
 		if err != nil {
 			return
 		}
@@ -437,7 +437,7 @@ func removeFileFromZIP(input []byte, filepath string) (output []byte, err error)
 		if err != nil {
 			return
 		}
-		data, err = ioutil.ReadAll(rc)
+		data, err = io.ReadAll(rc)
 		if err != nil {
 			return
 		}
@@ -471,7 +471,7 @@ func readFileFromZIP(signedXPI []byte, filename string) ([]byte, error) {
 				return nil, fmt.Errorf("error opening file %q in ZIP: %w", filename, err)
 			}
 			defer rc.Close()
-			data, err := ioutil.ReadAll(rc)
+			data, err := io.ReadAll(rc)
 			if err != nil {
 				return nil, fmt.Errorf("error reading file %q in ZIP: %w", filename, err)
 			}
@@ -502,7 +502,7 @@ func readXPIContentsToMap(signedXPI []byte) (map[string][]byte, error) {
 			return nil, fmt.Errorf("error opening file %q in ZIP: %w", f.Name, err)
 		}
 		defer rc.Close()
-		data, err := ioutil.ReadAll(rc)
+		data, err := io.ReadAll(rc)
 		if err != nil {
 			return nil, fmt.Errorf("error reading file %q in ZIP: %w", f.Name, err)
 		}

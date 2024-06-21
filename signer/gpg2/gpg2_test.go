@@ -4,7 +4,6 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -81,7 +80,7 @@ func assertNewSignerWithConfErrs(t *testing.T, invalidConf signer.Configuration)
 // writes and imports the signer's public key in a new GPG keyring
 // then writes and verifies each clear signed file
 func assertClearSignedFilesVerify(t *testing.T, signer *GPG2Signer, testname string, signedFiles []signer.NamedSignedFile) {
-	tmpDir, err := ioutil.TempDir("", fmt.Sprintf("autograph_gpg2_test_%s_", testname))
+	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("autograph_gpg2_test_%s_", testname))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +88,7 @@ func assertClearSignedFilesVerify(t *testing.T, signer *GPG2Signer, testname str
 
 	// write the public key to a file
 	publicKeyPath := filepath.Join(tmpDir, "gpg2_publickey")
-	err = ioutil.WriteFile(publicKeyPath, []byte(signer.PublicKey), 0755)
+	err = os.WriteFile(publicKeyPath, []byte(signer.PublicKey), 0755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +110,7 @@ func assertClearSignedFilesVerify(t *testing.T, signer *GPG2Signer, testname str
 	// gpg --verify considers more than one signed file a detached sig
 	for _, signedFile := range signedFiles {
 		signedFilePath := filepath.Join(tmpDir, signedFile.Name)
-		err = ioutil.WriteFile(signedFilePath, signedFile.Bytes, 0755)
+		err = os.WriteFile(signedFilePath, signedFile.Bytes, 0755)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -323,36 +322,36 @@ func TestSignData(t *testing.T) {
 				t.Parallel()
 
 				// write the signature to a temp file
-				tmpSignatureFile, err := ioutil.TempFile("", fmt.Sprintf("gpg2_TestSignPGPAndVerifyWithGnuPG_signature_%s_", s.ID))
+				tmpSignatureFile, err := os.CreateTemp("", fmt.Sprintf("gpg2_TestSignPGPAndVerifyWithGnuPG_signature_%s_", s.ID))
 				if err != nil {
 					t.Fatal(err)
 				}
 				defer os.Remove(tmpSignatureFile.Name())
-				err = ioutil.WriteFile(tmpSignatureFile.Name(), []byte(sigstr), 0755)
+				err = os.WriteFile(tmpSignatureFile.Name(), []byte(sigstr), 0755)
 				if err != nil {
 					t.Fatalf("error writing file %s: %q", tmpSignatureFile.Name(), err)
 				}
 
 				// write the input to a temp file
-				tmpContentFile, err := ioutil.TempFile("", fmt.Sprintf("gpg2_TestSignPGPAndVerifyWithGnuPG_input_%s_", s.ID))
+				tmpContentFile, err := os.CreateTemp("", fmt.Sprintf("gpg2_TestSignPGPAndVerifyWithGnuPG_input_%s_", s.ID))
 				if err != nil {
 					t.Fatal(err)
 				}
 
 				defer os.Remove(tmpContentFile.Name())
-				err = ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
+				err = os.WriteFile(tmpContentFile.Name(), input, 0755)
 				if err != nil {
 					t.Fatal(err)
 				}
 
 				// write the public key to a temp file
-				tmpPublicKeyFile, err := ioutil.TempFile("", fmt.Sprintf("gpg2_TestSignPGPAndVerifyWithGnuPG_publickey_%s_", s.ID))
+				tmpPublicKeyFile, err := os.CreateTemp("", fmt.Sprintf("gpg2_TestSignPGPAndVerifyWithGnuPG_publickey_%s_", s.ID))
 				if err != nil {
 					t.Fatal(err)
 				}
 				defer os.Remove(tmpPublicKeyFile.Name())
 				// fmt.Printf("loading %s\n", s.PublicKey)
-				err = ioutil.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
+				err = os.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
 				if err != nil {
 					t.Fatal(err)
 				}

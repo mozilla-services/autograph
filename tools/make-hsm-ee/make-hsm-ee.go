@@ -9,9 +9,9 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
+	"os"
 	"time"
 
 	"github.com/ThalesIgnite/crypto11"
@@ -52,7 +52,7 @@ func main() {
 		usage()
 	}
 
-	issuerCertBytes, err := ioutil.ReadFile(issuerCertPath)
+	issuerCertBytes, err := os.ReadFile(issuerCertPath)
 	if err != nil {
 		log.Fatalf("error reading issuer cert: %s", err.Error())
 	}
@@ -124,7 +124,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ioutil.WriteFile(outputBasename+".crt", eePem.Bytes(), 0644)
+	err = os.WriteFile(outputBasename+".crt", eePem.Bytes(), 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func main() {
 		log.Fatal(err)
 	}
 	msgBody := fmt.Sprintf("%s%s\n", secp384r1ECParams, eePrivPem.Bytes())
-	err = ioutil.WriteFile(outputBasename+".key", []byte(msgBody), 0644)
+	err = os.WriteFile(outputBasename+".key", []byte(msgBody), 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
