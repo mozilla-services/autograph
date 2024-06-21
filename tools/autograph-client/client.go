@@ -10,7 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"hash"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -192,7 +192,7 @@ examples:
 	} else if infile != "/path/to/file" {
 		log.Printf("signing file %q", infile)
 		url = url + "/sign/file"
-		filebytes, err := ioutil.ReadFile(infile)
+		filebytes, err := os.ReadFile(infile)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -201,7 +201,7 @@ examples:
 		log.Printf("signing files %q", flag.Args())
 		url = url + "/sign/files"
 		for _, inputFilename := range flag.Args() {
-			inputFileBytes, err := ioutil.ReadFile(inputFilename)
+			inputFileBytes, err := os.ReadFile(inputFilename)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -250,7 +250,7 @@ examples:
 	var roots *x509.CertPool
 	if rootPath != "/path/to/root.pem" {
 		roots = x509.NewCertPool()
-		rootContent, err := ioutil.ReadFile(rootPath)
+		rootContent, err := os.ReadFile(rootPath)
 		if err != nil {
 			log.Fatalf("failed to read roots from path %s: %s", rootPath, err)
 		}
@@ -290,7 +290,7 @@ examples:
 				fmt.Printf("DEBUG: received response\nDEBUG: %+v\n", resp)
 			}
 			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -407,14 +407,14 @@ examples:
 					}
 				}
 				if outfile != "" {
-					err = ioutil.WriteFile(outfile, sigData, 0644)
+					err = os.WriteFile(outfile, sigData, 0644)
 					if err != nil {
 						log.Fatal(err)
 					}
 					log.Println("response written to", outfile)
 				}
 				if outkeyfile != "" {
-					err = ioutil.WriteFile(outkeyfile, []byte(response.PublicKey), 0644)
+					err = os.WriteFile(outkeyfile, []byte(response.PublicKey), 0644)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -426,7 +426,7 @@ examples:
 					if err != nil {
 						log.Fatal(err)
 					}
-					err = ioutil.WriteFile(signedOutputFilename, signedFileBytes, 0644)
+					err = os.WriteFile(signedOutputFilename, signedFileBytes, 0644)
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -475,7 +475,7 @@ func listKeyIDsForCurrentUser(cli *http.Client, debug bool, url, userid, pass st
 		fmt.Printf("DEBUG: received response\nDEBUG: %+v\n", resp)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}

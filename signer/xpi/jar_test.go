@@ -4,7 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	_ "embed"
-	"io/ioutil"
+	"io"
 	"testing"
 )
 
@@ -147,7 +147,7 @@ func TestRepack(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer rc.Close()
-		data, err := ioutil.ReadAll(rc)
+		data, err := io.ReadAll(rc)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -211,7 +211,7 @@ func TestRepackEmptyCOSE(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer rc.Close()
-		data, err := ioutil.ReadAll(rc)
+		data, err := io.ReadAll(rc)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -9,7 +9,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -30,7 +29,7 @@ func httpError(w http.ResponseWriter, r *http.Request, errorCode int, errorMessa
 	// request body is read before writing a response.
 	// https://github.com/golang/go/issues/15789
 	if r.Body != nil {
-		io.Copy(ioutil.Discard, r.Body)
+		io.Copy(io.Discard, r.Body)
 		r.Body.Close()
 	}
 	http.Error(w, msg, errorCode)

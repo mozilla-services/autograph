@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -183,27 +182,27 @@ func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 	pkcs7Sig := sig.(*Signature).String()
 
 	// write the signature to a temp file
-	tmpSignatureFile, err := ioutil.TempFile("", "TestSignDataAndVerifyWithOpenSSL_signature")
+	tmpSignatureFile, err := os.CreateTemp("", "TestSignDataAndVerifyWithOpenSSL_signature")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(tmpSignatureFile.Name(), []byte(pkcs7Sig), 0755)
+	err = os.WriteFile(tmpSignatureFile.Name(), []byte(pkcs7Sig), 0755)
 	if err != nil {
 		t.Fatalf("error writing file %s: %q", tmpSignatureFile.Name(), err)
 	}
 
 	// write the input to a temp file
-	tmpContentFile, err := ioutil.TempFile("", "TestSignDataAndVerifyWithOpenSSL_input")
+	tmpContentFile, err := os.CreateTemp("", "TestSignDataAndVerifyWithOpenSSL_input")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ioutil.WriteFile(tmpContentFile.Name(), input, 0755)
+	err = os.WriteFile(tmpContentFile.Name(), input, 0755)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// write the issuer cert to a temp file
-	tmpIssuerCertFile, err := ioutil.TempFile("", "TestSignDataAndVerifyWithOpenSSL_issuer")
+	tmpIssuerCertFile, err := os.CreateTemp("", "TestSignDataAndVerifyWithOpenSSL_issuer")
 	if err != nil {
 		t.Fatal(err)
 	}
