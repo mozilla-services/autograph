@@ -583,7 +583,7 @@ wNuvFqc=
 // NB: these certs do no exactly match the result of parsing
 // ExpiredEndEntityChain
 var ExpiredEndEntityChainCerts = []*x509.Certificate{
-	&x509.Certificate{
+	{
 		Subject: pkix.Name{
 			CommonName:         "normandy.content-signature.mozilla.org",
 			Organization:       []string{"Mozilla Corporation"},
@@ -598,7 +598,7 @@ var ExpiredEndEntityChainCerts = []*x509.Certificate{
 		DNSNames:  []string{"normandy.content-signature.mozilla.org"},
 		KeyUsage:  x509.KeyUsageDigitalSignature,
 	},
-	&x509.Certificate{
+	{
 		Subject: pkix.Name{
 			CommonName:         "Content Signing Intermediate",
 			Organization:       []string{"Mozilla Corporation"},
@@ -614,7 +614,7 @@ var ExpiredEndEntityChainCerts = []*x509.Certificate{
 		KeyUsage:            x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 		PermittedDNSDomains: []string{".content-signature.mozilla.org", "content-signature.mozilla.org"},
 	},
-	&x509.Certificate{
+	{
 		Subject: pkix.Name{
 			CommonName:         "root-ca-production-amo",
 			Organization:       []string{"Mozilla Corporation"},
@@ -734,7 +734,7 @@ wNuvFqc=
 // NB: these certs do no exactly match the result of parsing
 // WronglyOrderedChain
 var WronglyOrderedChainCerts = []*x509.Certificate{
-	&x509.Certificate{
+	{
 		Subject: pkix.Name{
 			CommonName:         "Content Signing Intermediate/emailAddress=foxsec@mozilla.com",
 			Organization:       []string{"Mozilla Corporation"},
@@ -750,7 +750,7 @@ var WronglyOrderedChainCerts = []*x509.Certificate{
 		KeyUsage:            x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 		PermittedDNSDomains: []string{".content-signature.mozilla.org", "content-signature.mozilla.org"},
 	},
-	&x509.Certificate{
+	{
 		Subject: pkix.Name{
 			CommonName:         "normandy.content-signature.mozilla.org",
 			Organization:       []string{"Mozilla Corporation"},
@@ -765,7 +765,7 @@ var WronglyOrderedChainCerts = []*x509.Certificate{
 		DNSNames:  []string{"normandy.content-signature.mozilla.org"},
 		KeyUsage:  x509.KeyUsageDigitalSignature,
 	},
-	&x509.Certificate{
+	{
 		Subject: pkix.Name{
 			CommonName:         "root-ca-production-amo",
 			Organization:       []string{"Mozilla Corporation"},
@@ -911,7 +911,7 @@ Gbste+8S5QCMhh00g5vR9QF8EaFqdxCdSxrsA4GmpCa5UQl8jtCnpp2DLKXuOh72
 // NB: these certs do no exactly match the result of parsing
 // NormandyDevChain2021
 var NormandyDevChain2021Certs = []*x509.Certificate{
-	&x509.Certificate{
+	{
 		Subject: pkix.Name{
 			CommonName:         "normandy.content-signature.mozilla.org",
 			Organization:       []string{"Mozilla Corporation"},
@@ -926,7 +926,7 @@ var NormandyDevChain2021Certs = []*x509.Certificate{
 		DNSNames:  []string{"normandy.content-signature.mozilla.org"},
 		KeyUsage:  x509.KeyUsageDigitalSignature,
 	},
-	&x509.Certificate{
+	{
 		Subject: pkix.Name{
 			CommonName:         "Devzilla Signing Services Intermediate 1",
 			Organization:       []string{"Allizom"},
@@ -941,7 +941,7 @@ var NormandyDevChain2021Certs = []*x509.Certificate{
 		IsCA:      true,
 		DNSNames:  nil,
 	},
-	&x509.Certificate{
+	{
 		Subject: pkix.Name{
 			CommonName:         "dev.content-signature.root.ca",
 			Organization:       []string{"Content Signature Dev Signing"},
@@ -1002,10 +1002,10 @@ func Test_ParseChain(t *testing.T) {
 			wantErrStr: []string{"failed to PEM decode EE/leaf certificate from chain"},
 		},
 		{
-			name:       "EE bad PEM content fails",
-			chain:      []byte(badPEMContent),
-			wantCerts:  []*x509.Certificate{},
-			wantErr:    true,
+			name:      "EE bad PEM content fails",
+			chain:     []byte(badPEMContent),
+			wantCerts: []*x509.Certificate{},
+			wantErr:   true,
 			wantErrStr: []string{
 				"error parsing EE/leaf certificate from chain: asn1: structure error: tags don't match",
 				"error parsing EE/leaf certificate from chain: x509: malformed tbs certificate",
@@ -1019,10 +1019,10 @@ func Test_ParseChain(t *testing.T) {
 			wantErrStr: []string{"failed to PEM decode intermediate certificate from chain"},
 		},
 		{
-			name:       "inter bad PEM content fails",
-			chain:      []byte(firefoxPkiStageRoot + "\n" + badPEMContent),
-			wantCerts:  []*x509.Certificate{},
-			wantErr:    true,
+			name:      "inter bad PEM content fails",
+			chain:     []byte(firefoxPkiStageRoot + "\n" + badPEMContent),
+			wantCerts: []*x509.Certificate{},
+			wantErr:   true,
 			wantErrStr: []string{
 				"failed to parse intermediate certificate from chain: asn1: structure error: tags don't match",
 				"failed to parse intermediate certificate from chain: x509: malformed tbs certificate",
@@ -1036,10 +1036,10 @@ func Test_ParseChain(t *testing.T) {
 			wantErrStr: []string{"failed to PEM decode root certificate from chain"},
 		},
 		{
-			name:       "inter bad PEM content fails",
-			chain:      []byte(firefoxPkiStageRoot + "\n" + firefoxPkiStageRoot + "\n" + badPEMContent),
-			wantCerts:  []*x509.Certificate{},
-			wantErr:    true,
+			name:      "inter bad PEM content fails",
+			chain:     []byte(firefoxPkiStageRoot + "\n" + firefoxPkiStageRoot + "\n" + badPEMContent),
+			wantCerts: []*x509.Certificate{},
+			wantErr:   true,
 			wantErrStr: []string{
 				"failed to parse root certificate from chain: asn1: structure error: tags don't match",
 				"failed to parse root certificate from chain: x509: malformed tbs certificate",

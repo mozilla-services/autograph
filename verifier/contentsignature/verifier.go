@@ -17,7 +17,6 @@ import (
 // cert. It does not validate the certificates or the chain.
 //
 // It returns the slice of three certs or an empty slice and an error.
-//
 func ParseChain(chain []byte) (certs []*x509.Certificate, err error) {
 	block, rest := pem.Decode(chain)
 	if block == nil || block.Type != "CERTIFICATE" {
@@ -101,7 +100,6 @@ func verifyRoot(rootHash string, cert *x509.Certificate) error {
 // 1) signed by their parent/issuer/the next cert in the chain or all verifyRoot checks for the root
 // 2) valid for the current time i.e. cert NotBefore < current time < cert NotAfter
 // 3) the chain follows name constraints and extended key usage as checked by x509 Certificate.Verify
-//
 func VerifyChain(rootHash string, certs []*x509.Certificate, currentTime time.Time) error {
 	if len(certs) != 3 {
 		return fmt.Errorf("can only verify 3 certificate chain, got %d certs", len(certs))
@@ -172,7 +170,6 @@ func VerifyChain(rootHash string, certs []*x509.Certificate, currentTime time.Ti
 // then verifies the cert chain of trust maps to the signed data.
 //
 // It returns an error if it fails or nil on success.
-//
 func Verify(input, certChain []byte, signature, rootHash string) error {
 	certs, err := ParseChain(certChain)
 	if err != nil {
