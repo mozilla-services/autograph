@@ -40,10 +40,8 @@ while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-h
 done
 
 # exec in containers to workaround https://circleci.com/docs/2.0/building-docker-images/#accessing-services
-docker compose exec monitor-lambda-emulator "/usr/local/bin/test_monitor.sh"
-docker compose logs monitor-lambda-emulator
-docker compose exec monitor-hsm-lambda-emulator "/usr/local/bin/test_monitor.sh"
-docker compose logs monitor-hsm-lambda-emulator
+docker compose exec monitor-lambda-emulator "/app/src/autograph/tools/autograph-client/integration_test_monitor.sh"
+docker compose exec monitor-hsm-lambda-emulator "/app/src/autograph/tools/autograph-client/integration_test_monitor.sh"
 
 echo "checking read-only API"
 # user bob doesn't exist in the softhsm config
