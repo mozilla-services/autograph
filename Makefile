@@ -6,16 +6,13 @@ PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-servic
 # The GOPATH isn't always on the path.
 GOPATH := $(shell go env GOPATH)
 
-all: generate test vet lint staticcheck install
+all: generate test vet staticcheck install
 
 # update the vendored version of the wait-for-it.sh script
 install-wait-for-it:
 	curl -o bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
 	sha256sum -c bin/wait-for-it.sh.sha256
 	chmod +x bin/wait-for-it.sh
-
-install-golint:
-	go install golang.org/x/lint/golint@v0.0.0-20190409202823-959b441ac422
 
 install-goveralls:
 	go install github.com/mattn/goveralls@v0.0.11
@@ -37,17 +34,13 @@ vendor:
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
 
-lint:
-	$(GOPATH)/bin/golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
-	test 0 -eq $$(grep -c -Pv 'stutters|suggestions' /tmp/autograph-golint.txt)
-
 # refs: https://github.com/mozilla-services/autograph/issues/247
 check-no-crypto11-in-signers:
 	test 0 -eq $(shell grep -Ri crypto11 signer/*/ | tee /tmp/autograph-crypto11-check.txt | wc -l)
 
 show-lints:
-	-cat /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt /tmp/autograph-staticcheck.txt
-	-rm -f /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt /tmp/autograph-staticcheck.txt
+	-cat /tmp/autograph-crypto11-check.txt /tmp/autograph-staticcheck.txt
+	-rm -f /tmp/autograph-crypto11-check.txt /tmp/autograph-staticcheck.txt
 
 vet:
 	go vet $(PACKAGE_NAMES)

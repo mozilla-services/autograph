@@ -22,13 +22,6 @@ jobs:
             make check-no-crypto11-in-signers
             make show-lints
       - run:
-          name: run golint
-          command: |
-            make install-golint lint
-            make show-lints
-            make -C tools/autograph-monitor lint
-            make -C verifier/contentsignature lint
-      - run:
           name: run gofmt
           command: |
             make -s fmt-diff | tee fmt.diff
@@ -38,7 +31,7 @@ jobs:
           command: |
             make vet
             make -C tools/autograph-monitor vet
-            make -C verifier/contentsignature vet 
+            make -C verifier/contentsignature vet
       - run:
           name: run staticcheck
           command: |
