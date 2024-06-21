@@ -6,7 +6,8 @@ set -o pipefail
 MONITOR_ENDPOINT=${1:-"http://localhost:8080"}
 
 # invoke a test monitor run in a lambda monitor
-MONITOR_ERROR=$(curl --silent -w '\n' -X POST "${MONITOR_ENDPOINT}/2015-03-31/functions/function/invocations" -d '{}')
+CURL_OPTIONS="--retry 10 --retry-max-time 120 --retry-connrefused"
+MONITOR_ERROR=$(curl $CURL_OPTIONS -w '\n' -X POST "${MONITOR_ENDPOINT}/2015-03-31/functions/function/invocations" -d '{}')
 
 # Dump the log file, if it exists
 if [ -f "/tmp/autograph-lambda-logs.txt" ]; then
