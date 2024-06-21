@@ -11,9 +11,11 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer"
 	verifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
@@ -90,7 +92,7 @@ func TestSign(t *testing.T) {
 		// decode public key
 		keyBytes, err := base64.StdEncoding.DecodeString(s.PublicKey)
 		if err != nil {
-			t.Fatalf("testcase %d ailed to parse public key: %v", i, err)
+			t.Fatalf("testcase %d failed to parse public key: %v", i, err)
 		}
 		keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
 		if err != nil {
@@ -101,6 +103,21 @@ func TestSign(t *testing.T) {
 		// verify signature on input data
 		if !cs.VerifyData(input, pubkey) {
 			t.Fatalf("testcase %d failed to verify content signature", i)
+		}
+
+		// verify the signature from a SignatureResponse too.
+		response := formats.SignatureResponse{
+			Ref:       fmt.Sprintf("testcase-%d", i),
+			Type:      s.Type,
+			Mode:      s.Mode,
+			SignerID:  s.ID,
+			PublicKey: s.PublicKey,
+			Signature: sigstr,
+			X5U:       testcase.cfg.X5U,
+		}
+		err = VerifyResponse(input, response)
+		if err != nil {
+			t.Fatalf("testcase %d failed to verify content signature response: %v", i, err)
 		}
 	}
 }

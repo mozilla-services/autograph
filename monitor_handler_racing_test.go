@@ -58,10 +58,7 @@ func TestMonitorPass(t *testing.T) {
 
 		switch response.Type {
 		case contentsignature.Type:
-			err = verifyContentSignatureResponse(
-				base64.StdEncoding.EncodeToString(MonitoringInputData),
-				response,
-				"/__monitor__")
+			err = contentsignature.VerifyResponse(MonitoringInputData, response)
 			if err != nil {
 				t.Logf("%+v", response)
 				t.Fatalf("verification of monitoring response failed: %v", err)

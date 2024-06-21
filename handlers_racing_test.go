@@ -163,10 +163,16 @@ func TestSignaturePass(t *testing.T) {
 		for j, response := range responses {
 			switch response.Type {
 			case contentsignature.Type:
-				err = verifyContentSignatureResponse(
-					testcase.signaturerequests[j].Input,
-					response,
-					testcase.endpoint)
+				rawInput, decodeErr := base64.StdEncoding.DecodeString(testcase.signaturerequests[j].Input)
+				if decodeErr != nil {
+					t.Fatalf("in test case %d on endpoint %q, error '%v' in response %d;\nrequest was: %+v\nresponse was: %+v failed to decode input",
+						i, testcase.endpoint, decodeErr, j, testcase.signaturerequests[j], response)
+				}
+				if req.URL.RequestURI() == "/sign/hash" {
+					err = contentsignature.VerifyResponseHash(rawInput, response)
+				} else {
+					err = contentsignature.VerifyResponse(rawInput, response)
+				}
 			case xpi.Type:
 				err = verifyXPISignature(testcase.signaturerequests[j].Input, response.Signature)
 			case apk2.Type:

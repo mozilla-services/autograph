@@ -9,7 +9,6 @@ package main
 import (
 	"archive/zip"
 	"bytes"
-	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
@@ -32,7 +31,6 @@ import (
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/xpi"
-	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 
 	"go.mozilla.org/hawk"
 
@@ -474,10 +472,11 @@ func TestSignerAuthorized(t *testing.T) {
 				tid, len(responses), len(testcase.sgs))
 		}
 		for i, response := range responses {
-			err = verifyContentSignatureResponse(
-				testcase.sgs[i].Input,
-				response,
-				"/sign/data")
+			input, err := base64.StdEncoding.DecodeString(testcase.sgs[i].Input)
+			if err != nil {
+				t.Fatalf("test case %d input data decode error: %v", tid, err)
+			}
+			err = contentsignature.VerifyResponse(input, response)
 			if err != nil {
 				t.Fatalf("test case %d signature verification failed in response %d; request was: %+v",
 					tid, i, req)
@@ -802,39 +801,6 @@ func verifyXPISignature(input, sig string) error {
 		log.Fatal(err)
 	}
 	return pkcs7Sig.VerifyWithChain(nil)
-}
-
-// verifyContentSignatureResponse base64 decodes the input data,
-// parses an ecdsa signature public key form the response, then
-// verifies the response data or hash
-func verifyContentSignatureResponse(rawInput string, resp formats.SignatureResponse, endpoint string) error {
-	input, err := base64.StdEncoding.DecodeString(rawInput)
-	if err != nil {
-		return err
-	}
-	keyBytes, err := base64.StdEncoding.DecodeString(resp.PublicKey)
-	if err != nil {
-		return err
-	}
-	keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
-	if err != nil {
-		return err
-	}
-	pubKey := keyInterface.(*ecdsa.PublicKey)
-	sig, err := csigverifier.Unmarshal(resp.Signature)
-	if err != nil {
-		return err
-	}
-	if endpoint == "/sign/data" || endpoint == "/__monitor__" {
-		if !sig.VerifyData(input, pubKey) {
-			return fmt.Errorf("ecdsa signature verification failed")
-		}
-	} else {
-		if !sig.VerifyHash(input, pubKey) {
-			return fmt.Errorf("ecdsa signature verification failed")
-		}
-	}
-	return nil
 }
 
 func verifyAPKManifestSignature(input, sig string) error {
