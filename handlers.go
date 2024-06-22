@@ -503,7 +503,7 @@ func (a *autographer) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Body != nil {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
 			return

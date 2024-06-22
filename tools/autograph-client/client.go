@@ -531,7 +531,7 @@ func listSignerConfig(cli *http.Client, debug bool, url, userid, pass string, ke
 		fmt.Printf("DEBUG: received response\nDEBUG: %+v\n", resp)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
