@@ -82,7 +82,6 @@ services:
       - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
       # set a non-empty value to use the lambda handler
       - LAMBDA_TASK_ROOT=/usr/local/bin/
-      - AUTOGRAPH_ROOT_HASH
     ports:
       - "9000:8080"
     links:
@@ -103,7 +102,6 @@ services:
       - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
       # set a non-empty value to use the lambda handler
       - LAMBDA_TASK_ROOT=/usr/local/bin/
-      - AUTOGRAPH_ROOT_HASH
     ports:
       - "9001:8080"
     links:

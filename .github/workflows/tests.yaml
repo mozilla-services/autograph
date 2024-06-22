@@ -1,0 +1,120 @@
+name: Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Restrict tests to the most recent commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-22.04
+    outputs:
+      testcases: ${{ steps.enum-tests.outputs.testcases }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Build images
+        shell: bash
+        run: make generate build
+
+      - name: Save images
+        shell: bash
+        run: |
+            mkdir -p docker-cache
+            docker save -o docker-cache/autograph-images.tar autograph-app autograph-app-hsm
+
+      - name: Enumerate tests
+        id: enum-tests
+        shell: bash
+        run: |
+            echo -n "testcases=" >> $GITHUB_OUTPUT
+            yq -o=json '.services | keys' tools/autograph-client/integration-tests.yml | jq -c >> $GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: autograph-images-${{ github.sha }}
+          path: docker-cache/
+
+  unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-22.04
+    needs:
+      - build
+    env:
+      DBNAME: autograph
+      PGPASSWORD: myautographdbpassword
+
+    services:
+      database:
+        image: postgres:11
+        env:
+          POSTGRES_DB: ${{ env.DBNAME }}
+          POSTGRES_PASSWORD: ${{ env.PGPASSWORD }}
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: autograph-images-${{ github.sha }}
+          path: docker-cache/
+
+      - name: Initialize database
+        shell: bash
+        run: psql -h localhost -p 5432 -U postgres --no-password -f database/schema.sql ${{ env.DBNAME }}
+
+      - name: Load images
+        shell: bash
+        run: docker load -i docker-cache/autograph-images.tar
+
+      - name: Run Tests
+        shell: bash
+        env:
+          AUTOGRAPH_DB_DSN: postgres://myautographdbuser:${{ env.PGPASSWORD }}@localhost/${{ env.DBNAME }}?sslmode=disable
+        run: |
+          docker run \
+            --env AUTOGRAPH_DB_DSN \
+            --env RACE_TEST=0 \
+            --workdir /app/src/autograph \
+            --net=host \
+            --user 0 \
+            autograph-app ./bin/run_unit_tests.sh
+
+  integration-tests:
+    name: Run Integration Tests
+    runs-on: ubuntu-22.04
+    needs:
+      - build
+    strategy:
+      fail-fast: false # Don't cancel other jobs if a test fails
+      matrix:
+        testcase: ${{ fromJSON(needs.build.outputs.testcases) }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: autograph-images-${{ github.sha }}
+          path: docker-cache/
+
+      - name: Load images
+        shell: bash
+        run: docker load -i docker-cache/autograph-images.tar
+
+      - name: Running ${{ matrix.testcase }}
+        shell: bash
+        run: docker compose -f tools/autograph-client/integration-tests.yml run ${{ matrix.testcase }}
