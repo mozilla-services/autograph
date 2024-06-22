@@ -9,7 +9,6 @@
 // in Firefox Desktop or [the rust application services
 // component](https://github.com/mozilla/application-services/) in
 // other Mozilla products.
-//
 package contentsignature // import "github.com/mozilla-services/autograph/verifier/contentsignature"
 
 import (
