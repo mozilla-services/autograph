@@ -8,6 +8,7 @@ package signer
 
 import (
 	"crypto/rsa"
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -305,4 +306,117 @@ var rejectedFileNames = []string{
 	"control^chars",
 	"control*chars",
 	"_non_alpha_start",
+}
+
+func TestSanitizedConfig(t *testing.T) {
+	for _, testcase := range sanitizerTestCases {
+		r := testcase.cfg.Sanitize()
+		if testcase.result != *r {
+			expect, _ := json.MarshalIndent(testcase.result, "", "  ")
+			actual, _ := json.MarshalIndent(r, "", "  ")
+			t.Logf("expected: %s", expect)
+			t.Logf("actual: %s", actual)
+			t.Fatalf("Sanitized config failed for: %s", testcase.cfg.ID)
+		}
+	}
+}
+
+var sanitizerTestCases = []struct {
+	cfg    Configuration
+	result SanitizedConfig
+}{
+	// All the fields are copied over.
+	{cfg: Configuration{
+		ID:                  "copy-public-values",
+		Type:                "bar",
+		Mode:                "qux",
+		PublicKey:           "This is a public key",
+		IssuerCert:          "This is an issuer",
+		Certificate:         "This is a certificate",
+		X5U:                 "http://example.com/",
+		KeyID:               "This is a keyid",
+		SubdomainOverride:   "allizom.com",
+		Validity:            12345,
+		ClockSkewTolerance:  555,
+		ChainUploadLocation: "file:///somewhere/over/the/rainbow",
+		CaCert:              "The root of evil",
+		Hash:                "sha666",
+		SaltLength:          9001,
+	},
+		result: SanitizedConfig{
+			ID:                  "copy-public-values",
+			Type:                "bar",
+			Mode:                "qux",
+			PublicKey:           "This is a public key",
+			IssuerCert:          "This is an issuer",
+			Certificate:         "This is a certificate",
+			X5U:                 "http://example.com/",
+			KeyID:               "This is a keyid",
+			SubdomainOverride:   "allizom.com",
+			Validity:            12345,
+			ClockSkewTolerance:  555,
+			ChainUploadLocation: "file:///somewhere/over/the/rainbow",
+			CaCert:              "The root of evil",
+			Hash:                "sha666",
+			SaltLength:          9001,
+		}},
+	// Private keys are hashed with SHA256
+	{cfg: Configuration{
+		ID:            "private-key-example",
+		PrivateKey:    "hello world",
+		IssuerPrivKey: "Lorem Ipsum",
+	},
+		result: SanitizedConfig{
+			ID: "private-key-example",
+			// echo -n "hello world" | sha256sum
+			PrivateKey: "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+			// echo -n "Lorem Ipsum" | sha256sum
+			IssuerPrivKey: "030dc1f936c3415aff3f3357163515190d347a28e758e1f717d17bae453541c9",
+		}},
+	// Certificates should parse out the fingerprint and validity dates.
+	{cfg: Configuration{
+		ID: "cert-extra-data",
+		Certificate: `
+-----BEGIN CERTIFICATE-----
+MIICXDCCAeKgAwIBAgIIFYW6xg9HrnAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODUxMDA2MB4XDTE4MTIyMTE1
+NTY0NloXDTI5MDIyMjE1NTY0NlowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTU1MDg1MTAwNjB2MBAGByqGSM49AgEGBSuBBAAiA2IABAwF
+9wOPiv/1oBdxSyOO6fe8KkFJCiyRx2KIXhsT4BwWY8AGHoCfBNm/Swdg+OSi+TdH
+dF+5eUrKiqG4PvdWoGGS4rtHqY3ayeF9GRaaLpLMdZkhc/MVJygJoecmsXM2O6Nq
+MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+/wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
+b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjBss+GLdMdLT2Y/g73OE9x0WyUG
+vqzO7klt20yytmhaYMIPT/zRnWsHZbqEijHMzGsCMQDEoKetuWkyBkzAytS6l+ss
+mYigBlwySY+gTqsjuIrydWlKaOv1GU+PXbwX0cQuaN8=
+-----END CERTIFICATE-----`,
+	},
+		result: SanitizedConfig{
+			ID: "cert-extra-data",
+			Certificate: `
+-----BEGIN CERTIFICATE-----
+MIICXDCCAeKgAwIBAgIIFYW6xg9HrnAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODUxMDA2MB4XDTE4MTIyMTE1
+NTY0NloXDTI5MDIyMjE1NTY0NlowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTU1MDg1MTAwNjB2MBAGByqGSM49AgEGBSuBBAAiA2IABAwF
+9wOPiv/1oBdxSyOO6fe8KkFJCiyRx2KIXhsT4BwWY8AGHoCfBNm/Swdg+OSi+TdH
+dF+5eUrKiqG4PvdWoGGS4rtHqY3ayeF9GRaaLpLMdZkhc/MVJygJoecmsXM2O6Nq
+MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+/wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
+b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjBss+GLdMdLT2Y/g73OE9x0WyUG
+vqzO7klt20yytmhaYMIPT/zRnWsHZbqEijHMzGsCMQDEoKetuWkyBkzAytS6l+ss
+mYigBlwySY+gTqsjuIrydWlKaOv1GU+PXbwX0cQuaN8=
+-----END CERTIFICATE-----`,
+			// openssl x509 -outform DER | shasum
+			CertFingerprintSha1: "793a92cb335c3846ffed7f8c112137cd8a75e7c7",
+			// openssl x509 -outform DER | sha256sum
+			CertFingerprintSha256: "61bd2500b732d2889a1b17c24365741550534fb715cd4f7c463a23a35bd931ee",
+			// openssl x509 -noout -text
+			CertDateStart: "2018-12-21T15:56:46Z",
+			CertDateEnd:   "2029-02-22T15:56:46Z",
+		}},
 }
