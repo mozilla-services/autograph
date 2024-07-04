@@ -31,17 +31,17 @@ APP_HSM_NORMANDY_ROOT_HASH=$(grep '[0-9A-F]' normandy_dev_root_hash.txt | tr -d 
 # start the monitor lambda emulators
 echo "checking autograph monitors"
 docker compose run \
-			--rm \
-      		-e AUTOGRAPH_URL=http://app:8000/ \
-			--entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
-			monitor-lambda-emulator /go/bin/autograph-monitor
+	       --rm \
+	       -e AUTOGRAPH_URL=http://app:8000/ \
+	       --entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
+	       monitor-lambda-emulator /go/bin/autograph-monitor
 
 docker compose run \
-			--rm \
-      		-e AUTOGRAPH_URL=http://autograph-app-hsm:8001/ \
-			-e AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH \
-			--entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
-			monitor-hsm-lambda-emulator /go/bin/autograph-monitor
+	       --rm \
+	       -e AUTOGRAPH_URL=http://autograph-app-hsm:8001/ \
+	       -e AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH \
+	       --entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
+	       monitor-hsm-lambda-emulator /go/bin/autograph-monitor
 
 echo "checking read-only API"
 # user bob doesn't exist in the softhsm config
@@ -93,7 +93,7 @@ docker compose run \
 	       --rm \
 	       --user 0 \
 	       -e TARGET=http://app:8000 \
-               -e VERIFY=1 \
+	       -e VERIFY=1 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./build_test_apks.sh \
 	       app
