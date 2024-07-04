@@ -20,4 +20,4 @@ fi
 
 # Run the test
 set -e
-/bin/bash -c "$@"
+exec "$@"

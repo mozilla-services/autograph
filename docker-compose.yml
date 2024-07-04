@@ -66,10 +66,7 @@ services:
   monitor:
     container_name: autograph-monitor
     image: autograph-app
-    command:
-      [
-        "/go/bin/autograph-monitor",
-      ]
+    command: ["/go/bin/autograph-monitor"]
 
   monitor-lambda-emulator:
     container_name: autograph-monitor-lambda-emulator
@@ -83,6 +80,7 @@ services:
       # set a non-empty value to use the lambda handler
       - LAMBDA_TASK_ROOT=/usr/local/bin/
       - AUTOGRAPH_ROOT_HASH
+    command: ["/go/bin/autograph-monitor"]
     ports:
       - "9000:8080"
     links:
@@ -104,6 +102,7 @@ services:
       # set a non-empty value to use the lambda handler
       - LAMBDA_TASK_ROOT=/usr/local/bin/
       - AUTOGRAPH_ROOT_HASH
+    command: ["/go/bin/autograph-monitor"]
     ports:
       - "9001:8080"
     links:
