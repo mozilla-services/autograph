@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"time"
@@ -72,6 +73,22 @@ func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.S
 		"user_id":       userid,
 		"t":             int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 	}).Info(fmt.Sprintf("signing operation failed with error: %v", err))
+}
+
+// If the x5u is a local file, mirror it via the `x5u` endpoint instead.
+func mirrorLocalX5U(r *http.Request, response formats.SignatureResponse) string {
+	parsedX5U, err := url.Parse(response.X5U)
+	if err == nil && parsedX5U.Scheme == "file" {
+		mirroredX5U := url.URL{
+			Scheme:	"http",
+			Host:   r.Host,
+			Path:   path.Join("x5u", response.SignerID, path.Base(parsedX5U.Path)),
+		}
+		return mirroredX5U.String()
+	}
+
+	// Otherwise, return the X5U unmodified
+	return response.X5U
 }
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
@@ -203,6 +220,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			X5U:        requestedSignerConfig.X5U,
 			SignerOpts: requestedSignerConfig.SignerOpts,
 		}
+		sigresps[i].X5U = mirrorLocalX5U(r, sigresps[i])
+
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {
 		case "/sign/hash":
@@ -488,4 +507,70 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(signerIDsJSON)
+}
+
+func (a *autographer) handleGetX5u(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		return
+	}
+	if r.Body != nil {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
+			return
+		}
+		if len(body) > 0 {
+			httpError(w, r, http.StatusBadRequest, "endpoint received unexpected request body")
+			return
+		}
+	}
+
+	pathKeyID, ok := mux.Vars(r)["keyid"]
+	if !ok {
+		httpError(w, r, http.StatusInternalServerError, "route is improperly configured")
+		return
+	}
+	if !signer.IDFormatRegexp.MatchString(pathKeyID) {
+		httpError(w, r, http.StatusBadRequest, "keyid in URL path '%s' is invalid, it must match %s", pathKeyID, signer.IDFormat)
+		return
+	}
+
+	pathChainFile, ok := mux.Vars(r)["chainfile"]
+	if !ok {
+		httpError(w, r, http.StatusInternalServerError, "route is improperly configured")
+		return
+	}
+	if !signer.IDFormatRegexp.MatchString(pathKeyID) {
+		httpError(w, r, http.StatusBadRequest, "keyid in URL path '%s' is invalid, it must match %s", pathKeyID, signer.IDFormat)
+		return
+	}
+
+	// Lookup the signer, and see if it has a local X5U chain upload location.
+	// Treat all errors as a 404 to avoid leaking unnecessary signer details as this
+	// endpoint has no authentication.
+	for _, s := range a.getSigners() {
+		config := s.Config()
+		if config.ID != pathKeyID {
+			continue
+		}
+
+		// Check if the signer has a chain upload location, and the requested file exists.
+		parsedURL, err := url.Parse(config.ChainUploadLocation)
+		if err != nil || parsedURL.Scheme != "file" {
+			break
+		}
+		chainFilePath := path.Join(parsedURL.Path, pathChainFile)
+		stat, err := os.Stat(chainFilePath)
+		if err != nil || !stat.Mode().IsRegular() {
+			break
+		}
+
+		// Serve files from the chain upload location
+		http.ServeFile(w, r, chainFilePath)
+		return
+	}
+
+	log.Infof("X5U not found for signer: %s", pathKeyID)
+	httpError(w, r, http.StatusNotFound, "404 page not found")
 }

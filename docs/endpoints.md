@@ -271,6 +271,12 @@ See `/sign/data`, the response format is identical.
 A successful request return a `201 Created` with a response
 body containing an S/MIME detached signature encoded with Base 64.
 
+## /x5u/:keyid/:chain
+
+This is an endpoint used to fetch certificate chains which are generated and
+stored locally. If the signer is configured with a `chainuploadlocation` with
+the `file://` scheme, then the contents of that file location are mirrored here.
+
 ## /\_\_monitor\_\_
 
 This is a special endpoint designed to monitor the status of all signers

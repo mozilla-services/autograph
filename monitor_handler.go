@@ -47,6 +47,7 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 
 	enc := json.NewEncoder(w)
 	for _, response := range m.sigresps {
+		response.X5U = mirrorLocalX5U(r, response)
 		if err := enc.Encode(&response); err != nil {
 			httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
 			return

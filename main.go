@@ -214,6 +214,7 @@ func run(conf configuration, listen string, debug bool) {
 	router.HandleFunc("/sign/data", statsMiddleware(ag.handleSignature, "http.api.sign/data", stats)).Methods("POST")
 	router.HandleFunc("/sign/hash", statsMiddleware(ag.handleSignature, "http.api.sign/hash", stats)).Methods("POST")
 	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", statsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids", stats)).Methods("GET")
+	router.HandleFunc("/x5u/{keyid:[a-zA-Z0-9-_]{1,64}}/{chainfile:[a-zA-Z0-9-_.]{1,255}}", statsMiddleware(ag.handleGetX5u, "http.api.x5u", stats)).Methods("GET")
 	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
 		err = setRuntimeConfig()
 		if err != nil {
