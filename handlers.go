@@ -80,7 +80,7 @@ func mirrorLocalX5U(r *http.Request, response formats.SignatureResponse) string 
 	parsedX5U, err := url.Parse(response.X5U)
 	if err == nil && parsedX5U.Scheme == "file" {
 		mirroredX5U := url.URL{
-			Scheme:	"http",
+			Scheme: "http",
 			Host:   r.Host,
 			Path:   path.Join("x5u", response.SignerID, path.Base(parsedX5U.Path)),
 		}
