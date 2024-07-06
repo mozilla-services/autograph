@@ -87,8 +87,6 @@ services:
       - app
     depends_on:
       - app
-    volumes:
-      - apptmpdir:/tmp/
 
   monitor-hsm-lambda-emulator:
     container_name: autograph-monitor-hsm-lambda-emulator
@@ -109,8 +107,6 @@ services:
       - app-hsm
     depends_on:
       - app-hsm
-    volumes:
-      - hsmtmpdir:/tmp/
 
   unit-test:
     container_name: autograph-unit-test
