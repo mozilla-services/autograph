@@ -48,9 +48,6 @@ RUN cd /app/src/autograph/tools/genpki/ && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
       -p issuercert -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
-      -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')" && \
-      cp /app/autograph.softhsm.yaml /tmp/ && \
-      /bin/bash /app/src/autograph/tools/softhsm/hash_signer_cacert.sh /app/autograph.softhsm.yaml normandy > /tmp/normandy_dev_root_hash.txt && \
-      cat /tmp/normandy_dev_root_hash.txt
+      -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')"
 
 CMD /go/bin/autograph -c /app/autograph.softhsm.yaml
