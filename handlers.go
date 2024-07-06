@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -543,6 +544,13 @@ func (a *autographer) handleGetX5u(w http.ResponseWriter, r *http.Request) {
 	}
 	if !signer.IDFormatRegexp.MatchString(pathKeyID) {
 		httpError(w, r, http.StatusBadRequest, "keyid in URL path '%s' is invalid, it must match %s", pathKeyID, signer.IDFormat)
+		return
+	}
+
+	// The handler regex should reject such paths, but let's be extra certain that we have been given
+	// a path without any attempt to escape the X5U upload directory.
+	if strings.Contains(pathChainFile, "/") || strings.Contains(pathChainFile, "\\") || strings.Contains(pathChainFile, "..") {
+		httpError(w, r, http.StatusBadRequest, "Invalid X5U file name '%s'", pathChainFile)
 		return
 	}
 
