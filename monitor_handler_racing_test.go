@@ -8,12 +8,14 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
@@ -27,6 +29,23 @@ import (
 )
 
 const autographDevRootHash = `5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`
+
+func getMirroredX5U(x5u string) (body []byte, err error) {
+	req, err := http.NewRequest("GET", x5u, nil)
+	if err != nil {
+		return nil, err
+	}
+	segs := strings.Split(req.URL.Path, "/")
+	req = mux.SetURLVars(req, map[string]string{"keyid": segs[len(segs)-2], "chainfile": segs[len(segs)-1]})
+
+	w := httptest.NewRecorder()
+	ag.handleGetX5U(w, req)
+	if w.Code != http.StatusOK || w.Body.String() == "" {
+		return nil, fmt.Errorf("fetch x5u failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
+	}
+
+	return w.Body.Bytes(), nil
+}
 
 func TestMonitorPass(t *testing.T) {
 	t.Parallel()
@@ -64,7 +83,7 @@ func TestMonitorPass(t *testing.T) {
 				t.Fatalf("verification of monitoring response failed: %v", err)
 			}
 		case contentsignaturepki.Type:
-			body, _, err := contentsignaturepki.GetX5U(&http.Client{}, response.X5U)
+			body, err := getMirroredX5U(response.X5U)
 			if err != nil {
 				t.Fatal(err)
 			}

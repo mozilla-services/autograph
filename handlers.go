@@ -510,7 +510,7 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 	w.Write(signerIDsJSON)
 }
 
-func (a *autographer) handleGetX5u(w http.ResponseWriter, r *http.Request) {
+func (a *autographer) handleGetX5U(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
 		return
