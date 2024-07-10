@@ -29,26 +29,19 @@ docker cp autograph-app-hsm:/tmp/normandy_dev_root_hash.txt .
 APP_HSM_NORMANDY_ROOT_HASH=$(grep '[0-9A-F]' normandy_dev_root_hash.txt | tr -d '\r\n')
 
 # start the monitor lambda emulators
-docker compose up -d monitor-lambda-emulator
-AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH docker compose up -d monitor-hsm-lambda-emulator
+echo "checking autograph monitors"
+docker compose run \
+	       --rm \
+	       -e AUTOGRAPH_URL=http://app:8000/ \
+	       --entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
+	       monitor-lambda-emulator /go/bin/autograph-monitor
 
-echo "waiting for monitor-lambda-emulator to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-lambda-emulator)"; do
-  echo -n "."
-  sleep 1 # wait before checking again
-done
-echo "waiting for monitor-hsm-lambda-emulator to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-hsm-lambda-emulator)"; do
-  echo -n "."
-  sleep 1 # wait before checking again
-done
-
-echo "checking monitoring using hsm root hash:" "$APP_HSM_NORMANDY_ROOT_HASH"
-# exec in containers to workaround https://circleci.com/docs/2.0/building-docker-images/#accessing-services
-docker compose exec monitor-lambda-emulator "/usr/local/bin/test_monitor.sh"
-docker compose logs monitor-lambda-emulator
-docker compose exec monitor-hsm-lambda-emulator "/usr/local/bin/test_monitor.sh"
-docker compose logs monitor-hsm-lambda-emulator
+docker compose run \
+	       --rm \
+	       -e AUTOGRAPH_URL=http://autograph-app-hsm:8001/ \
+	       -e AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH \
+	       --entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
+	       monitor-hsm-lambda-emulator /go/bin/autograph-monitor
 
 echo "checking read-only API"
 # user bob doesn't exist in the softhsm config
@@ -100,7 +93,7 @@ docker compose run \
 	       --rm \
 	       --user 0 \
 	       -e TARGET=http://app:8000 \
-               -e VERIFY=1 \
+	       -e VERIFY=1 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./build_test_apks.sh \
 	       app
