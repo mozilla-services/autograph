@@ -49,7 +49,7 @@ jobs:
 
   unit-test:
     # based on the official golang image with more docker stuff
-    machine: ubuntu-2204:2024.05.1
+    machine: true
     steps:
       - checkout
       - run:
