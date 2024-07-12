@@ -97,7 +97,7 @@ func (testcase *HandlerTestCase) NewRequest(t *testing.T) *http.Request {
 	return req
 }
 
-func (testcase* HandlerTestCase) ValidateResponse(t *testing.T, w *httptest.ResponseRecorder) {
+func (testcase *HandlerTestCase) ValidateResponse(t *testing.T, w *httptest.ResponseRecorder) {
 	if w.Code != testcase.expectedStatus {
 		t.Fatalf("test case %s: got code %d but expected %d",
 			testcase.name, w.Code, testcase.expectedStatus)
@@ -116,10 +116,10 @@ func (testcase* HandlerTestCase) ValidateResponse(t *testing.T, w *httptest.Resp
 	}
 }
 
-func (testcase* HandlerTestCase) Run(t *testing.T, handler func(http.ResponseWriter, *http.Request)) {
+func (testcase *HandlerTestCase) Run(t *testing.T, handler func(http.ResponseWriter, *http.Request)) {
 	// test request setup
 	var req = testcase.NewRequest(t)
-	
+
 	// run the request
 	w := httptest.NewRecorder()
 	handler(w, req)
@@ -127,7 +127,6 @@ func (testcase* HandlerTestCase) Run(t *testing.T, handler func(http.ResponseWri
 	// validate response
 	testcase.ValidateResponse(t, w)
 }
-
 
 func TestBadRequest(t *testing.T) {
 	t.Parallel()
@@ -667,7 +666,7 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 
 	const autographDevAliceKeyIDsJSON = "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"pgpsubkey-debsign\",\"randompgp\",\"randompgp-debsign\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]"
 
-	var testcases = []HandlerTestCase {
+	var testcases = []HandlerTestCase{
 		{
 			name:            "invalid method POST returns 405",
 			method:          "POST",
@@ -824,7 +823,7 @@ mYigBlwySY+gTqsjuIrydWlKaOv1GU+PXbwX0cQuaN8=
 		t.Fatal(err)
 	}
 
-	var testcases = []HandlerTestCase {
+	var testcases = []HandlerTestCase{
 		{
 			name:            "invalid method POST returns 405",
 			method:          "POST",
