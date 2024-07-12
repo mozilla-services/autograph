@@ -117,6 +117,7 @@ services:
     image: autograph-app
     build:
       context: .
+      target: base
     environment:
       - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/app/src/autograph/tools/softhsm/db-root.crt
       - AUTOGRAPH_DB_HOST=db
@@ -134,6 +135,9 @@ services:
     links:
       - db
     user: "0"
+    volumes:
+      # TODO: This should probably be read-only, but that breaks coverage reporting.
+      - .:/app/src/autograph:rw
     working_dir: "/app/src/autograph/"
     command:
       [
