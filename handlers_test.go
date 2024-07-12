@@ -20,6 +20,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -36,6 +37,97 @@ import (
 
 	margo "go.mozilla.org/mar"
 )
+
+type HandlerTestCase struct {
+	name   string
+	method string
+	url    string
+
+	// urlRouteVars are https://pkg.go.dev/github.com/gorilla/mux#Vars
+	// as configured with the handler at /config/{keyid:[a-zA-Z0-9-_]{1,64}}
+	// there should only be a keyid var and it should match the url value
+	urlRouteVars map[string]string
+
+	// headers are additional http headers to set
+	headers *http.Header
+
+	// user/auth ID to build an Authorization header for
+	authorizeID string
+	nilBody     bool
+	body        string
+
+	expectedStatus  int
+	expectedHeaders http.Header
+	expectedBody    string
+}
+
+func (testcase *HandlerTestCase) NewRequest(t *testing.T) *http.Request {
+	// test request setup
+	var (
+		req *http.Request
+		err error
+	)
+	if testcase.nilBody {
+		req, err = http.NewRequest(testcase.method, testcase.url, nil)
+	} else {
+		req, err = http.NewRequest(testcase.method, testcase.url, strings.NewReader(testcase.body))
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	req = mux.SetURLVars(req, testcase.urlRouteVars)
+	if testcase.headers != nil {
+		req.Header = *testcase.headers
+	}
+
+	if testcase.authorizeID != "" {
+		auth, err := ag.getAuthByID(testcase.authorizeID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// getAuthHeader requires a content type and body
+		req.Header.Set("Authorization", hawk.NewRequestAuth(req,
+			&hawk.Credentials{
+				ID:   auth.ID,
+				Key:  auth.Key,
+				Hash: sha256.New},
+			0).RequestHeader())
+	}
+
+	return req
+}
+
+func (testcase* HandlerTestCase) ValidateResponse(t *testing.T, w *httptest.ResponseRecorder) {
+	if w.Code != testcase.expectedStatus {
+		t.Fatalf("test case %s: got code %d but expected %d",
+			testcase.name, w.Code, testcase.expectedStatus)
+	}
+	if w.Body.String() != testcase.expectedBody {
+		t.Fatalf("test case %s: got body %q expected %q", testcase.name, w.Body.String(), testcase.expectedBody)
+	}
+	for expectedHeader, expectedHeaderVals := range testcase.expectedHeaders {
+		vals, ok := w.Header()[expectedHeader]
+		if !ok {
+			t.Fatalf("test case %s: expected header %q not found", testcase.name, expectedHeader)
+		}
+		if strings.Join(vals, "") != strings.Join(expectedHeaderVals, "") {
+			t.Fatalf("test case %s: header vals %q did not match expected %q ", testcase.name, vals, expectedHeaderVals)
+		}
+	}
+}
+
+func (testcase* HandlerTestCase) Run(t *testing.T, handler func(http.ResponseWriter, *http.Request)) {
+	// test request setup
+	var req = testcase.NewRequest(t)
+	
+	// run the request
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	// validate response
+	testcase.ValidateResponse(t, w)
+}
+
 
 func TestBadRequest(t *testing.T) {
 	t.Parallel()
@@ -575,28 +667,7 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 
 	const autographDevAliceKeyIDsJSON = "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"pgpsubkey-debsign\",\"randompgp\",\"randompgp-debsign\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]"
 
-	var testcases = []struct {
-		name   string
-		method string
-		url    string
-
-		// urlRouteVars are https://pkg.go.dev/github.com/gorilla/mux#Vars
-		// as configured with the handler at /auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids
-		// there should only be an auth_id var and it should match the url value
-		urlRouteVars map[string]string
-
-		// headers are additional http headers to set
-		headers *http.Header
-
-		// user/auth ID to build an Authorization header for
-		authorizeID string
-		nilBody     bool
-		body        string
-
-		expectedStatus  int
-		expectedHeaders http.Header
-		expectedBody    string
-	}{
+	var testcases = []HandlerTestCase {
 		{
 			name:            "invalid method POST returns 405",
 			method:          "POST",
@@ -720,60 +791,194 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 			expectedHeaders: http.Header{"Content-Type": []string{"application/json"}},
 		},
 	}
-	for i, testcase := range testcases {
-		// test request setup
-		var (
-			req *http.Request
-			err error
-		)
-		if testcase.nilBody {
-			req, err = http.NewRequest(testcase.method, testcase.url, nil)
-		} else {
-			req, err = http.NewRequest(testcase.method, testcase.url, strings.NewReader(testcase.body))
-		}
-		if err != nil {
-			t.Fatal(err)
-		}
-		req = mux.SetURLVars(req, testcase.urlRouteVars)
+	for _, testcase := range testcases {
+		testcase.Run(t, ag.handleGetAuthKeyIDs)
+	}
+}
 
-		if testcase.headers != nil {
-			req.Header = *testcase.headers
-		}
-		if testcase.authorizeID != "" {
-			auth, err := ag.getAuthByID(testcase.authorizeID)
-			if err != nil {
-				t.Fatal(err)
-			}
-			// getAuthHeader requires a content type and body
-			req.Header.Set("Authorization", hawk.NewRequestAuth(req,
-				&hawk.Credentials{
-					ID:   auth.ID,
-					Key:  auth.Key,
-					Hash: sha256.New},
-				0).RequestHeader())
-		}
+func TestHandleGetX5U(t *testing.T) {
+	t.Parallel()
 
-		// run the request
-		w := httptest.NewRecorder()
-		ag.handleGetAuthKeyIDs(w, req)
+	// This is a bit hacky, but the config is set to use this path for the X5U normandy
+	// upload location. But to untangle this kind of config dependency we need to be able
+	// to mock out the signers - and that is hard.
+	const normandyTestChainFile = "/tmp/autograph/chains/normandydev/example.pem"
+	const normandyTestChainContents = `
+-----BEGIN CERTIFICATE-----
+MIICXDCCAeKgAwIBAgIIFYW6xg9HrnAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODUxMDA2MB4XDTE4MTIyMTE1
+NTY0NloXDTI5MDIyMjE1NTY0NlowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTU1MDg1MTAwNjB2MBAGByqGSM49AgEGBSuBBAAiA2IABAwF
+9wOPiv/1oBdxSyOO6fe8KkFJCiyRx2KIXhsT4BwWY8AGHoCfBNm/Swdg+OSi+TdH
+dF+5eUrKiqG4PvdWoGGS4rtHqY3ayeF9GRaaLpLMdZkhc/MVJygJoecmsXM2O6Nq
+MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+/wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
+b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjBss+GLdMdLT2Y/g73OE9x0WyUG
+vqzO7klt20yytmhaYMIPT/zRnWsHZbqEijHMzGsCMQDEoKetuWkyBkzAytS6l+ss
+mYigBlwySY+gTqsjuIrydWlKaOv1GU+PXbwX0cQuaN8=
+-----END CERTIFICATE-----`
+	err := os.WriteFile(normandyTestChainFile, []byte(normandyTestChainContents), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		// validate response
-		if w.Code != testcase.expectedStatus {
-			t.Fatalf("test case %s (%d): got code %d but expected %d",
-				testcase.name, i, w.Code, testcase.expectedStatus)
-		}
-		if w.Body.String() != testcase.expectedBody {
-			t.Fatalf("test case %s (%d): got body %q expected %q", testcase.name, i, w.Body.String(), testcase.expectedBody)
-		}
-		for expectedHeader, expectedHeaderVals := range testcase.expectedHeaders {
-			vals, ok := w.Header()[expectedHeader]
-			if !ok {
-				t.Fatalf("test case %s (%d): expected header %q not found", testcase.name, i, expectedHeader)
-			}
-			if strings.Join(vals, "") != strings.Join(expectedHeaderVals, "") {
-				t.Fatalf("test case %s (%d): header vals %q did not match expected %q ", testcase.name, i, vals, expectedHeaderVals)
-			}
-		}
+	var testcases = []HandlerTestCase {
+		{
+			name:            "invalid method POST returns 405",
+			method:          "POST",
+			url:             "http://foo.bar/x5u/normandy/example.pem",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "POST method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "invalid method PUT returns 405",
+			method:          "PUT",
+			url:             "http://foo.bar/x5u/normandy/example.pem",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "PUT method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "invalid method OPTIONS returns 405",
+			method:          "OPTIONS",
+			url:             "http://foo.bar/x5u/normandy/example.pem",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "OPTIONS method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "invalid method HEAD returns 405",
+			method:          "HEAD",
+			url:             "http://foo.bar/x5u/normandy/example.pem",
+			nilBody:         true,
+			expectedStatus:  http.StatusMethodNotAllowed,
+			expectedBody:    "HEAD method not allowed; endpoint accepts GET only\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with misconfigured keyid route param returns 500",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandy/example.pem",
+			urlRouteVars:    map[string]string{"chainfile": "example.pem"}, // missing keyid
+			nilBody:         true,
+			expectedStatus:  http.StatusInternalServerError,
+			expectedBody:    "route is improperly configured\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with misconfigured chainfile route param returns 500",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandy/example.pem",
+			urlRouteVars:    map[string]string{"keyid": "normandy"}, // missing chainfile
+			nilBody:         true,
+			expectedStatus:  http.StatusInternalServerError,
+			expectedBody:    "route is improperly configured\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with directory parent escapes returns 400",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandy/../example.pem",
+			urlRouteVars:    map[string]string{"keyid": "normandy", "chainfile": "../example.pem"},
+			nilBody:         true,
+			expectedStatus:  http.StatusBadRequest,
+			expectedBody:    "Invalid X5U file name '../example.pem'\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with directory root escapes returns 400",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandy//example.pem",
+			urlRouteVars:    map[string]string{"keyid": "normandy", "chainfile": "//example.pem"},
+			nilBody:         true,
+			expectedStatus:  http.StatusBadRequest,
+			expectedBody:    "Invalid X5U file name '//example.pem'\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with extra directory path returns 400",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandy/extra/example.pem",
+			urlRouteVars:    map[string]string{"keyid": "normandy", "chainfile": "extra/example.pem"},
+			nilBody:         true,
+			expectedStatus:  http.StatusBadRequest,
+			expectedBody:    "Invalid X5U file name 'extra/example.pem'\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with backslash path returns 400",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandy/extra\\example.pem",
+			urlRouteVars:    map[string]string{"keyid": "normandy", "chainfile": "extra\\example.pem"},
+			nilBody:         true,
+			expectedStatus:  http.StatusBadRequest,
+			expectedBody:    "Invalid X5U file name 'extra\\example.pem'\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with empty body returns 200",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandy/example.pem",
+			urlRouteVars:    map[string]string{"keyid": "normandy", "chainfile": "example.pem"},
+			nilBody:         false,
+			body:            "",
+			expectedStatus:  http.StatusOK,
+			expectedBody:    normandyTestChainContents,
+			expectedHeaders: http.Header{"Content-Type": []string{"application/x-x509-ca-cert"}},
+		},
+		{
+			name:            "GET with non-empty body returns 400",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandy/example.pem",
+			urlRouteVars:    map[string]string{"keyid": "normandy", "chainfile": "example.pem"},
+			nilBody:         false,
+			body:            "foobar/---",
+			expectedStatus:  http.StatusBadRequest,
+			expectedBody:    "endpoint received unexpected request body\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with unknown signer returns 404",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandyxyz/example.pem",
+			urlRouteVars:    map[string]string{"keyid": "normandyxyz", "chainfile": "example.pem"},
+			nilBody:         false,
+			body:            "",
+			expectedStatus:  http.StatusNotFound,
+			expectedBody:    "404 page not found\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with unknown chain returns 404",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/normandy/example.pem",
+			urlRouteVars:    map[string]string{"keyid": "normandy", "chainfile": "notfound.pem"},
+			nilBody:         false,
+			body:            "",
+			expectedStatus:  http.StatusNotFound,
+			expectedBody:    "404 page not found\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+		{
+			name:            "GET with non-PKI signer returns 404",
+			method:          "GET",
+			url:             "http://foo.bar/x5u/randompgp/example.pem",
+			urlRouteVars:    map[string]string{"keyid": "randompgp", "chainfile": "example.pem"},
+			nilBody:         false,
+			body:            "",
+			expectedStatus:  http.StatusNotFound,
+			expectedBody:    "404 page not found\r\nrequest-id: -\n",
+			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+		},
+	}
+	for _, testcase := range testcases {
+		testcase.Run(t, ag.handleGetX5U)
 	}
 }
 
