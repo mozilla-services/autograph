@@ -271,11 +271,30 @@ See `/sign/data`, the response format is identical.
 A successful request return a `201 Created` with a response
 body containing an S/MIME detached signature encoded with Base 64.
 
-## /x5u/:keyid/:chain
+## /x5u/:keyid/:chainfile
 
 This is an endpoint used to fetch certificate chains which are generated and
 stored locally. If the signer is configured with a `chainuploadlocation` with
 the `file://` scheme, then the contents of that file location are mirrored here.
+
+### Request
+
+The endpoint accepts a GET request without query parameters or request body. Because
+this endpoint is intended to serve public certificates, no authentication headers are
+necessary to access this endpoint.
+
+### Response
+
+A successful response returns a `200 OK` with a response body containing the
+PEM-encoded certificate chain for the given `keyid` and `chainfile`. The expected
+Content-Type should be `application/x-x509-ca-cert`.
+
+The following error codes may be observed with this endpoint:
+- 400 Bad Request when the request includes a non-empty body
+- 400 Bad Request when the `chainfile` contains a malformed filename.
+- 404 Not Found when either the signer ID, or the requested chainfile are not found.
+- 404 Not Found when the signer is not configured to store certificate chains locally.
+- 405 Method Not Allowed when the request method is not GET
 
 ## /\_\_monitor\_\_
 
