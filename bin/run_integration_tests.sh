@@ -98,3 +98,6 @@ docker compose run \
 	       --entrypoint ./build_test_apks.sh \
 	       app
 # TODO(GH-381): add HSM support for APK signing keys and test here
+
+echo "cleaning up"
+rm normandy_dev_root_hash.txt
