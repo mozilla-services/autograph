@@ -1,9 +1,10 @@
 package main
 
 import (
-	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Middleware wraps an http.Handler with additional functionality
@@ -27,13 +28,18 @@ func setResponseHeaders() Middleware {
 func setRequestID() Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rid := make([]rune, 16)
-			letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-			for i := range rid {
-				rid[i] = letters[rand.Intn(len(letters))]
+			// NewV7 is used instead of New because the latter will panic
+			// if can't generate a UUID. It's preferably for us to have
+			// worse request ids than panic.
+			uuid, err := uuid.NewV7()
+			var rid string
+			if err != nil {
+				rid = "-"
+			} else {
+				rid = uuid.String()
 			}
 
-			h.ServeHTTP(w, addToContext(r, contextKeyRequestID, string(rid)))
+			h.ServeHTTP(w, addToContext(r, contextKeyRequestID, rid))
 		})
 	}
 }
