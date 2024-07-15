@@ -32,41 +32,47 @@ if [ "$VERIFY" = "0" ]; then
     COMMON_ARGS="$COMMON_ARGS -noverify"
 fi
 
+# These tests don't interfere with each other, so they are backgrounded
+# and waited on after all are launched.
+
 # only PKCS7 SHA1
-go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1.zip
+go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1.zip &
 
 # PKCS7 SHA1 with COSE ES256
-go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1-ES256.zip -c ES256
+go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1-ES256.zip -c ES256 &
 
 # PKCS7 SHA1 with COSE ES512
-go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1-ES256.zip -c ES512
+go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1-ES256.zip -c ES512 &
 
 # PKCS7 SHA1 with COSE PS256
-go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1-PS256.zip -c PS256
+go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1-PS256.zip -c PS256 &
 
 # PKCS7 SHA1 with COSE ES256 ES384 ES512 (multiple recognized)
-go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1-ES256-ES384-ES512.zip -c ES256 -c ES384 -c ES512
+go run client.go $COMMON_ARGS -pk7digest sha1 -o ${OUTPUT_BASENAME}-SHA1-ES256-ES384-ES512.zip -c ES256 -c ES384 -c ES512 &
 
 # PKCS7 SHA1 with COSE ES256 PS256 (multiple one Fx recognizes ES256 and another unrecognized PS256)
-go run client.go $COMMON_ARGS -pk7digest sha1  -o ${OUTPUT_BASENAME}-SHA1-ES256-PS256.zip -c ES256 -c PS256
+go run client.go $COMMON_ARGS -pk7digest sha1  -o ${OUTPUT_BASENAME}-SHA1-ES256-PS256.zip -c ES256 -c PS256 &
 
 
 # only PKCS7 SHA256
-go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256.zip
+go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256.zip &
 
 # PKCS7 SHA256 with COSE ES256
-go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-ES256.zip -c ES256
+go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-ES256.zip -c ES256 &
 
 # PKCS7 SHA256 with COSE ES512
-go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-ES256.zip -c ES512
+go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-ES256.zip -c ES512 &
 
 # PKCS7 SHA256 with COSE PS256
-go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-PS256.zip -c PS256
+go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-PS256.zip -c PS256 &
 
 # PKCS7 SHA256 with COSE ES256 ES384 ES512 (multiple recognized)
-go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-ES256-ES384-ES512.zip -c ES256 -c ES384 -c ES512
+go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-ES256-ES384-ES512.zip -c ES256 -c ES384 -c ES512 &
 
 # PKCS7 SHA256 with COSE ES256 PS256 (multiple one Fx recognizes ES256 and another unrecognized PS256)
-go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-ES256-PS256.zip -c ES256 -c PS256
+go run client.go $COMMON_ARGS -pk7digest sha256 -o ${OUTPUT_BASENAME}-SHA256-ES256-PS256.zip -c ES256 -c PS256 &
+
+# Wait for tests to complete
+wait
 
 tar cvzf ${OUTPUT_BASENAME}.tgz ${OUTPUT_BASENAME}*.zip

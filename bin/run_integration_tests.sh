@@ -52,14 +52,16 @@ docker compose run \
 	       -e AUTOGRAPH_URL=http://app:8000 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_api.sh \
-	       app
+	       app &
 docker compose run \
 	       --rm \
 	       --user 0 \
 	       -e AUTOGRAPH_URL=http://app-hsm:8001 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_api.sh \
-	       app-hsm
+	       app-hsm &
+
+wait
 
 echo "checking gpg signing"
 docker compose run \
@@ -78,7 +80,7 @@ docker compose run \
 	       -e AUTOGRAPH_URL=http://app:8000 \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_xpis.sh \
-	       app
+	       app &
 docker compose run \
 	       --rm \
 	       --user 0 \
@@ -86,7 +88,9 @@ docker compose run \
 	       -e SIGNER_ID_PREFIX="hsm-" \
 	       --workdir /app/src/autograph/tools/autograph-client \
 	       --entrypoint ./integration_test_xpis.sh \
-	       app-hsm
+	       app-hsm &
+
+wait
 
 echo "checking APK signing"
 docker compose run \
