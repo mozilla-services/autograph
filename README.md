@@ -43,8 +43,6 @@ docker compose up 2>&1 | tee compose.log \
        grep "autograph-unit-test" compose.log)
 ```
 
-As of 2023-06-26, only the integration tests will pass on Circle CI. See [Issue 853](https://github.com/mozilla-services/autograph/issues/853) for details.
-
 ### Using go get
 
 _**Do Not Use** unless you are an experienced golang developer._
