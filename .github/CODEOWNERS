@@ -1,8 +1,3 @@
-*       @g-k, @kkleemola, @pwnbus
+* @mozilla-services/autograph-devs @mozilla-services/autograph-mergers
 
-# the AMO team should review changes that impact Addon signing
-signer/xpi/	@willdurand
-
-# TODO: check with Mathieu
-# signer/contentsignature	@leplatrem
-# signer/contentsignaturepki	@leplatrem
+signer/xpi/ @mozilla-services/autograph-devs @mozilla-services/autograph-mergers @mozilla/addons-engineering
