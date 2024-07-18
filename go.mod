@@ -1,6 +1,6 @@
 module github.com/mozilla-services/autograph
 
-go 1.22
+go 1.22.5
 
 require (
 	github.com/DataDog/datadog-go v3.7.2+incompatible
@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-lambda-go v1.27.0
 	github.com/aws/aws-sdk-go v1.42.15
 	github.com/golang/mock v1.6.0
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/lib/pq v1.10.4
@@ -40,7 +41,6 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
 	github.com/goware/prefixer v0.0.0-20160118172347-395022866408 // indirect
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c // indirect
