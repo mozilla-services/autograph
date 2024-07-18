@@ -13,13 +13,13 @@ jobs:
       - run:
           name: install dependencies
           environment:
-            PATH: "${PATH}:/usr/lib/go-1.22/bin"
           # TODO(AUT-158): installing Go differently for tests than linting is bad
           command: |
             echo "deb http://deb.debian.org/debian/ bookworm-backports main" > /etc/apt/sources.list.d/bookworm-backports.list
             echo "deb-src http://deb.debian.org/debian/ bookworm-backports main" >> /etc/apt/sources.list.d/bookworm-backports.list
             apt-get update
             apt-get install -y golang-1.22 build-essential git ca-certificates libltdl-dev
+            echo 'export PATH="${PATH}:/usr/lib/go-1.22/bin"' >> $BASH_ENV
       - checkout
       - run:
           name: check crypto11 not used in signers
