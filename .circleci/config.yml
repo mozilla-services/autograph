@@ -8,13 +8,14 @@ version: 2.1
 jobs:
   lint-vet-fmt:
     docker:
-      - image: cimg/go:1.22
+      - image: debian:bookworm
     steps:
       - run:
           name: install dependencies
+          # TODO(AUT-158): installing Go differently for tests than linting is bad
           command: |
             apt-get update
-            apt-get install -y golang build-essential git ca-certificates libltdl-dev
+            apt-get install -y golang-1.22 build-essential git ca-certificates libltdl-dev
       - checkout
       - run:
           name: check crypto11 not used in signers
