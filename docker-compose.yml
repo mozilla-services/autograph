@@ -20,7 +20,7 @@ services:
   dev:
     container_name: autograph-app-dev
     build:
-      context: Dockerfile.dev
+      context: .
     environment: # This could be a test database instead maybe?
       - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
     links:
