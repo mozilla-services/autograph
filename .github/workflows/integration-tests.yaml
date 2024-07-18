@@ -1,0 +1,59 @@
+name: Tests
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        required: true
+        type: string
+      run-id:
+        required: false
+        default: ${{ github.run_id }}
+        type: string
+
+# Restrict tests to the most recent commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  enumerate:
+    name: Enumerate Tests
+    runs-on: ubuntu-22.04
+    outputs:
+      testcases: ${{ steps.enum-tests.outputs.testcases }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Enumerate tests
+        id: enum-tests
+        shell: bash
+        run: |
+            echo -n "testcases=" >> $GITHUB_OUTPUT
+            yq -o=json '.services | keys' tools/autograph-client/integration-tests.yml | jq -c >> $GITHUB_OUTPUT
+
+  integration-tests:
+    name: Run Integration Tests
+    runs-on: ubuntu-22.04
+    needs:
+      - enumerate
+    strategy:
+      fail-fast: false # Don't cancel other jobs if a test fails
+      matrix:
+        testcase: ${{ fromJSON(needs.enumerate.outputs.testcases) }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: docker-cache/
+
+      - name: Load images
+        shell: bash
+        run: docker load -i docker-cache/autograph-images.tar
+
+      - name: Running ${{ matrix.testcase }}
+        shell: bash
+        run: docker compose -f tools/autograph-client/integration-tests.yml run ${{ matrix.testcase }}

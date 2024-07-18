@@ -32,13 +32,6 @@ jobs:
             mkdir -p docker-cache
             docker save -o docker-cache/autograph-images.tar autograph-app autograph-app-hsm
 
-      - name: Enumerate tests
-        id: enum-tests
-        shell: bash
-        run: |
-            echo -n "testcases=" >> $GITHUB_OUTPUT
-            yq -o=json '.services | keys' tools/autograph-client/integration-tests.yml | jq -c >> $GITHUB_OUTPUT
-
       - uses: actions/upload-artifact@v4
         with:
           name: autograph-images-${{ github.sha }}
@@ -94,27 +87,6 @@ jobs:
             autograph-app ./bin/run_unit_tests.sh
 
   integration-tests:
-    name: Run Integration Tests
-    runs-on: ubuntu-22.04
-    needs:
-      - build
-    strategy:
-      fail-fast: false # Don't cancel other jobs if a test fails
-      matrix:
-        testcase: ${{ fromJSON(needs.build.outputs.testcases) }}
-    steps:
-      - name: Clone repository
-        uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: autograph-images-${{ github.sha }}
-          path: docker-cache/
-
-      - name: Load images
-        shell: bash
-        run: docker load -i docker-cache/autograph-images.tar
-
-      - name: Running ${{ matrix.testcase }}
-        shell: bash
-        run: docker compose -f tools/autograph-client/integration-tests.yml run ${{ matrix.testcase }}
+    uses: .github/workflows/integration-tests.yaml
+    with:
+      artifact-name: autograph-images-${{ github.sha }}
