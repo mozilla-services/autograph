@@ -8,7 +8,7 @@ version: 2.1
 jobs:
   lint-vet-fmt:
     docker:
-      - image: debian:bookworm
+      - image: cimg/go:1.22
     steps:
       - run:
           name: install dependencies
