@@ -18,7 +18,7 @@ jobs:
             echo "deb-src http://deb.debian.org/debian/ bookworm-backports main" >> /etc/apt/sources.list.d/bookworm-backports.list
             apt-get update
             apt-get install -y golang-1.22 build-essential git ca-certificates libltdl-dev
-            export PATH="${PATH}:/usr/lib/go-${GO_VERSION}/bin:/go/bin"
+            export PATH="${PATH}:/usr/lib/go-1.22/bin:/go/bin"
       - checkout
       - run:
           name: check crypto11 not used in signers
