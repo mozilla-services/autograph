@@ -8,13 +8,9 @@ version: 2.1
 jobs:
   lint-vet-fmt:
     docker:
-      - image: debian:bookworm
+      - image: cimg/go:1.22
     steps:
-      - run:
-          name: install dependencies
-          command: |
-            apt-get update
-            apt-get install -y golang build-essential git ca-certificates libltdl-dev
+      # TODO(AUT-158): this linting always succeeds even if there are errors, and future correct linting may need correct cgo compliation
       - checkout
       - run:
           name: check crypto11 not used in signers
@@ -38,7 +34,7 @@ jobs:
           command: |
             make vet
             make -C tools/autograph-monitor vet
-            make -C verifier/contentsignature vet 
+            make -C verifier/contentsignature vet
       - run:
           name: run staticcheck
           command: |
@@ -50,7 +46,7 @@ jobs:
   unit-test:
     # based on the official golang image with more docker stuff
     docker:
-      - image: cimg/go:1.19
+      - image: cimg/go:1.22
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
@@ -80,7 +76,7 @@ jobs:
   build-integrationtest-verify:
     # based on the official golang image with more docker stuff
     docker:
-      - image: cimg/go:1.19
+      - image: cimg/go:1.22
         auth:
           username: $DOCKER_USER
           password: $DOCKER_PASS
