@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"time"
+
+	"net/http"
 
 	"github.com/DataDog/datadog-go/statsd"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,4 +24,15 @@ func (a *autographer) addStats(conf configuration) (err error) {
 	a.stats, err = loadStatsd(conf)
 	log.Infof("Statsd enabled at %s with namespace %s", conf.Statsd.Addr, conf.Statsd.Namespace)
 	return err
+}
+
+// Send statsd success request
+func (a *autographer) statsWriteSuccess(r *http.Request, key string) {
+	if a.stats != nil {
+		starttime := getRequestStartTime(r)
+		sendStatsErr := a.stats.Timing(key, time.Since(starttime), nil, 1.0)
+		if sendStatsErr != nil {
+			log.Warnf("Error sending statsd on success %s: %s", key, sendStatsErr)
+		}
+	}
 }

@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"net/http"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -457,4 +459,24 @@ func TestPortOverride(t *testing.T) {
 	if listen != expected {
 		t.Errorf("expected listen %s got %s", expected, listen)
 	}
+}
+
+func TestStatsWriteSuccess(t *testing.T) {
+	t.Parallel()
+	req, err := http.NewRequest("GET", "https://foo.bar", nil)
+	if err != nil {
+		t.Errorf("Error setting up request.")
+	}
+	ag.statsWriteSuccess(req, "test")
+}
+
+func TestStatsWriteSuccessNoStats(t *testing.T) {
+	t.Parallel()
+	// No stats set on autographer
+	tmpag := newAutographer(1)
+	req, err := http.NewRequest("GET", "https://foo.bar", nil)
+	if err != nil {
+		t.Errorf("Error setting up request.")
+	}
+	tmpag.statsWriteSuccess(req, "test")
 }
