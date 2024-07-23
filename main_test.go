@@ -467,7 +467,10 @@ func TestStatsWriteSuccess(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error setting up request.")
 	}
-	ag.statsWriteSuccess(req, "test")
+	statsErr := ag.statsWriteSuccess(req, "test")
+	if statsErr != nil {
+		t.Errorf("statsWriteSuccess should not have failed: %s", statsErr)
+	}
 }
 
 func TestStatsWriteSuccessNoStats(t *testing.T) {
@@ -478,5 +481,26 @@ func TestStatsWriteSuccessNoStats(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error setting up request.")
 	}
-	tmpag.statsWriteSuccess(req, "test")
+	statsErr := tmpag.statsWriteSuccess(req, "test")
+	if statsErr != nil {
+		t.Errorf("statsWriteSuccess should not have failed: %s", statsErr)
+	}
+}
+
+func TestStatsWriteSuccessFailure(t *testing.T) {
+	t.Parallel()
+	// No stats set on autographer
+	tmpag := newAutographer(1)
+	req, err := http.NewRequest("GET", "https://foo.bar", nil)
+	if err != nil {
+		t.Errorf("Error setting up request.")
+	}
+	conf.loadFromFile("autograph.yaml")
+	// Buffer will always be full - causing an error on submission
+	conf.Statsd.Buflen = -1
+	tmpag.addStats(conf)
+	statsErr := tmpag.statsWriteSuccess(req, "test")
+	if statsErr == nil {
+		t.Error("statsWriteSuccess should have failed!")
+	}
 }

@@ -27,12 +27,13 @@ func (a *autographer) addStats(conf configuration) (err error) {
 }
 
 // Send statsd success request
-func (a *autographer) statsWriteSuccess(r *http.Request, key string) {
+func (a *autographer) statsWriteSuccess(r *http.Request, key string) (err error) {
 	if a.stats != nil {
 		starttime := getRequestStartTime(r)
 		sendStatsErr := a.stats.Timing(key, time.Since(starttime), nil, 1.0)
 		if sendStatsErr != nil {
-			log.Warnf("Error sending statsd on success %s: %s", key, sendStatsErr)
+			return fmt.Errorf("error sending statsd on success %s: %w", key, sendStatsErr)
 		}
 	}
+	return nil
 }
