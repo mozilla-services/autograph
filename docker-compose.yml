@@ -21,6 +21,7 @@ services:
     container_name: autograph-app-dev
     build:
       context: .
+      target: development
     environment: # This could be a test database instead maybe?
       - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
     links:
@@ -54,7 +55,7 @@ services:
     build:
       context: tools/softhsm/
     environment:
-      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt 
     links:
       - db
     ports:

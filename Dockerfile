@@ -44,6 +44,22 @@ RUN cd /app/src/autograph && go install .
 RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autograph-monitor .
 RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograph-client .
 
+#
+# Development Stage
+#
+FROM base as development
+
+ENV PATH="$PATH:/usr/lib/go-${GO_VERSION}/bin:/go/bin"
+ENV FOO='bar'
+ENV GOPATH='/go'
+
+# fetch the RDS CA bundles
+# https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificatesAllRegions
+RUN curl -o /usr/local/share/old-rds-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && \
+      curl -o /usr/local/share/new-rds-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
+      cat /usr/local/share/old-rds-ca-bundle.pem /usr/local/share/new-rds-ca-bundle.pem > /usr/local/share/rds-combined-ca-bundle.pem
+
+CMD [ "/bin/bash"]
 #------------------------------------------------------------------------------
 # Deployment Stage
 #------------------------------------------------------------------------------
