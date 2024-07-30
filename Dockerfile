@@ -45,30 +45,6 @@ RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autogra
 RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograph-client .
 
 #------------------------------------------------------------------------------
-# Deployment Stage
-#------------------------------------------------------------------------------
-FROM base as autograph-app
-EXPOSE 8000
-
-# fetch the RDS CA bundles
-# https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificatesAllRegions
-RUN curl -o /usr/local/share/old-rds-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && \
-      curl -o /usr/local/share/new-rds-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
-      cat /usr/local/share/old-rds-ca-bundle.pem /usr/local/share/new-rds-ca-bundle.pem > /usr/local/share/rds-combined-ca-bundle.pem
-
-# Copy compiled appliation from the builder.
-ADD . /app/src/autograph
-ADD autograph.yaml /app
-ADD version.json /app
-COPY --from=builder /go/bin /go/bin/
-
-# Setup the worker and entrypoint.
-RUN useradd --uid 10001 --home-dir /app --shell /sbin/nologin app
-USER app
-WORKDIR /app
-CMD /go/bin/autograph
-
-#------------------------------------------------------------------------------
 # With SoftHSM set up for testing
 #------------------------------------------------------------------------------
 FROM builder as autograph-builder-softhsm
@@ -143,3 +119,27 @@ COPY tools/autograph-monitor/lambda-selftest-entrypoint.sh /usr/local/bin/lambda
 USER app
 ENTRYPOINT ["/usr/local/bin/aws-lambda-rie"]
 CMD ["/go/bin/autograph-monitor"]
+
+#------------------------------------------------------------------------------
+# Deployment Stage
+#------------------------------------------------------------------------------
+FROM base
+EXPOSE 8000
+
+# fetch the RDS CA bundles
+# https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificatesAllRegions
+RUN curl -o /usr/local/share/old-rds-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && \
+        curl -o /usr/local/share/new-rds-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
+        cat /usr/local/share/old-rds-ca-bundle.pem /usr/local/share/new-rds-ca-bundle.pem > /usr/local/share/rds-combined-ca-bundle.pem
+
+# Copy compiled appliation from the builder.
+ADD . /app/src/autograph
+ADD autograph.yaml /app
+ADD version.json /app
+COPY --from=builder /go/bin /go/bin/
+
+# Setup the worker and entrypoint.
+RUN useradd --uid 10001 --home-dir /app --shell /sbin/nologin app
+USER app
+WORKDIR /app
+CMD /go/bin/autograph
