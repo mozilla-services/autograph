@@ -47,7 +47,7 @@ RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograp
 #------------------------------------------------------------------------------
 # Deployment Stage
 #------------------------------------------------------------------------------
-FROM base
+FROM base as autograph-app
 EXPOSE 8000
 
 # fetch the RDS CA bundles
@@ -71,7 +71,7 @@ CMD /go/bin/autograph
 #------------------------------------------------------------------------------
 # With SoftHSM set up for testing
 #------------------------------------------------------------------------------
-FROM base as autograph-app-softhsm
+FROM builder as autograph-builder-softhsm
 
 RUN apt-get update && \
       apt-get -y upgrade && \
@@ -83,16 +83,11 @@ ADD tools/softhsm/autograph.softhsm.yaml /app/
 
 # give app access to dev db root cert
 ADD tools/softhsm/db-root.crt /opt/db-root.crt
-RUN chgrp -vR app /opt
 RUN chmod -vR 0444 /opt/db-root.crt
 
 # Setup SoftHSM
 RUN mkdir -p /var/lib/softhsm/tokens && \
       softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
-
-# load dev keys
-ADD tools/softhsm/webextensions-rsa.pem /app/src/autograph/tools/softhsm/
-ADD tools/softhsm/extensions-ecdsa-pk8.pem /app/src/autograph/tools/softhsm/
 
 # Import a key pair from the given path. The file must be in PKCS#8-format. Use with --slot or --token or --serial, --file-pin, --label, --id, --no-public-key, and --pxin.
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --id deadbeef --import /app/src/autograph/tools/softhsm/webextensions-rsa.pem
