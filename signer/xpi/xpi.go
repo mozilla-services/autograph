@@ -128,6 +128,8 @@ type XPISigner struct {
 
 // New initializes an XPI signer using a configuration
 func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, err error) {
+	// TODO(AUT-160): instead of doing nil checks for stats all over XPISigner,
+	// we could just check it here once or provide a null object version of it for tests.
 	s = new(XPISigner)
 	if conf.Type != Type {
 		return nil, fmt.Errorf("xpi: invalid type %q, must be %q", conf.Type, Type)
