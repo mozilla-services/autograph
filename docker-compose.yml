@@ -37,7 +37,8 @@ services:
     container_name: autograph-app-hsm
     image: autograph-app-hsm
     build:
-      context: tools/softhsm/
+      context: .
+      target: autograph-app-softhsm
     environment:
       - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
     links:
@@ -94,8 +95,8 @@ services:
     container_name: autograph-monitor-hsm-lambda-emulator
     image: autograph-monitor-lambda-emulator
     build:
-      context: tools/autograph-monitor/
-      dockerfile: Dockerfile.lambda-emulator
+      context: .
+      target: autograph-lambda-emulator
     environment:
       - AUTOGRAPH_URL=http://autograph-app-hsm:8001/
       - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
