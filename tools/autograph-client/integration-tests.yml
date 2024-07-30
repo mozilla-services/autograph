@@ -3,7 +3,8 @@ include:
 services:
   test-api-app:
     container_name: test-api-app
-    image: autograph-app
+    build:
+      context: ../..
     user: "0"
     links:
       - app
@@ -18,7 +19,8 @@ services:
 
   test-api-hsm:
     container_name: test-api-hsm
-    image: autograph-app
+    build:
+      context: ../..
     user: "0"
     links:
       - app-hsm
