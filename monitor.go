@@ -3,12 +3,14 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/mozilla-services/autograph/formats"
-	"github.com/mozilla-services/autograph/signer"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/DataDog/datadog-go/statsd"
+	"github.com/mozilla-services/autograph/formats"
+	"github.com/mozilla-services/autograph/signer"
+	log "github.com/sirupsen/logrus"
 )
 
 // A monitor of signer health
@@ -35,6 +37,8 @@ type monitor struct {
 
 	// Closed on exit of the autographer instance.
 	exit chan interface{}
+
+	stats statsd.ClientInterface
 }
 
 // The monitor loop, should run in a separate goroutine.
@@ -139,6 +143,7 @@ func newMonitor(ag *autographer, duration time.Duration) *monitor {
 	m.initialized = make(chan interface{})
 	m.exit = ag.exit
 	m.debug = ag.debug
+	m.stats = ag.stats
 
 	go m.start(duration)
 
