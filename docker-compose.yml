@@ -4,7 +4,6 @@ volumes:
 services:
   db:
     container_name: autograph-db
-    image: autograph:db
     build:
       context: database/
     environment:
@@ -16,7 +15,6 @@ services:
 
   app:
     container_name: autograph-app
-    image: autograph-app
     build:
       context: .
     environment:
@@ -35,10 +33,9 @@ services:
 
   app-hsm:
     container_name: autograph-app-hsm
-    image: autograph-app-hsm
     build:
       context: .
-      target: autograph-app-softhsm
+      target: autograph-builder-softhsm
     environment:
       - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
     links:
@@ -93,7 +90,6 @@ services:
 
   monitor-hsm-lambda-emulator:
     container_name: autograph-monitor-hsm-lambda-emulator
-    image: autograph-monitor-lambda-emulator
     build:
       context: .
       target: autograph-lambda-emulator
@@ -115,9 +111,9 @@ services:
 
   unit-test:
     container_name: autograph-unit-test
-    image: autograph-app
     build:
       context: .
+      target: autograph-builder-softhsm
     environment:
       - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/app/src/autograph/tools/softhsm/db-root.crt
       - AUTOGRAPH_DB_HOST=db
@@ -136,7 +132,4 @@ services:
       - db
     user: "0"
     working_dir: "/app/src/autograph/"
-    command:
-      [
-        "./bin/run_unit_tests.sh"
-      ]
+    command: ["./bin/run_unit_tests.sh"]
