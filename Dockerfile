@@ -73,6 +73,10 @@ CMD /go/bin/autograph
 #------------------------------------------------------------------------------
 FROM builder as autograph-builder-softhsm
 
+# We build off of `builder` because of the `go run genkeys.go` command below.
+# And we want to do so because otherwise the bookworm image we build off of will
+# have Go 1.22.1 instead of the version in our `go.mod` and we want to avoid a
+# re-install of the right Go version.
 RUN apt-get update && \
       apt-get -y upgrade && \
       apt-get -y install jq yq softhsm2 python3 python3-ruamel.yaml && \
