@@ -68,9 +68,9 @@ USER app
 WORKDIR /app
 CMD /go/bin/autograph
 
-#
+#------------------------------------------------------------------------------
 # With SoftHSM set up for testing
-# FIXME
+#------------------------------------------------------------------------------
 FROM base as autograph-app-softhsm
 
 RUN apt-get update && \
@@ -79,10 +79,10 @@ RUN apt-get update && \
       apt-get clean
 
 # copy the config
-ADD autograph.softhsm.yaml /app/
+ADD tools/softhsm/autograph.softhsm.yaml /app/
 
 # give app access to dev db root cert
-ADD db-root.crt /opt/db-root.crt
+ADD tools/softhsm/db-root.crt /opt/db-root.crt
 RUN chgrp -vR app /opt
 RUN chmod -vR 0444 /opt/db-root.crt
 
@@ -91,8 +91,8 @@ RUN mkdir -p /var/lib/softhsm/tokens && \
       softhsm2-util --init-token --slot 0 --label test --pin 0000 --so-pin 0000
 
 # load dev keys
-ADD webextensions-rsa.pem /app/src/autograph/tools/softhsm/
-ADD extensions-ecdsa-pk8.pem /app/src/autograph/tools/softhsm/
+ADD tools/softhsm/webextensions-rsa.pem /app/src/autograph/tools/softhsm/
+ADD tools/softhsm/extensions-ecdsa-pk8.pem /app/src/autograph/tools/softhsm/
 
 # Import a key pair from the given path. The file must be in PKCS#8-format. Use with --slot or --token or --serial, --file-pin, --label, --id, --no-public-key, and --pxin.
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --id deadbeef --import /app/src/autograph/tools/softhsm/webextensions-rsa.pem
@@ -127,9 +127,9 @@ RUN cd /app/src/autograph/tools/genpki/ && \
 
 CMD /go/bin/autograph -c /app/autograph.softhsm.yaml
 
-#
+#------------------------------------------------------------------------------
 # Lambda emulator
-# FIXME
+#------------------------------------------------------------------------------
 FROM base as autograph-lambda-emulator
 
 USER root
@@ -139,7 +139,7 @@ RUN curl -Lo /usr/local/bin/aws-lambda-rie \
     && \
     chmod +x /usr/local/bin/aws-lambda-rie
 
-COPY lambda-selftest-entrypoint.sh /usr/local/bin/lambda-selftest-entrypoint.sh
+COPY tools/autograph-monitor/lambda-selftest-entrypoint.sh /usr/local/bin/lambda-selftest-entrypoint.sh
 
 USER app
 ENTRYPOINT ["/usr/local/bin/aws-lambda-rie"]
