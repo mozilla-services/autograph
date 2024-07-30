@@ -63,12 +63,12 @@ services:
 
   monitor:
     container_name: autograph-monitor
-    image: autograph-app
+    build:
+      context: .
     command: ["/go/bin/autograph-monitor"]
 
   monitor-lambda-emulator:
     container_name: autograph-monitor-lambda-emulator
-    image: autograph-monitor-lambda-emulator
     build:
       context: .
       target: autograph-lambda-emulator
