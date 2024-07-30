@@ -116,7 +116,6 @@ RUN curl -Lo /usr/local/bin/aws-lambda-rie \
 
 COPY tools/autograph-monitor/lambda-selftest-entrypoint.sh /usr/local/bin/lambda-selftest-entrypoint.sh
 
-USER app
 ENTRYPOINT ["/usr/local/bin/aws-lambda-rie"]
 CMD ["/go/bin/autograph-monitor"]
 
