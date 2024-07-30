@@ -72,7 +72,7 @@ type configuration struct {
 // with all signers and permissions configured
 type autographer struct {
 	db                   *database.Handler
-	stats                *statsd.Client
+	stats                statsd.ClientInterface
 	nonces               *lru.Cache
 	debug                bool
 	heartbeatConf        *heartbeatConfig
@@ -166,11 +166,9 @@ func run(conf configuration, listen string, debug bool) {
 		ag.initHSM(conf)
 	}
 
-	if conf.Statsd.Addr != "" {
-		err = ag.addStats(conf)
-		if err != nil {
-			log.Fatal(err)
-		}
+	err = ag.addStats(conf)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	err = ag.addSigners(conf.Signers)
@@ -292,6 +290,7 @@ func newAutographer(cachesize int) (a *autographer) {
 	a.authBackend = newInMemoryAuthBackend()
 	a.nonces, err = lru.New(cachesize)
 	a.exit = make(chan interface{})
+	a.stats = &statsd.NoOpClient{}
 	if err != nil {
 		log.Fatal(err)
 	}
