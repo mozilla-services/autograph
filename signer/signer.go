@@ -523,14 +523,11 @@ type StatsClient struct {
 	signerTags []string
 
 	// stats is the statsd client for reporting metrics
-	stats *statsd.Client
+	stats statsd.ClientInterface
 }
 
 // NewStatsClient makes a new stats client
-func NewStatsClient(signerConfig Configuration, stats *statsd.Client) (*StatsClient, error) {
-	if stats == nil {
-		return nil, fmt.Errorf("xpi: statsd client is nil. Could not create StatsClient for signer %s", signerConfig.ID)
-	}
+func NewStatsClient(signerConfig Configuration, stats statsd.ClientInterface) (*StatsClient, error) {
 	return &StatsClient{
 		stats: stats,
 		signerTags: []string{
