@@ -118,3 +118,13 @@ jobs:
       - name: Running ${{ matrix.testcase }}
         shell: bash
         run: docker compose -f tools/autograph-client/integration-tests.yml run ${{ matrix.testcase }}
+
+      - name: Fetching autograph logs
+        shell: bash
+        if: ${{ always() }}
+        run: |
+          if echo "${{ matrix.testcase }}" | grep -q hsm;
+            docker compose logs app-hsm
+          else
+            docker compose logs app
+          fi
