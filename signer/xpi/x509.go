@@ -12,56 +12,9 @@ import (
 	"math/big"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"go.mozilla.org/cose"
 )
 
-// populateRsaCache adds an rsa key to the cache every
-// XPISigner.rsaCacheSleepDuration, blocks when the cache channel is
-// full, and should be run as a goroutine
-func (s *XPISigner) populateRsaCache(size int) {
-	var (
-		err   error
-		key   *rsa.PrivateKey
-		start time.Time
-	)
-	for {
-		start = time.Now()
-		key, err = rsa.GenerateKey(s.rand, size)
-		if err != nil {
-			log.Fatalf("xpi: error generating RSA key for cache: %q", err)
-		}
-		if key == nil {
-			log.Fatal("xpi: error generated nil RSA key for cache")
-		}
-
-		if s.stats != nil {
-			s.stats.SendHistogram("xpi.rsa_cache.gen_key_dur", time.Since(start))
-		}
-		s.rsaCache <- key
-		time.Sleep(s.rsaCacheGeneratorSleepDuration)
-	}
-}
-
-// monitorRsaCacheSize sends the number of cached keys and cache size
-// to datadog. It should be run as a goroutine
-func (s *XPISigner) monitorRsaCacheSize() {
-	if s.stats == nil {
-		return
-	}
-	for {
-		s.stats.SendGauge("xpi.rsa_cache.chan_len", len(s.rsaCache))
-
-		// chan capacity should be constant but is useful for
-		// knowing % cache filled across deploys
-		s.stats.SendGauge("xpi.rsa_cache.chan_cap", cap(s.rsaCache))
-
-		time.Sleep(s.rsaCacheSizeSampleRate)
-	}
-}
-
-// retrieve a key from the cache or generate one if it takes too long
-// or if the size is wrong
 func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 	var (
 		err   error
@@ -69,19 +22,7 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 		start time.Time
 	)
 	start = time.Now()
-	select {
-	case key = <-s.rsaCache:
-		if key.N.BitLen() != size {
-			// it's theoritically impossible for this to happen
-			// because the end entity has the same key size has
-			// the signer, but we're paranoid so handling it
-			log.Warnf("WARNING: xpi rsa cache returned a key of size %d when %d was requested", key.N.BitLen(), size)
-			key, err = rsa.GenerateKey(s.rand, size)
-		}
-	case <-time.After(s.rsaCacheFetchTimeout):
-		// generate a key if none available
-		key, err = rsa.GenerateKey(s.rand, size)
-	}
+	key, err = rsa.GenerateKey(s.rand, size)
 
 	if s.stats != nil {
 		s.stats.SendHistogram("xpi.rsa_cache.get_key", time.Since(start))

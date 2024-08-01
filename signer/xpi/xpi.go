@@ -83,22 +83,6 @@ type XPISigner struct {
 	// rand is the CSPRNG to use from the HSM or crypto/rand
 	rand io.Reader
 
-	// rsa cache is used to pre-generate RSA private keys and speed up
-	// the signing process
-	rsaCache chan *rsa.PrivateKey
-
-	// rsaCacheGeneratorSleepDuration is how frequently each cache key
-	// generator tries to add a key to the cache chan
-	rsaCacheGeneratorSleepDuration time.Duration
-
-	// rsaCacheFetchTimeout is how long a consumer waits for the
-	// cache before generating its own key
-	rsaCacheFetchTimeout time.Duration
-
-	// rsaCacheSizeSampleRate is how frequently the monitor
-	// reports the cache size and capacity
-	rsaCacheSizeSampleRate time.Duration
-
 	// stats is the statsd client for reporting metrics
 	stats *signer.StatsClient
 
@@ -206,32 +190,10 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	s.recommendationFilePath = conf.RecommendationConfig.FilePath
 	log.Infof("xpi: signer %q is ignoring recommendation file path %q", s.ID, s.recommendationFilePath)
 
-	// If the private key is rsa, launch go routines that
-	// populates the rsa cache with private keys of the same
-	// length
+	// If the private key is rsa, sanity check the length
 	if issuerKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {
 		if issuerKey.N.BitLen() < rsaKeyMinSize {
 			return nil, fmt.Errorf("xpi: issuer RSA key must be at least %d bits", rsaKeyMinSize)
-		}
-		if conf.RSACacheConfig.StatsSampleRate < 5*time.Second {
-			log.Warnf("xpi: sampling rsa cache as rate of %q (less than 5s)", conf.RSACacheConfig.StatsSampleRate)
-		}
-		s.rsaCacheGeneratorSleepDuration = conf.RSACacheConfig.GeneratorSleepDuration
-		s.rsaCacheFetchTimeout = conf.RSACacheConfig.FetchTimeout
-		s.rsaCacheSizeSampleRate = conf.RSACacheConfig.StatsSampleRate
-
-		s.rsaCache = make(chan *rsa.PrivateKey, conf.RSACacheConfig.NumKeys)
-		for i := 0; i < int(conf.RSACacheConfig.NumGenerators); i++ {
-			go s.populateRsaCache(issuerKey.N.BitLen())
-		}
-
-		log.Infof("xpi: %d RSA key cache started with %d generators running every %q\n and a %q timeout", conf.RSACacheConfig.NumKeys, conf.RSACacheConfig.NumGenerators, s.rsaCacheGeneratorSleepDuration, s.rsaCacheFetchTimeout)
-
-		if s.stats == nil {
-			log.Warnf("xpi: No statsd client found to send RSA cache metrics")
-		} else {
-			go s.monitorRsaCacheSize()
-			log.Infof("xpi: Started RSA cache monitor")
 		}
 	}
 

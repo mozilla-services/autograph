@@ -1,8 +1,6 @@
 package xpi
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -48,16 +46,12 @@ func TestSignFile(t *testing.T) {
 			t.Run(fmt.Sprintf("test sign file %s signer id %s (%d)", input.name, testcase.ID, i), func(t *testing.T) {
 				t.Parallel()
 
-				// initialize a signer
-				testcase.RSACacheConfig = signer.RSACacheConfig{
-					NumKeys:                5,
-					NumGenerators:          2,
-					GeneratorSleepDuration: time.Minute,
-					FetchTimeout:           100 * time.Millisecond,
-					StatsSampleRate:        10 * time.Second,
+				statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
+				if err != nil {
+					t.Fatalf("passing testcase %d: Error constructing statsdClient: %v", i, err)
 				}
-
-				signerStatsClient, err := signer.NewStatsClient(testcase, &statsd.NoOpClient{})
+				statsdClient.Namespace = "test_autograph_stats_ns"
+				signerStatsClient, err := signer.NewStatsClient(testcase, statsdClient)
 				if err != nil {
 					t.Fatalf("passing testcase %d: Error constructing signer.StatsdClient: %v", i, err)
 				}
@@ -280,11 +274,12 @@ func TestNewFailure(t *testing.T) {
 
 	for i, testcase := range invalidSignerConfigs {
 		_, err := New(testcase.cfg, nil)
-		if !strings.Contains(err.Error(), testcase.err) {
-			t.Fatalf("testcase %d expected to fail with '%v' but failed with '%v' instead", i, testcase.err, err)
-		}
+		// check for lack of error first, otherwise `err.Error()` will cause a panic if no error
+		// is present.
 		if err == nil {
 			t.Fatalf("testcase %d expected to fail with '%v' but succeeded", i, testcase.err)
+		} else if !strings.Contains(err.Error(), testcase.err) {
+			t.Fatalf("testcase %d expected to fail with '%v' but failed with '%v' instead", i, testcase.err, err)
 		}
 	}
 }
@@ -489,89 +484,6 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 	} else if err.Error() != "xpi.VerifyWithChain: cannot verify unfinished signature" {
 		t.Fatalf("expected to fail verify unfinished signature but got error '%v'", err)
 	}
-}
-
-func TestRsaCaching(t *testing.T) {
-	t.Parallel()
-
-	// initialize an RSA signer with cache
-	testcase := validSignerConfigs[0]
-	testcase.RSACacheConfig.NumKeys = 2
-	testcase.RSACacheConfig.NumGenerators = 0 // we'll run populateRsaCache directly
-	s, err := New(testcase, nil)
-	if err != nil {
-		t.Fatalf("signer initialization failed with: %v", err)
-	}
-	keySize := s.issuerKey.(*rsa.PrivateKey).N.BitLen()
-
-	// should drop cached key with an invalid size and generate a new one
-	smallKey, err := rsa.GenerateKey(s.rand, 512)
-	if err != nil {
-		t.Fatalf("generating test key failed with: %v", err)
-	}
-	go func() { s.rsaCache <- smallKey }()
-	if os.Getenv("CI") == "true" {
-		// sleep longer when running in continuous integration
-		time.Sleep(30 * time.Second)
-	} else {
-		time.Sleep(10 * time.Second)
-	}
-	if len(s.rsaCache) != 1 {
-		t.Fatalf("have an unexpected number of keys in chan wanted 1 got: %d", len(s.rsaCache))
-	}
-	key, err := s.getRsaKey(keySize)
-	if err != nil {
-		t.Fatalf("signer initialization failed with: %v", err)
-	}
-	if key.N.BitLen() != keySize {
-		t.Fatalf("key bitlen does not match. expected %d, got %d", keySize, key.N.BitLen())
-	}
-
-	go s.populateRsaCache(keySize)
-	if os.Getenv("CI") == "true" {
-		// sleep longer when running in continuous integration
-		time.Sleep(30 * time.Second)
-	} else {
-		time.Sleep(10 * time.Second)
-	}
-	// retrieving a rsa key should be really fast now
-	start := time.Now()
-	key, err = s.getRsaKey(keySize)
-	if err != nil {
-		t.Fatalf("signer initialization failed with: %v", err)
-	}
-	cachedElapsed := time.Since(start)
-	t.Logf("retrieved rsa key from cache in %q", cachedElapsed)
-
-	start = time.Now()
-	rsa.GenerateKey(rand.Reader, keySize)
-	generatedElapsed := time.Since(start)
-	t.Logf("generated rsa key without cache in %q", generatedElapsed)
-
-	if cachedElapsed > generatedElapsed {
-		t.Fatal("key retrieval from populated cache took longer than generating directly")
-	}
-	if key.N.BitLen() != keySize {
-		t.Fatalf("key bitlen does not match. expected %d, got %d", keySize, key.N.BitLen())
-	}
-}
-
-func TestRSACacheSizeMonitor(t *testing.T) {
-
-	t.Run("runs without statsd", func(t *testing.T) {
-		t.Parallel()
-
-		// initialize an RSA signer with cache
-		testcase := validSignerConfigs[0]
-		s, err := New(testcase, nil)
-		if err != nil {
-			t.Fatalf("signer initialization failed with: %v", err)
-		}
-
-		s.stats = nil
-		// this should not panic
-		s.monitorRsaCacheSize()
-	})
 }
 
 func TestSignFileWithCOSESignatures(t *testing.T) {
