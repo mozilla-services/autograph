@@ -34,6 +34,9 @@ import (
 // IDFormat is a regex for the format IDs must follow
 const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 
+// IDFormatRegexp is the compiled regex from IDFormat
+var IDFormatRegexp = regexp.MustCompile(IDFormat)
+
 // RSACacheConfig is a config for the RSAKeyCache
 type RSACacheConfig struct {
 	// NumKeys is the number of RSA keys matching the issuer size
