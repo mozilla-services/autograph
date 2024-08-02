@@ -34,29 +34,6 @@ import (
 // IDFormat is a regex for the format IDs must follow
 const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 
-// RSACacheConfig is a config for the RSAKeyCache
-type RSACacheConfig struct {
-	// NumKeys is the number of RSA keys matching the issuer size
-	// to cache
-	NumKeys uint64
-
-	// NumGenerators is the number of key generator workers to run
-	// that populate the RSA key cache
-	NumGenerators uint8
-
-	// GeneratorSleepDuration is how frequently each cache key
-	// generator tries to add a key to the cache chan
-	GeneratorSleepDuration time.Duration
-
-	// FetchTimeout is how long a consumer waits for the cache
-	// before generating its own key
-	FetchTimeout time.Duration
-
-	// StatsSampleRate is how frequently the monitor reports the
-	// cache size and capacity
-	StatsSampleRate time.Duration
-}
-
 // RecommendationConfig is a config for the XPI recommendation file
 type RecommendationConfig struct {
 	// AllowedStates is a map of strings the signer is allowed to
@@ -98,10 +75,6 @@ type Configuration struct {
 	// X5U (X.509 URL) is a URL that points to an X.509 public key
 	// certificate chain to validate a content signature
 	X5U string `json:"x5u,omitempty" yaml:"x5u,omitempty"`
-
-	// RSACacheConfig for XPI signers this specifies config for an
-	// RSA cache
-	RSACacheConfig RSACacheConfig `json:"rsacacheconfig,omitempty" yaml:"rsacacheconfig,omitempty"`
 
 	// RecommendationConfig specifies config values for
 	// recommendations files for XPI signers

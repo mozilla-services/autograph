@@ -2,23 +2,11 @@ package xpi
 
 import (
 	"testing"
-	"time"
-
-	"github.com/mozilla-services/autograph/signer"
 )
 
 func BenchmarkResignOmnija(b *testing.B) {
 	// initialize a system addon signer with an RSA key
 	testcase := validSignerConfigs[1]
-
-	// don't use an RSA key cache
-	testcase.RSACacheConfig = signer.RSACacheConfig{
-		NumKeys:                0,
-		NumGenerators:          0,
-		GeneratorSleepDuration: 10 * time.Minute,
-		FetchTimeout:           0,
-		StatsSampleRate:        10 * time.Minute,
-	}
 
 	s, err := New(testcase, nil)
 	if err != nil {

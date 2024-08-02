@@ -57,8 +57,7 @@ signers:
         -----END PRIVATE KEY-----
 ```
 
-The signer can also include optional config params for an RSA key cache
-and recommendations file:
+The signer can also include optional config params for a recommendations file:
 
 ``` yaml
 signers:
@@ -73,14 +72,6 @@ signers:
         partner: true
       relative_start: 0h
       duration: 26298h
-    # RSA key gen is slow and CPU intensive, so we can optionally
-    # pregenerate and cache keys with a worker pool
-    rsacacheconfig:
-      numkeys: 25
-      numgenerators: 2
-      generatorsleepduration: 1m
-      fetchtimeout: 100ms
-      statssamplerate: 1m
     certificate: |
         -----BEGIN CERTIFICATE-----
         MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
