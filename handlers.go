@@ -81,11 +81,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	starttime := getRequestStartTime(r)
 	auth, userid, err := a.authorizeHeader(r)
 	if err != nil {
-		if a.stats != nil {
-			sendStatsErr := a.stats.Timing("hawk.authorize_header_failed", time.Since(starttime), nil, 1.0)
-			if sendStatsErr != nil {
-				log.Warnf("Error sending hawk.authorize_header_failed: %s", sendStatsErr)
-			}
+		sendStatsErr := a.stats.Timing("hawk.authorize_header_failed", time.Since(starttime), nil, 1.0)
+		if sendStatsErr != nil {
+			log.Warnf("Error sending hawk.authorize_header_failed: %s", sendStatsErr)
 		}
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
 		return
@@ -110,11 +108,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = a.authorizeBody(auth, r, body)
-	if a.stats != nil {
-		sendStatsErr := a.stats.Timing("authorize_finished", time.Since(starttime), nil, 1.0)
-		if sendStatsErr != nil {
-			log.Warnf("Error sending authorize_finished: %s", sendStatsErr)
-		}
+	sendStatsErr := a.stats.Timing("authorize_finished", time.Since(starttime), nil, 1.0)
+	if sendStatsErr != nil {
+		log.Warnf("Error sending authorize_finished: %s", sendStatsErr)
 	}
 	if err != nil {
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
@@ -122,11 +118,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	}
 	var sigreqs []formats.SignatureRequest
 	err = json.Unmarshal(body, &sigreqs)
-	if a.stats != nil {
-		sendStatsErr := a.stats.Timing("body_unmarshaled", time.Since(starttime), nil, 1.0)
-		if sendStatsErr != nil {
-			log.Warnf("Error sending body_unmarshaled: %s", sendStatsErr)
-		}
+	sendStatsErr = a.stats.Timing("body_unmarshaled", time.Since(starttime), nil, 1.0)
+	if sendStatsErr != nil {
+		log.Warnf("Error sending body_unmarshaled: %s", sendStatsErr)
 	}
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to parse request body: %v", err)

@@ -47,22 +47,18 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 		return nil, "", fmt.Errorf("missing Authorization header")
 	}
 	auth, err = hawk.ParseRequestHeader(r.Header.Get("Authorization"))
-	if a.stats != nil {
-		sendStatsErr := a.stats.Timing("hawk.header_parsed", time.Since(getRequestStartTime(r)), nil, 1.0)
-		if sendStatsErr != nil {
-			log.Warnf("Error sending hawk.header_parsed: %s", sendStatsErr)
-		}
+	sendStatsErr := a.stats.Timing("hawk.header_parsed", time.Since(getRequestStartTime(r)), nil, 1.0)
+	if sendStatsErr != nil {
+		log.Warnf("Error sending hawk.header_parsed: %s", sendStatsErr)
 	}
 	if err != nil {
 		return nil, "", err
 	}
 	userid = auth.Credentials.ID
 	auth, err = hawk.NewAuthFromRequest(r, a.lookupCred(userid), a.lookupNonce)
-	if a.stats != nil {
-		sendStatsErr := a.stats.Timing("hawk.auth_created", time.Since(getRequestStartTime(r)), nil, 1.0)
-		if sendStatsErr != nil {
-			log.Warnf("Error sending hawk.auth_created: %s", sendStatsErr)
-		}
+	sendStatsErr = a.stats.Timing("hawk.auth_created", time.Since(getRequestStartTime(r)), nil, 1.0)
+	if sendStatsErr != nil {
+		log.Warnf("Error sending hawk.auth_created: %s", sendStatsErr)
 	}
 	if err != nil {
 		return nil, "", err
@@ -73,17 +69,16 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 	}
 	hawk.MaxTimestampSkew = a.hawkMaxTimestampSkew
 	err = auth.Valid()
-	if a.stats != nil {
-		sendStatsErr := a.stats.Timing("hawk.validated", time.Since(getRequestStartTime(r)), nil, 1.0)
-		if sendStatsErr != nil {
-			log.Warnf("Error sending hawk.validated: %s", sendStatsErr)
-		}
-		skew := abs(auth.ActualTimestamp.Sub(auth.Timestamp))
-		sendStatsErr = a.stats.Timing("hawk.timestamp_skew", skew, nil, 1.0)
-		if sendStatsErr != nil {
-			log.Warnf("Error sending hawk.timestamp_skew: %s", sendStatsErr)
-		}
+	sendStatsErr = a.stats.Timing("hawk.validated", time.Since(getRequestStartTime(r)), nil, 1.0)
+	if sendStatsErr != nil {
+		log.Warnf("Error sending hawk.validated: %s", sendStatsErr)
 	}
+	skew := abs(auth.ActualTimestamp.Sub(auth.Timestamp))
+	sendStatsErr = a.stats.Timing("hawk.timestamp_skew", skew, nil, 1.0)
+	if sendStatsErr != nil {
+		log.Warnf("Error sending hawk.timestamp_skew: %s", sendStatsErr)
+	}
+
 	if err != nil {
 		return nil, "", err
 	}
@@ -95,11 +90,9 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 func (a *autographer) authorizeBody(auth *hawk.Auth, r *http.Request, body []byte) (err error) {
 	payloadhash := auth.PayloadHash(r.Header.Get("Content-Type"))
 	payloadhash.Write(body)
-	if a.stats != nil {
-		sendStatsErr := a.stats.Timing("hawk.payload_hashed", time.Since(getRequestStartTime(r)), nil, 1.0)
-		if sendStatsErr != nil {
-			log.Warnf("Error sending hawk.payload_hashed: %s", sendStatsErr)
-		}
+	sendStatsErr := a.stats.Timing("hawk.payload_hashed", time.Since(getRequestStartTime(r)), nil, 1.0)
+	if sendStatsErr != nil {
+		log.Warnf("Error sending hawk.payload_hashed: %s", sendStatsErr)
 	}
 	if !auth.ValidHash(payloadhash) {
 		return fmt.Errorf("payload validation failed")

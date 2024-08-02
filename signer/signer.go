@@ -542,10 +542,6 @@ func NewStatsClient(signerConfig Configuration, stats statsd.ClientInterface) (*
 // a statsd gauge with the given name, int value cast to float64, tags
 // for the signer, and sampling rate of 1
 func (s *StatsClient) SendGauge(name string, value int) {
-	if s.stats == nil {
-		log.Warnf("xpi: statsd client is nil. Could not send gauge %s with value %v", name, value)
-		return
-	}
 	err := s.stats.Gauge(name, float64(value), s.signerTags, 1)
 	if err != nil {
 		log.Warnf("Error sending gauge %s: %s", name, err)
@@ -557,10 +553,6 @@ func (s *StatsClient) SendGauge(name string, value int) {
 // converted to ms, cast to float64, tags for the signer, and sampling
 // rate of 1
 func (s *StatsClient) SendHistogram(name string, value time.Duration) {
-	if s.stats == nil {
-		log.Warnf("xpi: statsd client is nil. Could not send histogram %s with value %s", name, value)
-		return
-	}
 	err := s.stats.Histogram(name, float64(value/time.Millisecond), s.signerTags, 1)
 	if err != nil {
 		log.Warnf("Error sending histogram %s: %s", name, err)
