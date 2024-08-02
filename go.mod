@@ -21,6 +21,7 @@ require (
 	go.mozilla.org/mozlogrus v2.0.0+incompatible
 	go.mozilla.org/pkcs7 v0.0.0-20210730143726-725912489c62
 	go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060
+	go.uber.org/mock v0.4.0
 )
 
 require (
