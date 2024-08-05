@@ -18,6 +18,11 @@ make test
 # run monitor unit tests
 make -C tools/autograph-monitor test
 
+EMPTY_TESTCACHE=${EMPTY_TESTCACHE:-""}
+if [ "$EMPTY_TESTCACHE" = "1" ]; then
+    go clean -testcache
+fi
+
 if [ "$RACE_TEST" = "1" ]; then
     make race
     make -C tools/autograph-monitor race

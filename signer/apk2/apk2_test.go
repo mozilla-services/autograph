@@ -36,7 +36,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("valid no mode", func(t *testing.T) {
 		t.Parallel()
 
-		s := assertNewSignerWithConfOK(t, apk2signerconf)
+		s := assertNewSignerWithConfOK(t, newApk2SignerConf())
 		if s.v3Enabled {
 			t.Fatalf("%s: unexpectedly enabled v3 signing", t.Name())
 		}
@@ -45,8 +45,9 @@ func TestNewSigner(t *testing.T) {
 	t.Run("valid empty mode", func(t *testing.T) {
 		t.Parallel()
 
-		apk2signerconf.Mode = ""
-		s := assertNewSignerWithConfOK(t, apk2signerconf)
+		missingMode := newApk2SignerConf()
+		missingMode.Mode = ""
+		s := assertNewSignerWithConfOK(t, missingMode)
 		if s.v3Enabled {
 			t.Fatalf("%s: unexpectedly enabled v3 signing", t.Name())
 		}
@@ -55,7 +56,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("valid v3enabled mode", func(t *testing.T) {
 		t.Parallel()
 
-		s := assertNewSignerWithConfOK(t, apk2signerconfModeV3enabled)
+		s := assertNewSignerWithConfOK(t, newApk2SignerConfWithModeV3())
 		if !s.v3Enabled {
 			t.Fatalf("%s: did not enable v3 signing", t.Name())
 		}
@@ -64,7 +65,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid type", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := apk2signerconf
+		invalidConf := newApk2SignerConf()
 		invalidConf.Type = "badType"
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -72,7 +73,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid ID", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := apk2signerconf
+		invalidConf := newApk2SignerConf()
 		invalidConf.ID = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -80,7 +81,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid Mode", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := apk2signerconf
+		invalidConf := newApk2SignerConf()
 		invalidConf.Mode = "invalidEnabled"
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -88,7 +89,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid PrivateKey", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := apk2signerconf
+		invalidConf := newApk2SignerConf()
 		invalidConf.PrivateKey = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -96,7 +97,7 @@ func TestNewSigner(t *testing.T) {
 	t.Run("invalid Certificate", func(t *testing.T) {
 		t.Parallel()
 
-		invalidConf := apk2signerconf
+		invalidConf := newApk2SignerConf()
 		invalidConf.Certificate = ""
 		assertNewSignerWithConfErrs(t, invalidConf)
 	})
@@ -105,6 +106,8 @@ func TestNewSigner(t *testing.T) {
 func TestConfig(t *testing.T) {
 	t.Parallel()
 
+	apk2Conf := newApk2SignerConf()
+	mode3EnabledConf := newApk2SignerConfWithModeV3()
 	type fields struct {
 		Configuration signer.Configuration
 	}
@@ -116,16 +119,16 @@ func TestConfig(t *testing.T) {
 		{
 			name: "config without mode",
 			fields: fields{
-				Configuration: apk2signerconf,
+				Configuration: apk2Conf,
 			},
-			want: apk2signerconf,
+			want: apk2Conf,
 		},
 		{
 			name: "config v3enabled mode",
 			fields: fields{
-				Configuration: apk2signerconfModeV3enabled,
+				Configuration: mode3EnabledConf,
 			},
-			want: apk2signerconfModeV3enabled,
+			want: mode3EnabledConf,
 		},
 	}
 	for _, tt := range tests {
@@ -155,7 +158,7 @@ func TestConfig(t *testing.T) {
 func TestOptionsAreEmpty(t *testing.T) {
 	t.Parallel()
 
-	s := assertNewSignerWithConfOK(t, apk2signerconf)
+	s := assertNewSignerWithConfOK(t, newApk2SignerConf())
 	defaultOpts := s.GetDefaultOptions()
 	expectedOpts := Options{}
 	if defaultOpts != expectedOpts {
@@ -165,7 +168,7 @@ func TestOptionsAreEmpty(t *testing.T) {
 
 func TestSignFile(t *testing.T) {
 	// initialize a signer
-	s := assertNewSignerWithConfOK(t, apk2signerconf)
+	s := assertNewSignerWithConfOK(t, newApk2SignerConf())
 
 	// sign input data
 	signedFile, err := s.SignFile(testAPK, s.GetDefaultOptions())
@@ -301,17 +304,23 @@ i+UaOY4AHXEAn1t3FuRW4J2W4tku4XmAZys9ATX0/LVbm/R3pqGYmTAqv0SDnStM
 Gg/He+3S+8Rq0zqXAbOVJDVSTCRV5C9ZOmTWedBzaqmykScsCxLSpmEffy2RrtBU
 dNKAPtSx4o34NaTpxg==
 -----END CERTIFICATE-----`
-	apk2signerconf = signer.Configuration{
+)
+
+func newApk2SignerConf() signer.Configuration {
+	return signer.Configuration{
 		ID:          "apk2test",
 		Type:        Type,
 		PrivateKey:  apk2TestPrivateKeyPEM,
 		Certificate: apk2TestCert,
 	}
-	apk2signerconfModeV3enabled = signer.Configuration{
+}
+
+func newApk2SignerConfWithModeV3() signer.Configuration {
+	return signer.Configuration{
 		ID:          "apk2testv3enabled",
 		Type:        Type,
 		Mode:        "v3enabled",
 		PrivateKey:  apk2TestPrivateKeyPEM,
 		Certificate: apk2TestCert,
 	}
-)
+}
