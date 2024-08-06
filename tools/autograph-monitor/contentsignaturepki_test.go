@@ -199,7 +199,7 @@ func Test_verifyContentSignature(t *testing.T) {
 
 	// TODO: replace type with pointer to a notifier
 	// implementation when another is added
-	var typedNilNotifier Notifier = nil
+	var typedNilNotifier Notifier
 
 	type args struct {
 		x5uClient    *http.Client
@@ -479,7 +479,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		var notifier Notifier = tt.args.notifier
+		notifier := tt.args.notifier
 		if tt.useMockNotifier {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()

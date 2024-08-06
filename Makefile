@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-services/autograph/database github.com/mozilla-services/autograph/formats github.com/mozilla-services/autograph/signer github.com/mozilla-services/autograph/signer/apk2 github.com/mozilla-services/autograph/signer/contentsignature github.com/mozilla-services/autograph/signer/contentsignaturepki github.com/mozilla-services/autograph/signer/genericrsa github.com/mozilla-services/autograph/signer/gpg2 github.com/mozilla-services/autograph/signer/mar github.com/mozilla-services/autograph/signer/xpi github.com/mozilla-services/autograph/verifier/contentsignature
+PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-services/autograph/database github.com/mozilla-services/autograph/formats github.com/mozilla-services/autograph/signer github.com/mozilla-services/autograph/signer/apk2 github.com/mozilla-services/autograph/signer/contentsignature github.com/mozilla-services/autograph/signer/contentsignaturepki github.com/mozilla-services/autograph/signer/genericrsa github.com/mozilla-services/autograph/signer/gpg2 github.com/mozilla-services/autograph/signer/mar github.com/mozilla-services/autograph/signer/xpi github.com/mozilla-services/autograph/verifier/contentsignature github.com/mozilla-services/autograph/tools/autograph-monitor
 
 # The GOPATH isn't always on the path.
 GOPATH := $(shell go env GOPATH)
@@ -53,11 +53,11 @@ vet:
 	go vet $(PACKAGE_NAMES)
 
 fmt-diff:
-	gofmt -d *.go database/ signer/ tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
+	gofmt -d *.go database/ signer/ tools/autograph-client/ tools/autograph-monitor tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
 fmt-fix:
 	go fmt $(PACKAGE_NAMES)
-	gofmt -w tools/autograph-client/ $(shell ls tools/autograph-monitor/*.go) tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
+	gofmt -w tools/autograph-client/ tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
 
 benchmarkxpi:
 	go test -run=XXX -benchtime=15s -bench=. -v -cpuprofile cpu.out github.com/mozilla-services/autograph/signer/xpi ;\
