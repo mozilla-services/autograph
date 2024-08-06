@@ -356,13 +356,17 @@ func TestSignData(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				defer os.Remove("/tmp/autograph_test_gpg2_keyring.gpg")
-				defer os.Remove("/tmp/autograph_test_gpg2_secring.gpg")
-				defer os.Remove("/tmp/autograph_test_gpg2_keyring.gpg~")
+				tmpKeyringDir, err := os.MkdirTemp("", "keyring")
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer os.RemoveAll(tmpKeyringDir)
+
+				tmpKeyring := filepath.Join(tmpKeyringDir, "keyring.gpg")
 
 				// call gnupg to create a new keyring, load the key in it
 				gnupgCreateKeyring := exec.Command("gpg", "--no-default-keyring",
-					"--keyring", "/tmp/autograph_test_gpg2_keyring.gpg",
+					"--keyring", tmpKeyring,
 					"--import", tmpPublicKeyFile.Name())
 				out, err := gnupgCreateKeyring.CombinedOutput()
 				if err != nil {
@@ -371,7 +375,7 @@ func TestSignData(t *testing.T) {
 
 				// verify the signature
 				gnupgVerifySig := exec.Command("gpg", "--no-default-keyring",
-					"--keyring", "/tmp/autograph_test_gpg2_keyring.gpg",
+					"--keyring", tmpKeyring,
 					"--verify", tmpSignatureFile.Name(), tmpContentFile.Name())
 				out, err = gnupgVerifySig.CombinedOutput()
 				if err != nil {
