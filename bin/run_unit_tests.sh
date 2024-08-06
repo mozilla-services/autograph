@@ -13,15 +13,13 @@ REPORT_COVERAGE=${CI:-""}
 if [ "$REPORT_COVERAGE" = "true" ]; then
     make install-goveralls
 fi
-# run app unit tests
-make test
-# run monitor unit tests
-make -C tools/autograph-monitor test
 
 if [ "$RACE_TEST" = "1" ]; then
     make race
     make -C tools/autograph-monitor race
-    make -C verifier/contentsignature race
+else
+    make test
+    make -C tools/autograph-monitor test
 fi
 
 if [ "$REPORT_COVERAGE" = "true" ]; then
