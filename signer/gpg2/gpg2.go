@@ -86,7 +86,7 @@ type GPG2Signer struct {
 }
 
 // New initializes a pgp signer using a configuration
-func New(conf signer.Configuration) (s *GPG2Signer, err error) {
+func New(conf signer.Configuration, tmpDirPrefix string) (s *GPG2Signer, err error) {
 	s = new(GPG2Signer)
 
 	if conf.Type != Type {
@@ -131,7 +131,7 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 
 	s.passphrase = conf.Passphrase
 
-	s.tmpDir, err = createKeyRing(s)
+	s.tmpDir, err = createKeyRing(s, tmpDirPrefix)
 	if err != nil {
 		return nil, fmt.Errorf("gpg2: error creating keyring: %w", err)
 	}
@@ -153,11 +153,8 @@ func New(conf signer.Configuration) (s *GPG2Signer, err error) {
 //
 // It return errors for any failure to create the tmp dir; or write,
 // import, or clean up the private and public keys.
-func createKeyRing(s *GPG2Signer) (dir string, err error) {
-	// reuse keyring in tempdir
-	prefix := fmt.Sprintf("autograph_%s_%s_%s_", s.Type, s.KeyID, s.Mode)
-
-	dir, err = os.MkdirTemp("", prefix)
+func createKeyRing(s *GPG2Signer, tmpDirPrefix string) (dir string, err error) {
+	dir, err = os.MkdirTemp("", tmpDirPrefix)
 	if err != nil {
 		return "", fmt.Errorf("gpg2: error creating tempdir for keyring: %w", err)
 	}
@@ -382,8 +379,10 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 		return
 	}
 
-	// create a tmp dir outside the signer GPG home
-	inputsTmpDir, err := os.MkdirTemp("", fmt.Sprintf("autograph_%s_%s_%s_sign_files", s.Type, s.KeyID, s.Mode))
+	// create a second temporary directory inside of the one the keyring is
+	// held in. this allows tests to easily and accurately assess the state
+	// of this directory.
+	inputsTmpDir, err := os.MkdirTemp(s.tmpDir, "sign_files")
 	if err != nil {
 		err = fmt.Errorf("gpg2: error creating tempdir for debsign: %w", err)
 		return

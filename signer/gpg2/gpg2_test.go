@@ -2,6 +2,7 @@ package gpg2
 
 import (
 	"bytes"
+	"crypto/md5"
 	_ "embed"
 	"fmt"
 	"os"
@@ -14,7 +15,14 @@ import (
 )
 
 func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *GPG2Signer {
-	s, err := New(conf)
+	// These test names end up quite long, and some versions of GPG don't work well
+	// with very long paths. See https://bugzilla.redhat.com/show_bug.cgi?id=1813705
+	// To work around this, we use a hashed version of the test name. This keeps
+	// the prefix consistent across runs while still being short enough.
+	hashedName := md5.Sum([]byte(t.Name()))
+	tmpDirPrefix := fmt.Sprintf("%x", hashedName)
+
+	s, err := New(conf, tmpDirPrefix)
 	if s == nil {
 		t.Fatal("expected non-nil signer for valid conf, but got nil signer and err %w", err)
 	}
@@ -67,7 +75,7 @@ func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *GPG2Sig
 }
 
 func assertNewSignerWithConfErrs(t *testing.T, invalidConf signer.Configuration) {
-	s, err := New(invalidConf)
+	s, err := New(invalidConf, "")
 	if s != nil {
 		t.Fatalf("expected nil signer for invalid conf, but got non-nil signer %v", s)
 	}
@@ -530,15 +538,14 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 			}
 
 			assertClearSignedFilesVerify(t, s, "verify-debsigned-files", gotSignedFiles)
+			matches, err := filepath.Glob(filepath.Join(s.tmpDir, "sign_files*", "*"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(matches) != 0 {
+				t.Fatalf("sign files did not clean up its temp input directories: %s", matches)
+			}
 		})
-	}
-
-	matches, err := filepath.Glob("/tmp/autograph_*sign_files*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(matches) != 0 {
-		t.Fatalf("sign files did not clean up its temp input directories: %s", matches)
 	}
 }
 
