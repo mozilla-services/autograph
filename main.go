@@ -445,7 +445,8 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		case gpg2.Type:
-			s, err = gpg2.New(signerConf)
+			tmpDirPrefix := fmt.Sprintf("autograph_%s_%s_%s_", signerConf.Type, signerConf.KeyID, signerConf.Mode)
+			s, err = gpg2.New(signerConf, tmpDirPrefix)
 			if err != nil {
 				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
