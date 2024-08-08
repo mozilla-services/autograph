@@ -13,6 +13,11 @@ if [ "$REPORT_COVERAGE" = "true" ]; then
     make install-goveralls
 fi
 
+EMPTY_TESTCACHE=${EMPTY_TESTCACHE:-""}
+if [ "$EMPTY_TESTCACHE" = "1" ]; then
+    go clean -testcache
+fi
+
 if [ "$RACE_TEST" = "1" ]; then
     make race
 else
