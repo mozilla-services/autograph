@@ -18,13 +18,6 @@ jobs:
             make check-no-crypto11-in-signers
             make show-lints
       - run:
-          name: run golint
-          command: |
-            make install-golint lint
-            make show-lints
-            make -C tools/autograph-monitor lint
-            make -C verifier/contentsignature lint
-      - run:
           name: run gofmt
           command: |
             make -s fmt-diff | tee fmt.diff
