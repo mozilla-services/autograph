@@ -12,6 +12,7 @@ docker compose rm -f db
 
 # start db and app servers
 docker compose up -d --force-recreate db app app-hsm
+docker compose build monitor-lambda-emulator monitor-hsm-lambda-emulator
 
 echo "waiting for autograph-app to start"
 while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
@@ -36,6 +37,7 @@ docker compose run \
 	       --entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
 	       monitor-lambda-emulator /go/bin/autograph-monitor
 
+echo "FIXME hsm monitor"
 docker compose run \
 	       --rm \
 	       -e AUTOGRAPH_URL=http://autograph-app-hsm:8001/ \
