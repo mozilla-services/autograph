@@ -1,6 +1,7 @@
 package contentsignaturepki
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/x509"
 	"fmt"
@@ -11,11 +12,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
+
+// S3UploadAPI is an interface to accommodate testing
+// Adapted from https://aws.github.io/aws-sdk-go-v2/docs/unit-testing/
+type S3UploadAPI interface {
+	Upload(ctx context.Context, input *s3.PutObjectInput, opts ...func(*manager.Uploader)) (*manager.UploadOutput, error)
+}
 
 // upload takes a string and a filename and puts it at the upload location
 // defined in the signer, then returns its URL
@@ -26,7 +35,16 @@ func (s *ContentSigner) upload(data, name string) error {
 	}
 	switch parsedURL.Scheme {
 	case "s3":
-		return uploadToS3(data, name, parsedURL)
+		// Context is a required argument, but in our uses,
+		// LoadDefaultConfig pulls the necessary configuration
+		// from the environment.
+		cfg, err := config.LoadDefaultConfig(context.Background())
+		if err != nil {
+			return fmt.Errorf("failed to load AWS config: %w", err)
+		}
+		client := s3.NewFromConfig(cfg)
+		uploader := manager.NewUploader(client)
+		return uploadToS3(uploader, data, name, parsedURL)
 	case "file":
 		return writeLocalFile(data, name, parsedURL)
 	default:
@@ -34,13 +52,11 @@ func (s *ContentSigner) upload(data, name string) error {
 	}
 }
 
-func uploadToS3(data, name string, target *url.URL) error {
-	sess := session.Must(session.NewSession())
-	uploader := s3manager.NewUploader(sess)
-	_, err := uploader.Upload(&s3manager.UploadInput{
+func uploadToS3(client S3UploadAPI, data, name string, target *url.URL) error {
+	_, err := client.Upload(context.Background(), &s3.PutObjectInput{
 		Bucket:             aws.String(target.Host),
 		Key:                aws.String(target.Path + name),
-		ACL:                aws.String("public-read"),
+		ACL:                types.ObjectCannedACLPublicRead,
 		Body:               strings.NewReader(data),
 		ContentType:        aws.String("binary/octet-stream"),
 		ContentDisposition: aws.String("attachment"),
