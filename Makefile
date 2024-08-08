@@ -70,9 +70,6 @@ race:
 
 staticcheck:
 	$(GOPATH)/bin/staticcheck $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
-	# ignore errors in pkgs
-	# ignore SA1019 for DSA being deprecated refs: GH #667
-	test 0 -eq $$(grep -c -Pv '^/go/pkg/mod/|SA1019' /tmp/autograph-staticcheck.txt)
 
 test:
 	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)
