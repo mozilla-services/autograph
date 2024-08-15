@@ -13,11 +13,18 @@ if [ -n "$CIRCLE_SHA1" ]; then
         "$CIRCLE_PROJECT_USERNAME" \
         "$CIRCLE_PROJECT_REPONAME" \
         "$CIRCLE_BUILD_URL" > version.json
+elif [ -n "$GITHUB_SHA" ]; then
+    # We are running in Github Actions.
+    printf '{"commit":"%s","version":"%s","source":"%s","build":"%s"}\n' \
+        "$GITHUB_SHA" \
+        "$GITHUB_REF_NAME" \
+        "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+        "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" > version.json
 elif [ -d .git ]; then
     # Try pulling info from git directly.
     printf '{"commit":"%s","version":"%s","source":"%s","build":"%s"}\n' \
         "$(git rev-parse HEAD)" \
-        "$(git describe --tags)" \
+        "$(git describe --tags --always)" \
         "$(git remote get-url origin)" \
         "" > version.json
 elif [ ! -f version.json ]; then
