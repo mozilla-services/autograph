@@ -1,0 +1,33 @@
+linters:
+  disable-all: true
+  enable:
+    - depguard
+    # TODO(AUT-202): errcheck is too handy to leave out but requires more churn
+    # at time of writing
+    # - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+
+linters-settings:
+  depguard:
+    rules:
+      # The first reason for this is to minimize how often we're having to deal
+      # with many different kinds of key types when the generic forms of the
+      # keys work fine. The second is that it makes sure our code can handle
+      # keys sourced from differing places.
+      #
+      # refs: https://github.com/mozilla-services/autograph/issues/247
+      no-crypto11-in-signer-submodules:
+        list-mode: lax
+
+        files:
+          - "**/signer/**/*.go"
+
+        deny:
+          - pkg: "github.com/ThalesIgnite/crypto11"
+            desc: "Only indirect PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"
+          - pkg: "github.com/ThalesGroup/crypto11" # ThalesGroup is the more modern version
+            desc: "Only indirect PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"

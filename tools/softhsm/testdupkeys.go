@@ -49,9 +49,9 @@ func main() {
 	// now try to make a key with the same label after the routine are done
 	ecdsakey, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], []byte(keyName), []byte(keyName), elliptic.P384())
 	if err != nil {
-		log.Printf("failed to make key %s in main thread: %v", keyName, i, err)
+		log.Printf("failed to make key %s in main thread: %v", keyName, err)
 	} else {
-		log.Printf("main thread made ECDSA Key named %q: %+v %+v", i, keyName, ecdsakey, ecdsakey.Public().(*ecdsa.PublicKey).Params())
+		log.Printf("main thread made ECDSA Key named %q: %+v %+v", keyName, ecdsakey, ecdsakey.Public().(*ecdsa.PublicKey).Params())
 	}
 }
 

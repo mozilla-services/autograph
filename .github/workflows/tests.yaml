@@ -44,6 +44,30 @@ jobs:
           name: autograph-images-${{ github.sha }}
           path: docker-cache/
 
+  lint:
+    name: Linting
+    runs-on: ubuntu-22.04
+    permissions:
+      # Required: allow read access to the content for analysis.
+      contents: read
+      # Optional: allow read access to pull request. Use with `only-new-issues` option.
+      pull-requests: read
+      # Optional: allow write access to checks to allow the action to annotate code in the PR.
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: golangci-lint
+        # If you bump this version, double check that we shouldn't also bump
+        # GOLANGCI_LINT_VERSION in the Makefile. (The version here is for the
+        # GitHub Action and the one in the Makefile is for the actual version of
+        # golangci-lint.)
+        uses: golangci/golangci-lint-action@v6.1.0
+        with:
+          args: --timeout 5m
+
   unit-tests:
     name: Run Unit Tests
     runs-on: ubuntu-22.04
