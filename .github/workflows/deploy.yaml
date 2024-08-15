@@ -12,6 +12,9 @@ jobs:
     name: Docker Images
     runs-on: ubuntu-22.04
     environment: build
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
