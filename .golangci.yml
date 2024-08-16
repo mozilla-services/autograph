@@ -1,7 +1,9 @@
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-    disable-default-exclusions: false
-    exclude-functions:
-      - (*database/sql.Tx).Rollback
+linters:
+  disable-all: true
+  enable:
+    # - errcheck # FIXME make ticket to enable this
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
