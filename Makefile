@@ -6,6 +6,8 @@ PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-servic
 # The GOPATH isn't always on the path.
 GOPATH := $(shell go env GOPATH)
 
+GOLANGCI_LINT_VERSION := v1.60.1
+
 all: generate test vet lint staticcheck install
 
 # update the vendored version of the wait-for-it.sh script
@@ -13,6 +15,10 @@ install-wait-for-it:
 	curl -o bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
 	sha256sum -c bin/wait-for-it.sh.sha256
 	chmod +x bin/wait-for-it.sh
+
+# FIXME
+good-lint:
+	docker run --rm -v $(PWD):/app -v ~/.cache/golangci-lint/v1.60.1:/root/.cache -w /app golangci/golangci-lint:v1.60.1 golangci-lint run -v
 
 install-golint:
 	go install golang.org/x/lint/golint@v0.0.0-20190409202823-959b441ac422
