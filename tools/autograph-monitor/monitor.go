@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -214,7 +215,7 @@ func monitor() (err error) {
 		for i, fail := range failures {
 			failure += fmt.Sprintf("\n%d. %s", i+1, fail.Error())
 		}
-		return fmt.Errorf(failure)
+		return errors.New(failure)
 	}
 	log.Println("All signature responses passed, monitoring OK")
 	return
