@@ -28,7 +28,7 @@ RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 -
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384-2 --id 11111111 --import /app/src/autograph/tools/softhsm/extensions-ecdsa-2-pk8.pem
 
 # genkeys
-RUN cd /app/src/autograph/tools/softhsm/ && go run genkeys.go
+RUN cd /app/src/autograph/tools/softhsm/ && go run ./genkeys/genkeys.go
 
 # make a pki in softhsm
 # then update the config
