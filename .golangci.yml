@@ -12,7 +12,8 @@ linters:
 linters-settings:
   depguard:
     rules:
-      foobar:
+      # refs: https://github.com/mozilla-services/autograph/issues/247
+      no-crypto11-in-signer-submodules:
         list-mode: lax
 
         files:
