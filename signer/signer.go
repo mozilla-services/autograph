@@ -15,6 +15,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -372,7 +373,7 @@ func ParsePrivateKey(keyPEMBlock []byte) (key crypto.PrivateKey, err error) {
 	}
 	savedErr = append(savedErr, "ecdsa: "+err.Error())
 
-	return nil, fmt.Errorf("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for ECDSA. errors: " + strings.Join(savedErr, ";;; "))
+	return nil, errors.New("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for ECDSA. errors: " + strings.Join(savedErr, ";;; "))
 }
 
 func removePrivateKeyNewlines(confPrivateKey string) string {
