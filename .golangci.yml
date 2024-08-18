@@ -1,9 +1,25 @@
 linters:
   disable-all: true
   enable:
+    - depguard
     # - errcheck # FIXME make ticket to enable this
     - gosimple
     - govet
     - ineffassign
     - staticcheck
     - unused
+
+linters-settings:
+  depguard:
+    rules:
+      foobar:
+        list-mode: lax
+
+        files:
+          - "**/signer/**/*.go"
+
+        deny:
+          - pkg: "github.com/ThalesIgnite/crypto11"
+            desc: "No PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"
+          - pkg: "github.com/ThalesGroup/crypto11" # ThalesGroup is the more modern version
+            desc: "No PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"
