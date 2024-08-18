@@ -44,6 +44,16 @@ jobs:
           name: autograph-images-${{ github.sha }}
           path: docker-cache/
 
+  lint:
+    name: Linting
+    runs-on: ubuntu-22.04
+    steps:
+      - name: golangci-lint
+        # If you bump this, check if the new version contains a new
+        # golangci-lint version we should bump as GOLANGCI_LINT_VERSION in the
+        # Makefile
+        uses: golangci/golangci-lint-action@v6.1.0
+
   unit-tests:
     name: Run Unit Tests
     runs-on: ubuntu-22.04

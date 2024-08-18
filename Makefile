@@ -6,6 +6,8 @@ PACKAGE_NAMES := github.com/mozilla-services/autograph github.com/mozilla-servic
 # The GOPATH isn't always on the path.
 GOPATH := $(shell go env GOPATH)
 
+# If you bump this version for golangci-lint, also check if the version of the
+# golangci-lint GitHub Action needs to be bumped in .github/workflows.
 GOLANGCI_LINT_VERSION := v1.60.1
 
 all: generate test vet lint staticcheck install

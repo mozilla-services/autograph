@@ -8,6 +8,8 @@ version: 2.1
 jobs:
   lint-vet-fmt:
     docker:
+      # If you adjust this version, also adjust the GOLANGCI_LINT_VERSION in the
+      # Makefile
       - image: golangci/golangci-lint:v1.60.1-alpine
     steps:
       - checkout
