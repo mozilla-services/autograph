@@ -2,7 +2,9 @@ linters:
   disable-all: true
   enable:
     - depguard
-    # - errcheck # FIXME make ticket to enable this
+    # TODO(AUT-202): errcheck is too handy to leave out but requires more churn
+    # at time of writing
+    # - errcheck
     - gosimple
     - govet
     - ineffassign
