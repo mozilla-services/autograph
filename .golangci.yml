@@ -21,6 +21,6 @@ linters-settings:
 
         deny:
           - pkg: "github.com/ThalesIgnite/crypto11"
-            desc: "No PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"
+            desc: "Only indirect PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"
           - pkg: "github.com/ThalesGroup/crypto11" # ThalesGroup is the more modern version
-            desc: "No PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"
+            desc: "Only indirect PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"
