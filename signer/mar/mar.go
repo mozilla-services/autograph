@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ThalesIgnite/crypto11"
 	"github.com/mozilla-services/autograph/signer"
 
 	margo "go.mozilla.org/mar"
@@ -18,8 +17,7 @@ import (
 
 const (
 	// Type of this signer is "mar"
-	Type  = "mar"
-	FIXME = crypto11.CKM_NCIPHER
+	Type = "mar"
 )
 
 // MARSigner holds the configuration of the signer
