@@ -22,19 +22,10 @@ install-wait-for-it:
 good-lint:
 	docker run --rm -v $(PWD):/app -v ~/.cache/golangci-lint/v1.60.1:/root/.cache -w /app golangci/golangci-lint:v1.60.1 golangci-lint run -v
 
-install-golint:
-	go install golang.org/x/lint/golint@v0.0.0-20190409202823-959b441ac422
-
-install-goveralls:
-	go install github.com/mattn/goveralls@v0.0.11
-
-install-staticcheck:
-	go install honnef.co/go/tools/cmd/staticcheck@v0.4.7
-
 install-go-mod-upgrade:
 	go get github.com/oligot/go-mod-upgrade
 
-install-dev-deps: install-golint install-staticcheck install-goveralls install-go-mod-upgrade
+install-dev-deps: install-goveralls install-go-mod-upgrade
 
 install:
 	go install github.com/mozilla-services/autograph
@@ -44,18 +35,6 @@ vendor:
 
 tag: all
 	git tag -s $(TAGVER) -a -m "$(TAGMSG)"
-
-lint:
-	$(GOPATH)/bin/golint $(PACKAGE_NAMES) | tee /tmp/autograph-golint.txt
-	test 0 -eq $$(grep -c -Pv 'stutters|suggestions' /tmp/autograph-golint.txt)
-
-# refs: https://github.com/mozilla-services/autograph/issues/247
-check-no-crypto11-in-signers:
-	test 0 -eq $(shell grep -Ri crypto11 signer/*/ | tee /tmp/autograph-crypto11-check.txt | wc -l)
-
-show-lints:
-	-cat /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt /tmp/autograph-staticcheck.txt
-	-rm -f /tmp/autograph-golint.txt /tmp/autograph-crypto11-check.txt /tmp/autograph-staticcheck.txt
 
 vet:
 	go vet $(PACKAGE_NAMES)
@@ -75,12 +54,6 @@ showbenchmarkxpi:
 
 race:
 	go test -race -covermode=atomic -count=1 $(PACKAGE_NAMES)
-
-staticcheck:
-	$(GOPATH)/bin/staticcheck $(PACKAGE_NAMES) | tee /tmp/autograph-staticcheck.txt
-	# ignore errors in pkgs
-	# ignore SA1019 for DSA being deprecated refs: GH #667
-	test 0 -eq $$(grep -c -Pv '^/go/pkg/mod/|SA1019' /tmp/autograph-staticcheck.txt)
 
 test:
 	go test -v -coverprofile coverage.out -covermode=count -count=1 $(PACKAGE_NAMES)
