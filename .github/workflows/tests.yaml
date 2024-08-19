@@ -55,11 +55,17 @@ jobs:
       # Optional: allow write access to checks to allow the action to annotate code in the PR.
       checks: write
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
       - name: golangci-lint
-        # If you bump this, check if the new version contains a new
-        # golangci-lint version we should bump as GOLANGCI_LINT_VERSION in the
-        # Makefile
         uses: golangci/golangci-lint-action@v6.1.0
+        with:
+          # If you bump this, also bump GOLANGCI_LINT_VERSION in the
+          # Makefile
+          version: v1.60.1
+          args: --timeout 5m
 
   unit-tests:
     name: Run Unit Tests
