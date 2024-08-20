@@ -227,7 +227,7 @@ func run(conf configuration, listen string, debug bool) {
 	// For each signer with a local chain upload location (eg: using the file
 	// scheme) create an handler to serve that directory at the path /x5u/keyid/
 	for _, signerConf := range conf.Signers {
-		parsedURL, err := url.Parse(signerConf.ChainUploadLocation)
+		parsedURL, err := url.Parse(signerConf.X5U)
 		if err != nil || parsedURL.Scheme != "file" {
 			// This signer doesn't upload certificate chains to local storage.
 			continue

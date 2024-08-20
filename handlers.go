@@ -75,16 +75,21 @@ func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.S
 	}).Info(fmt.Sprintf("signing operation failed with error: %v", err))
 }
 
-// If the x5u is a local file, mirror it via the `x5u` endpoint instead.
-func mirrorLocalX5U(r *http.Request, response formats.SignatureResponse) string {
+// rewriteLocalX5U checks for X5U certificate chains using the `file://` scheme
+// and rewrites them to use the `/x5u/:keyid/` endpoint instead, which should
+// mirror the contents of the signer's X5U location, and returns the updated URL.
+//
+// If the X5U certificate chain uses any other scheme, then the original URL is returned
+// without change.
+func rewriteLocalX5U(r *http.Request, response formats.SignatureResponse) string {
 	parsedX5U, err := url.Parse(response.X5U)
 	if err == nil && parsedX5U.Scheme == "file" {
-		mirroredX5U := url.URL{
+		newX5U := url.URL{
 			Scheme: "http",
 			Host:   r.Host,
 			Path:   path.Join("x5u", response.SignerID, path.Base(parsedX5U.Path)),
 		}
-		return mirroredX5U.String()
+		return newX5U.String()
 	}
 
 	// Otherwise, return the X5U unmodified
@@ -220,7 +225,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			X5U:        requestedSignerConfig.X5U,
 			SignerOpts: requestedSignerConfig.SignerOpts,
 		}
-		sigresps[i].X5U = mirrorLocalX5U(r, sigresps[i])
+		sigresps[i].X5U = rewriteLocalX5U(r, sigresps[i])
 
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {

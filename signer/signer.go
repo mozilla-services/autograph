@@ -34,9 +34,6 @@ import (
 // IDFormat is a regex for the format IDs must follow
 const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 
-// IDFormatRegexp is the compiled regex from IDFormat
-var IDFormatRegexp = regexp.MustCompile(IDFormat)
-
 // RecommendationConfig is a config for the XPI recommendation file
 type RecommendationConfig struct {
 	// AllowedStates is a map of strings the signer is allowed to
