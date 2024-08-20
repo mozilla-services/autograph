@@ -34,7 +34,6 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 
 	for _, errstr := range m.sigerrstrs {
 		if errstr != "" {
-			// "%s" is a go vet false positive correction
 			httpError(w, r, http.StatusInternalServerError, "%s", errstr)
 			return
 		}
