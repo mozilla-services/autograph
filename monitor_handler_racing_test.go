@@ -34,8 +34,11 @@ const autographDevRootHash = `5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF
 
 func getMirroredX5U(x5u string) (body []byte, err error) {
 	parsed, err := url.Parse(x5u)
-	segs := strings.Split(parsed.Path, "/")
+	if err != nil {
+		return nil, err
+	}
 
+	segs := strings.Split(parsed.Path, "/")
 	if segs[len(segs)-3] != "x5u" {
 		return nil, fmt.Errorf("x5u URL '%s' does not appear to be locally hosted", x5u)
 	}
