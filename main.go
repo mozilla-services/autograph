@@ -13,6 +13,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"regexp"
@@ -214,7 +215,6 @@ func run(conf configuration, listen string, debug bool) {
 	router.HandleFunc("/sign/data", statsMiddleware(ag.handleSignature, "http.api.sign/data", stats)).Methods("POST")
 	router.HandleFunc("/sign/hash", statsMiddleware(ag.handleSignature, "http.api.sign/hash", stats)).Methods("POST")
 	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", statsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids", stats)).Methods("GET")
-	router.HandleFunc("/x5u/{keyid:[a-zA-Z0-9-_]{1,64}}/{chainfile:[a-zA-Z0-9-_.]{1,255}}", statsMiddleware(ag.handleGetX5U, "http.api.x5u", stats)).Methods("GET")
 	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
 		err = setRuntimeConfig()
 		if err != nil {
@@ -222,6 +222,19 @@ func run(conf configuration, listen string, debug bool) {
 		}
 		addProfilerHandlers(router)
 		log.Infof("enabled HTTP perf profiler")
+	}
+
+	// For each signer with a local chain upload location (eg: using the file
+	// scheme) create an handler to serve that directory at the path /x5u/keyid/
+	for _, signerConf := range conf.Signers {
+		parsedURL, err := url.Parse(signerConf.ChainUploadLocation)
+		if err != nil || parsedURL.Scheme != "file" {
+			// This signer doesn't upload certificate chains to local storage.
+			continue
+		}
+
+		prefix := fmt.Sprintf("/x5u/%s/", signerConf.ID)
+		router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(http.Dir(parsedURL.Path))))
 	}
 
 	server := &http.Server{
