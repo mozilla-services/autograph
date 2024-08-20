@@ -14,7 +14,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"path"
 	"strings"
 	"testing"
 
@@ -46,9 +45,10 @@ func getLocalX5U(x5u string) (body []byte, err error) {
 	}
 
 	// Find the signer matching the keyid URL segment.
+	keyid := segs[len(segs)-2]
 	for _, s := range ag.getSigners() {
 		config := s.Config()
-		if config.ID != segs[len(segs)-2] {
+		if config.ID != keyid {
 			continue
 		}
 
@@ -60,11 +60,12 @@ func getLocalX5U(x5u string) (body []byte, err error) {
 		if parsedX5U.Scheme != "file" {
 			break
 		}
-
-		return os.ReadFile(path.Join(parsedX5U.Path, segs[len(segs)-1]))
+		return os.ReadFile(parsedX5U.Path)
 	}
 
-	return nil, fmt.Errorf("unable to fetch x5u from '%s'", x5u)
+	// Otherwise, we would need to perform an HTTP request to wherever this
+	// chain is hosted, but under unit testing there are no such signers.
+	return nil, fmt.Errorf("unable to read x5u from '%s'", x5u)
 }
 
 func TestMonitorPass(t *testing.T) {
