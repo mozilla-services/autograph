@@ -129,10 +129,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	for i, sigreq := range sigreqs {
 		if r.URL.RequestURI() == "/sign/files" {
 			if sigreq.Input != "" {
-				httpError(w, r, http.StatusBadRequest, fmt.Sprintf("input should be empty in sign files signature request %d", i))
+				httpError(w, r, http.StatusBadRequest, "input should be empty in sign files signature request %d", i)
 			}
 			if sigreq.Files == nil {
-				httpError(w, r, http.StatusBadRequest, fmt.Sprintf("missing Files in sign files signature request %d", i))
+				httpError(w, r, http.StatusBadRequest, "missing Files in sign files signature request %d", i)
 			}
 			if len(sigreq.Files) < MinNamedFiles {
 				httpError(w, r, http.StatusBadRequest, "Did not receive enough files to sign. Need at least %d", MinNamedFiles)
@@ -142,7 +142,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else if sigreq.Input == "" {
-			httpError(w, r, http.StatusBadRequest, fmt.Sprintf("missing input in signature request %d", i))
+			httpError(w, r, http.StatusBadRequest, "missing input in signature request %d", i)
 		}
 	}
 	if a.debug {

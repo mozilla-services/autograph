@@ -538,10 +538,8 @@ func verifyContentSignature(input []byte, resp formats.SignatureResponse, endpoi
 	}
 	if endpoint == "/sign/data" {
 		return sig.VerifyData(input, pubKey)
-	} else {
-		return sig.VerifyHash(input, pubKey)
 	}
-	return true
+	return sig.VerifyHash(input, pubKey)
 }
 
 func verifyXPI(input []byte, req formats.SignatureRequest, resp formats.SignatureResponse, reqType requestType, roots *x509.CertPool, verificationTime time.Time) bool {

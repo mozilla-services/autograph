@@ -143,11 +143,11 @@ func main() {
 	}
 	inter, err := x509.ParseCertificate(interCertBytes)
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to parse intermediate certificate: %w"), err)
+		log.Fatal("failed to parse intermediate certificate: %w", err)
 	}
 	_, err = inter.Verify(opts)
 	if err != nil {
-		log.Fatal(fmt.Errorf("failed to verify intermediate chain to root: %w"), err)
+		log.Fatal("failed to verify intermediate chain to root: %w", err)
 	}
 
 	rootTmpfile, err := os.CreateTemp("", "csrootcert")

@@ -48,7 +48,7 @@ func (s *ContentSigner) upload(data, name string) error {
 	case "file":
 		return writeLocalFile(data, name, parsedURL)
 	default:
-		return fmt.Errorf("unsupported upload scheme " + parsedURL.Scheme)
+		return fmt.Errorf("unsupported upload scheme %#v", parsedURL.Scheme)
 	}
 }
 
