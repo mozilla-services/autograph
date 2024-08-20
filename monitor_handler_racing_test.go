@@ -12,10 +12,12 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"os"
+	"path"
 	"strings"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
@@ -31,20 +33,33 @@ import (
 const autographDevRootHash = `5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`
 
 func getMirroredX5U(x5u string) (body []byte, err error) {
-	req, err := http.NewRequest("GET", x5u, nil)
-	if err != nil {
-		return nil, err
-	}
-	segs := strings.Split(req.URL.Path, "/")
-	req = mux.SetURLVars(req, map[string]string{"keyid": segs[len(segs)-2], "chainfile": segs[len(segs)-1]})
+	parsed, err := url.Parse(x5u)
+	segs := strings.Split(parsed.Path, "/")
 
-	w := httptest.NewRecorder()
-	ag.handleGetX5U(w, req)
-	if w.Code != http.StatusOK || w.Body.String() == "" {
-		return nil, fmt.Errorf("fetch x5u failed with %d: %s; request was: %+v", w.Code, w.Body.String(), req)
+	if segs[len(segs)-3] != "x5u" {
+		return nil, fmt.Errorf("x5u URL '%s' does not appear to be locally hosted", x5u)
 	}
 
-	return w.Body.Bytes(), nil
+	// If the URL can be parsed into the form /x5u/keyid/chainfilename then
+	// try to read it directly off the disk, since this is likely a local file
+	for _, s := range ag.getSigners() {
+		config := s.Config()
+		if config.ID != segs[len(segs)-2] {
+			continue
+		}
+
+		parsedUploadLocation, err := url.Parse(config.ChainUploadLocation)
+		if err != nil {
+			return nil, err
+		}
+		if parsedUploadLocation.Scheme != "file" {
+			break
+		}
+
+		return os.ReadFile(path.Join(parsedUploadLocation.Path, segs[len(segs)-1]))
+	}
+
+	return nil, fmt.Errorf("unable to fetch x5u from '%s'", x5u)
 }
 
 func TestMonitorPass(t *testing.T) {
