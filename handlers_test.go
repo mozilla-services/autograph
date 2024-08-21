@@ -37,6 +37,96 @@ import (
 	margo "go.mozilla.org/mar"
 )
 
+type HandlerTestCase struct {
+	name   string
+	method string
+	url    string
+
+	// urlRouteVars are https://pkg.go.dev/github.com/gorilla/mux#Vars
+	// as configured with the handler at /config/{keyid:[a-zA-Z0-9-_]{1,64}}
+	// there should only be a keyid var and it should match the url value
+	urlRouteVars map[string]string
+
+	// headers are additional http headers to set
+	headers *http.Header
+
+	// user/auth ID to build an Authorization header for
+	authorizeID string
+	nilBody     bool
+	body        string
+
+	expectedStatus  int
+	expectedHeaders http.Header
+	expectedBody    string
+}
+
+func (testcase *HandlerTestCase) NewRequest(t *testing.T) *http.Request {
+	// test request setup
+	var (
+		req *http.Request
+		err error
+	)
+	if testcase.nilBody {
+		req, err = http.NewRequest(testcase.method, testcase.url, nil)
+	} else {
+		req, err = http.NewRequest(testcase.method, testcase.url, strings.NewReader(testcase.body))
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	req = mux.SetURLVars(req, testcase.urlRouteVars)
+	if testcase.headers != nil {
+		req.Header = *testcase.headers
+	}
+
+	if testcase.authorizeID != "" {
+		auth, err := ag.getAuthByID(testcase.authorizeID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// getAuthHeader requires a content type and body
+		req.Header.Set("Authorization", hawk.NewRequestAuth(req,
+			&hawk.Credentials{
+				ID:   auth.ID,
+				Key:  auth.Key,
+				Hash: sha256.New},
+			0).RequestHeader())
+	}
+
+	return req
+}
+
+func (testcase *HandlerTestCase) ValidateResponse(t *testing.T, w *httptest.ResponseRecorder) {
+	if w.Code != testcase.expectedStatus {
+		t.Fatalf("test case %s: got code %d but expected %d",
+			testcase.name, w.Code, testcase.expectedStatus)
+	}
+	if w.Body.String() != testcase.expectedBody {
+		t.Fatalf("test case %s: got body %q expected %q", testcase.name, w.Body.String(), testcase.expectedBody)
+	}
+	for expectedHeader, expectedHeaderVals := range testcase.expectedHeaders {
+		vals, ok := w.Header()[expectedHeader]
+		if !ok {
+			t.Fatalf("test case %s: expected header %q not found", testcase.name, expectedHeader)
+		}
+		if strings.Join(vals, "") != strings.Join(expectedHeaderVals, "") {
+			t.Fatalf("test case %s: header vals %q did not match expected %q ", testcase.name, vals, expectedHeaderVals)
+		}
+	}
+}
+
+func (testcase *HandlerTestCase) Run(t *testing.T, handler func(http.ResponseWriter, *http.Request)) {
+	// test request setup
+	var req = testcase.NewRequest(t)
+
+	// run the request
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	// validate response
+	testcase.ValidateResponse(t, w)
+}
+
 func TestBadRequest(t *testing.T) {
 	t.Parallel()
 
@@ -575,28 +665,7 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 
 	const autographDevAliceKeyIDsJSON = "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"pgpsubkey-debsign\",\"randompgp\",\"randompgp-debsign\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]"
 
-	var testcases = []struct {
-		name   string
-		method string
-		url    string
-
-		// urlRouteVars are https://pkg.go.dev/github.com/gorilla/mux#Vars
-		// as configured with the handler at /auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids
-		// there should only be an auth_id var and it should match the url value
-		urlRouteVars map[string]string
-
-		// headers are additional http headers to set
-		headers *http.Header
-
-		// user/auth ID to build an Authorization header for
-		authorizeID string
-		nilBody     bool
-		body        string
-
-		expectedStatus  int
-		expectedHeaders http.Header
-		expectedBody    string
-	}{
+	var testcases = []HandlerTestCase{
 		{
 			name:            "invalid method POST returns 405",
 			method:          "POST",
@@ -720,60 +789,8 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 			expectedHeaders: http.Header{"Content-Type": []string{"application/json"}},
 		},
 	}
-	for i, testcase := range testcases {
-		// test request setup
-		var (
-			req *http.Request
-			err error
-		)
-		if testcase.nilBody {
-			req, err = http.NewRequest(testcase.method, testcase.url, nil)
-		} else {
-			req, err = http.NewRequest(testcase.method, testcase.url, strings.NewReader(testcase.body))
-		}
-		if err != nil {
-			t.Fatal(err)
-		}
-		req = mux.SetURLVars(req, testcase.urlRouteVars)
-
-		if testcase.headers != nil {
-			req.Header = *testcase.headers
-		}
-		if testcase.authorizeID != "" {
-			auth, err := ag.getAuthByID(testcase.authorizeID)
-			if err != nil {
-				t.Fatal(err)
-			}
-			// getAuthHeader requires a content type and body
-			req.Header.Set("Authorization", hawk.NewRequestAuth(req,
-				&hawk.Credentials{
-					ID:   auth.ID,
-					Key:  auth.Key,
-					Hash: sha256.New},
-				0).RequestHeader())
-		}
-
-		// run the request
-		w := httptest.NewRecorder()
-		ag.handleGetAuthKeyIDs(w, req)
-
-		// validate response
-		if w.Code != testcase.expectedStatus {
-			t.Fatalf("test case %s (%d): got code %d but expected %d",
-				testcase.name, i, w.Code, testcase.expectedStatus)
-		}
-		if w.Body.String() != testcase.expectedBody {
-			t.Fatalf("test case %s (%d): got body %q expected %q", testcase.name, i, w.Body.String(), testcase.expectedBody)
-		}
-		for expectedHeader, expectedHeaderVals := range testcase.expectedHeaders {
-			vals, ok := w.Header()[expectedHeader]
-			if !ok {
-				t.Fatalf("test case %s (%d): expected header %q not found", testcase.name, i, expectedHeader)
-			}
-			if strings.Join(vals, "") != strings.Join(expectedHeaderVals, "") {
-				t.Fatalf("test case %s (%d): header vals %q did not match expected %q ", testcase.name, i, vals, expectedHeaderVals)
-			}
-		}
+	for _, testcase := range testcases {
+		testcase.Run(t, ag.handleGetAuthKeyIDs)
 	}
 }
 

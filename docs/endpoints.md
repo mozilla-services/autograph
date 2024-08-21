@@ -271,6 +271,16 @@ See `/sign/data`, the response format is identical.
 A successful request return a `201 Created` with a response
 body containing an S/MIME detached signature encoded with Base 64.
 
+## /x5u/:keyid/
+
+This is an endpoint used to fetch certificate chains which are generated and
+stored locally. If the signer is configured with an `X5U` using the `file://`
+scheme, then the contents of that file location are served under this path.
+
+This path is only intended to simplify local development and testing. Production
+signers should store their X5U certificate chains with a cloud storage provider
+such as Amazon S3 or Google Cloud Storage.
+
 ## /\_\_monitor\_\_
 
 This is a special endpoint designed to monitor the status of all signers

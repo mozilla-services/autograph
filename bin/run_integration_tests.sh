@@ -25,8 +25,8 @@ while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app-hsm)"
 done
 
 # fetch the updated root hash from the app-hsm service
-docker cp autograph-app-hsm:/tmp/normandy_dev_root_hash.txt .
-APP_HSM_NORMANDY_ROOT_HASH=$(grep '[0-9A-F]' normandy_dev_root_hash.txt | tr -d '\r\n')
+APP_HSM_NORMANDY_ROOT_HASH=$(docker compose exec app-hsm yq -r '.signers[] | select(.id == "normandy").cacert' /app/autograph.softhsm.yaml | \
+                             openssl x509 -outform DER | sha256sum | awk '{print $1}')
 
 # start the monitor lambda emulators
 echo "checking autograph monitors"

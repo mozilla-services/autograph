@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -94,7 +95,7 @@ func main() {
 		conf.depTruststore = nil
 	}
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
-		conf.rootHash = os.Getenv("AUTOGRAPH_ROOT_HASH")
+		conf.rootHash = strings.ToUpper(os.Getenv("AUTOGRAPH_ROOT_HASH"))
 		conf.contentSignatureRootHash = conf.rootHash
 		log.Printf("Using root hash from env var AUTOGRAPH_ROOT_HASH=%q\n", conf.rootHash)
 	}

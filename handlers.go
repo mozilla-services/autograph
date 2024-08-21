@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"time"
@@ -72,6 +73,27 @@ func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.S
 		"user_id":       userid,
 		"t":             int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 	}).Info(fmt.Sprintf("signing operation failed with error: %v", err))
+}
+
+// rewriteLocalX5U checks for X5U certificate chains using the `file://` scheme
+// and rewrites them to use the `/x5u/:keyid/` endpoint instead, which should
+// mirror the contents of the signer's X5U location, and returns the updated URL.
+//
+// If the X5U certificate chain uses any other scheme, then the original URL is returned
+// without change.
+func rewriteLocalX5U(r *http.Request, keyid string, x5u string) string {
+	parsedX5U, err := url.Parse(x5u)
+	if err == nil && parsedX5U.Scheme == "file" {
+		newX5U := url.URL{
+			Scheme: "http",
+			Host:   r.Host,
+			Path:   path.Join("x5u", keyid, path.Base(parsedX5U.Path)),
+		}
+		return newX5U.String()
+	}
+
+	// Otherwise, return the X5U unmodified
+	return x5u
 }
 
 // handleSignature endpoint accepts a list of signature requests in a HAWK authenticated POST request
@@ -200,9 +222,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			SignerID:   requestedSignerConfig.ID,
 			PublicKey:  requestedSignerConfig.PublicKey,
 			SignedFile: base64.StdEncoding.EncodeToString(signedfile),
-			X5U:        requestedSignerConfig.X5U,
+			X5U:        rewriteLocalX5U(r, requestedSignerConfig.ID, requestedSignerConfig.X5U),
 			SignerOpts: requestedSignerConfig.SignerOpts,
 		}
+
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {
 		case "/sign/hash":

@@ -8,9 +8,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"os"
 	"strings"
 	"testing"
 
@@ -27,6 +30,43 @@ import (
 )
 
 const autographDevRootHash = `5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`
+
+func getLocalX5U(x5u string) (body []byte, err error) {
+	parsed, err := url.Parse(x5u)
+	if err != nil {
+		return nil, err
+	}
+
+	// If the URL can be parsed into the form /x5u/keyid/chainfilename then
+	// try to read it directly off the disk, since this is likely a local file
+	segs := strings.Split(parsed.Path, "/")
+	if (len(segs) < 3) || (segs[len(segs)-3] != "x5u") {
+		return nil, fmt.Errorf("x5u URL '%s' does not appear to be locally hosted", x5u)
+	}
+
+	// Find the signer matching the keyid URL segment.
+	keyid := segs[len(segs)-2]
+	for _, s := range ag.getSigners() {
+		config := s.Config()
+		if config.ID != keyid {
+			continue
+		}
+
+		// If the X5U location uses the `file` scheme, read the chain off disk.
+		parsedX5U, err := url.Parse(config.X5U)
+		if err != nil {
+			return nil, err
+		}
+		if parsedX5U.Scheme != "file" {
+			break
+		}
+		return os.ReadFile(parsedX5U.Path)
+	}
+
+	// Otherwise, we would need to perform an HTTP request to wherever this
+	// chain is hosted, but under unit testing there are no such signers.
+	return nil, fmt.Errorf("unable to read x5u from '%s'", x5u)
+}
 
 func TestMonitorPass(t *testing.T) {
 	t.Parallel()
@@ -64,7 +104,7 @@ func TestMonitorPass(t *testing.T) {
 				t.Fatalf("verification of monitoring response failed: %v", err)
 			}
 		case contentsignaturepki.Type:
-			body, _, err := contentsignaturepki.GetX5U(&http.Client{}, response.X5U)
+			body, err := getLocalX5U(response.X5U)
 			if err != nil {
 				t.Fatal(err)
 			}
