@@ -28,7 +28,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph
+          images: |
+            ${{ vars.DOCKERHUB_REPO }}
+            ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph
           tags: |
             type=semver,pattern={{raw}}
             type=raw,value=latest,enable={{is_default_branch}}
@@ -44,11 +46,18 @@ jobs:
           service_account: artifact-writer@${{ vars.GCP_PROJECT_ID}}.iam.gserviceaccount.com
           workload_identity_provider: ${{ vars.GCPV2_GITHUB_WORKLOAD_IDENTITY_PROVIDER }}
 
-      - uses: docker/login-action@v3
+      - name: Login to Google Artifact Registry
+        uses: docker/login-action@v3
         with:
           registry: ${{ vars.GAR_LOCATION }}-docker.pkg.dev
           username: oauth2accesstoken
           password: ${{ steps.gcp-auth.outputs.access_token }}
+
+      - name: Login to Dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
