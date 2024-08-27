@@ -83,34 +83,6 @@ jobs:
           paths:
             - docker-cache/
 
-  deploy:
-    docker:
-      - image: cimg/deploy:2024.03.1
-    steps:
-      - setup_remote_docker
-      - restore_cache:
-          key: v4-{{.Branch}}
-      - run:
-          name: Restore Docker image cache
-          command: gunzip -c docker-cache/autograph-app.tgz | docker load
-
-      - run:
-          name: Deploy to Dockerhub
-          command: |
-            # deploy main
-            if [ "${CIRCLE_BRANCH}" == "main" ]; then
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
-              docker tag autograph-app ${DOCKERHUB_REPO}:latest
-              docker push ${DOCKERHUB_REPO}:latest
-            elif  [ ! -z "${CIRCLE_TAG}" ]; then
-            # deploy a release tag...
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
-              echo "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
-              docker tag autograph-app "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
-              docker images
-              docker push "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
-            fi
-
 workflows:
   version: 2
   check-code-quality:
@@ -132,15 +104,6 @@ workflows:
             tags:
               only: /.*/
 
-      - deploy:
-          requires:
-            - build-integrationtest-verify
-          filters:
-            tags:
-              # only upload the docker container on semver tags
-              only: /[0-9]\.[0-9]+\.[0-9]+/
-            branches:
-              only: main
   nightly:
     triggers:
       - schedule:
