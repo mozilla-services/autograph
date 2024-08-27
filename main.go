@@ -210,11 +210,11 @@ func run(conf configuration, listen string, debug bool) {
 	router.HandleFunc("/__lbheartbeat__", statsMiddleware(handleLBHeartbeat, "http.nonapi.lbheartbeat", stats)).Methods("GET")
 	router.HandleFunc("/__version__", statsMiddleware(handleVersion, "http.nonapi.version", stats)).Methods("GET")
 	router.HandleFunc("/__monitor__", statsMiddleware(monitor.handleMonitor, "http.nonapi.monitor", stats)).Methods("GET")
-	router.HandleFunc("/sign/files", statsMiddleware(ag.handleSignature, "http.api.sign/files", stats)).Methods("POST")
-	router.HandleFunc("/sign/file", statsMiddleware(ag.handleSignature, "http.api.sign/file", stats)).Methods("POST")
-	router.HandleFunc("/sign/data", statsMiddleware(ag.handleSignature, "http.api.sign/data", stats)).Methods("POST")
-	router.HandleFunc("/sign/hash", statsMiddleware(ag.handleSignature, "http.api.sign/hash", stats)).Methods("POST")
-	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", statsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids", stats)).Methods("GET")
+	router.HandleFunc("/sign/files", apiStatsMiddleware(ag.handleSignature, "http.api.sign/files", stats)).Methods("POST")
+	router.HandleFunc("/sign/file", apiStatsMiddleware(ag.handleSignature, "http.api.sign/file", stats)).Methods("POST")
+	router.HandleFunc("/sign/data", apiStatsMiddleware(ag.handleSignature, "http.api.sign/data", stats)).Methods("POST")
+	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "http.api.sign/hash", stats)).Methods("POST")
+	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", apiStatsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids", stats)).Methods("GET")
 	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
 		err = setRuntimeConfig()
 		if err != nil {
