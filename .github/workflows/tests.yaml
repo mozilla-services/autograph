@@ -73,20 +73,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - build
-    env:
-      DBNAME: autograph
-      PGPASSWORD: myautographdbpassword
-
-    services:
-      database:
-        image: postgres:14
-        env:
-          POSTGRES_DB: ${{ env.DBNAME }}
-          POSTGRES_PASSWORD: ${{ env.PGPASSWORD }}
-          POSTGRES_HOST_AUTH_METHOD: trust
-        ports:
-          - 5432:5432
-
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
@@ -96,26 +82,14 @@ jobs:
           name: autograph-images-${{ github.sha }}
           path: docker-cache/
 
-      - name: Initialize database
-        shell: bash
-        run: psql -h localhost -p 5432 -U postgres --no-password -f database/schema.sql ${{ env.DBNAME }}
-
       - name: Load images
         shell: bash
         run: docker load -i docker-cache/autograph-images.tar
 
       - name: Run Tests
         shell: bash
-        env:
-          AUTOGRAPH_DB_DSN: postgres://myautographdbuser:${{ env.PGPASSWORD }}@localhost/${{ env.DBNAME }}?sslmode=disable
         run: |
-          docker run \
-            --env AUTOGRAPH_DB_DSN \
-            --env RACE_TEST=0 \
-            --workdir /app/src/autograph \
-            --net=host \
-            --user 0 \
-            autograph-app ./bin/run_unit_tests.sh
+          docker compose run unit-test
 
   integration-tests:
     name: Run Integration Tests
