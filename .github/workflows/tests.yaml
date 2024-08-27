@@ -126,3 +126,26 @@ jobs:
           else
             docker compose -f tools/autograph-client/integration-tests.yml logs app
           fi
+
+  # A hack around matrix jobs not reporting their status up through the job that
+  # created them. See
+  # https://github.com/orgs/community/discussions/26822#discussioncomment-8285141
+  # and
+  # https://github.com/orgs/community/discussions/26822#discussioncomment-3305794
+  integration-tests-results:
+    if: ${{ always() }}
+    name: Check Integration Test Results (See the individual Run Integration Tests jobs for details)
+    runs-on: ubuntu-22.04
+    needs:
+      - integration-tests
+    steps:
+      - name: See the individual Run Integration Tests jobs for details
+        run:
+          exit 1
+          # see https://stackoverflow.com/a/67532120/4907315
+        if: >-
+          ${{
+              contains(needs.*.result, 'failure')
+            || contains(needs.*.result, 'cancelled')
+            || contains(needs.*.result, 'skipped')
+          }}
