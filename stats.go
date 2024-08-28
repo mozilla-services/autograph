@@ -84,14 +84,14 @@ func statsMiddleware(h http.HandlerFunc, handlerName string, stats statsd.Client
 	}
 }
 
-// apiStatsMiddleware is a handler emits metrics at
+// apiStatsMiddleware is a handler that emits the metrics
 // "agg.http.api.request.attempts" and "agg.http.api.response.status.<status
-// code>" as well as metrics for the handlerName given. This only needs to exist
-// for as long as we're running in AWS. They're only required because our
-// combination of Grafana 0.9 and InfluxDB 1.11 doesn't allow us to sum over the
-// individual http.api.* API request metrics. So, we're stuck having to do the
-// aggregation ourselves. This. The "agg" is short for "aggregated".  These
-// metrics represent roll-ups of the individual http.api.* metrics. The
+// code>" as well as statsMiddleware metrics for the handlerName given. These
+// metrics represent roll-ups of the individual http.api.* metrics. This
+// function only needs to exist for as long as we're running in AWS. It's
+// required because our combination of Grafana 0.9 and InfluxDB 1.11 doesn't
+// allow us to sum over the individual http.api.* API request metrics. So, we do
+// the aggregation ourselves. The "agg" is short for "aggregated". The
 // handlerName provided should still include "http.api".
 func apiStatsMiddleware(h http.HandlerFunc, handlerName string, stats statsd.ClientInterface) http.HandlerFunc {
 	handlerFunc := statsMiddleware(h, handlerName, stats)
