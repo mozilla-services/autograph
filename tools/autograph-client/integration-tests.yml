@@ -70,20 +70,20 @@ services:
     container_name: test-monitor-app
     extends:
       file: ../../docker-compose.yml
-      service: unit-test
+      service: just-builder
     links:
-      - monitor-to-app
+      - "monitor-to-app:monitor"
     depends_on:
       - monitor-to-app
     entrypoint:
       [
         "go",
         "run",
-        "./tools/autograph-monitor-integration/main.go",
+        "/app/src/autograph/tools/autograph-monitor-integration/main.go",
         "-name",
         "monitor-to-app",
         "-url",
-        "http://localhost:10000",
+        "http://monitor:10000",
       ]
 
   # TODO: Add a monitor test for the HSM lambda - tricky because we need

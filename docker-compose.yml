@@ -161,3 +161,9 @@ services:
     user: "0"
     working_dir: "/app/src/autograph/"
     command: ["./bin/run_unit_tests.sh"]
+
+  just-builder: # FIXME
+    container_name: autograph-builder
+    build:
+      context: .
+      target: builder
