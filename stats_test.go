@@ -15,6 +15,8 @@ func TestStatsResponseWriterWritesResponseMetricOnce(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockStats := mockstatsd.NewMockClientInterface(ctrl)
+	mockStats.EXPECT().Incr("myhandler.response.status.4xx", []string(nil), 1.0).Times(1)
+	mockStats.EXPECT().Incr("myhandler.response.success", []string(nil), 1.0).Times(1)
 	mockStats.EXPECT().Incr("myhandler.response.status.400", []string(nil), 1.0).Times(1)
 
 	recorder := httptest.NewRecorder()
@@ -34,6 +36,8 @@ func TestStatsResponseWriterWritesToHeaderOnWrite(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockStats := mockstatsd.NewMockClientInterface(ctrl)
+	mockStats.EXPECT().Incr("myhandler.response.status.2xx", []string(nil), 1.0).Times(1)
+	mockStats.EXPECT().Incr("myhandler.response.success", []string(nil), 1.0).Times(1)
 	mockStats.EXPECT().Incr("myhandler.response.status.200", []string(nil), 1.0).Times(1)
 
 	recorder := httptest.NewRecorder()
@@ -49,7 +53,9 @@ func TestWrappingStatsResponseWriteWritesAllMetrics(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockStats := mockstatsd.NewMockClientInterface(ctrl)
+	mockStats.EXPECT().Incr("inner.response.status.5xx", []string(nil), 1.0).Times(1)
 	mockStats.EXPECT().Incr("inner.response.status.500", []string(nil), 1.0).Times(1)
+	mockStats.EXPECT().Incr("wrapper.response.status.5xx", []string(nil), 1.0).Times(1)
 	mockStats.EXPECT().Incr("wrapper.response.status.500", []string(nil), 1.0).Times(1)
 
 	recorder := httptest.NewRecorder()

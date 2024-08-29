@@ -66,6 +66,21 @@ func (w *statsdWriter) Write(b []byte) (int, error) {
 
 func (w *statsdWriter) WriteHeader(statusCode int) {
 	if w.headerWritten.CompareAndSwap(false, true) {
+		switch {
+		case statusCode >= 200 && statusCode < 300:
+			w.stats.Incr(fmt.Sprintf("%s.response.status.2xx", w.metricPrefix), nil, 1)
+			w.stats.Incr(fmt.Sprintf("%s.response.success", w.metricPrefix), nil, 1)
+		case statusCode >= 300 && statusCode < 400:
+			w.stats.Incr(fmt.Sprintf("%s.response.status.3xx", w.metricPrefix), nil, 1)
+		case statusCode >= 400 && statusCode < 500:
+			w.stats.Incr(fmt.Sprintf("%s.response.status.4xx", w.metricPrefix), nil, 1)
+			// 4xx is a success code for availability since this is
+			// generally folks messing up their authentication. Still want
+			// to have these on a dashboard as a double check, though.
+			w.stats.Incr(fmt.Sprintf("%s.response.success", w.metricPrefix), nil, 1)
+		case statusCode >= 500 && statusCode < 600:
+			w.stats.Incr(fmt.Sprintf("%s.response.status.5xx", w.metricPrefix), nil, 1)
+		}
 		w.stats.Incr(fmt.Sprintf("%s.response.status.%d", w.metricPrefix, statusCode), nil, 1)
 		w.ResponseWriter.WriteHeader(statusCode)
 	}
