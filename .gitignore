@@ -36,6 +36,19 @@ tools/sign-addon/venv/*
 
 vendor/go.mozilla.org/cose/samples/*
 version.json
+.vscode/
+
+./autograph
+tools/autograph-client/autograph-client
+tools/autograph-monitor/autograph-monitor
+tools/genpki/genpki
+tools/hawk-token-maker/hawk-token-maker
+tools/make-hsm-ee/make-hsm-ee
+tools/makecsr/makecsr
+tools/makecsr/make-ev-csr/make-ev-csr
+tools/softhsm/softhsm
+tools/softhsm/genkeys/genkeys
+tools/softhsm/genrsa/genrsa
 
 # Python dev stuff
 **/.venv*
