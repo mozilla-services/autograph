@@ -28,10 +28,10 @@ jobs:
 
       - name: Save images
         shell: bash
-        # FIXME rename just-builder?
+        # FIXME rename just-builder? autograph-builder
         run: |
             mkdir -p docker-cache
-            docker save -o docker-cache/autograph-images.tar autograph-app autograph-app-hsm just-builder
+            docker save -o docker-cache/autograph-images.tar autograph-app autograph-app-hsm autograph-builder
 
       - name: Enumerate tests
         id: enum-tests
