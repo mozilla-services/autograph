@@ -6,6 +6,8 @@ on:
   pull_request:
     branches:
       - main
+  schedule:
+    - cron: "0 1 * * *"
 
 # Restrict tests to the most recent commit.
 concurrency:
@@ -29,15 +31,15 @@ jobs:
       - name: Save images
         shell: bash
         run: |
-            mkdir -p docker-cache
-            docker save -o docker-cache/autograph-images.tar autograph-app autograph-app-hsm
+          mkdir -p docker-cache
+          docker save -o docker-cache/autograph-images.tar autograph-app autograph-app-hsm
 
       - name: Enumerate tests
         id: enum-tests
         shell: bash
         run: |
-            echo -n "testcases=" >> $GITHUB_OUTPUT
-            yq -o=json '.services | keys' tools/autograph-client/integration-tests.yml | jq -c >> $GITHUB_OUTPUT
+          echo -n "testcases=" >> $GITHUB_OUTPUT
+          yq -o=json '.services | keys' tools/autograph-client/integration-tests.yml | jq -c >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v4
         with:
@@ -58,7 +60,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: './go.mod'
+          go-version-file: "./go.mod"
       - name: golangci-lint
         # If you bump this version, double check that we shouldn't also bump
         # GOLANGCI_LINT_VERSION in the Makefile. (The version here is for the
