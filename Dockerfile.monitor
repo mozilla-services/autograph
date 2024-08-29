@@ -1,0 +1,15 @@
+FROM golang:1.23.0@sha256:ecef8303ced05b7cd1addf3c8ea98974f9231d4c5a0c230d23b37bb623714a23 as build
+
+WORKDIR /app
+
+COPY . .
+
+RUN go build -o autograph-monitor ./tools/autograph-monitor
+
+FROM golang:1.23.0@sha256:ecef8303ced05b7cd1addf3c8ea98974f9231d4c5a0c230d23b37bb623714a23
+
+COPY --from=build /app/autograph-monitor /app/autograph-monitor
+
+ENV SELF_SCHEDULED=true
+
+ENTRYPOINT ["/app/autograph-monitor"]

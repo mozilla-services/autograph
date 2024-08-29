@@ -100,9 +100,27 @@ func main() {
 		log.Printf("Using root hash from env var AUTOGRAPH_ROOT_HASH=%q\n", conf.rootHash)
 	}
 
+	selfScheduled := strings.ToLower(strings.TrimSpace(os.Getenv("SELF_SCHEDULED")))
+
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
 		lambda.Start(Handler)
+
+	} else if selfScheduled == "1" || selfScheduled == "true" {
+		scheduleDur := 1 * time.Minute
+		err := monitor()
+		if err != nil {
+			log.Printf("error running monitor: %s", err)
+		}
+
+		timer := time.NewTimer(scheduleDur)
+		for range timer.C {
+			err := monitor()
+			if err != nil {
+				log.Printf("error running monitor: %s", err)
+			}
+			// FIXME metric when we took more than `scheduleDur` to run
+		}
 	} else {
 		err := Handler()
 		if err != nil {
