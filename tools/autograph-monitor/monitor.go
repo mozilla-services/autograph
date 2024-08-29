@@ -127,11 +127,11 @@ func Handler() (err error) {
 }
 
 // monitor contacts the autograph service and verifies all monitoring signatures
-func monitor() (err error) {
+func monitor() error {
 	log.Println("Retrieving monitoring data from", conf.url)
 	req, err := http.NewRequest("GET", conf.url+"__monitor__", nil)
 	if err != nil {
-		return
+		return fmt.Errorf("unable to create NewRequest to the monitor endpoint: %w", err)
 	}
 
 	// For client requests, setting this field prevents re-use of
@@ -141,17 +141,17 @@ func monitor() (err error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", makeAuthHeader(req, "monitor", conf.monitoringKey))
-	cli := &http.Client{}
-	resp, err := cli.Do(req)
-	if err != nil || resp == nil {
-		return
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("request to monitor endpoint failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			log.Printf("error reading failed monitor response body: %s", err)
+			return fmt.Errorf("error reading failed monitor response body (original HTTP status was %s): %w", resp.Status, err)
 		}
 		return fmt.Errorf("monitor request failed with status %s and body: %s", resp.Status, body)
 	}
@@ -166,8 +166,10 @@ func monitor() (err error) {
 		if err := dec.Decode(&response); err == io.EOF {
 			break
 		} else if err != nil {
-			log.Fatal(err)
+			return fmt.Errorf("unable to parse the streaming SignatureReponse JSON: %w", err)
 		}
+
+		var err error
 		switch response.Type {
 		case contentsignature.Type:
 			log.Printf("Verifying content signature from signer %q", response.SignerID)
@@ -219,7 +221,7 @@ func monitor() (err error) {
 		return errors.New(failure)
 	}
 	log.Println("All signature responses passed, monitoring OK")
-	return
+	return nil
 }
 
 func makeAuthHeader(req *http.Request, user, token string) string {
