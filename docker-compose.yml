@@ -63,8 +63,8 @@ services:
       timeout: 10s
       retries: 3
 
-  monitor:
-    container_name: autograph-monitor
+  monitor-to-app:
+    container_name: autograph-monitor-to-app
     build:
       context: .
       dockerfile: Dockerfile.monitor
@@ -73,10 +73,29 @@ services:
       - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
       - AUTOGRAPH_ROOT_HASH
     command: ["/go/bin/autograph-monitor"]
+    ports:
+      - "10000:10000"
     links:
       - app
     depends_on:
       - app
+
+  monitor-to-app-hsm:
+    container_name: autograph-monitor-to-hsm
+    build:
+      context: .
+      dockerfile: Dockerfile.monitor
+    environment:
+      - AUTOGRAPH_URL=http://autograph-app:8000/
+      - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
+      - AUTOGRAPH_ROOT_HASH
+    command: ["/go/bin/autograph-monitor"]
+    ports:
+      - "10001:10000"
+    links:
+      - app-hsm
+    depends_on:
+      - app-hsm
 
   monitor-lambda-emulator:
     container_name: autograph-monitor-lambda-emulator

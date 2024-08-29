@@ -12,6 +12,8 @@ docker compose rm -f db
 
 # start db and app servers
 docker compose up -d --force-recreate db app app-hsm
+docker compose run -d --build monitor-to-app
+docker compose run -d --build monitor-to-app
 
 echo "waiting for autograph-app to start"
 while test "true" != "$(docker inspect -f {{.State.Running}} autograph-app)"; do
@@ -29,7 +31,7 @@ APP_HSM_NORMANDY_ROOT_HASH=$(docker compose exec app-hsm yq -r '.signers[] | sel
                              openssl x509 -outform DER | sha256sum | awk '{print $1}')
 
 # start the monitor lambda emulators
-echo "checking autograph monitors"
+echo "checking autograph lambda monitors"
 docker compose run \
 	       --rm \
 	       -e AUTOGRAPH_URL=http://app:8000/ \
@@ -42,6 +44,22 @@ docker compose run \
 	       -e AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH \
 	       --entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
 	       monitor-hsm-lambda-emulator /go/bin/autograph-monitor
+
+echo "waiting for monitor-to-app to start"
+while test "true" != "$(docker inspect -f {{.State.Running}} monitor-to-app)"; do
+	echo -n "."
+	sleep 1 # wait before checking again
+done
+
+echo "waiting for monitor-to-app-hsm to start"
+while test "true" != "$(docker inspect -f {{.State.Running}} monitor-to-app-hsm)"; do
+	echo -n "."
+	sleep 1 # wait before checking again
+done
+
+echo "checking autograph monitors"
+go run ./tools/autograph-monitor-integration/main.go -name monitor-to-app -url http://localhost:10000
+go run ./tools/autograph-monitor-integration/main.go -name monitor-to-app -url http://localhost:10001
 
 echo "checking read-only API"
 # user bob doesn't exist in the softhsm config
