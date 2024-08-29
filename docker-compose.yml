@@ -65,6 +65,7 @@ services:
 
   monitor-to-app:
     container_name: autograph-monitor-to-app
+    image: autograph-monitor-to-app
     build:
       context: .
       dockerfile: Dockerfile.monitor
@@ -81,7 +82,8 @@ services:
       - app
 
   monitor-to-app-hsm:
-    container_name: autograph-monitor-to-hsm
+    container_name: autograph-monitor-to-app-hsm
+    image: autograph-monitor-to-app-hsm
     build:
       context: .
       dockerfile: Dockerfile.monitor
@@ -164,6 +166,7 @@ services:
 
   just-builder: # FIXME
     container_name: autograph-builder
+    image: autograph-builder
     build:
       context: .
       target: builder
