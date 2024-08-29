@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"expvar"
 	"fmt"
 	"io"
 	"log"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
@@ -54,6 +56,12 @@ var (
 )
 
 func main() {
+	go func() {
+		// metrics serving endpoint
+		fmt.Println("Serving debug on :10000")
+		http.ListenAndServe(":10000", nil)
+	}()
+
 	conf.url = os.Getenv("AUTOGRAPH_URL")
 	if conf.url == "" {
 		log.Fatal("AUTOGRAPH_URL must be set to the base url of the autograph service")
@@ -100,11 +108,45 @@ func main() {
 		log.Printf("Using root hash from env var AUTOGRAPH_ROOT_HASH=%q\n", conf.rootHash)
 	}
 
+	selfScheduled := strings.ToLower(strings.TrimSpace(os.Getenv("SELF_SCHEDULED")))
+
+	client := retryablehttp.NewClient()
+	client.RetryMax = 5
+
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
-		lambda.Start(Handler)
+		lambda.Start(func() { Handler(client) })
+
+	} else if selfScheduled == "1" || selfScheduled == "true" {
+		scheduleDur := 1 * time.Minute
+		attempts := expvar.NewInt("monitoring.attempts")
+		successes := expvar.NewInt("monitoring.successes")
+		errors := expvar.NewInt("monitoring.errors")
+
+		attempts.Set(1)
+		err := monitor(client)
+		if err != nil {
+			errors.Set(1)
+			log.Printf("error running monitor: %s", err)
+		} else {
+			successes.Set(1)
+		}
+
+		timer := time.NewTimer(scheduleDur)
+		for range timer.C {
+			successes.Set(0)
+			errors.Set(0)
+			err := monitor(client)
+			if err != nil {
+				errors.Add(1)
+				log.Printf("error running monitor: %s", err)
+			} else {
+				successes.Add(1)
+			}
+			// FIXME metric when we took more than `scheduleDur` to run
+		}
 	} else {
-		err := Handler()
+		err := Handler(client)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -115,7 +157,7 @@ func main() {
 
 // Handler is a wrapper around monitor() that performs garbage collection
 // before returning
-func Handler() (err error) {
+func Handler(client *retryablehttp.Client) (err error) {
 	defer func() {
 		// force gc run
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1621133
@@ -123,11 +165,11 @@ func Handler() (err error) {
 		runtime.GC()
 		log.Println("Garbage collected in", time.Since(t1))
 	}()
-	return monitor()
+	return monitor(client)
 }
 
 // monitor contacts the autograph service and verifies all monitoring signatures
-func monitor() (err error) {
+func monitor(client *retryablehttp.Client) (err error) {
 	log.Println("Retrieving monitoring data from", conf.url)
 	req, err := http.NewRequest("GET", conf.url+"__monitor__", nil)
 	if err != nil {
@@ -141,8 +183,11 @@ func monitor() (err error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", makeAuthHeader(req, "monitor", conf.monitoringKey))
-	cli := &http.Client{}
-	resp, err := cli.Do(req)
+	rr, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return
+	}
+	resp, err := client.Do(rr)
 	if err != nil || resp == nil {
 		return
 	}
