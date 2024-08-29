@@ -156,7 +156,7 @@ func main() {
 
 // Handler is a wrapper around monitor() that performs garbage collection
 // before returning
-func Handler(client *http.Client) (err error) {
+func Handler(client *retryablehttp.Client) (err error) {
 	defer func() {
 		// force gc run
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1621133
@@ -168,7 +168,7 @@ func Handler(client *http.Client) (err error) {
 }
 
 // monitor contacts the autograph service and verifies all monitoring signatures
-func monitor(client *http.Client) (err error) {
+func monitor(client *retryablehttp.Client) (err error) {
 	log.Println("Retrieving monitoring data from", conf.url)
 	req, err := http.NewRequest("GET", conf.url+"__monitor__", nil)
 	if err != nil {
@@ -182,7 +182,11 @@ func monitor(client *http.Client) (err error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", makeAuthHeader(req, "monitor", conf.monitoringKey))
-	resp, err := client.Do(req)
+	rr, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		return
+	}
+	resp, err := client.Do(rr)
 	if err != nil || resp == nil {
 		return
 	}
