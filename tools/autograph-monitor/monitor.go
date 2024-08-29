@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"expvar"
 	"fmt"
 	"io"
 	"log"
@@ -54,6 +55,12 @@ var (
 )
 
 func main() {
+	go func() {
+		// metrics serving endpoint
+		fmt.Println("Serving debug on :10000")
+		http.ListenAndServe(":10000", nil)
+	}()
+
 	conf.url = os.Getenv("AUTOGRAPH_URL")
 	if conf.url == "" {
 		log.Fatal("AUTOGRAPH_URL must be set to the base url of the autograph service")
@@ -108,16 +115,28 @@ func main() {
 
 	} else if selfScheduled == "1" || selfScheduled == "true" {
 		scheduleDur := 1 * time.Minute
+		attempts := expvar.NewInt("monitoring.attempts")
+		successes := expvar.NewInt("monitoring.successes")
+		errors := expvar.NewInt("monitoring.errors")
+
+		attempts.Add(1)
 		err := monitor()
 		if err != nil {
+			errors.Add(1)
 			log.Printf("error running monitor: %s", err)
+		} else {
+			successes.Add(1)
 		}
 
 		timer := time.NewTimer(scheduleDur)
 		for range timer.C {
+			attempts.Add(1)
 			err := monitor()
 			if err != nil {
+				errors.Add(1)
 				log.Printf("error running monitor: %s", err)
+			} else {
+				successes.Add(1)
 			}
 			// FIXME metric when we took more than `scheduleDur` to run
 		}
