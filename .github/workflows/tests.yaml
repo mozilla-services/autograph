@@ -142,12 +142,10 @@ jobs:
       - integration-tests
     steps:
       - name: See the individual Run Integration Tests jobs for details
-        run:
-          exit 1
-          # see https://stackoverflow.com/a/67532120/4907315
-        if: >-
-          ${{
-              contains(needs.*.result, 'failure')
-            || contains(needs.*.result, 'cancelled')
-            || contains(needs.*.result, 'skipped')
-          }}
+        run: |
+          result="${{ needs.integration-tests.result }}"
+          if [[ $result == "success" || $result == "skipped" ]]; then
+            exit 0
+          else
+            exit 1
+          fi
