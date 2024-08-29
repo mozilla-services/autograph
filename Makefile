@@ -86,9 +86,10 @@ gpg-test-clean:
 # monitor -> monitor-lambda-emulator,monitor-hsm-lambda-emulator
 # app-hsm -> monitor-hsm-lambda-emulator (app-hsm writes chains and updated config to shared /tmp volume)
 #
+# FIXME just-builder vs autograph-builder name inconsistency
 build: generate
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel app db
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel app-hsm monitor-to-app
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel app-hsm monitor-to-app just-builder
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel monitor-lambda-emulator monitor-hsm-lambda-emulator
 
 integration-test:
