@@ -46,13 +46,13 @@ docker compose run \
 	       monitor-hsm-lambda-emulator /go/bin/autograph-monitor
 
 echo "waiting for monitor-to-app to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} monitor-to-app)"; do
+while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-to-app)"; do
 	echo -n "."
 	sleep 1 # wait before checking again
 done
 
 echo "waiting for monitor-to-app-hsm to start"
-while test "true" != "$(docker inspect -f {{.State.Running}} monitor-to-app-hsm)"; do
+while test "true" != "$(docker inspect -f {{.State.Running}} autograph-monitor-to-app-hsm)"; do
 	echo -n "."
 	sleep 1 # wait before checking again
 done
