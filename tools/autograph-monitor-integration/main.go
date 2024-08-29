@@ -18,8 +18,9 @@ type stats struct {
 }
 
 var (
-	monitor = flag.String("name", "", "name of the monitor to check")
-	baseURL = flag.String("url", "http://localhost:10000", "URL to check")
+	monitor  = flag.String("name", "", "name of the monitor to check")
+	baseURL  = flag.String("url", "http://localhost:10000", "URL to check")
+	attempts = flag.Int("attempts", 10, "number of attempts to make before giving up")
 )
 
 func main() {
@@ -29,7 +30,7 @@ func main() {
 		log.Fatalf("failed to parse monitor URL %#v: %s", *baseURL, err)
 	}
 	var tryErr error
-	for i := range 5 {
+	for i := range *attempts {
 		fmt.Printf("try %d for monitor %#v at %#v\n", i, *monitor, monitorMetricsURL)
 		tryErr = try(*monitor, monitorMetricsURL)
 		if tryErr == nil {
