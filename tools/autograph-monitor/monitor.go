@@ -123,18 +123,19 @@ func main() {
 		successes := expvar.NewInt("monitoring.successes")
 		errors := expvar.NewInt("monitoring.errors")
 
-		attempts.Add(1)
+		attempts.Set(1)
 		err := monitor(client)
 		if err != nil {
-			errors.Add(1)
+			errors.Set(1)
 			log.Printf("error running monitor: %s", err)
 		} else {
-			successes.Add(1)
+			successes.Set(1)
 		}
 
 		timer := time.NewTimer(scheduleDur)
 		for range timer.C {
-			attempts.Add(1)
+			successes.Set(0)
+			errors.Set(0)
 			err := monitor(client)
 			if err != nil {
 				errors.Add(1)
