@@ -31,7 +31,7 @@ jobs:
         # FIXME rename just-builder? autograph-builder
         run: |
           mkdir -p docker-cache
-          docker save -o docker-cache/autograph-images.tar autograph-app autograph-app-hsm autograph-just-builder autograph-monitor-to-app  autograph-monitor-to-app-hsm
+          docker save -o docker-cache/autograph-images.tar autograph-app autograph-app-hsm autograph-builder autograph-monitor-to-app autograph-monitor-to-app-hsm
 
       - name: Enumerate tests
         id: enum-tests
