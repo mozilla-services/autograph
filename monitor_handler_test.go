@@ -9,8 +9,6 @@ import (
 )
 
 func TestMonitorNoConfig(t *testing.T) {
-	t.Parallel()
-
 	tmpag := newAutographer(1)
 	var nomonitor configuration
 	tmpag.addMonitoring(nomonitor.Monitoring)
@@ -21,8 +19,6 @@ func TestMonitorNoConfig(t *testing.T) {
 }
 
 func TestMonitorAddDuplicate(t *testing.T) {
-	t.Parallel()
-
 	tmpag := newAutographer(1)
 	var monitorconf configuration
 	monitorconf.Monitoring.Key = "xxxxxxx"
@@ -40,7 +36,8 @@ func TestMonitorAddDuplicate(t *testing.T) {
 }
 
 func TestMonitorBadRequest(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
+	mo := newMonitor(ag, conf.MonitorInterval)
 
 	var TESTCASES = []struct {
 		user     string

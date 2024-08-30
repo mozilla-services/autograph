@@ -60,7 +60,7 @@ type HandlerTestCase struct {
 	expectedBody    string
 }
 
-func (testcase *HandlerTestCase) NewRequest(t *testing.T) *http.Request {
+func (testcase *HandlerTestCase) NewRequest(ag *autographer, t *testing.T) *http.Request {
 	// test request setup
 	var (
 		req *http.Request
@@ -115,9 +115,9 @@ func (testcase *HandlerTestCase) ValidateResponse(t *testing.T, w *httptest.Resp
 	}
 }
 
-func (testcase *HandlerTestCase) Run(t *testing.T, handler func(http.ResponseWriter, *http.Request)) {
+func (testcase *HandlerTestCase) Run(ag *autographer, t *testing.T, handler func(http.ResponseWriter, *http.Request)) {
 	// test request setup
-	var req = testcase.NewRequest(t)
+	var req = testcase.NewRequest(ag, t)
 
 	// run the request
 	w := httptest.NewRecorder()
@@ -128,7 +128,7 @@ func (testcase *HandlerTestCase) Run(t *testing.T, handler func(http.ResponseWri
 }
 
 func TestBadRequest(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
 
 	var TESTCASES = []struct {
 		endpoint string
@@ -204,7 +204,6 @@ func TestBadRequest(t *testing.T) {
 		testcase := testcase
 
 		t.Run(fmt.Sprintf("returns 400 for invalid %s %s %s", testcase.method, testcase.endpoint, testcase.body), func(t *testing.T) {
-			t.Parallel()
 
 			body := strings.NewReader(testcase.body)
 			req, err := http.NewRequest(testcase.method, "http://foo.bar"+testcase.endpoint, body)
@@ -235,7 +234,7 @@ func TestBadRequest(t *testing.T) {
 }
 
 func TestRequestTooLarge(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
 
 	blob := strings.Repeat("foobar", 200)
 	body := strings.NewReader(blob)
@@ -264,7 +263,7 @@ func TestRequestTooLarge(t *testing.T) {
 }
 
 func TestBadContentType(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
 
 	blob := "foofoofoofoofoofoofoofoofoofoofoofoofoofoo"
 	body := strings.NewReader(blob)
@@ -293,7 +292,7 @@ func TestBadContentType(t *testing.T) {
 }
 
 func TestAuthFail(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
 
 	var TESTCASES = []struct {
 		user        string
@@ -333,8 +332,6 @@ func TestAuthFail(t *testing.T) {
 }
 
 func TestLBHeartbeat(t *testing.T) {
-	t.Parallel()
-
 	var TESTCASES = []struct {
 		expect int
 		method string
@@ -358,7 +355,7 @@ func TestLBHeartbeat(t *testing.T) {
 	}
 }
 
-func checkHeartbeatReturnsExpectedStatusAndBody(t *testing.T, name, method string, expectedStatusCode int, expectedBody []byte) {
+func checkHeartbeatReturnsExpectedStatusAndBody(ag *autographer, t *testing.T, name, method string, expectedStatusCode int, expectedBody []byte) {
 	req, err := http.NewRequest(method, "http://foo.bar/__heartbeat__", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -375,7 +372,8 @@ func checkHeartbeatReturnsExpectedStatusAndBody(t *testing.T, name, method strin
 }
 
 func TestHeartbeat(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
+	ag.heartbeatConf = &heartbeatConfig{}
 
 	var TESTCASES = []struct {
 		name               string
@@ -389,11 +387,12 @@ func TestHeartbeat(t *testing.T) {
 		{"returns 405 for HEAD", `HEAD`, http.StatusMethodNotAllowed, "HEAD method not allowed; endpoint accepts GET only\r\nrequest-id: -\n"},
 	}
 	for _, testcase := range TESTCASES {
-		checkHeartbeatReturnsExpectedStatusAndBody(t, testcase.name, testcase.method, testcase.expectedHTTPStatus, []byte((testcase.expectedBody)))
+		checkHeartbeatReturnsExpectedStatusAndBody(ag, t, testcase.name, testcase.method, testcase.expectedHTTPStatus, []byte((testcase.expectedBody)))
 	}
 }
 
 func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
+	ag, _ := MockAutographer(t)
 	// NB: do not run in parallel with TestHeartbeat*
 	ag.heartbeatConf = &heartbeatConfig{
 		HSMCheckTimeout: time.Second,
@@ -402,21 +401,19 @@ func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
 
 	expectedStatus := http.StatusInternalServerError
 	expectedBody := []byte("{\"hsmAccessible\":false}")
-	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 500 for GET with HSM inaccessible", `GET`, expectedStatus, expectedBody)
-
-	ag.heartbeatConf = nil
+	checkHeartbeatReturnsExpectedStatusAndBody(ag, t, "returns 500 for GET with HSM inaccessible", `GET`, expectedStatus, expectedBody)
 }
 
 func TestHeartbeatChecksHSMStatusFailsWhenNotConfigured(t *testing.T) {
+	ag, _ := MockAutographer(t)
 	// NB: do not run in parallel with TestHeartbeat*
-	ag.heartbeatConf = nil
-
 	expectedStatus := http.StatusInternalServerError
 	expectedBody := []byte("Missing heartbeat config\r\nrequest-id: -\n")
-	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 500 for GET without heartbeat config HSM", `GET`, expectedStatus, expectedBody)
+	checkHeartbeatReturnsExpectedStatusAndBody(ag, t, "returns 500 for GET without heartbeat config HSM", `GET`, expectedStatus, expectedBody)
 }
 
 func TestHeartbeatChecksDBStatusOKAndTimesout(t *testing.T) {
+	ag, _ := MockAutographer(t)
 	// NB: do not run in parallel with TestHeartbeat* or DB tests
 	host := database.GetTestDBHost()
 	db, err := database.Connect(database.Config{
@@ -436,14 +433,14 @@ func TestHeartbeatChecksDBStatusOKAndTimesout(t *testing.T) {
 	// check OK run locally requires running DB container
 	expectedStatus := http.StatusOK
 	expectedBody := []byte("{\"dbAccessible\":true}")
-	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 200 for GET with DB accessible", `GET`, expectedStatus, expectedBody)
+	checkHeartbeatReturnsExpectedStatusAndBody(ag, t, "returns 200 for GET with DB accessible", `GET`, expectedStatus, expectedBody)
 
 	// drop timeout
 	ag.heartbeatConf.DBCheckTimeout = 1 * time.Nanosecond
 	// check DB request times out
 	expectedStatus = http.StatusOK
 	expectedBody = []byte("{\"dbAccessible\":false}")
-	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 200 for GET with DB time out", `GET`, expectedStatus, expectedBody)
+	checkHeartbeatReturnsExpectedStatusAndBody(ag, t, "returns 200 for GET with DB time out", `GET`, expectedStatus, expectedBody)
 
 	// restore longer timeout and close the DB connection
 	ag.heartbeatConf.DBCheckTimeout = 1 * time.Second
@@ -451,14 +448,10 @@ func TestHeartbeatChecksDBStatusOKAndTimesout(t *testing.T) {
 	// check DB request still fails
 	expectedStatus = http.StatusOK
 	expectedBody = []byte("{\"dbAccessible\":false}")
-	checkHeartbeatReturnsExpectedStatusAndBody(t, "returns 200 for GET with DB inaccessible", `GET`, expectedStatus, expectedBody)
-
-	ag.db = nil
+	checkHeartbeatReturnsExpectedStatusAndBody(ag, t, "returns 200 for GET with DB inaccessible", `GET`, expectedStatus, expectedBody)
 }
 
 func TestVersion(t *testing.T) {
-	t.Parallel()
-
 	var TESTCASES = []struct {
 		expect int
 		method string
@@ -487,7 +480,7 @@ func TestVersion(t *testing.T) {
 // * `appkey1` and `appkey2` for `alice`
 // * `appkey2` only for `bob`
 func TestSignerAuthorized(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
 
 	var TESTCASES = []struct {
 		userid string
@@ -577,7 +570,7 @@ func TestSignerAuthorized(t *testing.T) {
 
 // verify that user `bob` is not allowed to sign with `appkey1`
 func TestSignerUnauthorized(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
 
 	var TESTCASES = []formats.SignatureRequest{
 		// request signature that need to prepend the content-signature:\x00 header
@@ -616,7 +609,7 @@ func TestSignerUnauthorized(t *testing.T) {
 }
 
 func TestContentType(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
 
 	var TESTCASES = []formats.SignatureRequest{
 		formats.SignatureRequest{
@@ -650,6 +643,7 @@ func TestContentType(t *testing.T) {
 }
 
 func TestDebug(t *testing.T) {
+	ag, _ := MockAutographer(t)
 	ag.enableDebug()
 	if !ag.debug {
 		t.Fatalf("expected debug mode to be enabled, but is disabled")
@@ -661,7 +655,7 @@ func TestDebug(t *testing.T) {
 }
 
 func TestHandleGetAuthKeyIDs(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
 
 	const autographDevAliceKeyIDsJSON = "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"pgpsubkey-debsign\",\"randompgp\",\"randompgp-debsign\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]"
 
@@ -790,7 +784,7 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 		},
 	}
 	for _, testcase := range testcases {
-		testcase.Run(t, ag.handleGetAuthKeyIDs)
+		testcase.Run(ag, t, ag.handleGetAuthKeyIDs)
 	}
 }
 

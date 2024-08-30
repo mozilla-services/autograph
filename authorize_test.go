@@ -17,7 +17,7 @@ import (
 )
 
 func TestMissingAuthorization(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -35,7 +35,7 @@ func TestMissingAuthorization(t *testing.T) {
 }
 
 func TestBogusAuthorization(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -54,7 +54,7 @@ func TestBogusAuthorization(t *testing.T) {
 }
 
 func TestBadPayload(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -78,7 +78,7 @@ func TestBadPayload(t *testing.T) {
 }
 
 func TestExpiredAuth(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -98,6 +98,8 @@ func TestExpiredAuth(t *testing.T) {
 }
 
 func TestDuplicateNonce(t *testing.T) {
+	ag, conf := MockAutographer(t)
+
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
 	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", bodyrdr)
@@ -125,6 +127,8 @@ func TestDuplicateNonce(t *testing.T) {
 }
 
 func TestNonceFromLRU(t *testing.T) {
+	ag, conf := MockAutographer(t)
+
 	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -170,7 +174,7 @@ func TestNonceFromLRU(t *testing.T) {
 }
 
 func TestSignerNotFound(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
 
 	_, err := ag.authBackend.getSignerForUser(`unknown018qoegdxc`, `unkown093ytid`)
 	if err == nil {
@@ -179,7 +183,7 @@ func TestSignerNotFound(t *testing.T) {
 }
 
 func TestDefaultSignerNotFound(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
 
 	_, err := ag.authBackend.getSignerForUser(`unknown018qoegdxc`, ``)
 	if err == nil {
@@ -188,7 +192,7 @@ func TestDefaultSignerNotFound(t *testing.T) {
 }
 
 func TestAutographerAddAuthorizationsFails(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
 
 	testcases := []struct {
 		name   string
@@ -213,11 +217,11 @@ func TestAutographerAddAuthorizationsFails(t *testing.T) {
 			name: "authorization without a signer ID fails",
 			auths: []authorization{
 				{
-					ID:      "alice",
+					ID:      "bernie",
 					Signers: []string{},
 				},
 			},
-			errStr: `auth id "alice" must have at least one signer configured`,
+			errStr: `auth id "bernie" must have at least one signer configured`,
 		},
 		{
 			name: "invalid empty string auth ID fails",
@@ -274,9 +278,7 @@ func TestAutographerAddAuthorizationsFails(t *testing.T) {
 
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			tmpag := newAutographer(1)
-			tmpag.addSigners(conf.Signers)
-			err := tmpag.addAuthorizations(testcase.auths)
+			err := ag.addAuthorizations(testcase.auths)
 			if err == nil {
 				t.Fatalf("%s: addAuthorizations did not fail as expected", testcase.name)
 			}
@@ -290,16 +292,14 @@ func TestAutographerAddAuthorizationsFails(t *testing.T) {
 // set an authorization with a ts validity of 2 seconds, then sleep 5 seconds
 // to trigger the hawk skew error
 func TestHawkTimestampSkewFail(t *testing.T) {
-	t.Parallel()
+	ag, _ := MockAutographer(t)
 
 	var err error
-	tmpag := newAutographer(1)
-	tmpag.hawkMaxTimestampSkew, err = time.ParseDuration("2s")
+	ag.hawkMaxTimestampSkew, err = time.ParseDuration("2s")
 	if err != nil {
 		t.Fatal(err)
 	}
-	tmpag.addSigners(conf.Signers)
-	tmpag.addAuthorizations([]authorization{
+	ag.addAuthorizations([]authorization{
 		{
 			ID:      "alice",
 			Key:     "1862300e9bd18eafab2eb8d6",
@@ -316,7 +316,7 @@ func TestHawkTimestampSkewFail(t *testing.T) {
 	authheader := getAuthHeader(req, "alice", "1862300e9bd18eafab2eb8d6", sha256.New, id(), "application/json", body)
 	req.Header.Set("Authorization", authheader)
 	time.Sleep(5 * time.Second)
-	_, _, err = tmpag.authorizeHeader(req)
+	_, _, err = ag.authorizeHeader(req)
 	if err.Error() != hawk.ErrTimestampSkew.Error() {
 		t.Errorf("expected auth to fail with skewed timestamp but got error: %v", err)
 	}

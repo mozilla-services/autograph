@@ -31,7 +31,7 @@ import (
 
 const autographDevRootHash = `5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`
 
-func getLocalX5U(x5u string) (body []byte, err error) {
+func getLocalX5U(ag *autographer, x5u string, t *testing.T) (body []byte, err error) {
 	parsed, err := url.Parse(x5u)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,8 @@ func getLocalX5U(x5u string) (body []byte, err error) {
 }
 
 func TestMonitorPass(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
+	mo := newMonitor(ag, conf.MonitorInterval)
 
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
@@ -104,7 +105,7 @@ func TestMonitorPass(t *testing.T) {
 				t.Fatalf("verification of monitoring response failed: %v", err)
 			}
 		case contentsignaturepki.Type:
-			body, err := getLocalX5U(response.X5U)
+			body, err := getLocalX5U(ag, response.X5U, t)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -158,7 +159,8 @@ func TestMonitorPass(t *testing.T) {
 }
 
 func TestMonitorHasSignerParameters(t *testing.T) {
-	t.Parallel()
+	ag, conf := MockAutographer(t)
+	mo := newMonitor(ag, conf.MonitorInterval)
 
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
