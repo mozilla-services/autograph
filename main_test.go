@@ -12,10 +12,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mozilla-services/autograph/database"
 	log "github.com/sirupsen/logrus"
 )
 
-func MockAutographer(t *testing.T) (*autographer, configuration) {
+func newTestAutographer(t *testing.T) (*autographer, configuration) {
 	var conf configuration
 
 	// load the signers
@@ -50,6 +51,17 @@ func MockAutographer(t *testing.T) (*autographer, configuration) {
 	}
 
 	t.Cleanup(func() {
+		host := database.GetTestDBHost()
+		db, err := database.Connect(database.Config{
+			Name:                "autograph",
+			User:                "myautographdbuser",
+			Password:            "myautographdbpassword",
+			Host:                host + ":5432",
+			MonitorPollInterval: 10 * time.Second,
+		})
+		if err == nil {
+			db.Exec("truncate table endentities;")
+		}
 		close(ag.exit)
 	})
 
@@ -392,7 +404,7 @@ authorizations:
 
 // An authorization without at least one signer configured must fail
 func TestAuthWithoutSigner(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	var authorizations = []authorization{
 		authorization{

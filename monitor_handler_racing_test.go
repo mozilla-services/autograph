@@ -69,7 +69,7 @@ func getLocalX5U(ag *autographer, x5u string, t *testing.T) (body []byte, err er
 }
 
 func TestMonitorPass(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 	mo := newMonitor(ag, conf.MonitorInterval)
 
 	var empty []byte
@@ -159,7 +159,7 @@ func TestMonitorPass(t *testing.T) {
 }
 
 func TestMonitorHasSignerParameters(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 	mo := newMonitor(ag, conf.MonitorInterval)
 
 	var empty []byte

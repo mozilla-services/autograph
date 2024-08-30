@@ -17,7 +17,7 @@ import (
 )
 
 func TestMissingAuthorization(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -35,7 +35,7 @@ func TestMissingAuthorization(t *testing.T) {
 }
 
 func TestBogusAuthorization(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -54,7 +54,7 @@ func TestBogusAuthorization(t *testing.T) {
 }
 
 func TestBadPayload(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -78,7 +78,7 @@ func TestBadPayload(t *testing.T) {
 }
 
 func TestExpiredAuth(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -98,7 +98,7 @@ func TestExpiredAuth(t *testing.T) {
 }
 
 func TestDuplicateNonce(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)
@@ -127,7 +127,7 @@ func TestDuplicateNonce(t *testing.T) {
 }
 
 func TestNonceFromLRU(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	req, err := http.NewRequest("POST", "http://foo.bar/sign/data", nil)
 	if err != nil {
@@ -174,7 +174,7 @@ func TestNonceFromLRU(t *testing.T) {
 }
 
 func TestSignerNotFound(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	_, err := ag.authBackend.getSignerForUser(`unknown018qoegdxc`, `unkown093ytid`)
 	if err == nil {
@@ -183,7 +183,7 @@ func TestSignerNotFound(t *testing.T) {
 }
 
 func TestDefaultSignerNotFound(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	_, err := ag.authBackend.getSignerForUser(`unknown018qoegdxc`, ``)
 	if err == nil {
@@ -192,7 +192,7 @@ func TestDefaultSignerNotFound(t *testing.T) {
 }
 
 func TestAutographerAddAuthorizationsFails(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	testcases := []struct {
 		name   string
@@ -292,7 +292,7 @@ func TestAutographerAddAuthorizationsFails(t *testing.T) {
 // set an authorization with a ts validity of 2 seconds, then sleep 5 seconds
 // to trigger the hawk skew error
 func TestHawkTimestampSkewFail(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	var err error
 	ag.hawkMaxTimestampSkew, err = time.ParseDuration("2s")

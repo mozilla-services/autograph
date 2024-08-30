@@ -25,7 +25,7 @@ import (
 
 func TestSignaturePass(t *testing.T) {
 	t.Parallel()
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	var TESTCASES = []struct {
 		endpoint          string

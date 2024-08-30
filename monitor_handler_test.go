@@ -36,7 +36,7 @@ func TestMonitorAddDuplicate(t *testing.T) {
 }
 
 func TestMonitorBadRequest(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 	mo := newMonitor(ag, conf.MonitorInterval)
 
 	var TESTCASES = []struct {

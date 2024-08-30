@@ -128,7 +128,7 @@ func (testcase *HandlerTestCase) Run(ag *autographer, t *testing.T, handler func
 }
 
 func TestBadRequest(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	var TESTCASES = []struct {
 		endpoint string
@@ -234,7 +234,7 @@ func TestBadRequest(t *testing.T) {
 }
 
 func TestRequestTooLarge(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	blob := strings.Repeat("foobar", 200)
 	body := strings.NewReader(blob)
@@ -263,7 +263,7 @@ func TestRequestTooLarge(t *testing.T) {
 }
 
 func TestBadContentType(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	blob := "foofoofoofoofoofoofoofoofoofoofoofoofoofoo"
 	body := strings.NewReader(blob)
@@ -292,7 +292,7 @@ func TestBadContentType(t *testing.T) {
 }
 
 func TestAuthFail(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	var TESTCASES = []struct {
 		user        string
@@ -372,7 +372,7 @@ func checkHeartbeatReturnsExpectedStatusAndBody(ag *autographer, t *testing.T, n
 }
 
 func TestHeartbeat(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 	ag.heartbeatConf = &heartbeatConfig{}
 
 	var TESTCASES = []struct {
@@ -392,7 +392,7 @@ func TestHeartbeat(t *testing.T) {
 }
 
 func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 	// NB: do not run in parallel with TestHeartbeat*
 	ag.heartbeatConf = &heartbeatConfig{
 		HSMCheckTimeout: time.Second,
@@ -405,7 +405,7 @@ func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
 }
 
 func TestHeartbeatChecksHSMStatusFailsWhenNotConfigured(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 	// NB: do not run in parallel with TestHeartbeat*
 	expectedStatus := http.StatusInternalServerError
 	expectedBody := []byte("Missing heartbeat config\r\nrequest-id: -\n")
@@ -413,7 +413,7 @@ func TestHeartbeatChecksHSMStatusFailsWhenNotConfigured(t *testing.T) {
 }
 
 func TestHeartbeatChecksDBStatusOKAndTimesout(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 	// NB: do not run in parallel with TestHeartbeat* or DB tests
 	host := database.GetTestDBHost()
 	db, err := database.Connect(database.Config{
@@ -480,7 +480,7 @@ func TestVersion(t *testing.T) {
 // * `appkey1` and `appkey2` for `alice`
 // * `appkey2` only for `bob`
 func TestSignerAuthorized(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	var TESTCASES = []struct {
 		userid string
@@ -570,7 +570,7 @@ func TestSignerAuthorized(t *testing.T) {
 
 // verify that user `bob` is not allowed to sign with `appkey1`
 func TestSignerUnauthorized(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	var TESTCASES = []formats.SignatureRequest{
 		// request signature that need to prepend the content-signature:\x00 header
@@ -609,7 +609,7 @@ func TestSignerUnauthorized(t *testing.T) {
 }
 
 func TestContentType(t *testing.T) {
-	ag, conf := MockAutographer(t)
+	ag, conf := newTestAutographer(t)
 
 	var TESTCASES = []formats.SignatureRequest{
 		formats.SignatureRequest{
@@ -643,7 +643,7 @@ func TestContentType(t *testing.T) {
 }
 
 func TestDebug(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 	ag.enableDebug()
 	if !ag.debug {
 		t.Fatalf("expected debug mode to be enabled, but is disabled")
@@ -655,7 +655,7 @@ func TestDebug(t *testing.T) {
 }
 
 func TestHandleGetAuthKeyIDs(t *testing.T) {
-	ag, _ := MockAutographer(t)
+	ag, _ := newTestAutographer(t)
 
 	const autographDevAliceKeyIDsJSON = "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"pgpsubkey-debsign\",\"randompgp\",\"randompgp-debsign\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]"
 
