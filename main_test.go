@@ -12,22 +12,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mozilla-services/autograph/database"
 	log "github.com/sirupsen/logrus"
 )
 
-var (
-	ag   *autographer
-	mo   *monitor
-	conf configuration
-)
+func newTestAutographer(t *testing.T) (*autographer, configuration) {
+	var conf configuration
 
-func TestMain(m *testing.M) {
 	// load the signers
 	err := conf.loadFromFile("autograph.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
-	ag = newAutographer(1)
+	ag := newAutographer(1)
 	err = ag.addSigners(conf.Signers)
 	if err != nil {
 		log.Fatal(err)
@@ -52,26 +49,26 @@ func TestMain(m *testing.M) {
 	} else {
 		ag.hawkMaxTimestampSkew = time.Minute
 	}
-	// ok this is lame but the contentsignaturepki signer will upload a file dated
-	// at the given second so we don't want anything else to run at the same second
-	// otherwise that file may get rewritten. Easiest way to solve it? Sleep.
-	time.Sleep(time.Second)
 
-	// Initialize a monitor.
-	mo = newMonitor(ag, conf.MonitorInterval)
+	t.Cleanup(func() {
+		host := database.GetTestDBHost()
+		db, err := database.Connect(database.Config{
+			Name:                "autograph",
+			User:                "myautographdbuser",
+			Password:            "myautographdbpassword",
+			Host:                host + ":5432",
+			MonitorPollInterval: 10 * time.Second,
+		})
+		if err == nil {
+			db.Exec("truncate table endentities;")
+		}
+		close(ag.exit)
+	})
 
-	// run the tests and exit
-	r := m.Run()
-
-	// Shutdown the monitor
-	close(ag.exit)
-
-	os.Exit(r)
+	return ag, conf
 }
 
 func TestConfigLoad(t *testing.T) {
-	t.Parallel()
-
 	testcases := []struct {
 		name string
 		pass bool
@@ -221,8 +218,6 @@ authorizations:
 }
 
 func TestDuplicateSigners(t *testing.T) {
-	t.Parallel()
-
 	var conf configuration
 	// write conf file to /tmp and read it back
 	fd, err := os.CreateTemp("", "autographtestconf")
@@ -276,8 +271,6 @@ signers:
 }
 
 func TestDuplicateAuthorization(t *testing.T) {
-	t.Parallel()
-
 	var conf configuration
 	// write conf file to /tmp and read it back
 	fd, err := os.CreateTemp("", "autographtestconf")
@@ -346,8 +339,6 @@ authorizations:
 }
 
 func TestUnknownSignerInAuthorization(t *testing.T) {
-	t.Parallel()
-
 	var conf configuration
 	// write conf file to /tmp and read it back
 	fd, err := os.CreateTemp("", "autographtestconf")
@@ -413,23 +404,20 @@ authorizations:
 
 // An authorization without at least one signer configured must fail
 func TestAuthWithoutSigner(t *testing.T) {
-	t.Parallel()
+	ag, _ := newTestAutographer(t)
+
 	var authorizations = []authorization{
 		authorization{
 			ID: "alice",
 		},
 	}
-	tmpag := newAutographer(1)
-	tmpag.addSigners(conf.Signers)
-	err := tmpag.addAuthorizations(authorizations)
+	err := ag.addAuthorizations(authorizations)
 	if err == nil {
 		t.Fatalf("should have failed with must have one signer but succeeded")
 	}
 }
 
 func TestConfigLoadFileNotExist(t *testing.T) {
-	t.Parallel()
-
 	var conf configuration
 	err := conf.loadFromFile("/tmp/a/b/c/d/e/f/e/d/c/b/a/oned97fy2qoelfahd018oehfa9we8ohf219")
 	if err == nil {
@@ -438,8 +426,6 @@ func TestConfigLoadFileNotExist(t *testing.T) {
 }
 
 func TestDefaultPort(t *testing.T) {
-	t.Parallel()
-
 	expected := "0.0.0.0:8000"
 	_, listen, _ := parseArgsAndLoadConfig([]string{})
 	if listen != expected {
@@ -448,8 +434,6 @@ func TestDefaultPort(t *testing.T) {
 }
 
 func TestPortOverride(t *testing.T) {
-	t.Parallel()
-
 	expected := "0.0.0.0:8080"
 	_, listen, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
 	if listen != expected {
