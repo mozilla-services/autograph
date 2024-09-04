@@ -19,42 +19,78 @@ func (m mockUploadAPI) Upload(ctx context.Context, input *s3.PutObjectInput, opt
 
 func TestUploadToS3(t *testing.T) {
 	cases := []struct {
-		client    func(t *testing.T) S3UploadAPI
-		data      string
-		name      string
-		target    string
-		expectErr bool
+		testName            string
+		client              func(t *testing.T) S3UploadAPI
+		data                string
+		name                string
+		chainUploadLocation string
+		expectErr           bool
 	}{
 		{
+			testName: "successful_upload",
 			client: func(t *testing.T) S3UploadAPI {
 				return mockUploadAPI(func(ctx context.Context, input *s3.PutObjectInput, opts ...func(*manager.Uploader)) (*manager.UploadOutput, error) {
-					t.Helper()
+					expectedBucket := "foo.bar"
+					if *input.Bucket != expectedBucket {
+						t.Errorf("bucket: want %#v, got %#v", expectedBucket, *input.Bucket)
+					}
+					if *input.Key != "somestuff/successful_chain" {
+						t.Errorf("key: want \"somestuff/successful_chain\", got %#v", *input.Key)
+					}
 					return &manager.UploadOutput{}, nil
 				})
 			},
-			data:      "foo",
-			name:      "successful_upload",
-			target:    "https://foo.bar",
-			expectErr: false,
+			data:                "foo",
+			name:                "successful_chain",
+			chainUploadLocation: "s3://foo.bar/somestuff/",
+			expectErr:           false,
 		},
 		{
+			testName: "successful_upload_with_missing_slash",
 			client: func(t *testing.T) S3UploadAPI {
 				return mockUploadAPI(func(ctx context.Context, input *s3.PutObjectInput, opts ...func(*manager.Uploader)) (*manager.UploadOutput, error) {
-					t.Helper()
+					expectedBucket := "foo.bar"
+					if *input.Bucket != expectedBucket {
+						t.Errorf("bucket: want %#v, got %#v", expectedBucket, *input.Bucket)
+					}
+					expectedKey := "somestuff/successful_chain"
+					if *input.Key != expectedKey {
+						t.Errorf("key: want %#v, got %#v", expectedKey, *input.Key)
+					}
+					return &manager.UploadOutput{}, nil
+				})
+			},
+			data:                "foo",
+			name:                "successful_chain",
+			chainUploadLocation: "s3://foo.bar/somestuff",
+			expectErr:           false,
+		},
+		{
+			testName: "failed_upload",
+			client: func(t *testing.T) S3UploadAPI {
+				return mockUploadAPI(func(ctx context.Context, input *s3.PutObjectInput, opts ...func(*manager.Uploader)) (*manager.UploadOutput, error) {
+					expectedBucket := "foo.quux"
+					if *input.Bucket != expectedBucket {
+						t.Errorf("bucket: want %#v, got %#v", expectedBucket, *input.Bucket)
+					}
+					expectedKey := "something/will_fail_chain"
+					if *input.Key != expectedKey {
+						t.Errorf("key: want %#v, got %#v", expectedKey, *input.Key)
+					}
 					return nil, errors.New("upload failed")
 				})
 			},
-			data:      "foo",
-			name:      "failed_upload",
-			target:    "https://foo.bar",
-			expectErr: true,
+			data:                "foo",
+			name:                "will_fail_chain",
+			chainUploadLocation: "s3://foo.quux/something/",
+			expectErr:           true,
 		},
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.testName, func(t *testing.T) {
 			t.Parallel()
-			url, err := url.Parse(tt.target)
+			url, err := url.Parse(tt.chainUploadLocation)
 			if err != nil {
 				t.Fatalf("error parsing test url: %v", err)
 			}
