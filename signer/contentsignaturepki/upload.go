@@ -87,11 +87,6 @@ func writeLocalFile(data, name string, target *url.URL) error {
 	return os.WriteFile(filepath.Join(target.Path, name), []byte(data), 0755)
 }
 
-// buildHTTPClient returns the default HTTP.Client for fetching X5Us
-func buildHTTPClient() *http.Client {
-	return &http.Client{}
-}
-
 // GetX5U retrieves a chain file of certs from upload location, parses
 // and verifies it, then returns a byte slice of the response body and
 // a slice of parsed certificates.

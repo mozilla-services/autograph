@@ -7,6 +7,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -55,7 +56,7 @@ func (s *ContentSigner) makeAndUploadChain() error {
 	if err != nil {
 		return fmt.Errorf("failed to join x5u with chain name: %w", err)
 	}
-	_, _, err = GetX5U(buildHTTPClient(), newX5U)
+	_, _, err = GetX5U(http.DefaultClient, newX5U)
 	if err != nil {
 		return fmt.Errorf("failed to download new chain: %w", err)
 	}
