@@ -20,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
-	log "github.com/sirupsen/logrus"
 )
 
 // S3UploadAPI is an interface to accommodate testing
@@ -85,7 +84,6 @@ func writeLocalFile(data, name string, target *url.URL) error {
 		}
 	}
 
-	log.Printf("FIXME writing to %s", filepath.Join(target.Path, name))
 	return os.WriteFile(filepath.Join(target.Path, name), []byte(data), 0755)
 }
 
