@@ -7,6 +7,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
+	"path"
 	"time"
 
 	"github.com/mozilla-services/autograph/database"
@@ -51,7 +52,7 @@ func (s *ContentSigner) makeAndUploadChain() (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to upload chain: %w", err)
 	}
-	newX5U := s.X5U + chainName
+	newX5U := path.Join(s.X5U, chainName)
 	_, _, err = GetX5U(buildHTTPClient(), newX5U)
 	if err != nil {
 		return fmt.Errorf("failed to download new chain: %w", err)
