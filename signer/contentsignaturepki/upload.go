@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -53,9 +54,12 @@ func (s *ContentSigner) upload(data, name string) error {
 }
 
 func uploadToS3(client S3UploadAPI, data, name string, target *url.URL) error {
+	// aws-sdk-go-v2 now includes leading slashes in the key name, where v1 did
+	// not. So, to keep this code compatible, we have to trim it.
+	keyName := strings.TrimPrefix(path.Join(target.Path, name), "/")
 	_, err := client.Upload(context.Background(), &s3.PutObjectInput{
 		Bucket:             aws.String(target.Host),
-		Key:                aws.String(target.Path + name),
+		Key:                aws.String(keyName),
 		ACL:                types.ObjectCannedACLPublicRead,
 		Body:               strings.NewReader(data),
 		ContentType:        aws.String("binary/octet-stream"),
