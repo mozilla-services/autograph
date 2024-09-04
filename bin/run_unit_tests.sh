@@ -18,11 +18,7 @@ if [ "$EMPTY_TESTCACHE" = "1" ]; then
     go clean -testcache
 fi
 
-if [ "$RACE_TEST" = "1" ]; then
-    make race
-else
-    make test
-fi
+make test
 
 if [ "$REPORT_COVERAGE" = "true" ]; then
     # report coverage
