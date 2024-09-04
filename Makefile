@@ -56,11 +56,8 @@ benchmarkxpi:
 showbenchmarkxpi:
 	go tool pprof -web cpu.out
 
-race:
-	go test -race -covermode=atomic -count=1 ./...
-
 test:
-	go test -v -coverprofile coverage.out -covermode=count -count=1 ./...
+	go test -v -race -coverprofile coverage.out -covermode=atomic -count=1 ./...
 
 test-in-docker:
 	$(SHELL) -c " \

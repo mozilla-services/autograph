@@ -318,7 +318,7 @@ go.mozilla.org/mar
 # go.mozilla.org/mozlogrus v2.0.0+incompatible
 ## explicit
 go.mozilla.org/mozlogrus
-# go.mozilla.org/pkcs7 v0.0.0-20210730143726-725912489c62
+# go.mozilla.org/pkcs7 v0.9.0
 ## explicit; go 1.11
 go.mozilla.org/pkcs7
 # go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060
