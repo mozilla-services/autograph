@@ -10,6 +10,7 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -75,7 +76,7 @@ func TestSign(t *testing.T) {
 			}
 
 			// verify the signature using the public key of the end entity
-			_, certs, err := GetX5U(buildHTTPClient(), s.X5U)
+			_, certs, err := GetX5U(http.DefaultClient, s.X5U)
 			if err != nil {
 				t.Fatalf("testcase %d failed to get X5U %q: %v", i, s.X5U, err)
 			}
