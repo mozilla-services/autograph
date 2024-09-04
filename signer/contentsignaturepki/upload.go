@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	csigverifier "github.com/mozilla-services/autograph/verifier/contentsignature"
+	log "github.com/sirupsen/logrus"
 )
 
 // S3UploadAPI is an interface to accommodate testing
@@ -82,8 +84,9 @@ func writeLocalFile(data, name string, target *url.URL) error {
 			return err
 		}
 	}
-	// write the file into the target dir
-	return os.WriteFile(target.Path+name, []byte(data), 0755)
+
+	log.Printf("FIXME writing to %s", filepath.Join(target.Path, name))
+	return os.WriteFile(filepath.Join(target.Path, name), []byte(data), 0755)
 }
 
 // buildHTTPClient returns the default HTTP.Client for fetching X5Us
@@ -94,44 +97,50 @@ func buildHTTPClient() *http.Client {
 // GetX5U retrieves a chain file of certs from upload location, parses
 // and verifies it, then returns a byte slice of the response body and
 // a slice of parsed certificates.
-func GetX5U(client *http.Client, x5u string) (body []byte, certs []*x509.Certificate, err error) {
+func GetX5U(client *http.Client, x5u string) ([]byte, []*x509.Certificate, error) {
 	parsedURL, err := url.Parse(x5u)
 	if err != nil {
-		err = fmt.Errorf("failed to parse chain upload location: %w", err)
-		return
+		return nil, nil, fmt.Errorf("failed to parse chain upload location: %w", err)
+
 	}
-	if parsedURL.Scheme == "file" {
-		t := &http.Transport{}
-		t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
-		client.Transport = t
+	var bodyReader io.ReadCloser
+	switch parsedURL.Scheme {
+	case "https":
+		resp, err := client.Get(x5u)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to retrieve x5u from %#v: %w", x5u, err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return nil, nil, fmt.Errorf("failed to retrieve x5u from %#v: %s", x5u, resp.Status)
+		}
+		bodyReader = resp.Body
+
+	case "file":
+		bodyReader, err = os.Open(parsedURL.Path)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to open x5u file:// at %#v: %w", x5u, err)
+		}
+		defer bodyReader.Close()
+	default:
+		return nil, nil, fmt.Errorf("unsupported x5u scheme: %#v", parsedURL.Scheme)
 	}
-	resp, err := client.Get(x5u)
+
+	body, err := io.ReadAll(bodyReader)
 	if err != nil {
-		err = fmt.Errorf("failed to retrieve x5u: %w", err)
-		return
+		return nil, nil, fmt.Errorf("failed to parse x5u body from %#v: %w", x5u, err)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("failed to retrieve x5u from %s: %s", x5u, resp.Status)
-		return
-	}
-	body, err = io.ReadAll(resp.Body)
+	certs, err := csigverifier.ParseChain(body)
 	if err != nil {
-		err = fmt.Errorf("failed to parse x5u body: %w", err)
-		return
-	}
-	certs, err = csigverifier.ParseChain(body)
-	if err != nil {
-		err = fmt.Errorf("failed to parse x5u : %w", err)
-		return
+
+		return nil, nil, fmt.Errorf("failed to parse x5u : %w", err)
 	}
 	rootHash := sha2Fingerprint(certs[2])
 	err = csigverifier.VerifyChain([]string{rootHash}, certs, time.Now())
 	if err != nil {
-		err = fmt.Errorf("failed to verify certificate chain: %w", err)
-		return
+		return nil, nil, fmt.Errorf("failed to verify certificate chain: %w", err)
 	}
-	return
+	return body, certs, nil
 }
 
 func sha2Fingerprint(cert *x509.Certificate) string {
