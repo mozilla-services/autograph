@@ -44,43 +44,14 @@ These scripts help clean up old keys before hitting the limit.
    and export env vars to access the CloudHSM cluster (this might take
    a few seconds since it runs a few sops decrypt commands)
 
-1. Run `cat inactive_ee_key_labels.txt | ./find_ec_keys_by_label.sh >
-   inactive_ee_keys.csv` to find HSM key handles for the given
-   labels. (this might take a minute or two since it runs each
-   operation as a single key management command) Example output:
-
-   ```sh
-   $ cat inactive_ee_key_labels.txt | ./find_ec_keys_by_label.sh > inactive_ee_keys.csv
-   public key not found for normandy_cspki-20190520224541
-   private key not found for normandy_cspki-20190520224541
-   ...
-   INFO: success finished searching for EC keys with the provided labels
-   $ head inactive_ee_keys.csv
-   aus-20181015205220,123456
-   aus-20181015205220,123457
-   ...
-   ```
-
-   Keys deleted from earlier runs will not be found. This is expected.
 
 
 #### Delete the keys
 
-1. Run `./delete_keys_by_handle.sh < inactive_ee_keys.csv` to print
-   keys we will delete (but not delete them yet). Example output:
-
-   ```sh
-   $ ./delete_keys_by_handle.sh < inactive_ee_keys.csv
-   ...
-   got label aus-20181015205220 and handle 123456
-   123456
-   provided key label aus-20181015205220 matches label aus-20181015205220 for handle 123456
-   would delete: 123456 for label aus-20181015205220
-   ...
-   success! would delete: 42 keys
-   ```
+1. Run `./delete_keys_by_label.sh < inactive_ee_key_labels.txt` to print
+   keys we will delete (but not delete them yet).
 
 1. Inspect the output
 
-1. Run `DRY_RUN=0 ./delete_keys_by_handle.sh < inactive_ee_keys.csv`
+1. Run `DRY_RUN=0 ./delete_keys_by_label.sh < inactive_ee_keys.csv`
    to delete the keys

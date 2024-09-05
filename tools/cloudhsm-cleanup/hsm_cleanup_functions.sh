@@ -21,11 +21,9 @@ function set_db_env_vars(){
 function set_cloudhsm_env_vars(){
     CLOUDHSM_USER="$(sudo sops --extract '["hsm"]["pin"]' -d "$1" | cut -d ':' -f 1)"
     CLOUDHSM_PASSWORD="$(sudo sops --extract '["hsm"]["pin"]' -d "$1" | cut -d ':' -f 2)"
-    CLOUDHSM_LABEL="$(sudo sops --extract '["hsm"]["tokenlabel"]' -d "$1")"
 
-    export CLOUDHSM_USER
-    export CLOUDHSM_PASSWORD
-    export CLOUDHSM_LABEL
+    export CLOUDHSM_PIN="${CLOUDHSM_USER}:${CLOUDHSM_PASSWORD}"
+    export CLOUDHSM_ROLE="crypto-user"
 }
 
 # open a psql shell in the autograph DB using env vars from set_db_env_vars
