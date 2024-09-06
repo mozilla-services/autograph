@@ -31,14 +31,14 @@ import (
 // Handler is an http.Handler wrapper to instrument your HTTP server with
 // OpenCensus. It supports both stats and tracing.
 //
-// Tracing
+// # Tracing
 //
 // This handler is aware of the incoming request's span, reading it from request
 // headers as configured using the Propagation field.
 // The extracted span can be accessed from the incoming request's
 // context.
 //
-//    span := trace.FromContext(r.Context())
+//	span := trace.FromContext(r.Context())
 //
 // The server span will be automatically ended at the end of ServeHTTP.
 type Handler struct {
@@ -70,6 +70,12 @@ type Handler struct {
 	// from the information found in the incoming HTTP Request. By default the
 	// name equals the URL Path.
 	FormatSpanName func(*http.Request) string
+
+	// IsHealthEndpoint holds the function to use for determining if the
+	// incoming HTTP request should be considered a health check. This is in
+	// addition to the private isHealthEndpoint func which may also indicate
+	// tracing should be skipped.
+	IsHealthEndpoint func(*http.Request) bool
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +93,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) startTrace(w http.ResponseWriter, r *http.Request) (*http.Request, func()) {
-	if isHealthEndpoint(r.URL.Path) {
+	if h.IsHealthEndpoint != nil && h.IsHealthEndpoint(r) || isHealthEndpoint(r.URL.Path) {
 		return r, func() {}
 	}
 	var name string
@@ -218,7 +224,9 @@ func (t *trackingResponseWriter) WriteHeader(statusCode int) {
 }
 
 // wrappedResponseWriter returns a wrapped version of the original
-//  ResponseWriter and only implements the same combination of additional
+//
+//	ResponseWriter and only implements the same combination of additional
+//
 // interfaces as the original.
 // This implementation is based on https://github.com/felixge/httpsnoop.
 func (t *trackingResponseWriter) wrappedResponseWriter() http.ResponseWriter {
