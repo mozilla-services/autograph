@@ -311,6 +311,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		}
 		log.WithFields(log.Fields{
 			"rid":           rid,
+			"request_uri":   r.URL.RequestURI(),
 			"options":       sigreq.Options,
 			"mode":          sigresps[i].Mode,
 			"ref":           sigresps[i].Ref,
