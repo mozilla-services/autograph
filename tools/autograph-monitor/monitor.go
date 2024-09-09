@@ -71,7 +71,9 @@ func main() {
 	case "stage":
 		conf.rootHash = firefoxPkiStageRootHash
 		conf.truststore = x509.NewCertPool()
-		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiStageRoot))
+		for _, cert := range firefoxPkiStageRoots {
+			conf.truststore.AppendCertsFromPEM([]byte(cert))
+		}
 		conf.contentSignatureRootHash = firefoxPkiContentSignatureStageRootHash
 		conf.contentSignatureTruststore = x509.NewCertPool()
 		conf.contentSignatureTruststore.AppendCertsFromPEM([]byte(firefoxPkiContentSignatureStageRoot))
@@ -85,7 +87,9 @@ func main() {
 		conf.contentSignatureTruststore = conf.truststore
 		conf.depRootHash = firefoxPkiStageRootHash
 		conf.depTruststore = x509.NewCertPool()
-		conf.depTruststore.AppendCertsFromPEM([]byte(firefoxPkiStageRoot))
+		for _, cert := range firefoxPkiStageRoots {
+			conf.depTruststore.AppendCertsFromPEM([]byte(cert))
+		}
 	default:
 		conf.rootHash = autographDevRootHash
 		conf.truststore = nil
