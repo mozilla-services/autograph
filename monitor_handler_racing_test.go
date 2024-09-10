@@ -29,7 +29,7 @@ import (
 	margo "go.mozilla.org/mar"
 )
 
-const autographDevRootHash = `5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`
+var autographDevRootHashes = []string{`5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`}
 
 func getLocalX5U(ag *autographer, x5u string, t *testing.T) (body []byte, err error) {
 	parsed, err := url.Parse(x5u)
@@ -109,7 +109,7 @@ func TestMonitorPass(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			err = csigverifier.Verify(MonitoringInputData, body, response.Signature, autographDevRootHash)
+			err = csigverifier.Verify(MonitoringInputData, body, response.Signature, autographDevRootHashes)
 			if err != nil {
 				t.Logf("%+v", response)
 				t.Fatalf("verification of monitoring response failed: %v", err)

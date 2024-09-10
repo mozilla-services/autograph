@@ -30,18 +30,12 @@ type configuration struct {
 	url           string
 	monitoringKey string
 	env           string
-	rootHash      string
+	rootHashes    []string
 	truststore    *x509.CertPool
 
-	// hash and keystore for verifying XPI dep signers
-	depRootHash   string
+	// hashes and keystore for verifying XPI dep signers
+	depRootHashes []string
 	depTruststore *x509.CertPool
-
-	// hash and keystore for verifying ContentSignature responses
-	// when XPI and ContentSignature branches of the code signing
-	// PKI use different roots
-	contentSignatureRootHash   string
-	contentSignatureTruststore *x509.CertPool
 
 	// notifier raises and resolves warnings
 	notifier Notifier
@@ -69,39 +63,29 @@ func main() {
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
 	switch conf.env {
 	case "stage":
-		conf.rootHash = firefoxPkiStageRootHash
+		conf.rootHashes = firefoxPkiStageRootHashes
 		conf.truststore = x509.NewCertPool()
 		for _, cert := range firefoxPkiStageRoots {
 			conf.truststore.AppendCertsFromPEM([]byte(cert))
 		}
-		conf.contentSignatureRootHash = firefoxPkiContentSignatureStageRootHash
-		conf.contentSignatureTruststore = x509.NewCertPool()
-		conf.contentSignatureTruststore.AppendCertsFromPEM([]byte(firefoxPkiContentSignatureStageRoot))
-		conf.depRootHash = ""
-		conf.depTruststore = nil
 	case "prod":
-		conf.rootHash = firefoxPkiProdRootHash
+		conf.rootHashes = firefoxPkiProdRootHashes
 		conf.truststore = x509.NewCertPool()
-		conf.truststore.AppendCertsFromPEM([]byte(firefoxPkiProdRoot))
-		conf.contentSignatureRootHash = firefoxPkiProdRootHash
-		conf.contentSignatureTruststore = conf.truststore
-		conf.depRootHash = firefoxPkiStageRootHash
+		for _, cert := range firefoxPkiProdRoots {
+			conf.truststore.AppendCertsFromPEM([]byte(cert))
+		}
+		conf.depRootHashes = firefoxPkiStageRootHashes
 		conf.depTruststore = x509.NewCertPool()
 		for _, cert := range firefoxPkiStageRoots {
 			conf.depTruststore.AppendCertsFromPEM([]byte(cert))
 		}
 	default:
-		conf.rootHash = autographDevRootHash
-		conf.truststore = nil
-		conf.contentSignatureRootHash = autographDevRootHash
-		conf.contentSignatureTruststore = nil
-		conf.depRootHash = ""
-		conf.depTruststore = nil
+		conf.rootHashes = autographDevRootHashes
+		conf.truststore = x509.NewCertPool()
 	}
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
-		conf.rootHash = strings.ToUpper(os.Getenv("AUTOGRAPH_ROOT_HASH"))
-		conf.contentSignatureRootHash = conf.rootHash
-		log.Printf("Using root hash from env var AUTOGRAPH_ROOT_HASH=%q\n", conf.rootHash)
+		conf.rootHashes = append(conf.rootHashes, strings.ToUpper(os.Getenv("AUTOGRAPH_ROOT_HASH")))
+		log.Printf("Appending root hash from env var AUTOGRAPH_ROOT_HASH=%q\n", os.Getenv("AUTOGRAPH_ROOT_HASH"))
 	}
 
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
@@ -181,11 +165,11 @@ func monitor() error {
 				// The X5U is optional for contentsignature signers.
 				err = contentsignature.VerifyResponse([]byte(inputdata), response)
 			} else {
-				err = verifyContentSignature(x5uClient, conf.notifier, conf.contentSignatureRootHash, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
+				err = verifyContentSignature(x5uClient, conf.notifier, conf.rootHashes, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
 			}
 		case contentsignaturepki.Type:
 			log.Printf("Verifying content signature pki from signer %q", response.SignerID)
-			err = verifyContentSignature(x5uClient, conf.notifier, conf.contentSignatureRootHash, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
+			err = verifyContentSignature(x5uClient, conf.notifier, conf.rootHashes, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature)

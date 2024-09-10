@@ -55,7 +55,7 @@ const month = 4 * week
 // expirations.
 //
 // Chains with leaf/EE CommonNames in ignoredCerts are ignored.
-func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash string, ignoredCerts map[string]bool, response formats.SignatureResponse, input []byte) (err error) {
+func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHashes []string, ignoredCerts map[string]bool, response formats.SignatureResponse, input []byte) (err error) {
 	if response.X5U == "" {
 		return fmt.Errorf("content signature response is missing an X5U to fetch")
 	}
@@ -85,7 +85,7 @@ func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHash 
 		}
 	}
 	// errors if an cert is expired or not yet valid, verifies data and trust map to root hash
-	err = csigverifier.Verify(input, certChain, response.Signature, rootHash)
+	err = csigverifier.Verify(input, certChain, response.Signature, rootHashes)
 	if err != nil {
 		// check if we should ignore this cert
 		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {

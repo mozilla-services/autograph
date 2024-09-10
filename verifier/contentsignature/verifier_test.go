@@ -124,8 +124,8 @@ func signTestCert(options signOptions) *x509.Certificate {
 	return certX509
 }
 
-func sha2Fingerprint(cert *x509.Certificate) string {
-	return strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
+func sha2Fingerprint(cert *x509.Certificate) []string {
+	return []string{strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))}
 }
 
 func generateTestKey() *ecdsa.PrivateKey {
@@ -146,7 +146,7 @@ func generateTestRSAKey() *rsa.PrivateKey {
 
 // fixtures -----------------------------------------------------------------
 
-const normandyDev2021Roothash = `4C:35:B1:C3:E3:12:D9:55:E7:78:ED:D0:A7:E7:8A:38:83:04:EF:01:BF:FA:03:29:B2:46:9F:3C:C5:EC:36:04`
+var normandyDev2021Roothash = []string{`4C:35:B1:C3:E3:12:D9:55:E7:78:ED:D0:A7:E7:8A:38:83:04:EF:01:BF:FA:03:29:B2:46:9F:3C:C5:EC:36:04`}
 
 // firefoxPkiStageRoot is the CA root cert for the Addon stage code
 // signing PKI
@@ -195,7 +195,7 @@ thPX5WNsS8bwno2ccqncVLQ4PZxOIB83DFBFmAvTuBiAYWq874rneTXqInHyeCq+
 
 // firefoxPkiContentSignatureStageRootHash is the SHA2 hash of the
 // firefoxPkiContentSignatureStageRoot cert raw bytes
-const firefoxPkiContentSignatureStageRootHash = `3C:01:44:6A:BE:90:36:CE:A9:A0:9A:CA:A3:A5:20:AC:62:8F:20:A7:AE:32:CE:86:1C:B2:EF:B7:0F:A0:C7:45`
+var firefoxPkiContentSignatureStageRootHash = []string{`3C:01:44:6A:BE:90:36:CE:A9:A0:9A:CA:A3:A5:20:AC:62:8F:20:A7:AE:32:CE:86:1C:B2:EF:B7:0F:A0:C7:45`}
 
 // firefoxPkiContentSignatureStageRoot is the CA root cert for the
 // content signature stage code signing PKI
@@ -244,7 +244,7 @@ IKdcFKAt3fFrpyMhlfIKkLfmm0iDjmfmIXbDGBJw9SE=
 
 // firefoxPkiProdRootHash is the SHA2 hash of the firefoxPkiProdRoot
 // cert raw bytes
-const firefoxPkiProdRootHash = `97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E`
+var firefoxPkiProdRootHash = []string{`97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E`}
 
 // firefoxPkiProdRoot is the CA root cert for the Content Signature
 // and Addon prod code signing PKI
@@ -1130,7 +1130,7 @@ func Test_ParseChain(t *testing.T) {
 
 func Test_verifyRoot(t *testing.T) {
 	type args struct {
-		rootHash string
+		rootHash []string
 		cert     *x509.Certificate
 	}
 	tests := []struct {
@@ -1182,7 +1182,7 @@ func Test_verifyRoot(t *testing.T) {
 		{
 			name: "invalid empty root hash errs",
 			args: args{
-				rootHash: "",
+				rootHash: []string{""},
 				cert:     mustPEMToCert(firefoxPkiProdRoot),
 			},
 			wantErr: true,
@@ -1190,7 +1190,7 @@ func Test_verifyRoot(t *testing.T) {
 		{
 			name: "invalid root hash all colons errs",
 			args: args{
-				rootHash: ":::::::",
+				rootHash: []string{":::::::"},
 				cert:     mustPEMToCert(firefoxPkiProdRoot),
 			},
 			wantErr: true,
@@ -1198,7 +1198,7 @@ func Test_verifyRoot(t *testing.T) {
 		{
 			name: "invalid root hash errs",
 			args: args{
-				rootHash: "foo",
+				rootHash: []string{"foo"},
 				cert:     mustPEMToCert(firefoxPkiProdRoot),
 			},
 			wantErr: true,
@@ -1223,7 +1223,7 @@ func Test_verifyRoot(t *testing.T) {
 
 func Test_VerifyChain(t *testing.T) {
 	type args struct {
-		rootHash    string
+		rootHash    []string
 		certs       []*x509.Certificate
 		currentTime time.Time
 	}
@@ -1302,7 +1302,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "root hash mismatch fails",
 			args: args{
-				rootHash:    "invalid hash",
+				rootHash:    []string{"invalid hash"},
 				certs:       []*x509.Certificate{testLeaf, testInter, testRoot},
 				currentTime: time.Now(),
 			},
@@ -1404,7 +1404,7 @@ func TestVerify(t *testing.T) {
 		input     []byte
 		certChain []byte
 		signature string
-		rootHash  string
+		rootHash  []string
 	}
 	tests := []struct {
 		name    string
@@ -1428,7 +1428,7 @@ func TestVerify(t *testing.T) {
 				input:     []byte(""),
 				certChain: []byte(""),
 				signature: "",
-				rootHash:  "",
+				rootHash:  []string{""},
 			},
 			wantErr: true,
 		},
@@ -1438,7 +1438,7 @@ func TestVerify(t *testing.T) {
 				input:     []byte(""),
 				certChain: mustCertsToChain([]*x509.Certificate{testLeafRSAPub, testInter, testRoot}),
 				signature: "",
-				rootHash:  "",
+				rootHash:  []string{""},
 			},
 			wantErr: true,
 		},
@@ -1448,7 +1448,7 @@ func TestVerify(t *testing.T) {
 				input:     []byte(""),
 				certChain: mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot}),
 				signature: "",
-				rootHash:  "",
+				rootHash:  []string{""},
 			},
 			wantErr: true,
 		},
@@ -1458,7 +1458,7 @@ func TestVerify(t *testing.T) {
 				input:     []byte(""),
 				certChain: mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot}),
 				signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
-				rootHash:  "",
+				rootHash:  []string{""},
 			},
 			wantErr: true,
 		},

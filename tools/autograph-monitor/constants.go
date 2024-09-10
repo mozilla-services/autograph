@@ -1,18 +1,25 @@
 package main
 
-// autographDevRootHash is the SHA2 hash of the cacert in the
+// autographDevRootHashes is the SHA2 hashes of the cacerts in the
 // autograph dev config:
 // https://github.com/mozilla-services/autograph/blob/b3081068f4a9c0c1de02150432f2d02887dd6722/autograph.yaml#L113-L126
 // used on the normandy and remote settings development servers
-const autographDevRootHash = `5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`
+var autographDevRootHashes = []string{
+	`5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`,
+}
 
-// firefoxPkiStageRootHash is the SHA2 hash of the main firefoxPkiStageRoot
+// firefoxPkiStageRootHashes is the SHA2 hashes of the root certs in firefoxPkiStageRoots
 // cert raw bytes
-const firefoxPkiStageRootHash = `C0:F0:5D:59:B1:FD:E2:57:80:85:4C:32:FA:E8:FA:BA:84:81:C2:33:B4:C1:D3:90:CC:A5:F2:CE:A8:19:30:EE`
+var firefoxPkiStageRootHashes = []string{
+	`C0:F0:5D:59:B1:FD:E2:57:80:85:4C:32:FA:E8:FA:BA:84:81:C2:33:B4:C1:D3:90:CC:A5:F2:CE:A8:19:30:EE`,
+	`45:C3:7F:3A:09:A6:D7:0E:0F:A3:21:FB:29:75:3B:A7:99:8F:12:59:B3:27:72:76:8F:23:CC:DC:24:83:67:98`,
+	`DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90`,
+	`3C:01:44:6A:BE:90:36:CE:A9:A0:9A:CA:A3:A5:20:AC:62:8F:20:A7:AE:32:CE:86:1C:B2:EF:B7:0F:A0:C7:45`,
+}
 
 // firefoxPkiStageRoots is the list of CA root certs for the Addon stage code
 // signing PKI
-var firefoxPkiStageRoots = [...]string{
+var firefoxPkiStageRoots = []string{
 	// new root cert
 	`-----BEGIN CERTIFICATE-----
 MIIGRDCCBCygAwIBAgIBATANBgkqhkiG9w0BAQwFADBzMQswCQYDVQQGEwJVUzEc
@@ -130,53 +137,61 @@ zQQ9gt3NC2OXF4hveHfKZdCnb+BBl4S71QMYYCCTe+EDCsIGuyXWD/K2hfLD8TPW
 thPX5WNsS8bwno2ccqncVLQ4PZxOIB83DFBFmAvTuBiAYWq874rneTXqInHyeCq+
 819l9s72pDsFaGevmm0Us9bYuufTS5U=
 -----END CERTIFICATE-----`,
+	// old content root cert
+	`-----BEGIN CERTIFICATE-----
+MIIHbDCCBVSgAwIBAgIEYCWYOzANBgkqhkiG9w0BAQwFADCBqTELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRwwGgYDVQQK
+ExNBZGRvbnMgVGVzdCBTaWduaW5nMSQwIgYDVQQDExt0ZXN0LmFkZG9ucy5zaWdu
+aW5nLnJvb3QuY2ExMTAvBgkqhkiG9w0BCQEWInNlY29wcytzdGFnZXJvb3RhZGRv
+bnNAbW96aWxsYS5jb20wHhcNMjEwMjExMjA0ODU5WhcNMjQxMTE0MjA0ODU5WjCB
+qTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBW
+aWV3MRwwGgYDVQQKExNBZGRvbnMgVGVzdCBTaWduaW5nMSQwIgYDVQQDExt0ZXN0
+LmFkZG9ucy5zaWduaW5nLnJvb3QuY2ExMTAvBgkqhkiG9w0BCQEWInNlY29wcytz
+dGFnZXJvb3RhZGRvbnNAbW96aWxsYS5jb20wggIiMA0GCSqGSIb3DQEBAQUAA4IC
+DwAwggIKAoICAQDKRVty/FRsO4Ech6EYleyaKgAueaLYfMSsAIyPC/N8n/P8QcH8
+rjoiMJrKHRlqiJmMBSmjUZVzZAP0XJku0orLKWPKq7cATt+xhGY/RJtOzenMMsr5
+eN02V3GzUd1jOShUpERjzXdaO3pnfZqhdqNYqP9ocqQpyno7bZ3FZQ2vei+bF52k
+51uPioTZo+1zduoR/rT01twGtZm3QpcwU4mO74ysyxxgqEy3kpojq8Nt6haDwzrj
+khV9M6DGPLHZD71QaUiz5lOhD9CS8x0uqXhBhwMUBBkHsUDSxbN4ZhjDDWpCmwaD
+OtbJMUJxDGPCr9qj49QESccb367OeXLrfZ2Ntu/US2Bw9EDfhyNsXr9dg9NHj5yf
+4sDUqBHG0W8zaUvJx5T2Ivwtno1YZLyJwQW5pWeWn8bEmpQKD2KS/3y2UjlDg+YM
+NdNASjFe0fh6I5NCFYmFWA73DpDGlUx0BtQQU/eZQJ+oLOTLzp8d3dvenTBVnKF+
+uwEmoNfZwc4TTWJOhLgwxA4uK+Paaqo4Ap2RGS2ZmVkPxmroB3gL5n3k3QEXvULh
+7v8Psk4+MuNWnxudrPkN38MGJo7ju7gDOO8h1jLD4tdfuAqbtQLduLXzT4DJPA4y
+JBTFIRMIpMqP9CovaS8VPtMFLTrYlFh9UnEGpCeLPanJr+VEj7ae5sc8YwIDAQAB
+o4IBmDCCAZQwDAYDVR0TBAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwFgYDVR0lAQH/
+BAwwCgYIKwYBBQUHAwMwLAYJYIZIAYb4QgENBB8WHU9wZW5TU0wgR2VuZXJhdGVk
+IENlcnRpZmljYXRlMDMGCWCGSAGG+EIBBAQmFiRodHRwOi8vYWRkb25zLm1vemls
+bGEub3JnL2NhL2NybC5wZW0wHQYDVR0OBBYEFIbYNBxOWNETXJlf2EKY7RQPGfJd
+MIHZBgNVHSMEgdEwgc6AFIbYNBxOWNETXJlf2EKY7RQPGfJdoYGvpIGsMIGpMQsw
+CQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcx
+HDAaBgNVBAoTE0FkZG9ucyBUZXN0IFNpZ25pbmcxJDAiBgNVBAMTG3Rlc3QuYWRk
+b25zLnNpZ25pbmcucm9vdC5jYTExMC8GCSqGSIb3DQEJARYic2Vjb3BzK3N0YWdl
+cm9vdGFkZG9uc0Btb3ppbGxhLmNvbYIEYCWYOzANBgkqhkiG9w0BAQwFAAOCAgEA
+nowyJv8UaIV7NA0B3wkWratq6FgA1s/PzetG/ZKZDIW5YtfUvvyy72HDAwgKbtap
+Eog6zGI4L86K0UGUAC32fBjE5lWYEgsxNM5VWlQjbgTG0dc3dYiufxfDFeMbAPmD
+DzpIgN3jHW2uRqa/MJ+egHhv7kGFL68uVLboqk/qHr+SOCc1LNeSMCuQqvHwwM0+
+AU1GxhzBWDkealTS34FpVxF4sT5sKLODdIS5HXJr2COHHfYkw2SW/Sfpt6fsOwaF
+2iiDaK4LPWHWhhIYa6yaynJ+6O6KPlpvKYCChaTOVdc+ikyeiSO6AakJykr5Gy7d
+PkkK7MDCxuY6psHj7iJQ59YK7ujQB8QYdzuXBuLLo5hc5gBcq3PJs0fLT2YFcQHA
+dj+olGaDn38T0WI8ycWaFhQfKwATeLWfiQepr8JfoNlC2vvSDzGUGfdAfZfsJJZ8
+5xZxahHoTFGS0mDRfXqzKH5uD578GgjOZp0fULmzkcjWsgzdpDhadGjExRZFKlAy
+iKv8cXTONrGY0fyBDKennuX0uAca3V0Qm6v2VRp+7wG/pywWwc5n+04qgxTQPxgO
+6pPB9UUsNbaLMDR5QPYAWrNhqJ7B07XqIYJZSwGP5xB9NqUZLF4z+AOMYgWtDpmg
+IKdcFKAt3fFrpyMhlfIKkLfmm0iDjmfmIXbDGBJw9SE=
+-----END CERTIFICATE-----`,
 }
 
-// firefoxPkiContentSignatureStageRootHash is the SHA2 hash of the
-// firefoxPkiContentSignatureStageRoot cert raw bytes
-const firefoxPkiContentSignatureStageRootHash = `97:37:14:8C:52:46:02:62:BC:65:73:35:24:18:2D:86:4B:72:19:93:36:98:7A:91:30:9D:0F:37:F4:CA:61:20`
-
-// firefoxPkiContentSignatureStageRoot is the CA root cert for the
-// content signature stage code signing PKI
-const firefoxPkiContentSignatureStageRoot = `-----BEGIN CERTIFICATE-----
-MIIFUzCCAzugAwIBAgIUNr3E682X0kYY/982UzKQQviCcaQwDQYJKoZIhvcNAQEM
-BQAwczELMAkGA1UEBhMCVVMxHDAaBgNVBAoME01vemlsbGEgQ29ycG9yYXRpb24x
-KDAmBgNVBAsMH01vemlsbGEgU3RhZ2luZyBTaWduaW5nIFNlcnZpY2UxHDAaBgNV
-BAMME2Nhcy1yb290LWNhLXN0YWdpbmcwIBcNMjQwMjEyMDAwMDAwWhgPMjA1MDEy
-MzEwMDAwMDBaMH4xCzAJBgNVBAYTAlVTMRwwGgYDVQQKDBNNb3ppbGxhIENvcnBv
-cmF0aW9uMSgwJgYDVQQLDB9Nb3ppbGxhIFN0YWdpbmcgU2lnbmluZyBTZXJ2aWNl
-MScwJQYDVQQDDB5jYXMtaW50ZXJtZWRpYXRlLWNzLWNhLXN0YWdpbmcwdjAQBgcq
-hkjOPQIBBgUrgQQAIgNiAARibyDo1HGadCSX4dx2HF0COmAnPBV3AaVT26dFpKex
-cbBB8huoA+DLvKpX/CuZ9PJ0oicxlnoz4d7s5lJyda8+hzovqi1KzmtOX5GRC11A
-Gc5XRswhSlWwN060xV9secqjggF+MIIBejAMBgNVHRMEBTADAQH/MA4GA1UdDwEB
-/wQEAwIBBjAWBgNVHSUBAf8EDDAKBggrBgEFBQcDAzAdBgNVHQ4EFgQUrtZP7hiO
-bzO4ec4OsCSQP/vIm/gwgZ0GA1UdIwSBlTCBkoAUZx2I8O3VJayJw9B6xBqtSjSW
-APahd6R1MHMxCzAJBgNVBAYTAlVTMRwwGgYDVQQKDBNNb3ppbGxhIENvcnBvcmF0
-aW9uMSgwJgYDVQQLDB9Nb3ppbGxhIFN0YWdpbmcgU2lnbmluZyBTZXJ2aWNlMRww
-GgYDVQQDDBNjYXMtcm9vdC1jYS1zdGFnaW5nggEBMDMGCWCGSAGG+EIBBAQmFiRo
-dHRwOi8vYWRkb25zLmFsbGl6b20ub3JnL2NhL2NybC5wZW0wTgYDVR0eBEcwRaBD
-MCCCHi5jb250ZW50LXNpZ25hdHVyZS5tb3ppbGxhLm9yZzAfgh1jb250ZW50LXNp
-Z25hdHVyZS5tb3ppbGxhLm9yZzANBgkqhkiG9w0BAQwFAAOCAgEAqUqN9Kr1xbOU
-MHzIJnH420B4YLy/jRvADG9w4CAqEECgjATT9BLrGo9T5HjHIv6OTRmVtfi5YflN
-9+B2uy9pv9/lbzNGugbEWcIJ3QlnNy891ZBu7Ejlmeo7QhKW4FZSfJixomRCzCh2
-FZIZxYlrVct2z/CcnW17riNxLmEZmB7rI+QAhdCBuAEHrgHi9lnAjjg4plCs5CNA
-PXlvgdIK81mtOch/yvRwpfC8LBA1aP/Y44R7bCtNsPs0xqFxwEQ0EzUSCWhaOGlx
-Ngefu+9j8lGGP1TrTZ9j+lJylz1ZINgjFnMpnCTLGe5jHuH6Tik2v1WTsRrUkjoJ
-lGQiwu2L22V5sx0KUwDy1+vvgSRKVwaiUxOw19yHX22Q8ZQt4Xhr4+lzxJa+agIW
-ZN1Y08qE3stVc5nUDCQ/Xpc7unC61KeleWeskFA7pQI0TBw5jaLRk4PuglYbDYKe
-I2jMjTaeVfnmc0jENs+dPX7YBzHDrcljMIIGjXxaiZ/U6vjtEEiDHZvlmP7Hlx19
-EDy7BYXdspgPZg/8122kOJctGI2r0SGDykRYFRt4n+n0/0uYDy2TRuMfB2tqQ1Zw
-N0Oyc/CwbiqbbhreQXjBFZDPFKJjFgI5oPr1WG1wlfaxd8vkibXlmhx+avMZlVqM
-9jCzjZ5LLQLzzjY93u/mhtoBTUFhDjY=
------END CERTIFICATE-----`
-
-// firefoxPkiProdRootHash is the SHA2 hash of the firefoxPkiProdRoot
+// firefoxPkiProdRootHashes is the SHA2 hash of the firefoxPkiProdRoots
 // cert raw bytes
-const firefoxPkiProdRootHash = `97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E`
+var firefoxPkiProdRootHashes = []string{
+	`97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E`,
+}
 
-// firefoxPkiProdRoot is the CA root cert for the Content Signature
+// firefoxPkiProdRoots are the CA root certs for the Content Signature
 // and Addon prod code signing PKI
-const firefoxPkiProdRoot = `-----BEGIN CERTIFICATE-----
+var firefoxPkiProdRoots = []string{
+	`-----BEGIN CERTIFICATE-----
 MIIGYTCCBEmgAwIBAgIBATANBgkqhkiG9w0BAQwFADB9MQswCQYDVQQGEwJVUzEc
 MBoGA1UEChMTTW96aWxsYSBDb3Jwb3JhdGlvbjEvMC0GA1UECxMmTW96aWxsYSBB
 TU8gUHJvZHVjdGlvbiBTaWduaW5nIFNlcnZpY2UxHzAdBgNVBAMTFnJvb3QtY2Et
@@ -212,4 +227,5 @@ QCkDSLDjXTx39naBBGIVIqBtKKuVTla9enngdq692xX/CgO6QJVrwpqdGjebj5P8
 ZARKjbu1TuYQHf0fs+GwID8zeLc2zJL7UzcHFwwQ6Nda9OJN4uPAuC/BKaIpxCLL
 26b24/tRam4SJjqpiq20lynhUrmTtt6hbG3E1Hpy3bmkt2DYnuMFwEx2gfXNcnbT
 wNuvFqc=
------END CERTIFICATE-----`
+-----END CERTIFICATE-----`,
+}

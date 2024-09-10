@@ -109,8 +109,8 @@ func signTestCert(options signOptions) *x509.Certificate {
 	return certX509
 }
 
-func sha2Fingerprint(cert *x509.Certificate) string {
-	return strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
+func sha2Fingerprint(cert *x509.Certificate) []string {
+	return []string{strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))}
 }
 
 func mustCertsToChain(certs []*x509.Certificate) (chain []byte) {
@@ -204,7 +204,7 @@ func Test_verifyContentSignature(t *testing.T) {
 	type args struct {
 		x5uClient    *http.Client
 		notifier     Notifier
-		rootHash     string
+		rootHash     []string
 		ignoredCerts map[string]bool
 		response     formats.SignatureResponse
 		input        []byte
@@ -281,7 +281,7 @@ func Test_verifyContentSignature(t *testing.T) {
 			args: args{
 				x5uClient:    &http.Client{},
 				notifier:     nil,
-				rootHash:     "invalidroothash",
+				rootHash:     []string{"invalidroothash"},
 				ignoredCerts: map[string]bool{"example.content-signature.mozilla.org": true},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
@@ -300,7 +300,7 @@ func Test_verifyContentSignature(t *testing.T) {
 			args: args{
 				x5uClient: &http.Client{},
 				notifier:  nil,
-				rootHash:  "invalidroothash",
+				rootHash:  []string{"invalidroothash"},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
@@ -318,7 +318,7 @@ func Test_verifyContentSignature(t *testing.T) {
 			args: args{
 				x5uClient: &http.Client{},
 				notifier:  nil,
-				rootHash:  "shouldnotmatter",
+				rootHash:  []string{"invalidroothash"},
 				response: formats.SignatureResponse{
 					X5U: "",
 				},
@@ -994,7 +994,7 @@ VsAEZI1u4EDg8e/C1nFqaH9gNMArAgquYIB9rve+hdprIMnva0S147pflWopBWcb
 jwzgpfquuYnnxe0CNBA=
 -----END CERTIFICATE-----`
 
-const normandyDev2021Roothash = `4C:35:B1:C3:E3:12:D9:55:E7:78:ED:D0:A7:E7:8A:38:83:04:EF:01:BF:FA:03:29:B2:46:9F:3C:C5:EC:36:04`
+var normandyDev2021Roothash = []string{`4C:35:B1:C3:E3:12:D9:55:E7:78:ED:D0:A7:E7:8A:38:83:04:EF:01:BF:FA:03:29:B2:46:9F:3C:C5:EC:36:04`}
 
 var NormandyDevChain2021 = `-----BEGIN CERTIFICATE-----
 MIIGRTCCBC2gAwIBAgIEAQAABTANBgkqhkiG9w0BAQwFADBrMQswCQYDVQQGEwJV
