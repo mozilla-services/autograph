@@ -1,4 +1,5 @@
 ARG GO_VERSION=1.22
+ARG LIBKMSP11_VERSION=1.6
 
 #------------------------------------------------------------------------------
 # Base Debian Image
@@ -37,12 +38,17 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Build Stage
 #------------------------------------------------------------------------------
 FROM base as builder
+ARG LIBKMSP11_VERSION=1.6
 
 ADD . /app/src/autograph
 
 RUN cd /app/src/autograph && go install .
 RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autograph-monitor .
 RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograph-client .
+
+# Extract and verify the Google KMS library.
+RUN cd /tmp && curl -L https://github.com/GoogleCloudPlatform/kms-integrations/releases/download/pkcs11-v${LIBKMSP11_VERSION}/libkmsp11-${LIBKMSP11_VERSION}-linux-amd64.tar.gz | tar -zx --strip-components=1
+RUN openssl dgst -sha384 -verify /app/src/autograph/google-pkcs12-release-signing-key.pem -signature /tmp/libkmsp11.so.sig /tmp/libkmsp11.so
 
 #------------------------------------------------------------------------------
 # Deployment Stage
@@ -61,6 +67,9 @@ ADD . /app/src/autograph
 ADD autograph.yaml /app
 ADD version.json /app
 COPY --from=builder /go/bin /go/bin/
+
+# Copy Google KMS library from the builder.
+COPY --from=builder /tmp/libkmsp11.so /app
 
 # Setup the worker and entrypoint.
 RUN useradd --uid 10001 --home-dir /app --shell /sbin/nologin app
