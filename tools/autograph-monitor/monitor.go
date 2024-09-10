@@ -80,6 +80,7 @@ func main() {
 		}
 	default:
 		conf.rootHashes = autographDevRootHashes
+		conf.truststore = nil
 	}
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
 		conf.rootHashes = append(conf.rootHashes, strings.ToUpper(os.Getenv("AUTOGRAPH_ROOT_HASH")))

@@ -19,7 +19,7 @@ var firefoxPkiStageRootHashes = []string{
 // firefoxPkiStageRoots is the list of CA root certs for the Addon stage code
 // signing PKI
 var firefoxPkiStageRoots = []string{
-	// new root cert
+	// cas_new, currently used root cert
 	`-----BEGIN CERTIFICATE-----
 MIIGRDCCBCygAwIBAgIBATANBgkqhkiG9w0BAQwFADBzMQswCQYDVQQGEwJVUzEc
 MBoGA1UECgwTTW96aWxsYSBDb3Jwb3JhdGlvbjEoMCYGA1UECwwfTW96aWxsYSBT
@@ -56,7 +56,7 @@ Pafl5Rch9rAxeaMFOgYMeOJwlRCt2Fbm+mtnWKFdxy9Peib75pXQD43qYbnK8ucj
 xNCR3VBsgIgAhyO11hXiBo5nX5OHn2PG1MPV9+H0RQb6g5zOuKrWoh9CzB8mBl7d
 0JMkzy6TFAcAo3KL5ZNvRqqB8xRmIYLK
 -----END CERTIFICATE-----`,
-	// current root cert
+	// cas_cur, previous root cert
 	`-----BEGIN CERTIFICATE-----
 MIIGQjCCBCqgAwIBAgIBATANBgkqhkiG9w0BAQwFADBzMQswCQYDVQQGEwJVUzEc
 MBoGA1UECgwTTW96aWxsYSBDb3Jwb3JhdGlvbjEoMCYGA1UECwwfTW96aWxsYSBT
