@@ -61,16 +61,15 @@ func main() {
 	// prod or autograph dev code signing PKI roots and CA root
 	// certs defined in constants.go
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
+	conf.truststore = x509.NewCertPool()
 	switch conf.env {
 	case "stage":
 		conf.rootHashes = firefoxPkiStageRootHashes
-		conf.truststore = x509.NewCertPool()
 		for _, cert := range firefoxPkiStageRoots {
 			conf.truststore.AppendCertsFromPEM([]byte(cert))
 		}
 	case "prod":
 		conf.rootHashes = firefoxPkiProdRootHashes
-		conf.truststore = x509.NewCertPool()
 		for _, cert := range firefoxPkiProdRoots {
 			conf.truststore.AppendCertsFromPEM([]byte(cert))
 		}
@@ -81,7 +80,6 @@ func main() {
 		}
 	default:
 		conf.rootHashes = autographDevRootHashes
-		conf.truststore = x509.NewCertPool()
 	}
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
 		conf.rootHashes = append(conf.rootHashes, strings.ToUpper(os.Getenv("AUTOGRAPH_ROOT_HASH")))

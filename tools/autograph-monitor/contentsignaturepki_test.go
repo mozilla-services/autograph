@@ -311,7 +311,7 @@ func Test_verifyContentSignature(t *testing.T) {
 				input: signerTestData,
 			},
 			wantErr:   true,
-			errSubStr: "hash does not match expected root",
+			errSubStr: "hash does not match an expected root",
 		},
 		{
 			name: "empty x5u fails",
