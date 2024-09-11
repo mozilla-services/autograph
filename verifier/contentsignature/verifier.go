@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 )
@@ -78,17 +79,13 @@ func verifyRoot(rootHashes []string, cert *x509.Certificate) error {
 	// We're configure to check the root hash matches expected value
 	h := sha256.Sum256(cert.Raw)
 	certHash := fmt.Sprintf("%X", h[:])
-	var matchFound = false
-	for _, rootHash := range rootHashes {
-		rhash := strings.Replace(rootHash, ":", "", -1)
-		if rhash == certHash {
-			matchFound = true
-			break
-		}
-	}
+	var matchFound = slices.ContainsFunc(rootHashes, func(rootHash string) bool {
+		return certHash == strings.Replace(rootHash, ":", "", -1)
+	})
 	if !matchFound {
 		return fmt.Errorf("hash does not match an expected root hash: calculated=%s", certHash)
 	}
+
 	hasCodeSigningExtension := false
 	for _, ext := range cert.ExtKeyUsage {
 		if ext == x509.ExtKeyUsageCodeSigning {
