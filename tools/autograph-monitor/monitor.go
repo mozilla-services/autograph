@@ -63,19 +63,13 @@ func main() {
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
 	switch conf.env {
 	case "stage":
-		conf.rootHashes = []string{}
-		conf.truststore = x509.NewCertPool()
-		LoadCertsToTruststore(&conf.rootHashes, conf.truststore, firefoxPkiStageRoots)
+		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiStageRoots)
 	case "prod":
-		conf.rootHashes = []string{}
-		conf.truststore = x509.NewCertPool()
-		LoadCertsToTruststore(&conf.rootHashes, conf.truststore, firefoxPkiProdRoots)
+		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiProdRoots)
 
-		conf.depRootHashes = []string{}
-		conf.depTruststore = x509.NewCertPool()
-		LoadCertsToTruststore(&conf.depRootHashes, conf.depTruststore, firefoxPkiProdRoots)
+		conf.depTruststore, conf.depRootHashes = LoadCertsToTruststore(firefoxPkiProdRoots)
 	default:
-		conf.rootHashes = autographDevRootHashes
+		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiDevRoots)
 	}
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
 		conf.rootHashes = append(conf.rootHashes, strings.ToUpper(os.Getenv("AUTOGRAPH_ROOT_HASH")))
@@ -96,12 +90,15 @@ func main() {
 }
 
 // Helper function to load a series of certificates and their hashes to a given truststore and hash list
-func LoadCertsToTruststore(hashArr *[]string, truststore *x509.CertPool, certificates []string) {
+func LoadCertsToTruststore(certificates []string) (*x509.CertPool, []string) {
+	var hashArr = []string{}
+	var truststore = x509.NewCertPool()
 	for _, cert := range certificates {
 		certBytes := []byte(cert)
 		truststore.AppendCertsFromPEM(certBytes)
-		*hashArr = append(*hashArr, strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(certBytes))))
+		hashArr = append(hashArr, strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(certBytes))))
 	}
+	return truststore, hashArr
 }
 
 // Handler is a wrapper around monitor() that performs garbage collection

@@ -4,8 +4,21 @@ package main
 // autograph dev config:
 // https://github.com/mozilla-services/autograph/blob/b3081068f4a9c0c1de02150432f2d02887dd6722/autograph.yaml#L113-L126
 // used on the normandy and remote settings development servers
-var autographDevRootHashes = []string{
-	`5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`,
+var firefoxPkiDevRoots = []string{
+	`-----BEGIN CERTIFICATE-----
+MIICKjCCAa+gAwIBAgIIFY4HHiViG/gwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUzMTg2NzQ3MB4XDTE5MDExOTE3
+NDU0N1oXDTQ5MDMyMTE3NDU0N1owXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
+VQQDExBjc3Jvb3QxNTUzMTg2NzQ3MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEhpId
+iezJa9Ab2dCesA0pc5FIBdkA6uWWVU2hN3/CpTWcTbhZ6JRCSsGa31YEUEGkDuGl
+C1ti6hzL0gq/vlnRkMoAcdPU8qdeOp/ZAmVYP+CZcQ0F0S/7PFjqE+5AiLGmozgw
+NjAOBgNVHQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/
+BAUwAwEB/zAKBggqhkjOPQQDAwNpADBmAjEA1UhMQI32zwh4+UmD1tVYRFRLM0sy
+raFyXTzUlrYF0YW89gvUXETPTmewAST397LAAjEAzGUC8N7h8BWfj6R9ES88UPgr
+yhRZrsaFZybKjZnBwG7lN9AkrjpKC1h2z4naOXX3
+-----END CERTIFICATE-----`,
 }
 
 // firefoxPkiStageRoots is the list of CA root certs for the Addon stage code
