@@ -66,7 +66,6 @@ func main() {
 		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiStageRoots)
 	case "prod":
 		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiProdRoots)
-
 		conf.depTruststore, conf.depRootHashes = LoadCertsToTruststore(firefoxPkiProdRoots)
 	default:
 		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiDevRoots)
