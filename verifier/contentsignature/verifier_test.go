@@ -124,8 +124,8 @@ func signTestCert(options signOptions) *x509.Certificate {
 	return certX509
 }
 
-func sha2Fingerprint(cert *x509.Certificate) []string {
-	return []string{strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))}
+func sha2Fingerprint(cert *x509.Certificate) string {
+	return strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
 }
 
 func generateTestKey() *ecdsa.PrivateKey {
@@ -1130,8 +1130,8 @@ func Test_ParseChain(t *testing.T) {
 
 func Test_verifyRoot(t *testing.T) {
 	type args struct {
-		rootHash []string
-		cert     *x509.Certificate
+		rootHashes []string
+		cert       *x509.Certificate
 	}
 	tests := []struct {
 		name    string
@@ -1141,24 +1141,24 @@ func Test_verifyRoot(t *testing.T) {
 		{
 			name: "verify Firefox prod root",
 			args: args{
-				rootHash: firefoxPkiProdRootHash,
-				cert:     mustPEMToCert(firefoxPkiProdRoot),
+				rootHashes: firefoxPkiProdRootHash,
+				cert:       mustPEMToCert(firefoxPkiProdRoot),
 			},
 			wantErr: false,
 		},
 		{
 			name: "verify Firefox stage root",
 			args: args{
-				rootHash: firefoxPkiContentSignatureStageRootHash,
-				cert:     mustPEMToCert(firefoxPkiContentSignatureStageRoot),
+				rootHashes: firefoxPkiContentSignatureStageRootHash,
+				cert:       mustPEMToCert(firefoxPkiContentSignatureStageRoot),
 			},
 			wantErr: false,
 		},
 		{
 			name: "verify sign-signed root",
 			args: args{
-				rootHash: sha2Fingerprint(testRoot),
-				cert:     testRoot,
+				rootHashes: []string{sha2Fingerprint(testRoot)},
+				cert:       testRoot,
 			},
 			wantErr: false,
 		},
@@ -1166,55 +1166,55 @@ func Test_verifyRoot(t *testing.T) {
 		{
 			name: "root not self-signed errs",
 			args: args{
-				rootHash: sha2Fingerprint(mustPEMToCert(NormandyDevChain2021Intermediate)),
-				cert:     mustPEMToCert(NormandyDevChain2021Intermediate),
+				rootHashes: []string{sha2Fingerprint(mustPEMToCert(NormandyDevChain2021Intermediate))},
+				cert:       mustPEMToCert(NormandyDevChain2021Intermediate),
 			},
 			wantErr: true,
 		},
 		{
 			name: "root not CA errs",
 			args: args{
-				rootHash: sha2Fingerprint(testRootNonCA),
-				cert:     testRootNonCA,
+				rootHashes: []string{sha2Fingerprint(testRootNonCA)},
+				cert:       testRootNonCA,
 			},
 			wantErr: true,
 		},
 		{
 			name: "invalid empty root hash errs",
 			args: args{
-				rootHash: []string{""},
-				cert:     mustPEMToCert(firefoxPkiProdRoot),
+				rootHashes: []string{""},
+				cert:       mustPEMToCert(firefoxPkiProdRoot),
 			},
 			wantErr: true,
 		},
 		{
 			name: "invalid root hash all colons errs",
 			args: args{
-				rootHash: []string{":::::::"},
-				cert:     mustPEMToCert(firefoxPkiProdRoot),
+				rootHashes: []string{":::::::"},
+				cert:       mustPEMToCert(firefoxPkiProdRoot),
 			},
 			wantErr: true,
 		},
 		{
 			name: "invalid root hash errs",
 			args: args{
-				rootHash: []string{"foo"},
-				cert:     mustPEMToCert(firefoxPkiProdRoot),
+				rootHashes: []string{"foo"},
+				cert:       mustPEMToCert(firefoxPkiProdRoot),
 			},
 			wantErr: true,
 		},
 		{
 			name: "root without code signing ext errs",
 			args: args{
-				rootHash: sha2Fingerprint(testRootNoExt),
-				cert:     testRootNoExt,
+				rootHashes: []string{sha2Fingerprint(testRootNoExt)},
+				cert:       testRootNoExt,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := verifyRoot(tt.args.rootHash, tt.args.cert); (err != nil) != tt.wantErr {
+			if err := verifyRoot(tt.args.rootHashes, tt.args.cert); (err != nil) != tt.wantErr {
 				t.Errorf("verifyRoot() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1223,7 +1223,7 @@ func Test_verifyRoot(t *testing.T) {
 
 func Test_VerifyChain(t *testing.T) {
 	type args struct {
-		rootHash    []string
+		rootHashes  []string
 		certs       []*x509.Certificate
 		currentTime time.Time
 	}
@@ -1236,7 +1236,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "valid chain NormandyDevChain2021 passes",
 			args: args{
-				rootHash:    normandyDev2021Roothash,
+				rootHashes:  normandyDev2021Roothash,
 				certs:       mustParseChain(NormandyDevChain2021),
 				currentTime: mustParseUTC("2020-05-09T14:02:37Z"),
 			},
@@ -1246,7 +1246,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "valid test chain passes",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       []*x509.Certificate{testLeaf, testInter, testRoot},
 				currentTime: time.Now(),
 			},
@@ -1257,7 +1257,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "short chain fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       []*x509.Certificate{NormandyDevChain2021Certs[2]},
 				currentTime: mustParseUTC("2020-05-09T14:02:37Z"),
 			},
@@ -1267,7 +1267,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "long chain with extra root fails",
 			args: args{
-				rootHash: sha2Fingerprint(testRoot),
+				rootHashes: []string{sha2Fingerprint(testRoot)},
 				certs: []*x509.Certificate{
 					NormandyDevChain2021Certs[0],
 					NormandyDevChain2021Certs[1],
@@ -1282,7 +1282,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "wrongly ordered chain fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       mustParseChain(WronglyOrderedChain),
 				currentTime: mustParseUTC("2021-05-09T14:02:37Z"),
 			},
@@ -1292,7 +1292,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "invalid root non-CA chain fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRootNonCA),
+				rootHashes:  []string{sha2Fingerprint(testRootNonCA)},
 				certs:       []*x509.Certificate{testLeafNonCA, testInterNonCA, testRootNonCA},
 				currentTime: time.Now(),
 			},
@@ -1302,7 +1302,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "root hash mismatch fails",
 			args: args{
-				rootHash:    []string{"invalid hash"},
+				rootHashes:  []string{"invalid hash"},
 				certs:       []*x509.Certificate{testLeaf, testInter, testRoot},
 				currentTime: time.Now(),
 			},
@@ -1312,7 +1312,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "invalid DNS name fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       []*x509.Certificate{testLeafInvalidDNSName, testInter, testRoot},
 				currentTime: time.Now(),
 			},
@@ -1323,7 +1323,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "expired end-entity chain fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       []*x509.Certificate{testLeafExpired, testInter, testRoot},
 				currentTime: time.Now(),
 			},
@@ -1333,7 +1333,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "not yet valid end-entity chain fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       []*x509.Certificate{testLeafNotYetValid, testInter, testRoot},
 				currentTime: time.Now(),
 			},
@@ -1343,7 +1343,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "expired intermediate chain fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       []*x509.Certificate{testLeaf, testInterExpired, testRoot},
 				currentTime: time.Now(),
 			},
@@ -1353,7 +1353,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "not yet valid intermediate chain fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       []*x509.Certificate{testLeaf, testInterNotYetValid, testRoot},
 				currentTime: time.Now(),
 			},
@@ -1363,7 +1363,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "expired root chain fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       []*x509.Certificate{testLeaf, testInter, testRootExpired},
 				currentTime: time.Now(),
 			},
@@ -1373,7 +1373,7 @@ func Test_VerifyChain(t *testing.T) {
 		{
 			name: "not yet valid root chain fails",
 			args: args{
-				rootHash:    sha2Fingerprint(testRoot),
+				rootHashes:  []string{sha2Fingerprint(testRoot)},
 				certs:       []*x509.Certificate{testLeaf, testInter, testRootNotYetValid},
 				currentTime: time.Now(),
 			},
@@ -1383,7 +1383,7 @@ func Test_VerifyChain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := VerifyChain(tt.args.rootHash, tt.args.certs, tt.args.currentTime)
+			err := VerifyChain(tt.args.rootHashes, tt.args.certs, tt.args.currentTime)
 
 			if tt.wantErr == false && err != nil { // unexpected error
 				t.Errorf("VerifyChain() error = %v, wantErr %v", err, tt.wantErr)
@@ -1401,10 +1401,10 @@ func Test_VerifyChain(t *testing.T) {
 
 func TestVerify(t *testing.T) {
 	type args struct {
-		input     []byte
-		certChain []byte
-		signature string
-		rootHash  []string
+		input      []byte
+		certChain  []byte
+		signature  string
+		rootHashes []string
 	}
 	tests := []struct {
 		name    string
@@ -1414,10 +1414,10 @@ func TestVerify(t *testing.T) {
 		{
 			name: "test valid content signature response ok",
 			args: args{
-				input:     signerTestData,
-				certChain: mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot}),
-				signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
-				rootHash:  sha2Fingerprint(testRoot),
+				input:      signerTestData,
+				certChain:  mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot}),
+				signature:  "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+				rootHashes: []string{sha2Fingerprint(testRoot)},
 			},
 			wantErr: false,
 		},
@@ -1425,57 +1425,57 @@ func TestVerify(t *testing.T) {
 		{
 			name: "default args fails",
 			args: args{
-				input:     []byte(""),
-				certChain: []byte(""),
-				signature: "",
-				rootHash:  []string{""},
+				input:      []byte(""),
+				certChain:  []byte(""),
+				signature:  "",
+				rootHashes: []string{""},
 			},
 			wantErr: true,
 		},
 		{
 			name: "invalid key type fails",
 			args: args{
-				input:     []byte(""),
-				certChain: mustCertsToChain([]*x509.Certificate{testLeafRSAPub, testInter, testRoot}),
-				signature: "",
-				rootHash:  []string{""},
+				input:      []byte(""),
+				certChain:  mustCertsToChain([]*x509.Certificate{testLeafRSAPub, testInter, testRoot}),
+				signature:  "",
+				rootHashes: []string{""},
 			},
 			wantErr: true,
 		},
 		{
 			name: "signature unmarshal fails",
 			args: args{
-				input:     []byte(""),
-				certChain: mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot}),
-				signature: "",
-				rootHash:  []string{""},
+				input:      []byte(""),
+				certChain:  mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot}),
+				signature:  "",
+				rootHashes: []string{""},
 			},
 			wantErr: true,
 		},
 		{
 			name: "data verification fails",
 			args: args{
-				input:     []byte(""),
-				certChain: mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot}),
-				signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
-				rootHash:  []string{""},
+				input:      []byte(""),
+				certChain:  mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot}),
+				signature:  "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+				rootHashes: []string{""},
 			},
 			wantErr: true,
 		},
 		{
 			name: "chain verification fails",
 			args: args{
-				input:     signerTestData,
-				certChain: mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRootExpired}),
-				signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
-				rootHash:  sha2Fingerprint(testRoot),
+				input:      signerTestData,
+				certChain:  mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRootExpired}),
+				signature:  "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+				rootHashes: []string{sha2Fingerprint(testRoot)},
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Verify(tt.args.input, tt.args.certChain, tt.args.signature, tt.args.rootHash); (err != nil) != tt.wantErr {
+			if err := Verify(tt.args.input, tt.args.certChain, tt.args.signature, tt.args.rootHashes); (err != nil) != tt.wantErr {
 				t.Errorf("Verify() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

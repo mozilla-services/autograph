@@ -8,14 +8,6 @@ var autographDevRootHashes = []string{
 	`5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE`,
 }
 
-// firefoxPkiStageRootHashes is the SHA2 hashes of the root certs in firefoxPkiStageRoots
-// cert raw bytes
-var firefoxPkiStageRootHashes = []string{
-	`C0:F0:5D:59:B1:FD:E2:57:80:85:4C:32:FA:E8:FA:BA:84:81:C2:33:B4:C1:D3:90:CC:A5:F2:CE:A8:19:30:EE`,
-	`45:C3:7F:3A:09:A6:D7:0E:0F:A3:21:FB:29:75:3B:A7:99:8F:12:59:B3:27:72:76:8F:23:CC:DC:24:83:67:98`,
-	`DB:74:CE:58:E4:F9:D0:9E:E0:42:36:BE:6C:C5:C4:F6:6A:E7:74:7D:C0:21:42:7A:03:BC:2F:57:0C:8B:9B:90`,
-}
-
 // firefoxPkiStageRoots is the list of CA root certs for the Addon stage code
 // signing PKI
 var firefoxPkiStageRoots = []string{
@@ -136,12 +128,6 @@ zQQ9gt3NC2OXF4hveHfKZdCnb+BBl4S71QMYYCCTe+EDCsIGuyXWD/K2hfLD8TPW
 thPX5WNsS8bwno2ccqncVLQ4PZxOIB83DFBFmAvTuBiAYWq874rneTXqInHyeCq+
 819l9s72pDsFaGevmm0Us9bYuufTS5U=
 -----END CERTIFICATE-----`,
-}
-
-// firefoxPkiProdRootHashes is the SHA2 hash of the firefoxPkiProdRoots
-// cert raw bytes
-var firefoxPkiProdRootHashes = []string{
-	`97:E8:BA:9C:F1:2F:B3:DE:53:CC:42:A4:E6:57:7E:D6:4D:F4:93:C2:47:B4:14:FE:A0:36:81:8D:38:23:56:0E`,
 }
 
 // firefoxPkiProdRoots are the CA root certs for the Content Signature

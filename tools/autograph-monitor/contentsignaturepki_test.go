@@ -109,8 +109,8 @@ func signTestCert(options signOptions) *x509.Certificate {
 	return certX509
 }
 
-func sha2Fingerprint(cert *x509.Certificate) []string {
-	return []string{strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))}
+func sha2Fingerprint(cert *x509.Certificate) string {
+	return strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
 }
 
 func mustCertsToChain(certs []*x509.Certificate) (chain []byte) {
@@ -204,7 +204,7 @@ func Test_verifyContentSignature(t *testing.T) {
 	type args struct {
 		x5uClient    *http.Client
 		notifier     Notifier
-		rootHash     []string
+		rootHashes   []string
 		ignoredCerts map[string]bool
 		response     formats.SignatureResponse
 		input        []byte
@@ -220,9 +220,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  sha2Fingerprint(testRoot),
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
@@ -237,9 +237,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response typed nil notifier ok",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  typedNilNotifier,
-				rootHash:  sha2Fingerprint(testRoot),
+				x5uClient:  &http.Client{},
+				notifier:   typedNilNotifier,
+				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
@@ -254,9 +254,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response notifies",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  sha2Fingerprint(testRoot),
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
@@ -281,7 +281,7 @@ func Test_verifyContentSignature(t *testing.T) {
 			args: args{
 				x5uClient:    &http.Client{},
 				notifier:     nil,
-				rootHash:     []string{"invalidroothash"},
+				rootHashes:   []string{"invalidroothash"},
 				ignoredCerts: map[string]bool{"example.content-signature.mozilla.org": true},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
@@ -298,9 +298,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response with invalid root hash fails",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  []string{"invalidroothash"},
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: []string{"invalidroothash"},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
@@ -316,9 +316,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "empty x5u fails",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  []string{"invalidroothash"},
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: []string{"invalidroothash"},
 				response: formats.SignatureResponse{
 					X5U: "",
 				},
@@ -333,8 +333,8 @@ func Test_verifyContentSignature(t *testing.T) {
 				x5uClient: &http.Client{
 					Timeout: 1 * time.Nanosecond,
 				},
-				notifier: nil,
-				rootHash: normandyDev2021Roothash,
+				notifier:   nil,
+				rootHashes: normandyDev2021Roothash,
 				response: formats.SignatureResponse{
 					Ref:       "1881ks1du39bi26cfmfczu6pf3",
 					Type:      "contentsignature",
@@ -351,9 +351,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "truncated signature fails",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  sha2Fingerprint(testRoot),
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
@@ -369,9 +369,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "one cert X5U chain fails",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  normandyDev2021Roothash,
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: normandyDev2021Roothash,
 				response: formats.SignatureResponse{
 					Ref:       "1881ks1du39bi26cfmfczu6pf3",
 					Type:      "contentsignature",
@@ -388,9 +388,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "bad EE pubkey fails",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  normandyDev2021Roothash,
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: normandyDev2021Roothash,
 				response: formats.SignatureResponse{
 					Ref:       "1881ks1du39bi26cfmfczu6pf3",
 					Type:      "contentsignature",
@@ -407,9 +407,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "invalid data (wrong EE for normandyDev2021Roothash) fails",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  normandyDev2021Roothash,
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: normandyDev2021Roothash,
 				response: formats.SignatureResponse{
 					Ref:       "1881ks1du39bi26cfmfczu6pf3",
 					Type:      "contentsignature",
@@ -426,9 +426,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "expiring EE fails",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  sha2Fingerprint(testRoot),
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
@@ -444,9 +444,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "expiring inter fails",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  sha2Fingerprint(testRoot),
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
@@ -462,9 +462,9 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "expiring root fails",
 			args: args{
-				x5uClient: &http.Client{},
-				notifier:  nil,
-				rootHash:  sha2Fingerprint(testRoot16DaysToExpiration),
+				x5uClient:  &http.Client{},
+				notifier:   nil,
+				rootHashes: []string{sha2Fingerprint(testRoot16DaysToExpiration)},
 				response: formats.SignatureResponse{
 					Type:      "contentsignature",
 					Mode:      "p384ecdsa",
@@ -489,7 +489,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := verifyContentSignature(tt.args.x5uClient, notifier, tt.args.rootHash, tt.args.ignoredCerts, tt.args.response, tt.args.input)
+			err := verifyContentSignature(tt.args.x5uClient, notifier, tt.args.rootHashes, tt.args.ignoredCerts, tt.args.response, tt.args.input)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("verifyContentSignature() error = %v, wantErr %v", err, tt.wantErr)

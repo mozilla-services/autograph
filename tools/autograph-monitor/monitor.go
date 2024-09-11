@@ -61,26 +61,21 @@ func main() {
 	// prod or autograph dev code signing PKI roots and CA root
 	// certs defined in constants.go
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
-	conf.truststore = x509.NewCertPool()
 	switch conf.env {
 	case "stage":
-		conf.rootHashes = firefoxPkiStageRootHashes
-		for _, cert := range firefoxPkiStageRoots {
-			conf.truststore.AppendCertsFromPEM([]byte(cert))
-		}
+		conf.rootHashes = []string{}
+		conf.truststore = x509.NewCertPool()
+		LoadCertsToTruststore(&conf.rootHashes, conf.truststore, firefoxPkiStageRoots)
 	case "prod":
-		conf.rootHashes = firefoxPkiProdRootHashes
-		for _, cert := range firefoxPkiProdRoots {
-			conf.truststore.AppendCertsFromPEM([]byte(cert))
-		}
-		conf.depRootHashes = firefoxPkiStageRootHashes
+		conf.rootHashes = []string{}
+		conf.truststore = x509.NewCertPool()
+		LoadCertsToTruststore(&conf.rootHashes, conf.truststore, firefoxPkiProdRoots)
+
+		conf.depRootHashes = []string{}
 		conf.depTruststore = x509.NewCertPool()
-		for _, cert := range firefoxPkiStageRoots {
-			conf.depTruststore.AppendCertsFromPEM([]byte(cert))
-		}
+		LoadCertsToTruststore(&conf.depRootHashes, conf.depTruststore, firefoxPkiProdRoots)
 	default:
 		conf.rootHashes = autographDevRootHashes
-		conf.truststore = nil
 	}
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
 		conf.rootHashes = append(conf.rootHashes, strings.ToUpper(os.Getenv("AUTOGRAPH_ROOT_HASH")))
@@ -97,6 +92,15 @@ func main() {
 			os.Exit(1)
 		}
 		os.Exit(0)
+	}
+}
+
+// Helper function to load a series of certificates and their hashes to a given truststore and hash list
+func LoadCertsToTruststore(hashArr *[]string, truststore *x509.CertPool, certificates []string) {
+	for _, cert := range certificates {
+		certBytes := []byte(cert)
+		truststore.AppendCertsFromPEM(certBytes)
+		*hashArr = append(*hashArr, strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(certBytes))))
 	}
 }
 
