@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -89,13 +90,17 @@ func main() {
 }
 
 // Helper function to load a series of certificates and their hashes to a given truststore and hash list
-func LoadCertsToTruststore(certificates []string) (*x509.CertPool, []string) {
+func LoadCertsToTruststore(pemStrings []string) (*x509.CertPool, []string) {
 	var hashArr = []string{}
 	var truststore = x509.NewCertPool()
-	for _, cert := range certificates {
-		certBytes := []byte(cert)
-		truststore.AppendCertsFromPEM(certBytes)
-		hashArr = append(hashArr, strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(certBytes))))
+	for _, str := range pemStrings {
+		block, _ := pem.Decode([]byte(str))
+		if block == nil {
+			log.Printf("Failed to parse PEM certificate")
+			continue
+		}
+		truststore.AppendCertsFromPEM([]byte(str))
+		hashArr = append(hashArr, fmt.Sprintf("%X", sha256.Sum256(block.Bytes)))
 	}
 	return truststore, hashArr
 }
