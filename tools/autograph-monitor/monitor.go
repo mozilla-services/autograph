@@ -62,22 +62,25 @@ func main() {
 	// prod or autograph dev code signing PKI roots and CA root
 	// certs defined in constants.go
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
-	var err error
+	var err, depErr error
 	switch conf.env {
 	case "stage":
 		conf.truststore, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiStageRoots)
 	case "prod":
 		conf.truststore, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiProdRoots)
-		if err != nil {
-			break
-		}
-		conf.depTruststore, conf.depRootHashes, err = LoadCertsToTruststore(firefoxPkiProdRoots)
+		conf.depTruststore, conf.depRootHashes, depErr = LoadCertsToTruststore(firefoxPkiProdRoots)
 	default:
 		_, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiDevRoots)
 	}
 
 	if err != nil {
-		log.Fatalf("Failed to load root certificates. Error: %s", err)
+		err = fmt.Errorf("failed to load truststore root certificates: %w", err)
+	}
+	if depErr != nil {
+		depErr = fmt.Errorf("failed to load depTruststore root certificates: %w", depErr)
+	}
+	if err != nil || depErr != nil {
+		log.Fatalf("%s", errors.Join(err, depErr))
 	}
 
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
