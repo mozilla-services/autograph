@@ -69,7 +69,7 @@ func main() {
 		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiProdRoots)
 		conf.depTruststore, conf.depRootHashes = LoadCertsToTruststore(firefoxPkiProdRoots)
 	default:
-		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiDevRoots)
+		_, conf.rootHashes = LoadCertsToTruststore(firefoxPkiDevRoots)
 	}
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
 		conf.rootHashes = append(conf.rootHashes, strings.ToUpper(os.Getenv("AUTOGRAPH_ROOT_HASH")))
