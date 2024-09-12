@@ -12,8 +12,8 @@ func verifyXPISignature(sig string) error {
 		log.Fatal(err)
 	}
 	err = xpiSig.VerifyWithChain(conf.truststore)
-	if err == nil {
-		return nil
+	if err == nil || conf.depTruststore == nil {
+		return err
 	}
 	log.Printf("Got error %s verifying XPI signature with rel truststore trying dep truststore", err)
 	return xpiSig.VerifyWithChain(conf.depTruststore)

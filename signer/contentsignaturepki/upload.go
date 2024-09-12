@@ -126,7 +126,7 @@ func GetX5U(client *http.Client, x5u string) (body []byte, certs []*x509.Certifi
 		return
 	}
 	rootHash := sha2Fingerprint(certs[2])
-	err = csigverifier.VerifyChain(rootHash, certs, time.Now())
+	err = csigverifier.VerifyChain([]string{rootHash}, certs, time.Now())
 	if err != nil {
 		err = fmt.Errorf("failed to verify certificate chain: %w", err)
 		return

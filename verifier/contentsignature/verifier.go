@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 )
@@ -62,9 +63,9 @@ func ParseChain(chain []byte) (certs []*x509.Certificate, err error) {
 // 3) has the x509v3 Extentions for CodeSigning use
 //
 // and SHA2 sum of raw bytes matches the provided hex-encoded with
-// optional colons rootHash param (as from openssl x509 -noout -text
+// optional colons rootHashes param (as from openssl x509 -noout -text
 // -fingerprint -sha256 -in ca.crt)
-func verifyRoot(rootHash string, cert *x509.Certificate) error {
+func verifyRoot(rootHashes []string, cert *x509.Certificate) error {
 	// this is the last cert, it should be self signed
 	if !bytes.Equal(cert.RawSubject, cert.RawIssuer) {
 		return fmt.Errorf("subject does not match issuer, should be equal")
@@ -72,16 +73,19 @@ func verifyRoot(rootHash string, cert *x509.Certificate) error {
 	if !cert.IsCA {
 		return fmt.Errorf("missing IS CA extension")
 	}
-	if rootHash == "" {
-		return fmt.Errorf("rootHash must not be empty")
+	if rootHashes == nil || len(rootHashes) < 1 {
+		return fmt.Errorf("rootHashes must not be empty")
 	}
-	rhash := strings.Replace(rootHash, ":", "", -1)
 	// We're configure to check the root hash matches expected value
 	h := sha256.Sum256(cert.Raw)
 	certHash := fmt.Sprintf("%X", h[:])
-	if rhash != certHash {
-		return fmt.Errorf("hash does not match expected root: expected=%s; got=%s", rhash, certHash)
+	var matchFound = slices.ContainsFunc(rootHashes, func(rootHash string) bool {
+		return certHash == strings.Replace(rootHash, ":", "", -1)
+	})
+	if !matchFound {
+		return fmt.Errorf("hash does not match an expected root hash: calculated=%s", certHash)
 	}
+
 	hasCodeSigningExtension := false
 	for _, ext := range cert.ExtKeyUsage {
 		if ext == x509.ExtKeyUsageCodeSigning {
@@ -100,7 +104,7 @@ func verifyRoot(rootHash string, cert *x509.Certificate) error {
 // 1) signed by their parent/issuer/the next cert in the chain or all verifyRoot checks for the root
 // 2) valid for the current time i.e. cert NotBefore < current time < cert NotAfter
 // 3) the chain follows name constraints and extended key usage as checked by x509 Certificate.Verify
-func VerifyChain(rootHash string, certs []*x509.Certificate, currentTime time.Time) error {
+func VerifyChain(rootHashes []string, certs []*x509.Certificate, currentTime time.Time) error {
 	if len(certs) != 3 {
 		return fmt.Errorf("can only verify 3 certificate chain, got %d certs", len(certs))
 	}
@@ -124,7 +128,7 @@ func VerifyChain(rootHash string, certs []*x509.Certificate, currentTime time.Ti
 		}
 		switch i {
 		case 2: // the last cert is the root
-			err := verifyRoot(rootHash, cert)
+			err := verifyRoot(rootHashes, cert)
 			if err != nil {
 				return fmt.Errorf("certificate %d %q is root but fails validation: %w",
 					i, cert.Subject.CommonName, err)
@@ -170,7 +174,7 @@ func VerifyChain(rootHash string, certs []*x509.Certificate, currentTime time.Ti
 // then verifies the cert chain of trust maps to the signed data.
 //
 // It returns an error if it fails or nil on success.
-func Verify(input, certChain []byte, signature, rootHash string) error {
+func Verify(input, certChain []byte, signature string, rootHashes []string) error {
 	certs, err := ParseChain(certChain)
 	if err != nil {
 		return fmt.Errorf("error parsing cert chain: %w", err)
@@ -190,7 +194,7 @@ func Verify(input, certChain []byte, signature, rootHash string) error {
 		return fmt.Errorf("ecdsa signature verification failed")
 	}
 
-	err = VerifyChain(rootHash, certs, time.Now())
+	err = VerifyChain(rootHashes, certs, time.Now())
 	if err != nil {
 		return fmt.Errorf("error verifying content signature certificate chain: %w", err)
 	}
