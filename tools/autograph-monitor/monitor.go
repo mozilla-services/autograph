@@ -62,15 +62,24 @@ func main() {
 	// prod or autograph dev code signing PKI roots and CA root
 	// certs defined in constants.go
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
+	var err error
 	switch conf.env {
 	case "stage":
-		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiStageRoots)
+		conf.truststore, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiStageRoots)
 	case "prod":
-		conf.truststore, conf.rootHashes = LoadCertsToTruststore(firefoxPkiProdRoots)
-		conf.depTruststore, conf.depRootHashes = LoadCertsToTruststore(firefoxPkiProdRoots)
+		conf.truststore, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiProdRoots)
+		if err != nil {
+			break
+		}
+		conf.depTruststore, conf.depRootHashes, err = LoadCertsToTruststore(firefoxPkiProdRoots)
 	default:
-		_, conf.rootHashes = LoadCertsToTruststore(firefoxPkiDevRoots)
+		_, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiDevRoots)
 	}
+
+	if err != nil {
+		log.Fatalf("Failed to load root certificates. Error: %s", err)
+	}
+
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
 		conf.rootHashes = append(conf.rootHashes, strings.ToUpper(os.Getenv("AUTOGRAPH_ROOT_HASH")))
 		log.Printf("Appending root hash from env var AUTOGRAPH_ROOT_HASH=%q\n", os.Getenv("AUTOGRAPH_ROOT_HASH"))
@@ -90,7 +99,7 @@ func main() {
 }
 
 // Helper function to load a series of certificates and their hashes to a given truststore and hash list
-func LoadCertsToTruststore(pemStrings []string) (*x509.CertPool, []string) {
+func LoadCertsToTruststore(pemStrings []string) (*x509.CertPool, []string, error) {
 	var hashArr = []string{}
 	var truststore = x509.NewCertPool()
 	for _, str := range pemStrings {
@@ -99,10 +108,14 @@ func LoadCertsToTruststore(pemStrings []string) (*x509.CertPool, []string) {
 			log.Printf("Failed to parse PEM certificate")
 			continue
 		}
-		truststore.AppendCertsFromPEM([]byte(str))
-		hashArr = append(hashArr, fmt.Sprintf("%X", sha256.Sum256(block.Bytes)))
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, nil, err
+		}
+		truststore.AddCert(cert)
+		hashArr = append(hashArr, fmt.Sprintf("%X", sha256.Sum256(cert.Raw)))
 	}
-	return truststore, hashArr
+	return truststore, hashArr, nil
 }
 
 // Handler is a wrapper around monitor() that performs garbage collection
