@@ -42,7 +42,7 @@ import (
 	"go.mozilla.org/sops/decrypt"
 
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/ThalesIgnite/crypto11"
+	"github.com/mozilla-services/autograph/crypto11"
 )
 
 // configuration loads a yaml file that contains the configuration of Autograph

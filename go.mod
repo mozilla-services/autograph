@@ -4,7 +4,6 @@ go 1.22.1
 
 require (
 	github.com/DataDog/datadog-go v3.7.2+incompatible
-	github.com/ThalesIgnite/crypto11 v0.1.0
 	github.com/aws/aws-lambda-go v1.27.0
 	github.com/aws/aws-sdk-go-v2 v1.30.5
 	github.com/aws/aws-sdk-go-v2/config v1.27.33
@@ -18,6 +17,7 @@ require (
 	github.com/miekg/pkcs11 v1.0.3
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/sirupsen/logrus v1.8.1
+	github.com/youtube/vitess v2.1.1+incompatible
 	go.mozilla.org/cose v0.0.0-20200221144611-2ea72a6b3de3
 	go.mozilla.org/hawk v0.0.0-20190327210923-a483e4a7047e
 	go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d
@@ -71,7 +71,6 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/ugorji/go v0.0.0-20180112141927-9831f2c3ac10 // indirect
-	github.com/youtube/vitess v2.1.1+incompatible // indirect
 	go.mozilla.org/gopgagent v0.0.0-20170926210634-4d7ea76ff71a // indirect
 	go.opencensus.io v0.22.1 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
@@ -88,3 +87,5 @@ require (
 )
 
 replace github.com/mozilla-services/autograph/verifier/contentsignature => ./verifier/contentsignature/
+
+replace github.com/mozilla-services/autograph/crypto11 => ./crypto11/

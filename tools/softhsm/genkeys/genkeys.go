@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ThalesIgnite/crypto11"
+	"github.com/mozilla-services/autograph/crypto11"
 )
 
 func main() {

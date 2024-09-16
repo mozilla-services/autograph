@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ThalesIgnite/crypto11"
+	"github.com/mozilla-services/autograph/crypto11"
 )
 
 var wg sync.WaitGroup

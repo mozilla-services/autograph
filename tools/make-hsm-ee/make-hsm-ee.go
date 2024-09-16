@@ -14,7 +14,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ThalesIgnite/crypto11"
+	"github.com/mozilla-services/autograph/crypto11"
 )
 
 func usage() {
