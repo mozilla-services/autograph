@@ -18,7 +18,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ThalesIgnite/crypto11"
+	"github.com/mozilla-services/autograph/crypto11"
 )
 
 func main() {
