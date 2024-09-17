@@ -88,7 +88,7 @@ jobs:
           cd tools/autograph-monitor
           make build
       
-      - name: Create release draft if one doesn't exist yet
+      - name: Create release draft if a release doesn't exist yet
         run: |
           EXISTING_RELEASE=$(gh release view $GITHUB_REF_NAME --json="id" || echo '')
           if [[ -z $EXISTING_RELEASE ]]; then
