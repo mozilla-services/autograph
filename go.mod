@@ -86,5 +86,3 @@ require (
 	google.golang.org/grpc v1.24.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
-
-replace github.com/mozilla-services/autograph/verifier/contentsignature => ./verifier/contentsignature/
