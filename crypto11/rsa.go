@@ -209,7 +209,7 @@ func decryptOAEP(session *PKCS11Session, key *PKCS11PrivateKeyRSA, ciphertext []
 	if hMech, mgf, _, err = hashToPKCS11(hashFunction); err != nil {
 		return nil, err
 	}
-	if label != nil && len(label) > 0 {
+	if len(label) > 0 {
 		sourceData = uint(uintptr(unsafe.Pointer(&label[0])))
 		sourceDataLen = uint(len(label))
 	}
@@ -309,11 +309,11 @@ func (priv *PKCS11PrivateKeyRSA) Sign(rand io.Reader, digest []byte, opts crypto
 		return nil, err
 	}
 	err = withSession(priv.Slot, func(session *PKCS11Session) error {
-		switch opts.(type) {
+		switch opts2 := opts.(type) {
 		case *rsa.PSSOptions:
-			signature, err = signPSS(session, priv, digest, opts.(*rsa.PSSOptions))
+			signature, err = signPSS(session, priv, digest, opts2)
 		default: /* PKCS1-v1_5 */
-			signature, err = signPKCS1v15(session, priv, digest, opts.HashFunc())
+			signature, err = signPKCS1v15(session, priv, digest, opts2.HashFunc())
 		}
 		return err
 	})

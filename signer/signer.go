@@ -26,7 +26,7 @@ import (
 	"github.com/mozilla-services/autograph/formats"
 
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/ThalesIgnite/crypto11"
+	"github.com/mozilla-services/autograph/crypto11"
 	"github.com/miekg/pkcs11"
 
 	log "github.com/sirupsen/logrus"
