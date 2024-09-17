@@ -65,3 +65,36 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           context: .
+
+  monitor:
+    name: Build Monitor Lambda Zip
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.22'
+      
+      - name: Build monitor
+        run: |
+          cd tools/autograph-monitor
+          make build
+      
+      - name: Create release draft if one doesn't exist yet
+        run: |
+          EXISTING_RELEASE=$(gh release view $GITHUB_REF_NAME --json="id" || echo '')
+          if [[ -z $EXISTING_RELEASE ]]; then
+              gh release create $GITHUB_REF_NAME --generate-notes -d
+          fi
+
+      - name: Upload zip package to release
+        run: |
+          gh release upload $GITHUB_REF_NAME "$RUNNER_TEMP/tools/autograph-monitor/autograph-monitor.zip" --clobber
