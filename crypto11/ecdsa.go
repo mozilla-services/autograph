@@ -151,7 +151,7 @@ func marshalEcParams(c elliptic.Curve) ([]byte, error) {
 func unmarshalEcParams(b []byte) (elliptic.Curve, error) {
 	// See if it's a well-known curve
 	for _, ci := range wellKnownCurves {
-		if bytes.Compare(b, ci.oid) == 0 {
+		if bytes.Equal(b, ci.oid) {
 			if ci.curve != nil {
 				return ci.curve, nil
 			}
@@ -187,7 +187,7 @@ func unmarshalEcPoint(b []byte, c elliptic.Curve) (x *big.Int, y *big.Int, err e
 		return nil, nil, ErrMalformedDER
 	}
 	pointBytes := b[r:]
-	x, y = elliptic.Unmarshal(c, pointBytes)
+	x, y = elliptic.Unmarshal(c, pointBytes) //lint:ignore S1019
 	if x == nil || y == nil {
 		err = ErrMalformedPoint
 	}

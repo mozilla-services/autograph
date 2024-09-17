@@ -23,7 +23,7 @@ package crypto11
 
 import (
 	"crypto"
-	"crypto/dsa"
+	"crypto/dsa" //lint:ignore S1019
 	"io"
 	"math/big"
 
