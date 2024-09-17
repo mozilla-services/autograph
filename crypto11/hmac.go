@@ -123,8 +123,7 @@ var ErrHmacClosed = errors.New("already called Sum()")
 // The Reset() method is not implemented.
 // After Sum() is called no new data may be added.
 func (key *PKCS11SecretKey) NewHMAC(mech int, length int) (h hash.Hash, err error) {
-	var hi hmacImplementation
-	hi = hmacImplementation{
+	hi := hmacImplementation{
 		key: key,
 	}
 	var params []byte

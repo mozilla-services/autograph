@@ -23,7 +23,7 @@ package crypto11
 
 import (
 	"crypto"
-	"crypto/dsa"
+	"crypto/dsa" //nolint:all
 	"io"
 	"math/big"
 
