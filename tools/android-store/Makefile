@@ -29,6 +29,10 @@ PRIVATE_KEY ?= ../$(APP_NAME)-private-key.pem
 PUBLIC_CERT ?= ../$(APP_NAME)-signing-cert.pem
 WRAP_KEY ?= ../encryption_public_key.pem
 
+# Get the current user's name and group name
+USER_NAME := $(shell id --user --name)
+GROUP_NAME := $(shell id --group --name)
+
 
 ##################################################################################
 #
@@ -61,9 +65,16 @@ $(PEPK):
 .PHONY: setup-ramdisk
 setup-ramdisk: $(RD_PATH)/t	## Create a container writeable directory
 $(RD_PATH)/t:
-	@mkdir $@
-	@chmod a+w $@
+	mkdir -p $(RAM_DISK)
+	sudo mount -t ramfs -o size=10m myramdisk $(RAM_DISK)
+	sudo chown $(USER_NAME):$(GROUP_NAME) $(RAM_DISK)
+	mkdir -p $(RAM_DISK)/t
 	@echo "Container writeable directory configured"
+
+.PHONY: teardown-ramdisk
+teardown-ramdisk: ## Destroy the container writeable directory
+	sudo umount $(RAM_DISK)
+	rm -rf $(RAM_DISK)
 
 .PHONY: docker-run
 docker-run:  ## Start docker container (from host)
