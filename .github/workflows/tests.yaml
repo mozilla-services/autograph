@@ -91,6 +91,7 @@ jobs:
       - name: Run Tests
         shell: bash
         run: |
+          /usr/bin/git show -s --format=%cN HEAD
           docker compose run unit-test
 
   integration-tests:
