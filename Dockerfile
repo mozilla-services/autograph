@@ -25,6 +25,8 @@ RUN apt-get update && \
         apksigner \
         golang-${GO_VERSION} \
         gcc \
+        # needed for accurately collecting coverage data
+        git \
         g++ \
         libc6-dev \
         pkg-config \
