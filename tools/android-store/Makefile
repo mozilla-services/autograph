@@ -11,8 +11,7 @@ MAKEFLAGS = --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
 RAM_DISK ?= /tmp/ramdisk
-IN_CONTAINER := $(shell test "$$(cat /proc/self/cgroup | cut -d: -f3 | sort -u )" == "/" && echo false || echo true)
-RD_PATH := $(shell $(IN_CONTAINER) && echo /secrets || echo $(RAM_DISK))
+RD_PATH := /secrets
 
 CONTAINER_VERSION ?= latest
 # for testing, use 'autograph-app' for the locally build image from
@@ -38,7 +37,6 @@ WRAP_KEY ?= ../encryption_public_key.pem
 ##################################################################################
 .PHONY: status
 status: _check-prerequisites _check-for-pepk  ## Report on readiness to perform tasks
-	@echo "In container: $(IN_CONTAINER)"
 	@echo "Using ramdisk at $(RD_PATH)"
 
 .PHONY: _check-for-pepk
@@ -51,8 +49,6 @@ _check-prerequisites:  # Verify utilities available
 	@type -ap openssl &>/dev/null || { echo "ERROR: Missing openssl" ; false ; }
 	@type $(SCRIPT) &>/dev/null || { echo "ERROR: not available $(SCRIPT)" ; false ; }
 	@test -w $(RD_PATH)/t || { echo "ERROR: $(RD_PATH)/t is not writable (try: make setup-ramdisk)" ; false ; }
-	@{ ! $(IN_CONTAINER) && type -ap docker &>/dev/null ; } || { echo "ERROR: docker not available" ; false ; }
-	@$(IN_CONTAINER) || echo "Warning: not running in a container"
 
 .PHONY: download-pepk
 download-pepk: $(PEPK)	## Download pepk.jar
@@ -71,7 +67,6 @@ $(RD_PATH)/t:
 
 .PHONY: docker-run
 docker-run:  ## Start docker container (from host)
-	@! $(IN_CONTAINER) || { echo "ERROR: already in container" ; false ; }
 	docker run -it --rm \
 		-v $(RAM_DISK):/secrets \
 		$(CONTAINER_IMAGE):$(CONTAINER_VERSION) \
