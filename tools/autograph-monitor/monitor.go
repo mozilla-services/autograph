@@ -94,8 +94,7 @@ func main() {
 	} else {
 		err := Handler()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
+			log.Fatalf("Unhandled exception from monitor: %s", err)
 		}
 		os.Exit(0)
 	}
@@ -128,7 +127,11 @@ func Handler() (err error) {
 		// force gc run
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1621133
 		t1 := time.Now()
+
 		runtime.GC()
+		if err != nil {
+			log.Fatalf("Unhandled error on monitor Handler: %s", err)
+		}
 		log.Println("Garbage collected in", time.Since(t1))
 	}()
 	return monitor()
