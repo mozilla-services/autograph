@@ -29,9 +29,9 @@ PRIVATE_KEY ?= ../$(APP_NAME)-private-key.pem
 PUBLIC_CERT ?= ../$(APP_NAME)-signing-cert.pem
 WRAP_KEY ?= ../encryption_public_key.pem
 
-# Get the current user's name and group name
-USER_NAME := $(shell id --user --name)
-GROUP_NAME := $(shell id --group --name)
+# The user and group id for the app user
+DOCKER_USER_ID = 10001
+DOCKER_GROUP_ID = 10001
 
 
 ##################################################################################
@@ -63,23 +63,22 @@ $(PEPK):
 	@echo Downloaded to $(PEPK)
 
 .PHONY: setup-ramdisk
-setup-ramdisk: $(RD_PATH)/t	## Create a container writeable directory
-$(RD_PATH)/t:
+setup-ramdisk: $(RD_PATH)	## Create a container writeable directory
+$(RD_PATH):
 	mkdir -p $(RAM_DISK)
 	sudo mount -t ramfs -o size=10m myramdisk $(RAM_DISK)
-	sudo chown $(USER_NAME):$(GROUP_NAME) $(RAM_DISK)
-	mkdir -p $(RAM_DISK)/t
+	sudo chown $(DOCKER_USER_ID):$(DOCKER_GROUP_ID) $(RAM_DISK)
 	@echo "Container writeable directory configured"
 
 .PHONY: teardown-ramdisk
 teardown-ramdisk: ## Destroy the container writeable directory
 	sudo umount $(RAM_DISK)
-	rm -rf $(RAM_DISK)
+	sudo rm -rf $(RAM_DISK)
 
 .PHONY: docker-run
 docker-run:  ## Start docker container (from host)
 	docker run -it --rm \
-		-v $(RAM_DISK):/secrets \
+		-v $(RAM_DISK):/secrets:z \
 		$(CONTAINER_IMAGE):$(CONTAINER_VERSION) \
 		bash -c /app/src/autograph/tools/android-store/start-container-shell.sh
 
