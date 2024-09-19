@@ -78,7 +78,7 @@ teardown-ramdisk: ## Destroy the container writeable directory
 .PHONY: docker-run
 docker-run:  ## Start docker container (from host)
 	docker run -it --rm \
-		-v $(RAM_DISK):/secrets:z \
+		-v $(RAM_DISK):/secrets \
 		$(CONTAINER_IMAGE):$(CONTAINER_VERSION) \
 		bash -c /app/src/autograph/tools/android-store/start-container-shell.sh
 
