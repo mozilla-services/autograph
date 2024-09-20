@@ -26,8 +26,8 @@ import (
 	"github.com/mozilla-services/autograph/formats"
 
 	"github.com/DataDog/datadog-go/statsd"
-	"github.com/mozilla-services/autograph/crypto11"
 	"github.com/miekg/pkcs11"
+	"github.com/mozilla-services/autograph/crypto11"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -407,7 +407,7 @@ func (cfg *Configuration) CheckHSMConnection() error {
 	if err != nil {
 		return fmt.Errorf("error fetching private key for signer %s: %w", cfg.ID, err)
 	}
-	return fmt.Errorf("unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
+	return nil
 }
 
 // MakeKey generates a new key of type keyTpl and returns the priv and public interfaces.
