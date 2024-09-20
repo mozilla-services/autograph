@@ -403,13 +403,9 @@ func (cfg *Configuration) CheckHSMConnection() error {
 		return fmt.Errorf("HSM is not available for signer %s", cfg.ID)
 	}
 
-	privKey, err := cfg.GetPrivateKey()
+	_, err := cfg.GetPrivateKey()
 	if err != nil {
 		return fmt.Errorf("error fetching private key for signer %s: %w", cfg.ID, err)
-	}
-	// returns 0 if the key is not stored in the hsm
-	if GetPrivKeyHandle(privKey) != 0 {
-		return nil
 	}
 	return fmt.Errorf("unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
 }
@@ -476,18 +472,6 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 	default:
 		return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
 	}
-}
-
-// GetPrivKeyHandle returns the hsm handler object id of a key stored in the hsm,
-// or 0 if the key is not stored in the hsm
-func GetPrivKeyHandle(priv crypto.PrivateKey) uint {
-	switch key := priv.(type) {
-	case *crypto11.PKCS11PrivateKeyECDSA:
-		return uint(key.Handle)
-	case *crypto11.PKCS11PrivateKeyRSA:
-		return uint(key.Handle)
-	}
-	return 0
 }
 
 // StatsClient is a helper for sending statsd stats with the relevant

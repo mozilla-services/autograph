@@ -85,7 +85,7 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 		label = fmt.Sprintf("%d", time.Now().UnixNano())
 		t.Logf("TestConcurrentEndEntityOperations: routine %d is making an end-entity", j)
 		err = tx.InsertEE("http://example.com/TestConcurrentEndEntityOperations",
-			label, signerID, uint(j))
+			label, signerID)
 		if err != nil {
 			t.Fatalf("failed to insert end-entity into db: %v", err)
 		}

@@ -169,12 +169,11 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 		}
 		if tx != nil {
 			// insert it in database
-			hsmHandle := signer.GetPrivKeyHandle(s.eePriv)
-			err = tx.InsertEE(s.X5U, s.eeLabel, s.ID, hsmHandle)
+			err = tx.InsertEE(s.X5U, s.eeLabel, s.ID)
 			if err != nil {
 				return fmt.Errorf("contentsignaturepki %q: failed to insert EE into database: %w", s.ID, err)
 			}
-			log.Printf("contentsignaturepki %q: generated private key labeled %q with hsm handle %d and x5u %q", s.ID, s.eeLabel, hsmHandle, s.X5U)
+			log.Printf("contentsignaturepki %q: generated private key labeled %q with x5u %q", s.ID, s.eeLabel, s.X5U)
 		}
 	releaseLock:
 		if tx != nil {
