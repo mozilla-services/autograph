@@ -127,7 +127,6 @@ func Handler() (err error) {
 		// force gc run
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1621133
 		t1 := time.Now()
-
 		runtime.GC()
 		log.Println("Garbage collected in", time.Since(t1))
 	}()
