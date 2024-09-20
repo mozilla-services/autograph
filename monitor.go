@@ -76,13 +76,13 @@ func (m *monitor) checkSigners() {
 			// sign with data set to the base64 of the string 'AUTOGRAPH MONITORING'
 			sig, err := s.(signer.DataSigner).SignData(MonitoringInputData, s.(signer.DataSigner).GetDefaultOptions())
 			if err != nil {
-				m.sigerrstrs[i] = fmt.Sprintf("signing failed with error: %v", err)
+				m.sigerrstrs[i] = fmt.Sprintf("data signing for %s failed with error: %v", s.Config().ID, err)
 				continue
 			}
 
 			encodedsig, err := sig.Marshal()
 			if err != nil {
-				m.sigerrstrs[i] = fmt.Sprintf("encoding failed with error: %v", err)
+				m.sigerrstrs[i] = fmt.Sprintf("encoding failed for %s with error: %v", s.Config().ID, err)
 				continue
 			}
 			m.sigerrstrs[i] = ""
@@ -109,7 +109,7 @@ func (m *monitor) checkSigners() {
 			}
 			output, err := s.(signer.FileSigner).SignFile(s.(signer.TestFileGetter).GetTestFile(), s.(signer.FileSigner).GetDefaultOptions())
 			if err != nil {
-				m.sigerrstrs[i] = fmt.Sprintf("signing failed with error: %v", err)
+				m.sigerrstrs[i] = fmt.Sprintf("file signing failed for %s with error: %v", s.Config().ID, err)
 				continue
 			}
 			signedfile := base64.StdEncoding.EncodeToString(output)
