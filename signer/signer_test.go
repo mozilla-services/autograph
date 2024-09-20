@@ -204,7 +204,7 @@ func TestMakeKey(t *testing.T) {
 		if err != nil {
 			t.Fatalf("testcase %d failed to load signer configuration: %v", i, err)
 		}
-		priv, pub, err := testcase.cfg.MakeKey(keyTpl, "test")
+		_, pub, err := testcase.cfg.MakeKey(keyTpl, "test")
 		if err != nil {
 			t.Fatalf("testcase %d failed to make %T key from signer configuration: %v", i, keyTpl, err)
 		}
@@ -212,9 +212,6 @@ func TestMakeKey(t *testing.T) {
 		pubType := fmt.Sprintf("%T", pub)
 		if keyTplType != pubType {
 			t.Fatalf("testcase %d failed, expected public key of type %q but got %q", i, keyTplType, keyTplType)
-		}
-		if GetPrivKeyHandle(priv) != 0 {
-			t.Fatalf("testcase %d failed, expected public key handle 0 but got %d", i, GetPrivKeyHandle(priv))
 		}
 	}
 }

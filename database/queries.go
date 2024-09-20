@@ -66,9 +66,11 @@ func (db *Handler) GetLabelOfLatestEE(signerID string, youngerThan time.Duration
 }
 
 // InsertEE uses an existing transaction to insert an end-entity in database
-func (tx *Transaction) InsertEE(x5u, label, signerID string, hsmHandle uint) (err error) {
+func (tx *Transaction) InsertEE(x5u, label, signerID string) (err error) {
+	// hsm_handle is unused, but required to be not null. We should remove this
+	// column at some point; in the meantime, we always set it to -1
 	_, err = tx.Exec(`INSERT INTO endentities(x5u, label, signer_id, hsm_handle, is_current)
-				VALUES ($1, $2, $3, $4, $5)`, x5u, label, signerID, hsmHandle, true)
+				VALUES ($1, $2, $3, $4, $5)`, x5u, label, signerID, -1, true)
 	if err != nil {
 		tx.Rollback()
 		err = fmt.Errorf("failed to insert new key in database: %w", err)
