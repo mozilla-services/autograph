@@ -25,9 +25,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"hash"
+
 	"github.com/miekg/pkcs11"
 	"github.com/youtube/vitess/go/pools"
-	"hash"
 )
 
 const (

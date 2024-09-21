@@ -23,6 +23,7 @@ package crypto11
 
 import (
 	"fmt"
+
 	"github.com/miekg/pkcs11"
 )
 

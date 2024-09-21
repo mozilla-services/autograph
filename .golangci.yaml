@@ -5,6 +5,7 @@ linters:
     # TODO(AUT-202): errcheck is too handy to leave out but requires more churn
     # at time of writing
     # - errcheck
+    - goimports
     - gosimple
     - govet
     - ineffassign

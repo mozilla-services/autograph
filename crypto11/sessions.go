@@ -25,10 +25,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/miekg/pkcs11"
-	"github.com/youtube/vitess/go/pools"
 	"log"
 	"sync"
+
+	"github.com/miekg/pkcs11"
+	"github.com/youtube/vitess/go/pools"
 )
 
 // PKCS11Session is a pair of PKCS#11 context and a reference to a loaded session handle.
