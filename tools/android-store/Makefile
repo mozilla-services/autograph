@@ -29,7 +29,7 @@ PRIVATE_KEY ?= ../$(APP_NAME)-private-key.pem
 PUBLIC_CERT ?= ../$(APP_NAME)-signing-cert.pem
 WRAP_KEY ?= ../encryption_public_key.pem
 
-# The user and group id for the app user
+# The user and group id for the app user, Magic numbers from our Dockerfile
 DOCKER_USER_ID = 10001
 DOCKER_GROUP_ID = 10001
 
