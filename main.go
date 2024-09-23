@@ -388,7 +388,7 @@ func (a *autographer) initHSM(conf configuration) error {
 		// if we successfully initialized the crypto11 context,
 		// tell the signers they can try using the HSM
 		for i := range conf.Signers {
-			conf.Signers[i].InitHSM(tmpCtx)
+			conf.Signers[i].InitHSM(signer.NewAWSHSM(tmpCtx))
 			signerConf := &conf.Signers[i]
 
 			// save the first signer with an HSM label as
