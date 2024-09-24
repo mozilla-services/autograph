@@ -25,6 +25,7 @@ import (
 	"crypto/cipher"
 	"errors"
 	"fmt"
+
 	"github.com/miekg/pkcs11"
 )
 

@@ -129,7 +129,7 @@ type Configuration struct {
 	SignerOpts crypto.SignerOpts `json:"signer_opts,omitempty" yaml:"signeropts,omitempty"`
 
 	isHsmAvailable bool
-	Hsm HSM
+	Hsm            HSM
 }
 
 // InitHSM indicates that an HSM has been initialized
