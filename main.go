@@ -380,7 +380,7 @@ func (a *autographer) addDB(dbConf database.Config) chan bool {
 
 // initHSM sets up the HSM and notifies signers it is available
 func (a *autographer) initHSM(conf configuration) error {
-	tmpCtx, err := crypto11.Configure(&conf.HSM)
+	tmpCtx, err := crypto11.Configure(&conf.HSM, crypto11.NewDefaultPKCS11Context)
 	if err != nil {
 		return fmt.Errorf("error in initHSM from crypto11.Configure: %w", err)
 	}

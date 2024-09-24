@@ -149,11 +149,47 @@ var instance = &libCtx{
 
 // Represent library pkcs11 context and token configuration
 type libCtx struct {
-	ctx *pkcs11.Ctx
+	ctx PKCS11Context
 	cfg *PKCS11Config
 
 	token *pkcs11.TokenInfo
 	slot  uint
+}
+
+// A simple wrapper for the parts of pkcs11.Ctx that we use to allow replacing
+// it during testing (and thus avoid requiring a real HSM).
+// Note that only the methods we use are specified here. The pkcs11
+// implementation is in C, and has other methods that we don't need.
+// (Because it's a C implementation, we don't need to even declare them here.)
+type PKCS11Context interface {
+	CloseAllSessions(slotID uint) error
+	CloseSession(sh pkcs11.SessionHandle) error
+	Decrypt(sh pkcs11.SessionHandle, cipher []byte) ([]byte, error)
+	DecryptFinal(sh pkcs11.SessionHandle) ([]byte, error)
+	DecryptInit(sh pkcs11.SessionHandle, m []*pkcs11.Mechanism, o pkcs11.ObjectHandle) error
+	DecryptUpdate(sh pkcs11.SessionHandle, cipher []byte) ([]byte, error)
+	Destroy()
+	Encrypt(sh pkcs11.SessionHandle, message []byte) ([]byte, error)
+	EncryptFinal(sh pkcs11.SessionHandle) ([]byte, error)
+	EncryptInit(sh pkcs11.SessionHandle, m []*pkcs11.Mechanism, o pkcs11.ObjectHandle) error
+	EncryptUpdate(sh pkcs11.SessionHandle, plain []byte) ([]byte, error)
+	Finalize() error
+	FindObjects(sh pkcs11.SessionHandle, max int) ([]pkcs11.ObjectHandle, bool, error)
+	FindObjectsFinal(sh pkcs11.SessionHandle) error
+	FindObjectsInit(sh pkcs11.SessionHandle, temp []*pkcs11.Attribute) error
+	GenerateKey(sh pkcs11.SessionHandle, m []*pkcs11.Mechanism, temp []*pkcs11.Attribute) (pkcs11.ObjectHandle, error)
+	GenerateKeyPair(sh pkcs11.SessionHandle, m []*pkcs11.Mechanism, public, private []*pkcs11.Attribute) (pkcs11.ObjectHandle, pkcs11.ObjectHandle, error)
+	GenerateRandom(sh pkcs11.SessionHandle, length int) ([]byte, error)
+	GetAttributeValue(sh pkcs11.SessionHandle, o pkcs11.ObjectHandle, a []*pkcs11.Attribute) ([]*pkcs11.Attribute, error)
+	GetSlotList(tokenPresent bool) ([]uint, error)
+	GetTokenInfo(slotID uint) (pkcs11.TokenInfo, error)
+	Initialize() error
+	Login(sh pkcs11.SessionHandle, userType uint, pin string) error
+	OpenSession(slotID uint, flags uint) (pkcs11.SessionHandle, error)
+	Sign(sh pkcs11.SessionHandle, message []byte) ([]byte, error)
+	SignFinal(sh pkcs11.SessionHandle) ([]byte, error)
+	SignInit(sh pkcs11.SessionHandle, m []*pkcs11.Mechanism, o pkcs11.ObjectHandle) error
+	SignUpdate(sh pkcs11.SessionHandle, message []byte) error
 }
 
 // Find a token given its serial number
@@ -202,6 +238,12 @@ type PKCS11Config struct {
 	PoolWaitTimeout time.Duration
 }
 
+type PKCS11ContextFactory func(*PKCS11Config) PKCS11Context
+
+func NewDefaultPKCS11Context(config *PKCS11Config) PKCS11Context {
+	return pkcs11.New(config.Path)
+}
+
 // Configure configures PKCS#11 from a PKCS11Config.
 //
 // The PKCS#11 library context is returned,
@@ -217,7 +259,7 @@ type PKCS11Config struct {
 // If config is nil, and the library has already been configured, the
 // context from the first configuration is returned (and
 // the error will be nil in this case).
-func Configure(config *PKCS11Config) (*pkcs11.Ctx, error) {
+func Configure(config *PKCS11Config, factory PKCS11ContextFactory) (PKCS11Context, error) {
 	var err error
 	var slots []uint
 
@@ -236,7 +278,7 @@ func Configure(config *PKCS11Config) (*pkcs11.Ctx, error) {
 		config.MaxSessions = DefaultMaxSessions
 	}
 	instance.cfg = config
-	instance.ctx = pkcs11.New(config.Path)
+	instance.ctx = factory(config)
 	if instance.ctx == nil {
 		log.Printf("Could not open PKCS#11 library: %s", config.Path)
 		return nil, ErrCannotOpenPKCS11
@@ -285,7 +327,7 @@ func Configure(config *PKCS11Config) (*pkcs11.Ctx, error) {
 // Note that if CRYPTO11_CONFIG_PATH is set in the environment,
 // configuration will be read from that file, overriding any later
 // runtime configuration.
-func ConfigureFromFile(configLocation string) (ctx *pkcs11.Ctx, err error) {
+func ConfigureFromFile(configLocation string) (PKCS11Context, error) {
 	file, err := os.Open(configLocation)
 	if err != nil {
 		log.Printf("Could not open config file: %s", configLocation)
@@ -305,7 +347,7 @@ func ConfigureFromFile(configLocation string) (ctx *pkcs11.Ctx, err error) {
 		log.Printf("Could decode config file: %s", err.Error())
 		return nil, err
 	}
-	return Configure(config)
+	return Configure(config, NewDefaultPKCS11Context)
 }
 
 // Close releases all sessions and uninitializes library default handle.

@@ -25,7 +25,7 @@ p11Ctx, err := crypto11.Configure(&crypto11.PKCS11Config{
     Path:       "/usr/lib/softhsm/libsofthsm2.so",
     TokenLabel: "test",
     Pin:        "0000",
-})
+}, crypto11.NewDefaultPKCS11Context)
 ```
 
 Then run the `genpki` tool. Genpki outputs the label of the root and intermediate keys in the HSM, and writes their public certificates to temp files.
