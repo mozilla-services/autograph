@@ -25,9 +25,10 @@ import (
 	"context"
 	"crypto/cipher"
 	"fmt"
+	"runtime"
+
 	"github.com/miekg/pkcs11"
 	"github.com/youtube/vitess/go/pools"
-	"runtime"
 )
 
 // cipher.BlockMode -----------------------------------------------------

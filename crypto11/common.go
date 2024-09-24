@@ -100,7 +100,7 @@ func dsaGeneric(slot uint, key pkcs11.ObjectHandle, mechanism uint, digest []byt
 
 // Pick a random label for a key
 func generateKeyLabel() ([]byte, error) {
-	rawLabel := make([]byte, labelLength / 2)
+	rawLabel := make([]byte, labelLength/2)
 	var rand PKCS11RandReader
 	sz, err := rand.Read(rawLabel)
 	if err != nil {

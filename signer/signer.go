@@ -27,7 +27,6 @@ import (
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/mozilla-services/autograph/crypto11"
-	"github.com/miekg/pkcs11"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -130,13 +129,13 @@ type Configuration struct {
 	SignerOpts crypto.SignerOpts `json:"signer_opts,omitempty" yaml:"signeropts,omitempty"`
 
 	isHsmAvailable bool
-	hsmCtx         *pkcs11.Ctx
+	Hsm            HSM
 }
 
 // InitHSM indicates that an HSM has been initialized
-func (cfg *Configuration) InitHSM(ctx *pkcs11.Ctx) {
+func (cfg *Configuration) InitHSM(hsm HSM) {
 	cfg.isHsmAvailable = true
-	cfg.hsmCtx = ctx
+	cfg.Hsm = hsm
 }
 
 // Signer is an interface to a configurable issuer of digital signatures
@@ -251,7 +250,7 @@ type TestFileGetter interface {
 // HSM if available and otherwise rand.Reader
 func (cfg *Configuration) GetRand() io.Reader {
 	if cfg.isHsmAvailable {
-		return new(crypto11.PKCS11RandReader)
+		return cfg.Hsm.GetRand()
 	}
 	return rand.Reader
 }
@@ -307,12 +306,10 @@ func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKe
 
 // GetPrivateKey uses a signer configuration to determine where a private
 // key should be accessed from. If it is in local configuration, it will
-// be parsed and loaded in the signer. If it is in an HSM, it will be
-// used via a PKCS11 interface. This is completely transparent to the
-// caller, who should simply assume that the privatekey implements a
-// crypto.Sign interface
-//
-// Note that we assume the PKCS11 library has been previously initialized
+// be parsed and loaded in the signer. If it is in an HSM, this will be
+// outsourced to `cfg.Hsm`, which knows how to locate a private key handle
+// in an HSM. Either way, the returned value implements the crypto.Sign
+// interface.
 func (cfg *Configuration) GetPrivateKey() (crypto.PrivateKey, error) {
 	cfg.PrivateKey = removePrivateKeyNewlines(cfg.PrivateKey)
 	if cfg.PrivateKeyHasPEMPrefix() {
@@ -320,7 +317,7 @@ func (cfg *Configuration) GetPrivateKey() (crypto.PrivateKey, error) {
 	}
 	// otherwise, we assume the privatekey represents a label in the HSM
 	if cfg.isHsmAvailable {
-		key, err := crypto11.FindKeyPair(nil, []byte(cfg.PrivateKey))
+		key, err := cfg.Hsm.GetPrivateKey([]byte(cfg.PrivateKey))
 		if err != nil {
 			return nil, err
 		}
@@ -395,6 +392,8 @@ func (cfg *Configuration) PrivateKeyHasPEMPrefix() bool {
 // CheckHSMConnection (exposed via the signer.Configuration
 // interface).  It tried to fetch the signer private key and errors if
 // that fails or the private key is not an HSM key handle.
+// Ideally this would be part of the HSM interface, but the check requires
+// the label of a key on the HSM, which is part of the Configuration
 func (cfg *Configuration) CheckHSMConnection() error {
 	if cfg.PrivateKeyHasPEMPrefix() {
 		return fmt.Errorf("private key for signer %s has a PEM prefix and is not an HSM key label", cfg.ID)
@@ -403,50 +402,19 @@ func (cfg *Configuration) CheckHSMConnection() error {
 		return fmt.Errorf("HSM is not available for signer %s", cfg.ID)
 	}
 
-	privKey, err := cfg.GetPrivateKey()
+	_, err := cfg.GetPrivateKey()
 	if err != nil {
 		return fmt.Errorf("error fetching private key for signer %s: %w", cfg.ID, err)
 	}
-	// returns 0 if the key is not stored in the hsm
-	if GetPrivKeyHandle(privKey) != 0 {
-		return nil
-	}
-	return fmt.Errorf("unable to check HSM connection for signer %s private key is not stored in the HSM", cfg.ID)
+	return nil
 }
 
-// MakeKey generates a new key of type keyTpl and returns the priv and public interfaces.
-// If an HSM is available, it is used to generate and store the key, in which case 'priv'
-// just points to the HSM handler and must be used via the crypto.Signer interface.
+// MakeKey generates a new key of type keyTpl and returns the private and
+// public interfaces. If an HSM is available, this is outsourced to `cfg.Hsm`,
+// which will generate them in an HSM instead of in memory.
 func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv crypto.PrivateKey, pub crypto.PublicKey, err error) {
 	if cfg.isHsmAvailable {
-		var slots []uint
-		slots, err = cfg.hsmCtx.GetSlotList(true)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to list PKCS#11 Slots: %w", err)
-		}
-		if len(slots) < 1 {
-			return nil, nil, fmt.Errorf("failed to find a usable slot in hsm context")
-		}
-		keyNameBytes := []byte(keyName)
-		switch keyTplType := keyTpl.(type) {
-		case *ecdsa.PublicKey:
-			priv, err = crypto11.GenerateECDSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keyTplType)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to generate ecdsa key in hsm: %w", err)
-			}
-			pub = priv.(*crypto11.PKCS11PrivateKeyECDSA).PubKey.(*ecdsa.PublicKey)
-			return
-		case *rsa.PublicKey:
-			keySize := keyTplType.Size()
-			priv, err = crypto11.GenerateRSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keySize)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to generate rsa key in hsm: %w", err)
-			}
-			pub = priv.(*crypto11.PKCS11PrivateKeyRSA).PubKey.(*rsa.PublicKey)
-			return
-		default:
-			return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
-		}
+		return cfg.Hsm.MakeKey(keyTpl, keyName)
 	}
 	// no hsm, make keys in memory
 	switch keyTplType := keyTpl.(type) {
@@ -476,18 +444,6 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 	default:
 		return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
 	}
-}
-
-// GetPrivKeyHandle returns the hsm handler object id of a key stored in the hsm,
-// or 0 if the key is not stored in the hsm
-func GetPrivKeyHandle(priv crypto.PrivateKey) uint {
-	switch key := priv.(type) {
-	case *crypto11.PKCS11PrivateKeyECDSA:
-		return uint(key.Handle)
-	case *crypto11.PKCS11PrivateKeyRSA:
-		return uint(key.Handle)
-	}
-	return 0
 }
 
 // StatsClient is a helper for sending statsd stats with the relevant

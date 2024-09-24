@@ -164,7 +164,10 @@ func run(conf configuration, listen string, debug bool) {
 
 	// initialize the hsm if a configuration is defined
 	if conf.HSM.Path != "" {
-		ag.initHSM(conf)
+		err = ag.initHSM(conf)
+		if err != nil {
+			log.Fatalf("main.run: %s", err)
+		}
 	}
 
 	err = ag.addStats(conf)
@@ -376,25 +379,51 @@ func (a *autographer) addDB(dbConf database.Config) chan bool {
 }
 
 // initHSM sets up the HSM and notifies signers it is available
-func (a *autographer) initHSM(conf configuration) {
+func (a *autographer) initHSM(conf configuration) error {
 	tmpCtx, err := crypto11.Configure(&conf.HSM)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error in initHSM from crypto11.Configure: %w", err)
 	}
 	if tmpCtx != nil {
 		// if we successfully initialized the crypto11 context,
 		// tell the signers they can try using the HSM
 		for i := range conf.Signers {
-			conf.Signers[i].InitHSM(tmpCtx)
-			signerConf := conf.Signers[i]
+			// These two lines are strange and required until we fix how we use
+			// `signer.Configuration`. Since this list of
+			// `singer.Configuration`s is only of structs (not pointers), and
+			// since we're modifying the fields of those structs within
+			// `InitHSM` and also using this conf.Signers list elsewhere
+			// (including some failed attempts at copying the structs), we have
+			// to ensure the `InitHSM` the modifications stick by referencing
+			// the `Configuration`s through this slice. Without this
+			// `Signers[i]` call, you'll get mysterious failures where keys
+			// can't be found in the HSM.
+			//
+			// TODO(AUT-203): when we make `signer.Configuration` immutable,
+			// we'll not need this strange `conf.Signers[i]` and can loop
+			// through them normally.
+			conf.Signers[i].InitHSM(signer.NewAWSHSM(tmpCtx))
+			signerConf := &conf.Signers[i]
+
+			if signerConf.PrivateKeyHasPEMPrefix() {
+				// If the private key is not stored in the HSM, we have nothing
+				// more to do.
+				continue
+			}
 
 			// save the first signer with an HSM label as
 			// the key to test from the heartbeat handler
-			if a.heartbeatConf != nil && a.heartbeatConf.hsmSignerConf == nil && !signerConf.PrivateKeyHasPEMPrefix() {
-				a.heartbeatConf.hsmSignerConf = &signerConf
+			if a.heartbeatConf != nil && a.heartbeatConf.hsmSignerConf == nil {
+				a.heartbeatConf.hsmSignerConf = signerConf
+
+				err := signerConf.CheckHSMConnection()
+				if err != nil {
+					return fmt.Errorf("hsm connection check failed during initHSM on signer id %#v: %w", signerConf.ID, err)
+				}
 			}
 		}
 	}
+	return nil
 }
 
 // addSigners initializes each signer specified in the configuration by parsing
