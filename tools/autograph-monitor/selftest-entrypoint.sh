@@ -2,9 +2,9 @@
 
 set -o pipefail
 
-docker compose run monitor
+/go/bin/autograph-monitor
 EXIT_CODE=$?
-if [$EXIT_CODE -ne 0]; then
+if [ $EXIT_CODE -ne 0 ]; then
   echo "Monitor test failure detected"
   exit 1
 fi
