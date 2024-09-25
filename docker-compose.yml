@@ -66,8 +66,16 @@ services:
   monitor:
     container_name: autograph-monitor
     image: autograph-app
+    environment:
+      - AUTOGRAPH_URL=http://autograph-app:8000/
+      - AUTOGRAPH_KEY=19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
     command: ["/go/bin/autograph-monitor"]
+    links:
+      - app
+    depends_on:
+      - app
 
+  # legacy for AWS
   monitor-lambda-emulator:
     container_name: autograph-monitor-lambda-emulator
     image: autograph-monitor-lambda-emulator
@@ -88,6 +96,7 @@ services:
     depends_on:
       - app
 
+  # legacy for AWS
   monitor-hsm-lambda-emulator:
     container_name: autograph-monitor-hsm-lambda-emulator
     image: autograph-monitor-lambda-emulator
