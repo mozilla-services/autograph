@@ -2,13 +2,7 @@ FROM autograph-app
 
 USER root
 
-RUN curl -Lo /usr/local/bin/aws-lambda-rie \
-    https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie \
-    && \
-    chmod +x /usr/local/bin/aws-lambda-rie
-
 COPY selftest-entrypoint.sh /usr/local/bin/selftest-entrypoint.sh
 
 USER app
-ENTRYPOINT ["/usr/local/bin/aws-lambda-rie"]
-CMD ["/go/bin/autograph-monitor"]
+CMD ["/usr/local/bin/selftest-entrypoint.sh"]

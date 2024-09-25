@@ -33,14 +33,12 @@ echo "checking autograph monitors"
 docker compose run \
 	       --rm \
 	       -e AUTOGRAPH_URL=http://app:8000/ \
-	       --entrypoint /usr/local/bin/selftest-entrypoint.sh \
 	       monitor /go/bin/autograph-monitor
 
 docker compose run \
 	       --rm \
 	       -e AUTOGRAPH_URL=http://autograph-app-hsm:8001/ \
 	       -e AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH \
-	       --entrypoint /usr/local/bin/selftest-entrypoint.sh \
 	       monitor-hsm /go/bin/autograph-monitor
 
 echo "checking read-only API"
