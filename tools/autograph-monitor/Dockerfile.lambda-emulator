@@ -7,7 +7,7 @@ RUN curl -Lo /usr/local/bin/aws-lambda-rie \
     && \
     chmod +x /usr/local/bin/aws-lambda-rie
 
-COPY lambda-selftest-entrypoint.sh /usr/local/bin/lambda-selftest-entrypoint.sh
+COPY selftest-entrypoint.sh /usr/local/bin/selftest-entrypoint.sh
 
 USER app
 ENTRYPOINT ["/usr/local/bin/aws-lambda-rie"]

@@ -63,8 +63,7 @@ services:
     container_name: test-monitor-app
     extends:
       file: ../../docker-compose.yml
-      service: monitor-lambda-emulator
-    entrypoint: [ "/usr/local/bin/lambda-selftest-entrypoint.sh" ]
+      service: monitor
 
-  # TODO: Add a monitor test for the HSM lambda - tricky because we need
+  # TODO: Add a monitor test for the HSM container - tricky because we need
   # a way to dynamically grab the root hash from the HSM.
