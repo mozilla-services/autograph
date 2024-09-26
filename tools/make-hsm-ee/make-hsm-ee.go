@@ -69,7 +69,7 @@ func main() {
 		Path:       hsmPath,
 		TokenLabel: hsmType,
 		Pin:        hsmPin,
-	})
+	}, crypto11.NewDefaultPKCS11Context)
 	if err != nil {
 		log.Fatal(err)
 	}

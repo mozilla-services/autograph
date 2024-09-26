@@ -34,7 +34,7 @@ import (
 
 // PKCS11Session is a pair of PKCS#11 context and a reference to a loaded session handle.
 type PKCS11Session struct {
-	Ctx    *pkcs11.Ctx
+	Ctx    PKCS11Context
 	Handle pkcs11.SessionHandle
 }
 
@@ -54,7 +54,7 @@ var errSlotBusy = errors.New("pool slot busy")
 var errPoolNotFound = errors.New("pool not found")
 
 // Create a new session for a given slot
-func newSession(ctx *pkcs11.Ctx, slot uint) (*PKCS11Session, error) {
+func newSession(ctx PKCS11Context, slot uint) (*PKCS11Session, error) {
 	session, err := ctx.OpenSession(slot, pkcs11.CKF_SERIAL_SESSION|pkcs11.CKF_RW_SESSION)
 	if err != nil {
 		return nil, err
