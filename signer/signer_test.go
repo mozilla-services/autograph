@@ -509,3 +509,156 @@ func TestMakeKeyAWSRSA(t *testing.T) {
 		t.Fatalf("MakeKey failed: %v", err)
 	}
 }
+
+func TestMakeKeyGCPECDSA(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockCtx := mockpkcs11.NewMockPKCS11Context(ctrl)
+	defer ctrl.Finish()
+
+	// we don't actually have any use for the private key besides extracting
+	// the public key from it, but I couldn't find a way to directly construct
+	// the public key.
+	privKey, err := ParsePrivateKey([]byte(ecdsaPrivateKey))
+	if err != nil {
+		t.Fatalf("failed to parse private key: %v", err)
+	}
+	pubKey := privKey.(*ecdsa.PrivateKey).PublicKey
+
+	// annoyingly, we also need the ecdh form of the private key
+	// to find the length of it, to mock some things correctly.
+	ecdhPrivKey, err := privKey.(*ecdsa.PrivateKey).ECDH()
+	if err != nil {
+		t.Fatalf("failed to convert ecdsa private key to ecdh: %v", err)
+	}
+	ecdhPubKey := ecdhPrivKey.PublicKey()
+
+	// p256, prefix, and ecPointValue are all just intermediaries to set up
+	// pubKeyAttrs, which is a return value needed by one of the mocks.
+	p256, err := asn1.Marshal(asn1.ObjectIdentifier{1, 2, 840, 10045, 3, 1, 7})
+	if err != nil {
+		t.Fatalf("failed to marshal p256 object identifier")
+	}
+	// nasty hack because i couldn't find any other way to make unmarshalEcPoint
+	// happy.
+	prefix := make([]byte, 2)
+	prefix[0] = 0x04
+	prefix[1] = byte(len(ecdhPubKey.Bytes()))
+	ecPointValue := append(prefix, ecdhPubKey.Bytes()...)
+
+	pubKeyAttrs := []*pkcs11.Attribute{
+		&pkcs11.Attribute{
+			Type:  pkcs11.CKA_ECDSA_PARAMS,
+			Value: p256,
+		},
+		&pkcs11.Attribute{
+			Type:  pkcs11.CKA_EC_POINT,
+			Value: ecPointValue,
+		},
+	}
+
+	label := "test"
+	slot := uint(0)
+	session := pkcs11.SessionHandle(0)
+	object := pkcs11.ObjectHandle(0)
+	mechanism := []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_ECDSA_KEY_PAIR_GEN, nil)}
+	attributeTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_ECDSA_PARAMS, nil),
+		pkcs11.NewAttribute(pkcs11.CKA_EC_POINT, nil),
+	}
+
+	publicKeyTemplate := []*pkcs11.Attribute{}
+	privateKeyTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_LABEL, label),
+		pkcs11.NewAttribute(CKA_GOOGLE_DEFINED_KMS_ALGORITHM, KMS_ALGORITHM_EC_SIGN_P256_SHA256),
+	}
+
+	mockCtx.EXPECT().Initialize().Return(nil).Times(1)
+	mockCtx.EXPECT().GetSlotList(true).Return([]uint{slot}, nil).Times(3)
+	mockCtx.EXPECT().GetTokenInfo(slot).Return(pkcs11.TokenInfo{}, nil).Times(1)
+	mockCtx.EXPECT().OpenSession(slot, uint(6)).Return(session, nil).Times(1)
+	mockCtx.EXPECT().GenerateKeyPair(session, mechanism, publicKeyTemplate, privateKeyTemplate).Times(1)
+	mockCtx.EXPECT().GetAttributeValue(session, object, attributeTemplate).Return(pubKeyAttrs, nil).Times(1)
+	// these ones are called as part of Close(), not as part of our actual testing
+	mockCtx.EXPECT().CloseSession(session).Return(nil).Times(1)
+	mockCtx.EXPECT().CloseAllSessions(slot).Return(nil).Times(1)
+	mockCtx.EXPECT().Finalize().Return(nil).Times(1)
+	mockCtx.EXPECT().Destroy().Times(1)
+
+	mockFactory := mockedPKCS11ContextFactory(mockCtx)
+	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	defer crypto11.Close()
+
+	cfg := Configuration{
+		isHsmAvailable: true,
+		Hsm:            NewGCPHSM(mockCtx),
+	}
+	_, _, err = cfg.MakeKey(&pubKey, label)
+	if err != nil {
+		t.Fatalf("MakeKey failed: %v", err)
+	}
+}
+
+func TestMakeKeyGCPRSA(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockCtx := mockpkcs11.NewMockPKCS11Context(ctrl)
+	defer ctrl.Finish()
+
+	// we don't actually have any use for the private key besides extracting
+	// the public key from it, but I couldn't find a way to directly construct
+	// the public key.
+	privKey, err := ParsePrivateKey([]byte(rsaPrivateKey))
+	if err != nil {
+		t.Fatalf("failed to parse private key: %v", err)
+	}
+	pubKey := privKey.(*rsa.PrivateKey).PublicKey
+
+	pubKeyAttrs := []*pkcs11.Attribute{
+		&pkcs11.Attribute{
+			Type:  pkcs11.CKA_MODULUS,
+			Value: []byte("foo"),
+		},
+		&pkcs11.Attribute{
+			Type:  pkcs11.CKA_PUBLIC_EXPONENT,
+			Value: []byte("foo"),
+		},
+	}
+
+	label := "test"
+	slot := uint(0)
+	session := pkcs11.SessionHandle(0)
+	object := pkcs11.ObjectHandle(0)
+	mechanism := []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_RSA_PKCS_KEY_PAIR_GEN, nil)}
+	attributeTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_MODULUS, nil),
+		pkcs11.NewAttribute(pkcs11.CKA_PUBLIC_EXPONENT, nil),
+	}
+
+	publicKeyTemplate := []*pkcs11.Attribute{}
+	privateKeyTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_LABEL, label),
+		pkcs11.NewAttribute(CKA_GOOGLE_DEFINED_KMS_ALGORITHM, KMS_ALGORITHM_RSA_SIGN_PKCS1_2048_SHA256),
+	}
+	mockCtx.EXPECT().Initialize().Return(nil).Times(1)
+	mockCtx.EXPECT().GetSlotList(true).Return([]uint{slot}, nil).Times(3)
+	mockCtx.EXPECT().GetTokenInfo(slot).Return(pkcs11.TokenInfo{}, nil).Times(1)
+	mockCtx.EXPECT().OpenSession(slot, uint(6)).Return(session, nil).Times(1)
+	mockCtx.EXPECT().GenerateKeyPair(session, mechanism, publicKeyTemplate, privateKeyTemplate).Times(1)
+	mockCtx.EXPECT().GetAttributeValue(session, object, attributeTemplate).Return(pubKeyAttrs, nil).Times(1)
+	// these ones are called as part of Close(), not as part of our actual testing
+	mockCtx.EXPECT().CloseSession(session).Return(nil).Times(1)
+	mockCtx.EXPECT().CloseAllSessions(slot).Return(nil).Times(1)
+	mockCtx.EXPECT().Finalize().Return(nil).Times(1)
+	mockCtx.EXPECT().Destroy().Times(1)
+
+	mockFactory := mockedPKCS11ContextFactory(mockCtx)
+	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	defer crypto11.Close()
+	cfg := Configuration{
+		isHsmAvailable: true,
+		Hsm:            NewGCPHSM(mockCtx),
+	}
+	_, _, err = cfg.MakeKey(&pubKey, label)
+	if err != nil {
+		t.Fatalf("MakeKey failed: %v", err)
+	}
+}
