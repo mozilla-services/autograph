@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/miekg/pkcs11"
 	"github.com/mozilla-services/autograph/crypto11"
 )
 
@@ -18,7 +17,7 @@ type HSM interface {
 }
 
 type GenericHSM struct {
-	ctx *pkcs11.Ctx
+	ctx crypto11.PKCS11Context
 }
 
 // GetPrivateKey locates the keypair given by `label` in the HSM.
@@ -66,7 +65,7 @@ func (hsm *AWSHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKe
 	}
 }
 
-func NewAWSHSM(ctx *pkcs11.Ctx) *AWSHSM {
+func NewAWSHSM(ctx crypto11.PKCS11Context) *AWSHSM {
 	return &AWSHSM{
 		GenericHSM{
 			ctx,

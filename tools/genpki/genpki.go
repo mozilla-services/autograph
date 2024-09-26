@@ -37,7 +37,7 @@ func main() {
 			Path:       "/usr/lib/softhsm/libsofthsm2.so",
 			TokenLabel: "test",
 			Pin:        "0000",
-		})
+		}, crypto11.NewDefaultPKCS11Context)
 		if err != nil {
 			log.Fatal(err)
 		}
