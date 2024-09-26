@@ -80,13 +80,13 @@ gpg-test-clean:
 # image build order:
 #
 # app -> {app-hsm,monitor}
-# monitor -> monitor-lambda-emulator,monitor-hsm-lambda-emulator
-# app-hsm -> monitor-hsm-lambda-emulator (app-hsm writes chains and updated config to shared /tmp volume)
+# monitor -> monitor,monitor-hsm
+# app-hsm -> monitor-hsm(app-hsm writes chains and updated config to shared /tmp volume)
 #
 build: generate
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel app db
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel app-hsm monitor
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel monitor-lambda-emulator monitor-hsm-lambda-emulator
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel monitor monitor-hsm
 
 integration-test:
 	./bin/run_integration_tests.sh

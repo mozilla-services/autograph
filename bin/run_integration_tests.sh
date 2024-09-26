@@ -28,20 +28,18 @@ done
 APP_HSM_NORMANDY_ROOT_HASH=$(docker compose exec app-hsm yq -r '.signers[] | select(.id == "normandy").cacert' /app/autograph.softhsm.yaml | \
                              openssl x509 -outform DER | sha256sum | awk '{print $1}')
 
-# start the monitor lambda emulators
+# start the monitor containers
 echo "checking autograph monitors"
 docker compose run \
 	       --rm \
 	       -e AUTOGRAPH_URL=http://app:8000/ \
-	       --entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
-	       monitor-lambda-emulator /go/bin/autograph-monitor
+	       monitor /go/bin/autograph-monitor
 
 docker compose run \
 	       --rm \
 	       -e AUTOGRAPH_URL=http://autograph-app-hsm:8001/ \
 	       -e AUTOGRAPH_ROOT_HASH=$APP_HSM_NORMANDY_ROOT_HASH \
-	       --entrypoint /usr/local/bin/lambda-selftest-entrypoint.sh \
-	       monitor-hsm-lambda-emulator /go/bin/autograph-monitor
+	       monitor-hsm /go/bin/autograph-monitor
 
 echo "checking read-only API"
 # user bob doesn't exist in the softhsm config

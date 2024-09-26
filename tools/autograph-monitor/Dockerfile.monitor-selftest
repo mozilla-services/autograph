@@ -1,0 +1,8 @@
+FROM autograph-app
+
+USER root
+
+COPY selftest-entrypoint.sh /usr/local/bin/selftest-entrypoint.sh
+
+USER app
+CMD ["/usr/local/bin/selftest-entrypoint.sh"]
