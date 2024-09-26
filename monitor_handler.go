@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -32,11 +33,21 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	m.RLock()
 	defer m.RUnlock()
 
+	var failures []string
+
 	for _, errstr := range m.sigerrstrs {
 		if errstr != "" {
-			httpError(w, r, http.StatusInternalServerError, "%s", errstr)
-			return
+			failures = append(failures, errstr)
 		}
+	}
+
+	if len(failures) > 0 {
+		failure := "Errors encountered during signing:"
+		for i, fail := range failures {
+			failure += fmt.Sprintf("\n%d. %s", i+1, fail)
+		}
+		httpError(w, r, http.StatusInternalServerError, failure)
+		return
 	}
 
 	if m.debug {
