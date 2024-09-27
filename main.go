@@ -385,6 +385,12 @@ func (a *autographer) initHSM(conf configuration) error {
 		return fmt.Errorf("error in initHSM from crypto11.Configure: %w", err)
 	}
 	if tmpCtx != nil {
+		var hsm signer.HSM
+		if os.Getenv("KMS_PKCS11_CONFIG") != "" {
+			hsm = signer.NewGCPHSM(tmpCtx)
+		} else {
+			hsm = signer.NewAWSHSM(tmpCtx)
+		}
 		// if we successfully initialized the crypto11 context,
 		// tell the signers they can try using the HSM
 		for i := range conf.Signers {
@@ -402,7 +408,7 @@ func (a *autographer) initHSM(conf configuration) error {
 			// TODO(AUT-203): when we make `signer.Configuration` immutable,
 			// we'll not need this strange `conf.Signers[i]` and can loop
 			// through them normally.
-			conf.Signers[i].InitHSM(signer.NewAWSHSM(tmpCtx))
+			conf.Signers[i].InitHSM(hsm)
 			signerConf := &conf.Signers[i]
 
 			if signerConf.PrivateKeyHasPEMPrefix() {
