@@ -36,14 +36,52 @@ func TestGoldenPath(t *testing.T) {
 	server := httptest.NewTLSServer(mux)
 	defer server.Close()
 
-	conf := &configuration{
-		url:           server.URL + "/",
-		monitoringKey: "fakenotused",
-		truststore:    x509.NewCertPool(),
+	monitorEndpoint, err := rawAutographURLToMonitorEndpoint(server.URL)
+	if err != nil {
+		t.Fatalf("failed to turn httptest server %#v into the endpoint url : %s", server.URL, err)
 	}
-	err := Handler(conf, server.Client())
+
+	conf := &configuration{
+		origAutographURL: server.URL,
+		requestURL:       monitorEndpoint,
+		monitoringKey:    "fakenotused",
+		truststore:       x509.NewCertPool(),
+	}
+	err = Handler(conf, server.Client())
 	if err != nil {
 		t.Errorf("handler error: %v", err)
+	}
+}
+
+func TestNormalizeAutographURL(t *testing.T) {
+	testcases := map[string][]string{
+		"https://golden.com/__monitor__":    {"https://golden.com", "https://golden.com/", "https://golden.com//"},
+		"https://port.com:7890/__monitor__": {"https://port.com:7890", "https://port.com:7890/", "https://port.com:7890//"},
+		"http://testing.com/__monitor__":    {"http://testing.com", "http://testing.com/", "http://testing.com//"},
+	}
+
+	for expectedURL, origURLs := range testcases {
+		for _, tc := range origURLs {
+			t.Run(tc+"->"+expectedURL, func(t *testing.T) {
+				out, err := rawAutographURLToMonitorEndpoint(tc)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if out != expectedURL {
+					t.Errorf("want %#v, got %#v", expectedURL, out)
+				}
+			})
+		}
+	}
+
+	errorcases := []string{"golden.com", "golden.com/", "port.com:7890", "port.com:7890/"}
+	for _, tc := range errorcases {
+		t.Run("error-"+tc, func(t *testing.T) {
+			_, err := rawAutographURLToMonitorEndpoint(tc)
+			if err == nil {
+				t.Errorf("expected error, got nil")
+			}
+		})
 	}
 }
 
