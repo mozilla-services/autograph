@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"runtime"
 	"strings"
@@ -49,10 +50,19 @@ var (
 )
 
 func main() {
-	conf.url = os.Getenv("AUTOGRAPH_URL")
-	if conf.url == "" {
+	autographURLEnvVar := strings.TrimSpace(os.Getenv("AUTOGRAPH_URL"))
+	if autographURLEnvVar == "" {
 		log.Fatal("AUTOGRAPH_URL must be set to the base url of the autograph service")
 	}
+	baseURL, err := url.Parse(autographURLEnvVar)
+	if err != nil {
+		log.Fatalf("Failed to parse AUTOGRAPH_URL as url: %s", err)
+	}
+	if baseURL.Scheme == "" {
+		baseURL.Scheme = "https"
+	}
+	conf.url = baseURL.String()
+
 	conf.monitoringKey = os.Getenv("AUTOGRAPH_KEY")
 	if conf.monitoringKey == "" {
 		log.Fatal("AUTOGRAPH_KEY must be set to the api monitoring key")
@@ -62,7 +72,7 @@ func main() {
 	// prod or autograph dev code signing PKI roots and CA root
 	// certs defined in constants.go
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
-	var err, depErr error
+	var depErr error
 	switch conf.env {
 	case "stage":
 		conf.truststore, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiStageRoots)
@@ -135,8 +145,12 @@ func Handler() (err error) {
 
 // monitor contacts the autograph service and verifies all monitoring signatures
 func monitor() error {
+	requestURL, err := url.JoinPath(conf.url, "__monitor__")
+	if err != nil {
+		return fmt.Errorf("unable to join the monitor hostname (AUTOGRAPH_URL env var: %#v) to the /__monitor__ path: %w", conf.url, err)
+	}
 	log.Println("Retrieving monitoring data from", conf.url)
-	req, err := http.NewRequest("GET", conf.url+"__monitor__", nil)
+	req, err := http.NewRequest("GET", requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("unable to create NewRequest to the monitor endpoint: %w", err)
 	}
