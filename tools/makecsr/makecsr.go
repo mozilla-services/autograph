@@ -81,7 +81,7 @@ func main() {
 	sigalg := x509.ECDSAWithSHA384
 	switch privKey.(type) {
 	case *crypto11.PKCS11PrivateKeyRSA:
-		sigalg = x509.SHA384WithRSA
+		sigalg = x509.SHA256WithRSA
 
 	}
 	crtReq := &x509.CertificateRequest{
