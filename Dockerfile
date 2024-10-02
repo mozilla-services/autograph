@@ -4,6 +4,7 @@ ARG LIBKMSP11_VERSION=1.6
 #------------------------------------------------------------------------------
 # Base Debian Image
 #------------------------------------------------------------------------------
+# FIXME Requiring the amd64 platform explicity with this
 FROM debian:bookworm as base
 ARG GO_VERSION
 
@@ -18,18 +19,18 @@ RUN echo "deb-src http://deb.debian.org/debian/ bookworm-backports main" >> /etc
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get -y install --no-install-recommends \
-        libltdl-dev \
-        gpg \
-        libncurses5 \
-        devscripts \
-        apksigner \
-        golang-${GO_VERSION} \
-        gcc \
-        g++ \
-        libc6-dev \
-        pkg-config \
-        curl \
-        jq
+    libltdl-dev \
+    gpg \
+    libncurses5 \
+    devscripts \
+    apksigner \
+    golang-${GO_VERSION} \
+    gcc \
+    g++ \
+    libc6-dev \
+    pkg-config \
+    curl \
+    jq
 
 # Cleanup after package installation
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -59,8 +60,8 @@ EXPOSE 8000
 # fetch the RDS CA bundles
 # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificatesAllRegions
 RUN curl -o /usr/local/share/old-rds-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && \
-      curl -o /usr/local/share/new-rds-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
-      cat /usr/local/share/old-rds-ca-bundle.pem /usr/local/share/new-rds-ca-bundle.pem > /usr/local/share/rds-combined-ca-bundle.pem
+    curl -o /usr/local/share/new-rds-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
+    cat /usr/local/share/old-rds-ca-bundle.pem /usr/local/share/new-rds-ca-bundle.pem > /usr/local/share/rds-combined-ca-bundle.pem
 
 # Copy compiled appliation from the builder.
 ADD . /app/src/autograph
@@ -75,5 +76,5 @@ COPY --from=builder /tmp/libkmsp11.so /app
 RUN useradd --uid 10001 --home-dir /app --shell /sbin/nologin app
 USER app
 WORKDIR /app
-CMD /go/bin/autograph
+CMD ["/go/bin/autograph"]
 

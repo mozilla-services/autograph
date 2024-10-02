@@ -1,11 +1,7 @@
-// This code requires a configuration file to initialize the crypto11
-// library. Use the following config in a file named "crypto11.config"
-//
-//	{
-//	"Path" : "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so",
-//	"TokenLabel": "cavium",
-//	"Pin" : "$CRYPTO_USER:$PASSWORD"
-//	}
+// makecsr expects your `gcloud auth login --update-adc` to have been run
+// recently and the gcloud project to be set to the same one as is in the
+// keyring. Also, needs to be run in a x86_64 ("amd64", whatever) Linux
+// environment so that the libkmsp11 library can be loaded.
 package main
 
 import (
@@ -17,26 +13,59 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/mozilla-services/autograph/crypto11"
 )
 
 func main() {
 	var (
-		keyLabel string
-		ou       string
-		cn       string
-		email    string
+		gcpKeyName    string
+		gcpKeyRing    string
+		libkmsp11Path string
+		ou            string
+		cn            string
+		email         string
 	)
-	flag.StringVar(&keyLabel, "l", "mykey", "Label of the key in the HSM")
+	flag.StringVar(&gcpKeyName, "key", "", "The name of the key in GCP to use for signing")
+	flag.StringVar(&gcpKeyRing, "keyring", "", "The full ID of the key ring in GCP that contains the key specified in -key. Be sure your local GCP auth is set into the same project.")
+	flag.StringVar(&libkmsp11Path, "libkmsp11Path", "", "The file path to the libkmsp11 shared library.")
 	flag.StringVar(&ou, "ou", "Mozilla AMO Production Signing Service", "OrganizationalUnit of the Subject")
 	flag.StringVar(&cn, "cn", "Content Signing Intermediate", "CommonName of the Subject")
 	flag.StringVar(&email, "email", "foxsec@mozilla.com", "Email of the Subject")
 	flag.Parse()
 
-	p11Ctx, err := crypto11.ConfigureFromFile("crypto11.config")
+	if gcpKeyName == "" {
+		fmt.Fprintf(os.Stderr, "missing -key parameter\n")
+		os.Exit(1)
+	}
+	if gcpKeyRing == "" {
+		fmt.Fprintf(os.Stderr, "missing -keyring parameter\n")
+		os.Exit(1)
+	}
+
+	if libkmsp11Path == "" {
+		fmt.Fprintf(os.Stderr, "missing -libkmsp11Path parameter\n")
+		os.Exit(1)
+	}
+	dir, err := os.MkdirTemp("", "makecsr-")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("unable to make temp dir for configuring libkmsp11: %s", err)
+	}
+	libkmsp11ConfigPath := filepath.Join(dir, "libkmsp11config.yaml")
+	err = os.WriteFile(libkmsp11ConfigPath, []byte(fmt.Sprintf("tokens:\n  - key_ring: %#v\n", gcpKeyRing)), 0644)
+	if err != nil {
+		log.Fatalf("unable to make temp file for configuring libkmsp11 at %#v: %s", libkmsp11ConfigPath, err)
+	}
+	os.Setenv("KMS_PKCS11_CONFIG", libkmsp11ConfigPath)
+
+	pkcs11Config := &crypto11.PKCS11Config{
+		Path: libkmsp11Path,
+	}
+
+	p11Ctx, err := crypto11.Configure(pkcs11Config, crypto11.NewDefaultPKCS11Context)
+	if err != nil {
+		log.Fatalf("unable to configure GCP HSM (key %#v, keyring %#v) with crypto11: %s", gcpKeyName, gcpKeyRing, err)
 	}
 	slots, err := p11Ctx.GetSlotList(true)
 	if err != nil {
@@ -45,7 +74,7 @@ func main() {
 	if len(slots) < 1 {
 		log.Fatal("No slot found")
 	}
-	privKey, err := crypto11.FindKeyPair(nil, []byte(keyLabel))
+	privKey, err := crypto11.FindKeyPair(nil, []byte(gcpKeyName))
 	if err != nil {
 		log.Fatal(err)
 	}
