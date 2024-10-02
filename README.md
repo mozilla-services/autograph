@@ -22,6 +22,10 @@ Use Docker whenever possible. The golang version on your machine is likely _not_
 `docker pull mozilla/autograph && docker run mozilla/autograph`
 
 This will download the latest build of autograph from DockerHub and run it with its dev configuration.
+> [!TIP]
+> For Macs with Apple Sillicon, when pulling images from Docker set `DOCKER_DEFAULT_PLATFORM` like:
+> 
+> `export DOCKER_DEFAULT_PLATFORM=linux/amd64`
 
 #### Local Development with Docker
 
