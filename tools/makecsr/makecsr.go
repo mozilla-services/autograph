@@ -63,16 +63,9 @@ func main() {
 		Path: libkmsp11Path,
 	}
 
-	p11Ctx, err := crypto11.Configure(pkcs11Config, crypto11.NewDefaultPKCS11Context)
+	_, err = crypto11.Configure(pkcs11Config, crypto11.NewDefaultPKCS11Context)
 	if err != nil {
 		log.Fatalf("unable to configure GCP HSM (key %#v, keyring %#v) with crypto11: %s", gcpKeyName, gcpKeyRing, err)
-	}
-	slots, err := p11Ctx.GetSlotList(true)
-	if err != nil {
-		log.Fatalf("Failed to list PKCS#11 Slots: %s", err.Error())
-	}
-	if len(slots) < 1 {
-		log.Fatal("No slot found")
 	}
 	privKey, err := crypto11.FindKeyPair(nil, []byte(gcpKeyName))
 	if err != nil {
