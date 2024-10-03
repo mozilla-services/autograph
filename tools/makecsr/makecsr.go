@@ -69,7 +69,7 @@ func main() {
 	}
 	privKey, err := crypto11.FindKeyPair(nil, []byte(gcpKeyName))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("FindKeyPair error: %s", err)
 	}
 	sigalg := x509.ECDSAWithSHA384
 	switch privKey.(type) {
@@ -90,7 +90,7 @@ func main() {
 	fmt.Printf("+%v\n", crtReq)
 	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, crtReq, privKey)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("CreateCertificateRequest: %s", err)
 	}
 	pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
 }
