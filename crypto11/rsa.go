@@ -95,40 +95,16 @@ func GenerateRSAKeyPair(bits int) (*PKCS11PrivateKeyRSA, error) {
 	return GenerateRSAKeyPairOnSlot(instance.slot, nil, nil, bits)
 }
 
-// GenerateRSAKeyPairOnSlot creates a RSA private key on a specified slot
-//
-// Either or both label and/or id can be nil, in which case random values will be generated.
-func GenerateRSAKeyPairOnSlot(slot uint, id []byte, label []byte, bits int) (*PKCS11PrivateKeyRSA, error) {
-	var k *PKCS11PrivateKeyRSA
+func getDefaultRSAKeyAttributes(id []byte, label []byte, bits int) ([]*pkcs11.Attribute, []*pkcs11.Attribute, error) {
 	var err error
-	if err = ensureSessions(instance, slot); err != nil {
-		return nil, err
-	}
-	err = withSession(slot, func(session *PKCS11Session) error {
-		k, err = GenerateRSAKeyPairOnSession(session, slot, id, label, bits)
-		return err
-	})
-	return k, err
-}
-
-// GenerateRSAKeyPairOnSession creates an RSA private key of given length, on a specified session.
-//
-// Either or both label and/or id can be nil, in which case random values will be generated.
-//
-// RSA private keys are generated with both sign and decrypt
-// permissions, and a public exponent of 65537.
-func GenerateRSAKeyPairOnSession(session *PKCS11Session, slot uint, id []byte, label []byte, bits int) (*PKCS11PrivateKeyRSA, error) {
-	var err error
-	var pub crypto.PublicKey
-
 	if label == nil {
 		if label, err = generateKeyLabel(); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if id == nil {
 		if id, err = generateKeyLabel(); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	publicKeyTemplate := []*pkcs11.Attribute{
@@ -151,6 +127,58 @@ func GenerateRSAKeyPairOnSession(session *PKCS11Session, slot uint, id []byte, l
 		pkcs11.NewAttribute(pkcs11.CKA_LABEL, label),
 		pkcs11.NewAttribute(pkcs11.CKA_ID, id),
 	}
+
+	return publicKeyTemplate, privateKeyTemplate, nil
+}
+
+// GenerateRSAKeyPairOnSlot creates a RSA private key on a specified slot
+//
+// Either or both label and/or id can be nil, in which case random values will be generated.
+func GenerateRSAKeyPairOnSlot(slot uint, id []byte, label []byte, bits int) (*PKCS11PrivateKeyRSA, error) {
+	publicKeyTemplate, privateKeyTemplate, err := getDefaultRSAKeyAttributes(id, label, bits)
+	if err != nil {
+		return nil, err
+	}
+
+	return GenerateRSAKeyPairOnSlotWithProvidedAttributes(slot, publicKeyTemplate, privateKeyTemplate)
+}
+
+// GenerateRSAKeyPairOnSession creates an RSA private key of given length, on a specified session.
+//
+// Either or both label and/or id can be nil, in which case random values will be generated.
+//
+// RSA private keys are generated with both sign and decrypt
+// permissions, and a public exponent of 65537.
+func GenerateRSAKeyPairOnSession(session *PKCS11Session, slot uint, id []byte, label []byte, bits int) (*PKCS11PrivateKeyRSA, error) {
+	publicKeyTemplate, privateKeyTemplate, err := getDefaultRSAKeyAttributes(id, label, bits)
+	if err != nil {
+		return nil, err
+	}
+
+	return GenerateRSAKeyPairOnSessionWithProvidedAttributes(session, slot, publicKeyTemplate, privateKeyTemplate)
+}
+
+// GenerateRSAKeyPairOnSlotWithProvidedAttributes generates a new RSA
+// key pair in the given slot with the given public and private attributes
+func GenerateRSAKeyPairOnSlotWithProvidedAttributes(slot uint, publicKeyTemplate []*pkcs11.Attribute, privateKeyTemplate []*pkcs11.Attribute) (*PKCS11PrivateKeyRSA, error) {
+	var k *PKCS11PrivateKeyRSA
+	var err error
+	if err = ensureSessions(instance, slot); err != nil {
+		return nil, err
+	}
+	err = withSession(slot, func(session *PKCS11Session) error {
+		k, err = GenerateRSAKeyPairOnSessionWithProvidedAttributes(session, slot, publicKeyTemplate, privateKeyTemplate)
+		return err
+	})
+	return k, err
+}
+
+// GenerateRSAKeyPairOnSessionWithProvidedAttributes generates a new RSA
+// key pair in the given slot with the given public and private attributes
+func GenerateRSAKeyPairOnSessionWithProvidedAttributes(session *PKCS11Session, slot uint, publicKeyTemplate []*pkcs11.Attribute, privateKeyTemplate []*pkcs11.Attribute) (*PKCS11PrivateKeyRSA, error) {
+	var err error
+	var pub crypto.PublicKey
+
 	mech := []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_RSA_PKCS_KEY_PAIR_GEN, nil)}
 	pubHandle, privHandle, err := session.Ctx.GenerateKeyPair(session.Handle,
 		mech,

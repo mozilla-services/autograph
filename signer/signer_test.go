@@ -28,19 +28,31 @@ func TestParseRSAPrivateKey(t *testing.T) {
 
 var rsaPrivateKey = `
 -----BEGIN RSA PRIVATE KEY-----
-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
+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
 -----END RSA PRIVATE KEY-----
 `
 
@@ -491,6 +503,159 @@ func TestMakeKeyAWSRSA(t *testing.T) {
 	cfg := Configuration{
 		isHsmAvailable: true,
 		Hsm:            NewAWSHSM(mockCtx),
+	}
+	_, _, err = cfg.MakeKey(&pubKey, label)
+	if err != nil {
+		t.Fatalf("MakeKey failed: %v", err)
+	}
+}
+
+func TestMakeKeyGCPECDSA(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockCtx := mockpkcs11.NewMockPKCS11Context(ctrl)
+	defer ctrl.Finish()
+
+	// we don't actually have any use for the private key besides extracting
+	// the public key from it, but I couldn't find a way to directly construct
+	// the public key.
+	privKey, err := ParsePrivateKey([]byte(ecdsaPrivateKey))
+	if err != nil {
+		t.Fatalf("failed to parse private key: %v", err)
+	}
+	pubKey := privKey.(*ecdsa.PrivateKey).PublicKey
+
+	// annoyingly, we also need the ecdh form of the private key
+	// to find the length of it, to mock some things correctly.
+	ecdhPrivKey, err := privKey.(*ecdsa.PrivateKey).ECDH()
+	if err != nil {
+		t.Fatalf("failed to convert ecdsa private key to ecdh: %v", err)
+	}
+	ecdhPubKey := ecdhPrivKey.PublicKey()
+
+	// p256, prefix, and ecPointValue are all just intermediaries to set up
+	// pubKeyAttrs, which is a return value needed by one of the mocks.
+	p256, err := asn1.Marshal(asn1.ObjectIdentifier{1, 2, 840, 10045, 3, 1, 7})
+	if err != nil {
+		t.Fatalf("failed to marshal p256 object identifier")
+	}
+	// nasty hack because i couldn't find any other way to make unmarshalEcPoint
+	// happy.
+	prefix := make([]byte, 2)
+	prefix[0] = 0x04
+	prefix[1] = byte(len(ecdhPubKey.Bytes()))
+	ecPointValue := append(prefix, ecdhPubKey.Bytes()...)
+
+	pubKeyAttrs := []*pkcs11.Attribute{
+		&pkcs11.Attribute{
+			Type:  pkcs11.CKA_ECDSA_PARAMS,
+			Value: p256,
+		},
+		&pkcs11.Attribute{
+			Type:  pkcs11.CKA_EC_POINT,
+			Value: ecPointValue,
+		},
+	}
+
+	label := "test"
+	slot := uint(0)
+	session := pkcs11.SessionHandle(0)
+	object := pkcs11.ObjectHandle(0)
+	mechanism := []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_ECDSA_KEY_PAIR_GEN, nil)}
+	attributeTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_ECDSA_PARAMS, nil),
+		pkcs11.NewAttribute(pkcs11.CKA_EC_POINT, nil),
+	}
+
+	publicKeyTemplate := []*pkcs11.Attribute{}
+	privateKeyTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_LABEL, label),
+		pkcs11.NewAttribute(CKA_GOOGLE_DEFINED_KMS_ALGORITHM, KMS_ALGORITHM_EC_SIGN_P256_SHA256),
+	}
+
+	mockCtx.EXPECT().Initialize().Return(nil).Times(1)
+	mockCtx.EXPECT().GetSlotList(true).Return([]uint{slot}, nil).Times(3)
+	mockCtx.EXPECT().GetTokenInfo(slot).Return(pkcs11.TokenInfo{}, nil).Times(1)
+	mockCtx.EXPECT().OpenSession(slot, uint(6)).Return(session, nil).Times(1)
+	mockCtx.EXPECT().GenerateKeyPair(session, mechanism, publicKeyTemplate, privateKeyTemplate).Times(1)
+	mockCtx.EXPECT().GetAttributeValue(session, object, attributeTemplate).Return(pubKeyAttrs, nil).Times(1)
+	// these ones are called as part of Close(), not as part of our actual testing
+	mockCtx.EXPECT().CloseSession(session).Return(nil).Times(1)
+	mockCtx.EXPECT().CloseAllSessions(slot).Return(nil).Times(1)
+	mockCtx.EXPECT().Finalize().Return(nil).Times(1)
+	mockCtx.EXPECT().Destroy().Times(1)
+
+	mockFactory := mockedPKCS11ContextFactory(mockCtx)
+	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	defer crypto11.Close()
+
+	cfg := Configuration{
+		isHsmAvailable: true,
+		Hsm:            NewGCPHSM(mockCtx),
+	}
+	_, _, err = cfg.MakeKey(&pubKey, label)
+	if err != nil {
+		t.Fatalf("MakeKey failed: %v", err)
+	}
+}
+
+func TestMakeKeyGCPRSA(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockCtx := mockpkcs11.NewMockPKCS11Context(ctrl)
+	defer ctrl.Finish()
+
+	// we don't actually have any use for the private key besides extracting
+	// the public key from it, but I couldn't find a way to directly construct
+	// the public key.
+	privKey, err := ParsePrivateKey([]byte(rsaPrivateKey))
+	if err != nil {
+		t.Fatalf("failed to parse private key: %v", err)
+	}
+	pubKey := privKey.(*rsa.PrivateKey).PublicKey
+
+	pubKeyAttrs := []*pkcs11.Attribute{
+		&pkcs11.Attribute{
+			Type:  pkcs11.CKA_MODULUS,
+			Value: []byte("foo"),
+		},
+		&pkcs11.Attribute{
+			Type:  pkcs11.CKA_PUBLIC_EXPONENT,
+			Value: []byte("foo"),
+		},
+	}
+
+	label := "test"
+	slot := uint(0)
+	session := pkcs11.SessionHandle(0)
+	object := pkcs11.ObjectHandle(0)
+	mechanism := []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcs11.CKM_RSA_PKCS_KEY_PAIR_GEN, nil)}
+	attributeTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_MODULUS, nil),
+		pkcs11.NewAttribute(pkcs11.CKA_PUBLIC_EXPONENT, nil),
+	}
+
+	publicKeyTemplate := []*pkcs11.Attribute{}
+	privateKeyTemplate := []*pkcs11.Attribute{
+		pkcs11.NewAttribute(pkcs11.CKA_LABEL, label),
+		pkcs11.NewAttribute(CKA_GOOGLE_DEFINED_KMS_ALGORITHM, KMS_ALGORITHM_RSA_SIGN_PKCS1_2048_SHA256),
+	}
+	mockCtx.EXPECT().Initialize().Return(nil).Times(1)
+	mockCtx.EXPECT().GetSlotList(true).Return([]uint{slot}, nil).Times(3)
+	mockCtx.EXPECT().GetTokenInfo(slot).Return(pkcs11.TokenInfo{}, nil).Times(1)
+	mockCtx.EXPECT().OpenSession(slot, uint(6)).Return(session, nil).Times(1)
+	mockCtx.EXPECT().GenerateKeyPair(session, mechanism, publicKeyTemplate, privateKeyTemplate).Times(1)
+	mockCtx.EXPECT().GetAttributeValue(session, object, attributeTemplate).Return(pubKeyAttrs, nil).Times(1)
+	// these ones are called as part of Close(), not as part of our actual testing
+	mockCtx.EXPECT().CloseSession(session).Return(nil).Times(1)
+	mockCtx.EXPECT().CloseAllSessions(slot).Return(nil).Times(1)
+	mockCtx.EXPECT().Finalize().Return(nil).Times(1)
+	mockCtx.EXPECT().Destroy().Times(1)
+
+	mockFactory := mockedPKCS11ContextFactory(mockCtx)
+	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	defer crypto11.Close()
+	cfg := Configuration{
+		isHsmAvailable: true,
+		Hsm:            NewGCPHSM(mockCtx),
 	}
 	_, _, err = cfg.MakeKey(&pubKey, label)
 	if err != nil {
