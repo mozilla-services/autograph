@@ -42,11 +42,11 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(failures) > 0 {
-		failure := "Errors encountered during signing:"
+		failureStr := ""
 		for i, fail := range failures {
-			failure += fmt.Sprintf("\n%d. %s", i+1, fail)
+			failureStr += fmt.Sprintf("\n%d. %s", i+1, fail)
 		}
-		httpError(w, r, http.StatusInternalServerError, failure)
+		httpError(w, r, http.StatusInternalServerError, "Errors encountered during signing: %s", failureStr)
 		return
 	}
 
