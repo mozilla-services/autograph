@@ -1,11 +1,29 @@
 // This code requires a configuration file to initialize the crypto11
 // library. Use the following config in a file named "crypto11.config"
 //
+// For AWS, this file will look something like:
+//
 //	{
 //	"Path" : "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so",
 //	"TokenLabel": "cavium",
 //	"Pin" : "$CRYPTO_USER:$PASSWORD"
 //	}
+//
+// For GCP, this file will look something like:
+//
+//	{
+//	"Path": "/path/to/libkmsp11.so",
+//	"TokenLabel": "gcp"
+//	}
+//
+// You will additionally need a kmsp11 yml configuration file created and
+// specified in the KMS_PKCS11_CONFIG environment variable. This will look something like:
+// ---
+// tokens:
+//   - key_ring: projects/autograph/locations/us-west-2/keyRings/autograph-keyring
+//   - label: gcp
+//
+// Note that the label must match between the two configuration files.
 package main
 
 import (
@@ -49,12 +67,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	sigalg := x509.ECDSAWithSHA384
-	switch privKey.(type) {
-	case *crypto11.PKCS11PrivateKeyRSA:
-		sigalg = x509.SHA384WithRSA
-
-	}
 	crtReq := &x509.CertificateRequest{
 		Subject: pkix.Name{
 			CommonName:         fmt.Sprintf("%s/emailAddress=%s", cn, email),
@@ -62,8 +74,18 @@ func main() {
 			OrganizationalUnit: []string{ou},
 			Country:            []string{"US"},
 		},
-		DNSNames:           []string{cn},
-		SignatureAlgorithm: sigalg,
+		DNSNames: []string{cn},
+	}
+	// Google's KMS library automatically detects the correct signature
+	// algorithm based on the key given; no need to specify it.
+	if os.Getenv("KMS_PKCS11_CONFIG") == "" {
+		sigalg := x509.ECDSAWithSHA384
+		switch privKey.(type) {
+		case *crypto11.PKCS11PrivateKeyRSA:
+			sigalg = x509.SHA384WithRSA
+
+		}
+		crtReq.SignatureAlgorithm = sigalg
 	}
 	fmt.Printf("+%v\n", crtReq)
 	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, crtReq, privKey)
