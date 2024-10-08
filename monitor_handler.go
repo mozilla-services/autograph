@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -32,11 +34,17 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	m.RLock()
 	defer m.RUnlock()
 
+	var failures []string
+
 	for _, errstr := range m.sigerrstrs {
 		if errstr != "" {
-			httpError(w, r, http.StatusInternalServerError, "%s", errstr)
-			return
+			failures = append(failures, fmt.Sprintf("%d. %s", len(failures)+1, errstr))
 		}
+	}
+
+	if len(failures) > 0 {
+		httpError(w, r, http.StatusInternalServerError, "Errors encountered during signing: %s", strings.Join(failures, "\n"))
+		return
 	}
 
 	if m.debug {
