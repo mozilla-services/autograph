@@ -5,3 +5,8 @@ updates:
   schedule:
     interval: "weekly"
     time: "10:00" # UTC
+  groups:
+      aws-sdk-go-v2:
+        applies-to: version-updates
+        patterns:
+          - "github.com/aws/aws-sdk-go-v2/*"
