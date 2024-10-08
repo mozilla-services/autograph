@@ -153,10 +153,10 @@ eNGDpX35+pcEygI=
 	}
 
 	bodyBytes, _ := io.ReadAll(w.Result().Body)
-	if match, _ := regexp.Match("data signing for testErr1 failed", bodyBytes); !match {
+	if match, _ := regexp.Match("1. data signing for testErr1 failed", bodyBytes); !match {
 		t.Fatal("Didn't find first error in response body")
 	}
-	if match, _ := regexp.Match("data signing for testErr2 failed", bodyBytes); !match {
+	if match, _ := regexp.Match("2. data signing for testErr2 failed", bodyBytes); !match {
 		t.Fatal("Didn't find second error in response body")
 	}
 }

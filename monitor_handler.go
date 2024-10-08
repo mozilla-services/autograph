@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -37,16 +38,12 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 
 	for _, errstr := range m.sigerrstrs {
 		if errstr != "" {
-			failures = append(failures, errstr)
+			failures = append(failures, fmt.Sprintf("%d. %s", len(failures)+1, errstr))
 		}
 	}
 
 	if len(failures) > 0 {
-		failureStr := ""
-		for i, fail := range failures {
-			failureStr += fmt.Sprintf("\n%d. %s", i+1, fail)
-		}
-		httpError(w, r, http.StatusInternalServerError, "Errors encountered during signing: %s", failureStr)
+		httpError(w, r, http.StatusInternalServerError, "Errors encountered during signing: %s", strings.Join(failures, "\n"))
 		return
 	}
 
