@@ -4,7 +4,7 @@ ARG LIBKMSP11_VERSION=1.6
 #------------------------------------------------------------------------------
 # Base Debian Image
 #------------------------------------------------------------------------------
-FROM debian:bookworm as base
+FROM --platform=linux/amd64 debian:bookworm as base
 ARG GO_VERSION
 
 ENV DEBIAN_FRONTEND='noninteractive' \
