@@ -88,6 +88,7 @@ build: generate
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel app-hsm monitor
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --no-cache --parallel monitor monitor-hsm
 
+# TODO(AUT-287): port this to the Docker compose integration tests
 integration-test:
 	./bin/run_integration_tests.sh
 
