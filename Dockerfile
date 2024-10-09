@@ -61,6 +61,7 @@ ADD . /app/src/autograph
 RUN cd /app/src/autograph && go install .
 RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autograph-monitor .
 RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograph-client .
+RUN cd /app/src/autograph/tools/makecsr && go build -o /go/bin/makecsr .
 
 #------------------------------------------------------------------------------
 # Deployment Stage
