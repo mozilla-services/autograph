@@ -1,29 +1,8 @@
-// This code requires a configuration file to initialize the crypto11
-// library. Use the following config in a file named "crypto11.config"
+// If you're looking for how this code has been invoked, take a look at our
+// private hsm repo.
 //
-// For AWS, this file will look something like:
-//
-//	{
-//	"Path" : "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so",
-//	"TokenLabel": "cavium",
-//	"Pin" : "$CRYPTO_USER:$PASSWORD"
-//	}
-//
-// For GCP, this file will look something like:
-//
-//	{
-//	"Path": "/path/to/libkmsp11.so",
-//	"TokenLabel": "gcp"
-//	}
-//
-// You will additionally need a kmsp11 yml configuration file created and
-// specified in the KMS_PKCS11_CONFIG environment variable. This will look something like:
-// ---
-// tokens:
-//   - key_ring: projects/autograph/locations/us-west-2/keyRings/autograph-keyring
-//   - label: gcp
-//
-// Note that the label must match between the two configuration files.
+// See the README.md for more information about what this code needs to operate
+// correctly.
 package main
 
 import (
@@ -39,20 +18,59 @@ import (
 	"github.com/mozilla-services/autograph/crypto11"
 )
 
+var (
+	allowedSigAlgs = map[string]x509.SignatureAlgorithm{
+		"SHA256WithRSA":   x509.SHA256WithRSA,
+		"SHA384WithRSA":   x509.SHA384WithRSA,
+		"ECDSAWithSHA256": x509.ECDSAWithSHA256,
+		"ECDSAWithSHA384": x509.ECDSAWithSHA384,
+	}
+)
+
 func main() {
 	var (
-		keyLabel string
-		ou       string
-		cn       string
-		email    string
+		crypto11ConfigFilePath string
+		keyLabel               string
+		ou                     string
+		cn                     string
+		dnsName                string
+		email                  string
+		sigAlgName             string
 	)
+
+	flag.StringVar(&crypto11ConfigFilePath, "crypto11Config", "crypto11-config.json", "Path to the crypto11 configuration file")
 	flag.StringVar(&keyLabel, "l", "mykey", "Label of the key in the HSM")
 	flag.StringVar(&ou, "ou", "Mozilla AMO Production Signing Service", "OrganizationalUnit of the Subject")
 	flag.StringVar(&cn, "cn", "Content Signing Intermediate", "CommonName of the Subject")
-	flag.StringVar(&email, "email", "foxsec@mozilla.com", "Email of the Subject")
+	flag.StringVar(&dnsName, "dnsName", "", "DNS name for use in the Subject Altenative Name")
+	flag.StringVar(&email, "email", "", "email that's added to the EmailAddresses part of the Subject Alternative Name")
+	flag.StringVar(&sigAlgName, "sigAlg", "", fmt.Sprintf("Signature Algorithm to use with the key. Must be one of %q", mapKeysAsSlice(allowedSigAlgs)))
 	flag.Parse()
 
-	p11Ctx, err := crypto11.ConfigureFromFile("crypto11.config")
+	if dnsName == "" {
+		fmt.Fprintln(os.Stderr, "-dnsName is a required option")
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	if keyLabel == "" {
+		fmt.Fprintln(os.Stderr, "-l is a required option")
+		flag.Usage()
+		os.Exit(2)
+	}
+
+	if sigAlgName == "" {
+		fmt.Fprintln(os.Stderr, "-sigAlg is a required option")
+		flag.Usage()
+		os.Exit(2)
+	}
+	sigAlg, ok := allowedSigAlgs[sigAlgName]
+	if !ok {
+		fmt.Fprintf(os.Stderr, "invalid signature algorithm %#v passed as -sigAlg, select from %q\n", sigAlgName, mapKeysAsSlice(allowedSigAlgs))
+		os.Exit(2)
+	}
+
+	p11Ctx, err := crypto11.ConfigureFromFile(crypto11ConfigFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -67,30 +85,46 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// FIXME use nameConstraints and allow multiple dnsNames?
+	csrPEM, err := generatePEMEncodedCSR(privKey, ou, cn, email, []string{dnsName}, sigAlg)
+	if err != nil {
+		log.Fatalf("Failed to generate CSR: %s", err.Error())
+	}
+	fmt.Print(string(csrPEM))
+}
+
+func generatePEMEncodedCSR(privKey any, organizationalUnit, commonName, email string, dnsNames []string, sigAlg x509.SignatureAlgorithm) ([]byte, error) {
 	crtReq := &x509.CertificateRequest{
 		Subject: pkix.Name{
-			CommonName:         fmt.Sprintf("%s/emailAddress=%s", cn, email),
+			CommonName:         commonName,
 			Organization:       []string{"Mozilla Corporation"},
-			OrganizationalUnit: []string{ou},
+			OrganizationalUnit: []string{organizationalUnit},
 			Country:            []string{"US"},
 		},
-		DNSNames: []string{cn},
+		DNSNames:           dnsNames,
+		SignatureAlgorithm: sigAlg,
 	}
-	// Google's KMS library automatically detects the correct signature
-	// algorithm based on the key given; no need to specify it.
-	if os.Getenv("KMS_PKCS11_CONFIG") == "" {
-		sigalg := x509.ECDSAWithSHA384
-		switch privKey.(type) {
-		case *crypto11.PKCS11PrivateKeyRSA:
-			sigalg = x509.SHA384WithRSA
 
-		}
-		crtReq.SignatureAlgorithm = sigalg
+	if email != "" {
+		crtReq.EmailAddresses = []string{email}
 	}
-	fmt.Printf("+%v\n", crtReq)
+
 	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, crtReq, privKey)
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed in CreateCertificateRequest: %w", err)
 	}
-	pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+
+	out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+	return out, nil
+}
+
+// mapKeysAsSlice returns the keys of a map as a slice. Once we're on Go 1.23,
+// we can use `slices.Collect(map.Keys(..))` instead of this.
+func mapKeysAsSlice[K comparable, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
