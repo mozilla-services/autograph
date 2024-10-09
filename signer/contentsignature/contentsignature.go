@@ -3,6 +3,7 @@ package contentsignature // import "github.com/mozilla-services/autograph/signer
 import (
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/x509"
@@ -153,7 +154,7 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 		ID:   s.ID,
 	}
 
-	asn1Sig, err := s.priv.(crypto.Signer).Sign(s.rand, input, nil)
+	asn1Sig, err := s.priv.(crypto.Signer).Sign(rand.Reader, input, nil)
 	if err != nil {
 		return nil, fmt.Errorf("contentsignature: failed to sign hash: %w", err)
 	}
