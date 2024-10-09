@@ -44,11 +44,11 @@ vet:
 	go vet ./...
 
 fmt-diff:
-	gofmt -d *.go database/ signer/ tools/autograph-client/ tools/autograph-monitor tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
+	gofmt -d *.go database/ signer/ tools/autograph-client/ tools/autograph-monitor tools/softhsm/ tools/hawk-token-maker/ tools/makecsr/ tools/genpki/
 
 fmt-fix:
 	go fmt ./...
-	gofmt -w tools/autograph-client/ tools/softhsm/ tools/hawk-token-maker/ tools/make-hsm-ee/ tools/makecsr/ tools/genpki/
+	gofmt -w tools/autograph-client/ tools/softhsm/ tools/hawk-token-maker/ tools/makecsr/ tools/genpki/
 
 benchmarkxpi:
 	go test -run=XXX -benchtime=15s -bench=. -v -cpuprofile cpu.out github.com/mozilla-services/autograph/signer/xpi ;\
