@@ -29,12 +29,12 @@ import (
 )
 
 type configuration struct {
-	origAutographURL           string
-	requestURL 		   string
-	monitoringKey string
-	env           string
-	rootHashes    []string
-	truststore    *x509.CertPool
+	origAutographURL string
+	requestURL       string
+	monitoringKey    string
+	env              string
+	rootHashes       []string
+	truststore       *x509.CertPool
 
 	// hashes and keystore for verifying XPI dep signers
 	depRootHashes []string
@@ -57,7 +57,7 @@ func main() {
 	}
 	conf := &configuration{
 		origAutographURL: autographURLEnvVar,
-		requestURL:   requestURL,
+		requestURL:       requestURL,
 	}
 
 	conf.monitoringKey = os.Getenv("AUTOGRAPH_KEY")
@@ -114,8 +114,11 @@ func rawAutographURLToMonitorEndpoint(autographURLEnvVar string) (string, error)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse AUTOGRAPH_URL as url: %s", err)
 	}
-	if baseURL.Scheme == "" {
-		baseURL.Scheme = "https"
+	if baseURL.Scheme != "https" {
+		return "", fmt.Errorf("AUTOGRAPH_URL %#v must be an https:// url", autographURLEnvVar)
+	}
+	if baseURL.Host == "" {
+		return "", fmt.Errorf("AUTOGRAPH_URL %#v is missing a host field. Parsed as %#v", autographURLEnvVar, baseURL)
 	}
 	requestURL := baseURL.JoinPath("/__monitor__")
 	return requestURL.String(), nil
