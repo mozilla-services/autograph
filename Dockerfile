@@ -1,11 +1,10 @@
-ARG GO_VERSION=1.23.2
 ARG LIBKMSP11_VERSION=1.6
+
 
 #------------------------------------------------------------------------------
 # Base Debian Image
 #------------------------------------------------------------------------------
-FROM --platform=linux/amd64 golang:${GO_VERSION}-bookworm AS base
-ARG GO_VERSION
+FROM --platform=linux/amd64 golang:1.23-bookworm@sha256:345d5e81c88be2c500edf00ed1dca6be656e4485cd79e4e0bcc73a90361910e0 AS base
 
 ENV DEBIAN_FRONTEND='noninteractive'
 
