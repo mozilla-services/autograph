@@ -289,7 +289,7 @@ github.com/mozilla-services/yaml
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/sirupsen/logrus v1.8.1
+# github.com/sirupsen/logrus v1.9.3
 ## explicit; go 1.13
 github.com/sirupsen/logrus
 # github.com/ugorji/go v0.0.0-20180112141927-9831f2c3ac10
