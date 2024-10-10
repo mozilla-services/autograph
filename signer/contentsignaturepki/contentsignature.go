@@ -3,7 +3,6 @@ package contentsignaturepki // import "github.com/mozilla-services/autograph/sig
 import (
 	"crypto"
 	"crypto/ecdsa"
-	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/asn1"
@@ -261,8 +260,8 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 		X5U:  s.X5U,
 		ID:   s.ID,
 	}
-
-	asn1Sig, err := s.eePriv.(crypto.Signer).Sign(rand.Reader, input, nil)
+	// TODO: check to see if this should also be updated to s.rand
+	asn1Sig, err := s.eePriv.(crypto.Signer).Sign(s.rand, input, nil)
 	if err != nil {
 		return nil, fmt.Errorf("contentsignaturepki %q: failed to sign hash: %w", s.ID, err)
 	}
