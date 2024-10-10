@@ -114,8 +114,8 @@ func rawAutographURLToMonitorEndpoint(autographURLEnvVar string) (string, error)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse AUTOGRAPH_URL as url: %s", err)
 	}
-	if baseURL.Scheme != "https" {
-		return "", fmt.Errorf("AUTOGRAPH_URL %#v must be an https:// url", autographURLEnvVar)
+	if baseURL.Scheme != "https" && baseURL.Scheme != "http" {
+		return "", fmt.Errorf("AUTOGRAPH_URL %#v must be an https:// (or http:// url in testing)", autographURLEnvVar)
 	}
 	if baseURL.Host == "" {
 		return "", fmt.Errorf("AUTOGRAPH_URL %#v is missing a host field. Parsed as %#v", autographURLEnvVar, baseURL)
