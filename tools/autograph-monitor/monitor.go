@@ -29,7 +29,8 @@ import (
 )
 
 type configuration struct {
-	url           string
+	origAutographURL           string
+	requestURL 		   string
 	monitoringKey string
 	env           string
 	rootHashes    []string
@@ -50,16 +51,13 @@ func main() {
 	if autographURLEnvVar == "" {
 		log.Fatal("AUTOGRAPH_URL must be set to the base url of the autograph service")
 	}
-	baseURL, err := url.Parse(autographURLEnvVar)
+	requestURL, err := rawAutographURLToMonitorEndpoint(autographURLEnvVar)
 	if err != nil {
-		log.Fatalf("Failed to parse AUTOGRAPH_URL as url: %s", err)
+		log.Fatalf("failed to turn AUTOGRAPH_URL into a monitor endpoint url: %s", err)
 	}
-	if baseURL.Scheme == "" {
-		baseURL.Scheme = "https"
-	}
-
 	conf := &configuration{
-		url: baseURL.String(),
+		origAutographURL: autographURLEnvVar,
+		requestURL:   requestURL,
 	}
 
 	conf.monitoringKey = os.Getenv("AUTOGRAPH_KEY")
@@ -83,7 +81,7 @@ func main() {
 	}
 
 	if rootErr != nil {
-		err = fmt.Errorf("failed to load truststore root certificates: %w", err)
+		rootErr = fmt.Errorf("failed to load truststore root certificates: %w", rootErr)
 	}
 	if depErr != nil {
 		depErr = fmt.Errorf("failed to load depTruststore root certificates: %w", depErr)
@@ -109,6 +107,18 @@ func main() {
 		}
 		os.Exit(0)
 	}
+}
+
+func rawAutographURLToMonitorEndpoint(autographURLEnvVar string) (string, error) {
+	baseURL, err := url.Parse(autographURLEnvVar)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse AUTOGRAPH_URL as url: %s", err)
+	}
+	if baseURL.Scheme == "" {
+		baseURL.Scheme = "https"
+	}
+	requestURL := baseURL.JoinPath("/__monitor__")
+	return requestURL.String(), nil
 }
 
 // Helper function to load a series of certificates and their hashes to a given truststore and hash list
@@ -146,12 +156,8 @@ func Handler(conf *configuration, client *http.Client) (err error) {
 
 // monitor contacts the autograph service and verifies all monitoring signatures
 func monitor(conf *configuration, client *http.Client) error {
-	requestURL, err := url.JoinPath(conf.url, "__monitor__")
-	if err != nil {
-		return fmt.Errorf("unable to join the monitor hostname (AUTOGRAPH_URL env var: %#v) to the /__monitor__ path: %w", conf.url, err)
-	}
-	log.Println("Retrieving monitoring data from", conf.url)
-	req, err := http.NewRequest("GET", requestURL, nil)
+	log.Println("Retrieving monitoring data from", conf.origAutographURL)
+	req, err := http.NewRequest("GET", conf.requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("unable to create NewRequest to the monitor endpoint: %w", err)
 	}
