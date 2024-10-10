@@ -1,3 +1,11 @@
+# v1.17.31 (2024-10-09)
+
+* **Bug Fix**: Fixup some integration tests.
+
+# v1.17.30 (2024-10-08)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.17.29 (2024-10-07)
 
 * **Dependency Update**: Updated to the latest SDK module versions
