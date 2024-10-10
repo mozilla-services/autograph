@@ -45,6 +45,7 @@ ADD . /app/src/autograph
 RUN cd /app/src/autograph && go install .
 RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autograph-monitor .
 RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograph-client .
+RUN cd /app/src/autograph/tools/makecsr && go build -o /go/bin/makecsr .
 
 # Extract and verify the Google KMS library.
 RUN cd /tmp && curl -L https://github.com/GoogleCloudPlatform/kms-integrations/releases/download/pkcs11-v${LIBKMSP11_VERSION}/libkmsp11-${LIBKMSP11_VERSION}-linux-amd64.tar.gz | tar -zx --strip-components=1
