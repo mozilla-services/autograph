@@ -107,7 +107,9 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	}
 	alg, hash := makeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
-	sig.(*verifier.ContentSignature).HashName = alg
+	if err == nil {
+		sig.(*verifier.ContentSignature).HashName = alg
+	}
 	return sig, err
 }
 

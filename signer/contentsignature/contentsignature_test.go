@@ -11,6 +11,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -220,69 +221,19 @@ func TestNoShortData(t *testing.T) {
 }
 
 // Reproduce nil error
-var NILTESTCASE = []struct {
-	cfg signer.Configuration
-}{
-	// 	{cfg: signer.Configuration{
-	// 		Type: Type,
-	// 		ID:   P256ECDSA,
-	// 		X5U:  "https://foo.bar/chain.pem",
-	// 		PrivateKey: `
-	// -----BEGIN EC PARAMETERS-----
-	// BggqhkjOPQMBBw==
-	// -----END EC PARAMETERS-----
-	// -----BEGIN EC PRIVATE KEY-----
-	// MHcCAQEEII+Is30aP9wrB/H6AkKrJjMG8EVY2WseSFHTfWGCIk7voAoGCCqGSM49
-	// AwEHoUQDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq
-	// 3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==
-	// -----END EC PRIVATE KEY-----`,
-	// 	}},
-	{cfg: signer.Configuration{
-		Type:       Type,
-		ID:         "",
-		X5U:        "",
-		PrivateKey: "",
-	}},
+type ErrorReader struct{}
+
+func (e *ErrorReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("read error")
 }
 
 func TestNilErrorOnSignData(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
-	for i, testcase := range NILTESTCASE {
-		// initialize a signer
-		s, err := New(testcase.cfg)
-		// if err != nil {
-		// 	t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
-		// }
-		// if s.Type != testcase.cfg.Type {
-		// 	t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Type, testcase.cfg.Type)
-		// }
-		// if s.ID != testcase.cfg.ID {
-		// 	t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.ID, testcase.cfg.ID)
-		// }
-		// if s.PrivateKey != testcase.cfg.PrivateKey {
-		// 	t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.PrivateKey, testcase.cfg.PrivateKey)
-		// }
-		// if s.Mode != testcase.cfg.ID {
-		// 	t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.Mode, testcase.cfg.ID)
-		// }
-
-		// compare configs
-		c1, err := json.Marshal(s)
-		if err != nil {
-			t.Fatalf("testcase %d failed to json marshal signer: %v", i, err)
-		}
-		c2, err := json.Marshal(s.Config())
-		if err != nil {
-			t.Fatalf("testcase %d failed to json marshal signer config: %v", i, err)
-		}
-		if string(c1) != string(c2) {
-			t.Fatalf("testcase %d configurations don't match:\nc1=%s\nc2=%s", i, c1, c2)
-		}
-
-		// sign input data
-		_, err_nil := s.SignData(input, nil)
-		if err_nil != nil {
-			t.Fatalf("testcase %d failed to sign data: %v", i, err)
-		}
+	testcase := PASSINGTESTCASES[0]
+	s, _ := New(testcase.cfg)
+	s.rand = &ErrorReader{}
+	_, err_nil := s.SignData(input, nil)
+	if err_nil == nil {
+		t.Fatal("Should have failed to sign data with error in SignHash.")
 	}
 }
