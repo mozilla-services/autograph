@@ -23,7 +23,7 @@ func shannonEntropy(data []byte) (entropy float64) {
 }
 
 func TestRng(t *testing.T) {
-	for i, testcase := range PASSINGTESTCASES {
+	for i, testcase := range passingTestCases {
 		rng := testcase.cfg.GetRand()
 		randomData := make([]byte, 512)
 		_, err := rng.Read(randomData)
