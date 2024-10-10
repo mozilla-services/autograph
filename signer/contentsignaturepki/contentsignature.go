@@ -218,7 +218,9 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	}
 	alg, hash := MakeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
-	sig.(*verifier.ContentSignature).HashName = alg
+	if sig != nil {
+		sig.(*verifier.ContentSignature).HashName = alg
+	}
 	return sig, err
 }
 
@@ -260,7 +262,7 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 		X5U:  s.X5U,
 		ID:   s.ID,
 	}
-	// TODO: check to see if this should also be updated to s.rand
+
 	asn1Sig, err := s.eePriv.(crypto.Signer).Sign(s.rand, input, nil)
 	if err != nil {
 		return nil, fmt.Errorf("contentsignaturepki %q: failed to sign hash: %w", s.ID, err)
