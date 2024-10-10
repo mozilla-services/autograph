@@ -47,11 +47,10 @@ func TestGoldenPath(t *testing.T) {
 		monitoringKey:    "fakenotused",
 		truststore:       x509.NewCertPool(),
 	}
-	err = monitor(conf, server.Client())
+	err = Handler(conf, server.Client())
 	if err != nil {
-		t.Errorf("monitor error: %v", err)
+		t.Errorf("handler error: %v", err)
 	}
-
 }
 
 func TestNormalizeAutographURL(t *testing.T) {
