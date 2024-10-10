@@ -107,7 +107,9 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	}
 	alg, hash := makeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
-	if err == nil {
+
+	if sig != nil {
+		// sig could be nil when there is misconfigured permission or the kms is not available
 		sig.(*verifier.ContentSignature).HashName = alg
 	}
 	return sig, err
@@ -155,7 +157,6 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 		ID:   s.ID,
 	}
 
-	// asn1Sig, err := s.priv.(crypto.Signer).Sign(rand.Reader, input, nil)
 	asn1Sig, err := s.priv.(crypto.Signer).Sign(s.rand, input, nil)
 	if err != nil {
 		return nil, fmt.Errorf("contentsignature: failed to sign hash: %w", err)

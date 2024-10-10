@@ -227,13 +227,13 @@ func (e *ErrorReader) Read(p []byte) (n int, err error) {
 	return 0, errors.New("read error")
 }
 
-func TestNilErrorOnSignData(t *testing.T) {
+func TestRandReadFailureOnSignHash(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 	testcase := PASSINGTESTCASES[0]
 	s, _ := New(testcase.cfg)
 	s.rand = &ErrorReader{}
 	_, err_nil := s.SignData(input, nil)
 	if err_nil == nil {
-		t.Fatal("Should have failed to sign data with error in SignHash.")
+		t.Fatal("Should have failed to sign data with error in the SignHash.")
 	}
 }
