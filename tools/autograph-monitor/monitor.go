@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"runtime"
 	"strings"
@@ -28,11 +29,12 @@ import (
 )
 
 type configuration struct {
-	url           string
-	monitoringKey string
-	env           string
-	rootHashes    []string
-	truststore    *x509.CertPool
+	origAutographURL string
+	requestURL       string
+	monitoringKey    string
+	env              string
+	rootHashes       []string
+	truststore       *x509.CertPool
 
 	// hashes and keystore for verifying XPI dep signers
 	depRootHashes []string
@@ -44,15 +46,20 @@ type configuration struct {
 
 const inputdata string = "AUTOGRAPH MONITORING"
 
-var (
-	conf configuration
-)
-
 func main() {
-	conf.url = os.Getenv("AUTOGRAPH_URL")
-	if conf.url == "" {
+	autographURLEnvVar := strings.TrimSpace(os.Getenv("AUTOGRAPH_URL"))
+	if autographURLEnvVar == "" {
 		log.Fatal("AUTOGRAPH_URL must be set to the base url of the autograph service")
 	}
+	requestURL, err := rawAutographURLToMonitorEndpoint(autographURLEnvVar)
+	if err != nil {
+		log.Fatalf("failed to turn AUTOGRAPH_URL into a monitor endpoint url: %s", err)
+	}
+	conf := &configuration{
+		origAutographURL: autographURLEnvVar,
+		requestURL:       requestURL,
+	}
+
 	conf.monitoringKey = os.Getenv("AUTOGRAPH_KEY")
 	if conf.monitoringKey == "" {
 		log.Fatal("AUTOGRAPH_KEY must be set to the api monitoring key")
@@ -62,25 +69,27 @@ func main() {
 	// prod or autograph dev code signing PKI roots and CA root
 	// certs defined in constants.go
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
-	var err, depErr error
+	var rootErr, depErr error
 	switch conf.env {
 	case "stage":
-		conf.truststore, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiStageRoots)
+		conf.truststore, conf.rootHashes, rootErr = LoadCertsToTruststore(firefoxPkiStageRoots)
 	case "prod":
-		conf.truststore, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiProdRoots)
+		conf.truststore, conf.rootHashes, rootErr = LoadCertsToTruststore(firefoxPkiProdRoots)
 		conf.depTruststore, conf.depRootHashes, depErr = LoadCertsToTruststore(firefoxPkiStageRoots)
 	default:
-		_, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiDevRoots)
+		_, conf.rootHashes, rootErr = LoadCertsToTruststore(firefoxPkiDevRoots)
 	}
 
-	if err != nil {
-		err = fmt.Errorf("failed to load truststore root certificates: %w", err)
+	if rootErr != nil {
+		rootErr = fmt.Errorf("failed to load truststore root certificates: %w", rootErr)
 	}
 	if depErr != nil {
 		depErr = fmt.Errorf("failed to load depTruststore root certificates: %w", depErr)
 	}
-	if err != nil || depErr != nil {
-		log.Fatalf("%s", errors.Join(err, depErr))
+
+	err = errors.Join(rootErr, depErr)
+	if err != nil {
+		log.Fatalf("%s", err)
 	}
 
 	if os.Getenv("AUTOGRAPH_ROOT_HASH") != "" {
@@ -90,14 +99,29 @@ func main() {
 
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
-		lambda.Start(Handler)
+		lambda.Start(func() error { return Handler(conf, http.DefaultClient) })
 	} else {
-		err := Handler()
+		err := Handler(conf, http.DefaultClient)
 		if err != nil {
 			log.Fatalf("Unhandled exception from monitor: %s", err)
 		}
 		os.Exit(0)
 	}
+}
+
+func rawAutographURLToMonitorEndpoint(autographURLEnvVar string) (string, error) {
+	baseURL, err := url.Parse(autographURLEnvVar)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse AUTOGRAPH_URL as url: %s", err)
+	}
+	if baseURL.Scheme != "https" && baseURL.Scheme != "http" {
+		return "", fmt.Errorf("AUTOGRAPH_URL %#v must be an https:// (or http:// url in testing)", autographURLEnvVar)
+	}
+	if baseURL.Host == "" {
+		return "", fmt.Errorf("AUTOGRAPH_URL %#v is missing a host field. Parsed as %#v", autographURLEnvVar, baseURL)
+	}
+	requestURL := baseURL.JoinPath("/__monitor__")
+	return requestURL.String(), nil
 }
 
 // Helper function to load a series of certificates and their hashes to a given truststore and hash list
@@ -122,7 +146,7 @@ func LoadCertsToTruststore(pemStrings []string) (*x509.CertPool, []string, error
 
 // Handler is a wrapper around monitor() that performs garbage collection
 // before returning
-func Handler() (err error) {
+func Handler(conf *configuration, client *http.Client) (err error) {
 	defer func() {
 		// force gc run
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1621133
@@ -130,13 +154,13 @@ func Handler() (err error) {
 		runtime.GC()
 		log.Println("Garbage collected in", time.Since(t1))
 	}()
-	return monitor()
+	return monitor(conf, client)
 }
 
 // monitor contacts the autograph service and verifies all monitoring signatures
-func monitor() error {
-	log.Println("Retrieving monitoring data from", conf.url)
-	req, err := http.NewRequest("GET", conf.url+"__monitor__", nil)
+func monitor(conf *configuration, client *http.Client) error {
+	log.Println("Retrieving monitoring data from", conf.origAutographURL)
+	req, err := http.NewRequest("GET", conf.requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("unable to create NewRequest to the monitor endpoint: %w", err)
 	}
@@ -149,7 +173,7 @@ func monitor() error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", makeAuthHeader(req, "monitor", conf.monitoringKey))
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request to monitor endpoint failed: %w", err)
 	}
@@ -191,7 +215,7 @@ func monitor() error {
 			err = verifyContentSignature(x5uClient, conf.notifier, conf.rootHashes, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
-			err = verifyXPISignature(response.Signature)
+			err = verifyXPISignature(response.Signature, conf.truststore, conf.depTruststore)
 		case apk2.Type:
 			// we don't verify apk2 signatures because they can only be obtained on valid
 			// APK files, which is too big to fit in the monitoring logic
