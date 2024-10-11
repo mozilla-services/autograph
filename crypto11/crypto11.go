@@ -238,10 +238,14 @@ type PKCS11Config struct {
 	PoolWaitTimeout time.Duration
 }
 
-type PKCS11ContextFactory func(*PKCS11Config) PKCS11Context
+type PKCS11ContextFactory func(*PKCS11Config) (PKCS11Context, error)
 
-func NewDefaultPKCS11Context(config *PKCS11Config) PKCS11Context {
-	return pkcs11.New(config.Path)
+func NewDefaultPKCS11Context(config *PKCS11Config) (PKCS11Context, error) {
+	p11Ctx := pkcs11.New(config.Path)
+	if p11Ctx == nil {
+		return nil, ErrCannotOpenPKCS11
+	}
+	return p11Ctx, nil
 }
 
 // Configure configures PKCS#11 from a PKCS11Config.
@@ -278,11 +282,12 @@ func Configure(config *PKCS11Config, factory PKCS11ContextFactory) (PKCS11Contex
 		config.MaxSessions = DefaultMaxSessions
 	}
 	instance.cfg = config
-	instance.ctx = factory(config)
-	if instance.ctx == nil {
-		log.Printf("Could not open PKCS#11 library: %s", config.Path)
-		return nil, ErrCannotOpenPKCS11
+	p11Ctx, err := factory(config)
+	if err != nil {
+		return nil, err
 	}
+
+	instance.ctx = p11Ctx
 	if err = instance.ctx.Initialize(); err != nil {
 		log.Printf("Failed to initialize PKCS#11 library: %s", err.Error())
 		return nil, err

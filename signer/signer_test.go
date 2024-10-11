@@ -324,8 +324,8 @@ var rejectedFileNames = []string{
 }
 
 func mockedPKCS11ContextFactory(ctx crypto11.PKCS11Context) crypto11.PKCS11ContextFactory {
-	wrapped := func(_ *crypto11.PKCS11Config) crypto11.PKCS11Context {
-		return ctx
+	wrapped := func(_ *crypto11.PKCS11Config) (crypto11.PKCS11Context, error) {
+		return ctx, nil
 	}
 	return wrapped
 }
