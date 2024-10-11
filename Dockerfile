@@ -35,32 +35,38 @@ RUN apt-get update && \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 #------------------------------------------------------------------------------
-# Build Stage
+# Pre-build dependency caching
 #------------------------------------------------------------------------------
-FROM base as builder
-ARG LIBKMSP11_VERSION=1.6
+FROM base as prebuild
+ARG LIBKMSP11_VERSION
 
-ADD . /app/src/autograph
+COPY google-pkcs12-release-signing-key.pem /app/src/autograph/
 
-RUN cd /app/src/autograph && go install .
-RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autograph-monitor .
-RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograph-client .
-
-# Extract and verify the Google KMS library.
+# Download and verify the Google KMS library
 RUN cd /tmp && curl -L https://github.com/GoogleCloudPlatform/kms-integrations/releases/download/pkcs11-v${LIBKMSP11_VERSION}/libkmsp11-${LIBKMSP11_VERSION}-linux-amd64.tar.gz | tar -zx --strip-components=1
 RUN openssl dgst -sha384 -verify /app/src/autograph/google-pkcs12-release-signing-key.pem -signature /tmp/libkmsp11.so.sig /tmp/libkmsp11.so
-
-#------------------------------------------------------------------------------
-# Deployment Stage
-#------------------------------------------------------------------------------
-FROM base
-EXPOSE 8000
 
 # fetch the RDS CA bundles
 # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificatesAllRegions
 RUN curl -o /usr/local/share/old-rds-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && \
       curl -o /usr/local/share/new-rds-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
       cat /usr/local/share/old-rds-ca-bundle.pem /usr/local/share/new-rds-ca-bundle.pem > /usr/local/share/rds-combined-ca-bundle.pem
+
+#------------------------------------------------------------------------------
+# Build Stage
+#------------------------------------------------------------------------------
+FROM prebuild as builder
+
+ADD . /app/src/autograph
+RUN cd /app/src/autograph && go install .
+RUN cd /app/src/autograph/tools/autograph-monitor && go build -o /go/bin/autograph-monitor .
+RUN cd /app/src/autograph/tools/autograph-client && go build -o /go/bin/autograph-client .
+
+#------------------------------------------------------------------------------
+# Deployment Stage
+#------------------------------------------------------------------------------
+FROM prebuild
+EXPOSE 8000
 
 # Copy compiled appliation from the builder.
 ADD . /app/src/autograph
