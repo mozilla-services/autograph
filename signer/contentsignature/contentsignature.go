@@ -105,13 +105,14 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	if len(input) < 10 {
 		return nil, fmt.Errorf("contentsignature: refusing to sign input data shorter than 10 bytes")
 	}
+
 	alg, hash := makeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
-
-	if sig != nil {
-		// sig could be nil when there is misconfigured permission or the kms is not available
-		sig.(*verifier.ContentSignature).HashName = alg
+	if err != nil {
+		return nil, err
 	}
+
+	sig.(*verifier.ContentSignature).HashName = alg
 	return sig, err
 }
 

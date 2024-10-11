@@ -216,11 +216,14 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	if len(input) < 10 {
 		return nil, fmt.Errorf("contentsignaturepki %q: refusing to sign input data shorter than 10 bytes", s.ID)
 	}
+
 	alg, hash := MakeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
-	if sig != nil {
-		sig.(*verifier.ContentSignature).HashName = alg
+	if err != nil {
+		return nil, err
 	}
+
+	sig.(*verifier.ContentSignature).HashName = alg
 	return sig, err
 }
 

@@ -280,7 +280,6 @@ func TestNoShortData(t *testing.T) {
 	}
 }
 
-// Reproduce nil error
 type ErrorReader struct{}
 
 func (e *ErrorReader) Read(p []byte) (n int, err error) {
@@ -291,9 +290,10 @@ func TestReadRandFailureOnSignHash(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 	testcase := PASSINGTESTCASES[0]
 	s, _ := New(testcase.cfg)
+	// TODO: Add a configurable rand.Reader
 	s.rand = &ErrorReader{}
-	_, err_nil := s.SignData(input, nil)
-	if err_nil == nil {
+	_, err := s.SignData(input, nil)
+	if err == nil {
 		t.Fatal("Should have failed to sign data with error in the SignHash")
 	}
 }
