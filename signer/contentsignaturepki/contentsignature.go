@@ -3,7 +3,6 @@ package contentsignaturepki // import "github.com/mozilla-services/autograph/sig
 import (
 	"crypto"
 	"crypto/ecdsa"
-	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/asn1"
@@ -217,8 +216,13 @@ func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Sign
 	if len(input) < 10 {
 		return nil, fmt.Errorf("contentsignaturepki %q: refusing to sign input data shorter than 10 bytes", s.ID)
 	}
+
 	alg, hash := MakeTemplatedHash(input, s.Mode)
 	sig, err := s.SignHash(hash, options)
+	if err != nil {
+		return nil, err
+	}
+
 	sig.(*verifier.ContentSignature).HashName = alg
 	return sig, err
 }
@@ -262,7 +266,7 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 		ID:   s.ID,
 	}
 
-	asn1Sig, err := s.eePriv.(crypto.Signer).Sign(rand.Reader, input, nil)
+	asn1Sig, err := s.eePriv.(crypto.Signer).Sign(s.rand, input, nil)
 	if err != nil {
 		return nil, fmt.Errorf("contentsignaturepki %q: failed to sign hash: %w", s.ID, err)
 	}

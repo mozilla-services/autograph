@@ -8,6 +8,7 @@ package contentsignaturepki
 
 import (
 	"crypto/ecdsa"
+	"errors"
 	"strings"
 	"testing"
 
@@ -276,5 +277,23 @@ func TestNoShortData(t *testing.T) {
 	}
 	if err.Error() != `contentsignaturepki "testsigner0": refusing to sign input data shorter than 10 bytes` {
 		t.Fatalf("expected to fail with input data too short but failed with: %v", err)
+	}
+}
+
+type ErrorReader struct{}
+
+func (e *ErrorReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("read error")
+}
+
+func TestReadRandFailureOnSignHash(t *testing.T) {
+	input := []byte("foobarbaz1234abcd")
+	testcase := PASSINGTESTCASES[0]
+	s, _ := New(testcase.cfg)
+	// TODO: Add a configurable rand.Reader
+	s.rand = &ErrorReader{}
+	_, err := s.SignData(input, nil)
+	if err == nil {
+		t.Fatal("Should have failed to sign data with error in the SignHash")
 	}
 }
