@@ -20,7 +20,8 @@ import (
 
 var (
 	allowedSigAlgs = map[string]x509.SignatureAlgorithm{
-		"SHA256WithRSA":   x509.SHA256WithRSA,
+		"SHA256WithRSA": x509.SHA256WithRSA,
+		// TODO(AUT-307): SHA384WithRSA is not supported by GCP, but is in AWS. Remove this when we move off AWS
 		"SHA384WithRSA":   x509.SHA384WithRSA,
 		"ECDSAWithSHA256": x509.ECDSAWithSHA256,
 		"ECDSAWithSHA384": x509.ECDSAWithSHA384,
@@ -64,9 +65,18 @@ func main() {
 		flag.Usage()
 		os.Exit(2)
 	}
+
 	sigAlg, ok := allowedSigAlgs[sigAlgName]
 	if !ok {
 		fmt.Fprintf(os.Stderr, "invalid signature algorithm %#v passed as -sigAlg, select from %q\n", sigAlgName, mapKeysAsSlice(allowedSigAlgs))
+		os.Exit(2)
+	}
+
+	// TODO(AUT-307): Remove this conditional and erro when we remove
+	// SHA384WithRSA from the allowedSigAlgs
+	if os.Getenv("KMS_PKCS11_CONFIG") != "" && sigAlg == x509.SHA384WithRSA {
+		// We're on GCP, so we should tell them about the SHA384WithRSA issue
+		fmt.Fprintln(os.Stderr, "SHA384WithRSA is not supported by GCP. Select another signature algorithm")
 		os.Exit(2)
 	}
 
@@ -86,7 +96,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// FIXME use nameConstraints and allow multiple dnsNames?
 	csrPEM, err := generatePEMEncodedCSR(privKey, ou, cn, email, []string{dnsName}, sigAlg)
 	if err != nil {
 		log.Fatalf("Failed to generate CSR: %s", err.Error())

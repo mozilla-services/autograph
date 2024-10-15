@@ -5,10 +5,10 @@ hosted in our HSMs. It's used particularly to issue the CS and AMO intermediates
 used by autograph. See our private hsm repo for how we've invoked it.
 
 Note: nearly all of the CSRs attributes can be overridden at signing time, so
-this is not a complete picture (esp. of the name constraints). From SAN to
-signature algorithm. But we include those out of a desire to be as explicit as
-we can be, at the cost of perhaps confusing ourselves about all the places those
-attributes must be specified.
+this is not a complete picture of what will be signed. But we include attributes
+like subject alternative names and signature algorithm out of a desire to be as
+explicit as we can be. This comes at the cost of perhaps confusing ourselves
+about all the places those attributes must be specified.
 
 If you're invoking in GCP, be sure to set the `KMS_PKCS11_CONFIG` env var to the
 YAML config file that the libkmsp11 library requires.
