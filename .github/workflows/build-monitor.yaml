@@ -1,4 +1,4 @@
-name: Deploy
+name: Build Autograph Monitor
 on:
   workflow_dispatch:
   push:
