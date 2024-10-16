@@ -55,9 +55,10 @@ const (
 
 // Options contains options for creating and verifying PKCS15 signatures.
 type Options struct {
-	// Hash, if not zero, overrides the hash function passed to SignPSS.
-	// This is the only way to specify the hash function when using the
-	// crypto.Signer interface.
+	// Hash, if not zero, overrides the hash function passed to SignPSS. This is
+	// the only way to specify the hash function when using the crypto.Signer
+	// interface. crypto.Hash is "just" a uint, so the json.Marshal/Unmarshal
+	// calls in this package work on it, but it's a lil sketchy.
 	Hash crypto.Hash
 }
 

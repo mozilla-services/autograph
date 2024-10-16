@@ -44,11 +44,8 @@ type configuration struct {
 
 const inputdata string = "AUTOGRAPH MONITORING"
 
-var (
-	conf configuration
-)
-
 func main() {
+	conf := &configuration{}
 	conf.url = os.Getenv("AUTOGRAPH_URL")
 	if conf.url == "" {
 		log.Fatal("AUTOGRAPH_URL must be set to the base url of the autograph service")
@@ -90,9 +87,9 @@ func main() {
 
 	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
 		// we are inside a lambda environment so run as lambda
-		lambda.Start(Handler)
+		lambda.Start(func() error { return Handler(conf, http.DefaultClient) })
 	} else {
-		err := Handler()
+		err := Handler(conf, http.DefaultClient)
 		if err != nil {
 			log.Fatalf("Unhandled exception from monitor: %s", err)
 		}
@@ -122,7 +119,7 @@ func LoadCertsToTruststore(pemStrings []string) (*x509.CertPool, []string, error
 
 // Handler is a wrapper around monitor() that performs garbage collection
 // before returning
-func Handler() (err error) {
+func Handler(conf *configuration, client *http.Client) (err error) {
 	defer func() {
 		// force gc run
 		// https://bugzilla.mozilla.org/show_bug.cgi?id=1621133
@@ -130,11 +127,11 @@ func Handler() (err error) {
 		runtime.GC()
 		log.Println("Garbage collected in", time.Since(t1))
 	}()
-	return monitor()
+	return monitor(conf, client)
 }
 
 // monitor contacts the autograph service and verifies all monitoring signatures
-func monitor() error {
+func monitor(conf *configuration, client *http.Client) error {
 	log.Println("Retrieving monitoring data from", conf.url)
 	req, err := http.NewRequest("GET", conf.url+"__monitor__", nil)
 	if err != nil {
@@ -149,7 +146,7 @@ func monitor() error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", makeAuthHeader(req, "monitor", conf.monitoringKey))
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request to monitor endpoint failed: %w", err)
 	}
@@ -191,7 +188,7 @@ func monitor() error {
 			err = verifyContentSignature(x5uClient, conf.notifier, conf.rootHashes, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
-			err = verifyXPISignature(response.Signature)
+			err = verifyXPISignature(response.Signature, conf.truststore, conf.depTruststore)
 		case apk2.Type:
 			// we don't verify apk2 signatures because they can only be obtained on valid
 			// APK files, which is too big to fit in the monitoring logic
