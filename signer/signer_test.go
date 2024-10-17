@@ -7,9 +7,11 @@
 package signer
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"encoding/asn1"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -218,7 +220,7 @@ func TestNoSuitableKeyFound(t *testing.T) {
 }
 
 func TestMakeKey(t *testing.T) {
-	for i, testcase := range PASSINGTESTCASES {
+	for i, testcase := range passingTestCases {
 		_, keyTpl, _, err := testcase.cfg.GetKeys()
 		if err != nil {
 			t.Fatalf("testcase %d failed to load signer configuration: %v", i, err)
@@ -235,7 +237,7 @@ func TestMakeKey(t *testing.T) {
 	}
 }
 
-var PASSINGTESTCASES = []struct {
+var passingTestCases = []struct {
 	cfg Configuration
 }{
 	{cfg: Configuration{
@@ -661,4 +663,263 @@ func TestMakeKeyGCPRSA(t *testing.T) {
 	if err != nil {
 		t.Fatalf("MakeKey failed: %v", err)
 	}
+}
+
+var unlimitedBytesReaderPassingTestCases = []struct {
+	requestedBytes                int
+	expectedSessions              int
+	expectedPkcs11RandReaderBytes [][]byte
+}{
+	{
+		requestedBytes:                1,
+		expectedSessions:              1,
+		expectedPkcs11RandReaderBytes: [][]byte{{'A'}},
+	},
+	{
+		requestedBytes:                1024,
+		expectedSessions:              1,
+		expectedPkcs11RandReaderBytes: [][]byte{bytes.Repeat([]byte("A"), 1024)},
+	},
+	{
+		requestedBytes:   1536,
+		expectedSessions: 2,
+		expectedPkcs11RandReaderBytes: [][]byte{
+			bytes.Repeat([]byte("A"), 1024),
+			bytes.Repeat([]byte("B"), 512),
+		},
+	},
+	{
+		requestedBytes:   2047,
+		expectedSessions: 2,
+		expectedPkcs11RandReaderBytes: [][]byte{
+			bytes.Repeat([]byte("A"), 1024),
+			bytes.Repeat([]byte("B"), 1023),
+		},
+	},
+	{
+		requestedBytes:   2048,
+		expectedSessions: 2,
+		expectedPkcs11RandReaderBytes: [][]byte{
+			bytes.Repeat([]byte("A"), 1024),
+			bytes.Repeat([]byte("B"), 1024),
+		},
+	},
+	{
+		requestedBytes:   2049,
+		expectedSessions: 3,
+		expectedPkcs11RandReaderBytes: [][]byte{
+			bytes.Repeat([]byte("A"), 1024),
+			bytes.Repeat([]byte("B"), 1024),
+			{'C'},
+		},
+	},
+	{
+		requestedBytes:   5000,
+		expectedSessions: 5,
+		expectedPkcs11RandReaderBytes: [][]byte{
+			bytes.Repeat([]byte("A"), 1024),
+			bytes.Repeat([]byte("B"), 1024),
+			bytes.Repeat([]byte("C"), 1024),
+			bytes.Repeat([]byte("D"), 1024),
+			bytes.Repeat([]byte("E"), 904),
+		},
+	},
+}
+
+func TestUnlimitedBytesRandReader(t *testing.T) {
+	ubrr := new(unlimitedBytesRandReader)
+
+	ctrl := gomock.NewController(t)
+	mockCtx := mockpkcs11.NewMockPKCS11Context(ctrl)
+	defer ctrl.Finish()
+
+	slot := uint(0)
+	session := pkcs11.SessionHandle(0)
+	mockCtx.EXPECT().Initialize().Return(nil).Times(1)
+	mockCtx.EXPECT().GetSlotList(true).Return([]uint{slot}, nil).Times(2)
+	mockCtx.EXPECT().GetTokenInfo(slot).Return(pkcs11.TokenInfo{}, nil).Times(1)
+
+	// somewhat surprisingly, a new session is used each time we call
+	// GenerateRandom. It's unclear whether this happens exclusively in tests
+	// or if it also happens in production code
+	expectedSessions := 0
+	for _, testcase := range unlimitedBytesReaderPassingTestCases {
+		expectedSessions += testcase.expectedSessions
+	}
+	mockCtx.EXPECT().OpenSession(slot, uint(6)).Return(session, nil).Times(expectedSessions)
+
+	mockFactory := mockedPKCS11ContextFactory(mockCtx)
+	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	defer crypto11.Close()
+
+	for _, testcase := range unlimitedBytesReaderPassingTestCases {
+		var expectedBytes []byte
+		for _, bytes := range testcase.expectedPkcs11RandReaderBytes {
+			expectedBytes = append(expectedBytes, bytes...)
+			mockCtx.EXPECT().GenerateRandom(session, len(bytes)).Return(bytes, nil).Times(1)
+		}
+		result := make([]byte, testcase.requestedBytes)
+		n, err := ubrr.Read(result)
+		if err != nil {
+			t.Fatalf("unlimitedBytesRandReader.Read failed: %v", err)
+		}
+		if n != testcase.requestedBytes {
+			t.Fatalf("failed to read %d bytes, read %d instead", testcase.requestedBytes, n)
+		}
+		if !bytes.Equal(result, expectedBytes) {
+			t.Fatalf("result is not the expected bytes. got: %v, want: %v", result, expectedBytes)
+		}
+	}
+	// these ones are called as part of Close(), not as part of our actual testing
+	mockCtx.EXPECT().CloseSession(session).Return(nil).Times(expectedSessions)
+	mockCtx.EXPECT().CloseAllSessions(slot).Return(nil).Times(1)
+	mockCtx.EXPECT().Finalize().Return(nil).Times(1)
+	mockCtx.EXPECT().Destroy().Times(1)
+}
+
+// inputs and outputs to/from the under the hood GenerateRandom calls
+type grExpectation struct {
+	requestedBytes int
+	returnedBytes  []byte
+}
+
+var unlimitedBytesReaderFailingTestCases = []struct {
+	// number of random bytes to request
+	requestedBytes int
+	// the actual bytes we expect back. this will always be the same
+	// length as requestedBytes, and will be filled with the actual bytes
+	// returned for success calls to PKCS11RandReader.Read, followed by zeros
+	// this is true even when GenerateRandom returns some (but not all of the
+	// requested) random bytes, because PKCS11RandReader.Read throws the
+	// returned bytes from GenerateRandom on any error
+	expectedBytes              []byte
+	generateRandomExpectations []grExpectation
+}{
+	{
+		requestedBytes: 5,
+		expectedBytes:  bytes.Repeat([]byte{0}, 5),
+		generateRandomExpectations: []grExpectation{
+			{
+				requestedBytes: 5,
+				returnedBytes:  []byte{},
+			},
+		},
+	},
+	{
+		requestedBytes: 1024,
+		expectedBytes:  bytes.Repeat([]byte{0}, 1024),
+		generateRandomExpectations: []grExpectation{
+			{
+				requestedBytes: 1024,
+				returnedBytes:  bytes.Repeat([]byte("A"), 5),
+			},
+		},
+	},
+	{
+		requestedBytes: 2048,
+		expectedBytes: append(
+			bytes.Repeat([]byte("A"), 1024),
+			bytes.Repeat([]byte{0}, 1024)...,
+		),
+		generateRandomExpectations: []grExpectation{
+			{
+				requestedBytes: 1024,
+				returnedBytes:  bytes.Repeat([]byte("A"), 1024),
+			},
+			{
+				requestedBytes: 1024,
+				returnedBytes:  bytes.Repeat([]byte("B"), 72),
+			},
+		},
+	},
+	{
+		requestedBytes: 5000,
+		expectedBytes: append(
+			append(
+				bytes.Repeat([]byte("A"), 1024),
+				bytes.Repeat([]byte("B"), 1024)...,
+			),
+			bytes.Repeat([]byte{0}, 2952)...,
+		),
+		generateRandomExpectations: []grExpectation{
+			{
+				requestedBytes: 1024,
+				returnedBytes:  bytes.Repeat([]byte("A"), 1024),
+			},
+			{
+				requestedBytes: 1024,
+				returnedBytes:  bytes.Repeat([]byte("B"), 1024),
+			},
+			{
+				requestedBytes: 1024,
+				returnedBytes:  bytes.Repeat([]byte("C"), 42),
+			},
+		},
+	},
+}
+
+func TestUnlimitedBytesRandReaderErr(t *testing.T) {
+	ubrr := new(unlimitedBytesRandReader)
+
+	ctrl := gomock.NewController(t)
+	mockCtx := mockpkcs11.NewMockPKCS11Context(ctrl)
+	defer ctrl.Finish()
+
+	slot := uint(0)
+	session := pkcs11.SessionHandle(0)
+	mockCtx.EXPECT().Initialize().Return(nil).Times(1)
+	mockCtx.EXPECT().GetSlotList(true).Return([]uint{slot}, nil).Times(2)
+	mockCtx.EXPECT().GetTokenInfo(slot).Return(pkcs11.TokenInfo{}, nil).Times(1)
+
+	// somewhat surprisingly, a new session is used each time we call
+	// GenerateRandom. It's unclear whether this happens exclusively in tests
+	// or if it also happens in production code
+	expectedSessions := 0
+	for _, testcase := range unlimitedBytesReaderFailingTestCases {
+		expectedSessions += len(testcase.generateRandomExpectations)
+	}
+	mockCtx.EXPECT().OpenSession(slot, uint(6)).Return(session, nil).Times(expectedSessions)
+
+	mockFactory := mockedPKCS11ContextFactory(mockCtx)
+	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	defer crypto11.Close()
+
+	entropyErr := errors.New("not enough entropy")
+
+	for _, testcase := range unlimitedBytesReaderFailingTestCases {
+		expectedN := 0
+		for _, expectation := range testcase.generateRandomExpectations {
+			var expectedErr error = nil
+			if len(expectation.returnedBytes) != expectation.requestedBytes {
+				// if returned bytes and requested bytes are not the same,
+				// we're simulating a failure in GenerateRandom.
+				// we do not increase expectedN, because GenerateRandom always
+				// returns n = 0 in an error case
+				expectedErr = entropyErr
+			} else {
+				// if they are the same, expectedN goes up by the number of bytes
+				// returned
+				expectedN += len(expectation.returnedBytes)
+			}
+			mockCtx.EXPECT().GenerateRandom(session, expectation.requestedBytes).Return(expectation.returnedBytes, expectedErr).Times(1)
+		}
+
+		result := make([]byte, testcase.requestedBytes)
+		n, err := ubrr.Read(result)
+		if err != entropyErr {
+			t.Fatalf("expected error %v, got %v", entropyErr, err)
+		}
+		if n != expectedN {
+			t.Fatalf("expected Read to return %d bytes, got %d", expectedN, n)
+		}
+		if !bytes.Equal(result, testcase.expectedBytes) {
+			t.Fatalf("result is not the expected bytes. got: %v, wanted: %v", result, testcase.expectedBytes)
+		}
+	}
+
+	// these ones are called as part of Close(), not as part of our actual testing
+	mockCtx.EXPECT().CloseSession(session).Return(nil).Times(expectedSessions)
+	mockCtx.EXPECT().CloseAllSessions(slot).Return(nil).Times(1)
+	mockCtx.EXPECT().Finalize().Return(nil).Times(1)
+	mockCtx.EXPECT().Destroy().Times(1)
 }

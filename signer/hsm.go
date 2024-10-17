@@ -27,12 +27,12 @@ func (hsm *GenericHSM) GetPrivateKey(label []byte) (crypto.PrivateKey, error) {
 	return crypto11.FindKeyPair(nil, label)
 }
 
-func (hsm *GenericHSM) GetRand() io.Reader {
-	return new(crypto11.PKCS11RandReader)
-}
-
 type AWSHSM struct {
 	GenericHSM
+}
+
+func (hsm *AWSHSM) GetRand() io.Reader {
+	return new(crypto11.PKCS11RandReader)
 }
 
 func (hsm *AWSHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKey, crypto.PublicKey, error) {
@@ -105,6 +105,35 @@ const CKA_GOOGLE_DEFINED_KMS_ALGORITHM = CKA_GOOGLE_DEFINED | CKA_KMS_ALGORITHM
 
 type GCPHSM struct {
 	GenericHSM
+}
+
+type unlimitedBytesRandReader struct {
+	rr crypto11.PKCS11RandReader
+}
+
+func (ubrr *unlimitedBytesRandReader) Read(data []byte) (int, error) {
+	var n int
+	var err error
+	need := len(data)
+	for need > 0 {
+		var bytesRead int
+		next := min(need, 1024)
+		bytesRead, err = ubrr.rr.Read(data[n : n+next])
+		n += bytesRead
+		if err != nil {
+			return n, err
+		}
+		need -= bytesRead
+	}
+	return n, err
+}
+
+// GCPHSM.GetRand returns an io.Reader that can generate an unlimited
+// number of bytes from a crypto11.PKCS11RandReader. This is needed because
+// GCP KMS can generate a maximum of 1024 bytes per call.
+// https://cloud.google.com/kms/docs/generate-random#known_limitations
+func (hsm *GCPHSM) GetRand() io.Reader {
+	return new(unlimitedBytesRandReader)
 }
 
 func (hsm *GCPHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKey, crypto.PublicKey, error) {
