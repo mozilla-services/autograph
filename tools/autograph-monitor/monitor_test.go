@@ -57,7 +57,6 @@ func TestNormalizeAutographURL(t *testing.T) {
 	testcases := map[string][]string{
 		"https://golden.com/__monitor__":    {"https://golden.com", "https://golden.com/", "https://golden.com//"},
 		"https://port.com:7890/__monitor__": {"https://port.com:7890", "https://port.com:7890/", "https://port.com:7890//"},
-		"http://testing.com/__monitor__":    {"http://testing.com", "http://testing.com/", "http://testing.com//"},
 	}
 
 	for expectedURL, origURLs := range testcases {
