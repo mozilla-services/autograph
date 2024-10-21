@@ -167,32 +167,32 @@ func Test_verifyContentSignature(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	oneCertChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	oneCertChainTestServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, NormandyDevChain2021Intermediate)
 	}))
 	defer oneCertChainTestServer.Close()
 
-	rsaLeafChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	rsaLeafChainTestServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string(rsaLeafChain))
 	}))
 	defer rsaLeafChainTestServer.Close()
 
-	testLeafChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	testLeafChainTestServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string(testLeafChain))
 	}))
 	defer testLeafChainTestServer.Close()
 
-	testLeafExpiringSoonChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	testLeafExpiringSoonChainTestServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string(mustCertsToChain([]*x509.Certificate{testLeaf7DaysToExpiration, testInter, testRoot})))
 	}))
 	defer testLeafExpiringSoonChainTestServer.Close()
 
-	testInterExpiringSoonChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	testInterExpiringSoonChainTestServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string(mustCertsToChain([]*x509.Certificate{testLeaf, testInter30DaysToExpiration, testRoot})))
 	}))
 	defer testInterExpiringSoonChainTestServer.Close()
 
-	testRootExpiringSoonChainTestServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	testRootExpiringSoonChainTestServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string(mustCertsToChain([]*x509.Certificate{testLeaf, testInter, testRoot16DaysToExpiration})))
 	}))
 	defer testRootExpiringSoonChainTestServer.Close()
@@ -220,7 +220,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testLeafChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
@@ -237,7 +237,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response typed nil notifier ok",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testLeafChainTestServer.Client(),
 				notifier:   typedNilNotifier,
 				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
@@ -254,7 +254,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response notifies",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testLeafChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
@@ -279,7 +279,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response with invalid root hash but ignored EE ok",
 			args: args{
-				x5uClient:    &http.Client{},
+				x5uClient:    testLeafChainTestServer.Client(),
 				notifier:     nil,
 				rootHashes:   []string{"invalidroothash"},
 				ignoredCerts: map[string]bool{"example.content-signature.mozilla.org": true},
@@ -298,7 +298,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "valid csig response with invalid root hash fails",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testLeafChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: []string{"invalidroothash"},
 				response: formats.SignatureResponse{
@@ -316,7 +316,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "empty x5u fails",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testLeafChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: []string{"invalidroothash"},
 				response: formats.SignatureResponse{
@@ -351,7 +351,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "truncated signature fails",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testLeafChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
@@ -369,7 +369,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "one cert X5U chain fails",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  oneCertChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: normandyDev2021Roothash,
 				response: formats.SignatureResponse{
@@ -388,7 +388,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "bad EE pubkey fails",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  rsaLeafChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: normandyDev2021Roothash,
 				response: formats.SignatureResponse{
@@ -407,7 +407,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "invalid data (wrong EE for normandyDev2021Roothash) fails",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testLeafChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: normandyDev2021Roothash,
 				response: formats.SignatureResponse{
@@ -426,7 +426,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "expiring EE fails",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testLeafExpiringSoonChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
@@ -444,7 +444,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "expiring inter fails",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testInterExpiringSoonChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: []string{sha2Fingerprint(testRoot)},
 				response: formats.SignatureResponse{
@@ -462,7 +462,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		{
 			name: "expiring root fails",
 			args: args{
-				x5uClient:  &http.Client{},
+				x5uClient:  testRootExpiringSoonChainTestServer.Client(),
 				notifier:   nil,
 				rootHashes: []string{sha2Fingerprint(testRoot16DaysToExpiration)},
 				response: formats.SignatureResponse{
