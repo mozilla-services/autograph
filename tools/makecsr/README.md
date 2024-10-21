@@ -43,7 +43,7 @@ something like:
 ```yaml
 tokens:
   - key_ring: projects/autograph/locations/us-west-2/keyRings/autograph-keyring
-  - label: gcp
+    label: gcp
 ```
 
 Note that the `label` must match between the two configuration files.
