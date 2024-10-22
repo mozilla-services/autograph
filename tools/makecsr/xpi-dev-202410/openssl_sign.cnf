@@ -107,3 +107,33 @@ subjectKeyIdentifier	= hash
 authorityKeyIdentifier	= keyid,issuer
 subjectKeyIdentifier	= hash
 authorityKeyIdentifier	= issuer:always
+
+[ amo_intermediate_ca ]
+basicConstraints    = CA:true
+keyUsage        = critical,keyCertSign,cRLSign
+extendedKeyUsage    = critical,codeSigning
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid:always,issuer:always
+nsCaRevocationUrl   = http://addons.mozilla.org/ca/crl.pem
+nameConstraints         = @amo_name_constraints
+
+[ amo_name_constraints ]
+excluded;DNS.0 = .content-signature.mozilla.org
+excluded;DNS.1 = content-signature.mozilla.org
+
+[ cs_intermediate_ca ]
+basicConstraints    = CA:true
+keyUsage        = critical,keyCertSign,cRLSign
+extendedKeyUsage    = critical,codeSigning
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid:always,issuer:always
+nsCaRevocationUrl   = http://addons.allizom.org/ca/crl.pem
+nameConstraints         = @cs_name_constraints
+
+[ cs_name_constraints ]
+permitted;DNS.0 = .content-signature.mozilla.org
+permitted;DNS.1 = content-signature.mozilla.org
