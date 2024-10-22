@@ -1,0 +1,8 @@
+[ content_signature_and_addons_root_ca ]
+basicConstraints	= CA:true
+keyUsage		= critical,keyCertSign,cRLSign
+extendedKeyUsage	= critical,codeSigning
+subjectKeyIdentifier	= hash
+authorityKeyIdentifier	= keyid,issuer
+subjectKeyIdentifier	= hash
+authorityKeyIdentifier	= issuer:always
