@@ -1,3 +1,104 @@
+HOME			= .
+# RANDFILE		= $ENV::HOME/.rnd # not sure if it's needed but ideal to use default
+
+# Extra OBJECT IDENTIFIER info:
+#oid_file		= $ENV::HOME/.oid
+oid_section		= new_oids
+
+openssl_conf            = openssl_def
+[ openssl_def ]
+# To use this configuration file with the "-extfile" option of the
+# "openssl x509" utility, name here the section containing the
+# X.509v3 extensions to use:
+# extensions		= 
+# (Alternatively, use a configuration file that has only
+# X.509v3 extensions in its main [= default] section.)
+
+[ new_oids ]
+
+# We can add new OIDs in here for use by 'ca' and 'req'.
+# Add a simple OID like this:
+# testoid1=1.2.3.4
+# Or use config file substitution like this:
+# testoid2=${testoid1}.5.6
+
+####################################################################
+[ ca ]
+default_ca	= CA_default		# The default ca section, get overriden
+
+####################################################################
+[ CA_default ]
+
+dir		= 	/out	# Where everything is kept
+certs		= $dir/certs		# Where the issued certs are kept
+crl_dir		= $dir/crl		# Where the issued crl are kept
+database	= $dir/index.txt	# database index file.
+unique_subject	= yes			# Set to 'no' to allow creation of
+					# several ctificates with same subject.
+new_certs_dir	= $dir/newcerts		# default place for new certs.
+
+certificate	= $dir/cacert.pem 	# The CA certificate
+serial		= $dir/serial 		# The current serial number
+crlnumber	= $dir/crlnumber	# the current crl number
+					# must be commented out to leave a V1 CRL
+crl		= $dir/crl.pem 		# The current CRL
+private_key	= $dir/private/cakey.pem # The private key
+RANDFILE	= $dir/private/.rand	# private random number file
+
+# FIXME x509_extensions	= sign_moz		# The extentions to add to the cert, this does not exist anywhere in hsm repo
+
+# Comment out the following two lines for the "traditional"
+# (and highly broken) format.
+name_opt 	= ca_default		# Subject Name options
+cert_opt 	= ca_default		# Certificate field options
+
+# Extension copying option: use with caution.
+# copy_extensions = copy
+
+# Extensions to add to a CRL. Note: Netscape communicator chokes on V2 CRLs
+# so this is commented out by default to leave a V1 CRL.
+# crlnumber must also be commented out to leave a V1 CRL.
+# crl_extensions	= crl_ext
+
+default_days	= 365			# how long to certify for, this gets overwritten with startdate and enddate flags
+default_md		= sha256			# which md to use.
+preserve		= no			# keep passed DN ordering
+
+# A few difference way of specifying how similar the request should look
+# For type CA, the listed attributes must be the same, and the optional
+# and supplied fields are just that :-)
+policy					= policy_match
+
+# For the CA policy
+[ policy_match ]
+countryName				= optional
+stateOrProvinceName		= optional
+organizationName		= optional
+organizationalUnitName	= optional
+commonName				= supplied
+emailAddress			= optional
+
+####################################################################
+[ req ]
+default_bits		= 2048
+default_keyfile 	= privkey.pem
+distinguished_name	= req_distinguished_name
+x509_extensions		= amo_intermediate_ca
+
+# This sets a mask for permitted string types. There are several options. 
+# default: PrintableString, T61String, BMPString.
+# pkix	 : PrintableString, BMPString.
+# utf8only: only UTF8Strings.
+# nombstr : PrintableString, T61String (no BMPStrings or UTF8Strings).
+# MASK:XXXX a literal mask value.
+# WARNING: current versions of Netscape crash on BMPStrings or UTF8Strings
+# so use this option with caution!
+string_mask = nombstr
+
+[req_distinguished_name]
+commonName		= Common Name
+commonName_max	= 64
+
 [ content_signature_and_addons_root_ca ]
 basicConstraints	= CA:true
 keyUsage		= critical,keyCertSign,cRLSign
