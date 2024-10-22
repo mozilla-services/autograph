@@ -1,4 +1,4 @@
-docker run \
+docker run --rm \
         -e "KMS_PKCS11_CONFIG=/mnt/libkmsp11-config.yaml" \
         -e GOOGLE_APPLICATION_CREDENTIALS="/app/.config/gcloud/application_default_credentials.json" \
         -e LD_LIBRARY_PATH=/app \
