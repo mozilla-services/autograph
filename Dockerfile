@@ -29,7 +29,8 @@ RUN apt-get update && \
         libc6-dev \
         pkg-config \
         curl \
-        jq
+        jq \
+        libengine-pkcs11-openssl
 
 # Cleanup after package installation
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
