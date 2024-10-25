@@ -61,13 +61,15 @@ func main() {
 	conf.env = os.Getenv("AUTOGRAPH_ENV")
 	var err, depErr error
 	switch conf.env {
+	case "dev":
+		conf.truststore, conf.rootHashes, err = loadCertsToTruststore(firefoxPkiDevRoots)
 	case "stage":
-		conf.truststore, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiStageRoots)
+		conf.truststore, conf.rootHashes, err = loadCertsToTruststore(firefoxPkiStageRoots)
 	case "prod":
-		conf.truststore, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiProdRoots)
-		conf.depTruststore, conf.depRootHashes, depErr = LoadCertsToTruststore(firefoxPkiStageRoots)
+		conf.truststore, conf.rootHashes, err = loadCertsToTruststore(firefoxPkiProdRoots)
+		conf.depTruststore, conf.depRootHashes, depErr = loadCertsToTruststore(firefoxPkiStageRoots)
 	default:
-		_, conf.rootHashes, err = LoadCertsToTruststore(firefoxPkiDevRoots)
+		_, conf.rootHashes, err = loadCertsToTruststore(firefoxPkiLocalDevRoots)
 	}
 
 	if err != nil {
@@ -98,7 +100,7 @@ func main() {
 }
 
 // Helper function to load a series of certificates and their hashes to a given truststore and hash list
-func LoadCertsToTruststore(pemStrings []string) (*x509.CertPool, []string, error) {
+func loadCertsToTruststore(pemStrings []string) (*x509.CertPool, []string, error) {
 	var hashArr = []string{}
 	var truststore = x509.NewCertPool()
 	for _, str := range pemStrings {
