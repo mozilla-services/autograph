@@ -1,15 +1,11 @@
-ARG GO_VERSION=1.22
 ARG LIBKMSP11_VERSION=1.6
 
 #------------------------------------------------------------------------------
 # Base Debian Image
 #------------------------------------------------------------------------------
-FROM debian:bookworm AS base
-ARG GO_VERSION
+FROM golang:1.22.1-bookworm AS base
 
-ENV DEBIAN_FRONTEND='noninteractive' \
-    PATH="${PATH}:/usr/lib/go-${GO_VERSION}/bin:/go/bin" \
-    GOPATH='/go'
+ENV DEBIAN_FRONTEND='noninteractive'
 
 ## Enable bookworm-backports
 RUN echo "deb http://deb.debian.org/debian/ bookworm-backports main" > /etc/apt/sources.list.d/bookworm-backports.list
@@ -23,7 +19,6 @@ RUN apt-get update && \
         libncurses5 \
         devscripts \
         apksigner \
-        golang-${GO_VERSION} \
         gcc \
         g++ \
         libc6-dev \
