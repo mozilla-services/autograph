@@ -45,7 +45,7 @@ jobs:
       - id: gcp-auth
         uses: google-github-actions/auth@v2
         with:
-          token_format: 'access_token'
+          token_format: "access_token"
           service_account: artifact-writer@${{ vars.GCP_PROJECT_ID}}.iam.gserviceaccount.com
           workload_identity_provider: ${{ vars.GCPV2_GITHUB_WORKLOAD_IDENTITY_PROVIDER }}
 
@@ -74,6 +74,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           context: .
 
+      - name: Set up crane
+        if: ${{ github.event_name == 'release' }}
+        uses: imjasonh/setup-crane@v0.4
+
       - name: Tag and push
         # For releases, we specifically do _not_ want to rebuild, just tag the
         # existing image and push. There's no officially maintained action for
@@ -86,8 +90,8 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
           SRC: ${{ vars.DOCKERHUB_REPO}}:sha-${{ github.sha }}
         run: |
-          docker pull $SRC
+          crane digest $SRC
+          crane manifest $SRC
           for tag in $TAGS; do
-            docker tag $SRC $tag
-            docker push $tag
+            crane copy $SRC $tag
           done
