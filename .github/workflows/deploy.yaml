@@ -74,9 +74,24 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           context: .
 
+      # copypasta from https://github.com/imjasonh/setup-crane/blob/main/action.yml
       - name: Set up crane
-        if: ${{ github.event_name == 'release' }}
-        uses: imjasonh/setup-crane@v0.4
+        shell: bash
+        run: |
+          set -ex
+
+          out=crane
+          os=${{ runner.os }}
+          tag=$(curl -s -u "username:${{ github.token }}" https://api.github.com/repos/google/go-containerregistry/releases/latest | jq -r '.tag_name')
+          arch=$(uname -m)
+          tmp=$(mktemp -d)
+          cd ${tmp}
+          curl -fsL https://github.com/google/go-containerregistry/releases/download/${tag}/go-containerregistry_${os}_${arch}.tar.gz | tar xz ${out}
+          chmod +x ${tmp}/${out}
+          PATH=${PATH}:${tmp}
+          echo "${tmp}" >> $GITHUB_PATH
+          echo "${{ github.token }}" | crane auth login ghcr.io --username "dummy" --password-stdin
+
 
       - name: Tag and push
         # For releases, we specifically do _not_ want to rebuild, just tag the
