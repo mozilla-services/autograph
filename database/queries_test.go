@@ -9,6 +9,10 @@ import (
 )
 
 func TestConcurrentEndEntityOperations(t *testing.T) {
+	before := time.Now()
+	defer func() {
+		t.Logf("TestConcurrentEndEntityOperations took %s", time.Since(before))
+	}()
 	host := GetTestDBHost()
 	db, err := Connect(Config{
 		Name:                "autograph",
