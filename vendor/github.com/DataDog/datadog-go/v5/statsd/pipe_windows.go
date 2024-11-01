@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package statsd
@@ -10,20 +11,11 @@ import (
 	"github.com/Microsoft/go-winio"
 )
 
-const defaultPipeTimeout = 1 * time.Millisecond
-
 type pipeWriter struct {
 	mu       sync.RWMutex
 	conn     net.Conn
 	timeout  time.Duration
 	pipepath string
-}
-
-func (p *pipeWriter) SetWriteTimeout(d time.Duration) error {
-	p.mu.Lock()
-	p.timeout = d
-	p.mu.Unlock()
-	return nil
 }
 
 func (p *pipeWriter) Write(data []byte) (n int, err error) {
@@ -74,11 +66,16 @@ func (p *pipeWriter) Close() error {
 	return p.conn.Close()
 }
 
-func newWindowsPipeWriter(pipepath string) (*pipeWriter, error) {
+// GetTransportName returns the name of the transport
+func (p *pipeWriter) GetTransportName() string {
+	return writerWindowsPipe
+}
+
+func newWindowsPipeWriter(pipepath string, writeTimeout time.Duration) (*pipeWriter, error) {
 	// Defer connection establishment to first write
 	return &pipeWriter{
 		conn:     nil,
-		timeout:  defaultPipeTimeout,
+		timeout:  writeTimeout,
 		pipepath: pipepath,
 	}, nil
 }
