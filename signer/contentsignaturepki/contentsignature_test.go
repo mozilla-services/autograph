@@ -7,8 +7,10 @@
 package contentsignaturepki
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -357,15 +359,35 @@ func testDBHandler(t *testing.T) *database.Handler {
 	if err != nil {
 		t.Fatalf("failed to connect to test database: %v", err)
 	}
-	_, err = dbHandler.DB.Exec("truncate table endentities;")
+	err = dbHandler.CheckConnectionContext(context.Background())
+	if err != nil {
+		t.Fatalf("db.CheckConnection failed when it should not have with error: %s", err)
+	}
+
+	superDBHandler, err := database.Connect(database.Config{
+		Name:     "postgres",
+		User:     "myautographdbuser",
+		Password: "",
+		Host:     host + ":5432",
+	})
+	if err != nil {
+		t.Fatalf("failed to connect to database as superuser to truncate: %v", err)
+	}
+	_, err = superDBHandler.DB.Exec("truncate table endentities;")
 	if err != nil {
 		t.Fatalf("failed to truncate endentities table before running test: %v", err)
 	}
+	
+	t.Logf("FIXME HERE 1")
+	fmt.Println("FIXME HERE 1")
 	t.Cleanup(func() {
-		_, err = dbHandler.DB.Exec("truncate table endentities;")
+		_, err = superDBHandler.DB.Exec("truncate table endentities;")
 		if err != nil {
+			t.Logf("FIXME HERE 2")
+			fmt.Println("FIXME HERE 2")
 			t.Fatalf("failed to truncate endentities table after running test: %v", err)
 		}
+		dbHandler.Close()
 	})
 	return dbHandler
 }
