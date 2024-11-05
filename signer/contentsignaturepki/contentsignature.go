@@ -83,6 +83,9 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.chainUploadLocation = conf.ChainUploadLocation
 	s.caCert = conf.CaCert
 	s.db = conf.DB
+	if s.db == nil {
+		return nil, fmt.Errorf("contentsignaturepki %q: a database is required by this signer type but none have been configured", s.ID)
+	}
 	s.subdomainOverride = conf.SubdomainOverride
 
 	if conf.Type != Type {
