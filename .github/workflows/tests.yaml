@@ -70,6 +70,27 @@ jobs:
         with:
           args: --timeout 5m
 
+  xpi-test-profile:
+    name: Profile the signer/xpi tests
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "./go.mod"
+
+      - name: Profile signer/xpi tests
+        run: go test -o ./signer-xpi-tests -v -cpuprofile=cpu.prof -memprofile=mem.prof ./signer/xpi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signer-xpi-prof-${{ github.sha }}
+          path: |
+            cpu.prof
+            mem.prof
+            signer-xpi-tests
+
   unit-tests:
     name: Run Unit Tests
     runs-on: ubuntu-22.04
