@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/signer"
 	verifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
@@ -125,9 +126,11 @@ mpvOMOT3falDgXh0iOgdIA==
 		},
 	}
 
+	dbHandler := testDBHandler(t)
 	input := []byte("foobarbaz1234abcd")
 	for i, testcase := range testcases {
 		// initialize a signer
+		testcase.cfg.DB = dbHandler
 		s, err := New(testcase.cfg)
 		if err != nil {
 			t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
@@ -242,6 +245,7 @@ func TestNoShortData(t *testing.T) {
 		IssuerPrivKey:       keys.issuerPrivKey,
 		IssuerCert:          keys.issuerCert,
 		CaCert:              keys.caCert,
+		DB:                  testDBHandler(t),
 	}
 	s, err := New(cfg)
 	if err != nil {
@@ -274,6 +278,7 @@ func TestReadRandFailureOnSignHash(t *testing.T) {
 		IssuerPrivKey:       keys.issuerPrivKey,
 		IssuerCert:          keys.issuerCert,
 		CaCert:              keys.caCert,
+		DB:                  testDBHandler(t),
 	}
 	s, err := New(cfg)
 	if err != nil {
@@ -336,4 +341,18 @@ nsbYLErV5grBhN+UxzmY9YwlOl6j6CoBiNkCMQCVBh9UBkWNkUfMUGImrCNDLvlw
 //Vb8kLBsJmLQjZNbXt+ikjYkWGqppp2pVwwgf4=
 -----END CERTIFICATE-----`,
 	}
+}
+
+func testDBHandler(t *testing.T) *database.Handler {
+	host := database.GetTestDBHost()
+	dbHandler, err := database.Connect(database.Config{
+		Name:     "autograph",
+		User:     "myautographdbuser",
+		Password: "myautographdbpassword",
+		Host:     host + ":5432",
+	})
+	if err != nil {
+		t.Fatalf("failed to connect to test database: %v", err)
+	}
+	return dbHandler
 }
