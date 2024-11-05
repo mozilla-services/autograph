@@ -357,5 +357,15 @@ func testDBHandler(t *testing.T) *database.Handler {
 	if err != nil {
 		t.Fatalf("failed to connect to test database: %v", err)
 	}
+	_, err = dbHandler.DB.Exec("truncate table endentities;")
+	if err != nil {
+		t.Fatalf("failed to truncate endentities table before running test: %v", err)
+	}
+	t.Cleanup(func() {
+		_, err = dbHandler.DB.Exec("truncate table endentities;")
+		if err != nil {
+			t.Fatalf("failed to truncate endentities table after running test: %v", err)
+		}
+	})
 	return dbHandler
 }
