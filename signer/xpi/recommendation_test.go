@@ -186,8 +186,8 @@ func TestMakeRecommendationFile(t *testing.T) {
 	t.Run("makes a recommendation file", func(t *testing.T) {
 		t.Parallel()
 
-		// initialize a signer
-		s, err := New(recTestCase, nil)
+		keyGen := newTestRSAKeyGen()
+		s, err := New(recTestCase, keyGen.GenerateKey, nil)
 		if err != nil {
 			t.Fatalf("testcase signer initialization failed with: %v", err)
 		}
@@ -219,8 +219,8 @@ func TestMakeRecommendationFile(t *testing.T) {
 	t.Run("fails for signer not in rec mode", func(t *testing.T) {
 		t.Parallel()
 
-		// initialize a signer
-		s, err := New(validSignerConfigs[0], nil)
+		keyGen := newTestRSAKeyGen()
+		s, err := New(validSignerConfigs[0], keyGen.GenerateKey, nil)
 		if err != nil {
 			t.Fatalf("testcase %d signer initialization failed with: %v", 0, err)
 		}
@@ -247,8 +247,8 @@ func TestMakeRecommendationFile(t *testing.T) {
 			t.Fatalf("failed to unmarshal testcase for signer %q", err)
 		}
 
-		// initialize a signer
-		s, err := New(dupRecTestCase, nil)
+		keyGen := newTestRSAKeyGen()
+		s, err := New(dupRecTestCase, keyGen.GenerateKey, nil)
 		if err != nil {
 			t.Fatalf("testcase signer initialization failed with: %v", err)
 		}
@@ -271,8 +271,8 @@ func TestMakeRecommendationFile(t *testing.T) {
 	t.Run("fails for invalid recommendation validity not_before after not_after", func(t *testing.T) {
 		t.Parallel()
 
-		// initialize a signer
-		s, err := New(recTestCase, nil)
+		keyGen := newTestRSAKeyGen()
+		s, err := New(recTestCase, keyGen.GenerateKey, nil)
 		if err != nil {
 			t.Fatalf("testcase signer initialization failed with: %v", err)
 		}
@@ -349,8 +349,8 @@ func TestRecommendationNotIncludedInOtherSignerModes(t *testing.T) {
 		t.Run(tcName, func(t *testing.T) {
 			t.Parallel()
 
-			// initialize a signer
-			s, err := New(tc, nil)
+			keyGen := newTestRSAKeyGen()
+			s, err := New(tc, keyGen.GenerateKey, nil)
 			if err != nil {
 				t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
 			}
@@ -388,7 +388,8 @@ func TestSignFileWithRecommendation(t *testing.T) {
 	t.Run("signs unsignedbootstrap with PK7", func(t *testing.T) {
 		input := unsignedBootstrap
 
-		s, err := New(recTestCase, nil)
+		keyGen := newTestRSAKeyGen()
+		s, err := New(recTestCase, keyGen.GenerateKey, nil)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -420,7 +421,8 @@ func TestSignFileWithRecommendation(t *testing.T) {
 			t.Fatalf("failed to add issuer cert to pool")
 		}
 
-		s, err := New(recTestCase, nil)
+		keyGen := newTestRSAKeyGen()
+		s, err := New(recTestCase, keyGen.GenerateKey, nil)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -446,7 +448,8 @@ func TestSignFileWithRecommendation(t *testing.T) {
 	t.Run("signs unsignedbootstrap with PK7 fails for disallowed rec. state", func(t *testing.T) {
 		input := unsignedBootstrap
 
-		s, err := New(recTestCase, nil)
+		keyGen := newTestRSAKeyGen()
+		s, err := New(recTestCase, keyGen.GenerateKey, nil)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -463,7 +466,8 @@ func TestSignFileWithRecommendation(t *testing.T) {
 	t.Run("signs unsigned with rec PK7 and overwrites existing rec file", func(t *testing.T) {
 		input := unsignedBootstrap
 
-		s, err := New(recTestCase, nil)
+		keyGen := newTestRSAKeyGen()
+		s, err := New(recTestCase, keyGen.GenerateKey, nil)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}

@@ -9,6 +9,7 @@ package main
 //go:generate ./version.sh
 
 import (
+	"crypto/rsa"
 	"crypto/sha256"
 	"flag"
 	"fmt"
@@ -476,7 +477,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		case xpi.Type:
-			s, err = xpi.New(signerConf, statsClient)
+			s, err = xpi.New(signerConf, rsa.GenerateKey, statsClient)
 			if err != nil {
 				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}

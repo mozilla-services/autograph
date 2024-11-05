@@ -108,10 +108,14 @@ type XPISigner struct {
 	//      |                        |                     |
 	//   not_before          now / signing TS          not_after
 	recommendationValidityDuration time.Duration
+
+	// generateKey is passed in for testing purposes but is usually
+	// rsa.GenerateKey.
+	generateKey func(io.Reader, int) (*rsa.PrivateKey, error)
 }
 
 // New initializes an XPI signer using a configuration
-func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, err error) {
+func New(conf signer.Configuration, genKey func(io.Reader, int) (*rsa.PrivateKey, error), stats *signer.StatsClient) (s *XPISigner, err error) {
 	// TODO(AUT-160): instead of doing nil checks for stats all over XPISigner,
 	// we could just check it here once or provide a null object version of it for tests.
 	s = new(XPISigner)
@@ -129,6 +133,8 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 	s.PrivateKey = conf.PrivateKey
 
 	s.rand = conf.GetRand()
+	s.generateKey = genKey
+
 	s.issuerKey, s.issuerPublicKey, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
 		return nil, fmt.Errorf("xpi: GetKeys failed to retrieve signer: %w", err)

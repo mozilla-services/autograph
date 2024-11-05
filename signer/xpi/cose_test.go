@@ -75,8 +75,10 @@ func TestIntToCOSEAlg(t *testing.T) {
 func TestGenerateCOSEKeyPair(t *testing.T) {
 	// returns an initialized XPI signer
 	initSigner := func(t *testing.T) *XPISigner {
+		keyGen := newTestRSAKeyGen()
+
 		testcase := validSignerConfigs[0]
-		s, err := New(testcase, nil)
+		s, err := New(testcase, keyGen.GenerateKey, nil)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -507,7 +509,8 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 		t.Fatalf("error unmarshaling invalidSigBytes %q", err)
 	}
 
-	s, err := New(validSignerConfigs[0], nil)
+	keyGen := newTestRSAKeyGen()
+	s, err := New(validSignerConfigs[0], keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %q", err)
 	}
@@ -829,6 +832,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 	}
 
 	for i, testcase := range cases {
+		keyGen.Reset()
 		err := verifyCOSESignatures(testcase.fin, testcase.roots, testcase.opts, testcase.verificationTime)
 		anyMatches := false
 		for _, result := range testcase.results {
@@ -845,7 +849,8 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 func TestIssueCOSESignatureErrs(t *testing.T) {
 	t.Parallel()
 
-	signer, err := New(validSignerConfigs[0], nil)
+	keyGen := newTestRSAKeyGen()
+	signer, err := New(validSignerConfigs[0], keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
@@ -856,12 +861,14 @@ func TestIssueCOSESignatureErrs(t *testing.T) {
 		t.Fatalf("issueCOSESignature did not error on empty signer.issuerCert.Raw")
 	}
 
+	keyGen.Reset()
 	signer.issuerCert = nil
 	_, err = signer.issueCOSESignature("cn", []byte("manifest"), []*cose.Algorithm{cose.ES256})
 	if err == nil {
 		t.Fatalf("issueCOSESignature did not error on nil signer.issuerCert")
 	}
 
+	keyGen.Reset()
 	signer = nil
 	_, err = signer.issueCOSESignature("cn", []byte("manifest"), []*cose.Algorithm{cose.ES256})
 	if err == nil {

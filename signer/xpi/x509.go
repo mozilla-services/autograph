@@ -22,7 +22,7 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 		start time.Time
 	)
 	start = time.Now()
-	key, err = rsa.GenerateKey(s.rand, size)
+	key, err = s.generateKey(s.rand, size)
 
 	if s.stats != nil {
 		s.stats.SendHistogram("xpi.rsa_cache.get_key", time.Since(start))

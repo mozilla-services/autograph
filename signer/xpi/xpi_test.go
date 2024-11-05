@@ -1,12 +1,16 @@
 package xpi
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -56,7 +60,8 @@ func TestSignFile(t *testing.T) {
 					t.Fatalf("passing testcase %d: Error constructing signer.StatsdClient: %v", i, err)
 				}
 
-				s, err := New(testcase, signerStatsClient)
+				keyGen := newTestRSAKeyGen()
+				s, err := New(testcase, keyGen.GenerateKey, signerStatsClient)
 				if err != nil {
 					t.Fatalf("passing testcase %d: signer initialization failed with: %v", i, err)
 				}
@@ -100,8 +105,8 @@ func TestSignData(t *testing.T) {
 		t.Run(fmt.Sprintf("test sign data signer id %s (%d)", testcase.ID, i), func(t *testing.T) {
 			t.Parallel()
 
-			// initialize a signer
-			s, err := New(testcase, nil)
+			keyGen := newTestRSAKeyGen()
+			s, err := New(testcase, keyGen.GenerateKey, nil)
 			if err != nil {
 				t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
 			}
@@ -157,8 +162,8 @@ func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 
 	input := []byte("foobarbaz1234abcd")
 
-	// init a signer
-	s, err := New(validSignerConfigs[3], nil)
+	keyGen := newTestRSAKeyGen()
+	s, err := New(validSignerConfigs[3], keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -239,7 +244,8 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 	testcase := validSignerConfigs[3]
 
-	s, err := New(testcase, nil)
+	keyGen := newTestRSAKeyGen()
+	s, err := New(testcase, keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -254,6 +260,7 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 		t.Fatalf("failed to verify PKCS7 with SHA2 digest")
 	}
 
+	keyGen.Reset()
 	pkcs7SigSHA1, err := s.signDataWithPKCS7(input, "foo@bar.net", pkcs7.OIDDigestAlgorithmSHA1)
 	if err != nil {
 		t.Fatalf("failed to sign XPI with SHA1 digest %q", err)
@@ -263,6 +270,7 @@ func TestSignDataWithPKCS7VerifiesDigests(t *testing.T) {
 		t.Fatalf("failed to verify PKCS7 with SHA1 digest")
 	}
 
+	keyGen.Reset()
 	_, err = s.signDataWithPKCS7(input, "foo@bar.net", nil)
 	if err == nil {
 		t.Fatalf("signing XPI with nil digest did not error")
@@ -273,7 +281,8 @@ func TestNewFailure(t *testing.T) {
 	t.Parallel()
 
 	for i, testcase := range invalidSignerConfigs {
-		_, err := New(testcase.cfg, nil)
+		keyGen := newTestRSAKeyGen()
+		_, err := New(testcase.cfg, keyGen.GenerateKey, nil)
 		// check for lack of error first, otherwise `err.Error()` will cause a panic if no error
 		// is present.
 		if err == nil {
@@ -288,7 +297,8 @@ func TestOptionsP7Digest(t *testing.T) {
 	t.Parallel()
 
 	testcase := validSignerConfigs[3]
-	s, err := New(testcase, nil)
+	keyGen := newTestRSAKeyGen()
+	s, err := New(testcase, keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -323,8 +333,9 @@ func TestNoID(t *testing.T) {
 	t.Parallel()
 
 	input := []byte("foobarbaz1234abcd")
+	keyGen := newTestRSAKeyGen()
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(validSignerConfigs[3], nil)
+	s, err := New(validSignerConfigs[3], keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -341,8 +352,9 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 	t.Parallel()
 
 	input := []byte("foobarbaz1234abcd")
+	keyGen := newTestRSAKeyGen()
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(validSignerConfigs[3], nil)
+	s, err := New(validSignerConfigs[3], keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -377,8 +389,9 @@ func TestBadPKCS7DigestErrs(t *testing.T) {
 	t.Parallel()
 
 	input := []byte("foobarbaz1234abcd")
+	keyGen := newTestRSAKeyGen()
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(validSignerConfigs[3], nil)
+	s, err := New(validSignerConfigs[3], keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -399,8 +412,10 @@ func TestMarshalUnfinishedSignature(t *testing.T) {
 	t.Parallel()
 
 	input := []byte("foobarbaz1234abcd")
+	keyGen := newTestRSAKeyGen()
+
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(validSignerConfigs[3], nil)
+	s, err := New(validSignerConfigs[3], keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -422,8 +437,10 @@ func TestMarshalEmptySignature(t *testing.T) {
 	t.Parallel()
 
 	input := []byte("foobarbaz1234abcd")
+	keyGen := newTestRSAKeyGen()
+
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(validSignerConfigs[3], nil)
+	s, err := New(validSignerConfigs[3], keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -467,8 +484,10 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 	t.Parallel()
 
 	input := []byte("foobarbaz1234abcd")
+	keyGen := newTestRSAKeyGen()
+
 	// init a signer, don't care which one, taking this one because p256 is fast
-	s, err := New(validSignerConfigs[3], nil)
+	s, err := New(validSignerConfigs[3], keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("failed to initialize signer: %v", err)
 	}
@@ -490,9 +509,10 @@ func TestSignFileWithCOSESignatures(t *testing.T) {
 	t.Parallel()
 
 	input := unsignedBootstrap
-	// initialize a signer
+	keyGen := newTestRSAKeyGen()
+
 	testcase := validSignerConfigs[0]
-	s, err := New(testcase, nil)
+	s, err := New(testcase, keyGen.GenerateKey, nil)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
@@ -1443,4 +1463,64 @@ eT6Q43/gPKpGi5Sq1heGugQ=
 -----END PRIVATE KEY-----
 `,
 	}},
+}
+
+type testRSAKeyGen struct {
+	sync.Mutex
+	sizeToKeys   map[int][]*rsa.PrivateKey
+	sizeToUnused map[int]int
+}
+
+var testKeyGenKeysDontManipulateDirectly map[int][]*rsa.PrivateKey
+
+func init() {
+	var keys2K, keys4K []*rsa.PrivateKey
+	for range 2 {
+		key, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			panic("Unable to generate test keys: " + err.Error())
+		}
+		keys2K = append(keys2K, key)
+	}
+	for range 2 {
+		key, err := rsa.GenerateKey(rand.Reader, 4096)
+		if err != nil {
+			panic("Unable to generate test keys: " + err.Error())
+		}
+		keys4K = append(keys4K, key)
+	}
+	testKeyGenKeysDontManipulateDirectly = map[int][]*rsa.PrivateKey{
+		2048: keys2K,
+		4096: keys4K,
+	}
+}
+
+func newTestRSAKeyGen() *testRSAKeyGen {
+	sizeToUnused := make(map[int]int)
+	for size := range testKeyGenKeysDontManipulateDirectly {
+		sizeToUnused[size] = 0
+	}
+	return &testRSAKeyGen{sizeToKeys: testKeyGenKeysDontManipulateDirectly, sizeToUnused: sizeToUnused}
+}
+
+func (kg *testRSAKeyGen) GenerateKey(r io.Reader, size int) (*rsa.PrivateKey, error) {
+	kg.Lock()
+	defer kg.Unlock()
+	unused := kg.sizeToUnused[size]
+	keys, ok := kg.sizeToKeys[size]
+	if !ok || unused+1 > len(keys) {
+		// Default to the old way because we're doing something interesting.
+		fmt.Printf("FIXME HERE with %d", size)
+		return rsa.GenerateKey(r, size)
+	}
+	kg.sizeToUnused[size] = unused + 1
+	return keys[unused], nil
+}
+
+func (kg *testRSAKeyGen) Reset() {
+	kg.Lock()
+	defer kg.Unlock()
+	for k, _ := range kg.sizeToKeys {
+		kg.sizeToUnused[k] = 0
+	}
 }

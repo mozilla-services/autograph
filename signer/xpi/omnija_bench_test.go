@@ -1,6 +1,7 @@
 package xpi
 
 import (
+	"crypto/rsa"
 	"testing"
 )
 
@@ -8,7 +9,7 @@ func BenchmarkResignOmnija(b *testing.B) {
 	// initialize a system addon signer with an RSA key
 	testcase := validSignerConfigs[1]
 
-	s, err := New(testcase, nil)
+	s, err := New(testcase, rsa.GenerateKey, nil)
 	if err != nil {
 		b.Fatalf("signer initialization failed with: %v", err)
 	}
