@@ -17,8 +17,116 @@ import (
 )
 
 func TestSign(t *testing.T) {
+	keys := goodKeys()
+	var testcases = []struct {
+		cfg                signer.Configuration
+		expectedCommonName string
+	}{
+		{cfg: signer.Configuration{
+			Type:                Type,
+			ID:                  "testsigner0",
+			Mode:                P384ECDSA,
+			X5U:                 "file:///tmp/autograph_unit_tests/chains/",
+			ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
+			IssuerPrivKey:       keys.issuerPrivKey,
+			IssuerCert:          keys.issuerCert,
+			CaCert:              keys.caCert,
+		},
+			expectedCommonName: "testsigner0.content-signature.mozilla.org",
+		},
+		{cfg: signer.Configuration{
+			Type:                Type,
+			ID:                  "testsigner1",
+			Mode:                P256ECDSA,
+			X5U:                 "file:///tmp/autograph_unit_tests/chains/",
+			ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
+			IssuerPrivKey: `
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIEABir6WMfkbG2ZyKKDCij1PlSBldaaJqPQ/9ioWvCM5oAoGCCqGSM49
+AwEHoUQDQgAED0x4GeyH3nxaCVQqPFbRkoBg1BJePxTSg1oaRWIgBbrMYaB/TKpL
+WoBQZFUwn11IFDP5y1B6Tt9U5DxQ3tgt+w==
+-----END EC PRIVATE KEY-----`,
+			IssuerCert: `
+-----BEGIN CERTIFICATE-----
+MIICIDCCAcWgAwIBAgIIFYW+N1jIJvAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMTE2
+NTk1MVoXDTI5MDIyMjE2NTk1MVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTU1MDg1NDc5MTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IA
+BA9MeBnsh958WglUKjxW0ZKAYNQSXj8U0oNaGkViIAW6zGGgf0yqS1qAUGRVMJ9d
+SBQz+ctQek7fVOQ8UN7YLfujajBoMA4GA1UdDwEB/wQEAwIBhjATBgNVHSUEDDAK
+BggrBgEFBQcDAzAPBgNVHRMBAf8EBTADAQH/MDAGA1UdHgEB/wQmMCSgIjAggh4u
+Y29udGVudC1zaWduYXR1cmUubW96aWxsYS5vcmcwCgYIKoZIzj0EAwMDSQAwRgIh
+AJYQbM1zDA9RkmNwEc4LafBwL98Z+aGy31z80HeC5Y8hAiEA4KEG+ZNinz5yZItW
+NYDcA5Hvd1xXeRQi6SWj6Z2qT7w=
+-----END CERTIFICATE-----`,
+			CaCert: `
+-----BEGIN CERTIFICATE-----
+MIIB7DCCAZKgAwIBAgIIFYW+N1i+RHgwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMDE2
+NTk1MVoXDTQ5MDIyMjE2NTk1MVowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
+VQQDExBjc3Jvb3QxNTUwODU0NzkxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
+SZakSnBD3qkp15bQ+qzcKCn2+OmoOJKVgrSezyrx7IHjtEbCYUz8Zp+HhKg3NXLY
+6ZMjO0zYnq3gTdAzH3amOqM4MDYwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoG
+CCsGAQUFBwMDMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDSAAwRQIgIBgf
+KkmH7TerRPn/517v/41o/sF9Hd9iGBilyWtVMggCIQClvRXiMM6DrabvybPGHWTt
+mpvOMOT3falDgXh0iOgdIA==
+-----END CERTIFICATE-----`,
+		},
+			expectedCommonName: "testsigner1.content-signature.mozilla.org",
+		},
+		{cfg: signer.Configuration{
+			Type:                Type,
+			ID:                  "testsigner1",
+			SubdomainOverride:   "anothersigner1",
+			Mode:                P256ECDSA,
+			X5U:                 "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
+			ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
+			IssuerPrivKey: `
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIEABir6WMfkbG2ZyKKDCij1PlSBldaaJqPQ/9ioWvCM5oAoGCCqGSM49
+AwEHoUQDQgAED0x4GeyH3nxaCVQqPFbRkoBg1BJePxTSg1oaRWIgBbrMYaB/TKpL
+WoBQZFUwn11IFDP5y1B6Tt9U5DxQ3tgt+w==
+-----END EC PRIVATE KEY-----`,
+			IssuerCert: `
+-----BEGIN CERTIFICATE-----
+MIICIDCCAcWgAwIBAgIIFYW+N1jIJvAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMTE2
+NTk1MVoXDTI5MDIyMjE2NTk1MVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTU1MDg1NDc5MTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IA
+BA9MeBnsh958WglUKjxW0ZKAYNQSXj8U0oNaGkViIAW6zGGgf0yqS1qAUGRVMJ9d
+SBQz+ctQek7fVOQ8UN7YLfujajBoMA4GA1UdDwEB/wQEAwIBhjATBgNVHSUEDDAK
+BggrBgEFBQcDAzAPBgNVHRMBAf8EBTADAQH/MDAGA1UdHgEB/wQmMCSgIjAggh4u
+Y29udGVudC1zaWduYXR1cmUubW96aWxsYS5vcmcwCgYIKoZIzj0EAwMDSQAwRgIh
+AJYQbM1zDA9RkmNwEc4LafBwL98Z+aGy31z80HeC5Y8hAiEA4KEG+ZNinz5yZItW
+NYDcA5Hvd1xXeRQi6SWj6Z2qT7w=
+-----END CERTIFICATE-----`,
+			CaCert: `
+-----BEGIN CERTIFICATE-----
+MIIB7DCCAZKgAwIBAgIIFYW+N1i+RHgwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMDE2
+NTk1MVoXDTQ5MDIyMjE2NTk1MVowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
+VQQDExBjc3Jvb3QxNTUwODU0NzkxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
+SZakSnBD3qkp15bQ+qzcKCn2+OmoOJKVgrSezyrx7IHjtEbCYUz8Zp+HhKg3NXLY
+6ZMjO0zYnq3gTdAzH3amOqM4MDYwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoG
+CCsGAQUFBwMDMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDSAAwRQIgIBgf
+KkmH7TerRPn/517v/41o/sF9Hd9iGBilyWtVMggCIQClvRXiMM6DrabvybPGHWTt
+mpvOMOT3falDgXh0iOgdIA==
+-----END CERTIFICATE-----`,
+		},
+			expectedCommonName: "anothersigner1.content-signature.mozilla.org",
+		},
+	}
+
 	input := []byte("foobarbaz1234abcd")
-	for i, testcase := range PASSINGTESTCASES {
+	for i, testcase := range testcases {
 		// initialize a signer
 		s, err := New(testcase.cfg)
 		if err != nil {
@@ -88,151 +196,8 @@ func TestSign(t *testing.T) {
 		}
 	}
 }
-
-var PASSINGTESTCASES = []struct {
-	cfg                signer.Configuration
-	expectedCommonName string
-}{
-	{cfg: signer.Configuration{
-		Type:                Type,
-		ID:                  "testsigner0",
-		Mode:                P384ECDSA,
-		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
-		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
-		IssuerPrivKey: `
------BEGIN EC PRIVATE KEY-----
-MIGkAgEBBDBcwxsHPTSHIVY1qLobCqBtnjRe0UZWOro1xtg2oV4rkypbkkgHHnSA
-s8p0PlGIknKgBwYFK4EEACKhZANiAAQMBfcDj4r/9aAXcUsjjun3vCpBSQoskcdi
-iF4bE+AcFmPABh6AnwTZv0sHYPjkovk3R3RfuXlKyoqhuD73VqBhkuK7R6mN2snh
-fRkWmi6SzHWZIXPzFScoCaHnJrFzNjs=
------END EC PRIVATE KEY-----`,
-		IssuerCert: `
------BEGIN CERTIFICATE-----
-MIICXDCCAeKgAwIBAgIIFYW6xg9HrnAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
-VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODUxMDA2MB4XDTE4MTIyMTE1
-NTY0NloXDTI5MDIyMjE1NTY0NlowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
-MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
-VQQDExFjc2ludGVyMTU1MDg1MTAwNjB2MBAGByqGSM49AgEGBSuBBAAiA2IABAwF
-9wOPiv/1oBdxSyOO6fe8KkFJCiyRx2KIXhsT4BwWY8AGHoCfBNm/Swdg+OSi+TdH
-dF+5eUrKiqG4PvdWoGGS4rtHqY3ayeF9GRaaLpLMdZkhc/MVJygJoecmsXM2O6Nq
-MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
-/wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
-b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjBss+GLdMdLT2Y/g73OE9x0WyUG
-vqzO7klt20yytmhaYMIPT/zRnWsHZbqEijHMzGsCMQDEoKetuWkyBkzAytS6l+ss
-mYigBlwySY+gTqsjuIrydWlKaOv1GU+PXbwX0cQuaN8=
------END CERTIFICATE-----`,
-		CaCert: `
------BEGIN CERTIFICATE-----
-MIICKTCCAa+gAwIBAgIIFYW6xg2sw4QwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
-VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODUxMDA2MB4XDTE4MTIyMDE1
-NTY0NloXDTQ5MDIyMjE1NTY0NlowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
-MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
-VQQDExBjc3Jvb3QxNTUwODUxMDA2MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAENrUI
-9GJFild/ZVNwh7885643BhJlqTqZSas8mAUkYRDKv9lXk/r+CpLPclrwz/Po21xn
-5SlibnOTXaOZdMlDcWCCKqNNGRyi1xPHJIfvtF6+CswJnrkthpy6dimqd0Tyozgw
-NjAOBgNVHQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/
-BAUwAwEB/zAKBggqhkjOPQQDAwNoADBlAjB3fOCz2SQvxNZ65juSotQNRvXhB4TZ
-nsbYLErV5grBhN+UxzmY9YwlOl6j6CoBiNkCMQCVBh9UBkWNkUfMUGImrCNDLvlw
-//Vb8kLBsJmLQjZNbXt+ikjYkWGqppp2pVwwgf4=
------END CERTIFICATE-----`,
-	},
-		expectedCommonName: "testsigner0.content-signature.mozilla.org",
-	},
-	{cfg: signer.Configuration{
-		Type:                Type,
-		ID:                  "testsigner1",
-		Mode:                P256ECDSA,
-		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
-		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
-		IssuerPrivKey: `
------BEGIN EC PRIVATE KEY-----
-MHcCAQEEIEABir6WMfkbG2ZyKKDCij1PlSBldaaJqPQ/9ioWvCM5oAoGCCqGSM49
-AwEHoUQDQgAED0x4GeyH3nxaCVQqPFbRkoBg1BJePxTSg1oaRWIgBbrMYaB/TKpL
-WoBQZFUwn11IFDP5y1B6Tt9U5DxQ3tgt+w==
------END EC PRIVATE KEY-----`,
-		IssuerCert: `
------BEGIN CERTIFICATE-----
-MIICIDCCAcWgAwIBAgIIFYW+N1jIJvAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
-VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMTE2
-NTk1MVoXDTI5MDIyMjE2NTk1MVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
-MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
-VQQDExFjc2ludGVyMTU1MDg1NDc5MTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IA
-BA9MeBnsh958WglUKjxW0ZKAYNQSXj8U0oNaGkViIAW6zGGgf0yqS1qAUGRVMJ9d
-SBQz+ctQek7fVOQ8UN7YLfujajBoMA4GA1UdDwEB/wQEAwIBhjATBgNVHSUEDDAK
-BggrBgEFBQcDAzAPBgNVHRMBAf8EBTADAQH/MDAGA1UdHgEB/wQmMCSgIjAggh4u
-Y29udGVudC1zaWduYXR1cmUubW96aWxsYS5vcmcwCgYIKoZIzj0EAwMDSQAwRgIh
-AJYQbM1zDA9RkmNwEc4LafBwL98Z+aGy31z80HeC5Y8hAiEA4KEG+ZNinz5yZItW
-NYDcA5Hvd1xXeRQi6SWj6Z2qT7w=
------END CERTIFICATE-----`,
-		CaCert: `
------BEGIN CERTIFICATE-----
-MIIB7DCCAZKgAwIBAgIIFYW+N1i+RHgwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
-VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMDE2
-NTk1MVoXDTQ5MDIyMjE2NTk1MVowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
-MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
-VQQDExBjc3Jvb3QxNTUwODU0NzkxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
-SZakSnBD3qkp15bQ+qzcKCn2+OmoOJKVgrSezyrx7IHjtEbCYUz8Zp+HhKg3NXLY
-6ZMjO0zYnq3gTdAzH3amOqM4MDYwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoG
-CCsGAQUFBwMDMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDSAAwRQIgIBgf
-KkmH7TerRPn/517v/41o/sF9Hd9iGBilyWtVMggCIQClvRXiMM6DrabvybPGHWTt
-mpvOMOT3falDgXh0iOgdIA==
------END CERTIFICATE-----`,
-	},
-		expectedCommonName: "testsigner1.content-signature.mozilla.org",
-	},
-	{cfg: signer.Configuration{
-		Type:                Type,
-		ID:                  "testsigner1",
-		SubdomainOverride:   "anothersigner1",
-		Mode:                P256ECDSA,
-		X5U:                 "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
-		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
-		IssuerPrivKey: `
------BEGIN EC PRIVATE KEY-----
-MHcCAQEEIEABir6WMfkbG2ZyKKDCij1PlSBldaaJqPQ/9ioWvCM5oAoGCCqGSM49
-AwEHoUQDQgAED0x4GeyH3nxaCVQqPFbRkoBg1BJePxTSg1oaRWIgBbrMYaB/TKpL
-WoBQZFUwn11IFDP5y1B6Tt9U5DxQ3tgt+w==
------END EC PRIVATE KEY-----`,
-		IssuerCert: `
------BEGIN CERTIFICATE-----
-MIICIDCCAcWgAwIBAgIIFYW+N1jIJvAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
-VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMTE2
-NTk1MVoXDTI5MDIyMjE2NTk1MVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
-MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
-VQQDExFjc2ludGVyMTU1MDg1NDc5MTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IA
-BA9MeBnsh958WglUKjxW0ZKAYNQSXj8U0oNaGkViIAW6zGGgf0yqS1qAUGRVMJ9d
-SBQz+ctQek7fVOQ8UN7YLfujajBoMA4GA1UdDwEB/wQEAwIBhjATBgNVHSUEDDAK
-BggrBgEFBQcDAzAPBgNVHRMBAf8EBTADAQH/MDAGA1UdHgEB/wQmMCSgIjAggh4u
-Y29udGVudC1zaWduYXR1cmUubW96aWxsYS5vcmcwCgYIKoZIzj0EAwMDSQAwRgIh
-AJYQbM1zDA9RkmNwEc4LafBwL98Z+aGy31z80HeC5Y8hAiEA4KEG+ZNinz5yZItW
-NYDcA5Hvd1xXeRQi6SWj6Z2qT7w=
------END CERTIFICATE-----`,
-		CaCert: `
------BEGIN CERTIFICATE-----
-MIIB7DCCAZKgAwIBAgIIFYW+N1i+RHgwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
-VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU0NzkxMB4XDTE4MTIyMDE2
-NTk1MVoXDTQ5MDIyMjE2NTk1MVowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
-MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
-VQQDExBjc3Jvb3QxNTUwODU0NzkxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
-SZakSnBD3qkp15bQ+qzcKCn2+OmoOJKVgrSezyrx7IHjtEbCYUz8Zp+HhKg3NXLY
-6ZMjO0zYnq3gTdAzH3amOqM4MDYwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoG
-CCsGAQUFBwMDMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDSAAwRQIgIBgf
-KkmH7TerRPn/517v/41o/sF9Hd9iGBilyWtVMggCIQClvRXiMM6DrabvybPGHWTt
-mpvOMOT3falDgXh0iOgdIA==
------END CERTIFICATE-----`,
-	},
-		expectedCommonName: "anothersigner1.content-signature.mozilla.org",
-	},
-}
-
 func TestNewFailure(t *testing.T) {
-	TESTCASES := []struct {
+	testcases := []struct {
 		err string
 		cfg signer.Configuration
 	}{
@@ -255,7 +220,7 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 -----END RSA PRIVATE KEY-----`,
 		}},
 	}
-	for _, testcase := range TESTCASES {
+	for _, testcase := range testcases {
 		_, err := New(testcase.cfg)
 		if !strings.Contains(err.Error(), testcase.err) {
 			t.Fatalf("expected to fail with '%s' but failed with '%s' instead", testcase.err, err)
@@ -267,7 +232,18 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 }
 
 func TestNoShortData(t *testing.T) {
-	s, err := New(PASSINGTESTCASES[0].cfg)
+	keys := goodKeys()
+	cfg := signer.Configuration{
+		Type:                Type,
+		ID:                  "testsigner0",
+		Mode:                P384ECDSA,
+		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
+		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
+		IssuerPrivKey:       keys.issuerPrivKey,
+		IssuerCert:          keys.issuerCert,
+		CaCert:              keys.caCert,
+	}
+	s, err := New(cfg)
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}
@@ -288,12 +264,76 @@ func (e *ErrorReader) Read(p []byte) (n int, err error) {
 
 func TestReadRandFailureOnSignHash(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
-	testcase := PASSINGTESTCASES[0]
-	s, _ := New(testcase.cfg)
+	keys := goodKeys()
+	cfg := signer.Configuration{
+		Type:                Type,
+		ID:                  "testsigner0",
+		Mode:                P384ECDSA,
+		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
+		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
+		IssuerPrivKey:       keys.issuerPrivKey,
+		IssuerCert:          keys.issuerCert,
+		CaCert:              keys.caCert,
+	}
+	s, err := New(cfg)
+	if err != nil {
+		t.Fatalf("signer initialization failed with: %v", err)
+	}
 	// TODO: Add a configurable rand.Reader
 	s.rand = &ErrorReader{}
-	_, err := s.SignData(input, nil)
+	_, err = s.SignData(input, nil)
 	if err == nil {
 		t.Fatal("Should have failed to sign data with error in the SignHash")
+	}
+}
+
+type signerKeys struct {
+	issuerPrivKey string
+	issuerCert    string
+	caCert        string
+}
+
+// goodKeys is a lil helper for providing a set of ecdsa keys that will work for
+// testing.
+func goodKeys() signerKeys {
+	return signerKeys{
+		issuerPrivKey: `
+-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDBcwxsHPTSHIVY1qLobCqBtnjRe0UZWOro1xtg2oV4rkypbkkgHHnSA
+s8p0PlGIknKgBwYFK4EEACKhZANiAAQMBfcDj4r/9aAXcUsjjun3vCpBSQoskcdi
+iF4bE+AcFmPABh6AnwTZv0sHYPjkovk3R3RfuXlKyoqhuD73VqBhkuK7R6mN2snh
+fRkWmi6SzHWZIXPzFScoCaHnJrFzNjs=
+-----END EC PRIVATE KEY-----`,
+		issuerCert: `
+-----BEGIN CERTIFICATE-----
+MIICXDCCAeKgAwIBAgIIFYW6xg9HrnAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODUxMDA2MB4XDTE4MTIyMTE1
+NTY0NloXDTI5MDIyMjE1NTY0NlowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTU1MDg1MTAwNjB2MBAGByqGSM49AgEGBSuBBAAiA2IABAwF
+9wOPiv/1oBdxSyOO6fe8KkFJCiyRx2KIXhsT4BwWY8AGHoCfBNm/Swdg+OSi+TdH
+dF+5eUrKiqG4PvdWoGGS4rtHqY3ayeF9GRaaLpLMdZkhc/MVJygJoecmsXM2O6Nq
+MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+/wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
+b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjBss+GLdMdLT2Y/g73OE9x0WyUG
+vqzO7klt20yytmhaYMIPT/zRnWsHZbqEijHMzGsCMQDEoKetuWkyBkzAytS6l+ss
+mYigBlwySY+gTqsjuIrydWlKaOv1GU+PXbwX0cQuaN8=
+-----END CERTIFICATE-----`,
+		caCert: `
+-----BEGIN CERTIFICATE-----
+MIICKTCCAa+gAwIBAgIIFYW6xg2sw4QwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODUxMDA2MB4XDTE4MTIyMDE1
+NTY0NloXDTQ5MDIyMjE1NTY0NlowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
+VQQDExBjc3Jvb3QxNTUwODUxMDA2MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAENrUI
+9GJFild/ZVNwh7885643BhJlqTqZSas8mAUkYRDKv9lXk/r+CpLPclrwz/Po21xn
+5SlibnOTXaOZdMlDcWCCKqNNGRyi1xPHJIfvtF6+CswJnrkthpy6dimqd0Tyozgw
+NjAOBgNVHQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/
+BAUwAwEB/zAKBggqhkjOPQQDAwNoADBlAjB3fOCz2SQvxNZ65juSotQNRvXhB4TZ
+nsbYLErV5grBhN+UxzmY9YwlOl6j6CoBiNkCMQCVBh9UBkWNkUfMUGImrCNDLvlw
+//Vb8kLBsJmLQjZNbXt+ikjYkWGqppp2pVwwgf4=
+-----END CERTIFICATE-----`,
 	}
 }
