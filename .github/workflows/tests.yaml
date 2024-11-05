@@ -82,7 +82,7 @@ jobs:
           go-version-file: "./go.mod"
 
       - name: Profile signer/xpi tests
-        run: go test -v -race -coverprofile coverage.out -covermode=atomic -count=1 -o ./signer-xpi-tests -v -cpuprofile=cpu.prof -memprofile=mem.prof ./signer/xpi
+        run: go test -v -race -count=1 -o ./signer-xpi-tests -v -cpuprofile=cpu.prof -memprofile=mem.prof ./signer/xpi
       - uses: actions/upload-artifact@v4
         with:
           name: signer-xpi-prof-${{ github.sha }}
