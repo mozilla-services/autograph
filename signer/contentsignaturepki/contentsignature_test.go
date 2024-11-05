@@ -19,6 +19,8 @@ import (
 
 func TestSign(t *testing.T) {
 	keys := goodKeys()
+	dbHandler := testDBHandler(t)
+
 	var testcases = []struct {
 		cfg                signer.Configuration
 		expectedCommonName string
@@ -32,6 +34,7 @@ func TestSign(t *testing.T) {
 			IssuerPrivKey:       keys.issuerPrivKey,
 			IssuerCert:          keys.issuerCert,
 			CaCert:              keys.caCert,
+			DB:                  dbHandler,
 		},
 			expectedCommonName: "testsigner0.content-signature.mozilla.org",
 		},
@@ -76,6 +79,7 @@ CCsGAQUFBwMDMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDSAAwRQIgIBgf
 KkmH7TerRPn/517v/41o/sF9Hd9iGBilyWtVMggCIQClvRXiMM6DrabvybPGHWTt
 mpvOMOT3falDgXh0iOgdIA==
 -----END CERTIFICATE-----`,
+			DB: dbHandler,
 		},
 			expectedCommonName: "testsigner1.content-signature.mozilla.org",
 		},
@@ -121,16 +125,15 @@ CCsGAQUFBwMDMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwMDSAAwRQIgIBgf
 KkmH7TerRPn/517v/41o/sF9Hd9iGBilyWtVMggCIQClvRXiMM6DrabvybPGHWTt
 mpvOMOT3falDgXh0iOgdIA==
 -----END CERTIFICATE-----`,
+			DB: dbHandler,
 		},
 			expectedCommonName: "anothersigner1.content-signature.mozilla.org",
 		},
 	}
 
-	dbHandler := testDBHandler(t)
 	input := []byte("foobarbaz1234abcd")
 	for i, testcase := range testcases {
 		// initialize a signer
-		testcase.cfg.DB = dbHandler
 		s, err := New(testcase.cfg)
 		if err != nil {
 			t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
