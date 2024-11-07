@@ -4,7 +4,7 @@ ARG LIBKMSP11_VERSION=1.6
 #------------------------------------------------------------------------------
 # Base Debian Image
 #------------------------------------------------------------------------------
-FROM --platform=linux/amd64 debian:bookworm as base
+FROM debian:bookworm AS base
 ARG GO_VERSION
 
 ENV DEBIAN_FRONTEND='noninteractive' \
@@ -38,7 +38,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 #------------------------------------------------------------------------------
 # Pre-build dependency caching
 #------------------------------------------------------------------------------
-FROM base as prebuild
+FROM base AS prebuild
 ARG LIBKMSP11_VERSION
 
 COPY google-pkcs12-release-signing-key.pem /app/src/autograph/
@@ -56,7 +56,7 @@ RUN curl -o /usr/local/share/old-rds-ca-bundle.pem https://s3.amazonaws.com/rds-
 #------------------------------------------------------------------------------
 # Build Stage
 #------------------------------------------------------------------------------
-FROM prebuild as builder
+FROM prebuild AS builder
 
 ADD . /app/src/autograph
 RUN cd /app/src/autograph && go install .
