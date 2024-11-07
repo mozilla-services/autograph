@@ -20,6 +20,9 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -73,6 +76,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           context: .
+          platforms: linux/amd64,linux/arm64
 
       # copypasta from https://github.com/imjasonh/setup-crane/blob/main/action.yml
       - name: Set up crane
@@ -91,7 +95,6 @@ jobs:
           PATH=${PATH}:${tmp}
           echo "${tmp}" >> $GITHUB_PATH
           echo "${{ github.token }}" | crane auth login ghcr.io --username "dummy" --password-stdin
-
 
       - name: Tag and push
         # For releases, we specifically do _not_ want to rebuild, just tag the
