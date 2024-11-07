@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - main
-    tags:
-      - '[0-9]+.[0-9a-z]+.[0-9a-z]+'
+  release:
+    types:
+      - released
 
 jobs:
   docker:
@@ -26,12 +27,16 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
+          flavor:
+            # don't automatically tag with `latest`; we do this conditionally in the `tags` section
+            latest=false
           images: |
             ${{ vars.DOCKERHUB_REPO }}
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph
           tags: |
             type=semver,pattern={{raw}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+            type=sha,format=long,enable=${{ github.event_name == 'push' }}
 
       - name: Generate version.json
         shell: bash
@@ -40,7 +45,7 @@ jobs:
       - id: gcp-auth
         uses: google-github-actions/auth@v2
         with:
-          token_format: 'access_token'
+          token_format: "access_token"
           service_account: artifact-writer@${{ vars.GCP_PROJECT_ID}}.iam.gserviceaccount.com
           workload_identity_provider: ${{ vars.GCPV2_GITHUB_WORKLOAD_IDENTITY_PROVIDER }}
 
@@ -58,10 +63,50 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build and push
+        # On pushes to `main`, we build and push a new image, so we can simply
+        # use the `docker/build-push-action` action.
+        if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v6
         with:
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name == 'push' }}
           sbom: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           context: .
+
+      # copypasta from https://github.com/imjasonh/setup-crane/blob/main/action.yml
+      - name: Set up crane
+        shell: bash
+        run: |
+          set -ex
+
+          out=crane
+          os=${{ runner.os }}
+          tag=$(curl -s -u "username:${{ github.token }}" https://api.github.com/repos/google/go-containerregistry/releases/latest | jq -r '.tag_name')
+          arch=$(uname -m)
+          tmp=$(mktemp -d)
+          cd ${tmp}
+          curl -fsL https://github.com/google/go-containerregistry/releases/download/${tag}/go-containerregistry_${os}_${arch}.tar.gz | tar xz ${out}
+          chmod +x ${tmp}/${out}
+          PATH=${PATH}:${tmp}
+          echo "${tmp}" >> $GITHUB_PATH
+          echo "${{ github.token }}" | crane auth login ghcr.io --username "dummy" --password-stdin
+
+
+      - name: Tag and push
+        # For releases, we specifically do _not_ want to rebuild, just tag the
+        # existing image and push. There's no officially maintained action for
+        # this use case, but it's trivial enough to do ourselves.
+        if: ${{ github.event_name == 'release' }}
+        env:
+          # Tags come in the form of a fully qualified image name and tag, eg:
+          # mozilla/autograph:1.1.8
+          # us-west2-docker.pkg.dev/autograph-proj/autograph-repo/autograph:1.1.8
+          TAGS: ${{ steps.meta.outputs.tags }}
+          SRC: ${{ vars.DOCKERHUB_REPO}}:sha-${{ github.sha }}
+        run: |
+          crane digest $SRC
+          crane manifest $SRC
+          for tag in $TAGS; do
+            crane copy $SRC $tag
+          done

@@ -3,6 +3,7 @@ package signer
 import (
 	"crypto"
 	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
 	"io"
@@ -107,33 +108,16 @@ type GCPHSM struct {
 	GenericHSM
 }
 
-type unlimitedBytesRandReader struct {
-	rr crypto11.PKCS11RandReader
-}
-
-func (ubrr *unlimitedBytesRandReader) Read(data []byte) (int, error) {
-	var n int
-	var err error
-	need := len(data)
-	for need > 0 {
-		var bytesRead int
-		next := min(need, 1024)
-		bytesRead, err = ubrr.rr.Read(data[n : n+next])
-		n += bytesRead
-		if err != nil {
-			return n, err
-		}
-		need -= bytesRead
-	}
-	return n, err
-}
-
-// GCPHSM.GetRand returns an io.Reader that can generate an unlimited
-// number of bytes from a crypto11.PKCS11RandReader. This is needed because
-// GCP KMS can generate a maximum of 1024 bytes per call.
-// https://cloud.google.com/kms/docs/generate-random#known_limitations
+// GCPHSM.GetRand returns the local random number generator. We tried making the
+// GCP KMS GenerateRandom one work (that's called by libkmsp11 through the
+// crypto11.PKCS11RandReader interface) but we hit rate limits quickly (esp
+// because of Go's use of randutil.MaybeReadByte) and it required a lot of code
+// to fit all reads between 8 and 1024 bytes. See
+// https://cloud.google.com/kms/docs/generate-random#known_limitations Modern
+// Linux systems have a great /dev/urandom and Go uses that. It's security
+// properties are as good or better than HSMs.
 func (hsm *GCPHSM) GetRand() io.Reader {
-	return new(unlimitedBytesRandReader)
+	return rand.Reader
 }
 
 func (hsm *GCPHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKey, crypto.PublicKey, error) {
