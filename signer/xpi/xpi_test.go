@@ -46,12 +46,7 @@ func TestSignFile(t *testing.T) {
 			t.Run(fmt.Sprintf("test sign file %s signer id %s (%d)", input.name, testcase.ID, i), func(t *testing.T) {
 				t.Parallel()
 
-				statsdClient, err := statsd.NewBuffered("localhost:8135", 1)
-				if err != nil {
-					t.Fatalf("passing testcase %d: Error constructing statsdClient: %v", i, err)
-				}
-				statsdClient.Namespace = "test_autograph_stats_ns"
-				signerStatsClient, err := signer.NewStatsClient(testcase, statsdClient)
+				signerStatsClient, err := signer.NewStatsClient(testcase, &statsd.NoOpClient{})
 				if err != nil {
 					t.Fatalf("passing testcase %d: Error constructing signer.StatsdClient: %v", i, err)
 				}
