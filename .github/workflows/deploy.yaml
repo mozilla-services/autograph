@@ -39,7 +39,6 @@ jobs:
           tags: |
             type=semver,pattern={{raw}}
             type=raw,value=latest,enable=${{ github.event_name == 'push' }}
-            type=sha,format=long,enable=${{ github.event_name == 'push' }}
 
       - name: Generate version.json
         shell: bash
