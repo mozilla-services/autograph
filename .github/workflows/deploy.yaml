@@ -26,8 +26,22 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Docker Metadata
-        id: meta
+      - name: Docker Metadata for Google Artifact Registry build
+        id: metagar
+        uses: docker/metadata-action@v5
+        with:
+          flavor:
+            # don't automatically tag with `latest`; we do this conditionally in the `tags` section
+            latest=false
+          images: |
+            ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph
+          tags: |
+            type=sha,format=long,enable=${{ github.event_name == 'push' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+            type=semver,pattern={{raw}},enable=${{ github.event_name == 'release' }}
+
+      - name: Docker Metadata for Docker Hub
+        id: metahub
         uses: docker/metadata-action@v5
         with:
           flavor:
@@ -35,9 +49,8 @@ jobs:
             latest=false
           images: |
             ${{ vars.DOCKERHUB_REPO }}
-            ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph
           tags: |
-            type=semver,pattern={{raw}}
+            type=semver,pattern={{raw}},enable=${{ github.event_name == 'release' }}
             type=raw,value=latest,enable=${{ github.event_name == 'push' }}
 
       - name: Generate version.json
@@ -64,16 +77,16 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push to Google Artifact Registory for each commit on main
         # On pushes to `main`, we build and push a new image, so we can simply
         # use the `docker/build-push-action` action.
         if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v6
         with:
-          push: ${{ github.event_name == 'push' }}
+          push: true
           sbom: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.metagar.outputs.tags }}
+          labels: ${{ steps.metagar.outputs.labels }}
           context: .
           platforms: linux/amd64,linux/arm64
 
@@ -95,16 +108,41 @@ jobs:
           echo "${tmp}" >> $GITHUB_PATH
           echo "${{ github.token }}" | crane auth login ghcr.io --username "dummy" --password-stdin
 
-      - name: Tag and push
-        # For releases, we specifically do _not_ want to rebuild, just tag the
-        # existing image and push. There's no officially maintained action for
-        # this use case, but it's trivial enough to do ourselves.
+      - name: Copy from Google Artifact Registory to Docker Hub
+        # We want to make sure that Docker Hub's latest tag is always up to
+        # date. For releases, we specifically do _not_ want to rebuild and
+        # instead only tag the existing image and push. There's no officially
+        # maintained action for this use case, but it's trivial enough to do
+        # ourselves. On builds on each commit of main ("push" events), the
+        # expectation is that only `latest` will be pushed to Docker Hub. For
+        # releases, the expectation is only the semver tag will be pushed.
+        env:
+          # Tags come in the form of a fully qualified image name and tag
+          # separated by newlines.
+          TAGS: |
+            ${{ steps.metahub.outputs.tags }}
+          # This github.sha won't work if the tag is an annotated tag, but we'll
+          # hit that when we hit that. (We'll want to use github.object.sha but
+          # only in tags, not in pushes)
+          SRC: ${{ vars.DOCKERHUB_REPO}}:sha-${{ github.sha }}
+        run: |
+          crane digest $SRC
+          crane manifest $SRC
+          for tag in $TAGS; do
+            crane copy $SRC $tag
+          done
+
+      - name: Copy image from Google Artifact Registory to Google Artifact Registory as semver tag
+        # This is conditional because we only can do this correctly (that is,
+        # with the correct TAGS from the metagar step) and only need to do it at
+        # all on release.
         if: ${{ github.event_name == 'release' }}
         env:
-          # Tags come in the form of a fully qualified image name and tag, eg:
-          # mozilla/autograph:1.1.8
-          # us-west2-docker.pkg.dev/autograph-proj/autograph-repo/autograph:1.1.8
-          TAGS: ${{ steps.meta.outputs.tags }}
+          TAGS: |
+            ${{ steps.metagar.outputs.tags }}
+          # This github.sha won't work if the tag is an annotated tag, but we'll
+          # hit that when we hit that. (We'll want to use github.object.sha but
+          # only in tags, not in pushes)
           SRC: ${{ vars.DOCKERHUB_REPO}}:sha-${{ github.sha }}
         run: |
           crane digest $SRC
