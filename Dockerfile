@@ -83,5 +83,5 @@ COPY --from=builder /tmp/libkmsp11.so /app
 RUN useradd --uid 10001 --home-dir /app --shell /sbin/nologin app
 USER app
 WORKDIR /app
-CMD /go/bin/autograph
+CMD ["/go/bin/autograph"]
 
