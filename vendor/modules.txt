@@ -216,6 +216,9 @@ github.com/aws/smithy-go/tracing
 github.com/aws/smithy-go/transport/http
 github.com/aws/smithy-go/transport/http/internal/io
 github.com/aws/smithy-go/waiter
+# github.com/blang/semver v3.5.1+incompatible
+## explicit
+github.com/blang/semver
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
@@ -319,24 +322,29 @@ go.mozilla.org/mozlogrus
 # go.mozilla.org/pkcs7 v0.9.0
 ## explicit; go 1.11
 go.mozilla.org/pkcs7
-# go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060
-## explicit; go 1.12
-go.mozilla.org/sops
-go.mozilla.org/sops/aes
-go.mozilla.org/sops/audit
-go.mozilla.org/sops/azkv
-go.mozilla.org/sops/decrypt
-go.mozilla.org/sops/gcpkms
-go.mozilla.org/sops/keys
-go.mozilla.org/sops/keyservice
-go.mozilla.org/sops/kms
-go.mozilla.org/sops/logging
-go.mozilla.org/sops/pgp
-go.mozilla.org/sops/shamir
-go.mozilla.org/sops/stores
-go.mozilla.org/sops/stores/dotenv
-go.mozilla.org/sops/stores/json
-go.mozilla.org/sops/stores/yaml
+# go.mozilla.org/sops/v3 v3.5.0
+## explicit; go 1.13
+go.mozilla.org/sops/v3
+go.mozilla.org/sops/v3/aes
+go.mozilla.org/sops/v3/audit
+go.mozilla.org/sops/v3/azkv
+go.mozilla.org/sops/v3/cmd/sops/codes
+go.mozilla.org/sops/v3/cmd/sops/common
+go.mozilla.org/sops/v3/cmd/sops/formats
+go.mozilla.org/sops/v3/decrypt
+go.mozilla.org/sops/v3/gcpkms
+go.mozilla.org/sops/v3/keys
+go.mozilla.org/sops/v3/keyservice
+go.mozilla.org/sops/v3/kms
+go.mozilla.org/sops/v3/logging
+go.mozilla.org/sops/v3/pgp
+go.mozilla.org/sops/v3/shamir
+go.mozilla.org/sops/v3/stores
+go.mozilla.org/sops/v3/stores/dotenv
+go.mozilla.org/sops/v3/stores/ini
+go.mozilla.org/sops/v3/stores/json
+go.mozilla.org/sops/v3/stores/yaml
+go.mozilla.org/sops/v3/version
 # go.opencensus.io v0.22.1
 ## explicit; go 1.13
 go.opencensus.io
@@ -462,6 +470,9 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# gopkg.in/yaml.v2 v2.2.8
+# gopkg.in/ini.v1 v1.44.0
 ## explicit
-gopkg.in/yaml.v2
+gopkg.in/ini.v1
+# gopkg.in/urfave/cli.v1 v1.20.0
+## explicit
+gopkg.in/urfave/cli.v1

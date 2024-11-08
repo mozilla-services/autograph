@@ -23,7 +23,7 @@ require (
 	go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d
 	go.mozilla.org/mozlogrus v2.0.0+incompatible
 	go.mozilla.org/pkcs7 v0.9.0
-	go.mozilla.org/sops v0.0.0-20190912205235-14a22d7a7060
+	go.mozilla.org/sops/v3 v3.5.0
 	go.uber.org/mock v0.5.0
 )
 
@@ -55,6 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.1 // indirect
 	github.com/aws/smithy-go v1.22.1 // indirect
+	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/dimchansky/utfbom v1.1.0 // indirect
 	github.com/fatih/color v1.7.0 // indirect
@@ -83,5 +84,6 @@ require (
 	google.golang.org/appengine v1.6.1 // indirect
 	google.golang.org/genproto v0.0.0-20190716160619-c506a9f90610 // indirect
 	google.golang.org/grpc v1.24.0 // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
+	gopkg.in/ini.v1 v1.44.0 // indirect
+	gopkg.in/urfave/cli.v1 v1.20.0 // indirect
 )
