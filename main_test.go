@@ -60,7 +60,7 @@ func newTestAutographer(t *testing.T) (*autographer, configuration) {
 			MonitorPollInterval: 10 * time.Second,
 		})
 		if err == nil {
-			database.ClearDatabase(db)
+			database.DeleteAllIn(db)
 		}
 		close(ag.exit)
 	})

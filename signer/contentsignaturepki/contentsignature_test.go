@@ -139,7 +139,7 @@ mpvOMOT3falDgXh0iOgdIA==
 
 	input := []byte("foobarbaz1234abcd")
 	for i, testcase := range testcases {
-		database.ClearDatabase(dbHandler)
+		database.DeleteAllIn(dbHandler)
 
 		// initialize a signer
 		s, err := New(testcase.cfg)
@@ -462,10 +462,10 @@ func newTestDBHandler(t *testing.T) *database.Handler {
 		t.Fatalf("db.CheckConnection failed when it should not have with error: %s", err)
 	}
 
-	database.ClearDatabase(dbHandler)
+	database.DeleteAllIn(dbHandler)
 
 	t.Cleanup(func() {
-		database.ClearDatabase(dbHandler)
+		database.DeleteAllIn(dbHandler)
 		dbHandler.Close()
 	})
 	return dbHandler

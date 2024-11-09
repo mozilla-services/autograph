@@ -120,9 +120,9 @@ func GetTestDBHost() string {
 	return host
 }
 
-// ClearDatabase removes all the data from the given database. It's meant only
+// DeleteAllIn removes all the data from the given database. It's meant only
 // for use in the tests.
-func ClearDatabase(db *Handler) error {
+func DeleteAllIn(db *Handler) error {
 	_, err := db.DB.Exec("truncate table endentities;")
 	return err
 }
