@@ -8,9 +8,13 @@ package contentsignaturepki
 
 import (
 	"context"
+	"crypto"
 	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"testing"
 
@@ -135,6 +139,8 @@ mpvOMOT3falDgXh0iOgdIA==
 
 	input := []byte("foobarbaz1234abcd")
 	for i, testcase := range testcases {
+		database.ClearDatabase(dbHandler)
+
 		// initialize a signer
 		s, err := New(testcase.cfg)
 		if err != nil {
@@ -304,6 +310,91 @@ func TestReadRandFailureOnSignHash(t *testing.T) {
 	}
 }
 
+type fakeHSM struct {
+	slotToKeys map[string]crypto.PrivateKey
+}
+
+// GetPrivateKey implements signer.HSM.
+func (f *fakeHSM) GetPrivateKey(label []byte) (crypto.PrivateKey, error) {
+	key, ok := f.slotToKeys[string(label)]
+	if !ok {
+		return nil, fmt.Errorf("key not found")
+	}
+	return key, nil
+}
+
+// GetRand implements signer.HSM.
+func (f *fakeHSM) GetRand() io.Reader {
+	return rand.Reader
+}
+
+// MakeKey creats a key but currently only makes P256 ecdsa kyes.
+func (f *fakeHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKey, crypto.PublicKey, error) {
+	switch keyTpl.(type) {
+	case *ecdsa.PublicKey:
+		_, ok := f.slotToKeys[keyName]
+		if ok {
+			return nil, nil, fmt.Errorf("fakeHSM: key with name %q already exists", keyName)
+		}
+		priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			return nil, nil, fmt.Errorf("fakeHSM: failed to generate key: %v", err)
+		}
+		f.slotToKeys[keyName] = priv
+		return priv, priv.Public(), nil
+	default:
+		return nil, nil, fmt.Errorf("fakeHSM: making key of type %T is not supported", keyTpl)
+	}
+}
+
+// TestExistingEEKeyShouldWork is an attempt to mimic autograph booting up after
+// a restart with an existing EE key. That is, the first signer creates the EE
+// key in the HSM, and the second one should pick it up successfully.
+func TestExistingEEKeyShouldWork(t *testing.T) {
+	dbHandler := newTestDBHandler(t)
+	hsm := &fakeHSM{slotToKeys: make(map[string]crypto.PrivateKey)}
+	newCfg := func() signer.Configuration {
+		keys := goodKeys()
+		cfg := &signer.Configuration{
+			Type:                Type,
+			ID:                  "testsigner0",
+			Mode:                P384ECDSA,
+			X5U:                 "file:///tmp/autograph_unit_tests/chains/",
+			ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
+			IssuerPrivKey:       keys.issuerPrivKey,
+			IssuerCert:          keys.issuerCert,
+			CaCert:              keys.caCert,
+			DB:                  dbHandler,
+		}
+		cfg.InitHSM(hsm)
+		return *cfg
+	}
+
+	s1, err := New(newCfg())
+	if err != nil {
+		t.Fatalf("first signer: initialization failed with: %v", err)
+	}
+	_, err = s1.SignData([]byte("foobarbaz1234abcd"), nil)
+	if err != nil {
+		t.Fatalf("first signer: failed to sign data: %v", err)
+	}
+
+	s2, err := New(newCfg())
+	if err != nil {
+		t.Fatalf("second signer: initialization failed with: %v", err)
+	}
+	_, err = s2.SignData([]byte("foobarbaz1234abcd"), nil)
+	if err != nil {
+		t.Fatalf("second signer: failed to sign data: %v", err)
+	}
+	if s1.PrivateKey != s2.PrivateKey {
+		t.Errorf("second signer: private key should be the same as the first signer")
+	}
+	if len(hsm.slotToKeys) != 1 {
+		t.Errorf("expected 1 key in the HSM, got %d", len(hsm.slotToKeys))
+	}
+}
+
 type signerKeys struct {
 	issuerPrivKey string
 	issuerCert    string
@@ -371,18 +462,10 @@ func newTestDBHandler(t *testing.T) *database.Handler {
 		t.Fatalf("db.CheckConnection failed when it should not have with error: %s", err)
 	}
 
-	_, err = dbHandler.DB.Exec("truncate table endentities;")
-	if err != nil {
-		t.Fatalf("failed to truncate endentities table before running test: %v", err)
-	}
+	database.ClearDatabase(dbHandler)
 
 	t.Cleanup(func() {
-		_, err = dbHandler.DB.Exec("truncate table endentities;")
-		if err != nil {
-			t.Logf("FIXME HERE 2")
-			fmt.Println("FIXME HERE 2")
-			t.Fatalf("failed to truncate endentities table after running test: %v", err)
-		}
+		database.ClearDatabase(dbHandler)
 		dbHandler.Close()
 	})
 	return dbHandler
