@@ -21,7 +21,7 @@ import (
 
 func TestSign(t *testing.T) {
 	keys := goodKeys()
-	dbHandler := testDBHandler(t)
+	dbHandler := newTestDBHandler(t)
 
 	var testcases = []struct {
 		cfg                signer.Configuration
@@ -205,14 +205,16 @@ mpvOMOT3falDgXh0iOgdIA==
 	}
 }
 func TestNewFailure(t *testing.T) {
+	dbHandler := newTestDBHandler(t)
+
 	testcases := []struct {
 		err string
 		cfg signer.Configuration
 	}{
-		{err: `contentsignaturepki "": invalid type`, cfg: signer.Configuration{Type: ""}},
-		{err: `contentsignaturepki "": missing signer ID in signer configuration`, cfg: signer.Configuration{Type: Type, ID: ""}},
-		{err: `contentsignaturepki "bob": missing issuer private key in signer configuration`, cfg: signer.Configuration{Type: Type, ID: "bob"}},
-		{err: `contentsignaturepki "bob": failed to get keys`, cfg: signer.Configuration{Type: Type, ID: "bob", IssuerPrivKey: "Ym9iCg=="}},
+		{err: `contentsignaturepki "": invalid type`, cfg: signer.Configuration{Type: "", DB: dbHandler}},
+		{err: `contentsignaturepki "": missing signer ID in signer configuration`, cfg: signer.Configuration{Type: Type, ID: "", DB: dbHandler}},
+		{err: `contentsignaturepki "bob": missing issuer private key in signer configuration`, cfg: signer.Configuration{Type: Type, ID: "bob", DB: dbHandler}},
+		{err: `contentsignaturepki "bob": failed to get keys`, cfg: signer.Configuration{Type: Type, ID: "bob", IssuerPrivKey: "Ym9iCg==", DB: dbHandler}},
 		{err: `contentsignaturepki "abcd": invalid public key type for issuer, must be ecdsa`, cfg: signer.Configuration{
 			Type: Type,
 			ID:   "abcd",
@@ -226,7 +228,12 @@ ogU63yRBtCOZDYKtMbaDvXvLfKjeIBzNAiEA4otLPzrJH6K1HQaf5rgI6dEcBWGP
 M1ZxulpMFD86/QECIAY+AuNXfbhE6gX7xoedPYB3AML5oTmvdzTsL2IePSZpAiBl
 w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 -----END RSA PRIVATE KEY-----`,
+			DB: dbHandler,
 		}},
+		{
+			err: `contentsignaturepki "foo": a database is required by the contentsignaturepki signer type but none have been configured`,
+			cfg: signer.Configuration{Type: "contentsignaturepki", ID: "foo", DB: nil},
+		},
 	}
 	for _, testcase := range testcases {
 		_, err := New(testcase.cfg)
@@ -250,7 +257,7 @@ func TestNoShortData(t *testing.T) {
 		IssuerPrivKey:       keys.issuerPrivKey,
 		IssuerCert:          keys.issuerCert,
 		CaCert:              keys.caCert,
-		DB:                  testDBHandler(t),
+		DB:                  newTestDBHandler(t),
 	}
 	s, err := New(cfg)
 	if err != nil {
@@ -283,7 +290,7 @@ func TestReadRandFailureOnSignHash(t *testing.T) {
 		IssuerPrivKey:       keys.issuerPrivKey,
 		IssuerCert:          keys.issuerCert,
 		CaCert:              keys.caCert,
-		DB:                  testDBHandler(t),
+		DB:                  newTestDBHandler(t),
 	}
 	s, err := New(cfg)
 	if err != nil {
@@ -348,7 +355,7 @@ nsbYLErV5grBhN+UxzmY9YwlOl6j6CoBiNkCMQCVBh9UBkWNkUfMUGImrCNDLvlw
 	}
 }
 
-func testDBHandler(t *testing.T) *database.Handler {
+func newTestDBHandler(t *testing.T) *database.Handler {
 	host := database.GetTestDBHost()
 	dbHandler, err := database.Connect(database.Config{
 		Name:     "autograph",
@@ -364,24 +371,13 @@ func testDBHandler(t *testing.T) *database.Handler {
 		t.Fatalf("db.CheckConnection failed when it should not have with error: %s", err)
 	}
 
-	superDBHandler, err := database.Connect(database.Config{
-		Name:     "postgres",
-		User:     "myautographdbuser",
-		Password: "",
-		Host:     host + ":5432",
-	})
-	if err != nil {
-		t.Fatalf("failed to connect to database as superuser to truncate: %v", err)
-	}
-	_, err = superDBHandler.DB.Exec("truncate table endentities;")
+	_, err = dbHandler.DB.Exec("truncate table endentities;")
 	if err != nil {
 		t.Fatalf("failed to truncate endentities table before running test: %v", err)
 	}
-	
-	t.Logf("FIXME HERE 1")
-	fmt.Println("FIXME HERE 1")
+
 	t.Cleanup(func() {
-		_, err = superDBHandler.DB.Exec("truncate table endentities;")
+		_, err = dbHandler.DB.Exec("truncate table endentities;")
 		if err != nil {
 			t.Logf("FIXME HERE 2")
 			fmt.Println("FIXME HERE 2")
