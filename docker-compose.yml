@@ -13,6 +13,8 @@ services:
     ports:
       - "5432:5432"
     command: postgres -c 'ssl=on' -c 'ssl_cert_file=/opt/server.crt' -c 'ssl_key_file=/opt/server.key'
+    volumes:
+      - ./database/unittest-setup.sql:/docker-entrypoint-initdb.d/unittest-setup.sql
 
   app:
     container_name: autograph-app
