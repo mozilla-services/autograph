@@ -97,6 +97,7 @@ services:
 
   unit-test:
     container_name: autograph-unit-test
+    image: autograph-app
     build:
       context: .
     environment:
@@ -115,4 +116,7 @@ services:
       - db
     user: "0"
     working_dir: "/app/src/autograph/"
-    command: ["./bin/run_unit_tests.sh"]
+    command:
+      [
+        "./bin/run_unit_tests.sh"
+      ]
