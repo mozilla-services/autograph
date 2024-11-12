@@ -25,6 +25,22 @@ func newTestAutographer(t *testing.T) (*autographer, configuration) {
 		log.Fatal(err)
 	}
 	ag := newAutographer(1)
+	// FIXME refactor helper
+	host := database.GetTestDBHost()
+	err = ag.addDB(database.Config{
+		Name:                "autograph",
+		User:                "myautographdbuser",
+		Password:            "myautographdbpassword",
+		Host:                host + ":5432",
+		MonitorPollInterval: 10 * time.Second,
+	})
+	if err != nil {
+		log.Fatalf("newTestAutographer: failed to connect to db: %s", err)
+	}
+	err = database.DeleteAllIn(ag.db)
+	if err != nil {
+		log.Fatalf("newTestAutographer: failed to delete all in db %s", err)
+	}
 	err = ag.addSigners(conf.Signers)
 	if err != nil {
 		log.Fatal(err)

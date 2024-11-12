@@ -156,10 +156,13 @@ func run(conf configuration, listen string, debug bool) {
 	ag = newAutographer(conf.Server.NonceCacheSize)
 	ag.heartbeatConf = &conf.Heartbeat
 
-	if conf.Database.Name != "" {
+	if conf.Database.Name != "" || os.Getenv("AUTOGRAPH_DB_DSN") != "" {
 		// ignore the monitor close chan since it will stop
 		// when the app is stopped
-		_ = ag.addDB(conf.Database)
+		err = ag.addDB(conf.Database)
+		if err != nil {
+			log.Fatalf("main.run failed to add database: %s", err)
+		}
 	}
 
 	// initialize the hsm if a configuration is defined
@@ -361,21 +364,18 @@ func (a *autographer) startCleanupHandler() {
 
 // addDB connects to the DB and starts a gorountine to monitor DB
 // connectivity
-func (a *autographer) addDB(dbConf database.Config) chan bool {
+func (a *autographer) addDB(dbConf database.Config) error {
 	var err error
 	a.db, err = database.Connect(dbConf)
 	if err != nil {
-		log.Fatal(err)
-	}
-	if a.db == nil {
-		log.Fatal("failed to initialize database connection, unknown error")
+		return fmt.Errorf("failed to connect to database: %w", err)
 	}
 	// start a monitoring function that errors if the db
 	// becomes inaccessible
 	closeDBMonitor := make(chan bool, 1)
 	go a.db.Monitor(dbConf.MonitorPollInterval, closeDBMonitor)
 	log.Print("database connection established")
-	return closeDBMonitor
+	return nil
 }
 
 // initHSM sets up the HSM and notifies signers it is available
