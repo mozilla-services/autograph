@@ -310,43 +310,6 @@ func TestReadRandFailureOnSignHash(t *testing.T) {
 	}
 }
 
-type fakeHSM struct {
-	slotToKeys map[string]crypto.PrivateKey
-}
-
-// GetPrivateKey implements signer.HSM.
-func (f *fakeHSM) GetPrivateKey(label []byte) (crypto.PrivateKey, error) {
-	key, ok := f.slotToKeys[string(label)]
-	if !ok {
-		return nil, fmt.Errorf("key not found")
-	}
-	return key, nil
-}
-
-// GetRand implements signer.HSM.
-func (f *fakeHSM) GetRand() io.Reader {
-	return rand.Reader
-}
-
-// MakeKey creats a key but currently only makes P256 ecdsa kyes.
-func (f *fakeHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKey, crypto.PublicKey, error) {
-	switch keyTpl.(type) {
-	case *ecdsa.PublicKey:
-		_, ok := f.slotToKeys[keyName]
-		if ok {
-			return nil, nil, fmt.Errorf("fakeHSM: key with name %q already exists", keyName)
-		}
-		priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-		if err != nil {
-			return nil, nil, fmt.Errorf("fakeHSM: failed to generate key: %v", err)
-		}
-		f.slotToKeys[keyName] = priv
-		return priv, priv.Public(), nil
-	default:
-		return nil, nil, fmt.Errorf("fakeHSM: making key of type %T is not supported", keyTpl)
-	}
-}
-
 // TestExistingEEKeyShouldWork is an attempt to mimic autograph booting up after
 // a restart with an existing EE key. That is, the first signer creates the EE
 // key in the HSM, and the second one should pick it up successfully.
@@ -469,4 +432,41 @@ func newTestDBHandler(t *testing.T) *database.Handler {
 		dbHandler.Close()
 	})
 	return dbHandler
+}
+
+type fakeHSM struct {
+	slotToKeys map[string]crypto.PrivateKey
+}
+
+// GetPrivateKey implements signer.HSM.
+func (f *fakeHSM) GetPrivateKey(label []byte) (crypto.PrivateKey, error) {
+	key, ok := f.slotToKeys[string(label)]
+	if !ok {
+		return nil, fmt.Errorf("key not found")
+	}
+	return key, nil
+}
+
+// GetRand implements signer.HSM.
+func (f *fakeHSM) GetRand() io.Reader {
+	return rand.Reader
+}
+
+// MakeKey creats a key but currently only makes P256 ecdsa kyes.
+func (f *fakeHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKey, crypto.PublicKey, error) {
+	switch keyTpl.(type) {
+	case *ecdsa.PublicKey:
+		_, ok := f.slotToKeys[keyName]
+		if ok {
+			return nil, nil, fmt.Errorf("fakeHSM: key with name %q already exists", keyName)
+		}
+		priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			return nil, nil, fmt.Errorf("fakeHSM: failed to generate key: %v", err)
+		}
+		f.slotToKeys[keyName] = priv
+		return priv, priv.Public(), nil
+	default:
+		return nil, nil, fmt.Errorf("fakeHSM: making key of type %T is not supported", keyTpl)
+	}
 }
