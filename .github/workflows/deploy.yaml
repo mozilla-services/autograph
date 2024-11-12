@@ -124,7 +124,7 @@ jobs:
           # This github.sha won't work if the tag is an annotated tag, but we'll
           # hit that when we hit that. (We'll want to use github.object.sha but
           # only in tags, not in pushes)
-          SRC: ${{ vars.DOCKERHUB_REPO}}:sha-${{ github.sha }}
+          SRC: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}
         run: |
           crane digest $SRC
           crane manifest $SRC
@@ -143,7 +143,7 @@ jobs:
           # This github.sha won't work if the tag is an annotated tag, but we'll
           # hit that when we hit that. (We'll want to use github.object.sha but
           # only in tags, not in pushes)
-          SRC: ${{ vars.DOCKERHUB_REPO}}:sha-${{ github.sha }}
+          SRC: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}
         run: |
           crane digest $SRC
           crane manifest $SRC
