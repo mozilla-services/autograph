@@ -74,7 +74,7 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 		label, _, err = db.GetLabelOfLatestEE(signerID, 15*time.Second)
 		switch err {
 		case nil:
-			t.Logf("TestConcurrentEndEntityOperations: routine %d is returning end-entity %q", j, label)
+			t.Logf("TestConcurrentEndEntityOperations: routine %d is returning end-entity %q (after taking the transaction)", j, label)
 			goto releaseLock
 		case ErrNoSuitableEEFound:
 			break
@@ -95,7 +95,7 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 			t.Fatalf("failed to end end-entity db operations: %v", err)
 		}
 	case nil:
-		t.Logf("TestConcurrentEndEntityOperations: routine %d is returning end-entity %q", j, label)
+		t.Logf("TestConcurrentEndEntityOperations: routine %d is returning end-entity %q (without taking the transaction)", j, label)
 	default:
 		t.Fatal(err)
 	}
