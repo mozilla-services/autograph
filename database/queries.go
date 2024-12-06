@@ -25,7 +25,9 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 		return nil, err
 	}
 	// lock the table
-	_, err = tx.Exec("LOCK TABLE endentities_lock IN ACCESS EXCLUSIVE MODE")
+	_, err = tx.Exec(`LOCK TABLE endentities IN EXCLUSIVE MODE;
+	LOCK TABLE endentities_lock IN EXCLUSIVE MODE;
+	`)
 	if err != nil {
 		err = fmt.Errorf("failed to lock endentities table: %w", err)
 		tx.Rollback()
