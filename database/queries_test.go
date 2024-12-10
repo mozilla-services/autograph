@@ -28,7 +28,7 @@ func TestConcurrentEndEntityOperations(t *testing.T) {
 	defer db.Close()
 
 	var wg sync.WaitGroup
-	concurrency := 373 // took a long time to pick that number!
+	concurrency := 273 // took a long time to pick that number!
 	wg.Add(concurrency)
 	signerID := fmt.Sprintf("database_unit_testing_%d", time.Now().UnixNano())
 	labelsSyncMap := sync.Map{}

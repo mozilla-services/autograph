@@ -59,7 +59,7 @@ func newTestAutographer(t *testing.T) (*autographer, configuration) {
 			Host:                host + ":5432",
 			MonitorPollInterval: 10 * time.Second,
 		})
-		if err == nil && db != nil {
+		if err == nil {
 			db.Exec("truncate table endentities;")
 		}
 		close(ag.exit)
