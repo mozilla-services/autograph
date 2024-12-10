@@ -28,7 +28,6 @@ type Handler struct {
 // Transaction owns a sql transaction
 type Transaction struct {
 	*sql.Tx
-	ID uint64
 }
 
 // Config holds the parameters to connect to a database

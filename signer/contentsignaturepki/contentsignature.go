@@ -153,17 +153,26 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 			break
 		default:
 			// some other error popped up, exit
+			if tx != nil {
+				tx.Rollback()
+			}
 			return err
 		}
 		// create a label and generate the key
 		s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102150405"))
 		s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, s.eeLabel)
 		if err != nil {
+			if tx != nil {
+				tx.Rollback()
+			}
 			return fmt.Errorf("contentsignaturepki %q: failed to generate end entity: %w", s.ID, err)
 		}
 		// make the certificate and upload the chain
 		err = s.makeAndUploadChain()
 		if err != nil {
+			if tx != nil {
+				tx.Rollback()
+			}
 			return fmt.Errorf("contentsignaturepki %q: failed to make chain and x5u: %w", s.ID, err)
 		}
 		if tx != nil {

@@ -15,13 +15,3 @@ ALTER TABLE endentities ADD CONSTRAINT endentities_unique_label UNIQUE (label);
 GRANT SELECT, INSERT ON endentities TO myautographdbuser;
 GRANT UPDATE (is_current) ON endentities TO myautographdbuser;
 GRANT USAGE ON endentities_id_seq TO myautographdbuser;
-
-CREATE TABLE endentities_lock(
-      id          SERIAL PRIMARY KEY,
-      is_locked   BOOLEAN NOT NULL,
-      created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      freed_at    TIMESTAMP WITH TIME ZONE
-
-);
-GRANT SELECT, INSERT, UPDATE ON endentities_lock TO myautographdbuser;
-GRANT USAGE ON endentities_lock_id_seq TO myautographdbuser;

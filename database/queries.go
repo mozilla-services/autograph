@@ -25,24 +25,13 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 		return nil, err
 	}
 	// lock the table
-	_, err = tx.Exec(`LOCK TABLE endentities IN EXCLUSIVE MODE;
-	LOCK TABLE endentities_lock IN EXCLUSIVE MODE;
-	`)
+	_, err = tx.Exec(`LOCK TABLE endentities IN EXCLUSIVE MODE;`)
 	if err != nil {
 		err = fmt.Errorf("failed to lock endentities table: %w", err)
 		tx.Rollback()
 		return nil, err
 	}
-	var id uint64
-	err = tx.QueryRow(`INSERT INTO endentities_lock(is_locked)
-				VALUES ($1) RETURNING id`,
-		true).Scan(&id)
-	if err != nil {
-		tx.Rollback()
-		err = fmt.Errorf("failed to lock endentities table: %w", err)
-		return nil, err
-	}
-	return &Transaction{tx, id}, nil
+	return &Transaction{tx}, nil
 }
 
 // GetLabelOfLatestEE returns the label of the latest end-entity for the specified signer
@@ -91,13 +80,7 @@ func (tx *Transaction) InsertEE(x5u, label, signerID string) (err error) {
 
 // End commits a transaction
 func (tx *Transaction) End() error {
-	_, err := tx.Exec("UPDATE endentities_lock SET is_locked=FALSE, freed_at=NOW() WHERE id=$1", tx.ID)
-	if err != nil {
-		err = fmt.Errorf("failed to update is_current status of keys in database: %w", err)
-		tx.Rollback()
-		return err
-	}
-	err = tx.Commit()
+	err := tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("failed to commit transaction in database: %w", err)
 		tx.Rollback()
