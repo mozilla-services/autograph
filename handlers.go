@@ -148,6 +148,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusBadRequest, "failed to parse request body: %v", err)
 		return
 	}
+
 	for i, sigreq := range sigreqs {
 		if r.URL.RequestURI() == "/sign/files" {
 			if sigreq.Input != "" {
@@ -215,6 +216,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		requestedSignerConfig := requestedSigner.Config()
+		a.stats.Incr("signer.requests", []string{"keyid:" + requestedSignerConfig.ID, "user:" + userid, usedDefaultSignerTag(sigreq)}, 1.0)
+
 		sigresps[i] = formats.SignatureResponse{
 			Ref:        id(),
 			Type:       requestedSignerConfig.Type,
@@ -512,4 +515,15 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(signerIDsJSON)
+}
+
+// usedDefaultSignerTag returns a statds tag indicating whether the default
+// signer for an authorization was used.
+func usedDefaultSignerTag(sigreq formats.SignatureRequest) string {
+	// TODO(AUT-206): remove this when we've migrate everyone off of the default
+	// keyid
+	if sigreq.KeyID == "" {
+		return "used_default_signer:true"
+	}
+	return "used_default_signer:false"
 }
