@@ -51,6 +51,7 @@ func newTestAutographer(t *testing.T) (*autographer, configuration) {
 	}
 
 	t.Cleanup(func() {
+		close(ag.exit)
 		host := database.GetTestDBHost()
 		db, err := database.Connect(database.Config{
 			Name:                "autograph",
@@ -62,7 +63,6 @@ func newTestAutographer(t *testing.T) (*autographer, configuration) {
 		if err == nil {
 			db.Exec("truncate table endentities;")
 		}
-		close(ag.exit)
 	})
 
 	return ag, conf
