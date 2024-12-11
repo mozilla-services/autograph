@@ -98,7 +98,7 @@ func GetX5U(client *http.Client, x5u string) ([]byte, []*x509.Certificate, error
 	}
 	var bodyReader io.ReadCloser
 	switch parsedURL.Scheme {
-	case "https":
+	case "https", "http":
 		resp, err := client.Get(x5u)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to retrieve x5u from %#v: %w", x5u, err)
