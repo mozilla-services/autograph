@@ -28,7 +28,7 @@ func TestConcurrentEndEntityOperations(t *testing.T) {
 	defer db.Close()
 
 	var wg sync.WaitGroup
-	concurrency := 273 // took a long time to pick that number!
+	concurrency := 373 // took a long time to pick that number!
 	wg.Add(concurrency)
 	signerID := fmt.Sprintf("database_unit_testing_%d", time.Now().UnixNano())
 	labelsSyncMap := sync.Map{}
@@ -57,10 +57,6 @@ func TestConcurrentEndEntityOperations(t *testing.T) {
 func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerID string) string {
 	defer wg.Done()
 	t.Logf("TestConcurrentEndEntityOperations: starting routine %d", j)
-	// sleep for 5 seconds to wait for test cleanup and for all jobs to run together
-	nextTime := time.Now().Truncate(5 * time.Second)
-	nextTime = nextTime.Add(10 * time.Second)
-	time.Sleep(time.Until(nextTime))
 
 	label, _, err := db.GetLabelOfLatestEE(signerID, 15*time.Second)
 	switch err {
