@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mozilla-services/autograph/database"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -51,17 +50,6 @@ func newTestAutographer(t *testing.T) (*autographer, configuration) {
 	}
 
 	t.Cleanup(func() {
-		host := database.GetTestDBHost()
-		db, err := database.Connect(database.Config{
-			Name:                "autograph",
-			User:                "myautographdbuser",
-			Password:            "myautographdbpassword",
-			Host:                host + ":5432",
-			MonitorPollInterval: 10 * time.Second,
-		})
-		if err == nil {
-			db.Exec("truncate table endentities;")
-		}
 		close(ag.exit)
 	})
 

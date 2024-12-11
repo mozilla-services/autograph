@@ -57,10 +57,6 @@ func TestConcurrentEndEntityOperations(t *testing.T) {
 func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerID string) string {
 	defer wg.Done()
 	t.Logf("TestConcurrentEndEntityOperations: starting routine %d", j)
-	// sleep until the next 10s, then start
-	nextTime := time.Now().Truncate(10 * time.Second)
-	nextTime = nextTime.Add(10 * time.Second)
-	time.Sleep(time.Until(nextTime))
 
 	label, _, err := db.GetLabelOfLatestEE(signerID, 15*time.Second)
 	switch err {
