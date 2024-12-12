@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -40,6 +41,9 @@ type configuration struct {
 	depRootHashes []string
 	depTruststore *x509.CertPool
 
+	// signer IDs to ignore expiration warnings for
+	ignoreExpiredSignerIds []string
+
 	// notifier raises and resolves warnings
 	notifier Notifier
 }
@@ -47,6 +51,8 @@ type configuration struct {
 const inputdata string = "AUTOGRAPH MONITORING"
 
 func main() {
+	flag.Parse()
+
 	autographURLEnvVar := strings.TrimSpace(os.Getenv("AUTOGRAPH_URL"))
 	if autographURLEnvVar == "" {
 		log.Fatal("AUTOGRAPH_URL must be set to the base url of the autograph service")
@@ -64,6 +70,16 @@ func main() {
 	if conf.monitoringKey == "" {
 		log.Fatal("AUTOGRAPH_KEY must be set to the api monitoring key")
 	}
+
+	ignoredExpSignerIdsVar := os.Getenv("IGNORE_EXPIRATION_SIGNER_IDS")
+	var ignoreExpiredSignerIds []string
+	if ignoredExpSignerIdsVar != "" {
+		ignoreExpiredSignerIds = strings.Split(ignoredExpSignerIdsVar, ",")
+		for i, id := range ignoreExpiredSignerIds {
+			ignoreExpiredSignerIds[i] = strings.TrimSpace(id)
+		}
+	}
+	conf.ignoreExpiredSignerIds = ignoreExpiredSignerIds
 
 	// configure monitor to check responses against Fx stage or
 	// prod or autograph dev code signing PKI roots and CA root
@@ -210,11 +226,11 @@ func monitor(conf *configuration, client *http.Client) error {
 				// The X5U is optional for contentsignature signers.
 				err = contentsignature.VerifyResponse([]byte(inputdata), response)
 			} else {
-				err = verifyContentSignature(x5uClient, conf.notifier, conf.rootHashes, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
+				err = verifyContentSignature(x5uClient, conf.notifier, conf.rootHashes, contentSignatureIgnoredLeafCertCNs, conf.ignoreExpiredSignerIds, response, []byte(inputdata))
 			}
 		case contentsignaturepki.Type:
 			log.Printf("Verifying content signature pki from signer %q", response.SignerID)
-			err = verifyContentSignature(x5uClient, conf.notifier, conf.rootHashes, contentSignatureIgnoredLeafCertCNs, response, []byte(inputdata))
+			err = verifyContentSignature(x5uClient, conf.notifier, conf.rootHashes, contentSignatureIgnoredLeafCertCNs, conf.ignoreExpiredSignerIds, response, []byte(inputdata))
 		case xpi.Type:
 			log.Printf("Verifying XPI signature from signer %q", response.SignerID)
 			err = verifyXPISignature(response.Signature, conf.truststore, conf.depTruststore)

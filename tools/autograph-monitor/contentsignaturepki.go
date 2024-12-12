@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/mozilla-services/autograph/formats"
@@ -55,7 +56,7 @@ const month = 4 * week
 // expirations.
 //
 // Chains with leaf/EE CommonNames in ignoredCerts are ignored.
-func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHashes []string, ignoredCerts map[string]bool, response formats.SignatureResponse, input []byte) (err error) {
+func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHashes []string, ignoredCerts map[string]bool, ignoreExpiredSignerIds []string, response formats.SignatureResponse, input []byte) (err error) {
 	if response.X5U == "" {
 		return fmt.Errorf("content signature response is missing an X5U to fetch")
 	}
@@ -98,7 +99,8 @@ func verifyContentSignature(x5uClient *http.Client, notifier Notifier, rootHashe
 	err = certChainPendingExpiration(certs)
 	if err != nil {
 		// check if we should ignore this cert
-		if _, ok := ignoredCerts[certs[0].Subject.CommonName]; ok {
+		ignoreByCN := ignoredCerts[certs[0].Subject.CommonName]
+		if ignoreByCN || slices.Contains(ignoreExpiredSignerIds, response.SignerID) {
 			log.Printf("ignoring chain EE CN %q pending expiration error: %q", certs[0].Subject.CommonName, err)
 			return nil
 		}

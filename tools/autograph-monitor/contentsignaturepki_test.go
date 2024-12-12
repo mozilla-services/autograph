@@ -202,12 +202,13 @@ func Test_verifyContentSignature(t *testing.T) {
 	var typedNilNotifier Notifier
 
 	type args struct {
-		x5uClient    *http.Client
-		notifier     Notifier
-		rootHashes   []string
-		ignoredCerts map[string]bool
-		response     formats.SignatureResponse
-		input        []byte
+		x5uClient                  *http.Client
+		notifier                   Notifier
+		rootHashes                 []string
+		ignoredExpirationSignerIds []string
+		ignoredCerts               map[string]bool
+		response                   formats.SignatureResponse
+		input                      []byte
 	}
 	tests := []struct {
 		name                 string
@@ -477,6 +478,24 @@ func Test_verifyContentSignature(t *testing.T) {
 			wantErr:   true,
 			errSubStr: `root certificate 2 "autograph unit test self-signed root" expires in less than 15 months`,
 		},
+		{name: "expiring root's expiration is ignored",
+			args: args{
+				x5uClient:                  &http.Client{},
+				notifier:                   nil,
+				rootHashes:                 []string{sha2Fingerprint(testRoot16DaysToExpiration)},
+				ignoredExpirationSignerIds: []string{"normankey"},
+				response: formats.SignatureResponse{
+					Type:      "contentsignature",
+					Mode:      "p384ecdsa",
+					SignerID:  "normankey",
+					Signature: "qGjS1QmB2xANizjJqrGmIPoojzjBrTV5kgi01p1ELnfKwH4E3UDTZRf-9K7PCEwjt0mOzd1bBmRBKcnWZNFAMvAduBwfAPHFGpX-YKBoRSLHuA6QuiosEydnZEs5ykAR",
+					X5U:       testRootExpiringSoonChainTestServer.URL,
+				},
+				input: signerTestData,
+			},
+			wantErr:   false,
+			errSubStr: "",
+		},
 	}
 	for _, tt := range tests {
 		notifier := tt.args.notifier
@@ -489,7 +508,7 @@ func Test_verifyContentSignature(t *testing.T) {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := verifyContentSignature(tt.args.x5uClient, notifier, tt.args.rootHashes, tt.args.ignoredCerts, tt.args.response, tt.args.input)
+			err := verifyContentSignature(tt.args.x5uClient, notifier, tt.args.rootHashes, tt.args.ignoredCerts, tt.args.ignoredExpirationSignerIds, tt.args.response, tt.args.input)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("verifyContentSignature() error = %v, wantErr %v", err, tt.wantErr)
