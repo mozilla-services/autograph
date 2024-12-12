@@ -33,7 +33,6 @@ type configuration struct {
 	origAutographURL string
 	requestURL       string
 	monitoringKey    string
-	env              string
 	rootHashes       []string
 	truststore       *x509.CertPool
 
@@ -84,9 +83,8 @@ func main() {
 	// configure monitor to check responses against Fx stage or
 	// prod or autograph dev code signing PKI roots and CA root
 	// certs defined in constants.go
-	conf.env = os.Getenv("AUTOGRAPH_ENV")
 	var rootErr, depErr error
-	switch conf.env {
+	switch strings.TrimSpace(os.Getenv("AUTOGRAPH_ENV")) {
 	case "dev":
 		conf.truststore, conf.rootHashes, rootErr = loadCertsToTruststore(firefoxPkiDevRoots)
 	case "stage":
