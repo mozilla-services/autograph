@@ -38,8 +38,8 @@ import (
 	"github.com/mozilla-services/autograph/signer/mar"
 	"github.com/mozilla-services/autograph/signer/xpi"
 
-	"go.mozilla.org/sops"
-	"go.mozilla.org/sops/decrypt"
+	"go.mozilla.org/sops/v3"
+	"go.mozilla.org/sops/v3/decrypt"
 
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/mozilla-services/autograph/crypto11"
