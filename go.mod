@@ -1,6 +1,6 @@
 module github.com/mozilla-services/autograph
 
-go 1.22.1
+go 1.23.4
 
 require (
 	github.com/DataDog/datadog-go v4.8.3+incompatible

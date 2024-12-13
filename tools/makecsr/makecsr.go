@@ -13,7 +13,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"maps"
 	"os"
+	"slices"
 
 	"github.com/mozilla-services/autograph/crypto11"
 )
@@ -39,13 +41,15 @@ func main() {
 		sigAlgName             string
 	)
 
+	allowedSigNames := slices.Collect(maps.Keys(allowedSigAlgs))
+
 	flag.StringVar(&crypto11ConfigFilePath, "crypto11Config", "crypto11-config.json", "Path to the crypto11 configuration file")
 	flag.StringVar(&keyLabel, "l", "mykey", "Label of the key in the HSM")
 	flag.StringVar(&ou, "ou", "Mozilla AMO Production Signing Service", "OrganizationalUnit of the Subject")
 	flag.StringVar(&cn, "cn", "Content Signing Intermediate", "CommonName of the Subject")
 	flag.StringVar(&dnsName, "dnsName", "", "DNS name for use in the Subject Altenative Name")
 	flag.StringVar(&email, "email", "", "email that's added to the EmailAddresses part of the Subject Alternative Name")
-	flag.StringVar(&sigAlgName, "sigAlg", "", fmt.Sprintf("Signature Algorithm to use with the key. Must be one of %q", mapKeysAsSlice(allowedSigAlgs)))
+	flag.StringVar(&sigAlgName, "sigAlg", "", fmt.Sprintf("Signature Algorithm to use with the key. Must be one of %q", allowedSigNames))
 	flag.Parse()
 
 	if dnsName == "" {
@@ -68,7 +72,7 @@ func main() {
 
 	sigAlg, ok := allowedSigAlgs[sigAlgName]
 	if !ok {
-		fmt.Fprintf(os.Stderr, "invalid signature algorithm %#v passed as -sigAlg, select from %q\n", sigAlgName, mapKeysAsSlice(allowedSigAlgs))
+		fmt.Fprintf(os.Stderr, "invalid signature algorithm %#v passed as -sigAlg, select from %q\n", sigAlgName, allowedSigNames)
 		os.Exit(2)
 	}
 
@@ -126,14 +130,4 @@ func generatePEMEncodedCSR(privKey any, organizationalUnit, commonName, email st
 
 	out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
 	return out, nil
-}
-
-// mapKeysAsSlice returns the keys of a map as a slice. Once we're on Go 1.23,
-// we can use `slices.Collect(map.Keys(..))` instead of this.
-func mapKeysAsSlice[K comparable, V any](m map[K]V) []K {
-	keys := make([]K, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
 }
