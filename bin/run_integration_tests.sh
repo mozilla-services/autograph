@@ -1,4 +1,7 @@
 #!/bin/bash
+# TODO(AUT-287): remove this
+# because the integration tests diverges from the integration-tests.yml
+# which is ran by GitHub actions
 
 set -e
 set -o pipefail

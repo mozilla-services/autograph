@@ -23,7 +23,10 @@ Use Docker whenever possible. The golang version on your machine is likely _not_
 
 This will download the latest build of autograph from DockerHub and run it with its dev configuration.
 
-#### Local Development with Docker
+## Local Development
+
+### Local Development with Docker
+
 
 (This process will start a number of `gpg-agent` processes on your host machine,
 then does a `killall gpg-agent` to clean up.)
@@ -34,9 +37,10 @@ make build             # updates local docker images
 make integration-test  # must pass
 docker compose up      # runs unit tests in container, must pass
 ```
-_Note: you must monitor the output of docker to detect when the unit tests have
-completed. Otherwise, it will run forever with heartbeat messages. The following
-pipeline is useful (and available in the Makefile as target `test-in-docker`):_
+> [!Note]
+> You must monitor the output of docker to detect when the unit tests have completed. Otherwise, it will run forever with heartbeat messages. The following pipeline is useful (and available in the Makefile as target `test-in-docker`):
+> FIXME: Note dependency between autograph app and monitor and all the Dockerfiles
+
 ```bash
 docker compose up 2>&1 | tee compose.log \
     | (grep --silent "autograph-unit-test exited with code" && docker compose down; \
