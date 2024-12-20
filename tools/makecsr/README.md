@@ -52,9 +52,9 @@ For more information, see
 https://mana.mozilla.org/wiki/pages/viewpage.action?pageId=87365053
 
 ### Putting it all together, practical GCP example
-Using this with GCP, you should have:
+1. Have your keys created in GCP KMS and be sure that your user account has the `cloudkms.signerVerifier` role attached.
 
-1. A read only libkmsp11-config.yaml file like this
+2. A read only libkmsp11-config.yaml file like this
 ```
 tokens:
   - key_ring: projects/my-project/locations/global/keyRings/my-key-ring
@@ -62,7 +62,7 @@ tokens:
 # Note: This file should be read-only. You can do `chmod -w libkmsp11-config.yaml` after you create it.
 ```
 
-2. A crypto11-config.json file like this
+3. A crypto11-config.json file like this
 ```
 {
   "Path": "/app/libkmsp11.so",
@@ -70,11 +70,11 @@ tokens:
 }
 ```
 
-3. Be authenticated with GCP. Ex: `gcloud auth login --update-adc`
+4. Be authenticated with GCP. Ex: `gcloud auth login --update-adc`
 
-4. Have the latest autograph docker image pulled down. `docker pull mozilla:autograph/latest`
+5. Have the latest autograph docker image pulled down. `docker pull mozilla:autograph/latest`
 
-5. Run the docker container in interactive mode with those configs your gcloud credentials mounted.
+6. Run the docker container in interactive mode with those configs your gcloud credentials mounted.
 ```
 docker run -it --rm --user 0:0 \
     -e "KMS_PKCS11_CONFIG=/mnt/libkmsp11-config.yaml" \
@@ -85,7 +85,7 @@ docker run -it --rm --user 0:0 \
     "mozilla/autograph:latest" /bin/bash
 ```
 
-6. Run the makecsr command with the options you want.
+7. Run the makecsr command with the options you want.
 ```
 makecsr -cn "My Corporation" \
     -dnsName "my.domain.name.foo" 
