@@ -54,7 +54,7 @@ https://mana.mozilla.org/wiki/pages/viewpage.action?pageId=87365053
 ### Putting it all together, practical GCP example
 1. Have your keys created in GCP KMS and be sure that your user account has the `cloudkms.signerVerifier` role attached.
 
-2. A read only libkmsp11-config.yaml file like this
+2. Create a read only libkmsp11-config.yaml file like this
 ```
 tokens:
   - key_ring: projects/my-project/locations/global/keyRings/my-key-ring
@@ -62,7 +62,7 @@ tokens:
 # Note: This file should be read-only. You can do `chmod -w libkmsp11-config.yaml` after you create it.
 ```
 
-3. A crypto11-config.json file like this
+3. Create a crypto11-config.json file like this
 ```
 {
   "Path": "/app/libkmsp11.so",
@@ -70,9 +70,9 @@ tokens:
 }
 ```
 
-4. Be authenticated with GCP. Ex: `gcloud auth login --update-adc`
+4. Get authenticated with GCP. Ex: `gcloud auth login --update-adc`
 
-5. Have the latest autograph docker image pulled down. `docker pull mozilla:autograph/latest`
+5. Pull the latest autograph docker image. `docker pull mozilla:autograph/latest`
 
 6. Run the docker container in interactive mode with those configs your gcloud credentials mounted.
 ```
