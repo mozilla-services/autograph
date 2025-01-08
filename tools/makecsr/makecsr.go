@@ -34,8 +34,12 @@ func main() {
 	var (
 		crypto11ConfigFilePath string
 		keyLabel               string
+		o                      string
 		ou                     string
 		cn                     string
+		c                      string
+		st                     string
+		l                      string
 		dnsName                string
 		email                  string
 		sigAlgName             string
@@ -44,9 +48,13 @@ func main() {
 	allowedSigNames := slices.Collect(maps.Keys(allowedSigAlgs))
 
 	flag.StringVar(&crypto11ConfigFilePath, "crypto11Config", "crypto11-config.json", "Path to the crypto11 configuration file")
-	flag.StringVar(&keyLabel, "l", "mykey", "Label of the key in the HSM")
+	flag.StringVar(&keyLabel, "lbl", "mykey", "Label of the key in the HSM")
+	flag.StringVar(&o, "o", "Mozilla Corporation", "Organization of the Subject")
 	flag.StringVar(&ou, "ou", "Mozilla AMO Production Signing Service", "OrganizationalUnit of the Subject")
 	flag.StringVar(&cn, "cn", "Content Signing Intermediate", "CommonName of the Subject")
+	flag.StringVar(&c, "c", "Country", "Country of the Subject")
+	flag.StringVar(&st, "st", "State/Province", "State/Province of the Subject")
+	flag.StringVar(&l, "l", "City/Locale", "City/Locale of the Subject")
 	flag.StringVar(&dnsName, "dnsName", "", "DNS name for use in the Subject Altenative Name")
 	flag.StringVar(&email, "email", "", "email that's added to the EmailAddresses part of the Subject Alternative Name")
 	flag.StringVar(&sigAlgName, "sigAlg", "", fmt.Sprintf("Signature Algorithm to use with the key. Must be one of %q", allowedSigNames))
@@ -100,20 +108,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	csrPEM, err := generatePEMEncodedCSR(privKey, ou, cn, email, []string{dnsName}, sigAlg)
+	csrPEM, err := generatePEMEncodedCSR(privKey, o, ou, cn, c, st, l, email, []string{dnsName}, sigAlg)
 	if err != nil {
 		log.Fatalf("Failed to generate CSR: %s", err.Error())
 	}
 	fmt.Print(string(csrPEM))
 }
 
-func generatePEMEncodedCSR(privKey any, organizationalUnit, commonName, email string, dnsNames []string, sigAlg x509.SignatureAlgorithm) ([]byte, error) {
+func generatePEMEncodedCSR(privKey any, organization, organizationalUnit, commonName, country, state, locale, email string, dnsNames []string, sigAlg x509.SignatureAlgorithm) ([]byte, error) {
 	crtReq := &x509.CertificateRequest{
 		Subject: pkix.Name{
 			CommonName:         commonName,
-			Organization:       []string{"Mozilla Corporation"},
+			Organization:       []string{organization},
 			OrganizationalUnit: []string{organizationalUnit},
-			Country:            []string{"US"},
+			Country:            []string{country},
+			Locality:           []string{locale},
+			Province:           []string{state},
 		},
 		DNSNames:           dnsNames,
 		SignatureAlgorithm: sigAlg,

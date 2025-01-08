@@ -87,10 +87,14 @@ docker run -it --rm --user 0:0 \
 
 7. Run the makecsr command with the options you want.
 ```
-makecsr -cn "My Corporation" \
-    -dnsName "my.domain.name.foo" 
-    -l "my-key-label-from-kms" 
-    -ou "Engineering Operations" 
-    -sigAlg "SHA256WithRSA" 
+makecsr -lbl "my-key-label-from-kms" \
+    -o "My Organization" \
+    -cn "My Org Common Name" \
+    -dnsName "my.domain.name.foo" \
+    -ou "My Department Name" \
+    -c "My Country" \
+    -st "My Province/State" \
+    -l "My City" \
+    -sigAlg "SHA256WithRSA" \
     -crypto11Config "/mnt/crypto11-config.json"
 ```
