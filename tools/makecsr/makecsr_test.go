@@ -18,24 +18,28 @@ import (
 func TestGoldenPath(t *testing.T) {
 	testcases := []struct {
 		privKey       crypto.PrivateKey
+		org           string
 		orgUnit       string
 		commonName    string
+		country       string
+		state         string
+		locale        string
 		email         string
 		dnsNames      []string
 		sigAlg        x509.SignatureAlgorithm
 		expectedError error
 	}{
-		{generateRSAKey(t), "MozOrg", "MozCN", "", []string{"example.com", "biff.com"}, x509.SHA256WithRSA, nil},
-		{generateRSAKey(t), "MozOrg", "MozCN", "", []string{"okay.com"}, x509.SHA384WithRSA, nil},
-		{generateRSAKey(t), "MozOrg", "MozCN/email=foobar.com", "", []string{"okay.com"}, x509.SHA256WithRSA, nil},
-		{generateRSAKey(t), "MozOrg", "MozCN", "welp@foobar.com", []string{"okay.com"}, x509.SHA256WithRSA, nil},
-		{generateECDSAKey(t), "Foo", "foocN", "", []string{"okay.com"}, x509.ECDSAWithSHA256, nil},
-		{generateECDSAKey(t), "Foo", "foocN", "", []string{"okay.com"}, x509.ECDSAWithSHA384, nil},
-		{generateRSAKey(t), "MozOrg", "MozCN", "", []string{"failed.com"}, x509.ECDSAWithSHA256, errors.New("x509: requested SignatureAlgorithm does not match private key type")},
+		{generateRSAKey(t), "Mozilla", "MozOrg", "MozCN", "US", "California", "San Francisoco", "", []string{"example.com", "biff.com"}, x509.SHA256WithRSA, nil},
+		{generateRSAKey(t), "Mozilla Corp", "MozOrg", "MozCN", "US", "California", "San Francisoco", "", []string{"okay.com"}, x509.SHA384WithRSA, nil},
+		{generateRSAKey(t), "Mozilla Corporation", "MozOrg", "MozCN/email=foobar.com", "US", "California", "San Francisoco", "", []string{"okay.com"}, x509.SHA256WithRSA, nil},
+		{generateRSAKey(t), "Mozilla Corporation", "MozOrg", "MozCN", "US", "California", "San Francisoco", "welp@foobar.com", []string{"okay.com"}, x509.SHA256WithRSA, nil},
+		{generateECDSAKey(t), "Mozilla Corporation", "Foo", "foocN", "US", "California", "San Francisoco", "", []string{"okay.com"}, x509.ECDSAWithSHA256, nil},
+		{generateECDSAKey(t), "Mozilla Corporation", "Foo", "foocN", "US", "California", "San Francisoco", "", []string{"okay.com"}, x509.ECDSAWithSHA384, nil},
+		{generateRSAKey(t), "Mozilla Corporation", "MozOrg", "MozCN", "US", "California", "San Francisoco", "", []string{"failed.com"}, x509.ECDSAWithSHA256, errors.New("x509: requested SignatureAlgorithm does not match private key type")},
 	}
 	for i, tc := range testcases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			out, err := generatePEMEncodedCSR(tc.privKey, tc.orgUnit, tc.commonName, tc.email, tc.dnsNames, tc.sigAlg)
+			out, err := generatePEMEncodedCSR(tc.privKey, tc.org, tc.orgUnit, tc.commonName, tc.country, tc.state, tc.locale, tc.email, tc.dnsNames, tc.sigAlg)
 			if tc.expectedError != nil {
 				if err == nil {
 					t.Fatalf("expectedError: want %v, got nil", tc.expectedError)
