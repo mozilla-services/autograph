@@ -2,7 +2,7 @@
 
 This is a small helper used to generate a PEM-encoded CSR from a private key
 hosted in our HSMs. It's used particularly to issue the CS and AMO intermediates
-used by autograph. See our private hsm repo for how we've invoked it.
+used by autograph.
 
 Note: nearly all of the CSRs attributes can be overridden at signing time, so
 this is not a complete picture of what will be signed. But we include attributes
