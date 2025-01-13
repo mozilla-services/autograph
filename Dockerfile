@@ -64,6 +64,7 @@ RUN cd /app/src/autograph/tools/makecsr && go build -o /go/bin/makecsr .
 #------------------------------------------------------------------------------
 FROM prebuild
 EXPOSE 8000
+EXPOSE 2112
 
 # Copy compiled appliation from the builder.
 ADD . /app/src/autograph

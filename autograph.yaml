@@ -11,6 +11,9 @@ statsd:
     namespace: "autograph."
     buflen: 1
 
+debugserver:
+    listen: "0.0.0.0:2112"
+
 # When using an HSM, place the path to the pkcs11 client library,
 # token label and pin of the crypto user in the configuration below
 # hsm:
