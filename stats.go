@@ -5,17 +5,15 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	"github.com/DataDog/datadog-go/statsd"
-
+	"github.com/DataDog/datadog-go/v5/statsd"
 	log "github.com/sirupsen/logrus"
 )
 
 func loadStatsd(conf configuration) (*statsd.Client, error) {
-	statsdClient, err := statsd.NewBuffered(conf.Statsd.Addr, conf.Statsd.Buflen)
+	statsdClient, err := statsd.New(conf.Statsd.Addr, statsd.WithNamespace(conf.Statsd.Namespace))
 	if err != nil {
 		return nil, fmt.Errorf("error constructing statsdClient: %w", err)
 	}
-	statsdClient.Namespace = conf.Statsd.Namespace
 
 	return statsdClient, nil
 }

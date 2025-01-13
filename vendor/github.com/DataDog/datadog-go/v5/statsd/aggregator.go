@@ -15,9 +15,9 @@ type (
 )
 
 type aggregator struct {
-	nbContextGauge int32
-	nbContextCount int32
-	nbContextSet   int32
+	nbContextGauge uint64
+	nbContextCount uint64
+	nbContextSet   uint64
 
 	countsM sync.RWMutex
 	gaugesM sync.RWMutex
@@ -34,34 +34,24 @@ type aggregator struct {
 
 	client *Client
 
-	// aggregator implements ChannelMode mechanism to receive histograms,
+	// aggregator implements channelMode mechanism to receive histograms,
 	// distributions and timings. Since they need sampling they need to
-	// lock for random. When using both ChannelMode and ExtendedAggregation
+	// lock for random. When using both channelMode and ExtendedAggregation
 	// we don't want goroutine to fight over the lock.
 	inputMetrics    chan metric
 	stopChannelMode chan struct{}
 	wg              sync.WaitGroup
 }
 
-type aggregatorMetrics struct {
-	nbContext             int32
-	nbContextGauge        int32
-	nbContextCount        int32
-	nbContextSet          int32
-	nbContextHistogram    int32
-	nbContextDistribution int32
-	nbContextTiming       int32
-}
-
-func newAggregator(c *Client) *aggregator {
+func newAggregator(c *Client, maxSamplesPerContext int64) *aggregator {
 	return &aggregator{
 		client:          c,
 		counts:          countsMap{},
 		gauges:          gaugesMap{},
 		sets:            setsMap{},
-		histograms:      newBufferedContexts(newHistogramMetric),
-		distributions:   newBufferedContexts(newDistributionMetric),
-		timings:         newBufferedContexts(newTimingMetric),
+		histograms:      newBufferedContexts(newHistogramMetric, maxSamplesPerContext),
+		distributions:   newBufferedContexts(newDistributionMetric, maxSamplesPerContext),
+		timings:         newBufferedContexts(newTimingMetric, maxSamplesPerContext),
 		closed:          make(chan struct{}),
 		stopChannelMode: make(chan struct{}),
 	}
@@ -76,6 +66,7 @@ func (a *aggregator) start(flushInterval time.Duration) {
 			case <-ticker.C:
 				a.flush()
 			case <-a.closed:
+				ticker.Stop()
 				return
 			}
 		}
@@ -124,22 +115,18 @@ func (a *aggregator) flush() {
 	}
 }
 
-func (a *aggregator) flushTelemetryMetrics() *aggregatorMetrics {
+func (a *aggregator) flushTelemetryMetrics(t *Telemetry) {
 	if a == nil {
-		return nil
+		// aggregation is disabled
+		return
 	}
 
-	am := &aggregatorMetrics{
-		nbContextGauge:        atomic.SwapInt32(&a.nbContextGauge, 0),
-		nbContextCount:        atomic.SwapInt32(&a.nbContextCount, 0),
-		nbContextSet:          atomic.SwapInt32(&a.nbContextSet, 0),
-		nbContextHistogram:    a.histograms.resetAndGetNbContext(),
-		nbContextDistribution: a.distributions.resetAndGetNbContext(),
-		nbContextTiming:       a.timings.resetAndGetNbContext(),
-	}
-
-	am.nbContext = am.nbContextGauge + am.nbContextCount + am.nbContextSet + am.nbContextHistogram + am.nbContextDistribution + am.nbContextTiming
-	return am
+	t.AggregationNbContextGauge = atomic.LoadUint64(&a.nbContextGauge)
+	t.AggregationNbContextCount = atomic.LoadUint64(&a.nbContextCount)
+	t.AggregationNbContextSet = atomic.LoadUint64(&a.nbContextSet)
+	t.AggregationNbContextHistogram = a.histograms.getNbContext()
+	t.AggregationNbContextDistribution = a.distributions.getNbContext()
+	t.AggregationNbContextTiming = a.timings.getNbContext()
 }
 
 func (a *aggregator) flushMetrics() []metric {
@@ -179,19 +166,47 @@ func (a *aggregator) flushMetrics() []metric {
 	metrics = a.distributions.flush(metrics)
 	metrics = a.timings.flush(metrics)
 
-	atomic.AddInt32(&a.nbContextCount, int32(len(counts)))
-	atomic.AddInt32(&a.nbContextGauge, int32(len(gauges)))
-	atomic.AddInt32(&a.nbContextSet, int32(len(sets)))
+	atomic.AddUint64(&a.nbContextCount, uint64(len(counts)))
+	atomic.AddUint64(&a.nbContextGauge, uint64(len(gauges)))
+	atomic.AddUint64(&a.nbContextSet, uint64(len(sets)))
 	return metrics
 }
 
+// getContext returns the context for a metric name and tags.
+//
+// The context is the metric name and tags separated by a separator symbol.
+// It is not intended to be used as a metric name but as a unique key to aggregate
 func getContext(name string, tags []string) string {
-	return name + ":" + strings.Join(tags, tagSeparatorSymbol)
+	c, _ := getContextAndTags(name, tags)
+	return c
 }
 
+// getContextAndTags returns the context and tags for a metric name and tags.
+//
+// See getContext for usage for context
+// The tags are the tags separated by a separator symbol and can be re-used to pass down to the writer
 func getContextAndTags(name string, tags []string) (string, string) {
-	stringTags := strings.Join(tags, tagSeparatorSymbol)
-	return name + ":" + stringTags, stringTags
+	if len(tags) == 0 {
+		return name, ""
+	}
+	n := len(name) + len(nameSeparatorSymbol) + len(tagSeparatorSymbol)*(len(tags)-1)
+	for _, s := range tags {
+		n += len(s)
+	}
+
+	var sb strings.Builder
+	sb.Grow(n)
+	sb.WriteString(name)
+	sb.WriteString(nameSeparatorSymbol)
+	sb.WriteString(tags[0])
+	for _, s := range tags[1:] {
+		sb.WriteString(tagSeparatorSymbol)
+		sb.WriteString(s)
+	}
+
+	s := sb.String()
+
+	return s, s[len(name)+len(nameSeparatorSymbol):]
 }
 
 func (a *aggregator) count(name string, value int64, tags []string) error {

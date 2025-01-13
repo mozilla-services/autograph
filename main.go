@@ -41,7 +41,7 @@ import (
 	sops "github.com/getsops/sops/v3"
 	"github.com/getsops/sops/v3/decrypt"
 
-	"github.com/DataDog/datadog-go/statsd"
+	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/mozilla-services/autograph/crypto11"
 )
 

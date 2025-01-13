@@ -128,9 +128,9 @@ github.com/AzureAD/microsoft-authentication-library-for-go/apps/internal/options
 github.com/AzureAD/microsoft-authentication-library-for-go/apps/internal/shared
 github.com/AzureAD/microsoft-authentication-library-for-go/apps/internal/version
 github.com/AzureAD/microsoft-authentication-library-for-go/apps/public
-# github.com/DataDog/datadog-go v4.8.3+incompatible
-## explicit
-github.com/DataDog/datadog-go/statsd
+# github.com/DataDog/datadog-go/v5 v5.6.0
+## explicit; go 1.13
+github.com/DataDog/datadog-go/v5/statsd
 # github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.25.0
 ## explicit; go 1.21
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp

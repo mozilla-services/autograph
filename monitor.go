@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DataDog/datadog-go/statsd"
+	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer"
 	log "github.com/sirupsen/logrus"
