@@ -27,6 +27,7 @@ services:
       - db
     ports:
       - "8000:8000"
+      - "2112:2112"
     volumes:
       - apptmpdir:/tmp/
     healthcheck:
@@ -116,7 +117,4 @@ services:
       - db
     user: "0"
     working_dir: "/app/src/autograph/"
-    command:
-      [
-        "./bin/run_unit_tests.sh"
-      ]
+    command: ["./bin/run_unit_tests.sh"]

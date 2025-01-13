@@ -6,7 +6,19 @@ import (
 	"sync/atomic"
 
 	"github.com/DataDog/datadog-go/v5/statsd"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	// TODO(AUT-393): remove the statsd and prometheus counter using this name
+	// once we're done testing.
+	foobarTestCounterName = "foobar_test"
+	foobarTestCounter     = promauto.NewCounter(prometheus.CounterOpts{
+		Name: foobarTestCounterName,
+		Help: "A counter used for testing how prometheus and statsd metrics differ",
+	})
 )
 
 func loadStatsd(conf configuration) (*statsd.Client, error) {

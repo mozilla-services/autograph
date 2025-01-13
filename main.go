@@ -43,6 +43,7 @@ import (
 
 	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/mozilla-services/autograph/crypto11"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // configuration loads a yaml file that contains the configuration of Autograph
@@ -59,6 +60,11 @@ type configuration struct {
 		Namespace string
 		Buflen    int
 	}
+
+	// DebugServer are the settings for the control plane HTTP server where
+	// metrics are exposed for collection and some limited utitilites can live.
+	DebugServer debugServerConfig `yaml:"debugserver"`
+
 	HSM                   crypto11.PKCS11Config
 	Database              database.Config
 	Signers               []signer.Configuration
@@ -67,6 +73,12 @@ type configuration struct {
 	Heartbeat             heartbeatConfig
 	HawkTimestampValidity string
 	MonitorInterval       time.Duration
+}
+
+type debugServerConfig struct {
+	// Listen is a TCP address for the HTTP server to listen on. See
+	// http.Server's Addr field for details.
+	Listen string `yaml:"listen"`
 }
 
 // An autographer is a running instance of an autograph service,
@@ -238,6 +250,29 @@ func run(conf configuration, listen string, debug bool) {
 
 		prefix := fmt.Sprintf("/x5u/%s/", signerConf.ID)
 		router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(http.Dir(parsedURL.Path))))
+	}
+
+	ag.stats.Incr(foobarTestCounterName, nil, 1)
+	foobarTestCounter.Inc()
+
+	if conf.DebugServer.Listen != "" {
+		log.Infof("starting debug server on %s", conf.DebugServer.Listen)
+		go func() {
+			mux := mux.NewRouter()
+			mux.Handle("/metrics", promhttp.Handler())
+			srv := http.Server{
+				Addr:         conf.DebugServer.Listen,
+				IdleTimeout:  conf.Server.IdleTimeout,
+				ReadTimeout:  conf.Server.ReadTimeout,
+				WriteTimeout: conf.Server.WriteTimeout,
+				Handler:      mux,
+			}
+
+			err := srv.ListenAndServe()
+			if err != nil {
+				log.Fatalf("unable to start up debug server on %s: %s", conf.DebugServer.Listen, err)
+			}
+		}()
 	}
 
 	server := &http.Server{
