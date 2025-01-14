@@ -252,9 +252,12 @@ func run(conf configuration, listen string, debug bool) {
 		router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(http.Dir(parsedURL.Path))))
 	}
 
-	ag.stats.Incr(foobarTestCounterName, []string{"statsd:yes"}, 1)
-	foobarTestCounter.Inc()
-	promOnlyFoobarTestCounterName.Inc()
+	go func() {
+		time.Sleep(5 * time.Minute)
+		ag.stats.Incr(foobarTestCounterName, []string{"statsd:yes"}, 1)
+		foobarTestCounter.Inc()
+		promOnlyFoobarTestCounterName.Inc()
+	}()
 
 	if conf.DebugServer.Listen != "" {
 		log.Infof("starting debug server on %s", conf.DebugServer.Listen)
