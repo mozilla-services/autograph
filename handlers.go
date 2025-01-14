@@ -17,9 +17,11 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer"
@@ -217,6 +219,12 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		}
 		requestedSignerConfig := requestedSigner.Config()
 		a.stats.Incr("signer.requests", []string{"keyid:" + requestedSignerConfig.ID, "user:" + userid, usedDefaultSignerTag(sigreq)}, 1.0)
+		signerRequestsCounter.With(prometheus.Labels{
+			"keyid": requestedSignerConfig.ID,
+			"user":  userid,
+			// TODO(AUT-206): remove this when we've migrate everyone off of the default keyid
+			"used_default_signer": strconv.FormatBool(sigreq.KeyID == ""),
+		}).Inc()
 
 		sigresps[i] = formats.SignatureResponse{
 			Ref:        id(),

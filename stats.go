@@ -23,6 +23,11 @@ var (
 		Name: "prom_only_foobar_test",
 		Help: "A counter used for testing how prometheus and statsd metrics differ",
 	})
+
+	signerRequestsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "signer_requests",
+		Help: "A counter for how many authenticated and authorized requests are made to a given signer",
+	}, []string{"keyid", "user", "used_default_signer"})
 )
 
 func loadStatsd(conf configuration) (*statsd.Client, error) {
