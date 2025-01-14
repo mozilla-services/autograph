@@ -19,6 +19,10 @@ var (
 		Name: foobarTestCounterName,
 		Help: "A counter used for testing how prometheus and statsd metrics differ",
 	})
+	promOnlyFoobarTestCounterName = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "prom_only_foobar_test",
+		Help: "A counter used for testing how prometheus and statsd metrics differ",
+	})
 )
 
 func loadStatsd(conf configuration) (*statsd.Client, error) {
