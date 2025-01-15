@@ -13,10 +13,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/miekg/pkcs11"
 	"github.com/mozilla-services/autograph/crypto11"
 	"github.com/mozilla-services/autograph/internal/mockpkcs11"
+	"go.uber.org/mock/gomock"
 )
 
 func TestParseRSAPrivateKey(t *testing.T) {

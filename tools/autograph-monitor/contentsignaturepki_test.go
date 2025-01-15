@@ -20,9 +20,8 @@ import (
 	"time"
 
 	"github.com/mozilla-services/autograph/formats"
-
-	gomock "github.com/golang/mock/gomock"
 	"github.com/mozilla-services/autograph/tools/autograph-monitor/mock_main"
+	"go.uber.org/mock/gomock"
 )
 
 // helper funcs  -----------------------------------------------------------------
