@@ -221,14 +221,14 @@ func run(conf configuration, listen string, debug bool) {
 	stats := ag.stats
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/__heartbeat__", statsMiddleware(ag.handleHeartbeat, "http.nonapi.heartbeat", stats)).Methods("GET")
-	router.HandleFunc("/__lbheartbeat__", statsMiddleware(handleLBHeartbeat, "http.nonapi.lbheartbeat", stats)).Methods("GET")
-	router.HandleFunc("/__version__", statsMiddleware(handleVersion, "http.nonapi.version", stats)).Methods("GET")
-	router.HandleFunc("/__monitor__", statsMiddleware(monitor.handleMonitor, "http.nonapi.monitor", stats)).Methods("GET")
-	router.HandleFunc("/sign/files", apiStatsMiddleware(ag.handleSignature, "http.api.sign/files", stats)).Methods("POST")
-	router.HandleFunc("/sign/file", apiStatsMiddleware(ag.handleSignature, "http.api.sign/file", stats)).Methods("POST")
-	router.HandleFunc("/sign/data", apiStatsMiddleware(ag.handleSignature, "http.api.sign/data", stats)).Methods("POST")
-	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "http.api.sign/hash", stats)).Methods("POST")
+	router.HandleFunc("/__heartbeat__", nonAPIstatsMiddleware(ag.handleHeartbeat, "heartbeat", stats)).Methods("GET")
+	router.HandleFunc("/__lbheartbeat__", nonAPIstatsMiddleware(handleLBHeartbeat, "lbheartbeat", stats)).Methods("GET")
+	router.HandleFunc("/__version__", nonAPIstatsMiddleware(handleVersion, "version", stats)).Methods("GET")
+	router.HandleFunc("/__monitor__", nonAPIstatsMiddleware(monitor.handleMonitor, "monitor", stats)).Methods("GET")
+	router.HandleFunc("/sign/files", apiStatsMiddleware(ag.handleSignature, "sign/files", stats)).Methods("POST")
+	router.HandleFunc("/sign/file", apiStatsMiddleware(ag.handleSignature, "sign/file", stats)).Methods("POST")
+	router.HandleFunc("/sign/data", apiStatsMiddleware(ag.handleSignature, "sign/data", stats)).Methods("POST")
+	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "sign/hash", stats)).Methods("POST")
 	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", apiStatsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids", stats)).Methods("GET")
 	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
 		err = setRuntimeConfig()
