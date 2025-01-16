@@ -230,14 +230,6 @@ func run(conf configuration, listen string, debug bool) {
 	router.HandleFunc("/sign/data", apiStatsMiddleware(ag.handleSignature, "http.api.sign/data", stats)).Methods("POST")
 	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "http.api.sign/hash", stats)).Methods("POST")
 	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", apiStatsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids", stats)).Methods("GET")
-	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
-		err = setRuntimeConfig()
-		if err != nil {
-			log.Fatal(err)
-		}
-		addProfilerHandlers(router)
-		log.Infof("enabled HTTP perf profiler")
-	}
 
 	// For each signer with a local chain upload location (eg: using the file
 	// scheme) create an handler to serve that directory at the path /x5u/keyid/
@@ -264,6 +256,16 @@ func run(conf configuration, listen string, debug bool) {
 		go func() {
 			mux := mux.NewRouter()
 			mux.Handle("/metrics", promhttp.Handler())
+
+			if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
+				err = setRuntimeConfig()
+				if err != nil {
+					log.Fatal(err)
+				}
+				addProfilerHandlers(router)
+				log.Infof("enabled HTTP perf profiler")
+			}
+
 			srv := http.Server{
 				Addr:         conf.DebugServer.Listen,
 				IdleTimeout:  conf.Server.IdleTimeout,
