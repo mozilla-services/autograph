@@ -29,12 +29,12 @@ var (
 		Help: "A counter for how many authenticated and authorized requests are made to a given signer",
 	}, []string{"keyid", "user", "used_default_signer"})
 
-	httpResponsesTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+	httpResponsesTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "http_responses_total",
 		Help: "A counter for how many HTTP responses were returned labeled by by the HTTP handler's name, whether the response was from a signer API call (0 for false, 1 if true), and the HTTP response status code group (2xx, 3xx, etc)",
 	}, []string{"handler", "is_api", "status_group"})
 
-	httpRequestsInflight = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	httpRequestsInflight = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "http_inflight_requests",
 		Help: "A gauge for how many HTTP requests are currently being processed labeled by the HTTP handler's name and whether the request is from a signer API call (0 for false, 1 if true)",
 	}, []string{"handler", "is_api"})
@@ -63,6 +63,9 @@ func (a *autographer) addStats(conf configuration) error {
 	}
 	a.stats = stats
 	log.Infof("Statsd enabled at %s with namespace %s", conf.Statsd.Addr, conf.Statsd.Namespace)
+
+	a.promReg = prometheus.DefaultRegisterer
+
 	return nil
 }
 
@@ -128,43 +131,62 @@ func statsdMiddleware(h http.HandlerFunc, handlerName string, stats statsd.Clien
 	}
 }
 
-// apiStatsMiddleware is a handler that emits the Prometheus metrics
-// `http_responses_total“ and `http_inflight_requests_total` with the label
-// `is_api` set to `1` as well as the StatsD metrics
-// "agg.http.api.request.attempts" and "agg.http.api.response.status.<status
-// code>" as well as statsdMiddleware metrics for the handlerName given. These
-// metrics represent roll-ups of the individual http.api.* metrics. This
-// function only needs to exist for as long as we're running in AWS. It's
-// required because our combination of Grafana 0.9 and InfluxDB 1.11 doesn't
-// allow us to sum over the individual http.api.* API request metrics. So, we do
-// the aggregation ourselves. The "agg" is short for "aggregated". The
-// handlerName provided should still include "http.api".
-func apiStatsMiddleware(h http.HandlerFunc, handlerName string, stats statsd.ClientInterface) http.HandlerFunc {
+// apiStatsMiddleware is a handler that emits metrics about the requests and
+// responses coming into the given http.HandlerFunc. It emits the Prometheus
+// metrics `http_responses_total“ and `http_inflight_requests_total` with the
+// label `handler` set to a useful name for the handler, the label `is_api` set
+// to `1`, and the label `status_group` (see [promWriter]). It also emits the
+// StatsD metrics "agg.http.api.request.attempts" and
+// "agg.http.api.response.status.<status code>" as well as the
+// [statsdMiddleware] metrics for the handlerName given. These metrics represent
+// roll-ups of the individual http.api.* metrics. This function only needs to
+// exist for as long as we're running in AWS. It's required because our
+// combination of Grafana 0.9 and InfluxDB 1.11 doesn't allow us to sum over the
+// individual http.api.* API request metrics. So, we do the aggregation
+// ourselves. The "agg" is short for "aggregated". The handlerName provided
+// should still include "http.api".
+// FIXME this comment isn't true anymore
+func apiStatsMiddleware(h http.HandlerFunc, handlerName string, stats statsd.ClientInterface, promReg prometheus.Registerer) http.HandlerFunc {
 	totalRequests := httpResponsesTotal.MustCurryWith(prometheus.Labels{"handler": handlerName, "is_api": "1"})
 	totalInflight := httpRequestsInflight.With(prometheus.Labels{"handler": handlerName, "is_api": "1"})
+	promReg.MustRegister(totalRequests, totalInflight)
+
 	handlerFunc := promMiddleware(h, totalRequests, totalInflight)
 	handlerFunc = statsdMiddleware(handlerFunc, "http.api."+handlerName, stats)
 	return statsdMiddleware(handlerFunc, "agg.http.api", stats)
 }
 
-// apiStatsMiddleware is a handler that emits the Prometheus metrics
+// nonAPIStatsMiddleware is a handler that emits the Prometheus metrics
 // `http_responses_total“ and `http_inflight_requests_total` with the label
-// `is_api` set to `0` as well as the StatsD metrics
+// `handler` set to a useful name for the handler, `is_api` set to `0`, the
+// label `status_group` (see [promWriter]), and the StatsD metrics
 // "agg.http.nonapi.request.attempts" and
 // "agg.http.nonapi.response.status.<status code>" as well as statsdMiddleware
 // metrics for the handlerName given.
-func nonAPIstatsMiddleware(h http.HandlerFunc, handlerName string, stats statsd.ClientInterface) http.HandlerFunc {
+func nonAPIstatsMiddleware(h http.HandlerFunc, handlerName string, stats statsd.ClientInterface, promReg prometheus.Registerer) http.HandlerFunc {
 	totalRequests := httpResponsesTotal.MustCurryWith(prometheus.Labels{"handler": handlerName, "is_api": "0"})
 	totalInflight := httpRequestsInflight.With(prometheus.Labels{"handler": handlerName, "is_api": "0"})
+	promReg.MustRegister(totalRequests, totalInflight)
+
 	handlerFunc := promMiddleware(h, totalRequests, totalInflight)
 	handlerFunc = statsdMiddleware(handlerFunc, "http.nonapi."+handlerName, stats)
 	return statsdMiddleware(handlerFunc, "agg.http.nonapi", stats)
 }
 
+// newPromWriter returns a new http.ResponseWriter that sends HTTP response
+// status code groups as metrics to prometheus. The metric emitted is the given
+// totalRequests CounterVec with the label "status_group" set to either "2xx",
+// "3xx", "4xx", "5xx", or (if something baffling has happened) "unknown". It
+// expects the CounterVec to already be registered with a prometheus.Registry.
 func newPromWriter(w http.ResponseWriter, totalRequests *prometheus.CounterVec) *promWriter {
 	return &promWriter{ResponseWriter: w, totalRequests: totalRequests, headerWritten: new(atomic.Bool)}
 }
 
+// promWriter is a http.ResponseWriter that sends HTTP response status code
+// groups as metrics to prometheus. The metric emitted is the given
+// totalRequests CounterVec with the label "status_group" set to either "2xx",
+// "3xx", "4xx", "5xx", or (if something baffling has happened) "unknown". It
+// expects the CounterVec to already be registered with a prometheus.Registry.
 type promWriter struct {
 	http.ResponseWriter
 	totalRequests *prometheus.CounterVec

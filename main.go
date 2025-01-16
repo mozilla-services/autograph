@@ -43,6 +43,7 @@ import (
 
 	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/mozilla-services/autograph/crypto11"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -86,6 +87,7 @@ type debugServerConfig struct {
 type autographer struct {
 	db                   *database.Handler
 	stats                statsd.ClientInterface
+	promReg              prometheus.Registerer
 	nonces               *lru.Cache
 	debug                bool
 	heartbeatConf        *heartbeatConfig
@@ -219,17 +221,19 @@ func run(conf configuration, listen string, debug bool) {
 	monitor := newMonitor(ag, conf.MonitorInterval)
 
 	stats := ag.stats
+	reg := ag.promReg
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/__heartbeat__", nonAPIstatsMiddleware(ag.handleHeartbeat, "heartbeat", stats)).Methods("GET")
-	router.HandleFunc("/__lbheartbeat__", nonAPIstatsMiddleware(handleLBHeartbeat, "lbheartbeat", stats)).Methods("GET")
-	router.HandleFunc("/__version__", nonAPIstatsMiddleware(handleVersion, "version", stats)).Methods("GET")
-	router.HandleFunc("/__monitor__", nonAPIstatsMiddleware(monitor.handleMonitor, "monitor", stats)).Methods("GET")
-	router.HandleFunc("/sign/files", apiStatsMiddleware(ag.handleSignature, "sign/files", stats)).Methods("POST")
-	router.HandleFunc("/sign/file", apiStatsMiddleware(ag.handleSignature, "sign/file", stats)).Methods("POST")
-	router.HandleFunc("/sign/data", apiStatsMiddleware(ag.handleSignature, "sign/data", stats)).Methods("POST")
-	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "sign/hash", stats)).Methods("POST")
-	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", apiStatsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids", stats)).Methods("GET")
+	router.HandleFunc("/__heartbeat__", nonAPIstatsMiddleware(ag.handleHeartbeat, "heartbeat", stats, reg)).Methods("GET")
+	router.HandleFunc("/__lbheartbeat__", nonAPIstatsMiddleware(handleLBHeartbeat, "lbheartbeat", stats, reg)).Methods("GET")
+	router.HandleFunc("/__version__", nonAPIstatsMiddleware(handleVersion, "version", stats, reg)).Methods("GET")
+	router.HandleFunc("/__monitor__", nonAPIstatsMiddleware(monitor.handleMonitor, "monitor", stats, reg)).Methods("GET")
+	router.HandleFunc("/sign/files", apiStatsMiddleware(ag.handleSignature, "sign/files", stats, reg)).Methods("POST")
+	router.HandleFunc("/sign/file", apiStatsMiddleware(ag.handleSignature, "sign/file", stats, reg)).Methods("POST")
+	router.HandleFunc("/sign/data", apiStatsMiddleware(ag.handleSignature, "sign/data", stats, reg)).Methods("POST")
+	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "sign/hash", stats, reg)).Methods("POST")
+	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", apiStatsMiddleware(ag.handleGetAuthKeyIDs, "getauthkeyids", stats, reg)).Methods("GET")
+
 	if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
 		err = setRuntimeConfig()
 		if err != nil {
