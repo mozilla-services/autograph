@@ -520,14 +520,3 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 	w.Write(signerIDsJSON)
 }
-
-// usedDefaultSignerTag returns a statds tag indicating whether the default
-// signer for an authorization was used.
-func usedDefaultSignerTag(sigreq formats.SignatureRequest) string {
-	// TODO(AUT-206): remove this when we've migrate everyone off of the default
-	// keyid
-	if sigreq.KeyID == "" {
-		return "used_default_signer:true"
-	}
-	return "used_default_signer:false"
-}
