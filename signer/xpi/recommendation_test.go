@@ -187,7 +187,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		t.Parallel()
 
 		// initialize a signer
-		s, err := New(recTestCase, nil)
+		s, err := New(recTestCase)
 		if err != nil {
 			t.Fatalf("testcase signer initialization failed with: %v", err)
 		}
@@ -220,7 +220,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		t.Parallel()
 
 		// initialize a signer
-		s, err := New(validSignerConfigs[0], nil)
+		s, err := New(validSignerConfigs[0])
 		if err != nil {
 			t.Fatalf("testcase %d signer initialization failed with: %v", 0, err)
 		}
@@ -248,7 +248,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		}
 
 		// initialize a signer
-		s, err := New(dupRecTestCase, nil)
+		s, err := New(dupRecTestCase)
 		if err != nil {
 			t.Fatalf("testcase signer initialization failed with: %v", err)
 		}
@@ -272,7 +272,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		t.Parallel()
 
 		// initialize a signer
-		s, err := New(recTestCase, nil)
+		s, err := New(recTestCase)
 		if err != nil {
 			t.Fatalf("testcase signer initialization failed with: %v", err)
 		}
@@ -350,7 +350,7 @@ func TestRecommendationNotIncludedInOtherSignerModes(t *testing.T) {
 			t.Parallel()
 
 			// initialize a signer
-			s, err := New(tc, nil)
+			s, err := New(tc)
 			if err != nil {
 				t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
 			}
@@ -388,7 +388,7 @@ func TestSignFileWithRecommendation(t *testing.T) {
 	t.Run("signs unsignedbootstrap with PK7", func(t *testing.T) {
 		input := unsignedBootstrap
 
-		s, err := New(recTestCase, nil)
+		s, err := New(recTestCase)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -420,7 +420,7 @@ func TestSignFileWithRecommendation(t *testing.T) {
 			t.Fatalf("failed to add issuer cert to pool")
 		}
 
-		s, err := New(recTestCase, nil)
+		s, err := New(recTestCase)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -446,7 +446,7 @@ func TestSignFileWithRecommendation(t *testing.T) {
 	t.Run("signs unsignedbootstrap with PK7 fails for disallowed rec. state", func(t *testing.T) {
 		input := unsignedBootstrap
 
-		s, err := New(recTestCase, nil)
+		s, err := New(recTestCase)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -463,7 +463,7 @@ func TestSignFileWithRecommendation(t *testing.T) {
 	t.Run("signs unsigned with rec PK7 and overwrites existing rec file", func(t *testing.T) {
 		input := unsignedBootstrap
 
-		s, err := New(recTestCase, nil)
+		s, err := New(recTestCase)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}

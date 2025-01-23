@@ -41,7 +41,6 @@ import (
 	sops "github.com/getsops/sops/v3"
 	"github.com/getsops/sops/v3/decrypt"
 
-	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/mozilla-services/autograph/crypto11"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -54,11 +53,6 @@ type configuration struct {
 		IdleTimeout    time.Duration
 		ReadTimeout    time.Duration
 		WriteTimeout   time.Duration
-	}
-	Statsd struct {
-		Addr      string
-		Namespace string
-		Buflen    int
 	}
 
 	// DebugServer are the settings for the control plane HTTP server where
@@ -85,7 +79,6 @@ type debugServerConfig struct {
 // with all signers and permissions configured
 type autographer struct {
 	db                   *database.Handler
-	stats                statsd.ClientInterface
 	nonces               *lru.Cache
 	debug                bool
 	heartbeatConf        *heartbeatConfig
@@ -182,11 +175,6 @@ func run(conf configuration, listen string, debug bool) {
 		}
 	}
 
-	err = ag.addStats(conf)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	err = ag.addSigners(conf.Signers)
 	if err != nil {
 		log.Fatal(err)
@@ -218,18 +206,16 @@ func run(conf configuration, listen string, debug bool) {
 	// Initialize a monitor.
 	monitor := newMonitor(ag, conf.MonitorInterval)
 
-	stats := ag.stats
-
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/__heartbeat__", statsMiddleware(ag.handleHeartbeat, "http.nonapi.heartbeat", stats)).Methods("GET")
-	router.HandleFunc("/__lbheartbeat__", statsMiddleware(handleLBHeartbeat, "http.nonapi.lbheartbeat", stats)).Methods("GET")
-	router.HandleFunc("/__version__", statsMiddleware(handleVersion, "http.nonapi.version", stats)).Methods("GET")
-	router.HandleFunc("/__monitor__", statsMiddleware(monitor.handleMonitor, "http.nonapi.monitor", stats)).Methods("GET")
-	router.HandleFunc("/sign/files", apiStatsMiddleware(ag.handleSignature, "http.api.sign/files", stats)).Methods("POST")
-	router.HandleFunc("/sign/file", apiStatsMiddleware(ag.handleSignature, "http.api.sign/file", stats)).Methods("POST")
-	router.HandleFunc("/sign/data", apiStatsMiddleware(ag.handleSignature, "http.api.sign/data", stats)).Methods("POST")
-	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "http.api.sign/hash", stats)).Methods("POST")
-	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", apiStatsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids", stats)).Methods("GET")
+	router.HandleFunc("/__heartbeat__", statsMiddleware(ag.handleHeartbeat, "http.nonapi.heartbeat")).Methods("GET")
+	router.HandleFunc("/__lbheartbeat__", statsMiddleware(handleLBHeartbeat, "http.nonapi.lbheartbeat")).Methods("GET")
+	router.HandleFunc("/__version__", statsMiddleware(handleVersion, "http.nonapi.version")).Methods("GET")
+	router.HandleFunc("/__monitor__", statsMiddleware(monitor.handleMonitor, "http.nonapi.monitor")).Methods("GET")
+	router.HandleFunc("/sign/files", apiStatsMiddleware(ag.handleSignature, "http.api.sign/files")).Methods("POST")
+	router.HandleFunc("/sign/file", apiStatsMiddleware(ag.handleSignature, "http.api.sign/file")).Methods("POST")
+	router.HandleFunc("/sign/data", apiStatsMiddleware(ag.handleSignature, "http.api.sign/data")).Methods("POST")
+	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "http.api.sign/hash")).Methods("POST")
+	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", apiStatsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids")).Methods("GET")
 
 	// For each signer with a local chain upload location (eg: using the file
 	// scheme) create an handler to serve that directory at the path /x5u/keyid/
@@ -243,13 +229,6 @@ func run(conf configuration, listen string, debug bool) {
 		prefix := fmt.Sprintf("/x5u/%s/", signerConf.ID)
 		router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(http.Dir(parsedURL.Path))))
 	}
-
-	go func() {
-		time.Sleep(5 * time.Minute)
-		ag.stats.Incr(foobarTestCounterName, []string{"statsd:yes"}, 1)
-		foobarTestCounter.Inc()
-		promOnlyFoobarTestCounterName.Inc()
-	}()
 
 	if conf.DebugServer.Listen != "" {
 		log.Infof("starting debug server on %s", conf.DebugServer.Listen)
@@ -350,7 +329,6 @@ func newAutographer(cachesize int) (a *autographer) {
 	a.authBackend = newInMemoryAuthBackend()
 	a.nonces, err = lru.New(cachesize)
 	a.exit = make(chan interface{})
-	a.stats = &statsd.NoOpClient{}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -493,14 +471,14 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		}
 		sids[signerConf.ID] = true
 		var (
-			s           signer.Signer
-			statsClient *signer.StatsClient
-			err         error
+			s signer.Signer
+			// statsClient *signer.StatsClient
+			err error
 		)
-		statsClient, err = signer.NewStatsClient(signerConf, a.stats)
-		if statsClient == nil || err != nil {
-			return fmt.Errorf("failed to add signer stats client %q or got back nil statsClient: %w", signerConf.ID, err)
-		}
+		// statsClient, err = signer.NewStatsClient(signerConf)
+		// if statsClient == nil || err != nil {
+		// 	return fmt.Errorf("failed to add signer stats client %q or got back nil statsClient: %w", signerConf.ID, err)
+		// }
 		// give the database handler to the signer configuration
 		if a.db != nil {
 			signerConf.DB = a.db
@@ -517,7 +495,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}
 		case xpi.Type:
-			s, err = xpi.New(signerConf, statsClient)
+			s, err = xpi.New(signerConf)
 			if err != nil {
 				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
 			}

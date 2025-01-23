@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer"
 	log "github.com/sirupsen/logrus"
@@ -37,8 +36,6 @@ type monitor struct {
 
 	// Closed on exit of the autographer instance.
 	exit chan interface{}
-
-	stats statsd.ClientInterface
 }
 
 // The monitor loop, should run in a separate goroutine.
@@ -143,7 +140,6 @@ func newMonitor(ag *autographer, duration time.Duration) *monitor {
 	m.initialized = make(chan interface{})
 	m.exit = ag.exit
 	m.debug = ag.debug
-	m.stats = ag.stats
 
 	go m.start(duration)
 

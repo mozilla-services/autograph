@@ -105,10 +105,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	starttime := getRequestStartTime(r)
 	auth, userid, err := a.authorizeHeader(r)
 	if err != nil {
-		sendStatsErr := a.stats.Timing("hawk.authorize_header_failed", time.Since(starttime), nil, 1.0)
-		if sendStatsErr != nil {
-			log.Warnf("Error sending hawk.authorize_header_failed: %s", sendStatsErr)
-		}
+		signerRequestsTiming.With(prometheus.Labels{
+			"step": "hawk_authorize_header_failed",
+		}).Observe(float64(time.Since(starttime).Milliseconds()))
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
 		return
 	}
@@ -132,20 +131,18 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = a.authorizeBody(auth, r, body)
-	sendStatsErr := a.stats.Timing("authorize_finished", time.Since(starttime), nil, 1.0)
-	if sendStatsErr != nil {
-		log.Warnf("Error sending authorize_finished: %s", sendStatsErr)
-	}
+	signerRequestsTiming.With(prometheus.Labels{
+		"step": "authorize_finished",
+	}).Observe(float64(time.Since(starttime).Milliseconds()))
 	if err != nil {
 		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
 		return
 	}
 	var sigreqs []formats.SignatureRequest
 	err = json.Unmarshal(body, &sigreqs)
-	sendStatsErr = a.stats.Timing("body_unmarshaled", time.Since(starttime), nil, 1.0)
-	if sendStatsErr != nil {
-		log.Warnf("Error sending body_unmarshaled: %s", sendStatsErr)
-	}
+	signerRequestsTiming.With(prometheus.Labels{
+		"step": "body_unmarshaled",
+	}).Observe(float64(time.Since(starttime).Milliseconds()))
 	if err != nil {
 		httpError(w, r, http.StatusBadRequest, "failed to parse request body: %v", err)
 		return
@@ -218,7 +215,6 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		requestedSignerConfig := requestedSigner.Config()
-		a.stats.Incr("signer.requests", []string{"keyid:" + requestedSignerConfig.ID, "user:" + userid, usedDefaultSignerTag(sigreq)}, 1.0)
 		signerRequestsCounter.With(prometheus.Labels{
 			"keyid": requestedSignerConfig.ID,
 			"user":  userid,

@@ -16,7 +16,7 @@ func TestMakeEndEntity(t *testing.T) {
 	// returns an initialized XPI signer
 	initSigner := func(t *testing.T, testcaseid int) *XPISigner {
 		testcase := validSignerConfigs[testcaseid]
-		s, err := New(testcase, nil)
+		s, err := New(testcase)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -116,7 +116,7 @@ func TestGetIssuerRSAKeySize(t *testing.T) {
 	// returns an initialized XPI signer
 	initSigner := func(t *testing.T, testcaseid int) *XPISigner {
 		testcase := validSignerConfigs[testcaseid]
-		s, err := New(testcase, nil)
+		s, err := New(testcase)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -159,7 +159,7 @@ func TestGetIssuerECDSACurve(t *testing.T) {
 	// returns an initialized XPI signer
 	initSigner := func(t *testing.T, testcaseid int) *XPISigner {
 		testcase := validSignerConfigs[testcaseid]
-		s, err := New(testcase, nil)
+		s, err := New(testcase)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}

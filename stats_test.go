@@ -5,22 +5,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	// We generated our own, but the latest DataDog statsd v5 package has their own
-	// in a `mocks` package there.
-	"github.com/mozilla-services/autograph/internal/mockstatsd"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"go.uber.org/mock/gomock"
 )
 
 func TestStatsResponseWriterWritesResponseMetricOnce(t *testing.T) {
+	responseSuccessCounter.Reset()
+	responseStatusCounter.Reset()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockStats := mockstatsd.NewMockClientInterface(ctrl)
-	mockStats.EXPECT().Incr("myhandler.response.status.4xx", []string(nil), 1.0).Times(1)
-	mockStats.EXPECT().Incr("myhandler.response.success", []string(nil), 1.0).Times(1)
-	mockStats.EXPECT().Incr("myhandler.response.status.400", []string(nil), 1.0).Times(1)
 
 	recorder := httptest.NewRecorder()
-	statsWriter := newStatsdWriter(recorder, "myhandler", mockStats)
+	statsWriter := newStatsWriter(recorder, "myhandler")
 	statsWriter.WriteHeader(http.StatusBadRequest)
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("expected status code %d, got %d", http.StatusBadRequest, recorder.Code)
@@ -30,40 +26,67 @@ func TestStatsResponseWriterWritesResponseMetricOnce(t *testing.T) {
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("tried to write to the headers again: Expected status code %d, got %d", http.StatusBadRequest, recorder.Code)
 	}
+
+	if testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "success")) != float64(1) {
+		t.Fatalf("Expected responseSuccessCounter to be 1, got %f", testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "success")))
+	}
+
+	if testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "400")) != float64(1) {
+		t.Fatalf("Expected responseStatusCounter to be 1, got %f", testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "400")))
+	}
 }
 
 func TestStatsResponseWriterWritesToHeaderOnWrite(t *testing.T) {
+	responseSuccessCounter.Reset()
+	responseStatusCounter.Reset()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockStats := mockstatsd.NewMockClientInterface(ctrl)
-	mockStats.EXPECT().Incr("myhandler.response.status.2xx", []string(nil), 1.0).Times(1)
-	mockStats.EXPECT().Incr("myhandler.response.success", []string(nil), 1.0).Times(1)
-	mockStats.EXPECT().Incr("myhandler.response.status.200", []string(nil), 1.0).Times(1)
 
 	recorder := httptest.NewRecorder()
-	statsWriter := newStatsdWriter(recorder, "myhandler", mockStats)
+	statsWriter := newStatsWriter(recorder, "myhandler")
 	statsWriter.Write([]byte("hello"))
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status code %d, got %d", http.StatusOK, recorder.Code)
 	}
+
+	if testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "success")) != float64(1) {
+		t.Fatalf("Expected responseSuccessCounter to be 1, got %f", testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "success")))
+	}
+
+	if testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "200")) != float64(1) {
+		t.Fatalf("Expected responseStatusCounter to be 1, got %f", testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "200")))
+	}
 }
 
 func TestWrappingStatsResponseWriteWritesAllMetrics(t *testing.T) {
+	responseSuccessCounter.Reset()
+	responseStatusCounter.Reset()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockStats := mockstatsd.NewMockClientInterface(ctrl)
-	mockStats.EXPECT().Incr("inner.response.status.5xx", []string(nil), 1.0).Times(1)
-	mockStats.EXPECT().Incr("inner.response.status.500", []string(nil), 1.0).Times(1)
-	mockStats.EXPECT().Incr("wrapper.response.status.5xx", []string(nil), 1.0).Times(1)
-	mockStats.EXPECT().Incr("wrapper.response.status.500", []string(nil), 1.0).Times(1)
 
 	recorder := httptest.NewRecorder()
-	inner := newStatsdWriter(recorder, "inner", mockStats)
-	wrapper := newStatsdWriter(inner, "wrapper", mockStats)
+	inner := newStatsWriter(recorder, "inner")
+	wrapper := newStatsWriter(inner, "wrapper")
 
 	wrapper.WriteHeader(http.StatusInternalServerError)
 	if recorder.Code != http.StatusInternalServerError {
 		t.Fatalf("expected status code %d, got %d", http.StatusInternalServerError, recorder.Code)
+	}
+
+	if testutil.ToFloat64(responseSuccessCounter.WithLabelValues("wrapper", "failure")) != float64(1) {
+		t.Fatalf("Expected responseSuccessCounter to be 1, got %f", testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "failure")))
+	}
+
+	if testutil.ToFloat64(responseStatusCounter.WithLabelValues("wrapper", "500")) != float64(1) {
+		t.Fatalf("Expected responseStatusCounter to be 1, got %f", testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "500")))
+	}
+
+	if testutil.ToFloat64(responseSuccessCounter.WithLabelValues("inner", "failure")) != float64(1) {
+		t.Fatalf("Expected responseSuccessCounter to be 1, got %f", testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "failure")))
+	}
+
+	if testutil.ToFloat64(responseStatusCounter.WithLabelValues("inner", "500")) != float64(1) {
+		t.Fatalf("Expected responseStatusCounter to be 1, got %f", testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "500")))
 	}
 }
