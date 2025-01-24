@@ -475,10 +475,6 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			// statsClient *signer.StatsClient
 			err error
 		)
-		// statsClient, err = signer.NewStatsClient(signerConf)
-		// if statsClient == nil || err != nil {
-		// 	return fmt.Errorf("failed to add signer stats client %q or got back nil statsClient: %w", signerConf.ID, err)
-		// }
 		// give the database handler to the signer configuration
 		if a.db != nil {
 			signerConf.DB = a.db
