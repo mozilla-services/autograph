@@ -73,10 +73,15 @@ func (w *statsWriter) WriteHeader(statusCode int) {
 			"statusCode": fmt.Sprintf("%d", statusCode),
 		}).Inc()
 
-		if statusCode >= 200 && statusCode < 300 || statusCode >= 400 && statusCode < 500 {
+		if statusCode >= 200 && statusCode < 300 {
 			responseSuccessCounter.With(prometheus.Labels{
 				"handler": w.handlerName,
 				"status":  "success",
+			}).Inc()
+		} else if statusCode >= 400 && statusCode < 500 {
+			responseSuccessCounter.With(prometheus.Labels{
+				"handler": w.handlerName,
+				"status":  "client_failure",
 			}).Inc()
 		} else {
 			responseSuccessCounter.With(prometheus.Labels{

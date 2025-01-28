@@ -27,8 +27,8 @@ func TestStatsResponseWriterWritesResponseMetricOnce(t *testing.T) {
 		t.Fatalf("tried to write to the headers again: Expected status code %d, got %d", http.StatusBadRequest, recorder.Code)
 	}
 
-	if testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "success")) != float64(1) {
-		t.Fatalf("Expected responseSuccessCounter to be 1, got %f", testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "success")))
+	if testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "client_failure")) != float64(1) {
+		t.Fatalf("Expected responseSuccessCounter to be 1, got %f", testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "client_failure")))
 	}
 
 	if testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "400")) != float64(1) {

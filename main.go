@@ -471,8 +471,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		}
 		sids[signerConf.ID] = true
 		var (
-			s signer.Signer
-			// statsClient *signer.StatsClient
+			s   signer.Signer
 			err error
 		)
 		// give the database handler to the signer configuration
