@@ -13,7 +13,15 @@ import (
 	"time"
 
 	"go.mozilla.org/cose"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
+
+var signerRequestsHistogram = promauto.NewHistogramVec(prometheus.HistogramOpts{
+	Name: "signer_histogram",
+	Help: "A histogram for signer request timing",
+}, []string{"keyid", "type", "mode", "name"})
 
 func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 	var (
@@ -24,9 +32,15 @@ func (s *XPISigner) getRsaKey(size int) (*rsa.PrivateKey, error) {
 	start = time.Now()
 	key, err = rsa.GenerateKey(s.rand, size)
 
-	if s.stats != nil {
-		s.stats.SendHistogram("xpi.rsa_cache.get_key", time.Since(start))
-	}
+	// send a histogram with the given name, time.Duration value
+	// converted to ms, cast to float64, tags for the signer
+	signerRequestsHistogram.With(prometheus.Labels{
+		"keyid": s.KeyID,
+		"type":  s.Type,
+		"mode":  s.Mode,
+		"name":  "xpi.rsa_cache.get_key",
+	}).Observe(float64(time.Since(start).Milliseconds()))
+
 	return key, err
 }
 

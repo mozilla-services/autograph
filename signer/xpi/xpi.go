@@ -83,9 +83,6 @@ type XPISigner struct {
 	// rand is the CSPRNG to use from the HSM or crypto/rand
 	rand io.Reader
 
-	// stats is the statsd client for reporting metrics
-	stats *signer.StatsClient
-
 	// recommendationAllowedStates is a map of strings the signer
 	// is allowed to set in the recommendations file to true
 	// indicating whether they're allowed or not
@@ -111,9 +108,7 @@ type XPISigner struct {
 }
 
 // New initializes an XPI signer using a configuration
-func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, err error) {
-	// TODO(AUT-160): instead of doing nil checks for stats all over XPISigner,
-	// we could just check it here once or provide a null object version of it for tests.
+func New(conf signer.Configuration) (s *XPISigner, err error) {
 	s = new(XPISigner)
 	if conf.Type != Type {
 		return nil, fmt.Errorf("xpi: invalid type %q, must be %q", conf.Type, Type)
@@ -177,7 +172,6 @@ func New(conf signer.Configuration, stats *signer.StatsClient) (s *XPISigner, er
 		return nil, fmt.Errorf("xpi: unknown signer mode %q, must be 'add-on', 'extension', 'system add-on' or 'hotfix'", conf.Mode)
 	}
 	s.Mode = conf.Mode
-	s.stats = stats
 
 	if conf.Mode == ModeAddOnWithRecommendation {
 		s.recommendationAllowedStates = conf.RecommendationConfig.AllowedStates

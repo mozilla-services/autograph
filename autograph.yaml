@@ -6,11 +6,6 @@ server:
     readtimeout: 60s
     writetimeout: 60s
 
-statsd:
-    addr: "127.0.0.1:8125"
-    namespace: "autograph."
-    buflen: 1
-
 debugserver:
     listen: "0.0.0.0:2112"
 

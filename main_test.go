@@ -36,10 +36,6 @@ func newTestAutographer(t *testing.T) (*autographer, configuration) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ag.addStats(conf)
-	if err != nil {
-		log.Fatal(err)
-	}
 	if conf.HawkTimestampValidity != "" {
 		ag.hawkMaxTimestampSkew, err = time.ParseDuration(conf.HawkTimestampValidity)
 		if err != nil {

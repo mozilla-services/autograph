@@ -76,7 +76,7 @@ func TestGenerateCOSEKeyPair(t *testing.T) {
 	// returns an initialized XPI signer
 	initSigner := func(t *testing.T) *XPISigner {
 		testcase := validSignerConfigs[0]
-		s, err := New(testcase, nil)
+		s, err := New(testcase)
 		if err != nil {
 			t.Fatalf("signer initialization failed with: %v", err)
 		}
@@ -507,7 +507,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 		t.Fatalf("error unmarshaling invalidSigBytes %q", err)
 	}
 
-	s, err := New(validSignerConfigs[0], nil)
+	s, err := New(validSignerConfigs[0])
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %q", err)
 	}
@@ -845,7 +845,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 func TestIssueCOSESignatureErrs(t *testing.T) {
 	t.Parallel()
 
-	signer, err := New(validSignerConfigs[0], nil)
+	signer, err := New(validSignerConfigs[0])
 	if err != nil {
 		t.Fatalf("signer initialization failed with: %v", err)
 	}

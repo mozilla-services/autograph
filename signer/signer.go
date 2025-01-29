@@ -25,10 +25,7 @@ import (
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/formats"
 
-	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/mozilla-services/autograph/crypto11"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // IDFormat is a regex for the format IDs must follow
@@ -443,48 +440,5 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		return
 	default:
 		return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
-	}
-}
-
-// StatsClient is a helper for sending statsd stats with the relevant
-// tags for the signer and error handling
-type StatsClient struct {
-	// signerTags is the
-	signerTags []string
-
-	// stats is the statsd client for reporting metrics
-	stats statsd.ClientInterface
-}
-
-// NewStatsClient makes a new stats client
-func NewStatsClient(signerConfig Configuration, stats statsd.ClientInterface) (*StatsClient, error) {
-	return &StatsClient{
-		stats: stats,
-		signerTags: []string{
-			fmt.Sprintf("autograph-signer-id:%s", signerConfig.ID),
-			fmt.Sprintf("autograph-signer-type:%s", signerConfig.Type),
-			fmt.Sprintf("autograph-signer-mode:%s", signerConfig.Mode),
-		},
-	}, nil
-}
-
-// SendGauge checks for a statsd client and when one is present sends
-// a statsd gauge with the given name, int value cast to float64, tags
-// for the signer, and sampling rate of 1
-func (s *StatsClient) SendGauge(name string, value int) {
-	err := s.stats.Gauge(name, float64(value), s.signerTags, 1)
-	if err != nil {
-		log.Warnf("Error sending gauge %s: %s", name, err)
-	}
-}
-
-// SendHistogram checks for a statsd client and when one is present
-// sends a statsd histogram with the given name, time.Duration value
-// converted to ms, cast to float64, tags for the signer, and sampling
-// rate of 1
-func (s *StatsClient) SendHistogram(name string, value time.Duration) {
-	err := s.stats.Histogram(name, float64(value/time.Millisecond), s.signerTags, 1)
-	if err != nil {
-		log.Warnf("Error sending histogram %s: %s", name, err)
 	}
 }

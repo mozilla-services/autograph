@@ -92,11 +92,8 @@ build: generate
 integration-test:
 	./bin/run_integration_tests.sh
 
-dummy-statsd:
-	nc -kluvw 0 localhost 8125
-
 .SUFFIXES:            # Delete the default suffixes
-.PHONY: all dummy-statsd test generate vendor integration-test check-no-crypto11-in-signers test-in-docker
+.PHONY: all test generate vendor integration-test check-no-crypto11-in-signers test-in-docker
 
 # build the docker image, and run it locally with our source code mounted under /app/src/autograph
 # run as root to allow for changes, package installs, etc

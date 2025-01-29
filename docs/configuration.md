@@ -21,22 +21,6 @@ server:
 Use flag `-p` to provide an alternate port and override any
 port specified in the config.
 
-## Statsd
-
-Optionally, configure statsd with:
-
--   *addr* a UDP host and port to send statsd stats to
--   *namespace* a statsd prefix
--   *buflen* the number of statsd commands to buffer before sending or
-    100ms elapses in which case the buffer is flushed
-
-``` yaml
-statsd:
-    addr: "127.0.0.1:8125"
-    namespace: "autograph."
-    buflen: 1
-```
-
 ## Database
 
 Optionally, configure postgres using the sample below. Use the schema in
