@@ -28,6 +28,11 @@ var (
 		Name:      "signer_request_timing",
 		Namespace: statsNamespace,
 		Help:      "A summary vector for request timing",
+		Objectives: map[float64]float64{ // the quantiles we want to track
+			0.5:  0.05,
+			0.95: 0.01,
+			0.99: 0.001,
+		},
 	}, []string{"step"})
 
 	responseStatusCounter = promauto.NewCounterVec(prometheus.CounterOpts{
