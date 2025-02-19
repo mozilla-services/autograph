@@ -73,7 +73,7 @@ func verifyRoot(rootHashes []string, cert *x509.Certificate) error {
 	if !cert.IsCA {
 		return fmt.Errorf("missing IS CA extension")
 	}
-	if rootHashes == nil || len(rootHashes) < 1 {
+	if len(rootHashes) < 1 {
 		return fmt.Errorf("rootHashes must not be empty")
 	}
 	// We're configure to check the root hash matches expected value
