@@ -33,9 +33,9 @@ then does a `killall gpg-agent` to clean up.)
 
 After making any changes, please test locally by:
 ```bash
-make build             # updates local docker images
-make integration-test  # must pass
-docker compose up      # runs unit tests in container, must pass
+make build                    # updates local docker images
+make integration-test         # must pass
+docker compose run unit-test  # runs unit tests in container, must pass
 ```
 > [!Note]
 > You must monitor the output of docker to detect when the unit tests have completed. Otherwise, it will run forever with heartbeat messages. The following pipeline is useful (and available in the Makefile as target `test-in-docker`):
