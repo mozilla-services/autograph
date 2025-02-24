@@ -424,7 +424,7 @@ github.com/getsops/sops/v3/stores/ini
 github.com/getsops/sops/v3/stores/json
 github.com/getsops/sops/v3/stores/yaml
 github.com/getsops/sops/v3/version
-# github.com/go-jose/go-jose/v4 v4.0.4
+# github.com/go-jose/go-jose/v4 v4.0.5
 ## explicit; go 1.21
 github.com/go-jose/go-jose/v4
 github.com/go-jose/go-jose/v4/cipher
