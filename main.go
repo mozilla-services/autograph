@@ -201,6 +201,14 @@ func run(conf configuration, listen string, debug bool) {
 		ag.enableDebug()
 	}
 
+	// Initialize known prometheus labels to 0
+	for _, authorization := range conf.Authorizations {
+		for _, signer := range authorization.Signers {
+			signerRequestsCounter.WithLabelValues(signer, authorization.ID, "false")
+			signerRequestsCounter.WithLabelValues(signer, authorization.ID, "true")
+		}
+	}
+
 	ag.startCleanupHandler()
 
 	// Initialize a monitor.
