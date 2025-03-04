@@ -12,6 +12,8 @@ import (
 func TestStatsResponseWriterWritesResponseMetricOnce(t *testing.T) {
 	responseSuccessCounter.Reset()
 	responseStatusCounter.Reset()
+	responseSuccessGauge.Reset()
+	responseStatusGauge.Reset()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -34,11 +36,22 @@ func TestStatsResponseWriterWritesResponseMetricOnce(t *testing.T) {
 	if testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "400")) != float64(1) {
 		t.Fatalf("Expected responseStatusCounter to be 1, got %f", testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "400")))
 	}
+
+	// With Gauge Metric
+	if testutil.ToFloat64(responseSuccessGauge.WithLabelValues("myhandler", "client_failure")) != float64(1) {
+		t.Fatalf("Expected responseSuccessGauge to be 1, got %f", testutil.ToFloat64(responseSuccessGauge.WithLabelValues("myhandler", "client_failure")))
+	}
+
+	if testutil.ToFloat64(responseStatusGauge.WithLabelValues("myhandler", "400")) != float64(1) {
+		t.Fatalf("Expected responseStatusGauge to be 1, got %f", testutil.ToFloat64(responseStatusGauge.WithLabelValues("myhandler", "400")))
+	}
 }
 
 func TestStatsResponseWriterWritesToHeaderOnWrite(t *testing.T) {
 	responseSuccessCounter.Reset()
 	responseStatusCounter.Reset()
+	responseSuccessGauge.Reset()
+	responseStatusGauge.Reset()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -56,6 +69,15 @@ func TestStatsResponseWriterWritesToHeaderOnWrite(t *testing.T) {
 
 	if testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "200")) != float64(1) {
 		t.Fatalf("Expected responseStatusCounter to be 1, got %f", testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "200")))
+	}
+
+	// With Gauge Metric
+	if testutil.ToFloat64(responseSuccessGauge.WithLabelValues("myhandler", "success")) != float64(1) {
+		t.Fatalf("Expected responseSuccessGauge to be 1, got %f", testutil.ToFloat64(responseSuccessGauge.WithLabelValues("myhandler", "success")))
+	}
+
+	if testutil.ToFloat64(responseStatusGauge.WithLabelValues("myhandler", "200")) != float64(1) {
+		t.Fatalf("Expected responseStatusGauge to be 1, got %f", testutil.ToFloat64(responseStatusGauge.WithLabelValues("myhandler", "200")))
 	}
 }
 
@@ -86,7 +108,24 @@ func TestWrappingStatsResponseWriteWritesAllMetrics(t *testing.T) {
 		t.Fatalf("Expected responseSuccessCounter to be 1, got %f", testutil.ToFloat64(responseSuccessCounter.WithLabelValues("myhandler", "failure")))
 	}
 
-	if testutil.ToFloat64(responseStatusCounter.WithLabelValues("inner", "500")) != float64(1) {
-		t.Fatalf("Expected responseStatusCounter to be 1, got %f", testutil.ToFloat64(responseStatusCounter.WithLabelValues("myhandler", "500")))
+	// With Gauge Metric
+	if testutil.ToFloat64(responseStatusGauge.WithLabelValues("inner", "500")) != float64(1) {
+		t.Fatalf("Expected responseStatusGauge to be 1, got %f", testutil.ToFloat64(responseStatusGauge.WithLabelValues("myhandler", "500")))
+	}
+
+	if testutil.ToFloat64(responseSuccessGauge.WithLabelValues("wrapper", "failure")) != float64(1) {
+		t.Fatalf("Expected responseSuccessGauge to be 1, got %f", testutil.ToFloat64(responseSuccessGauge.WithLabelValues("myhandler", "failure")))
+	}
+
+	if testutil.ToFloat64(responseStatusGauge.WithLabelValues("wrapper", "500")) != float64(1) {
+		t.Fatalf("Expected responseStatusGauge to be 1, got %f", testutil.ToFloat64(responseStatusGauge.WithLabelValues("myhandler", "500")))
+	}
+
+	if testutil.ToFloat64(responseSuccessGauge.WithLabelValues("inner", "failure")) != float64(1) {
+		t.Fatalf("Expected responseSuccessGauge to be 1, got %f", testutil.ToFloat64(responseSuccessGauge.WithLabelValues("myhandler", "failure")))
+	}
+
+	if testutil.ToFloat64(responseStatusGauge.WithLabelValues("inner", "500")) != float64(1) {
+		t.Fatalf("Expected responseStatusGauge to be 1, got %f", testutil.ToFloat64(responseStatusGauge.WithLabelValues("myhandler", "500")))
 	}
 }
