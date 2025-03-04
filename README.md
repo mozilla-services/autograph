@@ -47,6 +47,13 @@ docker compose up 2>&1 | tee compose.log \
        grep "autograph-unit-test" compose.log)
 ```
 
+#### Running autograph in docker interactively
+There are two make commands to help troubleshoot the docker environment. Ex: install additional packages, modify code, rebuild, etc.
+```bash
+make build-and-run-interactive
+make pull-and-run-interactive
+```
+
 ### Using go get
 
 _**Do Not Use** unless you are an experienced golang developer._
