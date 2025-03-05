@@ -62,18 +62,19 @@ func hashSHA256AsHex(toHash []byte) string {
 
 func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.SignatureResponse, rid, userid, inputHash string, inputHashes []string, starttime time.Time, err error) {
 	log.WithFields(log.Fields{
-		"rid":           rid,
-		"options":       sigreq.Options,
-		"mode":          sigresp.Mode,
-		"ref":           sigresp.Ref,
-		"type":          sigresp.Type,
-		"signer_id":     sigresp.SignerID,
-		"input_hash":    inputHash,
-		"input_hashes":  inputHashes,
-		"output_hash":   nil,
-		"output_hashes": nil,
-		"user_id":       userid,
-		"t":             int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
+		"rid":                 rid,
+		"options":             sigreq.Options,
+		"mode":                sigresp.Mode,
+		"ref":                 sigresp.Ref,
+		"type":                sigresp.Type,
+		"signer_id":           sigresp.SignerID,
+		"used_default_signer": strconv.FormatBool(sigreq.KeyID == ""),
+		"input_hash":          inputHash,
+		"input_hashes":        inputHashes,
+		"output_hash":         nil,
+		"output_hashes":       nil,
+		"user_id":             userid,
+		"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 	}).Info(fmt.Sprintf("signing operation failed with error: %v", err))
 }
 
@@ -323,19 +324,20 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		log.WithFields(log.Fields{
-			"rid":           rid,
-			"request_uri":   r.URL.RequestURI(),
-			"options":       sigreq.Options,
-			"mode":          sigresps[i].Mode,
-			"ref":           sigresps[i].Ref,
-			"type":          sigresps[i].Type,
-			"signer_id":     sigresps[i].SignerID,
-			"input_hash":    inputHash,
-			"input_hashes":  inputHashes,
-			"output_hash":   outputHash,
-			"output_hashes": outputHashes,
-			"user_id":       userid,
-			"t":             int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
+			"rid":                 rid,
+			"request_uri":         r.URL.RequestURI(),
+			"options":             sigreq.Options,
+			"mode":                sigresps[i].Mode,
+			"ref":                 sigresps[i].Ref,
+			"type":                sigresps[i].Type,
+			"signer_id":           sigresps[i].SignerID,
+			"used_default_signer": strconv.FormatBool(sigreq.KeyID == ""),
+			"input_hash":          inputHash,
+			"input_hashes":        inputHashes,
+			"output_hash":         outputHash,
+			"output_hashes":       outputHashes,
+			"user_id":             userid,
+			"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("signing operation succeeded")
 	}
 	respdata, err := json.Marshal(sigresps)
