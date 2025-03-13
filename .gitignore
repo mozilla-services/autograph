@@ -54,3 +54,6 @@ tools/softhsm/genrsa/genrsa
 **/venv*
 **/__pycache__
 **/*.egg-info
+
+# Ignore generated credentials from google-github-actions/auth
+gha-creds-*.json
