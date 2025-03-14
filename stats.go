@@ -12,28 +12,18 @@ import (
 const statsNamespace = "autograph"
 
 var (
-	requestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name:      "requests",
-		Namespace: statsNamespace,
-		Help:      "A counter for how many requests are made to a given handler",
-	}, []string{"handler"})
-
+	// Using gauge metrics types instead of counter due to counters being dropped on
+	// first event, more info in AUT-393.
 	requestGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "request_gauge",
 		Namespace: statsNamespace,
-		Help:      "A counter for how many requests are made to a given handler",
+		Help:      "A gauge for how many requests are made to a given handler",
 	}, []string{"handler"})
-
-	signerRequestsCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name:      "signer_requests",
-		Namespace: statsNamespace,
-		Help:      "A counter for how many authenticated and authorized requests are made to a given signer",
-	}, []string{"keyid", "user", "used_default_signer"})
 
 	signerRequestsGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "signer_requests_gauge",
 		Namespace: statsNamespace,
-		Help:      "A counter for how many authenticated and authorized requests are made to a given signer",
+		Help:      "A gauge for how many authenticated and authorized requests are made to a given signer",
 	}, []string{"keyid", "user", "used_default_signer"})
 
 	signerRequestsTiming = promauto.NewSummaryVec(prometheus.SummaryOpts{
@@ -47,28 +37,16 @@ var (
 		},
 	}, []string{"step"})
 
-	responseStatusCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name:      "response_status",
-		Namespace: statsNamespace,
-		Help:      "A counter for response status codes for a given handler",
-	}, []string{"handler", "statusCode"})
-
 	responseStatusGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "response_status_gauge",
 		Namespace: statsNamespace,
-		Help:      "A counter for response status codes for a given handler",
+		Help:      "A gauge for response status codes for a given handler",
 	}, []string{"handler", "statusCode"})
-
-	responseSuccessCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name:      "response_success",
-		Namespace: statsNamespace,
-		Help:      "A counter for succesful vs failed response status codes",
-	}, []string{"handler", "status"})
 
 	responseSuccessGauge = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "response_success_gauge",
 		Namespace: statsNamespace,
-		Help:      "A counter for succesful vs failed response status codes",
+		Help:      "A gauge for succesful vs failed response status codes",
 	}, []string{"handler", "status"})
 )
 
@@ -97,38 +75,22 @@ func (w *statsWriter) Write(b []byte) (int, error) {
 
 func (w *statsWriter) WriteHeader(statusCode int) {
 	if w.headerWritten.CompareAndSwap(false, true) {
-		responseStatusCounter.With(prometheus.Labels{
-			"handler":    w.handlerName,
-			"statusCode": fmt.Sprintf("%d", statusCode),
-		}).Inc()
 		responseStatusGauge.With(prometheus.Labels{
 			"handler":    w.handlerName,
 			"statusCode": fmt.Sprintf("%d", statusCode),
 		}).Inc()
 
 		if statusCode >= 200 && statusCode < 300 {
-			responseSuccessCounter.With(prometheus.Labels{
-				"handler": w.handlerName,
-				"status":  "success",
-			}).Inc()
 			responseSuccessGauge.With(prometheus.Labels{
 				"handler": w.handlerName,
 				"status":  "success",
 			}).Inc()
 		} else if statusCode >= 400 && statusCode < 500 {
-			responseSuccessCounter.With(prometheus.Labels{
-				"handler": w.handlerName,
-				"status":  "client_failure",
-			}).Inc()
 			responseSuccessGauge.With(prometheus.Labels{
 				"handler": w.handlerName,
 				"status":  "client_failure",
 			}).Inc()
 		} else {
-			responseSuccessCounter.With(prometheus.Labels{
-				"handler": w.handlerName,
-				"status":  "failure",
-			}).Inc()
 			responseSuccessGauge.With(prometheus.Labels{
 				"handler": w.handlerName,
 				"status":  "failure",
@@ -146,9 +108,6 @@ func (w *statsWriter) WriteHeader(statusCode int) {
 // "<handlerName>.request.attempts".
 func statsMiddleware(h http.HandlerFunc, handlerName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		requestCounter.With(prometheus.Labels{
-			"handler": handlerName,
-		}).Inc()
 		requestGauge.With(prometheus.Labels{
 			"handler": handlerName,
 		}).Inc()
