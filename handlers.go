@@ -216,12 +216,6 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		requestedSignerConfig := requestedSigner.Config()
-		signerRequestsCounter.With(prometheus.Labels{
-			"keyid": requestedSignerConfig.ID,
-			"user":  userid,
-			// TODO(AUT-206): remove this when we've migrate everyone off of the default keyid
-			"used_default_signer": strconv.FormatBool(sigreq.KeyID == ""),
-		}).Inc()
 		signerRequestsGauge.With(prometheus.Labels{
 			"keyid": requestedSignerConfig.ID,
 			"user":  userid,
