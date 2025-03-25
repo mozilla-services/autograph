@@ -409,6 +409,75 @@ func TestConfigLoadFileNotExist(t *testing.T) {
 	}
 }
 
+func TestInvalidSignerConfigDoesNotBlockValidFromLoading(t *testing.T) {
+	var conf configuration
+	// write conf file to /tmp and read it back
+	fd, err := os.CreateTemp("", "autographtestconf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fi, err := fd.Stat()
+	if err != nil {
+		t.Fatal(err)
+	}
+	filename := fmt.Sprintf("%s/%s", os.TempDir(), fi.Name())
+	_, err = fd.Write([]byte(`
+server:
+    listen: "localhost:8000"
+    noncecachesize: 64
+
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
+
+signers:
+    - id: testsigner1
+      type: contentsignature
+      x5u: https://foo.example.com/chains/certificates.pem
+      privatekey: |
+          -----BEGIN EC PARAMETERS-----
+          BggqhkjOPQMBBw==
+          -----END EC PARAMETERS-----
+          -----BEGIN EC PRIVATE KEY-----
+          MHcCAQEEII+Is30aP9wrB/H6AkKrJjMG8EVY2WseSFHTfWGCIk7voAoGCCqGSM49
+          AwEHoUQDQgAEMdzAsqkWQiP8Fo89qTleJcuEjBtp2c6z16sC7BAS5KXvUGghURYq
+          3utZw8En6Ik/4Om8c7EW/+EO+EkHShhgdA==
+          -----END EC PRIVATE KEY-----
+    - id: testbadsigner1
+      type: contentsignaturepki
+    - id: testbadsigner2
+      type: xpi
+    - id: testbadsigner3
+      type: apk2
+    - id: testbadsigner4
+      type: mar
+    - id: testbadsigner5
+      type: gpg2
+    - id: testbadsigner6
+      type: genericrsa
+`))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	fd.Close()
+	err = conf.loadFromFile(filename)
+	if err != nil {
+		t.Fatalf("config parsing failed and should have passed: %v", err)
+	}
+
+	ag := newAutographer(conf.Server.NonceCacheSize)
+	err = ag.addSigners(conf.Signers)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ag.getSigners()) != 1 {
+		t.Fatalf("the one valid signer should have loaded succesfully")
+	}
+
+	os.Remove(filename)
+}
+
 func TestDefaultPort(t *testing.T) {
 	expected := "0.0.0.0:8000"
 	_, listen, _ := parseArgsAndLoadConfig([]string{})

@@ -482,22 +482,22 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		case contentsignature.Type:
 			s, err = contentsignature.New(signerConf)
 			if err != nil {
-				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
+				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
 			}
 		case contentsignaturepki.Type:
 			s, err = contentsignaturepki.New(signerConf)
 			if err != nil {
-				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
+				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
 			}
 		case xpi.Type:
 			s, err = xpi.New(signerConf)
 			if err != nil {
-				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
+				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
 			}
 		case apk2.Type:
 			s, err = apk2.New(signerConf)
 			if err != nil {
-				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
+				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
 			}
 		case mar.Type:
 			s, err = mar.New(signerConf)
@@ -505,23 +505,25 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 				log.Infof("Skipping signer %q from HSM", signerConf.ID)
 				continue
 			} else if err != nil {
-				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
+				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
 			}
 		case gpg2.Type:
 			tmpDirPrefix := fmt.Sprintf("autograph_%s_%s_%s_", signerConf.Type, signerConf.KeyID, signerConf.Mode)
 			s, err = gpg2.New(signerConf, tmpDirPrefix)
 			if err != nil {
-				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
+				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
 			}
 		case genericrsa.Type:
 			s, err = genericrsa.New(signerConf)
 			if err != nil {
-				return fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err)
+				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
 			}
 		default:
-			return fmt.Errorf("unknown signer type %q", signerConf.Type)
+			log.Error(fmt.Errorf("unknown signer type %q", signerConf.Type))
 		}
-		a.addSigner(s)
+		if err == nil {
+			a.addSigner(s)
+		}
 	}
 	return nil
 }
