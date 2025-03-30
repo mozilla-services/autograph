@@ -262,8 +262,11 @@ graph LR
   VerifyPK7Signature == Extract hash of SF signature file ==> VerifySignature
   VerifySignature == Extract Signing Certificate ==> VerifyCertificate
   VerifyCertificate == Get Trusted Root ==> BuildCertChain
+%% NOTE: Only end-entity certs can potentially end up here. Intermediates/root do not.
   BuildCertChain == ERROR_EXPIRED_CERTIFICATE ==> Success
+  BuildCertChain == ERROR_NOT_YET_VALID_CERTIFICATE ==> Success
   Success --> VerifyPK7Signature
+%% Expired intermediates/root will reach this state:
   BuildCertChain == else ==> Error
   Error --> VerifyPK7Signature
   end
