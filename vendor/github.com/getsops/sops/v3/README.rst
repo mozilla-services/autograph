@@ -106,7 +106,8 @@ encryption/decryption transparently and open the cleartext file in an editor
     please wait while an encryption key is being generated and stored in a secure fashion
     file written to mynewtestfile.yaml
 
-Editing will happen in whatever ``$EDITOR`` is set to, or, if it's not set, in vim.
+Editing will happen in whatever ``$SOPS_EDITOR`` or ``$EDITOR`` is set to, or, if it's
+not set, in vim, nano, or vi.
 Keep in mind that SOPS will wait for the editor to exit, and then try to reencrypt
 the file. Some GUI editors (atom, sublime) spawn a child process and then exit
 immediately. They usually have an option to wait for the main editor window to be
@@ -226,13 +227,20 @@ On macOS, this would be ``$HOME/Library/Application Support/sops/age/keys.txt``.
 Windows, this would be ``%AppData%\sops\age\keys.txt``. You can specify the location
 of this file manually by setting the environment variable **SOPS_AGE_KEY_FILE**.
 Alternatively, you can provide the key(s) directly by setting the **SOPS_AGE_KEY**
-environment variable.
+environment variable. Alternatively, you can provide a command to output the age keys
+by setting the **SOPS_AGE_KEY_CMD** environment variable.
 
 The contents of this key file should be a list of age X25519 identities, one
 per line. Lines beginning with ``#`` are considered comments and ignored. Each
 identity will be tried in sequence until one is able to decrypt the data.
 
-Encrypting with SSH keys via age is not yet supported by SOPS.
+Encrypting with SSH keys via age is also supported by SOPS. You can use SSH public keys
+("ssh-ed25519 AAAA...", "ssh-rsa AAAA...") as age recipients when encrypting a file.
+When decrypting a file, SOPS will look for ``~/.ssh/id_ed25519`` and falls back to
+``~/.ssh/id_rsa``. You can specify the location of the private key manually by setting
+the environment variableuse **SOPS_AGE_SSH_PRIVATE_KEY_FILE**.
+
+Note that only ``ssh-rsa`` and ``ssh-ed25519`` are supported.
 
 A list of age recipients can be added to the ``.sops.yaml``:
 
@@ -258,8 +266,12 @@ It is also possible to use ``updatekeys``, when adding or removing age recipient
   
 Encrypting using GCP KMS
 ~~~~~~~~~~~~~~~~~~~~~~~~
-GCP KMS uses `Application Default Credentials
-<https://developers.google.com/identity/protocols/application-default-credentials>`_.
+GCP KMS has support for authorization with the use of `Application Default Credentials
+<https://developers.google.com/identity/protocols/application-default-credentials>`_ and using an OAuth 2.0 token.
+Application default credentials precedes the use of access token.
+
+Using Application Default Credentials you can authorize by doing this:
+
 If you already logged in using
 
 .. code:: sh
@@ -271,6 +283,18 @@ you can enable application default credentials using the sdk:
 .. code:: sh
 
     $ gcloud auth application-default login
+
+Using OAauth tokens you can authorize by doing this:
+
+.. code:: sh
+    
+    $ export GOOGLE_OAUTH_ACCESS_TOKEN=<your access token>
+
+Or if you are logged in you can authorize by generating an access token:
+
+.. code:: sh
+
+    $ export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
 
 Encrypting/decrypting with GCP KMS requires a KMS ResourceID. You can use the
 cloud console the get the ResourceID or you can create one using the gcloud
@@ -375,33 +399,38 @@ Encrypting and decrypting from other programs
 When using ``sops`` in scripts or from other programs, there are often situations where you do not want to write
 encrypted or decrypted data to disk. The best way to avoid this is to pass data to SOPS via stdin, and to let
 SOPS write data to stdout. By default, the encrypt and decrypt operations write data to stdout already. To pass
-data via stdin, you need to pass ``/dev/stdin`` as the input filename. Please note that this only works on
-Unix-like operating systems such as macOS and Linux. On Windows, you have to use named pipes.
+data via stdin, you need to not provide an input filename. For encryption, you also must provide the
+``--filename-override`` option with the file's filename. The filename will be used to determine the input and output
+types, and to select the correct creation rule.
 
-To decrypt data, you can simply do:
-
-.. code:: sh
-
-	$ cat encrypted-data | sops decrypt /dev/stdin > decrypted-data
-
-To control the input and output format, pass ``--input-type`` and ``--output-type`` as appropriate. By default,
-``sops`` determines the input and output format from the provided filename, which is ``/dev/stdin`` here, and
-thus will use the binary store which expects JSON input and outputs binary data on decryption.
-
-For example, to decrypt YAML data and obtain the decrypted result as YAML, use:
+The simplest way to decrypt data from stdin is as follows:
 
 .. code:: sh
 
-	$ cat encrypted-data | sops decrypt --input-type yaml --output-type yaml /dev/stdin > decrypted-data
+	$ cat encrypted-data | sops decrypt > decrypted-data
+
+By default, ``sops`` determines the input and output format from the provided filename. Since in this case,
+no filename is provided, ``sops`` will use the binary store which expects JSON input and outputs binary data
+on decryption. This is often not what you want.
+
+To avoid this, you can either provide a filename with ``--filename-override``, or explicitly control
+the input and output formats by passing ``--input-type`` and ``--output-type`` as appropriate:
+
+.. code:: sh
+
+	$ cat encrypted-data | sops decrypt --filename-override filename.yaml > decrypted-data
+	$ cat encrypted-data | sops decrypt --input-type yaml --output-type yaml > decrypted-data
+
+In both cases, ``sops`` will assume that the data you provide is in YAML format, and will encode the decrypted
+data in YAML as well. The second form allows to use different formats for input and output.
 
 To encrypt, it is important to note that SOPS also uses the filename to look up the correct creation rule from
-``.sops.yaml``. Likely ``/dev/stdin`` will not match a creation rule, or only match the fallback rule without
-``path_regex``, which is usually not what you want. For that, ``sops`` provides the ``--filename-override``
-parameter which allows you to tell SOPS which filename to use to match creation rules:
+``.sops.yaml``. Therefore, you must provide the ``--filename-override`` parameter which allows you to tell
+SOPS which filename to use to match creation rules:
 
 .. code:: sh
 
-	$ echo 'foo: bar' | sops encrypt --filename-override path/filename.sops.yaml /dev/stdin > encrypted-data
+	$ echo 'foo: bar' | sops encrypt --filename-override path/filename.sops.yaml > encrypted-data
 
 SOPS will find a matching creation rule for ``path/filename.sops.yaml`` in ``.sops.yaml`` and use that one to
 encrypt the data from stdin. This filename will also be used to determine the input and output store. As always,
@@ -410,7 +439,7 @@ the input store type can be adjusted by passing ``--input-type``, and the output
 
 .. code:: sh
 
-	$ echo foo=bar | sops encrypt --filename-override path/filename.sops.yaml --input-type dotenv /dev/stdin > encrypted-data
+	$ echo foo=bar | sops encrypt --filename-override path/filename.sops.yaml --input-type dotenv > encrypted-data
 
 
 Encrypting using Hashicorp Vault
@@ -522,7 +551,7 @@ disabled by supplying the ``-y`` flag.
 ******************
 
 The ``rotate`` command generates a new data encryption key and reencrypt all values
-with the new key. At te same time, the command line flag ``--add-kms``, ``--add-pgp``,
+with the new key. At the same time, the command line flag ``--add-kms``, ``--add-pgp``,
 ``--add-gcp-kms``, ``--add-azure-kv``, ``--rm-kms``, ``--rm-pgp``, ``--rm-gcp-kms``
 and ``--rm-azure-kv`` can be used to add and remove keys from a file. These flags use
 the comma separated syntax as the ``--kms``, ``--pgp``, ``--gcp-kms`` and ``--azure-kv``
@@ -1068,6 +1097,11 @@ written to disk.
     $ echo your password: $database_password
     your password:
 
+If you want process signals to be sent to the command, for example if you are
+running ``exec-env`` to launch a server and your server handles SIGTERM, then the
+``--same-process`` flag can be used to instruct ``sops`` to start your command in
+the same process instead of a child process. This uses the ``execve`` system call
+and is supported on Unix-like systems.
 
 If the command you want to run only operates on files, you can use ``exec-file``
 instead. By default, SOPS will use a FIFO to pass the contents of the
@@ -1253,7 +1287,7 @@ When operating on stdin, use the ``--input-type`` and ``--output-type`` flags as
 
 .. code:: sh
 
-    $ cat myfile.json | sops decrypt --input-type json --output-type json /dev/stdin
+    $ cat myfile.json | sops decrypt --input-type json --output-type json
 
 JSON and JSON_binary indentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
