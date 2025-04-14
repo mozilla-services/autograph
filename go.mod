@@ -1,6 +1,7 @@
 module github.com/mozilla-services/autograph
 
 go 1.23.4
+
 toolchain go1.24.1
 
 require (
@@ -24,7 +25,7 @@ require (
 	go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d
 	go.mozilla.org/mozlogrus v2.0.0+incompatible
 	go.mozilla.org/pkcs7 v0.9.0
-	go.uber.org/mock v0.5.0
+	go.uber.org/mock v0.5.1
 )
 
 require (
