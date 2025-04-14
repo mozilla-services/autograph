@@ -719,7 +719,7 @@ go.opentelemetry.io/otel/trace
 go.opentelemetry.io/otel/trace/embedded
 go.opentelemetry.io/otel/trace/internal/telemetry
 go.opentelemetry.io/otel/trace/noop
-# go.uber.org/mock v0.5.0
+# go.uber.org/mock v0.5.1
 ## explicit; go 1.22
 go.uber.org/mock/gomock
 # golang.org/x/crypto v0.36.0
