@@ -2,8 +2,7 @@
 GOPATH := $(shell go env GOPATH)
 
 build:
-	go build -o bootstrap -tags lambda.norpc *.go
-	zip -r autograph-monitor.zip bootstrap
+	go build -o bootstrap *.go
 build-image:
 	docker build -t autograph-monitor:latest .
 doc:
@@ -25,7 +24,7 @@ staticcheck:
 vet:
 	go vet *.go
 clean:
-	rm bootstrap autograph-monitor.zip
+	rm bootstrap
 vendor:
 	go-mod-upgrade
 .PHONY: vendor clean build

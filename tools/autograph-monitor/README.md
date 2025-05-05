@@ -5,7 +5,7 @@ A small tool that queries Autograph's monitoring endpoint `__monitor__` and
 verifies each signature returned to make sure the service is operating
 correctly.
 
-Monitor runs standalone or as a lambda function.
+Monitor runs as a standalone app or container.
 
 It accepts two required environment variables:
 
