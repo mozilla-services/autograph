@@ -168,12 +168,6 @@ github.com/ProtonMail/go-crypto/openpgp/packet
 github.com/ProtonMail/go-crypto/openpgp/s2k
 github.com/ProtonMail/go-crypto/openpgp/x25519
 github.com/ProtonMail/go-crypto/openpgp/x448
-# github.com/aws/aws-lambda-go v1.47.0
-## explicit; go 1.18
-github.com/aws/aws-lambda-go/lambda
-github.com/aws/aws-lambda-go/lambda/handlertrace
-github.com/aws/aws-lambda-go/lambda/messages
-github.com/aws/aws-lambda-go/lambdacontext
 # github.com/aws/aws-sdk-go-v2 v1.36.3
 ## explicit; go 1.22
 github.com/aws/aws-sdk-go-v2/aws

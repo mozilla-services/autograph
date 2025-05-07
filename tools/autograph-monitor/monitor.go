@@ -17,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/apk2"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
@@ -113,16 +112,11 @@ func main() {
 		log.Printf("Appending root hash from env var AUTOGRAPH_ROOT_HASH=%q\n", os.Getenv("AUTOGRAPH_ROOT_HASH"))
 	}
 
-	if os.Getenv("LAMBDA_TASK_ROOT") != "" {
-		// we are inside a lambda environment so run as lambda
-		lambda.Start(func() error { return Handler(conf, http.DefaultClient) })
-	} else {
-		err := Handler(conf, http.DefaultClient)
-		if err != nil {
-			log.Fatalf("Unhandled exception from monitor: %s", err)
-		}
-		os.Exit(0)
+	err = Handler(conf, http.DefaultClient)
+	if err != nil {
+		log.Fatalf("Unhandled exception from monitor: %s", err)
 	}
+	os.Exit(0)
 }
 
 func rawAutographURLToMonitorEndpoint(autographURLEnvVar string) (string, error) {
