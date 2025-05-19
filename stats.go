@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync/atomic"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -22,6 +23,13 @@ var (
 		Name:      "request_gauge",
 		Namespace: statsNamespace,
 		Help:      "A counter for how many requests are made to a given handler",
+	}, []string{"handler"})
+
+	responseDurationHistogram = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name:      "request_duration",
+		Help:      "A historygram for how long requests take to process",
+		Namespace: statsNamespace,
+		Buckets:   prometheus.ExponentialBucketsRange(0.01, 6.0, 7), // 8 buckets with +Inf
 	}, []string{"handler"})
 
 	signerRequestsCounter = promauto.NewCounterVec(prometheus.CounterOpts{
@@ -153,7 +161,11 @@ func statsMiddleware(h http.HandlerFunc, handlerName string) http.HandlerFunc {
 			"handler": handlerName,
 		}).Inc()
 		w = newStatsWriter(w, handlerName)
+		// Process the request
 		h(w, r)
+		// Report the request duration
+		var durationSeconds = time.Since(getRequestStartTime(r)).Seconds()
+		responseDurationHistogram.WithLabelValues(handlerName).Observe(float64(durationSeconds))
 	}
 }
 
