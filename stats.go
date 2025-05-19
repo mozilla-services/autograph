@@ -27,7 +27,7 @@ var (
 
 	responseDurationHistogram = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:      "request_duration",
-		Help:      "A historygram for how long requests take to process",
+		Help:      "A histogram for how long requests take to process",
 		Namespace: statsNamespace,
 		Buckets:   prometheus.ExponentialBucketsRange(0.01, 6.0, 7), // 8 buckets with +Inf
 	}, []string{"handler"})
