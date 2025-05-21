@@ -129,3 +129,32 @@ func TestWrappingStatsResponseWriteWritesAllMetrics(t *testing.T) {
 		t.Fatalf("Expected responseStatusGauge to be 1, got %f", testutil.ToFloat64(responseStatusGauge.WithLabelValues("myhandler", "500")))
 	}
 }
+
+func TestStatsMiddleware(t *testing.T) {
+	requestCounter.Reset()
+	requestGauge.Reset()
+	apiResponseTiming.Reset()
+	// Create a dummy handler that writes a response
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	wrapped := statsMiddleware(handler, "testHandler")
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rr := httptest.NewRecorder()
+
+	// Call the middleware
+	wrapped.ServeHTTP(rr, req)
+
+	// Check metrics
+	if count := testutil.ToFloat64(requestCounter.WithLabelValues("testHandler")); count != 1 {
+		t.Errorf("expected requestCounter to be 1, got %f", count)
+	}
+	if gauge := testutil.ToFloat64(requestGauge.WithLabelValues("testHandler")); gauge != 1 {
+		t.Errorf("expected requestGauge to be 1, got %f", gauge)
+	}
+	// Summary will have non-zero values, so just check >0
+	count := testutil.CollectAndCount(apiResponseTiming)
+	if count == 0 {
+		t.Errorf("expected `apiResponseTiming` to have recorded a value")
+	}
+}

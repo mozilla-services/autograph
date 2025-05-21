@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync/atomic"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -24,6 +25,17 @@ var (
 		Help:      "A counter for how many requests are made to a given handler",
 	}, []string{"handler"})
 
+	apiResponseTiming = promauto.NewSummaryVec(prometheus.SummaryOpts{
+		Name:      "api_response_timing",
+		Help:      "A summary vector for how long API requests take to process",
+		Namespace: statsNamespace,
+		Objectives: map[float64]float64{ // the quantiles we want to track
+			0.5:  0.05, // 50th percentile with 0.05 second error
+			0.95: 0.01,
+			0.99: 0.001,
+		},
+	}, []string{"handler"})
+
 	signerRequestsCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:      "signer_requests",
 		Namespace: statsNamespace,
@@ -39,7 +51,7 @@ var (
 	signerRequestsTiming = promauto.NewSummaryVec(prometheus.SummaryOpts{
 		Name:      "signer_request_timing",
 		Namespace: statsNamespace,
-		Help:      "A summary vector for request timing",
+		Help:      "A summary vector for signer request timing",
 		Objectives: map[float64]float64{ // the quantiles we want to track
 			0.5:  0.05,
 			0.95: 0.01,
@@ -153,7 +165,11 @@ func statsMiddleware(h http.HandlerFunc, handlerName string) http.HandlerFunc {
 			"handler": handlerName,
 		}).Inc()
 		w = newStatsWriter(w, handlerName)
+		// Process the request
 		h(w, r)
+		// Report the request duration
+		var durationSeconds = time.Since(getRequestStartTime(r)).Seconds()
+		apiResponseTiming.WithLabelValues(handlerName).Observe(float64(durationSeconds))
 	}
 }
 
