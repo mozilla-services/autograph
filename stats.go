@@ -25,11 +25,15 @@ var (
 		Help:      "A counter for how many requests are made to a given handler",
 	}, []string{"handler"})
 
-	responseDurationHistogram = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name:      "request_duration",
-		Help:      "A histogram for how long requests take to process",
+	apiResponseTiming = promauto.NewSummaryVec(prometheus.SummaryOpts{
+		Name:      "api_response_timing",
+		Help:      "A summary vector for how long API requests take to process",
 		Namespace: statsNamespace,
-		Buckets:   prometheus.ExponentialBucketsRange(0.01, 6.0, 7), // 8 buckets with +Inf
+		Objectives: map[float64]float64{ // the quantiles we want to track
+			0.5:  0.05, // 50th percentile with 0.05 second error
+			0.95: 0.01,
+			0.99: 0.001,
+		},
 	}, []string{"handler"})
 
 	signerRequestsCounter = promauto.NewCounterVec(prometheus.CounterOpts{
@@ -47,7 +51,7 @@ var (
 	signerRequestsTiming = promauto.NewSummaryVec(prometheus.SummaryOpts{
 		Name:      "signer_request_timing",
 		Namespace: statsNamespace,
-		Help:      "A summary vector for request timing",
+		Help:      "A summary vector for signer request timing",
 		Objectives: map[float64]float64{ // the quantiles we want to track
 			0.5:  0.05,
 			0.95: 0.01,
@@ -165,7 +169,7 @@ func statsMiddleware(h http.HandlerFunc, handlerName string) http.HandlerFunc {
 		h(w, r)
 		// Report the request duration
 		var durationSeconds = time.Since(getRequestStartTime(r)).Seconds()
-		responseDurationHistogram.WithLabelValues(handlerName).Observe(float64(durationSeconds))
+		apiResponseTiming.WithLabelValues(handlerName).Observe(float64(durationSeconds))
 	}
 }
 

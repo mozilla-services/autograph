@@ -133,7 +133,7 @@ func TestWrappingStatsResponseWriteWritesAllMetrics(t *testing.T) {
 func TestStatsMiddleware(t *testing.T) {
 	requestCounter.Reset()
 	requestGauge.Reset()
-	responseDurationHistogram.Reset()
+	apiResponseTiming.Reset()
 	// Create a dummy handler that writes a response
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -152,9 +152,9 @@ func TestStatsMiddleware(t *testing.T) {
 	if gauge := testutil.ToFloat64(requestGauge.WithLabelValues("testHandler")); gauge != 1 {
 		t.Errorf("expected requestGauge to be 1, got %f", gauge)
 	}
-	// Histogram will have non-zero values, so just check >0
-	sum := testutil.CollectAndCount(responseDurationHistogram)
-	if sum == 0 {
-		t.Errorf("expected histogram to have recorded a value")
+	// Summary will have non-zero values, so just check >0
+	count := testutil.CollectAndCount(apiResponseTiming)
+	if count == 0 {
+		t.Errorf("expected `apiResponseTiming` to have recorded a value")
 	}
 }
