@@ -82,7 +82,7 @@ signers:
       type: contentsignaturepki
       validity: 708h
       clockskewtolerance: 1h
-      chainuploadlocation: file:///tmp/autograph/chains/normandydev/
+      chainlocation: /tmp/autograph/chains/normandydev/
       x5u: file:///tmp/autograph/chains/normandydev/
       issuerprivkey: |
         -----BEGIN EC PRIVATE KEY-----
@@ -134,7 +134,7 @@ signers:
       type: contentsignaturepki
       validity: 708h
       clockskewtolerance: 1h
-      chainuploadlocation: file:///tmp/autograph/chains/remotesettingsdev/
+      chainlocation: /tmp/autograph/chains/remotesettingsdev/
       x5u: file:///tmp/autograph/chains/remotesettingsdev/
       issuerprivkey: |
         -----BEGIN EC PRIVATE KEY-----

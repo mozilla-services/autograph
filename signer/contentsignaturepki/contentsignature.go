@@ -59,7 +59,7 @@ type ContentSigner struct {
 	rand                        io.Reader
 	validity                    time.Duration
 	clockSkewTolerance          time.Duration
-	chainUploadLocation         string
+	chainLocation               string
 	caCert                      string
 	db                          *database.Handler
 	subdomainOverride           string
@@ -80,7 +80,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.X5U = conf.X5U
 	s.validity = conf.Validity
 	s.clockSkewTolerance = conf.ClockSkewTolerance
-	s.chainUploadLocation = conf.ChainUploadLocation
+	s.chainLocation = conf.ChainLocation
 	s.caCert = conf.CaCert
 	s.db = conf.DB
 	s.subdomainOverride = conf.SubdomainOverride
@@ -161,8 +161,8 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 		if err != nil {
 			return fmt.Errorf("contentsignaturepki %q: failed to generate end entity: %w", s.ID, err)
 		}
-		// make the certificate and upload the chain
-		err = s.makeAndUploadChain()
+		// make the certificate and save the chain
+		err = s.makeAndSaveChain()
 		if err != nil {
 			return fmt.Errorf("contentsignaturepki %q: failed to make chain and x5u: %w", s.ID, err)
 		}
@@ -195,18 +195,18 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 // Config returns the configuration of the current signer
 func (s *ContentSigner) Config() signer.Configuration {
 	return signer.Configuration{
-		ID:                  s.ID,
-		Type:                s.Type,
-		Mode:                s.Mode,
-		PrivateKey:          s.PrivateKey,
-		PublicKey:           s.PublicKey,
-		IssuerPrivKey:       s.IssuerPrivKey,
-		IssuerCert:          s.IssuerCert,
-		X5U:                 s.X5U,
-		Validity:            s.validity,
-		ClockSkewTolerance:  s.clockSkewTolerance,
-		ChainUploadLocation: s.chainUploadLocation,
-		CaCert:              s.caCert,
+		ID:                 s.ID,
+		Type:               s.Type,
+		Mode:               s.Mode,
+		PrivateKey:         s.PrivateKey,
+		PublicKey:          s.PublicKey,
+		IssuerPrivKey:      s.IssuerPrivKey,
+		IssuerCert:         s.IssuerCert,
+		X5U:                s.X5U,
+		Validity:           s.validity,
+		ClockSkewTolerance: s.clockSkewTolerance,
+		ChainLocation:      s.chainLocation,
+		CaCert:             s.caCert,
 	}
 }
 

@@ -115,10 +115,10 @@ are valid for 90 days (30d of clock skew in the past, 30 days of
 validity, 30 days of clock skew in the future).
 
 Once the end-entity created, it is concatenated to the public
-certificate of the intermediate and root of the PKI, then uploaded to
-*chainuploadlocation*, and retrieved from *x5u* (these two locations may
-actually be different when we upload to an S3 bucket but download from a
-CDN).
+certificate of the intermediate and root of the PKI, then stored at
+*chainlocation*, and retrieved from *x5u* (these two locations may
+actually be different when we upload to a mounted volume but download
+from a CDN or the volume's bucket address).
 
 If this entire procedure succeeds, the signer is initialized with the
 end-entity and starts processing requests.
@@ -134,11 +134,8 @@ signers:
   # give +/- 30d of validity room for clients with bad clocks
   clockskewtolerance: 10m
 
-  # upload cert chains to this location (file:// is really just for local dev)
-  chainuploadlocation: file:///tmp/chains/
-  # when using S3, make sure the relevant AWS credentials are set in the
-  # environment that autograph runs in
-  #chainuploadlocation: s3://net-mozaws-dev-content-signature/chains/
+  # store cert chains to this location
+  chainlocation: file:///tmp/chains/
 
   # x5u is the path to the public dir where chains are stored. This MUST end
   # with a trailing slash because filenames will be appended to it.

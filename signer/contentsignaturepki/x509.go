@@ -7,6 +7,8 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
+	"os"
+	"path"
 	"time"
 
 	"github.com/mozilla-services/autograph/database"
@@ -39,15 +41,15 @@ func (s *ContentSigner) findAndSetEE(conf signer.Configuration) (err error) {
 	return
 }
 
-// makeAndUploadChain makes a certificate using the end-entity public key,
-// uploads the chain to its destination and creates an X5U download URL
-func (s *ContentSigner) makeAndUploadChain() (err error) {
+// makeAndSaveChain makes a certificate using the end-entity public key,
+// save the chain to its destination and creates an X5U download URL
+func (s *ContentSigner) makeAndSaveChain() (err error) {
 	var fullChain, chainName string
 	fullChain, chainName, err = s.makeChain()
 	if err != nil {
 		return fmt.Errorf("failed to make chain: %w", err)
 	}
-	err = s.upload(fullChain, chainName)
+	err = os.WriteFile(path.Join(s.chainLocation, chainName), []byte(fullChain), 0644)
 	if err != nil {
 		return fmt.Errorf("failed to upload chain: %w", err)
 	}

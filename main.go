@@ -101,6 +101,7 @@ func main() {
 func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, debug bool) {
 	var (
 		cfgFile  string
+		chainDir string
 		port     string
 		err      error
 		logLevel string
@@ -108,6 +109,7 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, d
 	)
 
 	fset.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
+	fset.StringVar(&chainDir, "cd", "/mnt/chain-dir", "Path for certificate chain storage")
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	// https://github.com/sirupsen/logrus#level-logging
 	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
