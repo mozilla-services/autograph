@@ -10,6 +10,7 @@ import (
 	"hash"
 	"io"
 	"math/big"
+	"net/http"
 	"time"
 
 	"github.com/mozilla-services/autograph/database"
@@ -185,7 +186,7 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 	default:
 		return fmt.Errorf("contentsignaturepki %q: failed to find suitable end-entity: %w", s.ID, err)
 	}
-	_, _, err = GetX5U(buildHTTPClient(), s.X5U)
+	_, _, err = GetX5U(http.DefaultClient, s.X5U)
 	if err != nil {
 		return fmt.Errorf("contentsignaturepki %q: failed to verify x5u: %w", s.ID, err)
 	}
