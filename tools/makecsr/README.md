@@ -72,7 +72,7 @@ tokens:
 
 4. Get authenticated with GCP. Ex: `gcloud auth login --update-adc`
 
-5. Pull the latest autograph docker image. `docker pull mozilla:autograph/latest`
+5. Pull the latest autograph docker image. `docker pull mozilla/autograph:latest`
 
 6. Run the docker container in interactive mode with those configs your gcloud credentials mounted.
 ```
