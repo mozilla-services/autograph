@@ -203,7 +203,10 @@ func TestHSMNotAvailable(t *testing.T) {
 	}()
 	tcfg := new(Configuration)
 	tcfg.InitHSM(nil)
-	tcfg.GetPrivateKey()
+	_, err := tcfg.GetPrivateKey()
+	if err == nil {
+		t.Fatal("expected to fail with no suitable key found but succeeded")
+	}
 }
 
 func TestNoSuitableKeyFound(t *testing.T) {
@@ -417,7 +420,10 @@ func TestMakeKeyAWSECDSA(t *testing.T) {
 	mockCtx.EXPECT().Destroy().Times(1)
 
 	mockFactory := mockedPKCS11ContextFactory(mockCtx)
-	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	_, err = crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	if err != nil {
+		t.Fatalf("failed to configure crypto11: %v", err)
+	}
 	defer crypto11.Close()
 
 	cfg := Configuration{
@@ -498,7 +504,10 @@ func TestMakeKeyAWSRSA(t *testing.T) {
 	mockCtx.EXPECT().Destroy().Times(1)
 
 	mockFactory := mockedPKCS11ContextFactory(mockCtx)
-	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	_, err = crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	if err != nil {
+		t.Fatalf("failed to configure crypto11: %v", err)
+	}
 	defer crypto11.Close()
 	cfg := Configuration{
 		isHsmAvailable: true,
@@ -585,7 +594,10 @@ func TestMakeKeyGCPECDSA(t *testing.T) {
 	mockCtx.EXPECT().Destroy().Times(1)
 
 	mockFactory := mockedPKCS11ContextFactory(mockCtx)
-	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	_, err = crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	if err != nil {
+		t.Fatalf("failed to configure crypto11: %v", err)
+	}
 	defer crypto11.Close()
 
 	cfg := Configuration{
@@ -651,7 +663,10 @@ func TestMakeKeyGCPRSA(t *testing.T) {
 	mockCtx.EXPECT().Destroy().Times(1)
 
 	mockFactory := mockedPKCS11ContextFactory(mockCtx)
-	crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	_, err = crypto11.Configure(&crypto11.PKCS11Config{}, mockFactory)
+	if err != nil {
+		t.Fatalf("failed to configure crypto11: %v", err)
+	}
 	defer crypto11.Close()
 	cfg := Configuration{
 		isHsmAvailable: true,

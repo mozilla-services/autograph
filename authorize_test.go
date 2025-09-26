@@ -299,7 +299,8 @@ func TestHawkTimestampSkewFail(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ag.addAuthorizations([]authorization{
+	_ = ag.addAuthorizations([]authorization{
+
 		{
 			ID:      "alice",
 			Key:     "1862300e9bd18eafab2eb8d6",
