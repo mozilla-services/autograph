@@ -532,7 +532,10 @@ func (sig *Signature) VerifyWithChainAt(truststore *x509.CertPool, verificationT
 // String returns a PEM encoded PKCS7 block
 func (sig *Signature) String() string {
 	var buf bytes.Buffer
-	pem.Encode(&buf, &pem.Block{Type: "PKCS7", Bytes: sig.Data})
+	err := pem.Encode(&buf, &pem.Block{Type: "PKCS7", Bytes: sig.Data})
+	if err != nil {
+		return fmt.Sprintf("error encoding signature to PEM: %v", err)
+	}
 	return buf.String()
 }
 

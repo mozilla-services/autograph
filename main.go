@@ -112,7 +112,10 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, d
 	// https://github.com/sirupsen/logrus#level-logging
 	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
 	fset.BoolVar(&debug, "D", false, "Sets the log level to debug to print debug logs.")
-	fset.Parse(args)
+	err = fset.Parse(args)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	switch logLevel {
 	case "debug":

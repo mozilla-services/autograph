@@ -101,5 +101,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+	err = pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
+	if err != nil {
+		log.Fatal(err)
+	}
 }
