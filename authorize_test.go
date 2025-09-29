@@ -299,13 +299,16 @@ func TestHawkTimestampSkewFail(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = ag.addAuthorizations([]authorization{
+	err = ag.addAuthorizations([]authorization{
 
 		{
 			ID:      "alice",
 			Key:     "1862300e9bd18eafab2eb8d6",
 			Signers: []string{"appkey1"},
 		}})
+	if err != nil {
+		t.Fatalf("adding authorization failed: %v", err)
+	}
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	bodyrdr := bytes.NewReader(body)

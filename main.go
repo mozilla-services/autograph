@@ -114,7 +114,7 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, d
 	fset.BoolVar(&debug, "D", false, "Sets the log level to debug to print debug logs.")
 	err = fset.Parse(args)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to parse flags: %v", err)
 	}
 
 	switch logLevel {

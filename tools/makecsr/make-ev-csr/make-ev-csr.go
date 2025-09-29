@@ -103,6 +103,6 @@ func main() {
 	}
 	err = pem.Encode(os.Stdout, &pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error when encoding PEM: %v", err)
 	}
 }

@@ -18,11 +18,11 @@ func TestMonitorNoConfig(t *testing.T) {
 	var nomonitor configuration
 	err := tmpag.addMonitoring(nomonitor.Monitoring)
 	if err != nil {
-		t.Fatal("adding monitoring configuration failed")
+		t.Fatalf("adding monitoring authorization failed: %v", err)
 	}
 	_, err = tmpag.getAuthByID(monitorAuthID)
 	if err == nil {
-		t.Fatal("monitor configuration found when none was passed")
+		t.Fatalf("monitor configuration found when none was passed: %v", err)
 	}
 }
 
