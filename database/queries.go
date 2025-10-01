@@ -28,6 +28,9 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 	_, err = tx.Exec("LOCK TABLE endentities_lock IN ACCESS EXCLUSIVE MODE")
 	if err != nil {
 		err = fmt.Errorf("failed to lock endentities table: %w", err)
+		// We ignore the error from tx.Rollback() because according to the Go documentation,
+		// if tx.Rollback() returns an error, the transaction is no longer valid nor
+		// committed to the database.
 		_ = tx.Rollback()
 		return nil, err
 	}

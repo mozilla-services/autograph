@@ -306,8 +306,8 @@ func TestHawkTimestampSkewFail(t *testing.T) {
 			Key:     "1862300e9bd18eafab2eb8d6",
 			Signers: []string{"appkey1"},
 		}})
-	if err != nil {
-		t.Fatalf("adding authorization failed: %v", err)
+	if err == nil {
+		t.Fatalf("adding authorization did not fail as expected: %v", err)
 	}
 
 	body := []byte("aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
