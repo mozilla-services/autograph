@@ -237,7 +237,7 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 }
 
 // String returns a PEM encoded PKCS7 block
-// TODO: Look further into whether we need to remove this
+// TODO: Look further into whether we need to remove this, the String() seems to not be used
 func (sig *Signature) String() string {
 	var buf bytes.Buffer
 	err := pem.Encode(&buf, &pem.Block{Type: "PKCS7", Bytes: sig.Data})
