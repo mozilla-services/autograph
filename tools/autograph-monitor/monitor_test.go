@@ -30,8 +30,14 @@ func TestGoldenPath(t *testing.T) {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
-		w.Write(respBytes1)
-		w.Write(respBytes2)
+		_, err = w.Write(respBytes1)
+		if err != nil {
+			t.Fatalf("failed to write respBytes1: %v", err)
+		}
+		_, err = w.Write(respBytes2)
+		if err != nil {
+			t.Fatalf("failed to write respBytes2: %v", err)
+		}
 	})
 	server := httptest.NewTLSServer(mux)
 	defer server.Close()

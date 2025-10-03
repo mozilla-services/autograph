@@ -16,10 +16,13 @@ import (
 func TestMonitorNoConfig(t *testing.T) {
 	tmpag := newAutographer(1)
 	var nomonitor configuration
-	tmpag.addMonitoring(nomonitor.Monitoring)
-	_, err := tmpag.getAuthByID(monitorAuthID)
+	err := tmpag.addMonitoring(nomonitor.Monitoring)
+	if err != nil {
+		t.Fatalf("adding monitoring authorization failed: %v", err)
+	}
+	_, err = tmpag.getAuthByID(monitorAuthID)
 	if err == nil {
-		t.Fatal("monitor configuration found when none was passed")
+		t.Fatalf("monitor configuration found when none was passed: %v", err)
 	}
 }
 
@@ -36,8 +39,8 @@ func TestMonitorAddDuplicate(t *testing.T) {
 		}
 	}()
 	// Adding the first one will pass, adding the second one will trigger the panic
-	tmpag.addMonitoring(monitorconf.Monitoring)
-	tmpag.addMonitoring(monitorconf.Monitoring)
+	_ = tmpag.addMonitoring(monitorconf.Monitoring)
+	_ = tmpag.addMonitoring(monitorconf.Monitoring)
 }
 
 func TestMonitorBadRequest(t *testing.T) {
@@ -116,7 +119,7 @@ eNGDpX35+pcEygI=
 =JC6I
 -----END PGP PUBLIC KEY BLOCK-----`
 
-	ag.addSigners([]signer.Configuration{{
+	err := ag.addSigners([]signer.Configuration{{
 		ID:         "testErr1",
 		Type:       "gpg2",
 		Mode:       "gpg2",
@@ -132,7 +135,9 @@ eNGDpX35+pcEygI=
 		PublicKey:  testPublicKey,
 	},
 	})
-
+	if err != nil {
+		t.Fatalf("adding signers failed: %v", err)
+	}
 	mo := newMonitor(ag, conf.MonitorInterval)
 
 	var empty []byte

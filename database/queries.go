@@ -28,7 +28,10 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 	_, err = tx.Exec("LOCK TABLE endentities_lock IN ACCESS EXCLUSIVE MODE")
 	if err != nil {
 		err = fmt.Errorf("failed to lock endentities table: %w", err)
-		tx.Rollback()
+		// We ignore the error from tx.Rollback() because according to the Go documentation,
+		// if tx.Rollback() returns an error, the transaction is no longer valid nor
+		// committed to the database.
+		_ = tx.Rollback()
 		return nil, err
 	}
 	var id uint64
@@ -36,7 +39,7 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 				VALUES ($1) RETURNING id`,
 		true).Scan(&id)
 	if err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		err = fmt.Errorf("failed to lock endentities table: %w", err)
 		return nil, err
 	}
@@ -72,7 +75,7 @@ func (tx *Transaction) InsertEE(x5u, label, signerID string) (err error) {
 	_, err = tx.Exec(`INSERT INTO endentities(x5u, label, signer_id, hsm_handle, is_current)
 				VALUES ($1, $2, $3, $4, $5)`, x5u, label, signerID, -1, true)
 	if err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		err = fmt.Errorf("failed to insert new key in database: %w", err)
 		return
 	}
@@ -81,7 +84,7 @@ func (tx *Transaction) InsertEE(x5u, label, signerID string) (err error) {
 		signerID, label)
 	if err != nil {
 		err = fmt.Errorf("failed to update is_current status of keys in database: %w", err)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return
 	}
 	return nil
@@ -92,13 +95,13 @@ func (tx *Transaction) End() error {
 	_, err := tx.Exec("UPDATE endentities_lock SET is_locked=FALSE, freed_at=NOW() WHERE id=$1", tx.ID)
 	if err != nil {
 		err = fmt.Errorf("failed to update is_current status of keys in database: %w", err)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("failed to commit transaction in database: %w", err)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	return nil

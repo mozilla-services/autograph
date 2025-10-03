@@ -188,7 +188,10 @@ func TestSignDataAndVerifyWithOpenSSL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pem.Encode(fd, &pem.Block{Type: "CERTIFICATE", Bytes: s.issuerCert.Raw})
+	err = pem.Encode(fd, &pem.Block{Type: "CERTIFICATE", Bytes: s.issuerCert.Raw})
+	if err != nil {
+		t.Fatal(err)
+	}
 	fd.Close()
 
 	// call openssl to verify the signature on the content using the root

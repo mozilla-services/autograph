@@ -29,7 +29,10 @@ func httpError(w http.ResponseWriter, r *http.Request, errorCode int, errorMessa
 	// request body is read before writing a response.
 	// https://github.com/golang/go/issues/15789
 	if r.Body != nil {
-		io.Copy(io.Discard, r.Body)
+		_, err := io.Copy(io.Discard, r.Body)
+		if err != nil {
+			log.Errorf("error while copying discard: %v", err)
+		}
 		r.Body.Close()
 	}
 	http.Error(w, msg, errorCode)

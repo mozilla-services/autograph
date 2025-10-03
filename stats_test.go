@@ -57,8 +57,10 @@ func TestStatsResponseWriterWritesToHeaderOnWrite(t *testing.T) {
 
 	recorder := httptest.NewRecorder()
 	statsWriter := newStatsWriter(recorder, "myhandler")
-	statsWriter.Write([]byte("hello"))
-
+	_, err := statsWriter.Write([]byte("hello"))
+	if err != nil {
+		t.Fatalf("unexpected error writing to statsWriter: %v", err)
+	}
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status code %d, got %d", http.StatusOK, recorder.Code)
 	}
