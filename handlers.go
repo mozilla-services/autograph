@@ -350,7 +350,10 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write(respdata)
+	_, err = w.Write(respdata)
+	if err != nil {
+		log.Errorf("error writing response: %v", err)
+	}
 	log.WithFields(log.Fields{
 		"rid":                  rid,
 		"num_signing_requests": sigReqsCount,
@@ -363,7 +366,10 @@ func handleLBHeartbeat(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
 		return
 	}
-	w.Write([]byte("ohai"))
+	_, err := w.Write([]byte("ohai"))
+	if err != nil {
+		log.Errorf("error writing response: %v", err)
+	}
 }
 
 // handleHeartbeat checks whether backing services are enabled and
@@ -450,7 +456,10 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(respdata)
+	_, err = w.Write(respdata)
+	if err != nil {
+		log.Errorf("error writing response: %v", err)
+	}
 }
 
 func handleVersion(w http.ResponseWriter, r *http.Request) {
@@ -526,5 +535,8 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(signerIDsJSON)
+	_, err = w.Write(signerIDsJSON)
+	if err != nil {
+		log.Errorf("error writing response: %v", err)
+	}
 }
