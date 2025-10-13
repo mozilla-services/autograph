@@ -3,7 +3,7 @@ ARG LIBKMSP11_VERSION=1.6
 #------------------------------------------------------------------------------
 # Base Debian Image
 #------------------------------------------------------------------------------
-FROM golang:1.25.1-bookworm AS base
+FROM golang:1.25.2-bookworm AS base
 
 ENV DEBIAN_FRONTEND='noninteractive'
 
