@@ -10,7 +10,7 @@ import (
 	"github.com/getsops/sops/v3"
 	"github.com/getsops/sops/v3/config"
 	"github.com/getsops/sops/v3/stores"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 const IndentDefault = 4
@@ -22,6 +22,10 @@ type Store struct {
 
 func NewStore(c *config.YAMLStoreConfig) *Store {
 	return &Store{config: *c}
+}
+
+func (store *Store) Name() string {
+	return "yaml"
 }
 
 func (store Store) appendCommentToList(comment string, list []interface{}) []interface{} {
