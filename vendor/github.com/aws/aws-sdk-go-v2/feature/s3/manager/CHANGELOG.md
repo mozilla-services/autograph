@@ -1,3 +1,27 @@
+# v1.19.12 (2025-10-07)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.19.11 (2025-10-02)
+
+* **Bug Fix**: Add missing ChecksumType field to UploadOutput.
+
+# v1.19.10 (2025-09-29)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.19.9 (2025-09-26)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.19.8 (2025-09-23)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.19.7 (2025-09-22)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.19.6 (2025-09-10)
 
 * **Dependency Update**: Updated to the latest SDK module versions
