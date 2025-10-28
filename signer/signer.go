@@ -432,7 +432,7 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		return
 	case *rsa.PublicKey:
 		keySize := keyTplType.Size()
-		priv, err = rsa.GenerateKey(rand.Reader, keySize)
+		priv, err = rsa.GenerateKey(rand.Reader, max(keySize, 2048))
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to generate rsa key in memory: %w", err)
 		}

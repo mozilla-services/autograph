@@ -221,14 +221,27 @@ the ``--age`` option or the **SOPS_AGE_RECIPIENTS** environment variable:
 
 When decrypting a file with the corresponding identity, SOPS will look for a
 text file name ``keys.txt`` located in a ``sops`` subdirectory of your user
-configuration directory. On Linux, this would be ``$XDG_CONFIG_HOME/sops/age/keys.txt``.
-If ``$XDG_CONFIG_HOME`` is not set ``$HOME/.config/sops/age/keys.txt`` is used instead.
-On macOS, this would be ``$HOME/Library/Application Support/sops/age/keys.txt``. On
-Windows, this would be ``%AppData%\sops\age\keys.txt``. You can specify the location
-of this file manually by setting the environment variable **SOPS_AGE_KEY_FILE**.
-Alternatively, you can provide the key(s) directly by setting the **SOPS_AGE_KEY**
-environment variable. Alternatively, you can provide a command to output the age keys
-by setting the **SOPS_AGE_KEY_CMD** environment variable.
+configuration directory. 
+
+- **Linux**
+
+  - Looks for ``keys.txt`` in ``$XDG_CONFIG_HOME/sops/age/keys.txt``;
+  - Falls back to ``$HOME/.config/sops/age/keys.txt`` if ``$XDG_CONFIG_HOME`` isn’t set.
+
+- **macOS**
+
+  - Looks for ``keys.txt`` in ``$XDG_CONFIG_HOME/sops/age/keys.txt``;
+  - Falls back to ``$HOME/Library/Application Support/sops/age/keys.txt`` if ``$XDG_CONFIG_HOME`` isn’t set.
+
+- **Windows**
+
+  - Looks for ``keys.txt`` in `%AppData%\\sops\\age\\keys.txt``.
+
+You can override the default lookup by:
+
+- setting the environment variable **SOPS_AGE_KEY_FILE**;
+- setting the **SOPS_AGE_KEY** environment variable;
+- providing a command to output the age keys by setting the **SOPS_AGE_KEY_CMD** environment variable..
 
 The contents of this key file should be a list of age X25519 identities, one
 per line. Lines beginning with ``#`` are considered comments and ignored. Each
@@ -238,7 +251,7 @@ Encrypting with SSH keys via age is also supported by SOPS. You can use SSH publ
 ("ssh-ed25519 AAAA...", "ssh-rsa AAAA...") as age recipients when encrypting a file.
 When decrypting a file, SOPS will look for ``~/.ssh/id_ed25519`` and falls back to
 ``~/.ssh/id_rsa``. You can specify the location of the private key manually by setting
-the environment variableuse **SOPS_AGE_SSH_PRIVATE_KEY_FILE**.
+the environment variable **SOPS_AGE_SSH_PRIVATE_KEY_FILE**.
 
 Note that only ``ssh-rsa`` and ``ssh-ed25519`` are supported.
 
@@ -365,6 +378,11 @@ a key. This has the following form::
 
     https://${VAULT_URL}/keys/${KEY_NAME}/${KEY_VERSION}
 
+You can omit the version, and have just a trailing slash, and this will use
+whatever the latest version of the key is::
+
+    https://${VAULT_URL}/keys/${KEY_NAME}/
+
 To create a Key Vault and assign your service principal permissions on it
 from the commandline:
 
@@ -388,6 +406,10 @@ Now you can encrypt a file using::
 
     $ sops encrypt --azure-kv https://sops.vault.azure.net/keys/sops-key/some-string test.yaml > test.enc.yaml
 
+or, without the version::
+
+    $ sops encrypt --azure-kv https://sops.vault.azure.net/keys/sops-key/ test.yaml > test.enc.yaml
+
 And decrypt it using::
 
     $ sops decrypt test.enc.yaml
@@ -407,7 +429,7 @@ The simplest way to decrypt data from stdin is as follows:
 
 .. code:: sh
 
-	$ cat encrypted-data | sops decrypt > decrypted-data
+    $ cat encrypted-data | sops decrypt > decrypted-data
 
 By default, ``sops`` determines the input and output format from the provided filename. Since in this case,
 no filename is provided, ``sops`` will use the binary store which expects JSON input and outputs binary data
@@ -418,8 +440,8 @@ the input and output formats by passing ``--input-type`` and ``--output-type`` a
 
 .. code:: sh
 
-	$ cat encrypted-data | sops decrypt --filename-override filename.yaml > decrypted-data
-	$ cat encrypted-data | sops decrypt --input-type yaml --output-type yaml > decrypted-data
+    $ cat encrypted-data | sops decrypt --filename-override filename.yaml > decrypted-data
+    $ cat encrypted-data | sops decrypt --input-type yaml --output-type yaml > decrypted-data
 
 In both cases, ``sops`` will assume that the data you provide is in YAML format, and will encode the decrypted
 data in YAML as well. The second form allows to use different formats for input and output.
@@ -430,7 +452,7 @@ SOPS which filename to use to match creation rules:
 
 .. code:: sh
 
-	$ echo 'foo: bar' | sops encrypt --filename-override path/filename.sops.yaml > encrypted-data
+    $ echo 'foo: bar' | sops encrypt --filename-override path/filename.sops.yaml > encrypted-data
 
 SOPS will find a matching creation rule for ``path/filename.sops.yaml`` in ``.sops.yaml`` and use that one to
 encrypt the data from stdin. This filename will also be used to determine the input and output store. As always,
@@ -439,7 +461,7 @@ the input store type can be adjusted by passing ``--input-type``, and the output
 
 .. code:: sh
 
-	$ echo foo=bar | sops encrypt --filename-override path/filename.sops.yaml --input-type dotenv > encrypted-data
+    $ echo foo=bar | sops encrypt --filename-override path/filename.sops.yaml --input-type dotenv > encrypted-data
 
 
 Encrypting using Hashicorp Vault
@@ -833,14 +855,6 @@ Example: place the following in your ``~/.bashrc``
     SOPS_GPG_EXEC = 'your_gpg_client_wrapper'
 
 
-Specify a different GPG key server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-By default, SOPS uses the key server ``keys.openpgp.org`` to retrieve the GPG
-keys that are not present in the local keyring.
-This is no longer configurable. You can learn more about why from this write-up: `SKS Keyserver Network Under Attack <https://gist.github.com/rjhansen/67ab921ffb4084c865b3618d6955275f>`_.
-
-
 Key groups
 ~~~~~~~~~~
 
@@ -1001,7 +1015,7 @@ service exposed on the unix socket located in ``/tmp/sops.sock``, you can run:
 
 .. code:: sh
 
-    $ sops decrypt --keyservice unix:///tmp/sops.sock file.yaml`
+    $ sops decrypt --keyservice unix:///tmp/sops.sock file.yaml
 
 And if you only want to use the key service exposed on the unix socket located
 in ``/tmp/sops.sock`` and not the local key service, you can run:
@@ -1321,7 +1335,7 @@ by configuring ``.sops.yaml`` with:
 
 .. note::
 
-  The YAML emitter used by sops only supports values between 2 and 9. If you specify 1,
+  The YAML emitter used by SOPS only supports values between 2 and 9. If you specify 1,
   or 10 and larger, the indent will be 2.
 
 YAML anchors
@@ -1464,7 +1478,7 @@ original file after encrypting or decrypting it.
 Encrypting binary files
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-SOPS primary use case is encrypting YAML and JSON configuration files, but it
+SOPS primary use case is encrypting YAML, JSON, ENV, and INI configuration files, but it
 also has the ability to manage binary files. When encrypting a binary, SOPS will
 read the data as bytes, encrypt it, store the encrypted base64 under
 ``tree['data']`` and write the result as JSON.
@@ -1547,6 +1561,17 @@ The value must be formatted as json.
 
     $ sops set ~/git/svc/sops/example.yaml '["an_array"][1]' '{"uid1":null,"uid2":1000,"uid3":["bob"]}'
 
+You can also provide the value from a file or stdin:
+
+.. code:: sh
+
+    # Provide the value from a file
+    $ echo '{"uid1":null,"uid2":1000,"uid3":["bob"]}' > /tmp/example-value
+    $ sops set --value-file ~/git/svc/sops/example.yaml '["an_array"][1]' /tmp/example-value
+
+    # Provide the value from stdin
+    $ echo '{"uid1":null,"uid2":1000,"uid3":["bob"]}' | sops set --value-stdin ~/git/svc/sops/example.yaml '["an_array"][1]'
+
 Unset a sub-part in a document tree
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1598,9 +1623,9 @@ git client interfaces, because they call git diff under the hood!
 Encrypting only parts of a file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note: this only works on YAML and JSON files, not on BINARY files.
+Note: this only works on YAML, JSON, ENV, and INI files, not on BINARY files.
 
-By default, SOPS encrypts all the values of a YAML or JSON file and leaves the
+By default, SOPS encrypts all the values of a YAML, JSON, ENV, or INI file and leaves the
 keys in cleartext. In some instances, you may want to exclude some values from
 being encrypted. This can be accomplished by adding the suffix **_unencrypted**
 to any key of a file. When set, all values underneath the key that set the
@@ -1655,6 +1680,308 @@ You can also specify these options in the ``.sops.yaml`` config file.
 Note: these six options ``--unencrypted-suffix``, ``--encrypted-suffix``, ``--encrypted-regex``,
 ``--unencrypted-regex``, ``--encrypted-comment-regex``, and ``--unencrypted-comment-regex`` are
 mutually exclusive and cannot all be used in the same file.
+
+Config file format
+------------------
+
+This section describes the format of the SOPS config file.
+The file must be named ``.sops.yaml`` (not ``.sops.yml``!),
+and SOPS will look for it in the current working directory and its parents,
+using the first ``.sops.yaml`` file found.
+
+A specific file can be set as the config file by passing the ``--config`` global option
+or setting the ``SOPS_CONFIG`` environment variable.
+
+The config file must be in the `YAML format <https://yaml.org/>`__.
+
+The following top-level keys are supported:
+
+* ``creation_rules``: a list of creation rule objects.
+* ``destination_rules``: a list of destination rule objects.
+* ``stores``: configuration object for the stores.
+
+The following subsections describe how these properties are used.
+
+Creation rule object
+~~~~~~~~~~~~~~~~~~~~
+
+A creation rule object has three types of keys:
+
+#. Keys that determine whether the creation rule matches.
+#. Keys that determine the (groups of) identities (keys) to encrypt with.
+#. Keys that determine which parts of and how a file is encrypted.
+
+Matching
+********
+
+The keys related to file matching are:
+
+* ``path_regex``: a regular expression matching files to encrypt.
+  If not specified, this creation rule will match all files.
+
+Identities
+**********
+
+One can either directly specify identities for a single key group, or specify a list of key groups.
+If a list of key groups is given, the individual settings are ignored.
+
+To directly specify a single key group, you can use the following keys:
+
+* ``kms`` (comma-separated string, or list of strings): list of AWS master keys.
+* ``aws_profile`` (string): AWS profile to use for the AWS KMS keys.
+  Example:
+
+  .. code:: yaml
+
+    creation_rules:
+      - kms:
+          - arn:aws:kms:us-east-1:656532927350:key/920aff2e-c5f1-4040-943a-047fa387b27e
+          - arn:aws:kms:ap-southeast-1:656532927350:key/9006a8aa-0fa6-4c14-930e-a2dfb916de1d
+        aws_profile: foo
+
+* ``age`` (comma-separated string, or list of strings): list of Age public keys.
+  Example:
+
+  .. code:: yaml
+
+    creation_rules:
+      - age:
+          - age1s3cqcks5genc6ru8chl0hkkd04zmxvczsvdxq99ekffe4gmvjpzsedk23c
+          - age1qe5lxzzeppw5k79vxn3872272sgy224g2nzqlzy3uljs84say3yqgvd0sw
+
+* ``pgp`` (comma-separated string, or list of strings): list of PGP/GPG key fingerprints.
+  Example:
+
+  .. code:: yaml
+
+    creation_rules:
+      - pgp:
+          - 85D77543B3D624B63CEA9E6DBC17301B491B3F21!
+          - E60892BB9BD89A69F759A1A0A3D652173B763E8F!
+
+* ``gcp_kms`` (comma-separated string, or list of strings): list of GCP KMS ResourceIDs.
+  Example:
+
+  .. code:: yaml
+
+    creation_rules:
+      - gcp_kms:
+          - projects/mygcproject/locations/global/keyRings/mykeyring/cryptoKeys/thekey
+
+* ``azure_keyvault`` (comma-separated string, or list of strings): list of Azure Key Vault resource identifiers.
+  Example:
+
+  .. code:: yaml
+
+    creation_rules:
+      - azure_keyvault:
+          - https://vault.url/keys/key-name/key-version  # Key with version
+          - https://vault.url/keys/key-name/             # key without version, the latest will be used
+
+* ``hc_vault_transit_uri`` (comma-separated string, or list of strings): list of HashiCorp Vault transit URIs.
+  Example:
+
+  .. code:: yaml
+
+    creation_rules:
+      - hc_vault_transit_uri:
+          - http://my.vault/v1/sops/keys/secondkey
+
+To specify a list of key groups, you can use the following key:
+
+* ``key_groups`` (list of key group objects): a list of key group objects.
+  See below for how such a resource should be represented.
+  Example:
+
+  .. code:: yaml
+
+    creation_rules:
+      - key_groups:
+          - kms:
+              - arn:aws:kms:us-east-1:656532927350:key/920aff2e-c5f1-4040-943a-047fa387b27e
+              - arn:aws:kms:ap-southeast-1:656532927350:key/9006a8aa-0fa6-4c14-930e-a2dfb916de1d
+            aws_profile: foo
+            age:
+              - age1s3cqcks5genc6ru8chl0hkkd04zmxvczsvdxq99ekffe4gmvjpzsedk23c
+              - age1qe5lxzzeppw5k79vxn3872272sgy224g2nzqlzy3uljs84say3yqgvd0sw
+            pgp:
+              - 85D77543B3D624B63CEA9E6DBC17301B491B3F21!
+              - E60892BB9BD89A69F759A1A0A3D652173B763E8F!
+            gcp_kms:
+              - projects/mygcproject/locations/global/keyRings/mykeyring/cryptoKeys/thekey
+            azure_keyvault:
+              - https://vault.url/keys/key-name/key-version  # Key with version
+              - https://vault.url/keys/key-name/             # key without version, the latest will be used
+            hc_vault_transit_uri:
+              - http://my.vault/v1/sops/keys/secondkey
+
+            merge:
+              - pgp:
+                  - 85D77543B3D624B63CEA9E6DBC17301B491B3F21!
+              - age:
+                  - age1s3cqcks5genc6ru8chl0hkkd04zmxvczsvdxq99ekffe4gmvjpzsedk23c
+              - gcp_kms:
+                  - projects/mygcproject/locations/global/keyRings/mykeyring/cryptoKeys/thekey
+                azure_keyvault:
+                  - https://vault.url/keys/key-name/key-version
+
+Key group object
+++++++++++++++++
+
+A key group contains multiple identities (keys), similar to a creation rule object.
+Having more than one key group allows for the use of `Shamir's secret sharing <https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing>`__
+which splits the file's encryption key up into multiple parts,
+requiring more than one identity to access the file.
+
+A key group supports the following keys:
+
+* ``kms`` (list of objects): list of AWS master keys.
+  Every object must have the following keys:
+
+  * ``arn`` (string): the ARN of the master key.
+
+  * ``role`` (string, can be omitted): the key's role.
+
+  * ``context`` (object mapping strings to strings): the key's encryption context.
+
+  * ``aws_profile`` (string): the AWS profile.
+
+  Example:
+
+  .. code:: yaml
+
+    - arn: arn:aws:kms:us-west-2:927034868273:key/fe86dd69-4132-404c-ab86-4269956b4500
+      role: arn:aws:iam::927034868273:role/sops-dev-xyz
+      context:
+        Environment: production
+        Role: web-server
+      aws_profile: foo
+
+* ``gcp_kms`` (list of objects): list of GCP KMS resource IDs.
+  Every object must have the following key:
+
+  * ``resource_id`` (string): the resource ID.
+
+  Example:
+
+  .. code:: yaml
+
+    - resource_id: projects/mygcproject/locations/global/keyRings/mykeyring/cryptoKeys/thekey
+
+* ``azure_keyvault`` (list of objects): list of Azure Key Vault resource identifiers.
+  Every object must have the following keys:
+
+  * ``vaultUrl`` (string): the vault URL.
+
+  * ``key`` (string): the key name.
+
+  * ``version`` (string, can be empty): the version of the key to use.
+    If empty, the latest key will be used on encryption.
+
+  Example:
+
+  .. code:: yaml
+
+    - vaultUrl: https://vault.url
+      key: key-name
+      version: key-version
+    - vaultUrl: https://vault.url
+      key: key-name
+      version: ""
+
+* ``hc_vault`` (list of strings): list of HashiCorp Vault transit URIs.
+
+* ``age`` (list of strings): list of Age public keys.
+
+* ``pgp`` (list of strings): list of PGP/GPG key fingerprints.
+
+* ``merge``: a list of key group objects.
+  These will be merged (by concatenating the keys of the same type) into this key group.
+  This property allows for the concatenation of key groups using YAML anchors, aliases, and overrides.
+
+Settings
+********
+
+The following keys configure encryption settings:
+
+* ``shamir_threshold`` (integer, default ``0``): Must be ``0`` (disabled) or an integer greater or equal to 2.
+  Determines the number of key groups that must be present each to decrypt the file's key.
+
+* ``mac_only_encrypted`` (boolean, default ``false``): If set to ``true``, only encrypted strings will count towards the file's MAC.
+  If set to ``false``, unencrypted values will also be part of the MAC computation.
+
+The following keys configure the specific values in a file that should be encrypted.
+Note that at most, one of these keys can be used.
+
+* ``unencrypted_suffix`` (string): A value is encrypted if its key **does not** end with this suffix.
+  All other values are **encrypted**.
+  Comments are always encrypted.
+
+* ``encrypted_suffix`` (string): A value is encrypted if its key **does** end with this suffix.
+  All other values are **not encrypted**.
+  Comments are always encrypted.
+
+* ``unencrypted_regex`` (string): A value is encrypted if its key **does not match** this regular expression.
+  All other values are **encrypted**.
+  Comments are always encrypted.
+
+* ``encrypted_regex`` (string): A value is encrypted if its key **matches** this regular expression.
+  All other values are **not encrypted**.
+  Comments are always encrypted.
+
+* ``unencrypted_comment_regex`` (string): A value or comment is not encrypted if it has a preceding comment (or a trailing comment on the same line) matching this regular expression.
+  All other values and comments are encrypted.
+
+* ``encrypted_comment_regex`` (string): A value or comment is encrypted if it has a preceding comment (or a trailing comment on the same line) matching this regular expression.
+  All other comments and values are not encrypted.
+  The matching comment itself is not encrypted.
+
+Destination rule object
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Not yet documented.
+
+.. TODO!
+.. type destinationRule struct {
+..     PathRegex        string       `yaml:"path_regex"`
+..     S3Bucket         string       `yaml:"s3_bucket"`
+..     S3Prefix         string       `yaml:"s3_prefix"`
+..     GCSBucket        string       `yaml:"gcs_bucket"`
+..     GCSPrefix        string       `yaml:"gcs_prefix"`
+..     VaultPath        string       `yaml:"vault_path"`
+..     VaultAddress     string       `yaml:"vault_address"`
+..     VaultKVMountName string       `yaml:"vault_kv_mount_name"`
+..     VaultKVVersion   int          `yaml:"vault_kv_version"`
+..     RecreationRule   creationRule `yaml:"recreation_rule,omitempty"`
+..     OmitExtensions   bool         `yaml:"omit_extensions"`
+.. }
+
+Stores configuration object
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The store configuration object can have the following keys:
+
+* ``dotenv``: this is an object. Right now no keys are supported.
+
+* ``ini``: this is an object. Right now no keys are supported.
+
+* ``json_binary``: this is an object, supporting the following keys:
+
+  * ``indent`` (integer; default ``-1``): the indentation to use in number of spaces.
+    ``0`` means no indentation (everything will be in one line),
+    and ``-1`` means indentation by a single tabulator character.
+
+* ``json``: this is an object, supporting the following keys:
+
+  * ``indent`` (integer; default ``-1``): the indentation to use in number of spaces.
+    ``0`` means no indentation (everything will be in one line),
+    and ``-1`` means indentation by a single tabulator character.
+
+* ``yaml``: this is an object, supporting the following keys:
+
+  * ``indent`` (integer; default ``4``): the indentation to use in number of spaces.
+    The YAML emitter used by sops only supports values between ``2`` and ``9``.
+    If you specify ``1``, or ``10`` and larger, the indent will be ``2``.
 
 Encryption Protocol
 -------------------
@@ -1811,9 +2138,9 @@ automation, we found this to be a hard problem with a number of prerequisites:
    git repo, jenkins and S3) and only be decrypted on the target
    systems
 
-SOPS can be used to encrypt YAML, JSON and BINARY files. In BINARY mode, the
+SOPS can be used to encrypt YAML, JSON, ENV, INI, and BINARY files. In BINARY mode, the
 content of the file is treated as a blob, the same way PGP would encrypt an
-entire file. In YAML and JSON modes, however, the content of the file is
+entire file. In YAML, JSON, ENV, and INI modes, however, the content of the file is
 manipulated as a tree where keys are stored in cleartext, and values are
 encrypted. hiera-eyaml does something similar, and over the years we learned
 to appreciate its benefits, namely:
