@@ -103,6 +103,15 @@ build-and-run-interactive:
 		-v "./:/app/src/autograph" \
 		mozilla/autograph:latest /bin/bash
 
+# using unit-test configuration build the docker image,
+# and run it locally with our source code mounted under /app/src/autograph
+# run as root to allow for changes, package installs, etc
+build-and-run-test-interactive:
+	docker compose build
+	docker compose up -d db
+	docker compose up -d app
+	docker compose run --entrypoint /bin/bash -v "$(pwd):/app/src/autograph" -u 0:0 unit-test
+
 # pull the docker image, and run it locally with our source code mounted under /app/src/autograph
 # run as root to allow for changes, package installs, etc
 pull-and-run-interactive:
