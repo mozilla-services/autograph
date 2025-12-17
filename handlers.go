@@ -129,13 +129,13 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	// Default max request body size set to 1.5GB
 	var maxBodySizeMB int64 = 1500
 	if os.Getenv("MAX_BODY_SIZE_IN_MB") != "" {
-		maxBodySizeMB, err = strconv.ParseInt(os.Getenv("MAX_BODY_SIZE_IN_MB"), 10, 64)
+		maxBodySizeMB, err = strconv.ParseInt(os.Getenv("MAX_BODY_SIZE_IN_MB"), 10, 0)
 		if err != nil {
 			log.Fatalf("Error parsing environment variable MAX_BODY_SIZE_IN_MB: %s", err)
 		}
 	}
-	var maxBodySizeBytes int = int(maxBodySizeMB) * 1000000
-	if len(body) > maxBodySizeBytes {
+	maxBodySizeBytes := maxBodySizeMB * 1000000
+	if int64(len(body)) > maxBodySizeBytes {
 		httpError(w, r, http.StatusBadRequest, "request exceeded max size of %d B", maxBodySizeBytes)
 		return
 	}
