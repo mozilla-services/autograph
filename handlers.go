@@ -126,9 +126,17 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusBadRequest, "empty or invalid request request body")
 		return
 	}
-	if len(body) > 1048576000 {
-		// the max body size is hardcoded to 1GB. Seriously, what are you trying to sign?
-		httpError(w, r, http.StatusBadRequest, "request exceeds max size of 1GB")
+	// Default max request body size set to 1.5GB
+	var maxBodySizeMB int64 = 1500
+	if os.Getenv("MAX_BODY_SIZE_IN_MB") != "" {
+		maxBodySizeMB, err = strconv.ParseInt(os.Getenv("MAX_BODY_SIZE_IN_MB"), 10, 0)
+		if err != nil {
+			log.Fatalf("Error parsing environment variable MAX_BODY_SIZE_IN_MB: %s", err)
+		}
+	}
+	maxBodySizeBytes := maxBodySizeMB * 1000000
+	if int64(len(body)) > maxBodySizeBytes {
+		httpError(w, r, http.StatusBadRequest, "request exceeded max size of %d B", maxBodySizeBytes)
 		return
 	}
 	err = a.authorizeBody(auth, r, body)

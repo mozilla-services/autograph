@@ -20,6 +20,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -233,10 +234,11 @@ func TestBadRequest(t *testing.T) {
 	}
 }
 
-func TestRequestTooLarge(t *testing.T) {
+func TestRequestJustLargeEnough(t *testing.T) {
 	ag, conf := newTestAutographer(t)
+	os.Setenv("MAX_BODY_SIZE_IN_MB", "1")
 
-	blob := strings.Repeat("foobar", 200)
+	blob := strings.Repeat("foobar", 166666)
 	body := strings.NewReader(blob)
 	req, err := http.NewRequest("GET", "http://foo.bar/sign/data", body)
 	if err != nil {
@@ -257,8 +259,49 @@ func TestRequestTooLarge(t *testing.T) {
 	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
 	ag.handleSignature(w, req)
+
+	reqBody := w.Body.String()
 	if w.Code != http.StatusBadRequest {
-		t.Fatalf("large request should have failed, but succeeded with %d: %s", w.Code, w.Body.String())
+		t.Fatalf("large request should have failed, but succeeded with %d: %s", w.Code, reqBody)
+	}
+	if !strings.Contains(reqBody, "failed to parse request body") {
+		// Expected an error to be thrown during unmarshal in handleSignature
+		t.Fatalf("expected \"failed to parse request body\" but got another error. %d: %s", w.Code, reqBody)
+	}
+}
+
+func TestRequestTooLarge(t *testing.T) {
+	ag, conf := newTestAutographer(t)
+	os.Setenv("MAX_BODY_SIZE_IN_MB", "1")
+
+	blob := strings.Repeat("foobar", 166667)
+	body := strings.NewReader(blob)
+	req, err := http.NewRequest("GET", "http://foo.bar/sign/data", body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	authheader := getAuthHeader(req,
+		auth.ID,
+		auth.Key,
+		sha256.New, id(),
+		"application/json",
+		[]byte(blob))
+	req.Header.Set("Authorization", authheader)
+	w := httptest.NewRecorder()
+	ag.handleSignature(w, req)
+
+	reqBody := w.Body.String()
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("large request should have failed, but succeeded with %d: %s", w.Code, reqBody)
+	}
+	if !strings.Contains(reqBody, "request exceeded max size") {
+		t.Fatalf("expected \"request exceeded max size\" but got another error. %d: %s", w.Code, reqBody)
 	}
 }
 
