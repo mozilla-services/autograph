@@ -19,6 +19,7 @@ RUN apt-get update && \
         libncurses5 \
         devscripts \
         apksigner \
+        rpm \
         gcc \
         g++ \
         libc6-dev \

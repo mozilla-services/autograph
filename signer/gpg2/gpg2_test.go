@@ -47,8 +47,8 @@ func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *GPG2Sig
 		t.Fatalf("signer initialization failed to create keyring in signer temp dir")
 	}
 
-	// check for gpg.conf written for debsign
-	if s.Mode == ModeDebsign {
+	// check for gpg.conf written for debsign and rpmsign
+	if s.Mode == ModeDebsign || s.Mode == ModeRPMSign {
 		foundConf := false
 		for _, filename := range matches {
 			if filepath.Base(filename) == gpgConfFilename {
@@ -56,7 +56,7 @@ func assertNewSignerWithConfOK(t *testing.T, conf signer.Configuration) *GPG2Sig
 			}
 		}
 		if !foundConf {
-			t.Fatalf("signer initialization failed to create gpg.conf in signer temp dir for debsign")
+			t.Fatalf("signer initialization failed to create gpg.conf in signer temp dir for %s", s.Mode)
 		}
 	}
 
@@ -137,6 +137,55 @@ func assertClearSignedFilesVerify(t *testing.T, signer *GPG2Signer, testname str
 			t.Fatalf("error verifying detached sig: %s\n%s", err, out)
 		}
 		t.Logf("GnuPG PGP signature verification output:\n%s\n", out)
+	}
+}
+
+func assertRPMSignedFilesVerify(t *testing.T, signer *GPG2Signer, testname string, signedFiles []signer.NamedSignedFile) {
+	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("autograph_gpg2_test_%s_", testname))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	publicKeyPath := filepath.Join(tmpDir, "gpg2_publickey.asc")
+	err = os.WriteFile(publicKeyPath, []byte(signer.PublicKey), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rpmInitDB := exec.Command("rpm", "--dbpath", tmpDir, "--initdb")
+	out, err := rpmInitDB.CombinedOutput()
+	if err != nil {
+		t.Fatalf("failed to initialize rpm database: %s\n%s", err, out)
+	}
+
+	rpmImportKey := exec.Command("rpm",
+		"--dbpath", tmpDir,
+		"--import", publicKeyPath)
+	out, err = rpmImportKey.CombinedOutput()
+	if err != nil {
+		t.Fatalf("failed to import public key into rpm keyring: %s\n%s", err, out)
+	}
+
+	for _, signedFile := range signedFiles {
+		signedFilePath := filepath.Join(tmpDir, signedFile.Name)
+		err = os.WriteFile(signedFilePath, signedFile.Bytes, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rpmVerifySig := exec.Command("rpm",
+			"--dbpath", tmpDir,
+			"-K", signedFilePath)
+		out, err = rpmVerifySig.CombinedOutput()
+		if err != nil {
+			t.Fatalf("error verifying rpm signature: %s\n%s", err, out)
+		}
+
+		if !strings.Contains(string(out), "digests signatures OK") {
+			t.Fatalf("rpm signature verification failed: %s", out)
+		}
+		t.Logf("RPM signature verification output:\n%s\n", out)
 	}
 }
 
@@ -417,10 +466,10 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				Configuration: randompgpGPG2SignerConf,
 			},
 			wantErr:    true,
-			wantErrStr: "gpg2: can only sign multiple files in debsign mode",
+			wantErrStr: "gpg2: can only sign multiple files in debsign or rpmsign mode",
 		},
 		{
-			name: "errors for invalid file extensions",
+			name: "debsign errors for invalid file extensions",
 			fields: fields{
 				Configuration: pgpsubkeyDebsignSignerConf,
 			},
@@ -438,7 +487,45 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				options: nil,
 			},
 			wantErr:    true,
-			wantErrStr: "gpg2: cannot sign file 1. Files missing extension .buildinfo, .dsc, or .changes",
+			wantErrStr: "gpg2: cannot sign file 1. File missing extension .buildinfo, .dsc, or .changes",
+		},
+		{
+			name: "rpmsign errors for invalid file extensions",
+			fields: fields{
+				Configuration: pgpsubkeyRPMSignSignerConf,
+			},
+			args: args{
+				inputs: []signer.NamedUnsignedFile{
+					{
+						Name:  "foo.rpm",
+						Bytes: []byte(""),
+					},
+					{
+						Name:  "bar.exe",
+						Bytes: []byte(""),
+					},
+				},
+				options: nil,
+			},
+			wantErr:    true,
+			wantErrStr: "gpg2: cannot sign file 1. File missing extension .rpm",
+		},
+		{
+			name: "rpmsign errors for .dsc file",
+			fields: fields{
+				Configuration: pgpsubkeyRPMSignSignerConf,
+			},
+			args: args{
+				inputs: []signer.NamedUnsignedFile{
+					{
+						Name:  "foo.dsc",
+						Bytes: []byte(""),
+					},
+				},
+				options: nil,
+			},
+			wantErr:    true,
+			wantErrStr: "gpg2: cannot sign file 0. File missing extension .rpm",
 		},
 		{
 			name: "errors for unsupported .commands file",
@@ -472,10 +559,10 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				options: nil,
 			},
 			wantErr:       true,
-			wantErrPrefix: "gpg2: failed to debsign inputs exit status 1\ndebsign: Can't find or can't read dsc file",
+			wantErrPrefix: "gpg2: failed to debsign inputs: exit status 1\ndebsign: Can't find or can't read dsc file",
 		},
 		{
-			name: "empty files ok",
+			name: "debsign empty files ok",
 			fields: fields{
 				Configuration: pgpsubkeyDebsignSignerConf,
 			},
@@ -484,6 +571,34 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				options: nil,
 			},
 			wantErr: false,
+		},
+		{
+			name: "rpmsign empty files ok",
+			fields: fields{
+				Configuration: pgpsubkeyRPMSignSignerConf,
+			},
+			args: args{
+				inputs:  []signer.NamedUnsignedFile{},
+				options: nil,
+			},
+			wantErr: false,
+		},
+		{
+			name: "rpmsign errors on invalid rpm file",
+			fields: fields{
+				Configuration: pgpsubkeyRPMSignSignerConf,
+			},
+			args: args{
+				inputs: []signer.NamedUnsignedFile{
+					{
+						Name:  "invalid.rpm",
+						Bytes: []byte("not a valid rpm file"),
+					},
+				},
+				options: nil,
+			},
+			wantErr:       true,
+			wantErrPrefix: "gpg2: failed to rpmsign inputs",
 		},
 		{
 			name: fmt.Sprintf("signer %s in mode %s ok", randompgpDebsignSignerConf.ID, randompgpDebsignSignerConf.Mode),
@@ -503,6 +618,17 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 			},
 			args: args{
 				inputs:  sphinxDebsignInputs,
+				options: nil,
+			},
+			wantErr: false,
+		},
+		{
+			name: fmt.Sprintf("signer %s in mode %s ok", randompgpRPMSignSignerConf.ID, randompgpRPMSignSignerConf.Mode),
+			fields: fields{
+				Configuration: randompgpRPMSignSignerConf,
+			},
+			args: args{
+				inputs:  testpkgRPMSignInputs,
 				options: nil,
 			},
 			wantErr: false,
@@ -537,7 +663,12 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				}
 			}
 
-			assertClearSignedFilesVerify(t, s, "verify-debsigned-files", gotSignedFiles)
+			switch s.Mode {
+			case ModeDebsign:
+				assertClearSignedFilesVerify(t, s, "verify-debsigned-files", gotSignedFiles)
+			case ModeRPMSign:
+				assertRPMSignedFilesVerify(t, s, "verify-rpmsigned-files", gotSignedFiles)
+			}
 			matches, err := filepath.Glob(filepath.Join(s.tmpDir, "sign_files*", "*"))
 			if err != nil {
 				t.Fatal(err)
@@ -577,6 +708,16 @@ var randompgpDebsignSignerConf = signer.Configuration{
 	PublicKey:  randompgpPublicKey,
 }
 
+var randompgpRPMSignSignerConf = signer.Configuration{
+	ID:         "gpg2test-randompgp-rpmsign",
+	Type:       Type,
+	Mode:       ModeRPMSign,
+	KeyID:      "A2910E4FBEA076009BCDE536DD0A5D99AAAB1F1A",
+	Passphrase: "abcdef123",
+	PrivateKey: randompgpPrivateKey,
+	PublicKey:  randompgpPublicKey,
+}
+
 //go:embed "test/fixtures/pgpsubkey.key"
 var pgpsubkeyPrivateKey string
 
@@ -609,6 +750,16 @@ var sphinxDebsignInputs = []signer.NamedUnsignedFile{
 	},
 }
 
+//go:embed "test/fixtures/testpkg-1.0-1.x86_64.rpm"
+var testpkgRPM []byte
+
+var testpkgRPMSignInputs = []signer.NamedUnsignedFile{
+	{
+		Name:  "testpkg-1.0-1.x86_64.rpm",
+		Bytes: testpkgRPM,
+	},
+}
+
 var pgpsubkeyGPG2SignerConf = signer.Configuration{
 	ID:         "gpg2test",
 	Type:       Type,
@@ -629,9 +780,21 @@ var pgpsubkeyDebsignSignerConf = signer.Configuration{
 	PublicKey:  pgpsubkeyPublicKey,
 }
 
+var pgpsubkeyRPMSignSignerConf = signer.Configuration{
+	ID:         "pgpsubkey-rpmsign",
+	Type:       Type,
+	Mode:       ModeRPMSign,
+	KeyID:      "1D02D42C7C2086373E2B7D8ED01EF1FA33C6BAEB",
+	Passphrase: "abcdef123",
+	PrivateKey: pgpsubkeyPrivateKey,
+	PublicKey:  pgpsubkeyPublicKey,
+}
+
 var validSignerConfigs = []signer.Configuration{
 	randompgpGPG2SignerConf,
 	randompgpDebsignSignerConf,
+	randompgpRPMSignSignerConf,
 	pgpsubkeyGPG2SignerConf,
 	pgpsubkeyDebsignSignerConf,
+	pgpsubkeyRPMSignSignerConf,
 }
