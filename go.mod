@@ -17,7 +17,7 @@ require (
 	github.com/miekg/pkcs11 v1.0.3
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c
 	github.com/prometheus/client_golang v1.23.2
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/youtube/vitess v2.1.1+incompatible
 	go.mozilla.org/cose v0.0.0-20200221144611-2ea72a6b3de3
 	go.mozilla.org/hawk v0.0.0-20190327210923-a483e4a7047e
