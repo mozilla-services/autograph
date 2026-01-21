@@ -64,11 +64,8 @@ signature:
     signature. In practice, this file usually contains three
     certificates: the end-entity that issues the content signature, the
     intermediate issuer and the root of the Firefox private PKI. Firefox
-    is configured to only accept signatures from the private PKI, as
-    controlled via the
-    `security.content.signature.root_hash` preference, where
-    the value is the hexadecimal of the sha256 of the DER of the root
-    certificate.
+    is configured to only accept signatures from the private PKI, which
+    is hard-coded in Firefox (https://bugzilla.mozilla.org/1846866).
 
 When Firefox verifies a content signature, it first retrieves the X5U
 and checks the signature validity using the end-entity certificate, the

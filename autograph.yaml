@@ -76,6 +76,11 @@ signers:
     # with Firefox, set security.content.signature.root_hash to
     # 5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE
     #
+    # NOTE: The above comment is only valid for Firefox <= 102.
+    # In Firefox 103+ (bug 1769669), roots are hard-coded in Firefox and the
+    # chosen root is dependent on the app.normandy.api_url pref, see
+    # https://searchfox.org/mozilla-central/rev/2bf90dc51ce7e8274ce208fbb9d68b3ff535185e/toolkit/components/normandy/lib/NormandyApi.sys.mjs#15-30
+    #
     # Note the private key of the root was not saved. Use tools/genpki to
     # make a new config as needed.
     - id: normandy
@@ -127,6 +132,11 @@ signers:
     # valid for remote-settings.content-signature.mozilla.org. To use this
     # with Firefox, set security.content.signature.root_hash to
     # 5E:36:F2:14:DE:82:3F:8B:29:96:89:23:5F:03:41:AC:AF:A0:75:AF:82:CB:4C:D4:30:7C:3D:B3:43:39:2A:FE
+    #
+    # NOTE: The above comment is only valid for Firefox <= 102.
+    # In Firefox 103+ (bug 1769669), roots are hard-coded in Firefox and the
+    # chosen root is dependent on multiple conditions, see
+    # https://searchfox.org/mozilla-central/rev/2bf90dc51ce7e8274ce208fbb9d68b3ff535185e/services/settings/Utils.sys.mjs#53-76,97-101,110-124
     #
     # Note the private key of the root was not saved. Use tools/genpki to
     # make a new config as needed.
