@@ -20,6 +20,7 @@ import (
 type MockPKCS11Context struct {
 	ctrl     *gomock.Controller
 	recorder *MockPKCS11ContextMockRecorder
+	isgomock struct{}
 }
 
 // MockPKCS11ContextMockRecorder is the mock recorder for MockPKCS11Context.
@@ -347,17 +348,21 @@ func (mr *MockPKCS11ContextMockRecorder) GetTokenInfo(slotID any) *gomock.Call {
 }
 
 // Initialize mocks base method.
-func (m *MockPKCS11Context) Initialize() error {
+func (m *MockPKCS11Context) Initialize(opts ...pkcs11.InitializeOption) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Initialize")
+	varargs := []any{}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Initialize", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Initialize indicates an expected call of Initialize.
-func (mr *MockPKCS11ContextMockRecorder) Initialize() *gomock.Call {
+func (mr *MockPKCS11ContextMockRecorder) Initialize(opts ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Initialize", reflect.TypeOf((*MockPKCS11Context)(nil).Initialize))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Initialize", reflect.TypeOf((*MockPKCS11Context)(nil).Initialize), opts...)
 }
 
 // Login mocks base method.
