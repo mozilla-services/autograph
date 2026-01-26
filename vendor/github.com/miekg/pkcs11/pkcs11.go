@@ -2,7 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:generate go run const_generate.go
+
 // Package pkcs11 is a wrapper around the PKCS#11 cryptographic library.
+// Latest version of the specification:
+// http://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/pkcs11-base-v2.40.html
 package pkcs11
 
 // It is *assumed*, that:
@@ -14,7 +18,7 @@ package pkcs11
 #cgo windows CFLAGS: -DPACKED_STRUCTURES
 #cgo linux LDFLAGS: -ldl
 #cgo darwin LDFLAGS: -ldl
-#cgo openbsd LDFLAGS: -ldl
+#cgo openbsd LDFLAGS:
 #cgo freebsd LDFLAGS: -ldl
 
 #include <stdlib.h>
@@ -102,11 +106,12 @@ void Destroy(struct ctx *c)
 }
 #endif
 
-CK_RV Initialize(struct ctx * c)
+CK_RV Initialize(struct ctx * c, CK_FLAGS flags, CK_VOID_PTR reserved)
 {
 	CK_C_INITIALIZE_ARGS args;
 	memset(&args, 0, sizeof(args));
-	args.flags = CKF_OS_LOCKING_OK;
+	args.flags = flags;
+	args.pReserved = reserved;
 	return c->sym->C_Initialize(&args);
 }
 
@@ -770,9 +775,10 @@ static inline CK_VOID_PTR getAttributePval(CK_ATTRIBUTE_PTR a)
 
 */
 import "C"
-import "strings"
-
-import "unsafe"
+import (
+	"strings"
+	"unsafe"
+)
 
 // Ctx contains the current pkcs11 context.
 type Ctx struct {
@@ -800,9 +806,36 @@ func (c *Ctx) Destroy() {
 	c.ctx = nil
 }
 
+type initializeArgs struct {
+	flags    uint
+	reserved unsafe.Pointer
+}
+
+// An InitializeOption modifies the default behavior of Initialize.
+type InitializeOption func(*initializeArgs)
+
+// InitializeWithFlags sets the flags field in CK_C_INITIALIZE_ARGS.
+// Note that flags defaults to CKF_OS_LOCKING_OK if this option is not provided.
+func InitializeWithFlags(flags uint) InitializeOption {
+	return func(args *initializeArgs) {
+		args.flags = flags
+	}
+}
+
+// InitializeWithReserved sets the pReserved field in CK_C_INITIALIZE_ARGS.
+func InitializeWithReserved(reserved unsafe.Pointer) InitializeOption {
+	return func(args *initializeArgs) {
+		args.reserved = reserved
+	}
+}
+
 // Initialize initializes the Cryptoki library.
-func (c *Ctx) Initialize() error {
-	e := C.Initialize(c.ctx)
+func (c *Ctx) Initialize(opts ...InitializeOption) error {
+	args := initializeArgs{flags: CKF_OS_LOCKING_OK}
+	for _, o := range opts {
+		o(&args)
+	}
+	e := C.Initialize(c.ctx, C.CK_FLAGS(args.flags), C.CK_VOID_PTR(args.reserved))
 	return toError(e)
 }
 
