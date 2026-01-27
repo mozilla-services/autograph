@@ -31,6 +31,9 @@ const (
 	// ModeDebsign represents a signer that signs files with debsign
 	ModeDebsign = "debsign"
 
+	// ModeRPMSign represents a signer that signs RPM files with rpmsign
+	ModeRPMSign = "rpmsign"
+
 	keyRingFilename = "autograph_gpg2_keyring.gpg"
 	gpgConfFilename = "gpg.conf"
 
@@ -101,11 +104,12 @@ func New(conf signer.Configuration, tmpDirPrefix string) (s *GPG2Signer, err err
 
 	switch conf.Mode {
 	case ModeDebsign:
+	case ModeRPMSign:
 	case ModeGPG2:
 	case "": // default to signing in gpg2 mode to preserve backwards compat with old config files
 		conf.Mode = ModeGPG2
 	default:
-		return nil, fmt.Errorf("gpg2: unknown signer mode %q, must be 'gpg2', or 'debsign'", conf.Mode)
+		return nil, fmt.Errorf("gpg2: unknown signer mode %q, must be 'gpg2', 'debsign', or 'rpmsign'", conf.Mode)
 	}
 	s.Mode = conf.Mode
 
@@ -136,9 +140,9 @@ func New(conf signer.Configuration, tmpDirPrefix string) (s *GPG2Signer, err err
 		return nil, fmt.Errorf("gpg2: error creating keyring: %w", err)
 	}
 
-	// debsign lets us to specify a gpg program name (gpg or
-	// gpg2), but not args. We use a config file to sent them.
-	if s.Mode == ModeDebsign {
+	// debsign and rpmsign invoke GPG for signing. We configure GPG
+	// via gpg.conf in $GNUPGHOME since we can't pass args directly to either tool.
+	if s.Mode == ModeDebsign || s.Mode == ModeRPMSign {
 		// write gpg.conf after importing keys, so gpg doesn't try to read stdin for key imports
 		if err = writeGPGConf(s.tmpDir); err != nil {
 			return nil, fmt.Errorf("error writing gpg conf: %w", err)
@@ -371,11 +375,12 @@ func (s *GPG2Signer) GetDefaultOptions() interface{} {
 	return Options{}
 }
 
-// SignFiles uses debsign to gpg2 clearsign multiple named
-// *.buildinfo, *.dsc, or *.changes files
+// SignFiles uses debsign or rpmsign to sign multiple named files.
+// In debsign mode: signs *.buildinfo, *.dsc, or *.changes files (clearsign)
+// In rpmsign mode: signs *.rpm files (embedded signature)
 func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interface{}) (signedFiles []signer.NamedSignedFile, err error) {
-	if s.Mode != ModeDebsign {
-		err = fmt.Errorf("gpg2: can only sign multiple files in %s mode", ModeDebsign)
+	if s.Mode != ModeDebsign && s.Mode != ModeRPMSign {
+		err = fmt.Errorf("gpg2: can only sign multiple files in %s or %s mode", ModeDebsign, ModeRPMSign)
 		return
 	}
 
@@ -384,7 +389,7 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 	// of this directory.
 	inputsTmpDir, err := os.MkdirTemp(s.tmpDir, "sign_files")
 	if err != nil {
-		err = fmt.Errorf("gpg2: error creating tempdir for debsign: %w", err)
+		err = fmt.Errorf("gpg2: error creating tempdir for %s signing: %w", s.Mode, err)
 		return
 	}
 	defer func() {
@@ -397,13 +402,20 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 	var inputFilePaths []string
 	for i, input := range inputs {
 		ext := filepath.Ext(input.Name)
-		if !(ext == ".buildinfo" || ext == ".dsc" || ext == ".changes") {
-			return nil, fmt.Errorf("gpg2: cannot sign file %d. Files missing extension .buildinfo, .dsc, or .changes", i)
+		switch s.Mode {
+		case ModeDebsign:
+			if !(ext == ".buildinfo" || ext == ".dsc" || ext == ".changes") {
+				return nil, fmt.Errorf("gpg2: cannot sign file %d. File missing extension .buildinfo, .dsc, or .changes", i)
+			}
+		case ModeRPMSign:
+			if ext != ".rpm" {
+				return nil, fmt.Errorf("gpg2: cannot sign file %d. File missing extension .rpm", i)
+			}
 		}
 		inputFilePath := filepath.Join(inputsTmpDir, input.Name)
 		err := os.WriteFile(inputFilePath, input.Bytes, 0644)
 		if err != nil {
-			return nil, fmt.Errorf("gpg2: failed to write tempfile %d for debsign to sign: %w", i, err)
+			return nil, fmt.Errorf("gpg2: failed to write tempfile %d for %s to sign: %w", i, s.Mode, err)
 		}
 		inputFilePaths = append(inputFilePaths, inputFilePath)
 	}
@@ -412,50 +424,83 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 	serializeSigning.Lock()
 	defer serializeSigning.Unlock()
 
-	args := append([]string{
-		// "Do not read any configuration files. This can only be used as the first option given on the command-line."
-		"--no-conf",
-		// "Specify the key ID to be used for signing; overrides any -m and -e options."
-		// debsign prefers the pub key fingerprint: https://github.com/Debian/devscripts/blob/16f9a6d24f4bd564c315f81b89e08c3b4fb76f13/scripts/debsign.sh#L389
-		"-k", s.KeyID,
-		// "Recreate signature"
-		"--re-sign",
-	}, inputFilePaths...)
-	debsignCmd := exec.Command("debsign", args...)
-	debsignCmd.Env = append(os.Environ(),
-		fmt.Sprintf("GNUPGHOME=%s", s.tmpDir),
-	)
-	stdin, err := debsignCmd.StdinPipe()
-	if err != nil {
-		return nil, fmt.Errorf("gpg2: failed to create stdin pipe for debsign cmd: %w", err)
+	var cmd *exec.Cmd
+	var passphraseRepeat int
+
+	switch s.Mode {
+	case ModeDebsign:
+		args := append([]string{
+			// "Do not read any configuration files. This can only be used as the first option given on the command-line."
+			"--no-conf",
+			// "Specify the key ID to be used for signing; overrides any -m and -e options."
+			// debsign prefers the pub key fingerprint: https://github.com/Debian/devscripts/blob/16f9a6d24f4bd564c315f81b89e08c3b4fb76f13/scripts/debsign.sh#L389
+			"-k", s.KeyID,
+			// "Recreate signature"
+			"--re-sign",
+		}, inputFilePaths...)
+		cmd = exec.Command("debsign", args...)
+		// debsign can call gpg multiple times per file
+		passphraseRepeat = len(inputFilePaths) * 4
+	case ModeRPMSign:
+		// We pass passphrase-fd 3 via _gpg_sign_cmd_extra_args to override
+		// passphrase-fd 0 from gpg.conf. This is because rpmsign uses stdin
+		// to pipe header data to GPG for signing but not the passphrase. Having
+		// passphrase-fd 0 in gpg.conf causes GPG to consume header data as passphrase,
+		// corrupting the data getting signed since the start will be omitted.
+		// We set up fd 3 ourselves via cmd.ExtraFiles and pass the passphrase through that.
+		// See https://github.com/rpm-software-management/rpm/blob/4623d4601ee83b5e0ecd16dd3f54d2182b519b30/sign/rpmgensig.c#L254
+		args := append([]string{
+			"--addsign",
+			"--key-id", s.KeyID,
+			"--define", "__gpg /usr/bin/gpg",
+			"--define", "_gpg_sign_cmd_extra_args --passphrase-fd 3",
+		}, inputFilePaths...)
+		cmd = exec.Command("rpmsign", args...)
+		// rpmsign calls gpg once per file
+		passphraseRepeat = len(inputFilePaths)
 	}
 
-	// write passphrase multiple times to stdin
-	// our gpg.conf prompts for the passphrase on each gpg call
-	// and debsign can call gpg multiple times per file
-	passphrasesForStdin := strings.Repeat(fmt.Sprintf("%s\n", s.passphrase), len(inputFilePaths)*4)
-	if _, err = io.WriteString(stdin, passphrasesForStdin); err != nil {
-		return nil, fmt.Errorf("gpg2: failed to write passphrase to stdin pipe for debsign cmd: %w", err)
-	}
-	if err = stdin.Close(); err != nil {
-		return nil, fmt.Errorf("gpg2: failed to close to stdin pipe for debsign cmd: %w", err)
-	}
-	out, err := debsignCmd.CombinedOutput()
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("GNUPGHOME=%s", s.tmpDir),
+	)
+
+	passphraseReader, passphraseWriter, err := os.Pipe()
 	if err != nil {
-		return nil, fmt.Errorf("gpg2: failed to debsign inputs %s\n%s", err, out)
+		return nil, fmt.Errorf("gpg2: failed to create %s passphrase pipe: %w", s.Mode, err)
+	}
+	defer passphraseReader.Close()
+
+	// Write passphrase to pipe (multiple times, once per signing operation)
+	passphrases := strings.Repeat(fmt.Sprintf("%s\n", s.passphrase), passphraseRepeat)
+	if _, err = io.WriteString(passphraseWriter, passphrases); err != nil {
+		passphraseWriter.Close()
+		return nil, fmt.Errorf("gpg2: failed to write %s passphrase to pipe: %w", s.Mode, err)
+	}
+	passphraseWriter.Close()
+
+	// For rpmsign, pass passphrase via fd 3, for debsign via fd 0 (stdin)
+	if s.Mode == ModeRPMSign {
+		cmd.ExtraFiles = []*os.File{passphraseReader}
+	} else {
+		cmd.Stdin = passphraseReader
+	}
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("gpg2: failed to %s inputs: %w\n%s", s.Mode, err, out)
 	}
 
 	// read the signed tempfiles
 	for i, inputFilePath := range inputFilePaths {
 		signedFileBytes, err := os.ReadFile(inputFilePath)
 		if err != nil {
-			return nil, fmt.Errorf("gpg2: failed to read %d %q signed by debsign: %w", i, inputFilePath, err)
+			return nil, fmt.Errorf("gpg2: failed to read %d %q signed by %s: %w", i, inputFilePath, s.Mode, err)
 		}
 		signedFiles = append(signedFiles, signer.NamedSignedFile{
 			Name:  inputs[i].Name,
 			Bytes: signedFileBytes,
 		})
 	}
-	log.Debugf("debsign output:\n%s\n", string(out))
+	log.Debugf("%s output:\n%s\n", s.Mode, string(out))
 	return signedFiles, nil
 }
