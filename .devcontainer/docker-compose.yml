@@ -1,0 +1,40 @@
+volumes:
+  apptmpdir:
+  hsmtmpdir:
+services:
+  db:
+    extends:
+      service: db
+      file: ../docker-compose.yml
+  app:
+    extends:
+      service: app
+      file: ../docker-compose.yml
+    volumes:
+      - apptmpdir:/tmp/
+      - ../:/workspace
+  app-hsm:
+    extends:
+      service: app-hsm
+      file: ../docker-compose.yml
+    volumes:
+      - hsmtmpdir:/tmp/
+      - ../:/workspace
+  # We don't really need these for dev work
+  #  but will keep these commented out just in case
+  # monitor:
+  #   extends:
+  #     service: monitor
+  #     file: ../docker-compose.yml
+  # monitor-lambda-emulator:
+  #   extends:
+  #     service: monitor-lambda-emulator
+  #     file: ../docker-compose.yml
+  # monitor-hsm-lambda-emulator:
+  #   extends:
+  #     service: monitor-hsm-lambda-emulator
+  #     file: ../docker-compose.yml
+  # unit-test:
+  #   extends:
+  #     service: unit-test
+  #     file: ../docker-compose.yml
