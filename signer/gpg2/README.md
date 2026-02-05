@@ -1,13 +1,16 @@
 # PGP Signing with GPG2
 
-This signer implements the Pretty Good Privacy signature format and
-Debian GPG signing using `debsign`.
+This signer implements the Pretty Good Privacy signature format using `gpg2`,
+Debian GPG signing using `debsign`, RPM signing using `rpmsign`.
 
 When configured in `gpg2` mode it accepts data on the `/sign/data`
 interface and returns armored detached signatures.
 
 In `debsign` mode it accepts files on the `/sign/files` interface and
 returns the clearsigned files.
+
+In `rpmsign` mode it accepts RPM files on the `/sign/files` interface and
+returns the signed RPM files with embedded GPG signatures.
 
 Example Usage:
 
@@ -62,8 +65,8 @@ signers:
     -----END PGP PUBLIC KEY BLOCK-----
 ```
 
-The **optional** field `mode` it can be either `gpg2` or
-`debsign`. When empty or missing it defaults to `gpg2` and should use
+The **optional** field `mode` can be `gpg2`, `debsign`, or `rpmsign`.
+When empty or missing it defaults to `gpg2` and should use
 the full key fingerprint in the `keyid` field. For example:
 
 ```yaml
@@ -100,14 +103,14 @@ This signer only supports the `/sign/data/` endpoint in `gpg2` mode:
 ]
 ```
 
-This signer only supports the `/sign/files/` endpoint in `debsign` mode:
+This signer only supports the `/sign/files/` endpoint in both `debsign` and `rpmsign` mode:
 
 ``` json
 [
     {
         "input": "",
         "keyid": "pgpsubkey-debsign",
-        "signed_files": [
+        "files": [
           {
             "name": "sphinx_1.7.2-1.dsc",
             "content": "LS0tLS1CRUdJTiBQR1AgU0lHTkVEIE1FU1NBR0UtLS0tLQpIYXNoOiBTS..."
@@ -140,7 +143,7 @@ recover the standard armored signature that gnupg expects.
 ]
 ```
 
-In `debsign` mode responses are at the field `signed_files`:
+In `debsign` and `rpmsign` mode responses are at the field `signed_files`:
 
 ```json
 [
