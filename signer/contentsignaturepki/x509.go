@@ -7,6 +7,8 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/mozilla-services/autograph/database"
@@ -41,9 +43,8 @@ func (s *ContentSigner) findAndSetEE(conf signer.Configuration) (err error) {
 
 // makeAndUploadChain makes a certificate using the end-entity public key,
 // uploads the chain to its destination and creates an X5U download URL
-func (s *ContentSigner) makeAndUploadChain() (err error) {
-	var fullChain, chainName string
-	fullChain, chainName, err = s.makeChain()
+func (s *ContentSigner) makeAndUploadChain() error {
+	fullChain, chainName, err := s.makeChain()
 	if err != nil {
 		return fmt.Errorf("failed to make chain: %w", err)
 	}
@@ -51,13 +52,16 @@ func (s *ContentSigner) makeAndUploadChain() (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to upload chain: %w", err)
 	}
-	newX5U := s.X5U + chainName
-	_, _, err = GetX5U(buildHTTPClient(), newX5U)
+	newX5U, err := url.JoinPath(s.X5U, chainName)
+	if err != nil {
+		return fmt.Errorf("failed to join x5u with chain name: %w", err)
+	}
+	_, _, err = GetX5U(http.DefaultClient, newX5U)
 	if err != nil {
 		return fmt.Errorf("failed to download new chain: %w", err)
 	}
 	s.X5U = newX5U
-	return
+	return nil
 }
 
 // makeChain issues an end-entity certificate using the ca private key and the first

@@ -9,6 +9,8 @@ package contentsignaturepki
 import (
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -19,73 +21,75 @@ import (
 func TestSign(t *testing.T) {
 	input := []byte("foobarbaz1234abcd")
 	for i, testcase := range PASSINGTESTCASES {
-		// initialize a signer
-		s, err := New(testcase.cfg)
-		if err != nil {
-			t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
-		}
-		if s.Type != testcase.cfg.Type {
-			t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Type, testcase.cfg.Type)
-		}
-		if s.ID != testcase.cfg.ID {
-			t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.ID, testcase.cfg.ID)
-		}
-		if s.PrivateKey != testcase.cfg.PrivateKey {
-			t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.PrivateKey, testcase.cfg.PrivateKey)
-		}
-		if s.Mode != testcase.cfg.Mode {
-			t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.Mode, testcase.cfg.Mode)
-		}
+		t.Run(fmt.Sprintf("test-%d", i), func(t *testing.T) {
+			// initialize a signer
+			s, err := New(testcase.cfg)
+			if err != nil {
+				t.Fatalf("testcase %d signer initialization failed with: %v", i, err)
+			}
+			if s.Type != testcase.cfg.Type {
+				t.Fatalf("testcase %d signer type %q does not match configuration %q", i, s.Type, testcase.cfg.Type)
+			}
+			if s.ID != testcase.cfg.ID {
+				t.Fatalf("testcase %d signer id %q does not match configuration %q", i, s.ID, testcase.cfg.ID)
+			}
+			if s.PrivateKey != testcase.cfg.PrivateKey {
+				t.Fatalf("testcase %d signer private key %q does not match configuration %q", i, s.PrivateKey, testcase.cfg.PrivateKey)
+			}
+			if s.Mode != testcase.cfg.Mode {
+				t.Fatalf("testcase %d signer curve %q does not match expected %q", i, s.Mode, testcase.cfg.Mode)
+			}
 
-		// sign input data
-		sig, err := s.SignData(input, nil)
-		if err != nil {
-			t.Fatalf("testcase %d failed to sign data: %v", i, err)
-		}
-		// convert signature to string format
-		sigstr, err := sig.Marshal()
-		if err != nil {
-			t.Fatalf("testcase %d failed to marshal signature: %v", i, err)
-		}
+			// sign input data
+			sig, err := s.SignData(input, nil)
+			if err != nil {
+				t.Fatalf("testcase %d failed to sign data: %v", i, err)
+			}
+			// convert signature to string format
+			sigstr, err := sig.Marshal()
+			if err != nil {
+				t.Fatalf("testcase %d failed to marshal signature: %v", i, err)
+			}
 
-		// convert string format back to signature
-		cs, err := verifier.Unmarshal(sigstr)
-		if err != nil {
-			t.Fatalf("testcase %d failed to unmarshal signature: %v", i, err)
-		}
+			// convert string format back to signature
+			cs, err := verifier.Unmarshal(sigstr)
+			if err != nil {
+				t.Fatalf("testcase %d failed to unmarshal signature: %v", i, err)
+			}
 
-		// make sure we still have the same string representation
-		sigstr2, err := cs.Marshal()
-		if err != nil {
-			t.Fatalf("testcase %d failed to re-marshal signature: %v", i, err)
-		}
-		if sigstr != sigstr2 {
-			t.Fatalf("testcase %d marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
-				i, sigstr, sigstr2)
-		}
+			// make sure we still have the same string representation
+			sigstr2, err := cs.Marshal()
+			if err != nil {
+				t.Fatalf("testcase %d failed to re-marshal signature: %v", i, err)
+			}
+			if sigstr != sigstr2 {
+				t.Fatalf("testcase %d marshalling signature changed its format.\nexpected\t%q\nreceived\t%q",
+					i, sigstr, sigstr2)
+			}
 
-		if cs.Len != getSignatureLen(s.Mode) {
-			t.Fatalf("testcase %d expected signature len of %d, got %d",
-				i, getSignatureLen(s.Mode), cs.Len)
-		}
-		if cs.Mode != s.Mode {
-			t.Fatalf("testcase %d expected curve name %q, got %q", i, s.Mode, cs.Mode)
-		}
+			if cs.Len != getSignatureLen(s.Mode) {
+				t.Fatalf("testcase %d expected signature len of %d, got %d",
+					i, getSignatureLen(s.Mode), cs.Len)
+			}
+			if cs.Mode != s.Mode {
+				t.Fatalf("testcase %d expected curve name %q, got %q", i, s.Mode, cs.Mode)
+			}
 
-		// verify the signature using the public key of the end entity
-		_, certs, err := GetX5U(buildHTTPClient(), s.X5U)
-		if err != nil {
-			t.Fatalf("testcase %d failed to get X5U %q: %v", i, s.X5U, err)
-		}
-		leaf := certs[0]
-		key := leaf.PublicKey.(*ecdsa.PublicKey)
-		if !sig.(*verifier.ContentSignature).VerifyData([]byte(input), key) {
-			t.Fatalf("testcase %d failed to verify signature", i)
-		}
+			// verify the signature using the public key of the end entity
+			_, certs, err := GetX5U(http.DefaultClient, s.X5U)
+			if err != nil {
+				t.Fatalf("testcase %d failed to get X5U %q: %v", i, s.X5U, err)
+			}
+			leaf := certs[0]
+			key := leaf.PublicKey.(*ecdsa.PublicKey)
+			if !sig.(*verifier.ContentSignature).VerifyData([]byte(input), key) {
+				t.Fatalf("testcase %d failed to verify signature", i)
+			}
 
-		if leaf.Subject.CommonName != testcase.expectedCommonName {
-			t.Errorf("testcase %d expected common name %#v, got %#v", i, testcase.expectedCommonName, leaf.Subject.CommonName)
-		}
+			if leaf.Subject.CommonName != testcase.expectedCommonName {
+				t.Errorf("testcase %d expected common name %#v, got %#v", i, testcase.expectedCommonName, leaf.Subject.CommonName)
+			}
+		})
 	}
 }
 
