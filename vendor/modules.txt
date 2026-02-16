@@ -551,7 +551,7 @@ github.com/hashicorp/vault/api
 ## explicit; go 1.11
 github.com/kylelemons/godebug/diff
 github.com/kylelemons/godebug/pretty
-# github.com/lib/pq v1.11.1
+# github.com/lib/pq v1.11.2
 ## explicit; go 1.21
 github.com/lib/pq
 github.com/lib/pq/internal/pgpass
