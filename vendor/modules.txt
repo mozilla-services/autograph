@@ -66,7 +66,7 @@ filippo.io/age/internal/bech32
 filippo.io/age/internal/format
 filippo.io/age/internal/stream
 filippo.io/age/plugin
-# filippo.io/edwards25519 v1.1.0
+# filippo.io/edwards25519 v1.1.1
 ## explicit; go 1.20
 filippo.io/edwards25519
 filippo.io/edwards25519/field
