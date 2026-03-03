@@ -2,7 +2,7 @@ SOPS: Secrets OPerationS
 ========================
 
 **SOPS** is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY
-formats and encrypts with AWS KMS, GCP KMS, Azure Key Vault, age, and PGP.
+formats and encrypts with AWS KMS, GCP KMS, Azure Key Vault, HuaweiCloud KMS, age, and PGP.
 (`demo <https://www.youtube.com/watch?v=YTEVyLXFiq0>`_)
 
 .. image:: https://i.imgur.com/X0TM5NI.gif
@@ -241,7 +241,8 @@ You can override the default lookup by:
 
 - setting the environment variable **SOPS_AGE_KEY_FILE**;
 - setting the **SOPS_AGE_KEY** environment variable;
-- providing a command to output the age keys by setting the **SOPS_AGE_KEY_CMD** environment variable..
+- providing a command to output the age keys by setting the **SOPS_AGE_KEY_CMD** environment variable.
+  This command can read the age recipient for which to return the private key from the **SOPS_AGE_RECIPIENT** environment variable.
 
 The contents of this key file should be a list of age X25519 identities, one
 per line. Lines beginning with ``#`` are considered comments and ignored. Each
@@ -249,9 +250,16 @@ identity will be tried in sequence until one is able to decrypt the data.
 
 Encrypting with SSH keys via age is also supported by SOPS. You can use SSH public keys
 ("ssh-ed25519 AAAA...", "ssh-rsa AAAA...") as age recipients when encrypting a file.
-When decrypting a file, SOPS will look for ``~/.ssh/id_ed25519`` and falls back to
-``~/.ssh/id_rsa``. You can specify the location of the private key manually by setting
-the environment variable **SOPS_AGE_SSH_PRIVATE_KEY_FILE**.
+
+When decrypting a file, SOPS will attempt to source the SSH private key as follows:
+
+- From the path specified in environment variable **SOPS_AGE_SSH_PRIVATE_KEY_FILE**.
+- From the output of the command specified in environment variable **SOPS_AGE_SSH_PRIVATE_KEY_CMD**.
+
+   .. note:: The output of this command must provide a key that is not password protected.
+
+- From ``~/.ssh/id_ed25519``.
+- From ``~/.ssh/id_rsa``.
 
 Note that only ``ssh-rsa`` and ``ssh-ed25519`` are supported.
 
@@ -308,6 +316,14 @@ Or if you are logged in you can authorize by generating an access token:
 .. code:: sh
 
     $ export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+
+By default, SOPS uses the gRPC client to communicate with GCP KMS. You can optionally
+switch to the REST client by setting the ``SOPS_GCP_KMS_CLIENT_TYPE`` environment variable:
+
+.. code:: sh
+
+    $ export SOPS_GCP_KMS_CLIENT_TYPE=rest  # Use REST client
+    $ export SOPS_GCP_KMS_CLIENT_TYPE=grpc  # Use gRPC client (default)
 
 Encrypting/decrypting with GCP KMS requires a KMS ResourceID. You can use the
 cloud console the get the ResourceID or you can create one using the gcloud
@@ -524,13 +540,77 @@ To easily deploy Vault locally: (DO NOT DO THIS FOR PRODUCTION!!!)
 
     $ sops encrypt --verbose prod/raw.yaml > prod/encrypted.yaml
 
+Encrypting using HuaweiCloud KMS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The HuaweiCloud KMS integration uses the
+`default credential provider chain <https://github.com/huaweicloud/huaweicloud-sdk-go-v3/blob/master/core/auth/provider/provider.go>`_
+which tries several authentication methods, in this order:
+
+1. Environment variables: ``HUAWEICLOUD_SDK_AK``, ``HUAWEICLOUD_SDK_SK``, ``HUAWEICLOUD_SDK_PROJECT_ID``
+2. Credentials file at ``~/.huaweicloud/credentials``
+3. Instance metadata (when running on HuaweiCloud instances)
+
+For example, you can use environment variables:
+
+.. code:: bash
+
+    export HUAWEICLOUD_SDK_AK="your-access-key"
+    export HUAWEICLOUD_SDK_SK="your-secret-key"
+    export HUAWEICLOUD_SDK_PROJECT_ID="your-project-id"
+
+Alternatively, you can create a credentials file at ``~/.huaweicloud/credentials``:
+
+.. code:: sh
+
+    $ cat ~/.huaweicloud/credentials
+    [default]
+    ak = your-access-key
+    sk = your-secret-key
+    project_id = your-project-id
+
+Encrypting/decrypting with HuaweiCloud KMS requires a KMS key ID in the format
+``region:key-uuid``. You can get the key ID from the HuaweiCloud console or using
+the HuaweiCloud API. The key ID format is ``region:key-uuid`` where:
+
+- ``region`` is the HuaweiCloud region (e.g., ``tr-west-1``, ``cn-north-1``)
+- ``key-uuid`` is the UUID of the KMS key (e.g., ``abc12345-6789-0123-4567-890123456789``)
+
+Now you can encrypt a file using:
+
+.. code:: sh
+
+    $ sops encrypt --hckms tr-west-1:abc12345-6789-0123-4567-890123456789 test.yaml > test.enc.yaml
+
+Or using the environment variable:
+
+.. code:: sh
+
+    $ export SOPS_HUAWEICLOUD_KMS_IDS="tr-west-1:abc12345-6789-0123-4567-890123456789"
+    $ sops encrypt test.yaml > test.enc.yaml
+
+And decrypt it using:
+
+.. code:: sh
+
+    $ sops decrypt test.enc.yaml
+
+You can also configure HuaweiCloud KMS keys in the ``.sops.yaml`` config file:
+
+.. code:: yaml
+
+    creation_rules:
+        - path_regex: \.hckms\.yaml$
+          hckms:
+            - tr-west-1:abc12345-6789-0123-4567-890123456789,tr-west-2:def67890-1234-5678-9012-345678901234
+
 Adding and removing keys
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 When creating new files, ``sops`` uses the PGP, KMS and GCP KMS defined in the
-command line arguments ``--kms``, ``--pgp``, ``--gcp-kms`` or ``--azure-kv``, or from
+command line arguments ``--kms``, ``--pgp``, ``--gcp-kms``, ``--hckms`` or ``--azure-kv``, or from
 the environment variables ``SOPS_KMS_ARN``, ``SOPS_PGP_FP``, ``SOPS_GCP_KMS_IDS``,
-``SOPS_AZURE_KEYVAULT_URLS``. That information is stored in the file under the
+``SOPS_HUAWEICLOUD_KMS_IDS``, ``SOPS_AZURE_KEYVAULT_URLS``. That information is stored in the file under the
 ``sops`` section, such that decrypting files does not require providing those
 parameters again.
 
@@ -574,9 +654,9 @@ disabled by supplying the ``-y`` flag.
 
 The ``rotate`` command generates a new data encryption key and reencrypt all values
 with the new key. At the same time, the command line flag ``--add-kms``, ``--add-pgp``,
-``--add-gcp-kms``, ``--add-azure-kv``, ``--rm-kms``, ``--rm-pgp``, ``--rm-gcp-kms``
-and ``--rm-azure-kv`` can be used to add and remove keys from a file. These flags use
-the comma separated syntax as the ``--kms``, ``--pgp``, ``--gcp-kms`` and ``--azure-kv``
+``--add-gcp-kms``, ``--add-hckms``, ``--add-azure-kv``, ``--rm-kms``, ``--rm-pgp``, ``--rm-gcp-kms``,
+``--rm-hckms`` and ``--rm-azure-kv`` can be used to add and remove keys from a file. These flags use
+the comma separated syntax as the ``--kms``, ``--pgp``, ``--gcp-kms``, ``--hckms`` and ``--azure-kv``
 arguments when creating new files.
 
 Use ``updatekeys`` if you want to add a key without rotating the data key.
@@ -752,7 +832,7 @@ stdout.
 Using .sops.yaml conf to select KMS, PGP and age for new files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is often tedious to specify the ``--kms`` ``--gcp-kms`` ``--pgp`` and ``--age`` parameters for creation
+It is often tedious to specify the ``--kms`` ``--gcp-kms`` ``--hckms`` ``--pgp`` and ``--age`` parameters for creation
 of all new files. If your secrets are stored under a specific directory, like a
 ``git`` repository, you can create a ``.sops.yaml`` configuration file at the root
 directory to define which keys are used for which filename.
@@ -793,6 +873,10 @@ can manage the three sets of configurations for the three types of files:
         # gcp files using GCP KMS
         - path_regex: \.gcp\.yaml$
           gcp_kms: projects/mygcproject/locations/global/keyRings/mykeyring/cryptoKeys/thekey
+
+        # hckms files using HuaweiCloud KMS
+        - path_regex: \.hckms\.yaml$
+          hckms: tr-west-1:abc12345-6789-0123-4567-890123456789,tr-west-2:def67890-1234-5678-9012-345678901234
 
         # Finally, if the rules above have not matched, this one is a
         # catchall that will encrypt the file using KMS set C as well as PGP
@@ -1005,10 +1089,12 @@ try all other remote key services until one succeeds.
 
 You can start a key service server by running ``sops keyservice``.
 
-You can specify the key services the ``sops`` binary uses with ``--keyservice``.
-This flag can be specified more than once, so you can use multiple key
-services. The local key service can be disabled with
-``enable-local-keyservice=false``.
+You can specify the key services the ``sops`` binary uses with the
+``--keyservice`` option. This flag can be specified more than once, so you can
+use multiple key services. Alternatively, a single key service can be specified
+by setting the ``SOPS_KEYSERVICE`` environment variable. The local key service
+can be disabled with ``--enable-local-keyservice=false`` or by setting the
+``SOPS_ENABLE_LOCAL_KEYSERVICE`` environment variable to ``false``.
 
 For example, to decrypt a file using both the local key service and the key
 service exposed on the unix socket located in ``/tmp/sops.sock``, you can run:
@@ -1787,6 +1873,16 @@ To directly specify a single key group, you can use the following keys:
       - hc_vault_transit_uri:
           - http://my.vault/v1/sops/keys/secondkey
 
+* ``hckms`` (list of strings): list of HuaweiCloud KMS key IDs (format: ``<region>:<key-uuid>``).
+  Example:
+
+  .. code:: yaml
+
+    creation_rules:
+      - hckms:
+          - tr-west-1:abc12345-6789-0123-4567-890123456789
+          - tr-west-1:def67890-1234-5678-9012-345678901234
+
 To specify a list of key groups, you can use the following key:
 
 * ``key_groups`` (list of key group objects): a list of key group objects.
@@ -1814,6 +1910,8 @@ To specify a list of key groups, you can use the following key:
               - https://vault.url/keys/key-name/             # key without version, the latest will be used
             hc_vault_transit_uri:
               - http://my.vault/v1/sops/keys/secondkey
+            hckms:
+              - tr-west-1:abc12345-6789-0123-4567-890123456789
 
             merge:
               - pgp:
@@ -1890,6 +1988,17 @@ A key group supports the following keys:
       version: ""
 
 * ``hc_vault`` (list of strings): list of HashiCorp Vault transit URIs.
+
+* ``hckms`` (list of objects): list of HuaweiCloud KMS key IDs.
+  Every object must have the following key:
+
+  * ``key_id`` (string): the key ID in format ``<region>:<key-uuid>``.
+
+  Example:
+
+  .. code:: yaml
+
+    - key_id: tr-west-1:abc12345-6789-0123-4567-890123456789
 
 * ``age`` (list of strings): list of Age public keys.
 

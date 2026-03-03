@@ -1,0 +1,8 @@
+Service1:
+  - id: region-id-1
+    endpoint: 'https://service1.region-id-1.com'
+Service2:
+  - id: region-id-2
+    endpoints:
+      - 'https://service2.region-id-2.com'
+      - 'https://service2.region-id-2.cn'
