@@ -30,13 +30,7 @@ linters-settings:
             desc: "Only indirect PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"
           - pkg: "github.com/ThalesGroup/crypto11" # ThalesGroup is the more modern version
             desc: "Only indirect PKCS#11 work allowed in signer submodules (so, crypto11 is banned there)"
-
-severity:
-  default-severity: error
-  rules:
-    # The following check fails the linting test 
-    # SA1019 - Using a deprecated function, variable, constant or field
-    - linters:
-        - staticcheck
-      text: "SA1019"
-      severity: warning
+  staticcheck:
+    checks:
+      - all
+      - "-SA1019"
