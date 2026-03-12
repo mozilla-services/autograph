@@ -62,13 +62,10 @@ jobs:
         with:
           go-version-file: "./go.mod"
       - name: golangci-lint
-        # If you bump this version, double check that we shouldn't also bump
-        # GOLANGCI_LINT_VERSION in the Makefile. (The version here is for the
-        # GitHub Action and the one in the Makefile is for the actual version of
-        # golangci-lint.)
-        uses: golangci/golangci-lint-action@v6.5.2
-        with:
-          args: --timeout 5m
+        shell: bash
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+          golangci-lint run --timeout 5m
 
   unit-tests:
     name: Run Unit Tests
