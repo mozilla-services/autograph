@@ -66,7 +66,7 @@ jobs:
         # GOLANGCI_LINT_VERSION in the Makefile. (The version here is for the
         # GitHub Action and the one in the Makefile is for the actual version of
         # golangci-lint.)
-        uses: golangci/golangci-lint-action@v6.1.0
+        uses: golangci/golangci-lint-action@v6.5.2
         with:
           args: --timeout 5m
 
