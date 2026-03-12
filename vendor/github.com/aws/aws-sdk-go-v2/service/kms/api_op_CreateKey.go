@@ -57,7 +57,7 @@ import (
 // operation to download the public key so it can be used outside of KMS. Each KMS
 // key can have only one key usage. KMS keys with RSA key pairs can be used to
 // encrypt and decrypt data or sign and verify messages (but not both). KMS keys
-// with NIST-recommended ECC key pairs can be used to sign and verify messages or
+// with NIST-standard ECC key pairs can be used to sign and verify messages or
 // derive shared secrets (but not both). KMS keys with ECC_SECG_P256K1 can be used
 // only to sign and verify messages. KMS keys with ML-DSA key pairs can be used to
 // sign and verify messages. KMS keys with SM2 key pairs (China Regions only) can
@@ -75,12 +75,12 @@ import (
 // HMAC keys to generate (GenerateMac ) and verify (VerifyMac ) HMAC codes for messages up to 4096
 // bytes.
 //
-// Multi-Region primary keys Imported key material To create a multi-Region
-// primary key in the local Amazon Web Services Region, use the MultiRegion
-// parameter with a value of True . To create a multi-Region replica key, that is,
-// a KMS key with the same key ID and key material as a primary key, but in a
-// different Amazon Web Services Region, use the ReplicateKeyoperation. To change a replica
-// key to a primary key, and its primary key to a replica key, use the UpdatePrimaryRegionoperation.
+// Multi-Region primary keys To create a multi-Region primary key in the local
+// Amazon Web Services Region, use the MultiRegion parameter with a value of True .
+// To create a multi-Region replica key, that is, a KMS key with the same key ID
+// and key material as a primary key, but in a different Amazon Web Services
+// Region, use the ReplicateKeyoperation. To change a replica key to a primary key, and its
+// primary key to a replica key, use the UpdatePrimaryRegionoperation.
 //
 // You can create multi-Region KMS keys for all supported KMS key types: symmetric
 // encryption KMS keys, HMAC KMS keys, asymmetric encryption KMS keys, and
@@ -95,12 +95,12 @@ import (
 // re-encrypting the data or making a cross-Region call. For more information about
 // multi-Region keys, see [Multi-Region keys in KMS]in the Key Management Service Developer Guide.
 //
-// To import your own key material into a KMS key, begin by creating a KMS key
-// with no key material. To do this, use the Origin parameter of CreateKey with a
-// value of EXTERNAL . Next, use GetParametersForImport operation to get a public key and import token.
-// Use the wrapping public key to encrypt your key material. Then, use ImportKeyMaterialwith your
-// import token to import the key material. For step-by-step instructions, see [Importing Key Material]in
-// the Key Management Service Developer Guide .
+// Imported key material To import your own key material into a KMS key, begin by
+// creating a KMS key with no key material. To do this, use the Origin parameter
+// of CreateKey with a value of EXTERNAL . Next, use GetParametersForImport operation to get a public
+// key and import token. Use the wrapping public key to encrypt your key material.
+// Then, use ImportKeyMaterialwith your import token to import the key material. For step-by-step
+// instructions, see [Importing Key Material]in the Key Management Service Developer Guide .
 //
 // You can import key material into KMS keys of all supported KMS key types:
 // symmetric encryption KMS keys, HMAC KMS keys, asymmetric encryption KMS keys,
@@ -290,14 +290,20 @@ type CreateKeyInput struct {
 	//
 	//   - RSA_4096
 	//
-	//   - Asymmetric NIST-recommended elliptic curve key pairs (signing and
-	//   verification -or- deriving shared secrets)
+	//   - Asymmetric NIST-standard elliptic curve key pairs (signing and verification
+	//   -or- deriving shared secrets)
 	//
 	//   - ECC_NIST_P256 (secp256r1)
 	//
 	//   - ECC_NIST_P384 (secp384r1)
 	//
 	//   - ECC_NIST_P521 (secp521r1)
+	//
+	//   - ECC_NIST_EDWARDS25519 (ed25519) - signing and verification only
+	//
+	//   - Note: For ECC_NIST_EDWARDS25519 KMS keys, the ED25519_SHA_512 signing
+	//   algorithm requires MessageType:RAWMessageType:RAW , while ED25519_PH_SHA_512 requires MessageType:DIGEST
+	//   MessageType:DIGEST . These message types cannot be used interchangeably.
 	//
 	//   - Other asymmetric elliptic curve key pairs (signing and verification)
 	//
@@ -340,7 +346,7 @@ type CreateKeyInput struct {
 	//   - For asymmetric KMS keys with RSA key pairs, specify ENCRYPT_DECRYPT or
 	//   SIGN_VERIFY .
 	//
-	//   - For asymmetric KMS keys with NIST-recommended elliptic curve key pairs,
+	//   - For asymmetric KMS keys with NIST-standard elliptic curve key pairs,
 	//   specify SIGN_VERIFY or KEY_AGREEMENT .
 	//
 	//   - For asymmetric KMS keys with ECC_SECG_P256K1 key pairs, specify SIGN_VERIFY .
@@ -608,40 +614,7 @@ func (c *Client) addOperationCreateKeyMiddlewares(stack *middleware.Stack, optio
 	if err = addInterceptAttempt(stack, options); err != nil {
 		return err
 	}
-	if err = addInterceptExecution(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptBeforeSerialization(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptAfterSerialization(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptBeforeSigning(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptAfterSigning(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptTransmit(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptBeforeDeserialization(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptAfterDeserialization(stack, options); err != nil {
-		return err
-	}
-	if err = addSpanInitializeStart(stack); err != nil {
-		return err
-	}
-	if err = addSpanInitializeEnd(stack); err != nil {
-		return err
-	}
-	if err = addSpanBuildRequestStart(stack); err != nil {
-		return err
-	}
-	if err = addSpanBuildRequestEnd(stack); err != nil {
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil
