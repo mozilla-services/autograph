@@ -4,14 +4,15 @@
 // license that can be found in the LICENSE file or at
 // https://developers.google.com/open-source/licenses/bsd
 
-// Package plugin implements the age plugin protocol.
 package plugin
 
 import (
 	"bufio"
+	"crypto/rand"
+	"errors"
 	"fmt"
 	"io"
-	"math/rand"
+	mathrand "math/rand/v2"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -53,6 +54,15 @@ func (r *Recipient) Name() string {
 	return r.name
 }
 
+// String returns the recipient encoding string ("age1name1...") or
+// "<identity-based recipient>" if r was created by [Identity.Recipient].
+func (r *Recipient) String() string {
+	if r.identity {
+		return "<identity-based recipient>"
+	}
+	return r.encoding
+}
+
 func (r *Recipient) Wrap(fileKey []byte) (stanzas []*age.Stanza, err error) {
 	stanzas, _, err = r.WrapWithLabels(fileKey)
 	return
@@ -67,7 +77,7 @@ func (r *Recipient) WrapWithLabels(fileKey []byte) (stanzas []*age.Stanza, label
 
 	conn, err := openClientConnection(r.name, "recipient-v1")
 	if err != nil {
-		return nil, nil, fmt.Errorf("couldn't start plugin: %v", err)
+		return nil, nil, fmt.Errorf("couldn't start plugin: %w", err)
 	}
 	defer conn.Close()
 
@@ -79,7 +89,7 @@ func (r *Recipient) WrapWithLabels(fileKey []byte) (stanzas []*age.Stanza, label
 	if err := writeStanza(conn, addType, r.encoding); err != nil {
 		return nil, nil, err
 	}
-	if err := writeStanza(conn, fmt.Sprintf("grease-%x", rand.Int())); err != nil {
+	if _, err := writeGrease(conn); err != nil {
 		return nil, nil, err
 	}
 	if err := writeStanzaWithBody(conn, "wrap-file-key", fileKey); err != nil {
@@ -194,6 +204,11 @@ func (i *Identity) Name() string {
 	return i.name
 }
 
+// String returns the identity encoding string ("AGE-PLUGIN-NAME-1...").
+func (i *Identity) String() string {
+	return i.encoding
+}
+
 // Recipient returns a Recipient wrapping this identity. When that Recipient is
 // used to encrypt a file key, the identity encoding is provided as-is to the
 // plugin, which is expected to support encrypting to identities.
@@ -215,7 +230,7 @@ func (i *Identity) Unwrap(stanzas []*age.Stanza) (fileKey []byte, err error) {
 
 	conn, err := openClientConnection(i.name, "identity-v1")
 	if err != nil {
-		return nil, fmt.Errorf("couldn't start plugin: %v", err)
+		return nil, fmt.Errorf("couldn't start plugin: %w", err)
 	}
 	defer conn.Close()
 
@@ -223,7 +238,7 @@ func (i *Identity) Unwrap(stanzas []*age.Stanza) (fileKey []byte, err error) {
 	if err := writeStanza(conn, "add-identity", i.encoding); err != nil {
 		return nil, err
 	}
-	if err := writeStanza(conn, fmt.Sprintf("grease-%x", rand.Int())); err != nil {
+	if _, err := writeGrease(conn); err != nil {
 		return nil, err
 	}
 	for _, rs := range stanzas {
@@ -388,6 +403,24 @@ type clientConnection struct {
 	close     func()
 }
 
+// NotFoundError is returned by [Recipient.Wrap] and [Identity.Unwrap] when the
+// plugin binary cannot be found.
+type NotFoundError struct {
+	// Name is the plugin (not binary) name.
+	Name string
+	// Err is the underlying error, usually an [exec.Error] wrapping
+	// [exec.ErrNotFound].
+	Err error
+}
+
+func (e *NotFoundError) Error() string {
+	return fmt.Sprintf("%q plugin not found: %v", e.Name, e.Err)
+}
+
+func (e *NotFoundError) Unwrap() error {
+	return e.Err
+}
+
 var testOnlyPluginPath string
 
 func openClientConnection(name, protocol string) (*clientConnection, error) {
@@ -430,6 +463,9 @@ func openClientConnection(name, protocol string) (*clientConnection, error) {
 	cmd.Dir = os.TempDir()
 
 	if err := cmd.Start(); err != nil {
+		if errors.Is(err, exec.ErrNotFound) {
+			return nil, &NotFoundError{Name: name, Err: err}
+		}
 		return nil, err
 	}
 
@@ -452,4 +488,19 @@ func writeStanza(conn io.Writer, t string, args ...string) error {
 func writeStanzaWithBody(conn io.Writer, t string, body []byte) error {
 	s := &format.Stanza{Type: t, Body: body}
 	return s.Marshal(conn)
+}
+
+func writeGrease(conn io.Writer) (sent bool, err error) {
+	if mathrand.IntN(3) == 0 {
+		return false, nil
+	}
+	s := &format.Stanza{Type: fmt.Sprintf("grease-%x", mathrand.Int())}
+	for i := 0; i < mathrand.IntN(3); i++ {
+		s.Args = append(s.Args, fmt.Sprintf("%d", mathrand.IntN(100)))
+	}
+	if mathrand.IntN(2) == 0 {
+		s.Body = make([]byte, mathrand.IntN(100))
+		rand.Read(s.Body)
+	}
+	return true, s.Marshal(conn)
 }

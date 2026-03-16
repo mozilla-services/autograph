@@ -114,7 +114,8 @@ type DecryptInput struct {
 
 	// Ciphertext to be decrypted. The blob includes metadata.
 	//
-	// This member is required.
+	// This parameter is required in all cases except when DryRun is true and
+	// DryRunModifiers is set to IGNORE_CIPHERTEXT .
 	CiphertextBlob []byte
 
 	// Checks if your request will succeed. DryRun is an optional parameter.
@@ -124,6 +125,19 @@ type DecryptInput struct {
 	//
 	// [Testing your permissions]: https://docs.aws.amazon.com/kms/latest/developerguide/testing-permissions.html
 	DryRun *bool
+
+	// Specifies the modifiers to apply to the dry run operation. DryRunModifiers is
+	// an optional parameter that only applies when DryRun is set to true .
+	//
+	// When set to IGNORE_CIPHERTEXT , KMS performs only authorization validation
+	// without ciphertext validation. This allows you to test permissions without
+	// requiring a valid ciphertext blob.
+	//
+	// To learn more about how to use this parameter, see [Testing your permissions] in the Key Management
+	// Service Developer Guide.
+	//
+	// [Testing your permissions]: https://docs.aws.amazon.com/kms/latest/developerguide/testing-permissions.html
+	DryRunModifiers []types.DryRunModifierType
 
 	// Specifies the encryption algorithm that will be used to decrypt the ciphertext.
 	// Specify the same algorithm that was used to encrypt the data. If you specify a
@@ -170,7 +184,8 @@ type DecryptInput struct {
 	// IncorrectKeyException .
 	//
 	// This parameter is required only when the ciphertext was encrypted under an
-	// asymmetric KMS key. If you used a symmetric encryption KMS key, KMS can get the
+	// asymmetric KMS key or when DryRun is true and DryRunModifiers is set to
+	// IGNORE_CIPHERTEXT . If you used a symmetric encryption KMS key, KMS can get the
 	// KMS key from metadata that it adds to the symmetric ciphertext blob. However, it
 	// is always recommended as a best practice. This practice ensures that you use the
 	// KMS key that you intend.
@@ -329,9 +344,6 @@ func (c *Client) addOperationDecryptMiddlewares(stack *middleware.Stack, options
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
-	if err = addOpDecryptValidationMiddleware(stack); err != nil {
-		return err
-	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDecrypt(options.Region), middleware.Before); err != nil {
 		return err
 	}
@@ -356,40 +368,7 @@ func (c *Client) addOperationDecryptMiddlewares(stack *middleware.Stack, options
 	if err = addInterceptAttempt(stack, options); err != nil {
 		return err
 	}
-	if err = addInterceptExecution(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptBeforeSerialization(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptAfterSerialization(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptBeforeSigning(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptAfterSigning(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptTransmit(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptBeforeDeserialization(stack, options); err != nil {
-		return err
-	}
-	if err = addInterceptAfterDeserialization(stack, options); err != nil {
-		return err
-	}
-	if err = addSpanInitializeStart(stack); err != nil {
-		return err
-	}
-	if err = addSpanInitializeEnd(stack); err != nil {
-		return err
-	}
-	if err = addSpanBuildRequestStart(stack); err != nil {
-		return err
-	}
-	if err = addSpanBuildRequestEnd(stack); err != nil {
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil
