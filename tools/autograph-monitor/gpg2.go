@@ -15,7 +15,6 @@ import (
 )
 
 func verifyGPG2RPMSignature(resp formats.SignatureResponse) error {
-	log.Printf("Verifying %s", resp)
 	if resp.PublicKey == "" {
 		return fmt.Errorf("gpg2/rpmsign: empty public_key in response")
 	}

@@ -240,14 +240,16 @@ func monitor(conf *configuration, client *http.Client) error {
 		case gpg2.Type:
 			// we don't verify pgp signatures because that requires building a keyring
 			// using the public key which is hard to do using the current openpgp package
-			// log.Printf("Verifying content signature pki from signer %q", response.SignerID)
-			// err = verifyGPG2Signature(response.Signature, response.PublicKey)
 			switch response.Mode {
 			case gpg2.ModeRPMSign:
 				log.Printf("Verifying RPM (rpmsign) signature from signer %q", response.SignerID)
 				err = verifyGPG2RPMSignature(response)
-				log.Printf("Err response from signer %q: %v", response.SignerID, err)
-				log.Printf("Response was: %+v", response)
+
+				if err != nil {
+					// TODO: find out why this error is not being printed later in the loop
+					log.Printf("Err response from signer %q: %v", response.SignerID, err)
+					log.Printf("Response was:\n%+v", response)
+				}
 			default:
 				// Keep existing behavior for gpg2 and debsign modes
 				log.Printf("Skipping verification of GPG2 signature from signer %q in mode %q", response.SignerID, response.Mode)
