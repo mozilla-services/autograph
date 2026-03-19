@@ -716,8 +716,6 @@ github.com/youtube/vitess/go/acl
 github.com/youtube/vitess/go/cache
 github.com/youtube/vitess/go/pools
 github.com/youtube/vitess/go/sync2
-# github.com/zeebo/errs v1.4.0
-## explicit; go 1.12
 # go.mongodb.org/mongo-driver v1.17.9
 ## explicit; go 1.18
 go.mongodb.org/mongo-driver/bson
@@ -877,8 +875,6 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.15.0
 ## explicit; go 1.25.0
 golang.org/x/time/rate
-# golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
-## explicit; go 1.18
 # google.golang.org/api v0.271.0
 ## explicit; go 1.25.0
 google.golang.org/api/googleapi
@@ -918,7 +914,7 @@ google.golang.org/genproto/googleapis/api/monitoredres
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.79.2
+# google.golang.org/grpc v1.79.3
 ## explicit; go 1.24.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
