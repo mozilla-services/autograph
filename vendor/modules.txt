@@ -227,7 +227,7 @@ github.com/aws/aws-sdk-go-v2/credentials/stscreds
 ## explicit; go 1.24
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds/internal/config
-# github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.0
+# github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.2
 ## explicit; go 1.23
 github.com/aws/aws-sdk-go-v2/feature/s3/manager
 # github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.19
@@ -411,7 +411,7 @@ github.com/felixge/httpsnoop
 # github.com/getsops/gopgagent v0.0.0-20241224165529-7044f28e491e
 ## explicit
 github.com/getsops/gopgagent
-# github.com/getsops/sops/v3 v3.12.1
+# github.com/getsops/sops/v3 v3.12.2
 ## explicit; go 1.24.0
 github.com/getsops/sops/v3
 github.com/getsops/sops/v3/aes
