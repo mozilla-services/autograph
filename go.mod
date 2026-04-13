@@ -10,7 +10,7 @@ require (
 	github.com/getsops/sops/v3 v3.12.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
-	github.com/hashicorp/golang-lru v0.5.4
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/lib/pq v1.12.3
 	github.com/miekg/pkcs11 v1.1.2
 	github.com/mozilla-services/yaml v0.0.0-20191106225358-5c216288813c

@@ -24,7 +24,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 
 	"github.com/mozilla-services/yaml"
 
@@ -79,7 +79,7 @@ type debugServerConfig struct {
 // with all signers and permissions configured
 type autographer struct {
 	db                   *database.Handler
-	nonces               *lru.Cache
+	nonces               *lru.Cache[string, time.Time]
 	debug                bool
 	heartbeatConf        *heartbeatConfig
 	authBackend          authBackend
@@ -330,7 +330,7 @@ func newAutographer(cachesize int) (a *autographer) {
 	var err error
 	a = new(autographer)
 	a.authBackend = newInMemoryAuthBackend()
-	a.nonces, err = lru.New(cachesize)
+	a.nonces, err = lru.New[string, time.Time](cachesize)
 	a.exit = make(chan interface{})
 	if err != nil {
 		log.Fatal(err)
