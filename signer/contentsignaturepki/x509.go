@@ -71,9 +71,9 @@ func (s *ContentSigner) makeAndSaveChain() (err error) {
 	return
 }
 
-// GetX5U retrieves a chain file of certs from upload location, parses
-// and verifies it, then returns a byte slice of the response body and
-// a slice of parsed certificates.
+// GetX5U retrieves a chain file of certs from an http location, mimicking how
+// a client would retrieve the chain. It then parses and verifies it, then
+// returns a byte slice of the response body and a slice of parsed certificates
 func GetX5U(client *http.Client, x5u string) (body []byte, certs []*x509.Certificate, err error) {
 	parsedURL, err := url.Parse(x5u)
 	if err != nil {
