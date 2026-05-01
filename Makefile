@@ -80,7 +80,7 @@ build: generate
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel app-hsm monitor
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel monitor monitor-hsm
 
-test-in-docker:
+test-in-docker: build
 	$(SHELL) -c " \
 		docker compose up 2>&1 | tee test-in-docker.log \
 		| (grep --silent 'autograph-unit-test exited with code' && docker compose down; \
