@@ -135,7 +135,7 @@ signers:
   clockskewtolerance: 10m
 
   # store cert chains to this location
-  chainlocation: file:///tmp/chains/
+  chainlocation: /tmp/chains/
 
   # x5u is the path to the public dir where chains are stored. This MUST end
   # with a trailing slash because filenames will be appended to it.
