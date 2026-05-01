@@ -2,15 +2,23 @@ package contentsignaturepki
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"math/big"
+	"net/http"
+	"net/url"
+	"os"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/signer"
+	verifier "github.com/mozilla-services/autograph/verifier/contentsignature"
 )
 
 // findAndSetEE searches the database for an end-entity key that is currently
@@ -39,24 +47,70 @@ func (s *ContentSigner) findAndSetEE(conf signer.Configuration) (err error) {
 	return
 }
 
-// makeAndUploadChain makes a certificate using the end-entity public key,
-// uploads the chain to its destination and creates an X5U download URL
-func (s *ContentSigner) makeAndUploadChain() (err error) {
+// makeAndSaveChain makes a certificate using the end-entity public key,
+// save the chain to its destination and creates an X5U download URL
+func (s *ContentSigner) makeAndSaveChain() (err error) {
 	var fullChain, chainName string
 	fullChain, chainName, err = s.makeChain()
 	if err != nil {
 		return fmt.Errorf("failed to make chain: %w", err)
 	}
-	err = s.upload(fullChain, chainName)
+	err = os.MkdirAll(s.chainLocation, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to upload chain: %w", err)
+		return fmt.Errorf("failed to create chain directory: %w", err)
 	}
-	newX5U := s.X5U + chainName
-	_, _, err = GetX5U(buildHTTPClient(), newX5U)
+	err = os.WriteFile(path.Join(s.chainLocation, chainName), []byte(fullChain), 0644)
 	if err != nil {
-		return fmt.Errorf("failed to download new chain: %w", err)
+		return fmt.Errorf("failed to write chain: %w", err)
+	}
+	newX5U, err := url.JoinPath(s.X5U, chainName)
+	if err != nil {
+		return fmt.Errorf("Invalid x5u URI: %w", err)
 	}
 	s.X5U = newX5U
+	return
+}
+
+// GetX5U retrieves a chain file of certs from upload location, parses
+// and verifies it, then returns a byte slice of the response body and
+// a slice of parsed certificates.
+func GetX5U(client *http.Client, x5u string) (body []byte, certs []*x509.Certificate, err error) {
+	parsedURL, err := url.Parse(x5u)
+	if err != nil {
+		err = fmt.Errorf("failed to parse chain upload location: %w", err)
+		return
+	}
+	if parsedURL.Scheme == "file" {
+		t := &http.Transport{}
+		t.RegisterProtocol("file", http.NewFileTransport(http.Dir("/")))
+		client.Transport = t
+	}
+	resp, err := client.Get(x5u)
+	if err != nil {
+		err = fmt.Errorf("failed to retrieve x5u: %w", err)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("failed to retrieve x5u from %s: %s", x5u, resp.Status)
+		return
+	}
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		err = fmt.Errorf("failed to parse x5u body: %w", err)
+		return
+	}
+	certs, err = verifier.ParseChain(body)
+	if err != nil {
+		err = fmt.Errorf("failed to parse x5u : %w", err)
+		return
+	}
+	rootHash := strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(certs[2].Raw)))
+	err = verifier.VerifyChain([]string{rootHash}, certs, time.Now())
+	if err != nil {
+		err = fmt.Errorf("failed to verify certificate chain: %w", err)
+		return
+	}
 	return
 }
 
