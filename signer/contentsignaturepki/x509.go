@@ -55,7 +55,7 @@ func (s *ContentSigner) makeAndSaveChain() (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to make chain: %w", err)
 	}
-	err = os.MkdirAll(s.chainLocation, 0644)
+	err = os.MkdirAll(s.chainLocation, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create chain directory: %w", err)
 	}
