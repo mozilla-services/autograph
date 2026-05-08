@@ -45,7 +45,7 @@ The corresponding autograph configuration would be
     type: contentsignaturepki
     validity: 708h
     clockskewtolerance: 720h
-    chainuploadlocation: s3://net-mozaws-dev-content-signature/chains/
+    chainlocation: /mnt/chains/
     x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
     privatekey: csinter1550855347
     publickey: CONTENT_OF_/tmp/csintercert802092792
@@ -70,7 +70,7 @@ The corresponding autograph configuration would be
     type: contentsignaturepki
     validity: 708h
     clockskewtolerance: 720h
-    chainuploadlocation: s3://net-mozaws-dev-content-signature/chains/
+    chainlocation: /mnt/chains/
     x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
     privatekey: CONTENT_OF_/tmp/csinterkey276780723
     publickey: CONTENT_OF_/tmp/csintercert802092792

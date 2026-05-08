@@ -59,14 +59,6 @@ showbenchmarkxpi:
 test:
 	go test -v -race -coverprofile coverage.out -covermode=atomic -count=1 ./...
 
-test-in-docker:
-	$(SHELL) -c " \
-		docker compose up 2>&1 | tee test-in-docker.log \
-		| (grep --silent 'autograph-unit-test exited with code' && docker compose down; \
-		grep 'autograph-unit-test' test-in-docker.log >unit-test.log ; \
-		tail -2 unit-test.log)"
-
-
 showcoverage: test
 	go tool cover -html=coverage.out
 
@@ -87,6 +79,13 @@ build: generate
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel app db
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel app-hsm monitor
 	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel monitor monitor-hsm
+
+test-in-docker: build
+	$(SHELL) -c " \
+		docker compose up 2>&1 | tee test-in-docker.log \
+		| (grep --silent 'autograph-unit-test exited with code' && docker compose down; \
+		grep 'autograph-unit-test' test-in-docker.log >unit-test.log ; \
+		tail -2 unit-test.log)"
 
 # TODO(AUT-287): port this to the Docker compose integration tests
 integration-test:

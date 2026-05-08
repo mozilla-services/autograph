@@ -89,7 +89,7 @@ type Configuration struct {
 	// created. This is mostly for contentsignaturepki. If this isn't set, the
 	// `KeyID` is used as the subdomain, instead. When setting this value to
 	// match another extant signer id, also be sure to set the X5U and
-	// ChainUploadLocations of this signer configuration to avoid uploading
+	// ChainLocations of this signer configuration to avoid storing
 	// chains that share the same file name.
 	SubdomainOverride string `json:"subdomain_override,omitempty" yaml:"subdomainoverride,omitempty"`
 
@@ -107,9 +107,9 @@ type Configuration struct {
 	// have a total validity of 10+30+10=50 days.
 	ClockSkewTolerance time.Duration `json:"clock_skew_tolerance,omitempty" yaml:"clockskewtolerance,omitempty"`
 
-	// ChainUploadLocation is the target a certificate chain should be
-	// uploaded to in order for clients to find it at the x5u location.
-	ChainUploadLocation string `json:"chain_upload_location,omitempty" yaml:"chainuploadlocation,omitempty"`
+	// ChainLocation is the target a certificate chain should be
+	// saved to in order for clients to find it at the x5u location.
+	ChainLocation string `json:"chain_location,omitempty" yaml:"chainlocation,omitempty"`
 
 	// CaCert is the certificate of the root of the pki, when used
 	CaCert string `json:"cacert,omitempty" yaml:"cacert,omitempty"`

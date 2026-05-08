@@ -9,6 +9,7 @@ package contentsignaturepki
 import (
 	"crypto/ecdsa"
 	"errors"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -73,7 +74,7 @@ func TestSign(t *testing.T) {
 		}
 
 		// verify the signature using the public key of the end entity
-		_, certs, err := GetX5U(buildHTTPClient(), s.X5U)
+		_, certs, err := GetX5U(&http.Client{}, s.X5U)
 		if err != nil {
 			t.Fatalf("testcase %d failed to get X5U %q: %v", i, s.X5U, err)
 		}
@@ -94,11 +95,11 @@ var PASSINGTESTCASES = []struct {
 	expectedCommonName string
 }{
 	{cfg: signer.Configuration{
-		Type:                Type,
-		ID:                  "testsigner0",
-		Mode:                P384ECDSA,
-		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
-		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
+		Type:          Type,
+		ID:            "testsigner0",
+		Mode:          P384ECDSA,
+		X5U:           "file:///tmp/autograph_unit_tests/chains/",
+		ChainLocation: "/tmp/autograph_unit_tests/chains/",
 		IssuerPrivKey: `
 -----BEGIN EC PRIVATE KEY-----
 MIGkAgEBBDBcwxsHPTSHIVY1qLobCqBtnjRe0UZWOro1xtg2oV4rkypbkkgHHnSA
@@ -141,11 +142,11 @@ nsbYLErV5grBhN+UxzmY9YwlOl6j6CoBiNkCMQCVBh9UBkWNkUfMUGImrCNDLvlw
 		expectedCommonName: "testsigner0.content-signature.mozilla.org",
 	},
 	{cfg: signer.Configuration{
-		Type:                Type,
-		ID:                  "testsigner1",
-		Mode:                P256ECDSA,
-		X5U:                 "file:///tmp/autograph_unit_tests/chains/",
-		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/",
+		Type:          Type,
+		ID:            "testsigner1",
+		Mode:          P256ECDSA,
+		X5U:           "file:///tmp/autograph_unit_tests/chains/",
+		ChainLocation: "/tmp/autograph_unit_tests/chains/",
 		IssuerPrivKey: `
 -----BEGIN EC PRIVATE KEY-----
 MHcCAQEEIEABir6WMfkbG2ZyKKDCij1PlSBldaaJqPQ/9ioWvCM5oAoGCCqGSM49
@@ -185,12 +186,12 @@ mpvOMOT3falDgXh0iOgdIA==
 		expectedCommonName: "testsigner1.content-signature.mozilla.org",
 	},
 	{cfg: signer.Configuration{
-		Type:                Type,
-		ID:                  "testsigner1",
-		SubdomainOverride:   "anothersigner1",
-		Mode:                P256ECDSA,
-		X5U:                 "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
-		ChainUploadLocation: "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
+		Type:              Type,
+		ID:                "testsigner1",
+		SubdomainOverride: "anothersigner1",
+		Mode:              P256ECDSA,
+		X5U:               "file:///tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
+		ChainLocation:     "/tmp/autograph_unit_tests/chains/dedup-path-anothersigner1",
 		IssuerPrivKey: `
 -----BEGIN EC PRIVATE KEY-----
 MHcCAQEEIEABir6WMfkbG2ZyKKDCij1PlSBldaaJqPQ/9ioWvCM5oAoGCCqGSM49

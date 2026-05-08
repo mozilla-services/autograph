@@ -158,8 +158,7 @@ signers:
     # give +/- 30d of validity room for clients with bad clocks
     clockskewtolerance: 10m
     # upload cert chains to this location
-    #chainuploadlocation: s3://net-mozaws-dev-content-signature/chains/
-    chainuploadlocation: file:///tmp/chains/
+    chainlocation: /tmp/chains/
     # x5u is the path to the public dir where chains are stored. This MUST end
     # with a trailing slash because filenames will be appended to it.
     # x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
@@ -204,7 +203,7 @@ signers:
     type: contentsignaturepki
     validity: 708h
     clockskewtolerance: 10m
-    chainuploadlocation: file:///tmp/chains/
+    chainlocation: /tmp/chains/
     x5u: file:///tmp/chains/
     issuerprivkey: csinter1550858489
     issuercert: |
