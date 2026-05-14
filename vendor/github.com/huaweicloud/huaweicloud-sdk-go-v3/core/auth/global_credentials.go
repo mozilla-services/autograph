@@ -93,7 +93,7 @@ func (s *GlobalCredentials) ProcessAuthParams(client *impl.DefaultHttpClient, re
 }
 
 func (s *GlobalCredentials) ProcessAuthRequest(client *impl.DefaultHttpClient, req *request.DefaultHttpRequest) (*request.DefaultHttpRequest, error) {
-	err := s.refresh(client)
+	err := s.ProcessSts(client)
 	if err != nil {
 		return nil, err
 	}
@@ -168,6 +168,11 @@ func (b *GlobalCredentialsBuilder) WithIdpId(idpId string) *GlobalCredentialsBui
 
 func (b *GlobalCredentialsBuilder) WithIdTokenFile(idTokenFile string) *GlobalCredentialsBuilder {
 	b.Builder.WithIdTokenFile(idTokenFile)
+	return b
+}
+
+func (b *GlobalCredentialsBuilder) WithStsAccessor(accessor internal.StsAccessor) *GlobalCredentialsBuilder {
+	b.Builder.WithStsAccessor(accessor)
 	return b
 }
 

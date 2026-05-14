@@ -25,10 +25,6 @@ import (
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/impl"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/request"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/sdkerr"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -36,8 +32,7 @@ const (
 	securityTokenInHeader             = "X-Security-Token"
 	emptyAk                           = "EMPTY_AK"
 	emptySK                           = "EMPTY_SK"
-	defaultExpirationThresholdSeconds = 40 * 60     // 40min
-	defaultDurationSeconds            = 6 * 60 * 60 // 6h
+	defaultExpirationThresholdSeconds = 40 * 60 // 40min
 )
 
 var DefaultDerivedPredicate = GetDefaultDerivedPredicate()
@@ -50,11 +45,11 @@ type BaseCredentials struct {
 	IdpId            string
 	IdTokenFile      string
 	DerivedPredicate func(*request.DefaultHttpRequest) bool
-	MetadataAccessor *internal.MetadataAccessor
+	StsAccessor      internal.StsAccessor
 
 	derivedAuthServiceName string
 	regionId               string
-	expiredAt              int64
+	expireAt               int64
 }
 
 func (s *BaseCredentials) IsDerivedAuth(httpRequest *request.DefaultHttpRequest) bool {
@@ -65,97 +60,36 @@ func (s *BaseCredentials) IsDerivedAuth(httpRequest *request.DefaultHttpRequest)
 	return s.DerivedPredicate(httpRequest)
 }
 
-func (s *BaseCredentials) needUpdateSecurityTokenFromMetadata() bool {
-	if s.AK == "" && s.SK == "" {
-		return true
-	}
-	if s.expiredAt == 0 || s.SecurityToken == "" {
-		return false
-	}
-	return s.expiredAt-time.Now().Unix() < defaultExpirationThresholdSeconds
+func (s *BaseCredentials) isExpired() bool {
+	return s.expireAt-time.Now().Unix() < defaultExpirationThresholdSeconds
 }
 
-func (s *BaseCredentials) getIdToken() (string, error) {
-	file := filepath.Clean(s.IdTokenFile)
-	_, err := os.Stat(file)
-	if err != nil {
-		return "", err
-	}
-
-	bytes, err := ioutil.ReadFile(file)
-	if err != nil {
-		return "", err
-	}
-	idToken := strings.TrimSpace(string(bytes))
-	if idToken == "" {
-		return "", sdkerr.NewCredentialsTypeError("id token is empty")
-	}
-	return idToken, nil
+func (s *BaseCredentials) needRefreshSts() bool {
+	return s.StsAccessor != nil && s.isExpired()
 }
 
-func (s *BaseCredentials) UpdateSecurityTokenFromMetadata() error {
-	if s.MetadataAccessor == nil {
-		s.MetadataAccessor = internal.NewMetadataAccessor()
-	}
-	credential, err := s.MetadataAccessor.GetCredentials()
-	if err != nil {
-		return err
-	}
+func (s *BaseCredentials) ProcessSts(client *impl.DefaultHttpClient) error {
+	if s.needRefreshSts() {
+		iamEndpoint := s.IamEndpoint
+		if iamEndpoint == "" {
+			iamEndpoint = internal.GetIamEndpoint()
+		}
 
-	s.AK = credential.Access
-	s.SK = credential.Secret
-	s.SecurityToken = credential.Securitytoken
-	location, err := time.ParseInLocation(`2006-01-02T15:04:05Z`, credential.ExpiresAt, time.UTC)
-	if err != nil {
-		return err
-	}
-	s.expiredAt = location.Unix()
+		cred, err := s.StsAccessor.GetCredential(
+			internal.WithClient(client),
+			internal.WithIamEndpoint(iamEndpoint),
+			internal.WithIdpId(s.IdpId),
+			internal.WithIdTokenFile(s.IdTokenFile),
+		)
+		if err != nil {
+			return err
+		}
 
-	return nil
-}
-
-func (s *BaseCredentials) needUpdateFederalAuthToken() bool {
-	if s.IdpId == "" || s.IdTokenFile == "" {
-		return false
+		s.AK = cred.Access
+		s.SK = cred.Secret
+		s.SecurityToken = cred.SecurityToken
+		s.expireAt = cred.ExpireAt
 	}
-	if s.SecurityToken == "" || s.expiredAt == 0 {
-		return true
-	}
-	return s.expiredAt-time.Now().Unix() < defaultExpirationThresholdSeconds
-}
-
-func (s *BaseCredentials) updateAuthTokenByIdToken(client *impl.DefaultHttpClient) error {
-	idToken, err := s.getIdToken()
-	if err != nil {
-		return err
-	}
-
-	var iamEndpoint string
-	if s.IamEndpoint != "" {
-		iamEndpoint = s.IamEndpoint
-	} else {
-		iamEndpoint = internal.GetIamEndpoint()
-	}
-	req := internal.GetUnscopedTokenWithIdTokenRequest(iamEndpoint, s.IdpId, idToken, client.GetHttpConfig())
-	resp, err := internal.CreateTokenWithIdToken(client, req)
-	if err != nil {
-		return err
-	}
-
-	akReq := internal.GetCreateTemporaryAccessKeyByTokenRequest(iamEndpoint, resp.XSubjectToken, defaultDurationSeconds, client.GetHttpConfig())
-	akResp, err := internal.CreateTemporaryAccessKeyByToken(client, akReq)
-	if err != nil {
-		return err
-	}
-
-	location, err := time.ParseInLocation(`2006-01-02T15:04:05Z`, akResp.Credential.ExpiresAt, time.UTC)
-	if err != nil {
-		return err
-	}
-	s.expiredAt = location.Unix()
-	s.SecurityToken = akResp.Credential.Securitytoken
-	s.AK = akResp.Credential.Access
-	s.SK = akResp.Credential.Secret
 	return nil
 }
 
@@ -165,16 +99,6 @@ func (s *BaseCredentials) selectIamEndpoint(regionId string) string {
 	}
 
 	return internal.GetIamEndpointById(regionId)
-}
-
-func (s *BaseCredentials) refresh(client *impl.DefaultHttpClient) error {
-	if s.needUpdateFederalAuthToken() {
-		return s.updateAuthTokenByIdToken(client)
-	}
-	if s.needUpdateSecurityTokenFromMetadata() {
-		return s.UpdateSecurityTokenFromMetadata()
-	}
-	return nil
 }
 
 func (s *BaseCredentials) baseProcessAuthRequest(reqBuilder *request.HttpRequestBuilder, req *request.DefaultHttpRequest) error {
@@ -264,6 +188,11 @@ func (builder *BaseCredentialsBuilder) WithIdTokenFile(idTokenFile string) *Base
 	return builder
 }
 
+func (builder *BaseCredentialsBuilder) WithStsAccessor(accessor internal.StsAccessor) *BaseCredentialsBuilder {
+	builder.BaseCredentials.StsAccessor = accessor
+	return builder
+}
+
 // Deprecated: This function may panic under certain circumstances. Use SafeBuild instead.
 func (builder *BaseCredentialsBuilder) Build() *BaseCredentials {
 	credentials, err := builder.SafeBuild()
@@ -289,6 +218,15 @@ func (builder *BaseCredentialsBuilder) SafeBuild() (*BaseCredentials, error) {
 		if builder.BaseCredentials.IdTokenFile == "" {
 			return nil, sdkerr.NewCredentialsTypeError("IdTokenFile is required when using IdpId&IdTokenFile")
 		}
+		if builder.BaseCredentials.StsAccessor == nil {
+			builder.BaseCredentials.StsAccessor = internal.NewFederalAccessor()
+		}
 	}
+
+	// Compatibility for metadata processing: NewCredentialsBuilder().SafeBuild()
+	if builder.BaseCredentials.AK == "" && builder.BaseCredentials.SK == "" && builder.BaseCredentials.StsAccessor == nil {
+		builder.BaseCredentials.StsAccessor = internal.NewMetadataAccessor()
+	}
+
 	return builder.BaseCredentials, nil
 }

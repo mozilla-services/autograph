@@ -24,6 +24,7 @@ import (
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/converter"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/utils"
 	"strings"
+	"time"
 )
 
 type IamResponse struct {
@@ -154,21 +155,71 @@ type CreateTemporaryAccessKeyByTokenRequestBody struct {
 
 type CreateTemporaryAccessKeyByTokenResponse struct {
 	IamResponse
-	Credential *Credential `json:"credential,omitempty"`
+	Credential *Credential `json:"credential"`
 }
 
 type GetTemporaryCredentialFromMetadataResponse struct {
-	Credential *Credential `json:"credential,omitempty"`
+	Credential *Credential `json:"credential"`
+}
+
+type AssumeAgencyForPodIdentityResponse struct {
+	Credentials *Credential `json:"credentials"`
 }
 
 type Credential struct {
-	ExpiresAt string `json:"expires_at"`
+	ExpireAt      int64
+	Access        string
+	Secret        string
+	SecurityToken string
+}
 
-	Access string `json:"access"`
+func (c *Credential) UnmarshalJSON(data []byte) error {
+	var m map[string]string
+	err := utils.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
 
-	Secret string `json:"secret"`
+	if val, ok := m["access"]; ok {
+		c.Access = val
+	} else if val, ok = m["accessKeyId"]; ok {
+		c.Access = val
+	} else {
+		return errors.New("access or accessKeyId not found in credential")
+	}
 
-	Securitytoken string `json:"securitytoken"`
+	if val, ok := m["secret"]; ok {
+		c.Secret = val
+	} else if val, ok = m["secretAccessKey"]; ok {
+		c.Secret = val
+	} else {
+		return errors.New("secret or secretAccessKey not found in credential")
+	}
+
+	if val, ok := m["securitytoken"]; ok {
+		c.SecurityToken = val
+	} else if val, ok = m["securityToken"]; ok {
+		c.SecurityToken = val
+	} else {
+		return errors.New("securitytoken or securityToken not found in credential")
+	}
+
+	var expireStr string
+	if val, ok := m["expires_at"]; ok {
+		expireStr = val
+	} else if val, ok = m["expiration"]; ok {
+		expireStr = val
+	} else {
+		return errors.New("expires_at or expiration not found in credential")
+	}
+
+	location, err := time.ParseInLocation(`2006-01-02T15:04:05Z`, expireStr, time.UTC)
+	if err != nil {
+		return err
+	}
+
+	c.ExpireAt = location.Unix()
+	return nil
 }
 
 type TokenAuth struct {

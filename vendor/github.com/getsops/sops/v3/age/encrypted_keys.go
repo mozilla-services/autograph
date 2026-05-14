@@ -14,6 +14,8 @@ package age
 import (
 	"bufio"
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -104,7 +106,7 @@ func (i *LazyScryptIdentity) Unwrap(stanzas []*age.Stanza) (fileKey []byte, err 
 	return fileKey, err
 }
 
-func unwrapIdentities(location string, reader io.Reader) (ParsedIdentities, error) {
+func unwrapIdentities(location string, reader io.Reader, allowMultipleKeysPerLine bool) (ParsedIdentities, error) {
 	b := bufio.NewReader(reader)
 	p, _ := b.Peek(14) // length of "age-encryption" and "-----BEGIN AGE"
 	peeked := string(p)
@@ -124,6 +126,8 @@ func unwrapIdentities(location string, reader io.Reader) (ParsedIdentities, erro
 		if len(contents) == privateKeySizeLimit {
 			return nil, fmt.Errorf("failed to read '%s': file too long", location)
 		}
+		contentsHash := sha256.Sum256(contents)
+		cacheKey := fmt.Sprintf("SopsAge%s", base64.StdEncoding.EncodeToString(contentsHash[:30]))
 		IncorrectPassphrase := func() {
 			conn, err := gpgagent.NewConn()
 			if err != nil {
@@ -134,7 +138,7 @@ func unwrapIdentities(location string, reader io.Reader) (ParsedIdentities, erro
 					log.Errorf("failed to close connection with gpg-agent: %s", err)
 				}
 			}(conn)
-			err = conn.RemoveFromCache(location)
+			err = conn.RemoveFromCache(cacheKey)
 			if err != nil {
 				log.Warnf("gpg-agent remove cache request errored: %s", err)
 				return
@@ -154,8 +158,7 @@ func unwrapIdentities(location string, reader io.Reader) (ParsedIdentities, erro
 				}(conn)
 
 				req := gpgagent.PassphraseRequest{
-					// TODO is the cachekey good enough?
-					CacheKey: location,
+					CacheKey: cacheKey,
 					Prompt:   "Passphrase",
 					Desc:     fmt.Sprintf("Enter passphrase for identity '%s':", location),
 				}
@@ -177,7 +180,7 @@ func unwrapIdentities(location string, reader io.Reader) (ParsedIdentities, erro
 		return ids, nil
 	// An unencrypted age identity file.
 	default:
-		ids, err := parseIdentities(b)
+		ids, err := parseIdentities(b, allowMultipleKeysPerLine)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse '%s' age identities: %w", location, err)
 		}

@@ -90,7 +90,7 @@ func (s *BasicCredentials) ProcessAuthParams(client *impl.DefaultHttpClient, reg
 }
 
 func (s *BasicCredentials) ProcessAuthRequest(client *impl.DefaultHttpClient, req *request.DefaultHttpRequest) (*request.DefaultHttpRequest, error) {
-	err := s.refresh(client)
+	err := s.ProcessSts(client)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +163,11 @@ func (b *BasicCredentialsBuilder) WithIdpId(idpId string) *BasicCredentialsBuild
 
 func (b *BasicCredentialsBuilder) WithIdTokenFile(idTokenFile string) *BasicCredentialsBuilder {
 	b.Builder.WithIdTokenFile(idTokenFile)
+	return b
+}
+
+func (b *BasicCredentialsBuilder) WithStsAccessor(accessor internal.StsAccessor) *BasicCredentialsBuilder {
+	b.Builder.WithStsAccessor(accessor)
 	return b
 }
 
