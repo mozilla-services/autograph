@@ -91,7 +91,7 @@ docker run -it --rm --user 0:0 \
     "mozilla/autograph:latest" /bin/bash
 ```
 > [!NOTE]
-> If using MacOS, add `--platform=linux/amd64` during `docker run` command. PKCS #11 Library for Cloud KMS, the `libkmsp11.so`, is only available in Windows and AMD64 ([doc](https://github.com/GoogleCloudPlatform/kms-integrations/blob/master/kmsp11/docs/user_guide.md#getting-started)).
+> If using arm64 (ex: macOS or arm linux) add `--platform=linux/amd64` during `docker run` command. PKCS #11 Library for Cloud KMS, the `libkmsp11.so`, is only available in Windows and AMD64 ([doc](https://github.com/GoogleCloudPlatform/kms-integrations/blob/master/kmsp11/docs/user_guide.md#getting-started)).
 
 7. Run the makecsr command with the options you want.
 ```
