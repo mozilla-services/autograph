@@ -52,23 +52,29 @@ For more information, see
 https://mana.mozilla.org/wiki/pages/viewpage.action?pageId=87365053
 
 ### Putting it all together, practical GCP example
-1. Have your keys created in GCP KMS and be sure that your user account has the `cloudkms.signerVerifier` role attached.
+1. Have your keys created in GCP KMS and be sure that your user account has the `cloudkms.signerVerifier` role attached. If role not attached, follow [example PR in mozilla/webservices-infra](https://github.com/mozilla/webservices-infra/pull/11578) to add role.
+
+> [!TIP]
+> Leave PR open to give role and use the same PR to remove the role once the work is complete.
 
 2. Create a read only libkmsp11-config.yaml file like this
 ```
 tokens:
-  - key_ring: projects/my-project/locations/global/keyRings/my-key-ring
+  - key_ring: projects/my-project-id/locations/global/keyRings/my-key-ring
     label: gcp-token
-# Note: This file should be read-only. You can do `chmod -w libkmsp11-config.yaml` after you create it.
 ```
+> [!Note]
+> This file should be read-only because GCP expects the file to be read-only. You can do `chmod -w libkmsp11-config.yaml` after you create it.
 
 3. Create a crypto11-config.json file like this
 ```
 {
   "Path": "/app/libkmsp11.so",
-  "TokenLabel": "gcp-autograph-token"
+  "TokenLabel": "gcp-token"
 }
 ```
+> [!IMPORTANT]
+> `TokenLabel` in crypto11-config.json and `label` from libkmsp11-config.yaml both need to be same value.
 
 4. Get authenticated with GCP. Ex: `gcloud auth login --update-adc`
 
@@ -84,6 +90,8 @@ docker run -it --rm --user 0:0 \
     -v "${PWD}/crypto11-config.json:/mnt/crypto11-config.json" \
     "mozilla/autograph:latest" /bin/bash
 ```
+> [!NOTE]
+> If using MacOS, add `--platform=linux/amd64` during `docker run` command. PKCS #11 Library for Cloud KMS, the `libkmsp11.so`, is only available in Windows and AMD64 ([doc](https://github.com/GoogleCloudPlatform/kms-integrations/blob/master/kmsp11/docs/user_guide.md#getting-started)).
 
 7. Run the makecsr command with the options you want.
 ```
