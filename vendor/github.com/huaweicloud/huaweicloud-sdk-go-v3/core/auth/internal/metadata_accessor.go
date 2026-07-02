@@ -30,8 +30,9 @@ import (
 	"time"
 )
 
+var MetadataEndpoint = "http://169.254.169.254"
+
 const (
-	MetadataEndpoint                = "http://169.254.169.254"
 	GetTokenPath                    = "/meta-data/latest/api/token"
 	GetSecurityKeyPath              = "/openstack/latest/securitykey"
 	XMetadataToken                  = "X-Metadata-Token"
@@ -75,6 +76,7 @@ func execute(req *http.Request) (*SimpleResponse, error) {
 type MetadataAccessor struct {
 	lastCallSeconds *int64
 	token           *string
+	expireAt        int64
 }
 
 func NewMetadataAccessor() *MetadataAccessor {
@@ -122,7 +124,7 @@ func (m *MetadataAccessor) tryUpdateToken(returnErr bool) error {
 	}
 }
 
-func (m *MetadataAccessor) GetCredentials() (*Credential, error) {
+func (m *MetadataAccessor) GetCredential(options ...StsAccessorOption) (*Credential, error) {
 	if m.token == nil &&
 		(m.lastCallSeconds == nil || time.Now().Unix()-*m.lastCallSeconds > DefaultCheckTokenDurationSecond) {
 		err := m.tryUpdateToken(false)
@@ -169,6 +171,6 @@ func (m *MetadataAccessor) GetCredentials() (*Credential, error) {
 	if err != nil {
 		return nil, err
 	}
+	m.expireAt = respModel.Credential.ExpireAt
 	return respModel.Credential, nil
-
 }

@@ -389,6 +389,22 @@ func (i *DeleteTagInvoker) Invoke() (*model.DeleteTagResponse, error) {
 	}
 }
 
+type DeriveSharedSecretInvoker struct {
+	*invoker.BaseInvoker
+}
+
+func (i *DeriveSharedSecretInvoker) GetBaseInvoker() *invoker.BaseInvoker {
+	return i.BaseInvoker
+}
+
+func (i *DeriveSharedSecretInvoker) Invoke() (*model.DeriveSharedSecretResponse, error) {
+	if result, err := i.BaseInvoker.Invoke(); err != nil {
+		return nil, err
+	} else {
+		return result.(*model.DeriveSharedSecretResponse), nil
+	}
+}
+
 type DisableKeyInvoker struct {
 	*invoker.BaseInvoker
 }
@@ -690,6 +706,22 @@ func (i *ListSupportRegionsInvoker) Invoke() (*model.ListSupportRegionsResponse,
 		return nil, err
 	} else {
 		return result.(*model.ListSupportRegionsResponse), nil
+	}
+}
+
+type ReEncryptInvoker struct {
+	*invoker.BaseInvoker
+}
+
+func (i *ReEncryptInvoker) GetBaseInvoker() *invoker.BaseInvoker {
+	return i.BaseInvoker
+}
+
+func (i *ReEncryptInvoker) Invoke() (*model.ReEncryptResponse, error) {
+	if result, err := i.BaseInvoker.Invoke(); err != nil {
+		return nil, err
+	} else {
+		return result.(*model.ReEncryptResponse), nil
 	}
 }
 
