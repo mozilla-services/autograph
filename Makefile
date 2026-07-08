@@ -76,9 +76,9 @@ gpg-test-clean:
 # app-hsm -> monitor-hsm(app-hsm writes chains and updated config to shared /tmp volume)
 #
 build: generate
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel app db
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel app-hsm monitor
-	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel monitor monitor-hsm
+	COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel app db
+	COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel app-hsm monitor
+	COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel monitor monitor-hsm
 
 test-in-docker: build
 	$(SHELL) -c " \
