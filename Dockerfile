@@ -42,6 +42,7 @@ ARG BUILDARCH
 COPY google-pkcs12-release-signing-key.pem /app/src/autograph/
 
 # Download and verify the Google KMS library
+RUN echo "Download Google KMS library for ${BUILDOS} and ${BUILDARCH}."
 RUN cd /tmp && curl -L https://github.com/GoogleCloudPlatform/kms-integrations/releases/download/pkcs11-v${LIBKMSP11_VERSION}/libkmsp11-${LIBKMSP11_VERSION}-${BUILDOS}-${BUILDARCH}.tar.gz | tar -zx --strip-components=1
 RUN openssl dgst -sha384 -verify /app/src/autograph/google-pkcs12-release-signing-key.pem -signature /tmp/libkmsp11.so.sig /tmp/libkmsp11.so
 
