@@ -21,6 +21,8 @@ services:
     image: autograph-app
     build:
       context: .
+      platforms:
+        - "linux/amd64"
     environment:
       - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
     links:
