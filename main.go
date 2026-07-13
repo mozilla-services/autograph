@@ -55,7 +55,7 @@ type serviceConfig struct {
 	}
 	// DebugServer are the settings for the control plane HTTP server where
 	// metrics are exposed for collection and some limited utitilites can live.
-	DebugServer debugServerConfig `yaml:"debugserver"`
+	DebugServer           debugServerConfig `yaml:"debugserver"`
 	HSM                   crypto11.PKCS11Config
 	Database              database.Config
 	Monitoring            authorization
@@ -66,8 +66,8 @@ type serviceConfig struct {
 
 // configuration loads a yaml file that contains the configuration of Autograph
 type signerConfig struct {
-	Signers               []signer.Configuration
-	Authorizations        []authorization
+	Signers        []signer.Configuration
+	Authorizations []authorization
 }
 
 type debugServerConfig struct {
@@ -101,12 +101,12 @@ func main() {
 
 func parseArgsAndLoadConfig(args []string) (serviceConf serviceConfig, signerConf signerConfig, listen string, debug bool) {
 	var (
-		serviceFile  string
+		serviceFile string
 		signerFile  string
-		port     string
-		err      error
-		logLevel string
-		fset     = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
+		port        string
+		err         error
+		logLevel    string
+		fset        = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
 	)
 
 	fset.StringVar(&serviceFile, "c", "autograph-service.yaml", "Path to service configuration file")
@@ -297,7 +297,7 @@ func run(serviceConf serviceConfig, signerConf signerConfig, listen string, debu
 func (c *serviceConfig) loadFromFile(path string) error {
 	var (
 		data []byte
-		err            error
+		err  error
 	)
 	data, err = os.ReadFile(path)
 	if err != nil {

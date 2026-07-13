@@ -118,7 +118,6 @@ heartbeat:
 	}
 }
 
-
 func TestSignerConfigLoad(t *testing.T) {
 	testcases := []struct {
 		name string
