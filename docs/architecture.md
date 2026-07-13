@@ -65,7 +65,7 @@ signer, and returns the encoded signature back to the client.
 The authentication/authorization model is probably the most complex part
 of the autograph core. Clients are required to provide a Hawk
 authorization with payload signature issued by a user trusted by
-autograph. The `authorization` section of the autograph.yaml
+autograph. The `authorization` section of the autograph-signer.yaml
 configuration lists permitted users, along with the signers each is
 allowed to use.
 

@@ -25,7 +25,7 @@ import (
 
 func TestSignaturePass(t *testing.T) {
 	t.Parallel()
-	ag, conf := newTestAutographer(t)
+	ag, _, signerConf := newTestAutographer(t)
 
 	var TESTCASES = []struct {
 		endpoint          string
@@ -111,7 +111,7 @@ func TestSignaturePass(t *testing.T) {
 		},
 	}
 	for i, testcase := range TESTCASES {
-		userid := conf.Authorizations[0].ID
+		userid := signerConf.Authorizations[0].ID
 		body, err := json.Marshal(testcase.signaturerequests)
 		if err != nil {
 			t.Fatal(err)

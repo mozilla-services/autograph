@@ -144,7 +144,7 @@ $ openssl x509 -req -days 365 -in /tmp/autograph-dev.csr -signkey /tmp/autograph
 
 Store the CRT on
 `http://example.net/certs/autograph-dev.crt` and set the x5u
-value in `autograph.yaml`.
+value in `autograph-signer.yaml`.
 
 ``` yaml
 signers:

@@ -15,7 +15,7 @@ import (
 
 func TestMonitorNoConfig(t *testing.T) {
 	tmpag := newAutographer(1)
-	var nomonitor configuration
+	var nomonitor serviceConfig
 	err := tmpag.addMonitoring(nomonitor.Monitoring)
 	if err != nil {
 		t.Fatalf("adding monitoring authorization failed: %v", err)
@@ -28,7 +28,7 @@ func TestMonitorNoConfig(t *testing.T) {
 
 func TestMonitorAddDuplicate(t *testing.T) {
 	tmpag := newAutographer(1)
-	var monitorconf configuration
+	var monitorconf serviceConfig
 	monitorconf.Monitoring.Key = "xxxxxxx"
 
 	defer func() {
@@ -44,8 +44,8 @@ func TestMonitorAddDuplicate(t *testing.T) {
 }
 
 func TestMonitorBadRequest(t *testing.T) {
-	ag, conf := newTestAutographer(t)
-	mo := newMonitor(ag, conf.MonitorInterval)
+	ag, serviceConf, signerConf := newTestAutographer(t)
+	mo := newMonitor(ag, serviceConf.MonitorInterval)
 
 	var TESTCASES = []struct {
 		user     string
@@ -60,11 +60,11 @@ func TestMonitorBadRequest(t *testing.T) {
 		{``, ``, `/__monitor__`, `HEAD`, ``},
 		{``, ``, `/__monitor__`, `DELETE`, ``},
 		// shouldn't have a request body
-		{`monitor`, conf.Monitoring.Key, `/__monitor__`, `GET`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
+		{`monitor`, serviceConf.Monitoring.Key, `/__monitor__`, `GET`, `[{"input":"y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d"}]`},
 		// should use the monitor user
-		{conf.Authorizations[0].ID, conf.Authorizations[0].Key, `/__monitor__`, `GET`, ``},
+		{signerConf.Authorizations[0].ID, signerConf.Authorizations[0].Key, `/__monitor__`, `GET`, ``},
 		// should use the monitoring key
-		{`monitor`, conf.Authorizations[0].Key, `/__monitor__`, `GET`, ``},
+		{`monitor`, signerConf.Authorizations[0].Key, `/__monitor__`, `GET`, ``},
 	}
 	for i, testcase := range TESTCASES {
 		body := strings.NewReader(testcase.body)
@@ -84,7 +84,7 @@ func TestMonitorBadRequest(t *testing.T) {
 }
 
 func TestMonitorReturnsAllFailures(t *testing.T) {
-	ag, conf := newTestAutographer(t)
+	ag, serviceConf, _ := newTestAutographer(t)
 	testPrivateKey := `-----BEGIN PGP PRIVATE KEY BLOCK-----
 
 lQHYBGbt/oUBBAC8q+ta2NFHKd5u63Atnpa9g8uU4lXyRkUeROqdS09fDEgNuip9
@@ -138,7 +138,7 @@ eNGDpX35+pcEygI=
 	if err != nil {
 		t.Fatalf("adding signers failed: %v", err)
 	}
-	mo := newMonitor(ag, conf.MonitorInterval)
+	mo := newMonitor(ag, serviceConf.MonitorInterval)
 
 	var empty []byte
 	req, err := http.NewRequest("GET", "http://foo.bar/__monitor__", bytes.NewReader(empty))
@@ -146,7 +146,7 @@ eNGDpX35+pcEygI=
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	authheader := getAuthHeader(req, monitorAuthID, conf.Monitoring.Key,
+	authheader := getAuthHeader(req, monitorAuthID, serviceConf.Monitoring.Key,
 		sha256.New, id(), "application/json", empty)
 	req.Header.Set("Authorization", authheader)
 	w := httptest.NewRecorder()
