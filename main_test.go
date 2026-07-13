@@ -25,6 +25,9 @@ func newTestAutographer(t *testing.T) (*autographer, serviceConfig, signerConfig
 		log.Fatal(err)
 	}
 	err = signerConf.loadFromFile("autograph-signer.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
 	ag := newAutographer(1)
 	err = ag.addSigners(signerConf.Signers)
 	if err != nil {
