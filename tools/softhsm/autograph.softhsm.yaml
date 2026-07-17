@@ -259,6 +259,71 @@ signers:
       v+d1uifbc8/SgGVWazxyofFhpRik7UJk5Hz4hebIwm08HT8FYFHvH+d2xIXw
       -----END CERTIFICATE-----
 
+  - id: apple-application
+    type: apple
+    mode: application
+    apple:
+      timestamp_url: none
+    privatekey: apple-application
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIELjCCAxagAwIBAgIBATANBgkqhkiG9w0BAQsFADCBsjEVMBMGCgmSJomT8ixk
+      AQEMBXVuc2V0MU4wTAYDVQQDDEVEZXZlbG9wZXIgSUQgQXBwbGljYXRpb246IEF1
+      dG9ncmFwaCBTb2Z0SFNNIEFwcGxlIEFwcGxpY2F0aW9uICh1bnNldCkxDjAMBgNV
+      BAsMBXVuc2V0MSwwKgYDVQQKDCNBdXRvZ3JhcGggU29mdEhTTSBBcHBsZSBBcHBs
+      aWNhdGlvbjELMAkGA1UEBhMCWFgwHhcNMjYwNzE2MjMwODEzWhcNMjcwNzE2MjMw
+      ODEzWjCBsjEVMBMGCgmSJomT8ixkAQEMBXVuc2V0MU4wTAYDVQQDDEVEZXZlbG9w
+      ZXIgSUQgQXBwbGljYXRpb246IEF1dG9ncmFwaCBTb2Z0SFNNIEFwcGxlIEFwcGxp
+      Y2F0aW9uICh1bnNldCkxDjAMBgNVBAsMBXVuc2V0MSwwKgYDVQQKDCNBdXRvZ3Jh
+      cGggU29mdEhTTSBBcHBsZSBBcHBsaWNhdGlvbjELMAkGA1UEBhMCWFgwggEiMA0G
+      CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDDQwV60eQNc8RA7/x+K4WWHMn6z1d9
+      NvNCZvbMxUxktWDi07IIutqUURWfgcZtVuTOBAjke0LtXHhLVihvy0yqLZfmdke7
+      wniqIbZT7nBJYv/WODyKUPHpf0QJgXUJIveJi/0lLUx3XajMKcjbMi/GdDjLwLvp
+      jE82FzCPekTX5xqLZn8pd/wuAHQs1ms5vGGUtT0nCmdQKGTouQPxAScKlr1BAh2n
+      1RXoJwfKd5FTmOxIMANyjpLm11++WujRQ5Ll18n0lZx5wZrlvfQ1oXlPsgrEbmnq
+      Bav43S11igBj0dGowgjDjXEJTr8zpwvW0qKZ/5jDwbI5pbdWFNxpJSeDAgMBAAGj
+      TTBLMAwGA1UdEwEB/wQCMAAwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwMwDgYDVR0P
+      AQH/BAQDAgeAMBMGCiqGSIb3Y2QGAQ0BAf8EAgUAMA0GCSqGSIb3DQEBCwUAA4IB
+      AQCbysLLzJiAOwqoREUFTMOrgcs/sNdxzEDy6fiqzIZpEtplNB1oRXAeto9MaABe
+      PdldcHUQHrgvqriq/+KeD+9CRc/GRbO1XVTXBO43MI9rjZ4PJSMcqVNuW1qDSbjV
+      QbXWv1ymwwXtWg4mW3DY43M73e49L+kUwcIojhCseAu2trqQGslBO0x6IhEmZ6vo
+      xvt0/YrXid9aoG6iAb6iF+D/3S/6kgtdagbnPjn2gN/lhFZGksaww+BFmORLEoWY
+      eRx/tEFuAQu6TnOLqMNhuZt4kbKhYPL0Bn2BI3QGCUo4CEynbDY1bazSlh0sPHwi
+      oaV910XZjfFGmEbsZs6rB8G9
+      -----END CERTIFICATE-----
+  - id: apple-installer
+    type: apple
+    mode: installer
+    apple:
+      timestamp_url: none
+    # PKCS#11 key label in the HSM (imported by tools/softhsm/Dockerfile)
+    privatekey: apple-installer
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIEIzCCAwugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBrDEVMBMGCgmSJomT8ixk
+      AQEMBXVuc2V0MUowSAYDVQQDDEFEZXZlbG9wZXIgSUQgSW5zdGFsbGVyOiBBdXRv
+      Z3JhcGggU29mdEhTTSBBcHBsZSBJbnN0YWxsZXIgKHVuc2V0KTEOMAwGA1UECwwF
+      dW5zZXQxKjAoBgNVBAoMIUF1dG9ncmFwaCBTb2Z0SFNNIEFwcGxlIEluc3RhbGxl
+      cjELMAkGA1UEBhMCWFgwHhcNMjYwODIxMTYyODM2WhcNMjcwODIxMTYyODM2WjCB
+      rDEVMBMGCgmSJomT8ixkAQEMBXVuc2V0MUowSAYDVQQDDEFEZXZlbG9wZXIgSUQg
+      SW5zdGFsbGVyOiBBdXRvZ3JhcGggU29mdEhTTSBBcHBsZSBJbnN0YWxsZXIgKHVu
+      c2V0KTEOMAwGA1UECwwFdW5zZXQxKjAoBgNVBAoMIUF1dG9ncmFwaCBTb2Z0SFNN
+      IEFwcGxlIEluc3RhbGxlcjELMAkGA1UEBhMCWFgwggEiMA0GCSqGSIb3DQEBAQUA
+      A4IBDwAwggEKAoIBAQDilUbSrBRKX2/iPTb56YSngHvXbtREAuxri3Jy3ZveYNrv
+      VZffMioAus/nhl3ZASPNgTf/e1aNDjAcqz26dfb3RNawCJJ0EkugrlbzNmUgP9jX
+      QSJXLlF6gR++RUAZRthU+HsSE1Y8Xm2Lhu7WRbypoUWlam2XnkF76bdnHAdnQZzN
+      Hd8AREdk342ae3TP4fhU54CtbC2+i9zJtMzDoQ7KqgMjphNmRVVx/kpKkOnHffvC
+      u5Kjy0Ar0vO8mYO5sV+IWZucEFHE9Agrg+qGy6whkxdfYTSbd1/42D2883AdYOIP
+      LUrAgtJ4IlL/+3m48FtceSmhQ4z0TuOndFvp/JKVAgMBAAGjTjBMMAwGA1UdEwEB
+      /wQCMAAwFwYDVR0lAQH/BA0wCwYJKoZIhvdjZAQNMA4GA1UdDwEB/wQEAwIHgDAT
+      BgoqhkiG92NkBgEOAQH/BAIFADANBgkqhkiG9w0BAQsFAAOCAQEAQduWLL9P/KuC
+      SHXf7XyjGwBTX/HB8tL2vMpXR8ODrfPE8M7hONuIyVREOpm6h9g0sdRRtmwXHFuA
+      TagSj27Vv7Hyo9csRqU39Zu3ybosIyOgIGVerLXLlv+nQPMaJWzBC3C8iW1CWpxE
+      iVHyzwcTmdVa7cEAfuanJjdgVdF8LQm9phJ4r7lkRIFBZkjqcPvOu79g94yGcqLR
+      GnRkzHtnAP+Uk5MOwXCTeca9L6ELvt5ZDNAv4+jDb4+lAlYBS1i8OGh/vtyZiCC5
+      ldjBHSpk6jx6A1LdHg8SeUCSu1bn7qGVrJDvskwcNBWVwdUKNY0Cu5UZyh5c3Wz6
+      EC3ctC9hag==
+      -----END CERTIFICATE-----
 authorizations:
   - id: alice
     key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
@@ -271,6 +336,8 @@ authorizations:
       - hsm-extensions-ecdsa
       - normandy
       - hsm-extensions-ecdsa-expired-chain
+      - apple-application
+      - apple-installer
 
 monitoring:
   key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs

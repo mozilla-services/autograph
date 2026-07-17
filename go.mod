@@ -3,6 +3,7 @@ module github.com/mozilla-services/autograph
 go 1.25.0
 
 require (
+	github.com/cyphar/filepath-securejoin v0.7.0
 	github.com/getsops/sops/v3 v3.12.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1

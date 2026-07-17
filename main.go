@@ -31,6 +31,7 @@ import (
 	"github.com/mozilla-services/autograph/database"
 	"github.com/mozilla-services/autograph/signer"
 	"github.com/mozilla-services/autograph/signer/apk2"
+	"github.com/mozilla-services/autograph/signer/apple"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/contentsignaturepki"
 	"github.com/mozilla-services/autograph/signer/genericrsa"
@@ -84,6 +85,11 @@ type autographer struct {
 	heartbeatConf        *heartbeatConfig
 	authBackend          authBackend
 	hawkMaxTimestampSkew time.Duration
+
+	// hsmConfig holds the PKCS#11 provider settings (from conf.HSM) so signers
+	// that shell out to an external tool using the HSM (e.g. the apple signer)
+	// can reach the same provider.
+	hsmConfig crypto11.PKCS11Config
 
 	// Used to signal the monitor on exit of the autographer instance.
 	exit chan interface{}
@@ -163,6 +169,9 @@ func run(conf configuration, listen string, debug bool) {
 	// and store them into the autographer handler
 	ag = newAutographer(conf.Server.NonceCacheSize)
 	ag.heartbeatConf = &conf.Heartbeat
+	// make the HSM/PKCS#11 provider settings available to signers that shell
+	// out to a tool using the HSM (e.g. the apple signer)
+	ag.hsmConfig = conf.HSM
 
 	if conf.Database.Name != "" {
 		// ignore the monitor close chan since it will stop
@@ -499,6 +508,15 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			}
 		case apk2.Type:
 			s, err = apk2.New(signerConf)
+			if err != nil {
+				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
+			}
+		case apple.Type:
+			s, err = apple.New(signerConf, apple.HSMConfig{
+				LibraryPath: a.hsmConfig.Path,
+				TokenLabel:  a.hsmConfig.TokenLabel,
+				Pin:         a.hsmConfig.Pin,
+			})
 			if err != nil {
 				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
 			}

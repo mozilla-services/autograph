@@ -1,0 +1,48 @@
+diff --git a/apple-codesign/src/cli/certificate_source.rs b/apple-codesign/src/cli/certificate_source.rs
+index b7d30c00..3b8d3706 100644
+--- a/apple-codesign/src/cli/certificate_source.rs
++++ b/apple-codesign/src/cli/certificate_source.rs
+@@ -771,7 +771,18 @@ impl KeySource for Pkcs11SigningKey {
+         info!("initializing PKCS11 library: {}", library_path.display());
+ 
+         let pkcs11 = Pkcs11::new(library_path.clone())?;
+-        pkcs11.initialize(CInitializeArgs::new(CInitializeFlags::OS_LOCKING_OK))?;
++        match pkcs11.initialize(CInitializeArgs::new(CInitializeFlags::OS_LOCKING_OK)) {
++            Ok(()) => {}
++            // Another C_Initialize earlier in this process (e.g. certificate
++            // resolution) already initialized the library. Spec-compliant PKCS#11
++            // modules (e.g. SoftHSM) return CKR_CRYPTOKI_ALREADY_INITIALIZED here;
++            // that is benign, so reuse the existing initialization.
++            Err(cryptoki::error::Error::Pkcs11(
++                cryptoki::error::RvError::CryptokiAlreadyInitialized,
++                _,
++            )) => {}
++            Err(e) => return Err(e.into()),
++        }
+ 
+         let slots = pkcs11.get_slots_with_token()?;
+         if slots.is_empty() {
+diff --git a/apple-codesign/src/pkcs11.rs b/apple-codesign/src/pkcs11.rs
+index bd0219f1..bf696ae6 100644
+--- a/apple-codesign/src/pkcs11.rs
++++ b/apple-codesign/src/pkcs11.rs
+@@ -113,7 +113,18 @@ impl Pkcs11PrivateKey {
+         F: FnOnce(&cryptoki::session::Session) -> Result<T, AppleCodesignError>,
+     {
+         let pkcs11 = Pkcs11::new(&self.library_path)?;
+-        pkcs11.initialize(CInitializeArgs::new(CInitializeFlags::OS_LOCKING_OK))?;
++        match pkcs11.initialize(CInitializeArgs::new(CInitializeFlags::OS_LOCKING_OK)) {
++            Ok(()) => {}
++            // Another C_Initialize earlier in this process (e.g. certificate
++            // resolution) already initialized the library. Spec-compliant PKCS#11
++            // modules (e.g. SoftHSM) return CKR_CRYPTOKI_ALREADY_INITIALIZED here;
++            // that is benign, so reuse the existing initialization.
++            Err(cryptoki::error::Error::Pkcs11(
++                cryptoki::error::RvError::CryptokiAlreadyInitialized,
++                _,
++            )) => {}
++            Err(e) => return Err(e.into()),
++        }
+ 
+         let slots = pkcs11.get_slots_with_token()?;
+         let slot = slots

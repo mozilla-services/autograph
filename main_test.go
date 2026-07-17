@@ -455,6 +455,8 @@ signers:
       type: gpg2
     - id: testbadsigner6
       type: genericrsa
+    - id: testbadsigner7
+      type: apple
 `))
 
 	if err != nil {

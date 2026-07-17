@@ -19,6 +19,7 @@ import (
 
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/apk2"
+	"github.com/mozilla-services/autograph/signer/apple"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/contentsignaturepki"
 	"github.com/mozilla-services/autograph/signer/genericrsa"
@@ -151,6 +152,10 @@ func TestMonitorPass(t *testing.T) {
 			// we don't verify pgp signatures. I don't feel good about this, but the openpgp
 			// package is very much a pain to deal with and requires putting the public key
 			// into a keyring to verify a signature.
+			continue
+		case apple.Type:
+			// we don't verify apple/macOS signatures here; validation requires
+			// Apple tooling and the signed artifact.
 			continue
 		default:
 			t.Fatalf("unsupported signature type %q", response.Type)

@@ -20,6 +20,7 @@ import (
 
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/apk2"
+	"github.com/mozilla-services/autograph/signer/apple"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/genericrsa"
 	"github.com/mozilla-services/autograph/signer/gpg2"
@@ -363,6 +364,14 @@ examples:
 					if !noVerify {
 						sigStatus = verifyAPK2(sigData)
 					}
+				case apple.Type:
+					// we don't verify apple/macOS signatures in the client;
+					// validation requires rcodesign and the signed artifact
+					sigData, err = base64.StdEncoding.DecodeString(response.SignedFile)
+					if err != nil {
+						log.Fatal(err)
+					}
+					sigStatus = true
 				case mar.Type:
 					if !noVerify {
 						sigStatus = verifyMAR(input)

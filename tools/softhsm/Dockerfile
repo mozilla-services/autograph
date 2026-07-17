@@ -27,6 +27,13 @@ RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 --id 12345678 --import /app/src/autograph/tools/softhsm/extensions-ecdsa-pk8.pem
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384-2 --id 11111111 --import /app/src/autograph/tools/softhsm/extensions-ecdsa-2-pk8.pem
 
+# apple signing keys, both used via PKCS#11: application (Mach-O/.app/.dmg) and
+# installer (.pkg/XAR).
+ADD apple-application-key.pem /app/src/autograph/tools/softhsm/
+RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label apple-application --id abcdef --import /app/src/autograph/tools/softhsm/apple-application-key.pem
+ADD apple-installer-key.pem /app/src/autograph/tools/softhsm/
+RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label apple-installer --id abcde0 --import /app/src/autograph/tools/softhsm/apple-installer-key.pem
+
 # genkeys
 RUN cd /app/src/autograph/tools/softhsm/ && go run ./genkeys/genkeys.go
 
