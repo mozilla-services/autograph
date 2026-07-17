@@ -57,6 +57,47 @@ type RecommendationConfig struct {
 	ValidityDuration time.Duration `yaml:"duration,omitempty"`
 }
 
+// AppleConfig holds default signing settings for the apple (macOS code
+// signing) signer type. Per-request options may override the hardened sign
+// config. See signer/apple for details.
+type AppleConfig struct {
+	// ForNotarization passes --for-notarization to rcodesign, which requires
+	// an Apple-issued Developer ID certificate and a timestamp server and
+	// enables the hardened runtime on all Mach-O binaries. Leave false for
+	// self-signed certificates (e.g. local dev/test).
+	ForNotarization bool `json:"for_notarization,omitempty" yaml:"for_notarization,omitempty"`
+
+	// TimestampURL overrides the RFC 3161 timestamp server. Empty uses
+	// rcodesign's default (Apple's server). The special value "none" disables
+	// timestamping (required for self-signed certs in tests).
+	TimestampURL string `json:"timestamp_url,omitempty" yaml:"timestamp_url,omitempty"`
+
+	// TeamName sets the --team-name value included in the code signature.
+	TeamName string `json:"team_name,omitempty" yaml:"team_name,omitempty"`
+
+	// HardenedSignConfig lists the default per-path signing settings applied
+	// when a signing request does not supply its own hardened_sign_config. It
+	// mirrors the hardened-sign-config used by Mozilla's iscript.
+	HardenedSignConfig []HardenedSignEntry `json:"hardened_sign_config,omitempty" yaml:"hardened_sign_config,omitempty"`
+}
+
+// HardenedSignEntry describes signing settings to apply to a set of paths
+// within an artifact. It mirrors a single entry of Mozilla iscript's
+// hardened-sign-config.
+type HardenedSignEntry struct {
+	// Globs selects the bundle-relative paths these settings apply to. An
+	// empty list (or an entry of "" or "@main") targets the main entity.
+	Globs []string `json:"globs,omitempty" yaml:"globs,omitempty"`
+
+	// Entitlements is inline plist XML applied to the matched paths via
+	// --entitlements-xml-file.
+	Entitlements string `json:"entitlements,omitempty" yaml:"entitlements,omitempty"`
+
+	// Runtime enables the hardened runtime code signature flag
+	// (--code-signature-flags runtime) on the matched paths.
+	Runtime bool `json:"runtime,omitempty" yaml:"runtime,omitempty"`
+}
+
 // Configuration defines the parameters of a signer.
 type Configuration struct {
 	ID            string            `json:"id" yaml:"id"`
@@ -76,6 +117,10 @@ type Configuration struct {
 	// RecommendationConfig specifies config values for
 	// recommendations files for XPI signers
 	RecommendationConfig RecommendationConfig `yaml:"recommendation,omitempty"`
+
+	// AppleConfig specifies default signing settings for the apple (macOS
+	// code signing) signer type. Per-request options may override these.
+	AppleConfig AppleConfig `json:"apple,omitempty" yaml:"apple,omitempty"`
 
 	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
 	// attributes and use a legacy PKCS7 digest

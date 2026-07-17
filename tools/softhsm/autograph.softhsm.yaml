@@ -259,6 +259,98 @@ signers:
       v+d1uifbc8/SgGVWazxyofFhpRik7UJk5Hz4hebIwm08HT8FYFHvH+d2xIXw
       -----END CERTIFICATE-----
 
+  - id: apple-application
+    type: apple
+    mode: application
+    apple:
+      timestamp_url: none
+    privatekey: apple-application
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIELjCCAxagAwIBAgIBATANBgkqhkiG9w0BAQsFADCBsjEVMBMGCgmSJomT8ixk
+      AQEMBXVuc2V0MU4wTAYDVQQDDEVEZXZlbG9wZXIgSUQgQXBwbGljYXRpb246IEF1
+      dG9ncmFwaCBTb2Z0SFNNIEFwcGxlIEFwcGxpY2F0aW9uICh1bnNldCkxDjAMBgNV
+      BAsMBXVuc2V0MSwwKgYDVQQKDCNBdXRvZ3JhcGggU29mdEhTTSBBcHBsZSBBcHBs
+      aWNhdGlvbjELMAkGA1UEBhMCWFgwHhcNMjYwNzE2MjMwODEzWhcNMjcwNzE2MjMw
+      ODEzWjCBsjEVMBMGCgmSJomT8ixkAQEMBXVuc2V0MU4wTAYDVQQDDEVEZXZlbG9w
+      ZXIgSUQgQXBwbGljYXRpb246IEF1dG9ncmFwaCBTb2Z0SFNNIEFwcGxlIEFwcGxp
+      Y2F0aW9uICh1bnNldCkxDjAMBgNVBAsMBXVuc2V0MSwwKgYDVQQKDCNBdXRvZ3Jh
+      cGggU29mdEhTTSBBcHBsZSBBcHBsaWNhdGlvbjELMAkGA1UEBhMCWFgwggEiMA0G
+      CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDDQwV60eQNc8RA7/x+K4WWHMn6z1d9
+      NvNCZvbMxUxktWDi07IIutqUURWfgcZtVuTOBAjke0LtXHhLVihvy0yqLZfmdke7
+      wniqIbZT7nBJYv/WODyKUPHpf0QJgXUJIveJi/0lLUx3XajMKcjbMi/GdDjLwLvp
+      jE82FzCPekTX5xqLZn8pd/wuAHQs1ms5vGGUtT0nCmdQKGTouQPxAScKlr1BAh2n
+      1RXoJwfKd5FTmOxIMANyjpLm11++WujRQ5Ll18n0lZx5wZrlvfQ1oXlPsgrEbmnq
+      Bav43S11igBj0dGowgjDjXEJTr8zpwvW0qKZ/5jDwbI5pbdWFNxpJSeDAgMBAAGj
+      TTBLMAwGA1UdEwEB/wQCMAAwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwMwDgYDVR0P
+      AQH/BAQDAgeAMBMGCiqGSIb3Y2QGAQ0BAf8EAgUAMA0GCSqGSIb3DQEBCwUAA4IB
+      AQCbysLLzJiAOwqoREUFTMOrgcs/sNdxzEDy6fiqzIZpEtplNB1oRXAeto9MaABe
+      PdldcHUQHrgvqriq/+KeD+9CRc/GRbO1XVTXBO43MI9rjZ4PJSMcqVNuW1qDSbjV
+      QbXWv1ymwwXtWg4mW3DY43M73e49L+kUwcIojhCseAu2trqQGslBO0x6IhEmZ6vo
+      xvt0/YrXid9aoG6iAb6iF+D/3S/6kgtdagbnPjn2gN/lhFZGksaww+BFmORLEoWY
+      eRx/tEFuAQu6TnOLqMNhuZt4kbKhYPL0Bn2BI3QGCUo4CEynbDY1bazSlh0sPHwi
+      oaV910XZjfFGmEbsZs6rB8G9
+      -----END CERTIFICATE-----
+  - id: apple-installer
+    type: apple
+    mode: installer
+    apple:
+      timestamp_url: none
+    privatekey: |
+      -----BEGIN PRIVATE KEY-----
+      MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC0KF7rit8Q3QrD
+      8m4NwpWrEfWIuYUnBOL9oEC+eb2zHPnVMBd+3sI8+O9eSgbiRleSu90jmcZJugAX
+      8CVri40x2ZS8TVJFbPZgY7o9pTH2bClmlgDaFyCoLsfENDKMJ9eLQBPRNhoPEnHt
+      cYl6SJpmlgQi2ckq7uGl/tIKjdXdxrTscANh0lamAzNOmcWugPFycSZSlZF9RYnA
+      Jopo+FHVEdycOGbORU0cerXO6+WPQbdpE0xMONByIvVOL35xUonciLFloYOhCT5I
+      BvGgIr+KHE+7YPjpTUVbsnEdYBuO0w7R4ui2beNjUj5Rlp3P3WQJbRgABPQ3hj/8
+      Bhjy6aYpAgMBAAECggEAJjUlpFioZEAsx0/D7WEmMsi1RRDrX1IW/ekdsgfJppHv
+      njn70alWkm3M/jc+7IA0lGcJSEKVng83c9w3Y26OPFNDyweu+hBY1CpyVh6R0Qwx
+      X5NSjO44u9JoBYF4cucEPIETctxBfI7R4KSinm+FZ1pLeESt+E//RSAc1aYtBEKD
+      +s4mvvl0Ye7GAWlwdGkRL+XfF5K3fJZjzo5Or/n/EWHx6tBWUmtbA+EXwsiVJYhb
+      PwAhFePTccwGv58B8lQbDURKihL2OSrJLwCRY2DaJ/hoWlbqgfInU7v+qOgBfX3V
+      HHwncYc8//VURl3MoHxWGBmqcMLOBw1V07qFI2wKcQKBgQDdw0IB/XeXD7Wr6ssb
+      rrQJAacNmwoB/zZIvb5+B0GPZ1AMdFzAGOXdrt0cfdT5uBe3rIFAkcWIPs/xvhaW
+      VcaS+NN1Z+d/DgG+8GLnz7npm/qoNSW1Wy6IE1jRZsqoGRSIUEvacjijF8UdBjhp
+      FYi29J20LOjLuDB281oVTlKrtQKBgQDP+ME7xtELX1t5DooYFwRDZGk7va6cKKek
+      YPJsOhCDMNQBUcFwZYQGZqt5h067Gk8ZHGCI+XGLZgDphoYseKIiJdx4MdxFXloZ
+      Laalhp7GHKV9HGlnwA8iQWHGq5zK8Gf3IUrzkLmGFFz2DZvtQismYMqN5zyrwDxL
+      0res91KhJQKBgQCN5vPF8jskHplReNyeyhvJ55TNz/eHb5d81G2gl2QMLz+5uHvh
+      MA1m3Q3/vUUaxgHnNis+9ghANnE5bzlk2V5HjZFB/0rSslPLqmafjvyXz4eFOvz2
+      H3KXAEpFNFFZXzMURs1C6vPy6LLo76IJHA5vg/el41bThPj+JJnwKD4eQQKBgDZ8
+      g5O3qPkDyKFUr9VT4mgNnIxsS5zaAeHNDHZSWBUm68RUuQtLbWWH7JDwZC4c3HBF
+      wPzh7V+KH98OwYRRLpkntjU/SuhZqd1C2pAvTtW0l57JnMvzw4NEAevc9j0s8vAK
+      JurdFd4M47YLJrjoRwnM/gRjer+8o49x63FDcsCJAoGAd3dDfhA+hpjArR4JdIm2
+      2j7Pg76pqbvU+ldyYEE+FQNn8D5XWJ5IhdH7J4YWiS3iuslzdRYSPsITh9ZiUTNr
+      SAfn0vUOjsFs1ZJR6Jsm3hhAkDFApvN0Qen7hHwwQB2gbtgRlHcp9XygEv6p8onz
+      NGH0Bqt+h3LzEVJIXFyojws=
+      -----END PRIVATE KEY-----
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIEIzCCAwugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBrDEVMBMGCgmSJomT8ixk
+      AQEMBXVuc2V0MUowSAYDVQQDDEFEZXZlbG9wZXIgSUQgSW5zdGFsbGVyOiBBdXRv
+      Z3JhcGggU29mdEhTTSBBcHBsZSBJbnN0YWxsZXIgKHVuc2V0KTEOMAwGA1UECwwF
+      dW5zZXQxKjAoBgNVBAoMIUF1dG9ncmFwaCBTb2Z0SFNNIEFwcGxlIEluc3RhbGxl
+      cjELMAkGA1UEBhMCWFgwHhcNMjYwNzE2MjMwODEzWhcNMjcwNzE2MjMwODEzWjCB
+      rDEVMBMGCgmSJomT8ixkAQEMBXVuc2V0MUowSAYDVQQDDEFEZXZlbG9wZXIgSUQg
+      SW5zdGFsbGVyOiBBdXRvZ3JhcGggU29mdEhTTSBBcHBsZSBJbnN0YWxsZXIgKHVu
+      c2V0KTEOMAwGA1UECwwFdW5zZXQxKjAoBgNVBAoMIUF1dG9ncmFwaCBTb2Z0SFNN
+      IEFwcGxlIEluc3RhbGxlcjELMAkGA1UEBhMCWFgwggEiMA0GCSqGSIb3DQEBAQUA
+      A4IBDwAwggEKAoIBAQC0KF7rit8Q3QrD8m4NwpWrEfWIuYUnBOL9oEC+eb2zHPnV
+      MBd+3sI8+O9eSgbiRleSu90jmcZJugAX8CVri40x2ZS8TVJFbPZgY7o9pTH2bClm
+      lgDaFyCoLsfENDKMJ9eLQBPRNhoPEnHtcYl6SJpmlgQi2ckq7uGl/tIKjdXdxrTs
+      cANh0lamAzNOmcWugPFycSZSlZF9RYnAJopo+FHVEdycOGbORU0cerXO6+WPQbdp
+      E0xMONByIvVOL35xUonciLFloYOhCT5IBvGgIr+KHE+7YPjpTUVbsnEdYBuO0w7R
+      4ui2beNjUj5Rlp3P3WQJbRgABPQ3hj/8Bhjy6aYpAgMBAAGjTjBMMAwGA1UdEwEB
+      /wQCMAAwFwYDVR0lAQH/BA0wCwYJKoZIhvdjZAQNMA4GA1UdDwEB/wQEAwIHgDAT
+      BgoqhkiG92NkBgEOAQH/BAIFADANBgkqhkiG9w0BAQsFAAOCAQEAp8q5Do6Tlre4
+      SOGGK7gwGz2NcJ4kXQLDxM5T4qpsER8T4iZNK6VN/3bCXZ2Vsrq39XCBrA8mSlZy
+      1LJydO3/ocSpa9nFhvof4ct9vMGkpPI68n+79Kg7tfh1EnTmnLNuIACjkhX7TNQq
+      TiItVQMGEuSwQJcqhqBaoVr7wCo+o80meIo8AH6VB4XhvH+dPUAoFcapwq05g8pi
+      m7aZMdXtBKhMBOFe5j634wyTSVPUcKGHM/Ap0u8b1+XBm4eK4Gtjah2mM5XhPhUS
+      89z68oJ5xMULf5Jgha846sITFZH0vvNstkz/EhHAnzIF9lqJIIGcXp0kpMh5R06f
+      Fz6ut2/ZbQ==
+      -----END CERTIFICATE-----
 authorizations:
   - id: alice
     key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
@@ -271,6 +363,8 @@ authorizations:
       - hsm-extensions-ecdsa
       - normandy
       - hsm-extensions-ecdsa-expired-chain
+      - apple-application
+      - apple-installer
 
 monitoring:
   key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs

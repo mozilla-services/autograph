@@ -27,6 +27,12 @@ RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label webextrsa4096 --
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384 --id 12345678 --import /app/src/autograph/tools/softhsm/extensions-ecdsa-pk8.pem
 RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label ext-ecdsa-p384-2 --id 11111111 --import /app/src/autograph/tools/softhsm/extensions-ecdsa-2-pk8.pem
 
+# apple application-signing key (Mach-O/.app/.dmg sign via PKCS#11). The
+# installer (.pkg) key is a PEM key in the config, since rcodesign can't sign
+# XAR/.pkg with a PKCS#11 key (see signer/apple).
+ADD apple-application-key.pem /app/src/autograph/tools/softhsm/
+RUN softhsm2-util --token test --pin 0000 --so-pin 0000 --label apple-application --id abcdef --import /app/src/autograph/tools/softhsm/apple-application-key.pem
+
 # genkeys
 RUN cd /app/src/autograph/tools/softhsm/ && go run ./genkeys/genkeys.go
 
