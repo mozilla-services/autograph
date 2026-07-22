@@ -108,7 +108,7 @@ build-and-run-interactive:
 build-and-run-test-interactive: build
 	docker compose up -d db
 	docker compose up -d app
-	docker compose run --entrypoint /bin/bash -v "$(pwd):/app/src/autograph" -u 0:0 unit-test
+	docker compose run --entrypoint /bin/bash -v "./:/app/src/autograph" -u 0:0 unit-test
 
 # pull the docker image, and run it locally with our source code mounted under /app/src/autograph
 # run as root to allow for changes, package installs, etc
