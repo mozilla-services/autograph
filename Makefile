@@ -78,7 +78,7 @@ gpg-test-clean:
 build: generate
 	COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel app db
 	COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel app-hsm monitor
-	COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel monitor monitor-hsm
+	COMPOSE_DOCKER_CLI_BUILD=0 docker compose build --parallel monitor-hsm
 
 test-in-docker: build
 	$(SHELL) -c " \
