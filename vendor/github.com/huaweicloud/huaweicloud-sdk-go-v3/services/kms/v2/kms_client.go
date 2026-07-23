@@ -539,6 +539,27 @@ func (c *KmsClient) DeleteTagInvoker(request *model.DeleteTagRequest) *DeleteTag
 	return &DeleteTagInvoker{invoker.NewBaseInvoker(c.HcClient, request, requestDef)}
 }
 
+// DeriveSharedSecret 派生共享密钥
+//
+// 功能介绍：派生共享密钥
+//
+// Please refer to HUAWEI cloud API Explorer for details.
+func (c *KmsClient) DeriveSharedSecret(request *model.DeriveSharedSecretRequest) (*model.DeriveSharedSecretResponse, error) {
+	requestDef := GenReqDefForDeriveSharedSecret()
+
+	if resp, err := c.HcClient.Sync(request, requestDef); err != nil {
+		return nil, err
+	} else {
+		return resp.(*model.DeriveSharedSecretResponse), nil
+	}
+}
+
+// DeriveSharedSecretInvoker 派生共享密钥
+func (c *KmsClient) DeriveSharedSecretInvoker(request *model.DeriveSharedSecretRequest) *DeriveSharedSecretInvoker {
+	requestDef := GenReqDefForDeriveSharedSecret()
+	return &DeriveSharedSecretInvoker{invoker.NewBaseInvoker(c.HcClient, request, requestDef)}
+}
+
 // DisableKey 禁用密钥
 //
 // - 功能介绍：禁用密钥，密钥禁用后不可以使用。
@@ -941,6 +962,29 @@ func (c *KmsClient) ListSupportRegions(request *model.ListSupportRegionsRequest)
 func (c *KmsClient) ListSupportRegionsInvoker(request *model.ListSupportRegionsRequest) *ListSupportRegionsInvoker {
 	requestDef := GenReqDefForListSupportRegions()
 	return &ListSupportRegionsInvoker{invoker.NewBaseInvoker(c.HcClient, request, requestDef)}
+}
+
+// ReEncrypt 重加密
+//
+// 将密文使用源密钥解密后，再使用指定的新密钥加密。
+// 能将CreateDatekey，CreateDatakeyWithoutPlainText,EncryptDatakey加密的数据密钥密文重新加密成新的数据密钥密文。
+// 能将EncryptData加密的密文重新加密成新的密文。
+//
+// Please refer to HUAWEI cloud API Explorer for details.
+func (c *KmsClient) ReEncrypt(request *model.ReEncryptRequest) (*model.ReEncryptResponse, error) {
+	requestDef := GenReqDefForReEncrypt()
+
+	if resp, err := c.HcClient.Sync(request, requestDef); err != nil {
+		return nil, err
+	} else {
+		return resp.(*model.ReEncryptResponse), nil
+	}
+}
+
+// ReEncryptInvoker 重加密
+func (c *KmsClient) ReEncryptInvoker(request *model.ReEncryptRequest) *ReEncryptInvoker {
+	requestDef := GenReqDefForReEncrypt()
+	return &ReEncryptInvoker{invoker.NewBaseInvoker(c.HcClient, request, requestDef)}
 }
 
 // ReplicateKey 复制密钥到指定区域

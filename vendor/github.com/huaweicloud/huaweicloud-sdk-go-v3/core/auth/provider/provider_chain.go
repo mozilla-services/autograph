@@ -42,6 +42,7 @@ func DefaultCredentialProviderChain(credentialType string) *CredentialProviderCh
 		NewEnvCredentialProvider(credentialType),
 		NewProfileCredentialProvider(credentialType),
 		NewMetadataCredentialProvider(credentialType),
+		NewProfileCredentialProvider(credentialType),
 	}
 	return NewCredentialProviderChain(providers)
 }
@@ -52,6 +53,7 @@ func BasicCredentialProviderChain() *CredentialProviderChain {
 		BasicCredentialEnvProvider(),
 		BasicCredentialProfileProvider(),
 		BasicCredentialMetadataProvider(),
+		BasicCredentialPodIdentityProvider(),
 	}
 	return NewCredentialProviderChain(providers)
 }
@@ -62,6 +64,7 @@ func GlobalCredentialProviderChain() *CredentialProviderChain {
 		GlobalCredentialEnvProvider(),
 		GlobalCredentialProfileProvider(),
 		GlobalCredentialMetadataProvider(),
+		GlobalCredentialPodIdentityProvider(),
 	}
 	return NewCredentialProviderChain(providers)
 }
