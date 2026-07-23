@@ -380,8 +380,8 @@ go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d h1:ACkLHkvZ4aS7QBgPbE8qNl+
 go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d/go.mod h1:BIzqT/Wm/HHBX0meahRdBRhJFXMa9F+G+AJluKduJJs=
 go.mozilla.org/mozlogrus v2.0.0+incompatible h1:V8aAmJPN07RQuTJZfsroehGglIERIpbj/C5ClwE6fao=
 go.mozilla.org/mozlogrus v2.0.0+incompatible/go.mod h1:bg4v22liQ+tLlQ6nI56e5C7Xe8AqEU4xDdEpWoCzQ6M=
-go.mozilla.org/pkcs7 v0.9.0 h1:yM4/HS9dYv7ri2biPtxt8ikvB37a980dg69/pKmS+eI=
-go.mozilla.org/pkcs7 v0.9.0/go.mod h1:SNgMg+EgDFwmvSmLRTNKC5fegJjB7v23qTQ0XLGUNHk=
+go.mozilla.org/pkcs7 v0.10.0 h1:jmljzDzNYFzaP1dFlgmCiQml9e+iEMmv8/NNs4evQbg=
+go.mozilla.org/pkcs7 v0.10.0/go.mod h1:SNgMg+EgDFwmvSmLRTNKC5fegJjB7v23qTQ0XLGUNHk=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/contrib/detectors/gcp v1.39.0 h1:kWRNZMsfBHZ+uHjiH4y7Etn2FK26LAGkNFw7RHv1DhE=

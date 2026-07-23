@@ -17,7 +17,7 @@ require (
 	go.mozilla.org/hawk v0.0.0-20190327210923-a483e4a7047e
 	go.mozilla.org/mar v0.0.0-20200124173325-c51ce05c9f3d
 	go.mozilla.org/mozlogrus v2.0.0+incompatible
-	go.mozilla.org/pkcs7 v0.9.0
+	go.mozilla.org/pkcs7 v0.10.0
 	go.uber.org/mock v0.6.0
 )
 
