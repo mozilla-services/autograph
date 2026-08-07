@@ -28,12 +28,8 @@ RUN apt update && \
         jq \
         libengine-pkcs11-openssl
 
-RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.29.0/bazelisk-${TARGETARCH}.deb
-RUN dpkg -i bazelisk-${TARGETARCH}.deb
-
 # Cleanup after package installation
 RUN apt clean && rm -rf /var/lib/apt/lists/*
-RUN rm bazelisk-${TARGETARCH}.deb
 
 #------------------------------------------------------------------------------
 # Pre-build dependency caching
@@ -41,12 +37,17 @@ RUN rm bazelisk-${TARGETARCH}.deb
 FROM base AS prebuild
 ARG TARGETARCH
 
+## install bazelisk for building libkmsp11
+RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.29.0/bazelisk-${TARGETARCH}.deb
+RUN dpkg -i bazelisk-${TARGETARCH}.deb
+RUN rm bazelisk-${TARGETARCH}.deb
+
 COPY google-pkcs12-release-signing-key.pem /app/src/autograph/
 
 # Build the Google KMS library
 RUN echo "Building Google KMS library for ${TARGETARCH}."
-ADD ./kmsp11 /kmsp11
-WORKDIR /kmsp11
+ADD ./kmsp11 /tmp/kmsp11
+WORKDIR /tmp/kmsp11
 RUN bazel build //kmsp11/main:libkmsp11.so
 RUN mv $(find / -type f -name "libkmsp11.so") ./
 
@@ -64,7 +65,7 @@ RUN cd /app/src/autograph/tools/makecsr && go build -o /go/bin/makecsr .
 #------------------------------------------------------------------------------
 # Deployment Stage
 #------------------------------------------------------------------------------
-FROM prebuild
+FROM base
 EXPOSE 8000
 EXPOSE 2112
 
@@ -75,7 +76,7 @@ ADD version.json /app
 COPY --from=builder /go/bin /go/bin/
 
 # Copy Google KMS library from the builder.
-COPY --from=builder /kmsp11/libkmsp11.so /app
+COPY --from=builder /tmp/kmsp11/libkmsp11.so /app
 
 # Setup the worker and entrypoint.
 RUN useradd --uid 10001 --home-dir /app --shell /sbin/nologin app
