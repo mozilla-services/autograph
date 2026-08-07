@@ -1,0 +1,78 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
+
+package(
+    default_testonly = 1,
+    default_visibility = ["//kmscng:__subpackages__"],
+)
+
+cc_library(
+    name = "matchers",
+    hdrs = ["matchers.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//common/test:matchers",
+        "//kmscng/util:status_utils",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "matchers_test",
+    size = "small",
+    srcs = ["matchers_test.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "registered_provider_test",
+    size = "small",
+    srcs = ["registered_provider_test.cc"],
+    linkopts = ["-DEFAULTLIB:ncrypt.lib"],
+    tags = [
+        # This test is manual because it relies on the output of the
+        # move_dll_to_system32 genrule, and for some reason that's flaky.
+        "manual",
+    ],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//common/test:resource_helpers",
+        "//common/test:test_status_macros",
+        "//kmscng:cng_headers",
+        "//kmscng:object",
+        "//kmscng:provider",
+        "//kmscng/util:registration",
+        "//kmscng/util:string_utils",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+go_test(
+    name = "signtool_test",
+    srcs = ["signtool_test.go"],
+    flaky = True,  # https://github.com/GoogleCloudPlatform/kms-integrations/issues/19
+    tags = [
+        "exclusive",  # only one test that does Windows installers at a time
+        "manual",  # don't run on dev workstations; included in //:ci_only_tests
+    ],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//fakekms",
+        "//kmscng/main:install_testlib",
+        "@com_github_google_uuid//:go_default_library",
+        "@com_github_sethvargo_go_gcpkms//pkg/gcpkms:go_default_library",
+        "@com_google_cloud_go_kms//apiv1:go_default_library",
+        "@com_google_cloud_go_kms//apiv1/kmspb:go_default_library",
+        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+        "@org_golang_google_api//option:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+    ],
+)

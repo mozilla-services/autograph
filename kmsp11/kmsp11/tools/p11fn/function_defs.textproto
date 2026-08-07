@@ -1,0 +1,1148 @@
+functions: <
+  name: "C_Initialize"
+  args: <
+    datatype: "CK_VOID_PTR"
+    name: "pInitArgs"
+  >
+>
+functions: <
+  name: "C_Finalize"
+  args: <
+    datatype: "CK_VOID_PTR"
+    name: "pReserved"
+  >
+>
+functions: <
+  name: "C_GetInfo"
+  args: <
+    datatype: "CK_INFO_PTR"
+    name: "pInfo"
+  >
+>
+functions: <
+  name: "C_GetFunctionList"
+  args: <
+    datatype: "CK_FUNCTION_LIST_PTR_PTR"
+    name: "ppFunctionList"
+  >
+>
+functions: <
+  name: "C_GetSlotList"
+  args: <
+    datatype: "CK_BBOOL"
+    name: "tokenPresent"
+  >
+  args: <
+    datatype: "CK_SLOT_ID_PTR"
+    name: "pSlotList"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulCount"
+  >
+>
+functions: <
+  name: "C_GetSlotInfo"
+  args: <
+    datatype: "CK_SLOT_ID"
+    name: "slotID"
+  >
+  args: <
+    datatype: "CK_SLOT_INFO_PTR"
+    name: "pInfo"
+  >
+>
+functions: <
+  name: "C_GetTokenInfo"
+  args: <
+    datatype: "CK_SLOT_ID"
+    name: "slotID"
+  >
+  args: <
+    datatype: "CK_TOKEN_INFO_PTR"
+    name: "pInfo"
+  >
+>
+functions: <
+  name: "C_GetMechanismList"
+  args: <
+    datatype: "CK_SLOT_ID"
+    name: "slotID"
+  >
+  args: <
+    datatype: "CK_MECHANISM_TYPE_PTR"
+    name: "pMechanismList"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulCount"
+  >
+>
+functions: <
+  name: "C_GetMechanismInfo"
+  args: <
+    datatype: "CK_SLOT_ID"
+    name: "slotID"
+  >
+  args: <
+    datatype: "CK_MECHANISM_TYPE"
+    name: "type"
+  >
+  args: <
+    datatype: "CK_MECHANISM_INFO_PTR"
+    name: "pInfo"
+  >
+>
+functions: <
+  name: "C_InitToken"
+  args: <
+    datatype: "CK_SLOT_ID"
+    name: "slotID"
+  >
+  args: <
+    datatype: "CK_UTF8CHAR_PTR"
+    name: "pPin"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPinLen"
+  >
+  args: <
+    datatype: "CK_UTF8CHAR_PTR"
+    name: "pLabel"
+  >
+>
+functions: <
+  name: "C_InitPIN"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_UTF8CHAR_PTR"
+    name: "pPin"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPinLen"
+  >
+>
+functions: <
+  name: "C_SetPIN"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_UTF8CHAR_PTR"
+    name: "pOldPin"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulOldLen"
+  >
+  args: <
+    datatype: "CK_UTF8CHAR_PTR"
+    name: "pNewPin"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulNewLen"
+  >
+>
+functions: <
+  name: "C_OpenSession"
+  args: <
+    datatype: "CK_SLOT_ID"
+    name: "slotID"
+  >
+  args: <
+    datatype: "CK_FLAGS"
+    name: "flags"
+  >
+  args: <
+    datatype: "CK_VOID_PTR"
+    name: "pApplication"
+  >
+  args: <
+    datatype: "CK_NOTIFY"
+    name: "Notify"
+  >
+  args: <
+    datatype: "CK_SESSION_HANDLE_PTR"
+    name: "phSession"
+  >
+>
+functions: <
+  name: "C_CloseSession"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+>
+functions: <
+  name: "C_CloseAllSessions"
+  args: <
+    datatype: "CK_SLOT_ID"
+    name: "slotID"
+  >
+>
+functions: <
+  name: "C_GetSessionInfo"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_SESSION_INFO_PTR"
+    name: "pInfo"
+  >
+>
+functions: <
+  name: "C_GetOperationState"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pOperationState"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulOperationStateLen"
+  >
+>
+functions: <
+  name: "C_SetOperationState"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pOperationState"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulOperationStateLen"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hEncryptionKey"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hAuthenticationKey"
+  >
+>
+functions: <
+  name: "C_Login"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_USER_TYPE"
+    name: "userType"
+  >
+  args: <
+    datatype: "CK_UTF8CHAR_PTR"
+    name: "pPin"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPinLen"
+  >
+>
+functions: <
+  name: "C_Logout"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+>
+functions: <
+  name: "C_CreateObject"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulCount"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE_PTR"
+    name: "phObject"
+  >
+>
+functions: <
+  name: "C_CopyObject"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hObject"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulCount"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE_PTR"
+    name: "phNewObject"
+  >
+>
+functions: <
+  name: "C_DestroyObject"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hObject"
+  >
+>
+functions: <
+  name: "C_GetObjectSize"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hObject"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulSize"
+  >
+>
+functions: <
+  name: "C_GetAttributeValue"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hObject"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulCount"
+  >
+>
+functions: <
+  name: "C_SetAttributeValue"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hObject"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulCount"
+  >
+>
+functions: <
+  name: "C_FindObjectsInit"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulCount"
+  >
+>
+functions: <
+  name: "C_FindObjects"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE_PTR"
+    name: "phObject"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulMaxObjectCount"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulObjectCount"
+  >
+>
+functions: <
+  name: "C_FindObjectsFinal"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+>
+functions: <
+  name: "C_EncryptInit"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hKey"
+  >
+>
+functions: <
+  name: "C_Encrypt"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pData"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulDataLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pEncryptedData"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulEncryptedDataLen"
+  >
+>
+functions: <
+  name: "C_EncryptUpdate"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pPart"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPartLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pEncryptedPart"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulEncryptedPartLen"
+  >
+>
+functions: <
+  name: "C_EncryptFinal"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pLastEncryptedPart"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulLastEncryptedPartLen"
+  >
+>
+functions: <
+  name: "C_DecryptInit"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hKey"
+  >
+>
+functions: <
+  name: "C_Decrypt"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pEncryptedData"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulEncryptedDataLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pData"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulDataLen"
+  >
+>
+functions: <
+  name: "C_DecryptUpdate"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pEncryptedPart"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulEncryptedPartLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pPart"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulPartLen"
+  >
+>
+functions: <
+  name: "C_DecryptFinal"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pLastPart"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulLastPartLen"
+  >
+>
+functions: <
+  name: "C_DigestInit"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+>
+functions: <
+  name: "C_Digest"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pData"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulDataLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pDigest"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulDigestLen"
+  >
+>
+functions: <
+  name: "C_DigestUpdate"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pPart"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPartLen"
+  >
+>
+functions: <
+  name: "C_DigestKey"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hKey"
+  >
+>
+functions: <
+  name: "C_DigestFinal"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pDigest"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulDigestLen"
+  >
+>
+functions: <
+  name: "C_SignInit"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hKey"
+  >
+>
+functions: <
+  name: "C_Sign"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pData"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulDataLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pSignature"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulSignatureLen"
+  >
+>
+functions: <
+  name: "C_SignUpdate"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pPart"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPartLen"
+  >
+>
+functions: <
+  name: "C_SignFinal"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pSignature"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulSignatureLen"
+  >
+>
+functions: <
+  name: "C_SignRecoverInit"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hKey"
+  >
+>
+functions: <
+  name: "C_SignRecover"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pData"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulDataLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pSignature"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulSignatureLen"
+  >
+>
+functions: <
+  name: "C_VerifyInit"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hKey"
+  >
+>
+functions: <
+  name: "C_Verify"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pData"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulDataLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pSignature"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulSignatureLen"
+  >
+>
+functions: <
+  name: "C_VerifyUpdate"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pPart"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPartLen"
+  >
+>
+functions: <
+  name: "C_VerifyFinal"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pSignature"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulSignatureLen"
+  >
+>
+functions: <
+  name: "C_VerifyRecoverInit"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hKey"
+  >
+>
+functions: <
+  name: "C_VerifyRecover"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pSignature"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulSignatureLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pData"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulDataLen"
+  >
+>
+functions: <
+  name: "C_DigestEncryptUpdate"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pPart"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPartLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pEncryptedPart"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulEncryptedPartLen"
+  >
+>
+functions: <
+  name: "C_DecryptDigestUpdate"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pEncryptedPart"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulEncryptedPartLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pPart"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulPartLen"
+  >
+>
+functions: <
+  name: "C_SignEncryptUpdate"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pPart"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPartLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pEncryptedPart"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulEncryptedPartLen"
+  >
+>
+functions: <
+  name: "C_DecryptVerifyUpdate"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pEncryptedPart"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulEncryptedPartLen"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pPart"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulPartLen"
+  >
+>
+functions: <
+  name: "C_GenerateKey"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulCount"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE_PTR"
+    name: "phKey"
+  >
+>
+functions: <
+  name: "C_GenerateKeyPair"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pPublicKeyTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPublicKeyAttributeCount"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pPrivateKeyTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulPrivateKeyAttributeCount"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE_PTR"
+    name: "phPublicKey"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE_PTR"
+    name: "phPrivateKey"
+  >
+>
+functions: <
+  name: "C_WrapKey"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hWrappingKey"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hKey"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pWrappedKey"
+  >
+  args: <
+    datatype: "CK_ULONG_PTR"
+    name: "pulWrappedKeyLen"
+  >
+>
+functions: <
+  name: "C_UnwrapKey"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hUnwrappingKey"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pWrappedKey"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulWrappedKeyLen"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulAttributeCount"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE_PTR"
+    name: "phKey"
+  >
+>
+functions: <
+  name: "C_DeriveKey"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_MECHANISM_PTR"
+    name: "pMechanism"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE"
+    name: "hBaseKey"
+  >
+  args: <
+    datatype: "CK_ATTRIBUTE_PTR"
+    name: "pTemplate"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulAttributeCount"
+  >
+  args: <
+    datatype: "CK_OBJECT_HANDLE_PTR"
+    name: "phKey"
+  >
+>
+functions: <
+  name: "C_SeedRandom"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "pSeed"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulSeedLen"
+  >
+>
+functions: <
+  name: "C_GenerateRandom"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+  args: <
+    datatype: "CK_BYTE_PTR"
+    name: "RandomData"
+  >
+  args: <
+    datatype: "CK_ULONG"
+    name: "ulRandomLen"
+  >
+>
+functions: <
+  name: "C_GetFunctionStatus"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+>
+functions: <
+  name: "C_CancelFunction"
+  args: <
+    datatype: "CK_SESSION_HANDLE"
+    name: "hSession"
+  >
+>
+functions: <
+  name: "C_WaitForSlotEvent"
+  args: <
+    datatype: "CK_FLAGS"
+    name: "flags"
+  >
+  args: <
+    datatype: "CK_SLOT_ID_PTR"
+    name: "pSlot"
+  >
+  args: <
+    datatype: "CK_VOID_PTR"
+    name: "pRserved"
+  >
+>

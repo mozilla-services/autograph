@@ -1,0 +1,220 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//kmsp11:__subpackages__"])
+
+cc_library(
+    name = "crypto_utils",
+    srcs = ["crypto_utils.cc"],
+    hdrs = ["crypto_utils.h"],
+    visibility = [
+        "//common:__subpackages__",  # TODO(b/270419822): remove
+        "//kmscng:__subpackages__",  # TODO(b/270419822): remove
+        "//kmsp11:__subpackages__",
+    ],
+    deps = [
+        ":errors",
+        "//common:kms_v1",
+        "//common:openssl",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "@com_google_absl//absl/random",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+cc_test(
+    name = "crypto_utils_test",
+    size = "small",
+    srcs = ["crypto_utils_test.cc"],
+    deps = [
+        ":crypto_utils",
+        "//common/test:runfiles",
+        "//kmsp11/test",
+        "@com_google_absl//absl/random",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "errors",
+    srcs = ["errors.cc"],
+    hdrs = ["errors.h"],
+    deps = [
+        ":status_utils",
+        "//common:source_location",
+        "//common:status_utils",
+        "@com_github_google_glog//:glog",
+    ],
+)
+
+cc_test(
+    name = "errors_test",
+    size = "small",
+    srcs = ["errors_test.cc"],
+    deps = [
+        ":errors",
+        "//kmsp11/test:matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "handle_map",
+    hdrs = ["handle_map.h"],
+    deps = [
+        ":crypto_utils",
+        ":errors",
+        "//kmsp11:cryptoki_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "handle_map_test",
+    size = "small",
+    srcs = ["handle_map_test.cc"],
+    deps = [
+        ":handle_map",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "global_provider",
+    srcs = ["global_provider.cc"],
+    hdrs = ["global_provider.h"],
+    deps = [
+        ":errors",
+        "//kmsp11:provider",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "global_provider_test",
+    size = "small",
+    srcs = ["global_provider_test.cc"],
+    deps = [
+        ":global_provider",
+        "//kmsp11/test",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "logging",
+    srcs = ["logging.cc"],
+    hdrs = ["logging.h"],
+    deps = [
+        ":errors",
+        ":status_utils",
+        "//common:platform",
+        "//common:status_utils",
+        "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc",
+        "@com_google_absl//absl/log:initialize",
+        "@com_google_absl//absl/log:log_entry",
+        "@com_google_absl//absl/log:log_sink",
+        "@com_google_absl//absl/log:log_sink_registry",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+cc_test(
+    name = "logging_test",
+    size = "small",
+    srcs = ["logging_test.cc"],
+    deps = [
+        ":logging",
+        ":string_utils",
+        "//common:platform",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/log:absl_log",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "padding",
+    srcs = ["padding.cc"],
+    hdrs = ["padding.h"],
+    deps = [
+        ":errors",
+        ":string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "padding_test",
+    size = "small",
+    srcs = ["padding_test.cc"],
+    deps = [
+        ":padding",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "status_utils",
+    srcs = ["status_utils.cc"],
+    hdrs = ["status_utils.h"],
+    deps = [
+        "//common:status_details_cc_proto",
+        "//common:status_utils",
+        "//kmsp11:cryptoki_headers",
+        "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "status_utils_test",
+    size = "small",
+    srcs = ["status_utils_test.cc"],
+    deps = [
+        ":status_utils",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "string_utils",
+    srcs = ["string_utils.cc"],
+    hdrs = ["string_utils.h"],
+    deps = [
+        ":errors",
+        "//common:openssl",
+        "//common:string_utils",
+        "//kmsp11:cryptoki_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/time",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "string_utils_test",
+    size = "small",
+    srcs = ["string_utils_test.cc"],
+    deps = [
+        ":string_utils",
+        "//common/test:test_status_macros",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

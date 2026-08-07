@@ -1,0 +1,432 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//kmsp11:__subpackages__"])
+
+cc_library(
+    name = "aes_cbc",
+    srcs = ["aes_cbc.cc"],
+    hdrs = ["aes_cbc.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:padding",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "aes_cbc_test",
+    size = "small",
+    srcs = ["aes_cbc_test.cc"],
+    deps = [
+        ":aes_cbc",
+        "//common/test:runfiles",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/test",
+        "//kmsp11/util:padding",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "aes_ctr",
+    srcs = ["aes_ctr.cc"],
+    hdrs = ["aes_ctr.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "aes_ctr_test",
+    size = "small",
+    srcs = ["aes_ctr_test.cc"],
+    deps = [
+        ":aes_ctr",
+        "//common/test:runfiles",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "aes_gcm",
+    srcs = ["aes_gcm.cc"],
+    hdrs = ["aes_gcm.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "aes_gcm_test",
+    size = "small",
+    srcs = ["aes_gcm_test.cc"],
+    deps = [
+        ":aes_gcm",
+        "//common/test:runfiles",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "crypter_interfaces",
+    hdrs = ["crypter_interfaces.h"],
+    deps = [
+        "//common:kms_client",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11:object",
+        "//kmsp11/util:errors",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_library(
+    name = "crypter_ops",
+    srcs = ["crypter_ops.cc"],
+    hdrs = ["crypter_ops.h"],
+    deps = [
+        ":aes_cbc",
+        ":aes_ctr",
+        ":aes_gcm",
+        ":crypter_interfaces",
+        ":ecdsa",
+        ":hmac",
+        ":rsaes_oaep",
+        ":rsassa_pkcs1",
+        ":rsassa_pss",
+        ":rsassa_raw_pkcs1",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:errors",
+    ],
+)
+
+cc_test(
+    name = "crypter_ops_test",
+    size = "small",
+    srcs = ["crypter_ops_test.cc"],
+    deps = [
+        ":crypter_ops",
+        "//common/test:runfiles",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ecdsa",
+    srcs = ["ecdsa.cc"],
+    hdrs = ["ecdsa.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":kms_digesting_signer",
+        ":kms_digesting_verifier",
+        ":kms_prehashed_signer",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "ecdsa_test",
+    size = "small",
+    srcs = ["ecdsa_test.cc"],
+    deps = [
+        ":ecdsa",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "find",
+    hdrs = ["find.h"],
+    deps = [
+        "//kmsp11:cryptoki_headers",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_library(
+    name = "hmac",
+    srcs = ["hmac.cc"],
+    hdrs = ["hmac.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "hmac_test",
+    size = "small",
+    srcs = ["hmac_test.cc"],
+    deps = [
+        ":hmac",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "kms_digesting_signer",
+    srcs = ["kms_digesting_signer.cc"],
+    hdrs = ["kms_digesting_signer.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":kms_prehashed_signer",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "kms_digesting_signer_test",
+    size = "small",
+    srcs = ["kms_digesting_signer_test.cc"],
+    deps = [
+        ":kms_digesting_signer",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "kms_digesting_verifier",
+    srcs = ["kms_digesting_verifier.cc"],
+    hdrs = ["kms_digesting_verifier.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "kms_digesting_verifier_test",
+    size = "small",
+    srcs = ["kms_digesting_verifier_test.cc"],
+    deps = [
+        ":kms_digesting_signer",
+        ":kms_digesting_verifier",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "kms_prehashed_signer",
+    srcs = ["kms_prehashed_signer.cc"],
+    hdrs = ["kms_prehashed_signer.h"],
+    deps = [
+        ":crypter_interfaces",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_library(
+    name = "operation",
+    hdrs = ["operation.h"],
+    deps = [
+        ":crypter_ops",
+        ":find",
+        "@com_google_absl//absl/types:variant",
+    ],
+)
+
+cc_library(
+    name = "preconditions",
+    srcs = ["preconditions.cc"],
+    hdrs = ["preconditions.h"],
+    deps = [
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11:object",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_test(
+    name = "preconditions_test",
+    size = "small",
+    srcs = ["preconditions_test.cc"],
+    deps = [
+        ":preconditions",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "rsaes_oaep",
+    srcs = ["rsaes_oaep.cc"],
+    hdrs = ["rsaes_oaep.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "rsaes_oaep_test",
+    size = "small",
+    srcs = ["rsaes_oaep_test.cc"],
+    deps = [
+        ":rsaes_oaep",
+        "//common/test:runfiles",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "rsassa_pkcs1",
+    srcs = ["rsassa_pkcs1.cc"],
+    hdrs = ["rsassa_pkcs1.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":kms_digesting_signer",
+        ":kms_digesting_verifier",
+        ":kms_prehashed_signer",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "rsassa_pkcs1_test",
+    size = "small",
+    srcs = ["rsassa_pkcs1_test.cc"],
+    deps = [
+        ":rsassa_pkcs1",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "rsassa_pss",
+    srcs = ["rsassa_pss.cc"],
+    hdrs = ["rsassa_pss.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":kms_digesting_signer",
+        ":kms_digesting_verifier",
+        ":kms_prehashed_signer",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "rsassa_pss_test",
+    size = "small",
+    srcs = ["rsassa_pss_test.cc"],
+    deps = [
+        ":rsassa_pss",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "rsassa_raw_pkcs1",
+    srcs = ["rsassa_raw_pkcs1.cc"],
+    hdrs = ["rsassa_raw_pkcs1.h"],
+    deps = [
+        ":crypter_interfaces",
+        ":kms_digesting_signer",
+        ":kms_digesting_verifier",
+        ":preconditions",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "rsassa_raw_pkcs1_test",
+    size = "small",
+    srcs = ["rsassa_raw_pkcs1_test.cc"],
+    deps = [
+        ":rsassa_raw_pkcs1",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

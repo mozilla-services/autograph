@@ -1,0 +1,125 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//kmscng:__subpackages__"])
+
+cc_library(
+    name = "errors",
+    srcs = ["errors.cc"],
+    hdrs = ["errors.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":status_utils",
+        "//common:source_location",
+        "//common:status_utils",
+        "//kmscng:cng_headers",
+        "@com_github_google_glog//:glog",
+    ],
+)
+
+cc_test(
+    name = "errors_test",
+    size = "small",
+    srcs = ["errors_test.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":errors",
+        "//kmscng/test:matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "logging",
+    srcs = ["logging.cc"],
+    hdrs = ["logging.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":errors",
+        ":status_utils",
+        "//common:platform",
+        "//common:status_utils",
+        "//kmscng:cng_headers",
+        "@com_github_grpc_grpc//:grpc",
+        "@com_google_absl//absl/base:log_severity",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/log:initialize",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+cc_test(
+    name = "logging_test",
+    size = "small",
+    srcs = ["logging_test.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":logging",
+        "//common:string_utils",
+        "//fakekms/cpp:fakekms",
+        "//kmscng/test:matchers",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "registration",
+    srcs = ["registration.cc"],
+    hdrs = ["registration.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//kmscng:cng_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_library(
+    name = "status_utils",
+    srcs = ["status_utils.cc"],
+    hdrs = ["status_utils.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//common:status_details_cc_proto",
+        "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "status_utils_test",
+    size = "small",
+    srcs = ["status_utils_test.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":status_utils",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "string_utils",
+    srcs = ["string_utils.cc"],
+    hdrs = ["string_utils.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//kmscng:cng_headers",
+    ],
+)
+
+cc_test(
+    name = "string_utils_test",
+    size = "small",
+    srcs = ["string_utils_test.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":string_utils",
+        "//common/test:test_status_macros",
+        "//kmscng/test:matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

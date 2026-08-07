@@ -1,0 +1,37 @@
+diff --git a/src/core/BUILD b/src/core/BUILD
+index 73889256d2..d58b18c507 100644
+--- a/src/core/BUILD
++++ b/src/core/BUILD
+@@ -2212,6 +2212,7 @@ grpc_cc_library(
+     ],
+     external_deps = [
+         "absl/container:flat_hash_map",
++        "absl/strings",
+         "absl/strings:str_format",
+     ],
+     deps = [
+diff --git a/src/core/lib/event_engine/cf_engine/cfstream_endpoint.cc b/src/core/lib/event_engine/cf_engine/cfstream_endpoint.cc
+index 74f7392af9..c9b203da14 100644
+--- a/src/core/lib/event_engine/cf_engine/cfstream_endpoint.cc
++++ b/src/core/lib/event_engine/cf_engine/cfstream_endpoint.cc
+@@ -18,6 +18,8 @@
+ #include <AvailabilityMacros.h>
+ #ifdef AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER
+ 
++#include "absl/strings/str_cat.h"
++
+ #include "src/core/lib/event_engine/cf_engine/cfstream_endpoint.h"
+ #include "src/core/lib/event_engine/trace.h"
+ #include "src/core/lib/gprpp/strerror.h"
+diff --git a/src/core/lib/event_engine/cf_engine/dns_service_resolver.cc b/src/core/lib/event_engine/cf_engine/dns_service_resolver.cc
+index 96de4bbf0b..a202e815ab 100644
+--- a/src/core/lib/event_engine/cf_engine/dns_service_resolver.cc
++++ b/src/core/lib/event_engine/cf_engine/dns_service_resolver.cc
+@@ -18,6 +18,7 @@
+ #include <AvailabilityMacros.h>
+ #ifdef AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER
+ 
++#include "absl/strings/str_cat.h"
+ #include "absl/strings/str_format.h"
+ 
+ #include "src/core/lib/address_utils/parse_address.h"

@@ -1,0 +1,12 @@
+diff --git a/google/cloud/kms/v1/resources.proto b/google/cloud/kms/v1/resources.proto
+index fb4e6534a..eabe6fab9 100644
+--- a/google/cloud/kms/v1/resources.proto
++++ b/google/cloud/kms/v1/resources.proto
+@@ -917,4 +917,7 @@ enum ProtectionLevel {
+ 
+   // Crypto operations are performed in an EKM-over-VPC backend.
+   EXTERNAL_VPC = 4;
++
++  // Crypto operations are performed in a single-tenant HSM.
++  HSM_SINGLE_TENANT = 5;
+ }

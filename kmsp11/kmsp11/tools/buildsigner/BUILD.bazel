@@ -1,0 +1,11 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary")
+
+go_binary(
+    name = "buildsigner",
+    srcs = ["buildsigner.go"],
+    visibility = ["//kmsp11:__subpackages__"],
+    deps = [
+        "@com_github_sethvargo_go_gcpkms//pkg/gcpkms:go_default_library",
+        "@com_google_cloud_go_kms//apiv1:go_default_library",
+    ],
+)

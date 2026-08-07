@@ -1,0 +1,40 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//kmscng:__subpackages__"])
+
+cc_library(
+    name = "sign_utils",
+    srcs = ["sign_utils.cc"],
+    hdrs = ["sign_utils.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmscng:algorithm_details",
+        "//kmscng:cng_headers",
+        "//kmscng:object",
+        "//kmscng/util:errors",
+        "//kmscng/util:status_utils",
+        "//kmscng/util:string_utils",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "sign_utils_test",
+    srcs = ["sign_utils_test.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":sign_utils",
+        "//common:kms_client",
+        "//common/test:resource_helpers",
+        "//common/test:test_status_macros",
+        "//kmscng:object",
+        "//kmscng:provider",
+        "//kmscng/test:matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

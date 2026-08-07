@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
+
+go_test(
+    name = "benchmark_test",
+    srcs = ["benchmark_test.go"],
+    args = ["-test.bench=."],
+    data = ["//kmsp11/main:libkmsp11.so"],
+    tags = [
+        # This test is manual because of the expected KMS traffic spike and its
+        # longer runtime which doesn't add too much value to regular builds.
+        "manual",
+    ],
+    deps = [
+        "@com_github_miekg_pkcs11//:go_default_library",
+        "@com_google_cloud_go//kms/apiv1/kmspb:go_default_library",
+        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+    ],
+)

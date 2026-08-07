@@ -1,0 +1,162 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//kmscng:__subpackages__"])
+
+cc_library(
+    name = "algorithm_details",
+    srcs = ["algorithm_details.cc"],
+    hdrs = ["algorithm_details.h"],
+    deps = [
+        ":cng_headers",
+        "//common:kms_v1",
+        "//kmscng/util:errors",
+        "//kmscng/util:string_utils",
+        "@com_google_absl//absl/container:btree",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "algorithm_details_test",
+    size = "small",
+    srcs = ["algorithm_details_test.cc"],
+    deps = [
+        ":algorithm_details",
+        ":cng_headers",
+        "//common/test:test_status_macros",
+        "//kmscng/test:matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "cng_headers",
+    hdrs = ["cng_headers.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//kmsp11/util:crypto_utils",
+        "@cpdk//:bcrypt_provider",
+        "@cpdk//:ncrypt_provider",
+    ],
+)
+
+cc_library(
+    name = "object",
+    srcs = ["object.cc"],
+    hdrs = ["object.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":algorithm_details",
+        ":cng_headers",
+        ":provider",
+        ":version",
+        "//common:kms_client",
+        "//common:kms_v1",
+        "//common:openssl",
+        "//common:status_macros",
+        "//kmscng/util:errors",
+        "//kmscng/util:status_utils",
+        "//kmscng/util:string_utils",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "object_test",
+    srcs = ["object_test.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":object",
+        ":provider",
+        ":version",
+        "//common:kms_client",
+        "//common/test:resource_helpers",
+        "//common/test:test_status_macros",
+        "//kmscng/test:matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "object_loader",
+    srcs = ["object_loader.cc"],
+    hdrs = ["object_loader.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":algorithm_details",
+        ":cng_headers",
+        ":provider",
+        "//common:kms_client",
+        "//common:kms_v1",
+        "//common:status_macros",
+        "//kmscng/config:config_cc_proto",
+        "//kmscng/util:errors",
+        "//kmscng/util:logging",
+        "//kmscng/util:status_utils",
+        "//kmscng/util:string_utils",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "object_loader_test",
+    srcs = ["object_loader_test.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":object_loader",
+        ":provider",
+        "//common:kms_client",
+        "//common/test:proto_parser",
+        "//common/test:resource_helpers",
+        "//common/test:test_status_macros",
+        "//kmscng/test:matchers",
+        "//kmscng/util:string_utils",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "provider",
+    srcs = ["provider.cc"],
+    hdrs = ["provider.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":cng_headers",
+        ":version",
+        "//common:kms_client",
+        "//common:status_macros",
+        "//kmscng/util:errors",
+        "//kmscng/util:status_utils",
+        "//kmscng/util:string_utils",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "provider_test",
+    srcs = ["provider_test.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":provider",
+        ":version",
+        "//common/test:test_platform",
+        "//common/test:test_status_macros",
+        "//kmscng:cng_headers",
+        "//kmscng/test:matchers",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "version",
+    hdrs = ["version.h"],
+    target_compatible_with = ["@platforms//os:windows"],
+)

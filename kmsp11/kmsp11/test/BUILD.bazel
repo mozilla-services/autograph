@@ -1,0 +1,69 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//kmsp11:__subpackages__"])
+
+cc_library(
+    name = "test",
+    testonly = 1,
+    deps = [
+        ":common_setup",
+        ":matchers",
+        ":resource_helpers",
+    ],
+)
+
+cc_library(
+    name = "common_setup",
+    testonly = 1,
+    srcs = ["common_setup.cc"],
+    hdrs = ["common_setup.h"],
+    deps = [
+        ":resource_helpers",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/util:crypto_utils",
+    ],
+)
+
+cc_library(
+    name = "matchers",
+    testonly = 1,
+    hdrs = ["matchers.h"],
+    deps = [
+        "//common/test:matchers",
+        "//kmsp11/util:status_utils",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "matchers_test",
+    size = "small",
+    srcs = ["matchers_test.cc"],
+    deps = [
+        ":matchers",
+        "//common:test_message_cc_proto",
+        "//kmsp11:cryptoki_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "resource_helpers",
+    testonly = 1,
+    srcs = ["resource_helpers.cc"],
+    hdrs = ["resource_helpers.h"],
+    deps = [
+        "//common:kms_v1",
+        "//common/test:resource_helpers",
+        "//common/test:runfiles",
+        "//common/test:test_status_macros",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11:object",
+        "//kmsp11/main:bridge",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/strings",
+    ],
+)

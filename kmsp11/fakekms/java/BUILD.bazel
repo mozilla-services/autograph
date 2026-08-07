@@ -1,0 +1,29 @@
+load("@rules_java//java:defs.bzl", "java_library", "java_test")
+
+java_library(
+    name = "FakeKms",
+    srcs = ["FakeKms.java"],
+    data = ["//fakekms/main:fakekms"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@bazel_tools//tools/java/runfiles",
+        "@maven//:com_google_api_gax",
+        "@maven//:com_google_api_gax_grpc",
+        "@maven//:com_google_cloud_google_cloud_kms",
+        "@maven//:io_grpc_grpc_api",
+    ],
+)
+
+java_test(
+    name = "FakeKmsTest",
+    size = "small",
+    srcs = ["FakeKmsTest.java"],
+    tags = ["no_m32"],
+    test_class = "com.google.cloud.kms.pkcs11.fakekms.FakeKmsTest",
+    deps = [
+        ":FakeKms",
+        "@maven//:com_google_api_grpc_proto_google_cloud_kms_v1",
+        "@maven//:com_google_cloud_google_cloud_kms",
+        "@maven//:junit_junit",
+    ],
+)

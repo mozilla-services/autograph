@@ -1,0 +1,7 @@
+; This is a Windows def file.
+; https://docs.microsoft.com/en-us/cpp/build/exporting-from-a-dll-using-def-files
+LIBRARY KMSP11
+EXPORTS
+{{- range .Functions}}
+  {{.Name}}
+{{- end}}

@@ -1,0 +1,56 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//:internal"])
+
+cc_library(
+    name = "fakekms",
+    testonly = 1,
+    srcs = select({
+        "//:windows": ["fakekms_win.cc"],
+        "//conditions:default": ["fakekms_posix.cc"],
+    }),
+    hdrs = ["fakekms.h"],
+    data = ["//fakekms/main:fakekms"],
+    defines = select({
+        # https://www.freebsd.org/cgi/man.cgi?query=getline&manpath=FreeBSD+11.4-RELEASE
+        "//:freebsd": ["_WITH_GETLINE"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        "//fakekms/fault:fault_cc_grpc",
+        "@bazel_tools//tools/cpp/runfiles",
+        "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_googleapis//google/cloud/kms/v1:kms_cc_grpc",
+    ],
+)
+
+cc_test(
+    name = "fakekms_test",
+    size = "small",
+    srcs = ["fakekms_test.cc"],
+    deps = [
+        ":fakekms",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "fault_helpers",
+    testonly = True,
+    srcs = ["fault_helpers.cc"],
+    hdrs = ["fault_helpers.h"],
+    deps = [
+        ":fakekms",
+        "//fakekms/fault:fault_cc_grpc",
+        "@com_github_google_glog//:glog",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/time",
+    ],
+)

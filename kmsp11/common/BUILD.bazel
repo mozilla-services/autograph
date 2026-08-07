@@ -1,0 +1,250 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_proto_library", "cc_test")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+package(default_visibility = ["//:internal"])
+
+cc_library(
+    name = "backoff",
+    srcs = ["backoff.cc"],
+    hdrs = ["backoff.h"],
+    deps = [
+        "@com_google_absl//absl/log:absl_log",
+        "@com_google_absl//absl/time",
+    ],
+)
+
+cc_test(
+    name = "backoff_test",
+    size = "small",
+    srcs = ["backoff_test.cc"],
+    deps = [
+        ":backoff",
+        "//common/test:test_status_macros",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "kms_client",
+    srcs = ["kms_client.cc"],
+    hdrs = ["kms_client.h"],
+    deps = [
+        ":backoff",
+        ":kms_v1",
+        ":openssl",
+        ":pagination_range",
+        ":platform",
+        ":source_location",
+        ":status_macros",
+        ":status_utils",
+        "@cloudkms_grpc_service_config",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/crc:crc32c",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "kms_client_test",
+    size = "small",
+    srcs = ["kms_client_test.cc"],
+    deps = [
+        ":kms_client",
+        "//common/test:matchers",
+        "//common/test:resource_helpers",
+        "//common/test:test_status_macros",
+        "//fakekms/cpp:fakekms",
+        "//fakekms/cpp:fault_helpers",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "kms_v1",
+    hdrs = ["kms_v1.h"],
+    deps = [
+        "@com_google_googleapis//google/cloud/kms/v1:kms_cc_grpc",
+        "@com_google_googleapis//google/cloud/kms/v1:kms_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "openssl",
+    srcs = ["openssl.cc"],
+    hdrs = ["openssl.h"],
+    deps = ["@boringssl//:crypto"] + select({
+        "//:openssl": ["@boringssl//:openssl_compat"],
+        "//conditions:default": [],
+    }),
+)
+
+cc_library(
+    name = "pagination_range",
+    hdrs = ["pagination_range.h"],
+    deps = [
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_test(
+    name = "pagination_range_test",
+    size = "small",
+    srcs = ["pagination_range_test.cc"],
+    deps = [
+        ":pagination_range",
+        "//common/test:matchers",
+        "@com_google_googleapis//google/bigtable/admin/v2:admin_cc_grpc",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "platform",
+    srcs = select({
+        "//:windows": ["platform_win.cc"],
+        "//conditions:default": ["platform_posix.cc"],
+    }),
+    hdrs = ["platform.h"],
+    deps = [
+        ":source_location",
+        ":status_macros",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/log:absl_check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_test(
+    name = "platform_test",
+    size = "small",
+    srcs = ["platform_test.cc"],
+    deps = [
+        ":platform",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "source_location",
+    hdrs = ["source_location.h"],
+    deps = [
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "source_location_test",
+    size = "small",
+    srcs = ["source_location_test.cc"],
+    deps = [
+        ":source_location",
+        "//common/test:matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_proto_library(
+    name = "status_details_cc_proto",
+    deps = [":status_details_proto"],
+)
+
+proto_library(
+    name = "status_details_proto",
+    srcs = ["status_details.proto"],
+)
+
+cc_library(
+    name = "status_macros",
+    hdrs = ["status_macros.h"],
+    deps = [
+        ":status_utils",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "status_macros_test",
+    size = "small",
+    srcs = ["status_macros_test.cc"],
+    deps = [
+        ":status_macros",
+        "//common/test:test_status_macros",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "status_utils",
+    hdrs = ["status_utils.h"],
+    deps = [
+        ":status_details_cc_proto",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_library(
+    name = "string_utils",
+    srcs = ["string_utils.cc"],
+    hdrs = ["string_utils.h"],
+    deps = [
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "string_utils_test",
+    size = "small",
+    srcs = ["string_utils_test.cc"],
+    deps = [
+        ":string_utils",
+        "//common/test:test_status_macros",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_proto_library(
+    name = "test_message_cc_proto",
+    testonly = 1,
+    deps = [":test_message_proto"],
+)
+
+proto_library(
+    name = "test_message_proto",
+    testonly = 1,
+    srcs = ["test_message.proto"],
+)
+
+cc_library(
+    name = "file_log_sink",
+    srcs = ["file_log_sink.cc"],
+    hdrs = ["file_log_sink.h"],
+    deps = [
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "file_log_sink_test",
+    size = "small",
+    srcs = ["file_log_sink_test.cc"],
+    deps = [
+        ":file_log_sink",
+        "//common/test:matchers",
+        "//common/test:test_status_macros",
+        "@com_google_absl//absl/log",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

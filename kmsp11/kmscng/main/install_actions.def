@@ -1,0 +1,4 @@
+LIBRARY InstallActions
+EXPORTS
+    RegisterProvider
+    UnregisterProvider

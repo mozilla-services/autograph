@@ -1,0 +1,273 @@
+load("//kmsp11/tools/p11fn:function_def_template.bzl", "function_def_template")
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+package(default_visibility = ["//kmsp11:__subpackages__"])
+
+# Note that main.cc is included in this translation unit because
+# C_GetFunctionList must return pointers to those functions.
+cc_library(
+    name = "bridge",
+    srcs = [
+        "bridge.cc",
+        "main.cc",
+        "unsupported.cc",
+    ],
+    hdrs = [
+        "bridge.h",
+        "function_list.h",
+    ],
+    linkstatic = 1,
+    deps = [
+        ":fork_support",
+        "//kmsp11:cryptoki_headers",
+        "//kmsp11:provider",
+        "//kmsp11/config",
+        "//kmsp11/util:crypto_utils",
+        "//kmsp11/util:errors",
+        "//kmsp11/util:global_provider",
+        "//kmsp11/util:logging",
+        "//kmsp11/util:status_utils",
+        "@com_google_absl//absl/status",
+    ],
+    alwayslink = 1,
+)
+
+cc_test(
+    name = "bridge_test",
+    size = "small",
+    srcs = ["bridge_test.cc"],
+    deps = [
+        ":bridge",
+        "//common/test:test_platform",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "asymmetric_crypt_test",
+    size = "small",
+    srcs = ["asymmetric_crypt_test.cc"],
+    deps = [
+        ":bridge",
+        "//common/test:test_platform",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "asymmetric_sign_test",
+    size = "small",
+    srcs = ["asymmetric_sign_test.cc"],
+    deps = [
+        ":bridge",
+        "//common/test:test_platform",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "symmetric_crypt_test",
+    size = "small",
+    srcs = ["symmetric_crypt_test.cc"],
+    deps = [
+        ":bridge",
+        "//common/test:test_platform",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "bridge_logging_test",
+    size = "small",
+    srcs = ["bridge_logging_test.cc"],
+    deps = [
+        ":bridge",
+        "//common:platform",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "//kmsp11/util:string_utils",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "fips_test",
+    size = "small",
+    srcs = select({
+        "//:fips": ["fips_test_fips_mode.cc"],
+        "//conditions:default": ["fips_test_nonfips_mode.cc"],
+    }),
+    deps = [
+        ":bridge",
+        "//common/test:test_status_macros",
+        "//fakekms/cpp:fakekms",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "fork_support",
+    srcs = select({
+        "//:windows": ["fork_support_win.cc"],
+        "//conditions:default": ["fork_support_posix.cc"],
+    }),
+    hdrs = ["fork_support.h"],
+    copts = select({
+        "//:linux": ["-lpthread"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        "//kmsp11/util:global_provider",
+        "//kmsp11/util:logging",
+        "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_test(
+    name = "fork_test",
+    size = "small",
+    srcs = select({
+        "//:windows": [],
+        "//conditions:default": ["fork_test.cc"],
+    }),
+    tags = [
+        # This is experimental behavior; skip sanitizers for now.
+        "no_san",
+    ],
+    deps = [
+        ":bridge",
+        "//common/test:test_platform",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+function_def_template(
+    name = "bridge_h",
+    src = "bridge.h.template",
+    out = "bridge.h",
+)
+
+function_def_template(
+    name = "function_list",
+    src = "function_list.h.template",
+    out = "function_list.h",
+)
+
+cc_binary(
+    name = "libkmsp11.so",
+    linkopts = select({
+        "//:freebsd": [
+            # Make all symbols hidden, except those that are specifically exported.
+            "-Wl,--version-script,$(location :linux_exports.lds)",
+            # Disallow undefined symbols in object files.
+            "-z defs",
+        ],
+        "//:linux": [
+            # Make all symbols hidden, except those that are specifically exported.
+            "-Wl,--version-script,$(location :linux_exports.lds)",
+            # Disallow undefined symbols in object files.
+            "-z defs",
+            # Link statically with the C++ stdlib (usually LLVM/libc++ despite these names).
+            "-static-libstdc++",
+            "-static-libgcc",
+        ],
+        "//:macos": [
+            # Make all symbols hidden, except those that are specifically exported.
+            "-Wl,-exported_symbols_list,$(location :macos_exports.lds)",
+        ],
+        "//conditions:default": [],
+    }),
+    linkshared = 1,
+    visibility = ["//visibility:public"],
+    win_def_file = select({
+        "//:windows": ":win_exports.def",
+        "//conditions:default": None,
+    }),
+    deps = [":bridge"] +
+           select({
+               "//:freebsd": [":linux_exports.lds"],
+               "//:linux": [":linux_exports.lds"],
+               "//:macos": [":macos_exports.lds"],
+               "//conditions:default": [],
+           }),
+)
+
+go_test(
+    name = "binary_test",
+    srcs = ["binary_test.go"],
+    args = select({
+        # BoringCrypto in FIPS mode makes much bigger binaries than we get
+        # under non-FIPS conditions.
+        "//:fips": [
+            "-min_binary_size_mb=16",
+            "-max_binary_size_mb=24",
+        ],
+        "//:openssl": ["-expect_openssl"],
+        "//conditions:default": [],
+    }),
+    data = [
+        ":libkmsp11.so",
+        "//kmsp11/tools/p11fn:function_defs.textproto",
+    ],
+    tags = [
+        # This test is manual because:
+        # - It will fail on devs' workstations if devs have a modern glibc.
+        # - It will fail in asan/tsan builds.
+        # This test should always be run when building releases, and is included
+        # in the `//:ci_only_tests` target so that it runs in CI builds.
+        "manual",
+    ],
+    deps = [
+        "//kmsp11/tools/p11fn:function_def_go_proto",
+        "@com_github_google_go_cmp//cmp:go_default_library",
+        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+        "@org_golang_google_protobuf//encoding/prototext:go_default_library",
+    ],
+)
+
+function_def_template(
+    name = "linux_exports",
+    src = "linux_exports.lds.template",
+    out = "linux_exports.lds",
+)
+
+function_def_template(
+    name = "macos_exports",
+    src = "macos_exports.lds.template",
+    out = "macos_exports.lds",
+)
+
+function_def_template(
+    name = "main_cc",
+    src = "main.cc.template",
+    out = "main.cc",
+)
+
+function_def_template(
+    name = "win_exports",
+    src = "win_exports.def.template",
+    out = "win_exports.def",
+)

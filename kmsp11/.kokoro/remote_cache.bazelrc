@@ -1,0 +1,4 @@
+build --remote_cache=grpcs://remotebuildexecution.googleapis.com
+build --google_default_credentials=true
+build --remote_instance_name=projects/oss-tools-build/instances/kokoro-ci
+build --remote_upload_local_results=true

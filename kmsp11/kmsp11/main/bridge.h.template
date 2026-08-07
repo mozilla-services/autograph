@@ -1,0 +1,20 @@
+#include "absl/status/status.h"
+#include "kmsp11/cryptoki.h"
+
+namespace cloud_kms::kmsp11 {
+
+{{/* Iterate over all the functions. */ -}}
+{{range .Functions -}}
+
+{{- /* Declare the function, minus the 'C_' prefix. */ -}}
+absl::Status {{slice .Name 2}} (
+
+{{- /* Declare the function args by iterating over them. */ -}}
+{{- range $index, $arg := .Args -}}
+{{if $index}},{{end}}
+    {{$arg.Datatype}} {{$arg.Name}}
+{{- end -}});
+
+{{ end -}}
+
+} //  namespace kmsp11

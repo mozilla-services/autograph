@@ -1,0 +1,13 @@
+diff --git a/include/openssl/base.h b/include/openssl/base.h
+index cb1affaca..8acb0c368 100644
+--- a/include/openssl/base.h
++++ b/include/openssl/base.h
+@@ -203,7 +203,7 @@ extern "C" {
+ 
+ #else  // defined(BORINGSSL_SHARED_LIBRARY)
+ 
+-#define OPENSSL_EXPORT
++#define OPENSSL_EXPORT __attribute__((visibility("default")))
+ 
+ #endif  // defined(BORINGSSL_SHARED_LIBRARY)
+ 

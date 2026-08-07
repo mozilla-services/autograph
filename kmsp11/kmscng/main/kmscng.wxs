@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Language="1033" Codepage="1252" UpgradeCode="{AB7C91D4-D9B6-4E79-A332-6839067BF60D}" Manufacturer="Google LLC" Name="Cloud KMS Provider for Microsoft CNG" Version="1.1.0">
+    <Package InstallScope="perMachine" InstallerVersion="200" Compressed="yes" Platform="x64"/>
+    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed."/>
+    <MediaTemplate EmbedCab="yes"/>
+    <!-- Disable change/repair in Add/Remove programs. -->
+    <Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+    <Property Id="ARPNOMODIFY" Value="yes" Secure="yes" />
+    <!-- Add files to the filesystem. -->
+    <!--
+      Install the DLL to C:\Windows\System32. This causes a compiler error:
+          warning LGHT1076 : ICE09: Component: ProviderComponent is a non-permanent system component
+      We ignore this, as we want to clean up the DLL from system32 when the user uninstalls.
+    -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="System64Folder"/>
+    </Directory>
+    <DirectoryRef Id="System64Folder">
+      <Component Id="ProviderComponent" Guid="*" Win64="yes">
+        <File Id="ProviderFile" KeyPath="yes" Source="kmscng.dll"/>
+      </Component>
+    </DirectoryRef>
+    <Feature Id="ProviderFeature" Title="Cloud KMS Provider" Level="1">
+      <ComponentRef Id="ProviderComponent"/>
+    </Feature>
+    <!-- Register / unregister the provider. -->
+    <Binary Id="InstallActions" SourceFile="install_actions.dll"/>
+    <CustomAction Id="RegisterProviderAction" Execute="deferred" Impersonate="no" BinaryKey="InstallActions" DllEntry="RegisterProvider"/>
+    <CustomAction Id="UnregisterProviderAction" Execute="deferred" Impersonate="no" BinaryKey="InstallActions" DllEntry="UnregisterProvider"/>
+    <InstallExecuteSequence>
+      <Custom Action="RegisterProviderAction" Before="InstallFinalize">(NOT Installed) AND (NOT REMOVE)</Custom>
+      <Custom Action="UnregisterProviderAction" Before="RemoveFiles">REMOVE</Custom>
+    </InstallExecuteSequence>
+  </Product>
+</Wix>
