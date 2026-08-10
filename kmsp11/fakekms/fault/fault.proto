@@ -1,0 +1,67 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package fakekms;
+
+option go_package = "cloud.google.com/kms/integrations/fakekms/fault/faultpb";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+import "google/rpc/status.proto";
+
+message RequestMatcher {
+  // If specified, this RequestMatcher will only match requests with the
+  // provided method name. If unspecified, any method name is a match.
+  string method_name = 1;
+}
+
+// The action to take in response to a matched request.
+message ResponseAction {
+  // If specified, the service will delay a response for the specified duration.
+  // If unspecified, no delay is added.
+  google.protobuf.Duration delay = 1;
+
+  // If specified, the service will return this error without processing the
+  // request through the normal handling flow. If unspecfied, the server's
+  // normal handling flow will be invoked and the server's response will be
+  // used.
+  google.rpc.Status error = 2;
+}
+
+message Fault {
+  // If specified, an API must match this matcher in order for the response
+  // action to be taken. If unspecfied, any request will match.
+  RequestMatcher request_matcher = 1;
+
+  // If specified, the provided action will be taken. If unspecified, the
+  // service's normal response will be returned.
+  //
+  // An empty response action is useful for consuming API requests that should
+  // not fault. For example, if you'd like to add a fault on the /second/
+  // request to a given RPC, adding a first Fault with an empty response action
+  // will allow the first RPC to proceed as usual.
+  ResponseAction response_action = 2;
+}
+
+// A FaultService maintains a list of unapplied faults. New faults are
+// added to the end of the fault list. When the service receives a new API
+// request, the fault list is traversed in order, looking for a fault whose
+// RequestMatcher matches the API request. If a match is found, the provided
+// ResponseAction is taken, and the fault is removed from the fault list.
+service FaultService {
+  // Add a new fault to the end of the fault list.
+  rpc AddFault(Fault) returns (google.protobuf.Empty);
+}

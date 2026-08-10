@@ -1,0 +1,201 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+package(default_visibility = [
+    "//common:__subpackages__",
+    "//kmscng:__subpackages__",
+])
+
+cc_library(
+    name = "bridge",
+    srcs = [
+        "bridge.cc",
+        "unsupported.cc",
+    ],
+    hdrs = ["bridge.h"],
+    linkstatic = True,
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//common:status_macros",
+        "//kmscng:algorithm_details",
+        "//kmscng:cng_headers",
+        "//kmscng:object",
+        "//kmscng:object_loader",
+        "//kmscng:provider",
+        "//kmscng/config",
+        "//kmscng/config:config_cc_proto",
+        "//kmscng/operation:sign_utils",
+        "//kmscng/util:errors",
+        "//kmscng/util:logging",
+        "//kmscng/util:status_utils",
+        "//kmscng/util:string_utils",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+    ],
+    alwayslink = True,
+)
+
+cc_test(
+    name = "bridge_test",
+    size = "small",
+    srcs = ["bridge_test.cc"],
+    linkopts = ["-DEFAULTLIB:ncrypt.lib"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":bridge",
+        "//common:kms_v1",
+        "//common/test:resource_helpers",
+        "//common/test:test_platform",
+        "//common/test:test_status_macros",
+        "//kmscng:cng_headers",
+        "//kmscng:object",
+        "//kmscng/operation:sign_utils",
+        "//kmscng/test:matchers",
+        "//kmscng/util:logging",
+        "//kmsp11/util:crypto_utils",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_binary(
+    name = "kmscng.dll",
+    linkshared = True,
+    target_compatible_with = ["@platforms//os:windows"],
+    win_def_file = "kmscng.def",
+    deps = [":main"],
+)
+
+cc_library(
+    name = "main",
+    srcs = ["main.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        ":bridge",
+        "//kmscng:cng_headers",
+        "//kmscng/util:logging",
+        "//kmscng/util:status_utils",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_binary(
+    name = "register_provider",
+    srcs = ["register_provider.cc"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//kmscng/util:registration",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+# This genrule creates a copy of the DLL named "libkmscng.dll" just to have a
+# value to use for the outs field, and then copies kmscng.dll to system32.
+# Robocopy only copies the DLL if it's newer than the version in system32, or
+# if it's the first time copying it.
+genrule(
+    name = "move_dll_to_system32",
+    srcs = [
+        ":kmscng.dll",
+    ],
+    outs = ["libkmscng.dll"],
+    cmd_bat = "copy $(@D)\\kmscng.dll $(@D)\\libkmscng.dll > NUL && robocopy $(@D) C:\\Windows\\System32 kmscng.dll /xc /xo > NUL & exit /b 0",
+    target_compatible_with = ["@platforms//os:windows"],
+)
+
+cc_binary(
+    name = "install_actions.dll",
+    srcs = ["install_actions.cc"],
+    linkshared = True,
+    target_compatible_with = ["@platforms//os:windows"],
+    win_def_file = "instalL_actions.def",
+    deps = [
+        "//kmscng/util:registration",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+genrule(
+    name = "installer",
+    srcs = [
+        ":kmscng.dll",
+        "kmscng.wxs",
+        ":install_actions.dll",
+    ],
+    outs = ["kmscng.msi"],
+    cmd = "cp $(location :kmscng.dll) . && " +
+          "cp $(location :install_actions.dll) . && " +
+          "$(location @wix//:candle) $(location kmscng.wxs) && " +
+          "$(location @wix//:light) kmscng.wixobj && " +
+          "cp kmscng.msi $@",
+    target_compatible_with = ["@platforms//os:windows"],
+    tools = [
+        "@wix//:candle",
+        "@wix//:light",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "installer_v0",
+    testonly = 1,
+    srcs = ["kmscng_upgrade_test.wxs"],
+    outs = ["kmscng_v0.msi"],
+    cmd = "cp $(location :kmscng_upgrade_test.wxs) kmscng_v0.wxs && " +
+          "echo 0.0.0 > kmscng_version.txt && " +
+          "$(location @wix//:candle) -dVersion=0.0.0 kmscng_v0.wxs && " +
+          "$(location @wix//:light) kmscng_v0.wixobj && " +
+          "cp kmscng_v0.msi $@",
+    target_compatible_with = ["@platforms//os:windows"],
+    tools = [
+        "@wix//:candle",
+        "@wix//:light",
+    ],
+)
+
+genrule(
+    name = "installer_v255",
+    testonly = 1,
+    srcs = ["kmscng_upgrade_test.wxs"],
+    outs = ["kmscng_v255.msi"],
+    cmd = "cp $(location :kmscng_upgrade_test.wxs) kmscng_v255.wxs && " +
+          "echo 255.255.65535 > kmscng_version.txt && " +
+          "$(location @wix//:candle) -dVersion=255.255.65535 kmscng_v255.wxs && " +
+          "$(location @wix//:light) kmscng_v255.wixobj && " +
+          "cp kmscng_v255.msi $@",
+    target_compatible_with = ["@platforms//os:windows"],
+    tools = [
+        "@wix//:candle",
+        "@wix//:light",
+    ],
+)
+
+go_library(
+    name = "install_testlib",
+    testonly = 1,
+    srcs = ["install_testlib.go"],
+    data = [":kmscng.msi"],
+    importpath = "installtestlib",
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+        "@org_golang_x_text//encoding/unicode:go_default_library",
+    ],
+)
+
+go_test(
+    name = "install_test",
+    srcs = ["install_test.go"],
+    data = [
+        ":kmscng_v0.msi",
+        ":kmscng_v255.msi",
+    ],
+    tags = [
+        "exclusive",  # only one test that does Windows installers at a time
+        "manual",  # don't run on dev workstations; included in //:ci_only_tests
+    ],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [":install_testlib"],
+)

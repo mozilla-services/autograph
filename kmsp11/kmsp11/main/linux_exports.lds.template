@@ -1,0 +1,10 @@
+/* This is a GNU LD version script.
+ * https://www.gnu.org/software/gnulib/manual/html_node/LD-Version-Scripts.html
+ */
+LIBKMSP11 {
+    global:
+{{- range .Functions}}
+      {{.Name}};
+{{- end}}
+    local: *;
+};

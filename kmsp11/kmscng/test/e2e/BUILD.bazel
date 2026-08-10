@@ -1,0 +1,32 @@
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+    name = "e2e_test",
+    srcs = ["e2e_test.cc"],
+    args = [
+        "--kms_endpoint=staging-cloudkms.sandbox.googleapis.com:443",
+        "--user_project=oss-tools-test",
+        "--location_name=projects/oss-tools-test/locations/us-central1",
+    ],
+    data = [
+        "//kmscng/main:kmscng.dll",
+    ],
+    linkstatic = 1,
+    # This test should always be run when building releases, and is included
+    # in the `//:windows_ci_only_tests` target so that it runs in CI builds.
+    tags = ["manual"],
+    target_compatible_with = ["@platforms//os:windows"],
+    deps = [
+        "//common:kms_v1",
+        "//common/test:resource_helpers",
+        "//common/test:test_platform",
+        "//kmscng:cng_headers",
+        "//kmscng:provider",
+        "//kmscng/util:registration",
+        "//kmscng/util:string_utils",
+        "@com_github_google_glog//:glog",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

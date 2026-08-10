@@ -1,0 +1,29 @@
+diff --git a/kms/apiv1/kmspb/resources.pb.go b/kms/apiv1/kmspb/resources.pb.go
+index e4b300d9d6..d39d28396a 100755
+--- a/kms/apiv1/kmspb/resources.pb.go
++++ b/kms/apiv1/kmspb/resources.pb.go
+@@ -55,6 +55,8 @@ const (
+ 	ProtectionLevel_EXTERNAL ProtectionLevel = 3
+ 	// Crypto operations are performed in an EKM-over-VPC backend.
+ 	ProtectionLevel_EXTERNAL_VPC ProtectionLevel = 4
++	// Crypto operations are performed in a single-tenant HSM.
++	ProtectionLevel_HSM_SINGLE_TENANT ProtectionLevel = 5
+ )
+ 
+ // Enum value maps for ProtectionLevel.
+@@ -65,6 +67,7 @@ var (
+ 		2: "HSM",
+ 		3: "EXTERNAL",
+ 		4: "EXTERNAL_VPC",
++		5: "HSM_SINGLE_TENANT",
+ 	}
+ 	ProtectionLevel_value = map[string]int32{
+ 		"PROTECTION_LEVEL_UNSPECIFIED": 0,
+@@ -72,6 +75,7 @@ var (
+ 		"HSM":                          2,
+ 		"EXTERNAL":                     3,
+ 		"EXTERNAL_VPC":                 4,
++		"HSM_SINGLE_TENANT":            5,
+ 	}
+ )
+ 

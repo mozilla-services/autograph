@@ -1,0 +1,40 @@
+#include "glog/logging.h"
+#include "kmsp11/cryptoki.h"
+#include "kmsp11/main/bridge.h"
+#include "kmsp11/util/crypto_utils.h"
+#include "kmsp11/util/logging.h"
+
+{{/* Iterate over all the functions. */ -}}
+{{range .Functions}}
+
+{{- /* Declare the function. */ -}}
+CK_RV {{.Name}} (
+
+{{- /* Declare the function args by iterating over them. */ -}}
+{{- range $index, $arg := .Args -}}
+{{if $index}},{{end}}
+    {{$arg.Datatype}} {{$arg.Name -}}
+{{- end -}}) {
+
+  // Clear any existing errors from the OpenSSL stack.
+  std::string cleared_error = cloud_kms::kmsp11::SslErrorToString("");
+  if (!cleared_error.empty()) {
+    LOG(INFO) << "Found an existing OpenSSL error on the stack; clearing:"
+              << std::endl << cleared_error;
+  }
+
+{{- /* Invoke the bridge function (without the 'C_' prefix). */}}
+  absl::Status status = cloud_kms::kmsp11::{{slice .Name 2 }}(
+
+{{- /* Iterate over the args to forward them to the bridge. */ -}}
+{{- range $index, $arg := .Args -}}
+{{if $index}},{{end}}
+      {{$arg.Name -}}
+{{- end -}}
+);
+
+  // Convert the returned status to a CK_RV, logging error info if it's not OK.
+  return cloud_kms::kmsp11::LogAndResolve("{{.Name}}", status);
+}
+
+{{end}}

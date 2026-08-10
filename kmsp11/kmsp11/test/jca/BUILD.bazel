@@ -1,0 +1,85 @@
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_java//java:defs.bzl", "java_library", "java_test")
+
+java_library(
+    name = "Environment",
+    testonly = 1,
+    srcs = ["Environment.java"],
+    data = [":libenv.so"],
+    deps = [
+        "@bazel_tools//tools/java/runfiles",
+        "@maven//:com_google_guava_guava",
+    ],
+)
+
+java_library(
+    name = "JcaTestFixture",
+    testonly = 1,
+    srcs = ["JcaTestFixture.java"],
+    data = [
+        "//kmsp11/main:libkmsp11.so",
+    ],
+    deps = [
+        ":Environment",
+        "//fakekms/java:FakeKms",
+        "@bazel_tools//tools/java/runfiles",
+        "@maven//:com_google_api_grpc_proto_google_cloud_kms_v1",
+        "@maven//:com_google_cloud_google_cloud_kms",
+    ],
+)
+
+cc_binary(
+    name = "libenv.so",
+    testonly = 1,
+    srcs = ["env.cc"],
+    linkshared = 1,
+    deps = [
+        "//common/test:test_platform",
+        "@bazel_tools//tools/jdk:jni",
+    ],
+)
+
+java_test(
+    name = "SignatureTest",
+    size = "small",
+    srcs = ["SignatureTest.java"],
+    tags = [
+        # The workspace rules pull in 64-bit Java on 64-bit hosts, so we can't
+        # test with a 32-bit shared library.
+        "no_m32",
+        # The Java runtime we pull in with the workspace rules doesn't have
+        # sanitizer support.
+        "no_san",
+    ],
+    test_class = "kmsp11.test.jca.SignatureTest",
+    deps = [
+        ":JcaTestFixture",
+        "@maven//:com_google_api_grpc_proto_google_cloud_kms_v1",
+        "@maven//:com_google_cloud_google_cloud_kms",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "EncryptionTest",
+    size = "small",
+    srcs = ["EncryptionTest.java"],
+    tags = [
+        # The workspace rules pull in 64-bit Java on 64-bit hosts, so we can't
+        # test with a 32-bit shared library.
+        "no_m32",
+        # The Java runtime we pull in with the workspace rules doesn't have
+        # sanitizer support.
+        "no_san",
+    ],
+    test_class = "kmsp11.test.jca.EncryptionTest",
+    deps = [
+        ":JcaTestFixture",
+        "@com_google_protobuf//:protobuf_java",
+        "@maven//:com_google_api_grpc_proto_google_cloud_kms_v1",
+        "@maven//:com_google_cloud_google_cloud_kms",
+        "@maven//:junit_junit",
+    ],
+)

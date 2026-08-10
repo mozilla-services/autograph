@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
+
+go_test(
+    name = "stress_test",
+    timeout = "long",
+    srcs = ["stress_test.go"],
+    data = ["//kmsp11/main:libkmsp11.so"],
+    tags = [
+        # This test is manual because of its extended runtime.
+        "manual",
+    ],
+    deps = [
+        "//fakekms",
+        "@com_github_miekg_pkcs11//:go_default_library",
+        "@com_google_cloud_go//kms/apiv1:go_default_library",
+        "@com_google_cloud_go//kms/apiv1/kmspb:go_default_library",
+        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+        "@org_golang_google_api//option:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+    ],
+)

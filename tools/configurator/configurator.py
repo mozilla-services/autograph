@@ -6,7 +6,7 @@ import re
 import os
 import sys
 
-from ruamel import yaml
+from ruamel.yaml import YAML
 
 
 SIGNER_CONFIG_PARAMS = ["type", "mode", "privatekey", "publickey",
@@ -65,8 +65,9 @@ def main():
             print("use -i to overwrite a configuration file in place")
             sys.exit(3)
 
+    yaml = YAML(typ='rt')
     with open(args.autograph_config, 'r') as config_in:
-        config = yaml.load(config_in, Loader=yaml.RoundTripLoader)
+        config = yaml.load(config_in)
 
     try:
         os.stat(args.value)
@@ -91,10 +92,10 @@ def main():
         print("overwriting %s" % (args.autograph_config))
         args.output_config = args.autograph_config
     if args.output_config == "stdout":
-        yaml.dump(config, sys.stdout, Dumper=yaml.RoundTripDumper)
+        yaml.dump(config, sys.stdout)
     else:
         with open(args.output_config, 'w') as config_out:
-            yaml.dump(config, config_out, Dumper=yaml.RoundTripDumper)
+            yaml.dump(config, config_out)
 
 
 if __name__ == '__main__':

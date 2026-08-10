@@ -1,0 +1,99 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package cloud_kms.kmsp11;
+
+message LibraryConfig {
+  // Next_value = 18
+
+  // Required. The list of tokens to expose in this library.
+  repeated TokenConfig tokens = 1;
+
+  // Optional. The RPC timeout for Cloud KMS API invocations. 0 or unset means
+  // the default (30 seconds).
+  uint32 rpc_timeout_secs = 2;
+
+  // Optional. The address to invoke. Defaults to `cloudkms.googleapis.com:443`.
+  string kms_endpoint = 3;
+
+  // Optional. The user project to use for per-request billing and global
+  // quotas.
+  string user_project_override = 11;
+
+  // Optional. True means that Google default authentication should be skipped,
+  // and insecure gRPC credentials (read: no credentials) should be used
+  // instead. Intended for use in test environments only, as this will result in
+  // PERMISSION_DENIED in real KMS environments.
+  bool use_insecure_grpc_channel_credentials = 4;
+
+  // Optional. True means that Google Compute Engine credentials should be used.
+  // This is the preferred approach when running in the context of a Service
+  // Account on GCE.
+  bool use_google_compute_engine_credentials = 17;
+
+  // Optional. True means that X.509 certificates will be generated at runtime
+  // for asymmetric KMS keys that are exposed in the library if no matching
+  // certificate is found in a token's `certs`. Certificates are
+  // not stable between runs of this library. This functionality is intended for
+  // compatibility with the SunPKCS11 JCA provider; other use is discouraged.
+  bool generate_certs = 5;
+
+  // Optional. The directory in which log files should be emitted. An empty
+  // value means log to standard error.
+  string log_directory = 6;
+
+  // Optional. A suffix that will be appended to generated log filenames.
+  string log_filename_suffix = 8;
+
+  // The interval on which KMS state is refreshed. The default is 0 (never
+  // refresh).
+  uint32 refresh_interval_secs = 7;
+
+  // Optional. If true, enables an experiment that allows multiple versions of a
+  // CryptoKey to be created. Default is false.
+  bool experimental_create_multiple_versions = 9;
+
+  // Optional. If true, enables an initialization time check that requires that
+  // BoringSSL has been built in FIPS mode. Default is false.
+  bool require_fips_mode = 10;
+
+  // Optional. Cloud KMS feature flags to emit with all RPC requests. Used for
+  // internal testing only.
+  string experimental_rpc_feature_flags = 12;
+
+  // Optional. If true, skips fork handlers registration, for applications that
+  // don't need the library to work in the child process. Default is false.
+  bool skip_fork_handlers = 15;
+
+  // Optional. If true, software keys are allowed. By default only HSM keys are
+  // allowed.
+  bool allow_software_keys = 16;
+  reserved 13, 14;
+}
+
+message TokenConfig {
+  // Required. The Cloud KMS KeyRing associated with this token.
+  // For example, projects/foo/locations/global/keyRings/bar
+  string key_ring = 1;
+
+  // Optional. The label to assign to this token in the PKCS #11
+  // CK_TOKEN_INFO structure.
+  string label = 2;
+
+  // Optional. PEM-formatted X.509 certificates that should be exposed by this
+  // token if a matching KMS key is found.
+  repeated string certs = 3;
+}

@@ -35,8 +35,8 @@ RUN cd /app/src/autograph/tools/softhsm/ && go run ./genkeys/genkeys.go
 # then write the generated config and new root hash to /tmp
 # we expect /tmp was mounted for exports to the monitor-hsm service
 RUN cd /app/src/autograph/tools/genpki/ && \
-      go run genpki.go > /app/genpki.out && \
-      cd /app/src/autograph/tools/configurator && \
+      go run genpki.go > /app/genpki.out
+RUN cd /app/src/autograph/tools/configurator && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
       -p issuerprivkey -v "$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" && \
       python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \

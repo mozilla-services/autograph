@@ -1,0 +1,32 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "sample",
+    srcs = ["sample.c"],
+    linkopts = select({
+        "//:linux": ["-ldl"],
+        # FreeBSD and macOS both include dlopen and dlsym in libc
+        "//conditions:default": [],
+    }),
+    target_compatible_with = select({
+        "//:posix": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    deps = ["//kmsp11:cryptoki_raw_headers"],
+    alwayslink = True,
+)
+
+cc_test(
+    name = "sample_test",
+    size = "small",
+    srcs = ["sample_test.cc"],
+    data = ["//kmsp11/main:libkmsp11.so"],
+    tags = ["no_san"],
+    deps = [
+        ":sample",
+        "//fakekms/cpp:fakekms",
+        "//kmsp11/test",
+        "@com_google_absl//absl/cleanup",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A basic installer that installs a single file, so that we can test upgrading to and from the real installer. -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Language="1033" Codepage="1252" UpgradeCode="{AB7C91D4-D9B6-4E79-A332-6839067BF60D}" Manufacturer="Google LLC" Name="Cloud KMS Provider for Microsoft CNG" Version="$(var.Version)">
+    <Package InstallScope="perMachine" InstallerVersion="200" Compressed="yes" Platform="x64"/>
+    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed."/>
+    <MediaTemplate EmbedCab="yes"/>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="System64Folder"/>
+    </Directory>
+    <DirectoryRef Id="System64Folder">
+      <Component Id="VersionComponent" Guid="*" Win64="yes">
+        <File Id="VersionFile" KeyPath="yes" Source="kmscng_version.txt"/>
+      </Component>
+    </DirectoryRef>
+    <Feature Id="ProviderFeature" Title="Cloud KMS Provider" Level="1">
+      <ComponentRef Id="VersionComponent"/>
+    </Feature>
+  </Product>
+</Wix>

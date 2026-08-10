@@ -1,0 +1,14 @@
+#ifndef KMSP11_MAIN_FUNCTION_LIST_H_
+#define KMSP11_MAIN_FUNCTION_LIST_H_
+
+#include "kmsp11/cryptoki.h"
+
+inline constexpr CK_FUNCTION_LIST NewFunctionList() {
+  return {CK_VERSION{CRYPTOKI_VERSION_MAJOR, CRYPTOKI_VERSION_MINOR},
+{{- range .Functions}}
+          &{{.Name}},
+{{- end}}
+  };
+}
+
+#endif  // KMSP11_MAIN_FUNCTION_LIST_H_

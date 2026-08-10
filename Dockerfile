@@ -3,20 +3,20 @@ ARG LIBKMSP11_VERSION=1.6
 #------------------------------------------------------------------------------
 # Base Debian Image
 #------------------------------------------------------------------------------
-FROM golang:1.26.3-bookworm AS base
-
+FROM golang:1.26.3-trixie AS base
+ARG TARGETARCH
 ENV DEBIAN_FRONTEND='noninteractive'
 
-## Enable bookworm-backports
-RUN echo "deb http://deb.debian.org/debian/ bookworm-backports main" > /etc/apt/sources.list.d/bookworm-backports.list
-RUN echo "deb-src http://deb.debian.org/debian/ bookworm-backports main" >> /etc/apt/sources.list.d/bookworm-backports.list
+## Enable trixie-backports
+RUN echo "deb http://deb.debian.org/debian/ trixie-backports main" > /etc/apt/sources.list.d/trixie-backports.list
+RUN echo "deb-src http://deb.debian.org/debian/ trixie-backports main" >> /etc/apt/sources.list.d/trixie-backports.list
 
-RUN apt-get update && \
-    apt-get -y upgrade && \
-    apt-get -y install --no-install-recommends \
+RUN apt update && \
+      apt -y upgrade && \
+      apt -y install --no-install-recommends \
         libltdl-dev \
         gpg \
-        libncurses5 \
+        libncurses6 \
         devscripts \
         apksigner \
         rpm \
@@ -29,28 +29,27 @@ RUN apt-get update && \
         libengine-pkcs11-openssl
 
 # Cleanup after package installation
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt clean && rm -rf /var/lib/apt/lists/*
 
 #------------------------------------------------------------------------------
 # Pre-build dependency caching
 #------------------------------------------------------------------------------
 FROM base AS prebuild
-ARG LIBKMSP11_VERSION
-ARG TARGETOS
 ARG TARGETARCH
+
+## install bazelisk for building libkmsp11
+RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.29.0/bazelisk-${TARGETARCH}.deb
+RUN dpkg -i bazelisk-${TARGETARCH}.deb
+RUN rm bazelisk-${TARGETARCH}.deb
 
 COPY google-pkcs12-release-signing-key.pem /app/src/autograph/
 
-# Download and verify the Google KMS library
-RUN echo "Download Google KMS library for ${TARGETOS} and ${TARGETARCH}."
-RUN cd /tmp && curl -L https://github.com/GoogleCloudPlatform/kms-integrations/releases/download/pkcs11-v${LIBKMSP11_VERSION}/libkmsp11-${LIBKMSP11_VERSION}-${TARGETOS}-${TARGETARCH}.tar.gz | tar -zx --strip-components=1
-RUN openssl dgst -sha384 -verify /app/src/autograph/google-pkcs12-release-signing-key.pem -signature /tmp/libkmsp11.so.sig /tmp/libkmsp11.so
-
-# fetch the RDS CA bundles
-# https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html#UsingWithRDS.SSL.CertificatesAllRegions
-RUN curl -o /usr/local/share/old-rds-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem && \
-      curl -o /usr/local/share/new-rds-ca-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem && \
-      cat /usr/local/share/old-rds-ca-bundle.pem /usr/local/share/new-rds-ca-bundle.pem > /usr/local/share/rds-combined-ca-bundle.pem
+# Build the Google KMS library
+RUN echo "Building Google KMS library for ${TARGETARCH}."
+ADD ./kmsp11 /tmp/kmsp11
+WORKDIR /tmp/kmsp11
+RUN bazel build //kmsp11/main:libkmsp11.so
+RUN mv $(find / -type f -name "libkmsp11.so") ./
 
 #------------------------------------------------------------------------------
 # Build Stage
@@ -66,7 +65,7 @@ RUN cd /app/src/autograph/tools/makecsr && go build -o /go/bin/makecsr .
 #------------------------------------------------------------------------------
 # Deployment Stage
 #------------------------------------------------------------------------------
-FROM prebuild
+FROM base
 EXPOSE 8000
 EXPOSE 2112
 
@@ -77,11 +76,10 @@ ADD version.json /app
 COPY --from=builder /go/bin /go/bin/
 
 # Copy Google KMS library from the builder.
-COPY --from=builder /tmp/libkmsp11.so /app
+COPY --from=builder /tmp/kmsp11/libkmsp11.so /app
 
 # Setup the worker and entrypoint.
 RUN useradd --uid 10001 --home-dir /app --shell /sbin/nologin app
 USER app
 WORKDIR /app
 CMD ["/go/bin/autograph"]
-

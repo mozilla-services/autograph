@@ -1,0 +1,132 @@
+# Display rc options when building
+build --announce_rc
+# Enable build:{linux,mac,windows} directives in the rc file
+build --enable_platform_specific_config
+# Silence warnings from third party libaries
+# https://github.com/bazelbuild/bazel/commit/08936aecb96f2937c61bdedfebcf1c5a41a0786d
+build --features=external-include-paths
+# Make Gtest use Abseil for CLI parsing (and other stuff)
+build --define=absl=1 --copt=-DGTEST_HAS_ABSL
+
+# C++ Version
+build:freebsd --cxxopt=-std=c++20 --linkopt=-std=c++20
+build:freebsd --host_cxxopt=-std=c++20 --host_linkopt=-std=c++20
+build:linux --cxxopt=-std=c++20 --linkopt=-std=c++20
+build:linux --host_cxxopt=-std=c++20 --host_linkopt=-std=c++20
+build:macos --cxxopt=-std=c++20 --linkopt=-std=c++20
+build:macos --host_cxxopt=-std=c++20 --host_linkopt=-std=c++20
+build:windows --cxxopt=/std:c++20 --host_cxxopt=/std:c++20
+# MSVC's linker doesn't care about C++ version.
+
+# Java version
+build --java_language_version=11 --tool_java_language_version=11
+
+# FreeBSD-specific options
+# Link with libm, which is separated from libc on FreeBSD
+build:freebsd --linkopt=-lm
+# Position-independent code
+build:freebsd --copt=-fPIC
+# Java Version
+# The Bazel remote_jdk11 target doesn't exist for FreeBSD, so we rely on a
+# locally installed JDK specified with the JAVA_HOME environment variable.
+build:freebsd --extra_toolchains=@local_jdk//:all
+build:freebsd --java_runtime_version=local_jdk
+build:freebsd --tool_java_runtime_version=local_jdk
+# Strict Java dependency checking seems broken with Local JDK. :-(
+build:freebsd --experimental_strict_java_deps=warn
+
+# Linux-specific options
+# Position-independent code
+build:linux --copt=-fPIC
+# Java Version
+build:linux --java_runtime_version=remotejdk_11
+
+# macOS-specific options
+# Ensure compatibility with all macOS versions currently supported by Apple.
+build:macos --copt=-mmacosx-version-min=11.3
+# Suppress errors like
+# clang: error: overriding '-mmacosx-version-min=11.3' option with '-target arm64-apple-macosx13.3' [-Werror,-Woverriding-t-option]
+build:macos --copt=-Wno-overriding-t-option
+# Workaround for build issue: https://github.com/bazelbuild/bazel/issues/4341#issuecomment-758361769
+build:macos --features=-supports_dynamic_linker
+build:macos --dynamic_mode=off
+# Java Version
+build:macos --java_runtime_version=remotejdk_11
+
+# Windows-specific options
+# Statically link in the C++ runtime, which avoids needing to install the
+# C++ redistributable on Windows 10 and up.
+build:windows --features=static_link_msvcrt
+# Prevent glog symbols from being exported with `__declspec(dllexport)`
+build:windows --copt=/DGOOGLE_GLOG_DLL_DECL=
+# Prevent glog from conflicting with windows.h
+# https://code.google.com/archive/p/google-glog/issues/33
+build:windows --copt=/DGLOG_NO_ABBREVIATED_SEVERITIES
+# Java Version
+build:windows --java_runtime_version=remotejdk_11
+
+# gRPC options
+# Workaround for build issue: https://github.com/bazelbuild/bazel/issues/4341#issuecomment-572050759
+build:macos --copt=-DGRPC_BAZEL_BUILD
+# Enable forking - https://github.com/grpc/grpc/blob/ddd4d6e318ae41b07bc853d7abe4c2f9c1b9e070/tools/bazel.rc#L73-L75
+build:freebsd --cxxopt=-DGRPC_POSIX_FORK_ALLOW_PTHREAD_ATFORK=1
+build:linux --cxxopt=-DGRPC_POSIX_FORK_ALLOW_PTHREAD_ATFORK=1
+build:macos --cxxopt=-DGRPC_POSIX_FORK_ALLOW_PTHREAD_ATFORK=1
+
+# x86 builds on amd64
+build:m32 --copt=-m32 --linkopt=-m32 --test_tag_filters=-no_m32
+
+# Sanitizer configurations (asan, tsan, ubsan)
+# Options mostly cribbed from Abseil and gRPC
+# https://github.com/grpc/grpc/blob/2210819f85c97aa3b61b1dbeb1ce190714c81326/tools/bazel.rc#L17
+# https://github.com/abseil/abseil-cpp/blob/46dfbfe31ca1dd414e4c33cbcbcd7199bb4efde3/ci/linux_clang-latest_libcxx_asan_bazel.sh#L71
+# https://github.com/abseil/abseil-cpp/blob/46dfbfe31ca1dd414e4c33cbcbcd7199bb4efde3/ci/linux_clang-latest_libcxx_tsan_bazel.sh#L71
+
+build:san --build_tests_only
+build:san --test_tag_filters=-no_san
+build:san --strip=never
+build:san --copt=-fno-omit-frame-pointer
+build:san --copt=-DGPR_NO_DIRECT_SYSCALLS
+build:san --linkopt=-fsanitize-link-c++-runtime
+# Use linkmode=pie to prevent cgo failures with more recent rules_go versions
+# https://github.com/bazel-contrib/rules_go/issues/3691#issuecomment-2311047667
+build:san --@io_bazel_rules_go//go/config:linkmode=pie
+
+build:asan --config=san
+build:asan --copt=-fsanitize=address
+build:asan --copt=-fsanitize=undefined
+build:asan --copt=-fsanitize=float-divide-by-zero
+build:asan --copt=-fsanitize=nullability
+build:asan --copt=-O0
+build:asan --copt=-DGRPC_ASAN
+build:asan --copt=-DGRPC_UBSAN
+build:asan --copt=-DADDRESS_SANITIZER  # used by absl
+build:asan --linkopt=-fsanitize=address
+build:asan --linkopt=-fsanitize=undefined
+build:asan --test_env=ASAN_OPTIONS=detect_leaks=1:color=always
+build:asan --test_env=UBSAN_OPTIONS=print_stacktrace=1
+
+build:tsan --config=san
+build:tsan --copt=-fsanitize=thread
+build:tsan --copt=-DGRPC_TSAN
+build:tsan --copt=-DTHREAD_SANITIZER # used by absl
+build:tsan --copt=-DDYNAMIC_ANNOTATIONS_ENABLED=1 # used by absl
+build:tsan --linkopt=-fsanitize=thread
+# Required by Abseil -- see https://github.com/abseil/abseil-cpp/issues/299#issuecomment-489433591
+build:tsan --test_env=TSAN_OPTIONS=report_atomic_races=0
+
+build:fips --copt=-DBORINGSSL_FIPS
+build:fips --define=fips=1
+build:fips --repo_env=KMSP11_CRYPTO_LIBRARY=boringssl_fips
+
+build:openssl --define=openssl=1
+build:openssl --repo_env=KMSP11_CRYPTO_LIBRARY=openssl
+
+# Allow credentials in the home directory well-known location to be used
+# when running tests.
+test --test_env=HOME
+
+# Import from user.bazelrc if it exists. Keep this at the end of the file so
+# that local options can override options that are declared in this file.
+# https://docs.bazel.build/versions/master/best-practices.html#using-the-bazelrc-file
+try-import %workspace%/user.bazelrc

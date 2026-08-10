@@ -1,0 +1,7 @@
+# This is a macOS export_list.
+# See Listing 3 under 'Symbol Exporting Strategies' at
+# https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/DynamicLibraries/100-Articles/DynamicLibraryDesignGuidelines.html
+
+{{- range .Functions}}
+_{{.Name}}
+{{- end}}

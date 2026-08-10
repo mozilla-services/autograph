@@ -1,0 +1,13 @@
+diff --git compat/openssl/libcrypto-compat.c compat/openssl/libcrypto-compat.c
+index 6e8e144..c61acf8 100644
+--- compat/openssl/libcrypto-compat.c
++++ compat/openssl/libcrypto-compat.c
+@@ -7,7 +7,7 @@
+  * https://www.openssl.org/source/license.html
+  */
+ 
+-#include "includes.h"
++#include "openssl/libcrypto-compat.h"
+ 
+ #if OPENSSL_VERSION_NUMBER < 0x10100000L
+ 
