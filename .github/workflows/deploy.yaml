@@ -7,11 +7,20 @@ on:
   release:
     types:
       - released
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  docker:
-    name: Docker Images
-    runs-on: ubuntu-22.04
+  docker-build:
+    name: Docker Build
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            architecture: amd64
+          - os: ubuntu-22.04-arm
+            architecture: arm64
+    runs-on: ${{ matrix.os }}
     environment: build
     permissions:
       contents: read
@@ -19,9 +28,6 @@ jobs:
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -36,9 +42,9 @@ jobs:
           images: |
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph
           tags: |
-            type=sha,format=long,enable=${{ github.event_name == 'push' }}
-            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
-            type=semver,pattern={{raw}},enable=${{ github.event_name == 'release' }}
+            type=sha,format=long,enable=true,suffix=-${{ matrix.architecture }}
+            type=raw,value=latest-${{ matrix.architecture }},enable=${{ github.event_name == 'push' }}
+            type=semver,pattern={{raw}}-${{ matrix.architecture }},enable=${{ github.event_name == 'release' }}
 
       - name: Docker Metadata for Docker Hub
         id: metahub
@@ -50,14 +56,15 @@ jobs:
           images: |
             ${{ vars.DOCKERHUB_REPO }}
           tags: |
-            type=semver,pattern={{raw}},enable=${{ github.event_name == 'release' }}
-            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+            type=semver,pattern={{raw}}-${{ matrix.architecture }},enable=${{ github.event_name == 'release' }}
+            type=raw,value=latest-${{ matrix.architecture }},enable=${{ github.event_name == 'push' }}
 
       - name: Generate version.json
         shell: bash
         run: make generate
 
       - id: gcp-auth
+        if: ${{ github.event_name == 'push' }}
         uses: google-github-actions/auth@v2
         with:
           token_format: "access_token"
@@ -65,6 +72,7 @@ jobs:
           workload_identity_provider: ${{ vars.GCPV2_GITHUB_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Login to Google Artifact Registry
+        if: ${{ github.event_name == 'push' }}
         uses: docker/login-action@v3
         with:
           registry: ${{ vars.GAR_LOCATION }}-docker.pkg.dev
@@ -80,18 +88,18 @@ jobs:
       - name: Build and push to Google Artifact Registry for each commit on main
         # On pushes to `main`, we build and push a new image, so we can simply
         # use the `docker/build-push-action` action.
-        if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v6
         with:
-          push: true
-          sbom: true
+          push: ${{ github.event_name == 'push' }}
+          sbom: ${{ github.event_name == 'push' }}
           tags: ${{ steps.metagar.outputs.tags }}
           labels: ${{ steps.metagar.outputs.labels }}
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/${{ matrix.architecture }}
 
       # copypasta from https://github.com/imjasonh/setup-crane/blob/main/action.yml
       - name: Set up crane
+        if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           set -ex
@@ -109,6 +117,7 @@ jobs:
           echo "${{ github.token }}" | crane auth login ghcr.io --username "dummy" --password-stdin
 
       - name: Copy from Google Artifact Registory to Docker Hub
+        if: ${{ github.event_name == 'push' }}
         # We want to make sure that Docker Hub's latest tag is always up to
         # date. For releases, we specifically do _not_ want to rebuild and
         # instead only tag the existing image and push. There's no officially
@@ -124,7 +133,7 @@ jobs:
           # This github.sha won't work if the tag is an annotated tag, but we'll
           # hit that when we hit that. (We'll want to use github.object.sha but
           # only in tags, not in pushes)
-          SRC: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}
+          SRC: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}-${{ matrix.architecture }}
         run: |
           crane digest $SRC
           crane manifest $SRC
@@ -143,10 +152,47 @@ jobs:
           # This github.sha won't work if the tag is an annotated tag, but we'll
           # hit that when we hit that. (We'll want to use github.object.sha but
           # only in tags, not in pushes)
-          SRC: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}
+          SRC: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}-${{ matrix.architecture }}
         run: |
           crane digest $SRC
           crane manifest $SRC
           for tag in $TAGS; do
             crane copy $SRC $tag
           done
+
+  docker-manifest:
+    name: Publish multi-arch manifests
+    permissions:
+      contents: read
+      id-token: write
+    needs: docker-build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - name: Login to Dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Publish latest
+        if: ${{ github.event_name == 'push' }}
+        run: |
+            LATEST_TAG=$(git describe --tags --abbrev=4)
+            git describe --tags --abbrev=4
+            docker manifest create mozilla/autograph:latest \
+              mozilla/autograph:sha-${{ github.sha }}-arm64 \
+              mozilla/autograph:sha-${{ github.sha }}-amd64 \
+
+      - name: Checkout code
+        if: ${{ github.event_name == 'release' }}
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Publish release
+        if: ${{ github.event_name == 'release' }}
+        run: |
+            docker manifest create mozilla/autograph:$(git describe --tags --abbrev=4) \
+              mozilla/autograph:sha-${{ github.sha }}-arm64 \
+              mozilla/autograph:sha-${{ github.sha }}-amd64 \
