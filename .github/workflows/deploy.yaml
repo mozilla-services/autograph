@@ -7,8 +7,6 @@ on:
   release:
     types:
       - released
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   docker-build:
@@ -42,7 +40,7 @@ jobs:
           images: |
             ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph
           tags: |
-            type=sha,format=long,enable=true,suffix=-${{ matrix.architecture }}
+            type=sha,format=long,enable=${{ github.event_name == 'push' }},suffix=-${{ matrix.architecture }}
             type=raw,value=latest-${{ matrix.architecture }},enable=${{ github.event_name == 'push' }}
             type=semver,pattern={{raw}}-${{ matrix.architecture }},enable=${{ github.event_name == 'release' }}
 
@@ -64,7 +62,6 @@ jobs:
         run: make generate
 
       - id: gcp-auth
-        if: ${{ github.event_name == 'push' }}
         uses: google-github-actions/auth@v2
         with:
           token_format: "access_token"
@@ -72,7 +69,6 @@ jobs:
           workload_identity_provider: ${{ vars.GCPV2_GITHUB_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Login to Google Artifact Registry
-        if: ${{ github.event_name == 'push' }}
         uses: docker/login-action@v3
         with:
           registry: ${{ vars.GAR_LOCATION }}-docker.pkg.dev
@@ -90,34 +86,14 @@ jobs:
         # use the `docker/build-push-action` action.
         uses: docker/build-push-action@v6
         with:
-          push: ${{ github.event_name == 'push' }}
-          sbom: ${{ github.event_name == 'push' }}
+          push: true
+          sbom: true
           tags: ${{ steps.metagar.outputs.tags }}
           labels: ${{ steps.metagar.outputs.labels }}
           context: .
           platforms: linux/${{ matrix.architecture }}
 
-      # copypasta from https://github.com/imjasonh/setup-crane/blob/main/action.yml
-      - name: Set up crane
-        if: ${{ github.event_name == 'push' }}
-        shell: bash
-        run: |
-          set -ex
-
-          out=crane
-          os=${{ runner.os }}
-          tag=$(curl -s -u "username:${{ github.token }}" https://api.github.com/repos/google/go-containerregistry/releases/latest | jq -r '.tag_name')
-          arch=$(uname -m)
-          tmp=$(mktemp -d)
-          cd ${tmp}
-          curl -fsL https://github.com/google/go-containerregistry/releases/download/${tag}/go-containerregistry_${os}_${arch}.tar.gz | tar xz ${out}
-          chmod +x ${tmp}/${out}
-          PATH=${PATH}:${tmp}
-          echo "${tmp}" >> $GITHUB_PATH
-          echo "${{ github.token }}" | crane auth login ghcr.io --username "dummy" --password-stdin
-
       - name: Copy from Google Artifact Registory to Docker Hub
-        if: ${{ github.event_name == 'push' }}
         # We want to make sure that Docker Hub's latest tag is always up to
         # date. For releases, we specifically do _not_ want to rebuild and
         # instead only tag the existing image and push. There's no officially
@@ -135,10 +111,8 @@ jobs:
           # only in tags, not in pushes)
           SRC: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}-${{ matrix.architecture }}
         run: |
-          crane digest $SRC
-          crane manifest $SRC
           for tag in $TAGS; do
-            crane copy $SRC $tag
+            docker buildx imagetools create --tag "${tag}" "${SRC}"
           done
 
       - name: Copy image from Google Artifact Registory to Google Artifact Registory as semver tag
@@ -154,10 +128,8 @@ jobs:
           # only in tags, not in pushes)
           SRC: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}-${{ matrix.architecture }}
         run: |
-          crane digest $SRC
-          crane manifest $SRC
           for tag in $TAGS; do
-            crane copy $SRC $tag
+            docker buildx imagetools create --tag "${tag}" "${SRC}"
           done
 
   docker-manifest:
@@ -167,7 +139,6 @@ jobs:
       id-token: write
     needs: docker-build
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' }}
     steps:
       - name: Login to Dockerhub
         uses: docker/login-action@v3
