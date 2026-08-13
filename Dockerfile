@@ -3,7 +3,7 @@ ARG LIBKMSP11_VERSION=1.6
 #------------------------------------------------------------------------------
 # Base Debian Image
 #------------------------------------------------------------------------------
-FROM golang:1.26.3-trixie AS base
+FROM golang:1.26.4-trixie AS base
 ARG TARGETARCH
 ENV DEBIAN_FRONTEND='noninteractive'
 
