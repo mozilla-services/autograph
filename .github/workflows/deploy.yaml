@@ -150,8 +150,6 @@ jobs:
       - name: Publish latest
         if: ${{ github.event_name == 'push' }}
         run: |
-            LATEST_TAG=$(git describe --tags --abbrev=4)
-            git describe --tags --abbrev=4
             docker manifest create mozilla/autograph:latest \
               mozilla/autograph:sha-${{ github.sha }}-arm64 \
               mozilla/autograph:sha-${{ github.sha }}-amd64 \
