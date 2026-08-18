@@ -150,9 +150,12 @@ jobs:
       - name: Publish latest
         if: ${{ github.event_name == 'push' }}
         run: |
+            ARM_DIGEST=$(docker manifest inspect mozilla/autograph:latest-arm64 | jq -r ".manifests[0].digest")
+            AMD_DIGEST=$(docker manifest inspect mozilla/autograph:latest-amd64 | jq -r ".manifests[0].digest")
             docker manifest create mozilla/autograph:latest \
-              mozilla/autograph:latest-arm64 \
-              mozilla/autograph:latest-amd64 \
+              mozilla/autograph@$AMD_DIGEST \
+              mozilla/autograph@$ARM_DIGEST
+            docker manifest push mozilla/autograph:latest
 
       - name: Checkout code
         if: ${{ github.event_name == 'release' }}
@@ -163,6 +166,10 @@ jobs:
       - name: Publish release
         if: ${{ github.event_name == 'release' }}
         run: |
-            docker manifest create mozilla/autograph:$(git describe --tags --abbrev=4) \
-              mozilla/autograph:sha-${{ github.sha }}-arm64 \
-              mozilla/autograph:sha-${{ github.sha }}-amd64 \
+            ARM_DIGEST=$(docker manifest inspect ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}-arm64 | jq -r ".manifests[0].digest")
+            AMD_DIGEST=$(docker manifest inspect ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:sha-${{ github.sha }}-amd64 | jq -r ".manifests[0].digest")
+            GIT_TAG=$(git describe --tags --abbrev=4)
+            docker manifest create ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:$GIT_TAG \
+              ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph@$AMD_DIGEST \
+              ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph@$ARM_DIGEST
+            docker manifest push ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GAR_REPOSITORY}}/autograph:$GIT_TAG
