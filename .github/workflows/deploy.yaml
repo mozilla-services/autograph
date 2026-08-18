@@ -134,6 +134,7 @@ jobs:
 
   docker-manifest:
     name: Publish multi-arch manifests
+    environment: build
     permissions:
       contents: read
       id-token: write
