@@ -1,6 +1,22 @@
 ARG LIBKMSP11_VERSION=1.6
 
 #------------------------------------------------------------------------------
+# rcodesign build stage (Apple code signing tool)
+#------------------------------------------------------------------------------
+# The apple signer shells out to rcodesign (github.com/indygreg/apple-platform-rs).
+# PKCS#11/HSM signing exists only on the upstream main branch — no released
+# version (0.29.0 is newest) or prebuilt binary includes it — so we build from a
+# pinned commit with the pkcs11 feature. It's built here and copied into the
+# final image so the runtime image carries no Rust toolchain. Revisit (switch to
+# a pinned release/prebuilt) once upstream ships a release with PKCS#11.
+FROM rust:1-bookworm AS rcodesign-builder
+ARG RCODESIGN_GIT=https://github.com/indygreg/apple-platform-rs
+ARG RCODESIGN_REV=607b3c1d952b06c0affa12106f9d6bad2ffbc44a
+RUN apt-get update && apt-get -y install --no-install-recommends cmake && rm -rf /var/lib/apt/lists/*
+RUN cargo install --git ${RCODESIGN_GIT} --rev ${RCODESIGN_REV} --features pkcs11 --root /out apple-codesign && \
+    /out/bin/rcodesign --version
+
+#------------------------------------------------------------------------------
 # Base Debian Image
 #------------------------------------------------------------------------------
 FROM golang:1.26.3-trixie AS base
@@ -26,7 +42,8 @@ RUN apt update && \
         pkg-config \
         curl \
         jq \
-        libengine-pkcs11-openssl
+        libengine-pkcs11-openssl \
+        softhsm2
 
 # Cleanup after package installation
 RUN apt clean && rm -rf /var/lib/apt/lists/*
@@ -77,6 +94,10 @@ COPY --from=builder /go/bin /go/bin/
 
 # Copy Google KMS library from the builder.
 COPY --from=builder /tmp/kmsp11/libkmsp11.so /app
+
+# Copy rcodesign (built with the pkcs11 feature) used by the apple signer.
+COPY --from=rcodesign-builder /out/bin/rcodesign /usr/local/bin/rcodesign
+RUN rcodesign --version
 
 # Setup the worker and entrypoint.
 RUN useradd --uid 10001 --home-dir /app --shell /sbin/nologin app

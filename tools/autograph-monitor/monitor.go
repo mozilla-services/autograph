@@ -19,6 +19,7 @@ import (
 
 	"github.com/mozilla-services/autograph/formats"
 	"github.com/mozilla-services/autograph/signer/apk2"
+	"github.com/mozilla-services/autograph/signer/apple"
 	"github.com/mozilla-services/autograph/signer/contentsignature"
 	"github.com/mozilla-services/autograph/signer/contentsignaturepki"
 	"github.com/mozilla-services/autograph/signer/genericrsa"
@@ -230,6 +231,12 @@ func monitor(conf *configuration, client *http.Client) error {
 			// we don't verify apk2 signatures because they can only be obtained on valid
 			// APK files, which is too big to fit in the monitoring logic
 			log.Printf("Skipping verification of APK2 signature from signer %q (we can't verify those)", response.SignerID)
+			continue
+		case apple.Type:
+			// we don't verify apple/macOS signatures here; validation requires
+			// Apple tooling and the signed artifact, which is out of scope for
+			// the monitor
+			log.Printf("Skipping verification of Apple signature from signer %q (we can't verify those)", response.SignerID)
 			continue
 		case mar.Type:
 			log.Printf("Verifying MAR signature from signer %q", response.SignerID)
