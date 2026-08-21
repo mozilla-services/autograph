@@ -1,47 +1,3 @@
-server:
-    listen: "0.0.0.0:8000"
-    # cache 500k nonces to protect from authorization replay attacks
-    noncecachesize: 524288
-    idletimeout: 60s
-    readtimeout: 60s
-    writetimeout: 60s
-
-debugserver:
-    listen: "0.0.0.0:2112"
-
-# When using an HSM, place the path to the pkcs11 client library,
-# token label and pin of the crypto user in the configuration below
-# hsm:
-#     # sample config for cloudhsm
-#     path:       /opt/cloudhsm/lib/libcloudhsm_pkcs11.so
-#     tokenlabel: cavium
-#     pin:        ulfr:e2deea623796eecd
-
-# When using a postgres database, set the config below:
-# database:
-#    name: autograph
-#    user: myautographdbuser
-#    password: myautographdbpassword
-#    host: db:5432
-#    sslmode: verify-full
-#    sslrootcert: /etc/ssl/certs/db-root.crt
-#    maxopenconns: 100
-#    maxidleconns: 10
-#    monitorpollinterval: 10s
-
-# When the DB or HSM is enabled use these timeouts for the
-# /__heartbeat__ handler
-heartbeat:
-    hsmchecktimeout: 100ms
-    dbchecktimeout: 150ms
-
-# allow hawk authorization headers to be valid for up to 10 minutes
-# to account for diverging clocks between client and server
-hawktimestampvalidity: 10m
-
-# optional refresh rate for cached monitor data
-monitorinterval: 5m
-
 # The keys below are testing keys that do not grant any power
 signers:
     # a p384 key, the standard
@@ -1793,6 +1749,3 @@ authorizations:
       key: 3isey64n25fim18chqgewirm6z2gwva1mas0eu71e9jtisdwv6bd
       signers:
           - remote-settings
-
-monitoring:
-    key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs

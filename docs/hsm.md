@@ -93,5 +93,5 @@ signers:
 
 Note that autograph does not generate slots or keys, this must be
 handled separately. For a full working example, take a look at
-`autograph.softhsm.yaml` and how it is used by CircleCI in
+`autograph.softhsm-signer.yaml` and how it is used by CircleCI in
 `.circleci/config.yaml`.

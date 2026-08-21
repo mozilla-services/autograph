@@ -39,7 +39,7 @@ keytool -exportcert -keystore testkeystore.jks -alias testapp|openssl x509 -info
 ```
 
 You can then place the certificate and private key in
-\`autograph.yaml\`:
+\`autograph-signer.yaml\`:
 
 ``` yaml
 signers:

@@ -58,7 +58,9 @@ services:
         "--",
         "autograph",
         "-c",
-        "/app/autograph.softhsm.yaml",
+        "/app/autograph.softhsm-service.yaml",
+        "-s",
+        "/app/autograph.softhsm-signer.yaml",
       ]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/__heartbeat__"]

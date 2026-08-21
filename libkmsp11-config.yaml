@@ -1,0 +1,3 @@
+tokens:
+  - key_ring: projects/moz-fx-autograph-prod/locations/global/keyRings/autograph-runtime-key-ring-prod
+    label: gcp-token

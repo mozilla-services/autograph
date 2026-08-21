@@ -7,7 +7,8 @@ RUN apt-get update && \
     apt-get clean
 
 # copy the config
-ADD autograph.softhsm.yaml /app/
+ADD autograph.softhsm-signer.yaml /app/
+ADD autograph.softhsm-service.yaml /app/
 
 # give app access to dev db root cert
 ADD db-root.crt /opt/db-root.crt
@@ -37,17 +38,17 @@ RUN cd /app/src/autograph/tools/softhsm/ && go run ./genkeys/genkeys.go
 RUN cd /app/src/autograph/tools/genpki/ && \
       go run genpki.go > /app/genpki.out
 RUN cd /app/src/autograph/tools/configurator && \
-      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
+      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s normandy \
       -p issuerprivkey -v "$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
+      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s normandy \
       -p issuercert -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s normandy \
+      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s normandy \
       -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
+      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s kinto \
       -p issuerprivkey -v "$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
+      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s kinto \
       -p issuercert -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm.yaml -i -s kinto \
+      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s kinto \
       -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')"
 
-CMD /go/bin/autograph -c /app/autograph.softhsm.yaml
+CMD /go/bin/autograph -c /app/autograph-service.yaml -c /app/autograph.softhsm-service.yaml -s /app/autograph.softhsm-signer.yaml

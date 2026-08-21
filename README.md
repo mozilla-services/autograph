@@ -77,7 +77,7 @@ $ go get github.com/mozilla-services/autograph
 The resulting binary will be placed in `$GOPATH/bin/autograph`. To run autograph with the example conf, do:
 ```bash
 $ cd $GOPATH/src/github.com/mozilla-services/autograph
-$ $GOPATH/bin/autograph -c autograph.yaml
+$ $GOPATH/bin/autograph -c autograph-service.yaml -s autograph-signer.yaml
 ```
 
 Example clients are in the `tools` directory. You can install the Go one like this:

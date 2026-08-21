@@ -129,7 +129,7 @@ func (testcase *HandlerTestCase) Run(ag *autographer, t *testing.T, handler func
 }
 
 func TestBadRequest(t *testing.T) {
-	ag, conf := newTestAutographer(t)
+	ag, _, signerConf := newTestAutographer(t)
 
 	var TESTCASES = []struct {
 		endpoint string
@@ -212,7 +212,7 @@ func TestBadRequest(t *testing.T) {
 				t.Fatal(err)
 			}
 			req.Header.Set("Content-Type", "application/json")
-			auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+			auth, err := ag.getAuthByID(signerConf.Authorizations[0].ID)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -235,7 +235,7 @@ func TestBadRequest(t *testing.T) {
 }
 
 func TestRequestJustLargeEnough(t *testing.T) {
-	ag, conf := newTestAutographer(t)
+	ag, _, signerConf := newTestAutographer(t)
 	os.Setenv("MAX_BODY_SIZE_IN_MB", "1")
 
 	blob := strings.Repeat("foobar", 166666)
@@ -245,7 +245,7 @@ func TestRequestJustLargeEnough(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+	auth, err := ag.getAuthByID(signerConf.Authorizations[0].ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +271,7 @@ func TestRequestJustLargeEnough(t *testing.T) {
 }
 
 func TestRequestTooLarge(t *testing.T) {
-	ag, conf := newTestAutographer(t)
+	ag, _, signerConf := newTestAutographer(t)
 	os.Setenv("MAX_BODY_SIZE_IN_MB", "1")
 
 	blob := strings.Repeat("foobar", 166667)
@@ -281,7 +281,7 @@ func TestRequestTooLarge(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+	auth, err := ag.getAuthByID(signerConf.Authorizations[0].ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -306,7 +306,7 @@ func TestRequestTooLarge(t *testing.T) {
 }
 
 func TestBadContentType(t *testing.T) {
-	ag, conf := newTestAutographer(t)
+	ag, _, signerConf := newTestAutographer(t)
 
 	blob := "foofoofoofoofoofoofoofoofoofoofoofoofoofoo"
 	body := strings.NewReader(blob)
@@ -315,7 +315,7 @@ func TestBadContentType(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/foobar")
-	auth, err := ag.getAuthByID(conf.Authorizations[0].ID)
+	auth, err := ag.getAuthByID(signerConf.Authorizations[0].ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -335,7 +335,7 @@ func TestBadContentType(t *testing.T) {
 }
 
 func TestAuthFail(t *testing.T) {
-	ag, _ := newTestAutographer(t)
+	ag, _, _ := newTestAutographer(t)
 
 	var TESTCASES = []struct {
 		user        string
@@ -415,7 +415,7 @@ func checkHeartbeatReturnsExpectedStatusAndBody(ag *autographer, t *testing.T, n
 }
 
 func TestHeartbeat(t *testing.T) {
-	ag, _ := newTestAutographer(t)
+	ag, _, _ := newTestAutographer(t)
 	ag.heartbeatConf = &heartbeatConfig{}
 
 	var TESTCASES = []struct {
@@ -435,7 +435,7 @@ func TestHeartbeat(t *testing.T) {
 }
 
 func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
-	ag, _ := newTestAutographer(t)
+	ag, _, _ := newTestAutographer(t)
 	// NB: do not run in parallel with TestHeartbeat*
 	ag.heartbeatConf = &heartbeatConfig{
 		HSMCheckTimeout: time.Second,
@@ -448,7 +448,7 @@ func TestHeartbeatChecksHSMStatusFails(t *testing.T) {
 }
 
 func TestHeartbeatChecksHSMStatusFailsWhenNotConfigured(t *testing.T) {
-	ag, _ := newTestAutographer(t)
+	ag, _, _ := newTestAutographer(t)
 	// NB: do not run in parallel with TestHeartbeat*
 	expectedStatus := http.StatusInternalServerError
 	expectedBody := []byte("Missing heartbeat config\r\nrequest-id: -\n")
@@ -456,7 +456,7 @@ func TestHeartbeatChecksHSMStatusFailsWhenNotConfigured(t *testing.T) {
 }
 
 func TestHeartbeatChecksDBStatusOKAndTimesout(t *testing.T) {
-	ag, _ := newTestAutographer(t)
+	ag, _, _ := newTestAutographer(t)
 	// NB: do not run in parallel with TestHeartbeat* or DB tests
 	host := database.GetTestDBHost()
 	db, err := database.Connect(database.Config{
@@ -523,39 +523,39 @@ func TestVersion(t *testing.T) {
 // * `appkey1` and `appkey2` for `alice`
 // * `appkey2` only for `bob`
 func TestSignerAuthorized(t *testing.T) {
-	ag, conf := newTestAutographer(t)
+	ag, _, signerConf := newTestAutographer(t)
 
 	var TESTCASES = []struct {
 		userid string
 		sgs    []formats.SignatureRequest
 	}{
 		{
-			userid: conf.Authorizations[0].ID,
+			userid: signerConf.Authorizations[0].ID,
 			sgs: []formats.SignatureRequest{
 				formats.SignatureRequest{
 					Input: "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
-					KeyID: conf.Authorizations[0].Signers[0],
+					KeyID: signerConf.Authorizations[0].Signers[0],
 				},
 				formats.SignatureRequest{
 					Input: "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d",
-					KeyID: conf.Authorizations[0].Signers[0],
+					KeyID: signerConf.Authorizations[0].Signers[0],
 				},
 				formats.SignatureRequest{
 					Input: "Q29udGVudC1TaWduYXR1cmU6ADwhRE9DVFlQRSBIVE1MPgo8aHRtbD4KPCEtLSBodHRwczovL2J1Z3ppbGxhLm1vemlsbGEub3JnL3Nob3dfYnVnLmNnaT9pZD0xMjI2OTI4IC0tPgo8aGVhZD4KICA8bWV0YSBjaGFyc2V0PSJ1dGYtOCI+CiAgPHRpdGxlPlRlc3RwYWdlIGZvciBidWcgMTIyNjkyODwvdGl0bGU+CjwvaGVhZD4KPGJvZHk+CiAgSnVzdCBhIGZ1bGx5IGdvb2QgdGVzdHBhZ2UgZm9yIEJ1ZyAxMjI2OTI4PGJyLz4KPC9ib2R5Pgo8L2h0bWw+Cg==",
-					KeyID: conf.Authorizations[0].Signers[1],
+					KeyID: signerConf.Authorizations[0].Signers[1],
 				},
 			},
 		},
 		{
-			userid: conf.Authorizations[1].ID,
+			userid: signerConf.Authorizations[1].ID,
 			sgs: []formats.SignatureRequest{
 				formats.SignatureRequest{
 					Input: "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
-					KeyID: conf.Authorizations[1].Signers[0],
+					KeyID: signerConf.Authorizations[1].Signers[0],
 				},
 				formats.SignatureRequest{
 					Input: "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d",
-					KeyID: conf.Authorizations[1].Signers[0],
+					KeyID: signerConf.Authorizations[1].Signers[0],
 				},
 			},
 		},
@@ -613,20 +613,20 @@ func TestSignerAuthorized(t *testing.T) {
 
 // verify that user `bob` is not allowed to sign with `appkey1`
 func TestSignerUnauthorized(t *testing.T) {
-	ag, conf := newTestAutographer(t)
+	ag, _, signerConf := newTestAutographer(t)
 
 	var TESTCASES = []formats.SignatureRequest{
 		// request signature that need to prepend the content-signature:\x00 header
 		formats.SignatureRequest{
 			Input: "PCFET0NUWVBFIEhUTUw+CjxodG1sPgo8IS0tIGh0dHBzOi8vYnVnemlsbGEubW96aWxsYS5vcmcvc2hvd19idWcuY2dpP2lkPTEyMjY5MjggLS0+CjxoZWFkPgogIDxtZXRhIGNoYXJzZXQ9InV0Zi04Ij4KICA8dGl0bGU+VGVzdHBhZ2UgZm9yIGJ1ZyAxMjI2OTI4PC90aXRsZT4KPC9oZWFkPgo8Ym9keT4KICBKdXN0IGEgZnVsbHkgZ29vZCB0ZXN0cGFnZSBmb3IgQnVnIDEyMjY5Mjg8YnIvPgo8L2JvZHk+CjwvaHRtbD4K",
-			KeyID: conf.Authorizations[0].Signers[0],
+			KeyID: signerConf.Authorizations[0].Signers[0],
 		},
 		formats.SignatureRequest{
 			Input: "y0hdfsN8tHlCG82JLywb4d2U+VGWWry8dzwIC3Hk6j32mryUHxUel9SWM5TWkk0d",
-			KeyID: conf.Authorizations[0].Signers[0],
+			KeyID: signerConf.Authorizations[0].Signers[0],
 		},
 	}
-	userid := conf.Authorizations[1].ID
+	userid := signerConf.Authorizations[1].ID
 	body, err := json.Marshal(TESTCASES)
 	if err != nil {
 		t.Fatal(err)
@@ -652,14 +652,14 @@ func TestSignerUnauthorized(t *testing.T) {
 }
 
 func TestContentType(t *testing.T) {
-	ag, conf := newTestAutographer(t)
+	ag, _, signerConf := newTestAutographer(t)
 
 	var TESTCASES = []formats.SignatureRequest{
 		formats.SignatureRequest{
 			Input: "Y2FyaWJvdXZpbmRpZXV4Cg==",
 		},
 	}
-	userid := conf.Authorizations[0].ID
+	userid := signerConf.Authorizations[0].ID
 	body, err := json.Marshal(TESTCASES)
 	if err != nil {
 		t.Fatal(err)
@@ -686,7 +686,7 @@ func TestContentType(t *testing.T) {
 }
 
 func TestDebug(t *testing.T) {
-	ag, _ := newTestAutographer(t)
+	ag, _, _ := newTestAutographer(t)
 	ag.enableDebug()
 	if !ag.debug {
 		t.Fatalf("expected debug mode to be enabled, but is disabled")
@@ -698,7 +698,7 @@ func TestDebug(t *testing.T) {
 }
 
 func TestHandleGetAuthKeyIDs(t *testing.T) {
-	ag, _ := newTestAutographer(t)
+	ag, _, _ := newTestAutographer(t)
 
 	const autographDevAliceKeyIDsJSON = "[\"apk_cert_with_ecdsa_sha256\",\"apk_cert_with_ecdsa_sha256_v3\",\"appkey1\",\"appkey2\",\"dummyrsa\",\"dummyrsapss\",\"extensions-ecdsa\",\"extensions-ecdsa-expired-chain\",\"legacy_apk_with_rsa\",\"normandy\",\"pgpsubkey\",\"pgpsubkey-debsign\",\"randompgp\",\"randompgp-debsign\",\"randompgp-rpmsign\",\"remote-settings\",\"testapp-android\",\"testapp-android-legacy\",\"testapp-android-v3\",\"testauthenticode\",\"testmar\",\"testmarecdsa\",\"webextensions-rsa\",\"webextensions-rsa-with-recommendation\"]"
 

@@ -45,8 +45,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// configuration loads a yaml file that contains the configuration of Autograph
-type configuration struct {
+type serviceConfig struct {
 	Server struct {
 		Listen         string
 		NonceCacheSize int
@@ -54,19 +53,21 @@ type configuration struct {
 		ReadTimeout    time.Duration
 		WriteTimeout   time.Duration
 	}
-
 	// DebugServer are the settings for the control plane HTTP server where
 	// metrics are exposed for collection and some limited utitilites can live.
-	DebugServer debugServerConfig `yaml:"debugserver"`
-
+	DebugServer           debugServerConfig `yaml:"debugserver"`
 	HSM                   crypto11.PKCS11Config
 	Database              database.Config
-	Signers               []signer.Configuration
-	Authorizations        []authorization
 	Monitoring            authorization
 	Heartbeat             heartbeatConfig
 	HawkTimestampValidity string
 	MonitorInterval       time.Duration
+}
+
+// configuration loads a yaml file that contains the configuration of Autograph
+type signerConfig struct {
+	Signers        []signer.Configuration
+	Authorizations []authorization
 }
 
 type debugServerConfig struct {
@@ -98,16 +99,18 @@ func main() {
 	run(parseArgsAndLoadConfig(args))
 }
 
-func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, debug bool) {
+func parseArgsAndLoadConfig(args []string) (serviceConf serviceConfig, signerConf signerConfig, listen string, debug bool) {
 	var (
-		cfgFile  string
-		port     string
-		err      error
-		logLevel string
-		fset     = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
+		serviceFile string
+		signerFile  string
+		port        string
+		err         error
+		logLevel    string
+		fset        = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
 	)
 
-	fset.StringVar(&cfgFile, "c", "autograph.yaml", "Path to configuration file")
+	fset.StringVar(&serviceFile, "c", "autograph-service.yaml", "Path to service configuration file")
+	fset.StringVar(&signerFile, "s", "autograph-signer.yaml", "Path to signer configuration file")
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	// https://github.com/sirupsen/logrus#level-logging
 	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
@@ -138,22 +141,26 @@ func parseArgsAndLoadConfig(args []string) (conf configuration, listen string, d
 		log.Infof("Set logging level to %s", level)
 	}
 
-	err = conf.loadFromFile(cfgFile)
+	err = serviceConf.loadFromFile(serviceFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = signerConf.loadFromFile(signerFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	confListen := strings.Split(conf.Server.Listen, ":")
+	confListen := strings.Split(serviceConf.Server.Listen, ":")
 	if len(confListen) > 1 && port != "" && port != confListen[1] {
 		listen = fmt.Sprintf("%s:%s", confListen[0], port)
-		log.Infof("Overriding listen addr from config %s with new port from the commandline: %s", conf.Server.Listen, listen)
+		log.Infof("Overriding listen addr from config %s with new port from the commandline: %s", serviceConf.Server.Listen, listen)
 	} else {
-		listen = conf.Server.Listen
+		listen = serviceConf.Server.Listen
 	}
 	return
 }
 
-func run(conf configuration, listen string, debug bool) {
+func run(serviceConf serviceConfig, signerConf signerConfig, listen string, debug bool) {
 	var (
 		ag  *autographer
 		err error
@@ -161,37 +168,37 @@ func run(conf configuration, listen string, debug bool) {
 
 	// initialize signers from the configuration
 	// and store them into the autographer handler
-	ag = newAutographer(conf.Server.NonceCacheSize)
-	ag.heartbeatConf = &conf.Heartbeat
+	ag = newAutographer(serviceConf.Server.NonceCacheSize)
+	ag.heartbeatConf = &serviceConf.Heartbeat
 
-	if conf.Database.Name != "" {
+	if serviceConf.Database.Name != "" {
 		// ignore the monitor close chan since it will stop
 		// when the app is stopped
-		_ = ag.addDB(conf.Database)
+		_ = ag.addDB(serviceConf.Database)
 	}
 
 	// initialize the hsm if a configuration is defined
-	if conf.HSM.Path != "" {
-		err = ag.initHSM(conf)
+	if serviceConf.HSM.Path != "" {
+		err = ag.initHSM(serviceConf, signerConf)
 		if err != nil {
 			log.Fatalf("main.run: %s", err)
 		}
 	}
 
-	err = ag.addSigners(conf.Signers)
+	err = ag.addSigners(signerConf.Signers)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ag.addAuthorizations(conf.Authorizations)
+	err = ag.addAuthorizations(signerConf.Authorizations)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ag.addMonitoring(conf.Monitoring)
+	err = ag.addMonitoring(serviceConf.Monitoring)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if conf.HawkTimestampValidity != "" {
-		ag.hawkMaxTimestampSkew, err = time.ParseDuration(conf.HawkTimestampValidity)
+	if serviceConf.HawkTimestampValidity != "" {
+		ag.hawkMaxTimestampSkew, err = time.ParseDuration(serviceConf.HawkTimestampValidity)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -207,7 +214,7 @@ func run(conf configuration, listen string, debug bool) {
 	ag.startCleanupHandler()
 
 	// Initialize a monitor.
-	monitor := newMonitor(ag, conf.MonitorInterval)
+	monitor := newMonitor(ag, serviceConf.MonitorInterval)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", statsMiddleware(ag.handleHeartbeat, "http.nonapi.heartbeat")).Methods("GET")
@@ -222,19 +229,19 @@ func run(conf configuration, listen string, debug bool) {
 
 	// For each signer with a local chain upload location (eg: using the file
 	// scheme) create an handler to serve that directory at the path /x5u/keyid/
-	for _, signerConf := range conf.Signers {
-		parsedURL, err := url.Parse(signerConf.X5U)
+	for _, signer := range signerConf.Signers {
+		parsedURL, err := url.Parse(signer.X5U)
 		if err != nil || parsedURL.Scheme != "file" {
 			// This signer doesn't upload certificate chains to local storage.
 			continue
 		}
 
-		prefix := fmt.Sprintf("/x5u/%s/", signerConf.ID)
+		prefix := fmt.Sprintf("/x5u/%s/", signer.ID)
 		router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(http.Dir(parsedURL.Path))))
 	}
 
-	if conf.DebugServer.Listen != "" {
-		log.Infof("starting debug server on %s", conf.DebugServer.Listen)
+	if serviceConf.DebugServer.Listen != "" {
+		log.Infof("starting debug server on %s", serviceConf.DebugServer.Listen)
 		go func() {
 			mux := mux.NewRouter()
 			mux.Handle("/metrics", promhttp.Handler())
@@ -249,24 +256,24 @@ func run(conf configuration, listen string, debug bool) {
 			}
 
 			srv := http.Server{
-				Addr:         conf.DebugServer.Listen,
-				IdleTimeout:  conf.Server.IdleTimeout,
-				ReadTimeout:  conf.Server.ReadTimeout,
-				WriteTimeout: conf.Server.WriteTimeout,
+				Addr:         serviceConf.DebugServer.Listen,
+				IdleTimeout:  serviceConf.Server.IdleTimeout,
+				ReadTimeout:  serviceConf.Server.ReadTimeout,
+				WriteTimeout: serviceConf.Server.WriteTimeout,
 				Handler:      mux,
 			}
 
 			err := srv.ListenAndServe()
 			if err != nil {
-				log.Fatalf("unable to start up debug server on %s: %s", conf.DebugServer.Listen, err)
+				log.Fatalf("unable to start up debug server on %s: %s", serviceConf.DebugServer.Listen, err)
 			}
 		}()
 	}
 
 	server := &http.Server{
-		IdleTimeout:  conf.Server.IdleTimeout,
-		ReadTimeout:  conf.Server.ReadTimeout,
-		WriteTimeout: conf.Server.WriteTimeout,
+		IdleTimeout:  serviceConf.Server.IdleTimeout,
+		ReadTimeout:  serviceConf.Server.ReadTimeout,
+		WriteTimeout: serviceConf.Server.WriteTimeout,
 		Addr:         listen,
 		Handler: handleMiddlewares(
 			router,
@@ -276,7 +283,7 @@ func run(conf configuration, listen string, debug bool) {
 			logRequest(),
 		),
 	}
-	log.Infof("starting autograph on %s with timeouts: idle %s read %s write %s", listen, conf.Server.IdleTimeout, conf.Server.ReadTimeout, conf.Server.WriteTimeout)
+	log.Infof("starting autograph on %s with timeouts: idle %s read %s write %s", listen, serviceConf.Server.IdleTimeout, serviceConf.Server.ReadTimeout, serviceConf.Server.WriteTimeout)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
@@ -286,8 +293,30 @@ func run(conf configuration, listen string, debug bool) {
 	close(ag.exit)
 }
 
-// loadFromFile reads a configuration from a local file
-func (c *configuration) loadFromFile(path string) error {
+// read a serviceConfig from a local file
+func (c *serviceConfig) loadFromFile(path string) error {
+	var (
+		data []byte
+		err  error
+	)
+	data, err = os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	err = yaml.Unmarshal(data, &c)
+	if err != nil {
+		return err
+	}
+
+	if c.Heartbeat.DBCheckTimeout == time.Duration(uint64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(uint64(0)) {
+		return fmt.Errorf("missing required heartbeat config section with non-zero timeouts")
+	}
+	return nil
+}
+
+// read a possibly SOPS encrypted signerConfig from a local file
+func (c *signerConfig) loadFromFile(path string) error {
 	var (
 		data, confData []byte
 		confSHA        [32]byte
@@ -317,10 +346,6 @@ func (c *configuration) loadFromFile(path string) error {
 	err = yaml.Unmarshal(confData, &c)
 	if err != nil {
 		return err
-	}
-
-	if c.Heartbeat.DBCheckTimeout == time.Duration(int64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(int64(0)) {
-		return fmt.Errorf("missing required heartbeat config section with non-zero timeouts")
 	}
 	return nil
 }
@@ -401,8 +426,8 @@ func (a *autographer) addDB(dbConf database.Config) chan bool {
 }
 
 // initHSM sets up the HSM and notifies signers it is available
-func (a *autographer) initHSM(conf configuration) error {
-	tmpCtx, err := crypto11.Configure(&conf.HSM, crypto11.NewDefaultPKCS11Context)
+func (a *autographer) initHSM(serviceConf serviceConfig, signerConf signerConfig) error {
+	tmpCtx, err := crypto11.Configure(&serviceConf.HSM, crypto11.NewDefaultPKCS11Context)
 	if err != nil {
 		return fmt.Errorf("error in initHSM from crypto11.Configure: %w", err)
 	}
@@ -415,7 +440,7 @@ func (a *autographer) initHSM(conf configuration) error {
 		}
 		// if we successfully initialized the crypto11 context,
 		// tell the signers they can try using the HSM
-		for i := range conf.Signers {
+		for i := range signerConf.Signers {
 			// These two lines are strange and required until we fix how we use
 			// `signer.Configuration`. Since this list of
 			// `singer.Configuration`s is only of structs (not pointers), and
@@ -430,8 +455,8 @@ func (a *autographer) initHSM(conf configuration) error {
 			// TODO(AUT-203): when we make `signer.Configuration` immutable,
 			// we'll not need this strange `conf.Signers[i]` and can loop
 			// through them normally.
-			conf.Signers[i].InitHSM(hsm)
-			signerConf := &conf.Signers[i]
+			signerConf.Signers[i].InitHSM(hsm)
+			signerConf := &signerConf.Signers[i]
 
 			if signerConf.PrivateKeyHasPEMPrefix() {
 				// If the private key is not stored in the HSM, we have nothing

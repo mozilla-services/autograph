@@ -1,8 +1,8 @@
 # Configuration
 
-The configuration lives in `autograph.yaml` at the default path
-`/etc/autograph/autograph.yaml` (use the flag `-c` to provide an
-alternate path).
+The configuration lives in `autograph-service.yaml` and `autograph-signer.yaml`
+at the default path `/etc/autograph/` (use the flags `-c` and `-s` to provide
+alternate paths).
 
 ## Server
 
@@ -152,7 +152,7 @@ The binary is located in `$GOPATH/bin/autograph` and can be
 started with the configuration file:
 
 ``` bash
-$ $GOPATH/bin/autograph -c autograph.yaml
+$ $GOPATH/bin/autograph -c autograph-service.yaml -s autograph-signer.yaml
 {"Timestamp":1453721399358695130,"Type":"app.log","Logger":"Autograph","Hostname":"gator1","EnvVersion":"2.0","Pid":17287,"Fields":{"msg":"main.go:74: Starting Autograph API on localhost:8000"}}
 ```
 
