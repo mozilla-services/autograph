@@ -309,7 +309,7 @@ func (c *serviceConfig) loadFromFile(path string) error {
 		return err
 	}
 
-	if c.Heartbeat.DBCheckTimeout == time.Duration(int64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(int64(0)) {
+	if c.Heartbeat.DBCheckTimeout == time.Duration(uint64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(uint64(0)) {
 		return fmt.Errorf("missing required heartbeat config section with non-zero timeouts")
 	}
 	return nil
