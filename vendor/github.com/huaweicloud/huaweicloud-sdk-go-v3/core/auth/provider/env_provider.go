@@ -40,18 +40,18 @@ type EnvCredentialProvider struct {
 	credentialType string
 }
 
-// NewEnvCredentialProvider return a env credential provider
+// NewEnvCredentialProvider return an env credential provider
 // Supported credential types: basic, global
 func NewEnvCredentialProvider(credentialType string) *EnvCredentialProvider {
 	return &EnvCredentialProvider{credentialType: strings.ToLower(credentialType)}
 }
 
-// BasicCredentialEnvProvider return a env provider for basic.Credentials
+// BasicCredentialEnvProvider return an env provider for basic.Credentials
 func BasicCredentialEnvProvider() *EnvCredentialProvider {
 	return NewEnvCredentialProvider(basicCredentialType)
 }
 
-// GlobalCredentialEnvProvider return a env provider for global.Credentials
+// GlobalCredentialEnvProvider return an env provider for global.Credentials
 func GlobalCredentialEnvProvider() *EnvCredentialProvider {
 	return NewEnvCredentialProvider(globalCredentialType)
 }

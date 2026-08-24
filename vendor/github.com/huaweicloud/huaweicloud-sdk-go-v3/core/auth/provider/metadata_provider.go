@@ -70,7 +70,7 @@ type MetadataGlobalCredentialProvider struct {
 }
 
 func (p *MetadataBasicCredentialProvider) GetCredentials() (auth.ICredential, error) {
-	builder := auth.NewBasicCredentialsBuilder()
+	builder := auth.NewBasicCredentialsBuilder().WithStsAccessor(internal.NewMetadataAccessor())
 	if p.ProjectId != "" {
 		builder.WithProjectId(p.ProjectId)
 	}
@@ -78,8 +78,8 @@ func (p *MetadataBasicCredentialProvider) GetCredentials() (auth.ICredential, er
 	if err != nil {
 		return nil, err
 	}
-	credentials.MetadataAccessor = internal.NewMetadataAccessor()
-	err = credentials.UpdateSecurityTokenFromMetadata()
+
+	err = credentials.ProcessSts(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (p *MetadataBasicCredentialProvider) GetCredentials() (auth.ICredential, er
 }
 
 func (p *MetadataGlobalCredentialProvider) GetCredentials() (auth.ICredential, error) {
-	builder := auth.NewGlobalCredentialsBuilder()
+	builder := auth.NewGlobalCredentialsBuilder().WithStsAccessor(internal.NewMetadataAccessor())
 	if p.DomainId != "" {
 		builder.WithDomainId(p.DomainId)
 	}
@@ -95,8 +95,8 @@ func (p *MetadataGlobalCredentialProvider) GetCredentials() (auth.ICredential, e
 	if err != nil {
 		return nil, err
 	}
-	credentials.MetadataAccessor = internal.NewMetadataAccessor()
-	err = credentials.UpdateSecurityTokenFromMetadata()
+
+	err = credentials.ProcessSts(nil)
 	if err != nil {
 		return nil, err
 	}
