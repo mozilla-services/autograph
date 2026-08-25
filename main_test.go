@@ -90,6 +90,7 @@ server:
 heartbeat:
     hsmchecktimeout: 100ms
     dbchecktimeout: 150ms
+    hsmtestsignerid: signeridhere
 `)},
 	}
 	for i, testcase := range testcases {

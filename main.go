@@ -466,7 +466,7 @@ func (a *autographer) initHSM(serviceConf serviceConfig, signerConf signerConfig
 
 			// save the first signer with an HSM label as
 			// the key to test from the heartbeat handler
-			if a.heartbeatConf != nil && a.heartbeatConf.hsmSignerConf == nil {
+			if a.heartbeatConf != nil && a.heartbeatConf.HSMTestSignerId != nil && *a.heartbeatConf.HSMTestSignerId == signerConf.ID {
 				a.heartbeatConf.hsmSignerConf = signerConf
 
 				err := signerConf.CheckHSMConnection()

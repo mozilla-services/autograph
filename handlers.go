@@ -45,10 +45,10 @@ const (
 type heartbeatConfig struct {
 	HSMCheckTimeout time.Duration
 	DBCheckTimeout  time.Duration
+	HSMTestSignerId *string
 
-	// hsmSignerConf is the signer conf to use to check
-	// HSM connectivity (set to the first signer with an HSM label
-	// in initHSM) when it is non-nil
+	// hsmSignerConf is the cached signer conf to use to check
+	// HSM connectivity. Set based on HSMTestSignerId.
 	hsmSignerConf *signer.Configuration
 }
 
