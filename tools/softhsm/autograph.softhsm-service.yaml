@@ -19,6 +19,7 @@ hsm:
 heartbeat:
     hsmchecktimeout: 100ms
     dbchecktimeout: 150ms
+    hsmtestsignerid: testmar
 
 # allow hawk authorization headers to be valid for up to 10 minutes
 # to account for diverging clocks between client and server
