@@ -69,6 +69,10 @@ type Configuration struct {
 	Certificate   string            `json:"certificate,omitempty" yaml:"certificate,omitempty"`
 	DB            *database.Handler `json:"-" yaml:"-"`
 
+	// secret tells us to retrieve sensitive properties from GCP secret manager as needed
+	Secret       string `json:"secret,omitempty" yaml:"secret,omitempty"`
+	SecretLoaded bool
+
 	// X5U (X.509 URL) is a URL that points to an X.509 public key
 	// certificate chain to validate a content signature
 	X5U string `json:"x5u,omitempty" yaml:"x5u,omitempty"`

@@ -10,6 +10,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
@@ -53,6 +54,7 @@ type serviceConfig struct {
 		ReadTimeout    time.Duration
 		WriteTimeout   time.Duration
 	}
+
 	// DebugServer are the settings for the control plane HTTP server where
 	// metrics are exposed for collection and some limited utitilites can live.
 	DebugServer           debugServerConfig `yaml:"debugserver"`
@@ -62,6 +64,9 @@ type serviceConfig struct {
 	Heartbeat             heartbeatConfig
 	HawkTimestampValidity string
 	MonitorInterval       time.Duration
+
+	// How long config should be cached when reading from the database
+	SignerCacheDuration string
 }
 
 // configuration loads a yaml file that contains the configuration of Autograph
@@ -86,6 +91,10 @@ type autographer struct {
 	authBackend          authBackend
 	hawkMaxTimestampSkew time.Duration
 
+	// So we know when to re-read auth and signer config from the database
+	signerCacheDuration time.Duration
+	signerLastRead      time.Time
+
 	// Used to signal the monitor on exit of the autographer instance.
 	exit chan interface{}
 }
@@ -96,22 +105,36 @@ func main() {
 	if len(args) > 0 {
 		args = os.Args[1:]
 	}
-	run(parseArgsAndLoadConfig(args))
+	serviceFile, signerFile, port, debug, err := parseArgs(args)
+	if err != nil {
+		log.Fatalf("Failed to parse args. %s", err)
+	}
+	serviceConf, err := loadServiceConfig(serviceFile)
+	if err != nil {
+		log.Fatalf("Failed to load service config. %s", err)
+	}
+
+	confListen := strings.Split(serviceConf.Server.Listen, ":")
+	var listen string
+	if len(confListen) > 1 && port != "" && port != confListen[1] {
+		listen = fmt.Sprintf("%s:%s", confListen[0], port)
+		log.Infof("Overriding listen addr from config %s with new port from the commandline: %s", serviceConf.Server.Listen, listen)
+	} else {
+		listen = serviceConf.Server.Listen
+	}
+
+	run(serviceConf, signerFile, listen, debug)
 }
 
-func parseArgsAndLoadConfig(args []string) (serviceConf serviceConfig, signerConf signerConfig, listen string, debug bool) {
+func parseArgs(args []string) (serviceFile string, signerFile string, port string, debug bool, err error) {
 	var (
-		serviceFile string
-		signerFile  string
-		port        string
-		err         error
-		logLevel    string
-		fset        = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
+		logLevel string
+		fset     = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
 	)
 
 	fset.StringVar(&serviceFile, "c", "autograph-service.yaml", "Path to service configuration file")
 	fset.StringVar(&signerFile, "s", "autograph-signer.yaml", "Path to signer configuration file")
-	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
+	fset.StringVar(&port, "p", "8000", "Port to listen on. Overrides the listen var from the config file")
 	// https://github.com/sirupsen/logrus#level-logging
 	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
 	fset.BoolVar(&debug, "D", false, "Sets the log level to debug to print debug logs.")
@@ -119,7 +142,6 @@ func parseArgsAndLoadConfig(args []string) (serviceConf serviceConfig, signerCon
 	if err != nil {
 		log.Fatalf("Failed to parse flags: %v", err)
 	}
-
 	switch logLevel {
 	case "debug":
 		debug = true
@@ -140,27 +162,79 @@ func parseArgsAndLoadConfig(args []string) (serviceConf serviceConfig, signerCon
 		log.SetLevel(level)
 		log.Infof("Set logging level to %s", level)
 	}
+	return
+}
 
+func loadServiceConfig(serviceFile string) (serviceConf serviceConfig, err error) {
 	err = serviceConf.loadFromFile(serviceFile)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = signerConf.loadFromFile(signerFile)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	confListen := strings.Split(serviceConf.Server.Listen, ":")
-	if len(confListen) > 1 && port != "" && port != confListen[1] {
-		listen = fmt.Sprintf("%s:%s", confListen[0], port)
-		log.Infof("Overriding listen addr from config %s with new port from the commandline: %s", serviceConf.Server.Listen, listen)
-	} else {
-		listen = serviceConf.Server.Listen
-	}
 	return
 }
 
-func run(serviceConf serviceConfig, signerConf signerConfig, listen string, debug bool) {
+func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, error) {
+	cfg, err := db.GetSignerConfig()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var dbConf signerConfig
+	err = json.Unmarshal([]byte(cfg), &dbConf)
+	if err != nil {
+		return nil, err
+	}
+
+	// return just dbConf if there is no file to load
+	if signerFile == "" {
+		return &dbConf, nil
+	}
+
+	// otherwise load and merge the two config sources
+	var fileConf signerConfig
+	err = fileConf.loadFromFile(signerFile)
+	if err != nil {
+		return &dbConf, err
+	}
+
+	// add any missing authorizations from fileConf to dbConf
+	var authsToAdd []authorization
+	for _, fa := range fileConf.Authorizations {
+		var conflict bool = false
+		for _, da := range dbConf.Authorizations {
+			if da.ID == fa.ID {
+				conflict = true
+				break
+			}
+		}
+		if !conflict {
+			authsToAdd = append(authsToAdd, fa)
+		}
+		dbConf.Authorizations = append(dbConf.Authorizations, authsToAdd...)
+	}
+
+	// add any missing signers from fileConf to dbConf
+	var signersToAdd []signer.Configuration
+	for _, fs := range fileConf.Signers {
+		var conflict bool = false
+		for _, ds := range dbConf.Signers {
+			if ds.ID == fs.ID {
+				conflict = true
+				break
+			}
+		}
+		if !conflict {
+			signersToAdd = append(signersToAdd, fs)
+		}
+		dbConf.Signers = append(dbConf.Signers, signersToAdd...)
+	}
+
+	return &dbConf, nil
+}
+
+func run(serviceConf serviceConfig, signerFile string, listen string, debug bool) {
 	var (
 		ag  *autographer
 		err error
@@ -177,9 +251,14 @@ func run(serviceConf serviceConfig, signerConf signerConfig, listen string, debu
 		_ = ag.addDB(serviceConf.Database)
 	}
 
+	signerConf, err := loadSignerConfig(ag.db, signerFile)
+	if err != nil {
+		log.Fatalf("Failed to load signer config! %s", err)
+	}
+
 	// initialize the hsm if a configuration is defined
 	if serviceConf.HSM.Path != "" {
-		err = ag.initHSM(serviceConf, signerConf)
+		err = ag.initHSM(serviceConf, *signerConf)
 		if err != nil {
 			log.Fatalf("main.run: %s", err)
 		}
@@ -206,6 +285,15 @@ func run(serviceConf serviceConfig, signerConf signerConfig, listen string, debu
 		ag.hawkMaxTimestampSkew = time.Minute
 	}
 	log.Infof("setting hawk timestamp skew to %s", ag.hawkMaxTimestampSkew)
+
+	if serviceConf.SignerCacheDuration != "" {
+		ag.signerCacheDuration, err = time.ParseDuration(serviceConf.SignerCacheDuration)
+		if err != nil {
+			log.Fatalf("Invalid SignerCacheDuartion value: %s", serviceConf.SignerCacheDuration)
+		}
+	} else {
+		ag.signerCacheDuration = time.Minute * 5 // default to 5 minutes
+	}
 
 	if debug {
 		ag.enableDebug()
