@@ -67,6 +67,10 @@ type serviceConfig struct {
 
 	// How long config should be cached when reading from the database
 	SignerCacheDuration string
+
+	GCP struct {
+		ProjectId string
+	}
 }
 
 // configuration loads a yaml file that contains the configuration of Autograph
@@ -234,6 +238,36 @@ func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, e
 	return &dbConf, nil
 }
 
+func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
+	var errs []error
+	for i := range signerConf.Signers {
+		if signerConf.Signers[i].Secret == "" || signerConf.Signers[i].SecretLoaded {
+			continue
+		}
+
+		secret, err := getSecretMap(gcpProjectId, signerConf.Signers[i].Secret)
+		if err != nil {
+			errs = append(errs, err)
+		}
+
+		if val, ok := secret["privatekey"]; ok {
+			signerConf.Signers[i].PrivateKey = val
+		}
+		if val, ok := secret["passphrase"]; ok {
+			signerConf.Signers[i].Passphrase = val
+		}
+		if val, ok := secret["issuerprivkey"]; ok {
+			signerConf.Signers[i].IssuerPrivKey = val
+		}
+		signerConf.Signers[i].SecretLoaded = true
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("Failed to retrieve %d secrets. Errors: %s", len(errs), errs)
+	}
+	return nil
+}
+
 func run(serviceConf serviceConfig, signerFile string, listen string, debug bool) {
 	var (
 		ag  *autographer
@@ -254,6 +288,14 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 	signerConf, err := loadSignerConfig(ag.db, signerFile)
 	if err != nil {
 		log.Fatalf("Failed to load signer config! %s", err)
+	}
+
+	// retrieve secrets for signer config as needed
+	if serviceConf.GCP.ProjectId != "" {
+		err = loadSignerSecrets(serviceConf.GCP.ProjectId, *signerConf)
+		if err != nil {
+			log.Errorf("Failed to retrieve some signer secrets! %s", err)
+		}
 	}
 
 	// initialize the hsm if a configuration is defined

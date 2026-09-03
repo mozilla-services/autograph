@@ -101,13 +101,13 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 
 // simplified test types
 type signerConfig struct {
-	Signers        []signer 			 `json:"signers"`
+	Signers        []signer        `json:"signers"`
 	Authorizations []authorization `json:"authorizations"`
 }
 
 type authorization struct {
-	ID      string 	 `json:"id"`
-	Key     string 	 `json:"key"`
+	ID      string   `json:"id"`
+	Key     string   `json:"key"`
 	Signers []string `json:"signers"`
 }
 
@@ -180,7 +180,7 @@ func TestSignerConfigLoad(t *testing.T) {
 		t.Fatal("Should have 2 authorizations")
 	}
 
-	if len(conf.Authorizations[0].Signers) + len(conf.Authorizations[1].Signers) != 7 {
+	if len(conf.Authorizations[0].Signers)+len(conf.Authorizations[1].Signers) != 7 {
 		t.Fatal("Should have 7 auth_signers")
 	}
 
