@@ -206,34 +206,36 @@ func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, e
 	// add any missing authorizations from fileConf to dbConf
 	var authsToAdd []authorization
 	for _, fa := range fileConf.Authorizations {
-		var conflict bool = false
+		var missing bool
 		for _, da := range dbConf.Authorizations {
+			missing = true
 			if da.ID == fa.ID {
-				conflict = true
+				missing = false
 				break
 			}
 		}
-		if !conflict {
+		if missing {
 			authsToAdd = append(authsToAdd, fa)
 		}
-		dbConf.Authorizations = append(dbConf.Authorizations, authsToAdd...)
 	}
+	dbConf.Authorizations = append(dbConf.Authorizations, authsToAdd...)
 
 	// add any missing signers from fileConf to dbConf
 	var signersToAdd []signer.Configuration
 	for _, fs := range fileConf.Signers {
-		var conflict bool = false
+		var missing bool
 		for _, ds := range dbConf.Signers {
+			missing = true
 			if ds.ID == fs.ID {
-				conflict = true
+				missing = false
 				break
 			}
 		}
-		if !conflict {
+		if missing {
 			signersToAdd = append(signersToAdd, fs)
 		}
-		dbConf.Signers = append(dbConf.Signers, signersToAdd...)
 	}
+	dbConf.Signers = append(dbConf.Signers, signersToAdd...)
 
 	return &dbConf, nil
 }
@@ -279,11 +281,7 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 	ag = newAutographer(serviceConf.Server.NonceCacheSize)
 	ag.heartbeatConf = &serviceConf.Heartbeat
 
-	if serviceConf.Database.Name != "" {
-		// ignore the monitor close chan since it will stop
-		// when the app is stopped
-		_ = ag.addDB(serviceConf.Database)
-	}
+	_ = ag.addDB(serviceConf.Database)
 
 	signerConf, err := loadSignerConfig(ag.db, signerFile)
 	if err != nil {
