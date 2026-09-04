@@ -1,6 +1,7 @@
 package database
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"sync"
@@ -96,4 +97,102 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 		t.Fatal(err)
 	}
 	return label
+}
+
+// simplified test types
+type signerConfig struct {
+	Signers        []signer        `json:"signers"`
+	Authorizations []authorization `json:"authorizations"`
+}
+
+type authorization struct {
+	ID      string   `json:"id"`
+	Key     string   `json:"key"`
+	Signers []string `json:"signers"`
+}
+
+type signer struct {
+	ID     string `json:"id"`
+	Type   string `json:"type"`
+	Mode   string `json:"mode"`
+	Secret string `json:"secret,omitempty"`
+	Foo    string `json:"foo,omitempty"`
+}
+
+func TestSignerConfigLoad(t *testing.T) {
+	host := GetTestDBHost()
+	db, err := Connect(Config{
+		Name:                "autograph",
+		User:                "myautographdbuser",
+		Password:            "myautographdbpassword",
+		Host:                host + ":5432",
+		MonitorPollInterval: 10 * time.Second,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = db.Exec(`delete from auth_signers;
+			delete from signer;
+			delete from auth;`)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = db.Exec(`insert into auth(id, key)
+		values('test1', 'abcdef0123456789'),
+		('test2', 'abcdef0123456789');
+
+		insert into signer(id, type, mode, secret, public)
+		values('test1-1', 'type1', 'mode1', 'path/to/secret/test1-1', '{ "foo": "bar1" }'),
+		('test1-2', 'type1', 'mode2', 'path/to/secret/test1-2', '{ "foo": "bar2" }'),
+		('test1-3', 'type1', 'mode3', 'path/to/secret/test1-3', '{ "foo": "bar3" }'),
+		('test2-1', 'type2', 'mode1', 'path/to/secret/test2-1', '{ "foo": "bar4" }'),
+		('test2-2', 'type2', 'mode2', 'path/to/secret/test2-2', '{ "foo": "bar5" }'),
+		('test-shared', 'type3', 'mode1', 'path/to/secret/test-shared', '{ "id": "bad-id", "foo": "bar6" }');
+
+		insert into auth_signers(auth, signer)
+		values('test1', 'test1-1'),
+		('test1', 'test1-2'),
+		('test1', 'test1-3'),
+		('test1', 'test-shared'),
+		('test2', 'test2-1'),
+		('test2', 'test2-2'),
+		('test2', 'test-shared');`)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	str, err := db.GetSignerConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var conf signerConfig
+	err = json.Unmarshal([]byte(str), &conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(conf.Authorizations) != 2 {
+		t.Fatal("Should have 2 authorizations")
+	}
+
+	if len(conf.Authorizations[0].Signers)+len(conf.Authorizations[1].Signers) != 7 {
+		t.Fatal("Should have 7 auth_signers")
+	}
+
+	if len(conf.Signers) != 6 {
+		t.Fatal("Should have 6 signers")
+	}
+
+	for _, s := range conf.Signers {
+		if s.ID == "bad-id" {
+			t.Fatal("The signer id public property should have been overwritten by the record's id")
+		}
+	}
+
+	t.Log("successfully read signer config from database")
 }
