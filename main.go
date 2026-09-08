@@ -206,9 +206,8 @@ func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, e
 	// add any missing authorizations from fileConf to dbConf
 	var authsToAdd []authorization
 	for _, fa := range fileConf.Authorizations {
-		var missing bool
+		var missing bool = true
 		for _, da := range dbConf.Authorizations {
-			missing = true
 			if da.ID == fa.ID {
 				missing = false
 				break
@@ -223,9 +222,8 @@ func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, e
 	// add any missing signers from fileConf to dbConf
 	var signersToAdd []signer.Configuration
 	for _, fs := range fileConf.Signers {
-		var missing bool
+		var missing bool = true
 		for _, ds := range dbConf.Signers {
-			missing = true
 			if ds.ID == fs.ID {
 				missing = false
 				break
