@@ -138,7 +138,7 @@ func parseArgs(args []string) (serviceFile string, signerFile string, port strin
 
 	fset.StringVar(&serviceFile, "c", "autograph-service.yaml", "Path to service configuration file")
 	fset.StringVar(&signerFile, "s", "autograph-signer.yaml", "Path to signer configuration file")
-	fset.StringVar(&port, "p", "8000", "Port to listen on. Overrides the listen var from the config file")
+	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	// https://github.com/sirupsen/logrus#level-logging
 	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
 	fset.BoolVar(&debug, "D", false, "Sets the log level to debug to print debug logs.")
