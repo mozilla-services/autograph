@@ -47,19 +47,12 @@ func TestFormatFilenameInvalidUTF8(t *testing.T) {
 	}
 }
 
-func TestFormatFilenameWithControlCharacter(t *testing.T) {
+func TestFormatFilenameInvalidControlCharacters(t *testing.T) {
 	t.Parallel()
 
-	// Both are the same, really, but `expected` is slightly more readable.
-	fn := []byte("some/file\x0d")
-	expected := []byte("some/file\r")
-
-	formatted, err := formatFilename(fn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(formatted, expected) {
-		t.Fatalf("manifest filename mismatch Expected:\n%q\nGot:\n%q", expected, formatted)
+	_, err := formatFilename([]byte("originalFile\nName: anotherFile.js"))
+	if err == nil {
+		t.Fatal("format filename did not error for new line")
 	}
 }
 
@@ -112,17 +105,6 @@ func TestMakingJarManifest(t *testing.T) {
 	}
 	if !bytes.Equal(unsignedEmptyCOSEManifest, manifest) {
 		t.Fatalf("manifest mismatch. Expect:\n%+v\nGot:\n%+v", unsignedEmptyCOSEManifest, manifest)
-	}
-
-	manifest, sigfile, err := makeJARManifestAndSignatureFile(unsignedBootstrap)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !bytes.Equal(manifest, unsignedBootstrapManifest) {
-		t.Fatalf("manifest mismatch. Expect:\n%q\nGot:\n%q", unsignedBootstrapManifest, manifest)
-	}
-	if !bytes.Equal(sigfile, unsignedBootstrapSignatureFile) {
-		t.Fatalf("signature file mismatch. Expect:\n%q\nGot:\n%q", unsignedBootstrapSignatureFile, sigfile)
 	}
 }
 

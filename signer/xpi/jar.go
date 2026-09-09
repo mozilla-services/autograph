@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"unicode"
 
 	"io"
 	"strings"
@@ -37,6 +38,10 @@ var maxFirstLineByteLen = maxLineByteLen - (len([]byte("Name: ")) + 1) // + 1 fo
 func formatFilename(filename []byte) (formatted []byte, err error) {
 	if !utf8.Valid(filename) {
 		err = fmt.Errorf("xpi: invalid UTF8 in filename %q", filename)
+		return
+	}
+	if bytes.ContainsFunc(filename, unicode.IsControl) {
+		err = fmt.Errorf("xpi: control character in filename %q", filename)
 		return
 	}
 	var (
@@ -94,23 +99,6 @@ func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err
 	}
 
 	return mw.Bytes(), err
-}
-
-// makeJARManifestAndSignatureFile writes hashes for all entries in a zip to a
-// manifest file then hashes the manifest file to write a signature
-// file and returns both
-func makeJARManifestAndSignatureFile(input []byte) (manifest, sigfile []byte, err error) {
-	manifest, err = makeJARManifest(input)
-	if err != nil {
-		return
-	}
-
-	sigfile, err = makeJARSignatureFile(manifest)
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 // makeJARManifest calculates a sha1 and sha256 hash for each zip entry and writes them to a manifest file
