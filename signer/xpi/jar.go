@@ -101,23 +101,6 @@ func makePKCS7Manifest(input []byte, metafiles []Metafile) (manifest []byte, err
 	return mw.Bytes(), err
 }
 
-// makeJARManifestAndSignatureFile writes hashes for all entries in a zip to a
-// manifest file then hashes the manifest file to write a signature
-// file and returns both
-func makeJARManifestAndSignatureFile(input []byte) (manifest, sigfile []byte, err error) {
-	manifest, err = makeJARManifest(input)
-	if err != nil {
-		return
-	}
-
-	sigfile, err = makeJARSignatureFile(manifest)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
 // makeJARManifest calculates a sha1 and sha256 hash for each zip entry and writes them to a manifest file
 func makeJARManifest(input []byte) (manifest []byte, err error) {
 	inputReader := bytes.NewReader(input)
