@@ -47,6 +47,15 @@ func TestFormatFilenameInvalidUTF8(t *testing.T) {
 	}
 }
 
+func TestFormatFilenameInvalidControlCharacters(t *testing.T) {
+	t.Parallel()
+
+	_, err := formatFilename([]byte("originalFile\nName: anotherFile.js"))
+	if err == nil {
+		t.Fatal("format filename did not error for new line")
+	}
+}
+
 func TestFormatFilenameWithControlCharacter(t *testing.T) {
 	t.Parallel()
 

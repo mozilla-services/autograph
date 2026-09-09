@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"unicode"
 
 	"io"
 	"strings"
@@ -37,6 +38,10 @@ var maxFirstLineByteLen = maxLineByteLen - (len([]byte("Name: ")) + 1) // + 1 fo
 func formatFilename(filename []byte) (formatted []byte, err error) {
 	if !utf8.Valid(filename) {
 		err = fmt.Errorf("xpi: invalid UTF8 in filename %q", filename)
+		return
+	}
+	if bytes.ContainsFunc(filename, unicode.IsControl) {
+		err = fmt.Errorf("xpi: control character in filename %q", filename)
 		return
 	}
 	var (
