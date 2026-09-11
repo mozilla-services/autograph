@@ -8,7 +8,7 @@ AUTOGRAPH_URL=${AUTOGRAPH_URL:?}
 CHECK_BOB=${CHECK_BOB:-"0"}
 
 # check alice has access to normandy
-go run client.go -t "$AUTOGRAPH_URL" -listkeyids -u alice | grep normandy
+go run client.go -t "$AUTOGRAPH_URL" -listkeyids -u softhsm-alice | grep normandy
 
 if [ "$CHECK_BOB" = "1" ]; then
     # but bob doesn't

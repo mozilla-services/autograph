@@ -57,14 +57,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command:
-      [
-        "autograph",
-        "-c",
-        "/app/autograph.softhsm-service.yaml",
-        "-s",
-        "/app/autograph.softhsm-signer.yaml",
-      ]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/__heartbeat__"]
       interval: 60s

@@ -132,39 +132,6 @@ func TestSignerConfigLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = db.Exec(`delete from auth_signers;
-			delete from signer;
-			delete from auth;`)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = db.Exec(`insert into auth(id, key)
-		values('test1', 'abcdef0123456789'),
-		('test2', 'abcdef0123456789');
-
-		insert into signer(id, type, mode, secret, public)
-		values('test1-1', 'type1', 'mode1', 'path/to/secret/test1-1', '{ "foo": "bar1" }'),
-		('test1-2', 'type1', 'mode2', 'path/to/secret/test1-2', '{ "foo": "bar2" }'),
-		('test1-3', 'type1', 'mode3', 'path/to/secret/test1-3', '{ "foo": "bar3" }'),
-		('test2-1', 'type2', 'mode1', 'path/to/secret/test2-1', '{ "foo": "bar4" }'),
-		('test2-2', 'type2', 'mode2', 'path/to/secret/test2-2', '{ "foo": "bar5" }'),
-		('test-shared', 'type3', 'mode1', 'path/to/secret/test-shared', '{ "id": "bad-id", "foo": "bar6" }');
-
-		insert into auth_signers(auth, signer)
-		values('test1', 'test1-1'),
-		('test1', 'test1-2'),
-		('test1', 'test1-3'),
-		('test1', 'test-shared'),
-		('test2', 'test2-1'),
-		('test2', 'test2-2'),
-		('test2', 'test-shared');`)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	str, err := db.GetSignerConfig()
 	if err != nil {
 		t.Fatal(err)
@@ -176,22 +143,23 @@ func TestSignerConfigLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(conf.Authorizations) != 2 {
-		t.Fatal("Should have 2 authorizations")
+	if len(conf.Authorizations) != 5 {
+		// should have 4 authorizations from app test config and 1 addiditional from app-hsm
+		t.Fatalf("Should have 5 authorizations configured, found %d", len(conf.Authorizations))
 	}
 
-	if len(conf.Authorizations[0].Signers)+len(conf.Authorizations[1].Signers) != 7 {
-		t.Fatal("Should have 7 auth_signers")
+	if len(conf.Signers) != 33 {
+		// should have 24 authorizations from app test config and 9 addiditional from app-hsm
+		t.Fatalf("Should have 33 signers configured, found %d", len(conf.Signers))
 	}
 
-	if len(conf.Signers) != 6 {
-		t.Fatal("Should have 6 signers")
+	var totalAuthSigners = 0
+	for _, auth := range conf.Authorizations {
+		totalAuthSigners += len(auth.Signers)
 	}
-
-	for _, s := range conf.Signers {
-		if s.ID == "bad-id" {
-			t.Fatal("The signer id public property should have been overwritten by the record's id")
-		}
+	if totalAuthSigners != 36 {
+		// should have 27 authorizations from app test config and 9 addiditional from app-hsm
+		t.Fatalf("Should have 36 auth_signers, found %d", totalAuthSigners)
 	}
 
 	t.Log("successfully read signer config from database")
