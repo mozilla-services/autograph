@@ -147,7 +147,7 @@ type Configuration struct {
 
 	// ChainLocation is the target a certificate chain should be
 	// saved to in order for clients to find it at the x5u location.
-	ChainLocation string `json:"chain_location,omitempty" yaml:"chainlocation,omitempty"`
+	ChainLocation string `json:"chainlocation,omitempty" yaml:"chainlocation,omitempty"`
 
 	// CaCert is the certificate of the root of the pki, when used
 	CaCert string `json:"cacert,omitempty" yaml:"cacert,omitempty"`
