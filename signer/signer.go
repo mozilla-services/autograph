@@ -70,15 +70,15 @@ type RecommendationConfig struct {
 	// AllowedStates is a map of strings the signer is allowed to
 	// set in the recommendations file to true indicating whether
 	// they're allowed or not
-	AllowedStates map[string]bool `yaml:"states,omitempty"`
+	AllowedStates map[string]bool `json:"states,omitempty" yaml:"states,omitempty"`
 
 	// FilePath is the path in the XPI to save the recommendations
 	// file
-	FilePath string `yaml:"path,omitempty"`
+	FilePath string `json:"path,omitempty" yaml:"path,omitempty"`
 
 	// ValidityRelativeStart is when to set the recommendation
 	// validity not_before relative to now
-	ValidityRelativeStart Duration `yaml:"relative_start,omitempty"`
+	ValidityRelativeStart Duration `json:"relative_start,omitempty" yaml:"relative_start,omitempty"`
 
 	// ValidityDuration is when to set the recommendation validity
 	// not_after relative to now
@@ -88,7 +88,7 @@ type RecommendationConfig struct {
 	//       <----------------------> <------------------->
 	//      |                        |                     |
 	//   not_before          now / signing TS          not_after
-	ValidityDuration Duration `yaml:"duration,omitempty"`
+	ValidityDuration Duration `json:"duration,omitempty" yaml:"duration,omitempty"`
 }
 
 // Configuration defines the parameters of a signer.
@@ -113,7 +113,7 @@ type Configuration struct {
 
 	// RecommendationConfig specifies config values for
 	// recommendations files for XPI signers
-	RecommendationConfig RecommendationConfig `yaml:"recommendation,omitempty"`
+	RecommendationConfig RecommendationConfig `json:"recommendation,omitempty yaml:"recommendation,omitempty"`
 
 	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
 	// attributes and use a legacy PKCS7 digest
@@ -129,7 +129,7 @@ type Configuration struct {
 	// match another extant signer id, also be sure to set the X5U and
 	// ChainLocations of this signer configuration to avoid storing
 	// chains that share the same file name.
-	SubdomainOverride string `json:"subdomain_override,omitempty" yaml:"subdomainoverride,omitempty"`
+	SubdomainOverride string `json:"subdomainoverride,omitempty" yaml:"subdomainoverride,omitempty"`
 
 	// Passphrase is the optional passphrase to use decrypt the
 	// gpg secret key for the gpg2 signer type
@@ -143,7 +143,7 @@ type Configuration struct {
 	// to the notbefore and notafter values. For example, a certificate
 	// with a validity of 30d and a clock skew tolerance of 10 days will
 	// have a total validity of 10+30+10=50 days.
-	ClockSkewTolerance Duration `json:"clock_skew_tolerance,omitempty" yaml:"clockskewtolerance,omitempty"`
+	ClockSkewTolerance Duration `json:"clockskewtolerance,omitempty" yaml:"clockskewtolerance,omitempty"`
 
 	// ChainLocation is the target a certificate chain should be
 	// saved to in order for clients to find it at the x5u location.
@@ -161,7 +161,7 @@ type Configuration struct {
 	SaltLength int `json:"saltlength,omitempty" yaml:"saltlength,omitempty"`
 
 	// SignerOpts contains options for signing with a Signer
-	SignerOpts crypto.SignerOpts `json:"signer_opts,omitempty" yaml:"signeropts,omitempty"`
+	SignerOpts crypto.SignerOpts `json:"signeropts,omitempty" yaml:"signeropts,omitempty"`
 
 	isHsmAvailable bool
 	Hsm            HSM
