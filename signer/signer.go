@@ -14,6 +14,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -31,6 +32,39 @@ import (
 // IDFormat is a regex for the format IDs must follow
 const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 
+// time.Duration wrapper for unmarshalling json
+type Duration time.Duration
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		// null or invalid string value
+		return nil
+	}
+	if s == "" {
+		return nil
+	}
+	v, err := time.ParseDuration(s)
+	*d = Duration(v)
+	return err
+}
+func (d *Duration) MarshalJSON() ([]byte, error) {
+	if *d == 0 {
+		// return empty byte array for unset duration, only possible in unit tests
+		return json.Marshal(0)
+	}
+	return json.Marshal(time.Duration(*d).String())
+}
+func (d *Duration) UnmarshalYAML(unmarshal func(any) error) error {
+	var s string
+	if err := unmarshal(&s); err != nil {
+		return err
+	}
+	v, err := time.ParseDuration(s)
+	*d = Duration(v)
+	return err
+}
+
 // RecommendationConfig is a config for the XPI recommendation file
 type RecommendationConfig struct {
 	// AllowedStates is a map of strings the signer is allowed to
@@ -44,7 +78,7 @@ type RecommendationConfig struct {
 
 	// ValidityRelativeStart is when to set the recommendation
 	// validity not_before relative to now
-	ValidityRelativeStart time.Duration `yaml:"relative_start,omitempty"`
+	ValidityRelativeStart Duration `yaml:"relative_start,omitempty"`
 
 	// ValidityDuration is when to set the recommendation validity
 	// not_after relative to now
@@ -54,7 +88,7 @@ type RecommendationConfig struct {
 	//       <----------------------> <------------------->
 	//      |                        |                     |
 	//   not_before          now / signing TS          not_after
-	ValidityDuration time.Duration `yaml:"duration,omitempty"`
+	ValidityDuration Duration `yaml:"duration,omitempty"`
 }
 
 // Configuration defines the parameters of a signer.
@@ -102,14 +136,14 @@ type Configuration struct {
 	Passphrase string `json:"passphrase,omitempty" yaml:"passphrase,omitempty"`
 
 	// Validity is the lifetime of a end-entity certificate
-	Validity time.Duration `json:"validity,omitempty" yaml:"validity,omitempty"`
+	Validity Duration `json:"validity,omitempty" yaml:"validity,omitempty"`
 
 	// ClockSkewTolerance increase the lifetime of a certificate
 	// to account for clients with skewed clocks by adding days
 	// to the notbefore and notafter values. For example, a certificate
 	// with a validity of 30d and a clock skew tolerance of 10 days will
 	// have a total validity of 10+30+10=50 days.
-	ClockSkewTolerance time.Duration `json:"clock_skew_tolerance,omitempty" yaml:"clockskewtolerance,omitempty"`
+	ClockSkewTolerance Duration `json:"clock_skew_tolerance,omitempty" yaml:"clockskewtolerance,omitempty"`
 
 	// ChainLocation is the target a certificate chain should be
 	// saved to in order for clients to find it at the x5u location.

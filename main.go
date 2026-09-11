@@ -137,7 +137,7 @@ func parseArgs(args []string) (serviceFile string, signerFile string, port strin
 	)
 
 	fset.StringVar(&serviceFile, "c", "autograph-service.yaml", "Path to service configuration file")
-	fset.StringVar(&signerFile, "s", "autograph-signer.yaml", "Path to signer configuration file")
+	fset.StringVar(&signerFile, "s", "", "Path to signer configuration file")
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	// https://github.com/sirupsen/logrus#level-logging
 	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
@@ -314,6 +314,7 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	if serviceConf.HawkTimestampValidity != "" {
 		ag.hawkMaxTimestampSkew, err = time.ParseDuration(serviceConf.HawkTimestampValidity)
 		if err != nil {
@@ -409,6 +410,7 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 			logRequest(),
 		),
 	}
+
 	log.Infof("starting autograph on %s with timeouts: idle %s read %s write %s", listen, serviceConf.Server.IdleTimeout, serviceConf.Server.ReadTimeout, serviceConf.Server.WriteTimeout)
 	err = server.ListenAndServe()
 	if err != nil {
