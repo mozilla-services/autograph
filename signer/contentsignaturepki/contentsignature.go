@@ -78,8 +78,8 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.IssuerPrivKey = conf.IssuerPrivKey
 	s.IssuerCert = conf.IssuerCert
 	s.X5U = conf.X5U
-	s.validity = conf.Validity
-	s.clockSkewTolerance = conf.ClockSkewTolerance
+	s.validity = time.Duration(conf.Validity)
+	s.clockSkewTolerance = time.Duration(conf.ClockSkewTolerance)
 	s.chainLocation = conf.ChainLocation
 	s.caCert = conf.CaCert
 	s.db = conf.DB
@@ -141,20 +141,18 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 				return fmt.Errorf("contentsignaturepki %q: failed to begin db operations: %w", s.ID, err)
 			}
 		}
+
 		// to prevent race conditions, we perform another set of the EE just in case
 		// someone else created it before we managed to obtain the lock
 		err = s.findAndSetEE(conf)
 		switch err {
-		case nil:
-			// alright we found a suitable EE this time to don't make one
-			goto releaseLock
 		case database.ErrNoSuitableEEFound:
 			// still nothing suitable, continue on
 			break
 		default:
-			// some other error popped up, exit
-			return err
+			goto releaseLock
 		}
+
 		// create a label and generate the key
 		s.eeLabel = fmt.Sprintf("%s-%s", s.ID, time.Now().UTC().Format("20060102150405"))
 		s.eePriv, s.eePub, err = conf.MakeKey(s.issuerPub, s.eeLabel)
@@ -164,13 +162,15 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 		// make the certificate and save the chain
 		err = s.makeAndSaveChain()
 		if err != nil {
-			return fmt.Errorf("contentsignaturepki %q: failed to make chain and x5u: %w", s.ID, err)
+			err = fmt.Errorf("contentsignaturepki %q: failed to make chain and x5u: %w", s.ID, err)
+			goto releaseLock
 		}
 		if tx != nil {
 			// insert it in database
 			err = tx.InsertEE(s.X5U, s.eeLabel, s.ID)
 			if err != nil {
-				return fmt.Errorf("contentsignaturepki %q: failed to insert EE into database: %w", s.ID, err)
+				err = fmt.Errorf("contentsignaturepki %q: failed to insert EE into database: %w", s.ID, err)
+				goto releaseLock
 			}
 			log.Printf("contentsignaturepki %q: generated private key labeled %q with x5u %q", s.ID, s.eeLabel, s.X5U)
 		}
@@ -199,8 +199,8 @@ func (s *ContentSigner) Config() signer.Configuration {
 		IssuerPrivKey:      s.IssuerPrivKey,
 		IssuerCert:         s.IssuerCert,
 		X5U:                s.X5U,
-		Validity:           s.validity,
-		ClockSkewTolerance: s.clockSkewTolerance,
+		Validity:           signer.Duration(s.validity),
+		ClockSkewTolerance: signer.Duration(s.clockSkewTolerance),
 		ChainLocation:      s.chainLocation,
 		CaCert:             s.caCert,
 	}

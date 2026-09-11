@@ -175,8 +175,8 @@ func New(conf signer.Configuration) (s *XPISigner, err error) {
 
 	if conf.Mode == ModeAddOnWithRecommendation {
 		s.recommendationAllowedStates = conf.RecommendationConfig.AllowedStates
-		s.recommendationValidityRelativeStart = conf.RecommendationConfig.ValidityRelativeStart
-		s.recommendationValidityDuration = conf.RecommendationConfig.ValidityDuration
+		s.recommendationValidityRelativeStart = time.Duration(conf.RecommendationConfig.ValidityRelativeStart)
+		s.recommendationValidityDuration = time.Duration(conf.RecommendationConfig.ValidityDuration)
 		log.Infof("xpi: set recommendation options allowed states: %+v, path: %q, start duration: %q duration: %q",
 			s.recommendationAllowedStates,
 			s.recommendationFilePath,

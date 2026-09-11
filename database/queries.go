@@ -106,3 +106,32 @@ func (tx *Transaction) End() error {
 	}
 	return nil
 }
+
+// Retrieve authorization records from the database as a json string
+func (db *Handler) GetSignerConfig() (cfg string, err error) {
+	err = db.QueryRow(`with authQuery as (
+		select jsonb_build_object(
+			'id', a.id,
+			'key', a.key,
+			'signers', array_agg(a_s.signer)
+		) auth
+		from auth a
+		inner join auth_signers a_s on a.id = a_s.auth
+		group by a.id, a.key
+	), signerQuery as (
+		select s.public ||  jsonb_build_object(
+			'id', s.id,
+			'type', s.type,
+			'mode', s.mode,
+			'secret', secret
+		) signer
+		from signer s
+	) select jsonb_build_object(
+  'signers', (select jsonb_agg(signer) from signerQuery),
+  'authorizations', (select jsonb_agg(auth) from authQuery)
+	);`).Scan(&cfg)
+	if err != nil {
+		err = fmt.Errorf("Failed to retrieve signer config from database: %w", err)
+	}
+	return
+}

@@ -3,12 +3,13 @@ FROM autograph-app
 USER root
 RUN apt-get update && \
     apt-get -y upgrade && \
-    apt-get -y install jq yq softhsm2 python3 python3-ruamel.yaml && \
+    apt-get -y install jq yq softhsm2 gettext postgresql-client && \
     apt-get clean
 
 # copy the config
-ADD autograph.softhsm-signer.yaml /app/
+ADD soft-hsm-schema.sql /app/
 ADD autograph.softhsm-service.yaml /app/
+ADD soft-hsm-schema.sql /app/
 
 # give app access to dev db root cert
 ADD db-root.crt /opt/db-root.crt
@@ -37,18 +38,19 @@ RUN cd /app/src/autograph/tools/softhsm/ && go run ./genkeys/genkeys.go
 # we expect /tmp was mounted for exports to the monitor-hsm service
 RUN cd /app/src/autograph/tools/genpki/ && \
       go run genpki.go > /app/genpki.out
-RUN cd /app/src/autograph/tools/configurator && \
-      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s normandy \
-      -p issuerprivkey -v "$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s normandy \
-      -p issuercert -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s normandy \
-      -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s kinto \
-      -p issuerprivkey -v "$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s kinto \
-      -p issuercert -v "$(grep 'inter cert path' /app/genpki.out | awk '{print $4}')" && \
-      python3 configurator.py -c /app/autograph.softhsm-signer.yaml -i -s kinto \
-      -p cacert -v "$(grep 'root cert path' /app/genpki.out | awk '{print $4}')"
+RUN cd /app
+RUN NORMANDY_IS_PRIV_KEY="$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" \
+      NORMANDY_IS_CERT="$(cat $(grep 'inter cert path' /app/genpki.out | awk '{print $4}'))" \
+      NORMANDY_CA_CERT="$(cat $(grep 'root cert path' /app/genpki.out | awk '{print $4}'))" \
+      KINTO_IS_PRIV_KEY="$(grep 'inter key name' /app/genpki.out | awk '{print $4}')" \
+      KINTO_IS_CERT="$(cat $(grep 'inter cert path' /app/genpki.out | awk '{print $4}'))" \
+      KINTO_CA_CERT="$(cat $(grep 'root cert path' /app/genpki.out | awk '{print $4}'))" \
+      envsubst < soft-hsm-schema.sql > soft-hsm-schema-merged.sql
 
-CMD /go/bin/autograph -c /app/autograph-service.yaml -c /app/autograph.softhsm-service.yaml -s /app/autograph.softhsm-signer.yaml
+CMD PGPASSWORD=$(yq -r '.database.password' /app/autograph-service.yaml) \
+      psql -h $(yq -r '.database.host' /app/autograph-service.yaml | cut -d ":" -f 1) \
+      -p $(yq -r '.database.host' /app/autograph-service.yaml | cut -d ":" -f 2) \
+      -U $(yq -r '.database.user' /app/autograph-service.yaml) \
+      -d $(yq -r '.database.name' /app/autograph-service.yaml) \
+      -a -f soft-hsm-schema-merged.sql && \
+      /go/bin/autograph -c /app/autograph.softhsm-service.yaml
