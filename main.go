@@ -304,11 +304,11 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 
 	err = ag.addSigners(signerConf.Signers)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	err = ag.addAuthorizations(signerConf.Authorizations)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	err = ag.addMonitoring(serviceConf.Monitoring)
 	if err != nil {

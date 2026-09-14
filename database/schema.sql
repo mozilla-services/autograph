@@ -33,7 +33,7 @@ CREATE TABLE auth(
       created     TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated     TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-GRANT SELECT ON auth TO myautographdbuser;
+GRANT SELECT, INSERT ON auth TO myautographdbuser;
 
 CREATE TABLE signer (
       id          VARCHAR(128) PRIMARY KEY,
@@ -45,7 +45,7 @@ CREATE TABLE signer (
       secret      VARCHAR(256), -- points to a secret that can be read by application
       public      JSONB
 );
-GRANT SELECT ON signer TO myautographdbuser;
+GRANT SELECT, INSERT, UPDATE ON signer TO myautographdbuser;
 
 CREATE TABLE auth_signers(
       auth    varchar(128),
@@ -55,10 +55,9 @@ CREATE TABLE auth_signers(
       CONSTRAINT auth_signers_fk_auth FOREIGN KEY(auth) REFERENCES auth(id),
       CONSTRAINT auth_signers_fk_signer FOREIGN KEY(signer) REFERENCES signer(id)
 );
-GRANT SELECT ON auth_signers TO myautographdbuser;
+GRANT SELECT, INSERT ON auth_signers TO myautographdbuser;
 
 
--- test signer and auth records
 -- test signer and auth records
 INSERT INTO signer(id, type, mode, public, comments)
 values('appkey1', 'contentsignature', null, jsonb_build_object(
