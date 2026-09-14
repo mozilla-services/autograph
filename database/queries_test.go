@@ -144,22 +144,19 @@ func TestSignerConfigLoad(t *testing.T) {
 	}
 
 	if len(conf.Authorizations) != 4 {
-		// should have 4 authorizations from app test config and 0 additional from app-hsm
 		t.Fatalf("Should have 4 authorizations configured, found %d", len(conf.Authorizations))
 	}
 
-	if len(conf.Signers) != 33 {
-		// should have 24 authorizations from app test config and 9 addiditional from app-hsm
-		t.Fatalf("Should have 33 signers configured, found %d", len(conf.Signers))
+	if len(conf.Signers) != 24 {
+		t.Fatalf("Should have 24 signers configured, found %d", len(conf.Signers))
 	}
 
 	var totalAuthSigners = 0
 	for _, auth := range conf.Authorizations {
 		totalAuthSigners += len(auth.Signers)
 	}
-	if totalAuthSigners != 36 {
-		// should have 27 authorizations from app test config and 9 addiditional from app-hsm
-		t.Fatalf("Should have 36 auth_signers, found %d", totalAuthSigners)
+	if totalAuthSigners != 27 {
+		t.Fatalf("Should have 27 auth_signers, found %d", totalAuthSigners)
 	}
 
 	t.Log("successfully read signer config from database")

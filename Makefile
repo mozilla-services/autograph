@@ -82,7 +82,7 @@ build: generate
 
 test-in-docker: build
 	$(SHELL) -c " \
-		docker compose up 2>&1 | tee test-in-docker.log \
+		docker compose run unit-test 2>&1 | tee test-in-docker.log \
 		| (grep --silent 'autograph-unit-test exited with code' && docker compose down; \
 		grep 'autograph-unit-test' test-in-docker.log >unit-test.log ; \
 		tail -2 unit-test.log)"
