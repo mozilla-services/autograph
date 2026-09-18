@@ -113,7 +113,7 @@ type Configuration struct {
 
 	// RecommendationConfig specifies config values for
 	// recommendations files for XPI signers
-	RecommendationConfig RecommendationConfig `json:"recommendation,omitempty yaml:"recommendation,omitempty"`
+	RecommendationConfig RecommendationConfig `json:"recommendation" yaml:"recommendation"`
 
 	// NoPKCS7SignedAttributes for signing legacy APKs don't sign
 	// attributes and use a legacy PKCS7 digest
