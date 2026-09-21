@@ -72,7 +72,6 @@ EXPOSE 2112
 # Copy compiled appliation from the builder.
 ADD . /app/src/autograph
 ADD autograph-service.yaml /app
-ADD autograph-signer.yaml /app
 ADD version.json /app
 COPY --from=builder /go/bin /go/bin/
 

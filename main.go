@@ -68,9 +68,6 @@ type serviceConfig struct {
 	HawkTimestampValidity string
 	MonitorInterval       time.Duration
 
-	// How long config should be cached when reading from the database
-	SignerCacheDuration string
-
 	GCP struct {
 		ProjectId string
 	}
@@ -97,10 +94,6 @@ type autographer struct {
 	heartbeatConf        *heartbeatConfig
 	authBackend          authBackend
 	hawkMaxTimestampSkew time.Duration
-
-	// So we know when to re-read auth and signer config from the database
-	signerCacheDuration time.Duration
-	signerLastRead      time.Time
 
 	// Used to signal the monitor on exit of the autographer instance.
 	exit chan interface{}
@@ -345,15 +338,6 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 	}
 	log.Infof("setting hawk timestamp skew to %s", ag.hawkMaxTimestampSkew)
 
-	if serviceConf.SignerCacheDuration != "" {
-		ag.signerCacheDuration, err = time.ParseDuration(serviceConf.SignerCacheDuration)
-		if err != nil {
-			log.Fatalf("Invalid SignerCacheDuartion value: %s", serviceConf.SignerCacheDuration)
-		}
-	} else {
-		ag.signerCacheDuration = time.Minute * 5 // default to 5 minutes
-	}
-
 	if debug {
 		ag.enableDebug()
 	}
@@ -374,6 +358,7 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "http.api.sign/hash")).Methods("POST")
 	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", apiStatsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids")).Methods("GET")
 
+	// TODO: START HERE ALEX
 	// For each signer with a local chain upload location (eg: using the file
 	// scheme) create an handler to serve that directory at the path /x5u/keyid/
 	for _, signer := range signerConf.Signers {
