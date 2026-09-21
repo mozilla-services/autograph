@@ -38,8 +38,8 @@ openssl pkcs12 -in testkeystore.p12  -nodes -nocerts -out key.pem
 keytool -exportcert -keystore testkeystore.jks -alias testapp|openssl x509 -inform der -text
 ```
 
-You can then place the certificate and private key in
-\`autograph-signer.yaml\`:
+You can then place the certificate and private key in GCP secret manager
+(or the database for small testing). Example config:
 
 ``` yaml
 signers:

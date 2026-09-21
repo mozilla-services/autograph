@@ -30,8 +30,7 @@ $ gpg --no-default-keyring --keyring /tmp/testkeyring.pgp \
 
 ## Configuration
 
-Add a signer to `autograph-signer.yaml` with the following
-**required** fields
+Add a signer to the database with the following **required** fields
 
 1.  a PGP public key (e.g. a key exported with `gpg --armor --export
     $KEYID`)
