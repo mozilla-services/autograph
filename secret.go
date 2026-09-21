@@ -14,18 +14,11 @@ import (
 )
 
 // Queries GCP secret manager and returns a map of the expected secret's string key/value pairs
-func getSecretMap(projectId string, secretName string) (secret map[string]string, err error) {
-	ctx := context.Background()
-	c, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return
-	}
-	defer c.Close()
-
+func getSecretMap(client *secretmanager.Client, ctx context.Context, projectId string, secretName string) (secret map[string]string, err error) {
 	req := &secretmanagerpb.AccessSecretVersionRequest{
 		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/latest", projectId, secretName),
 	}
-	resp, err := c.AccessSecretVersion(ctx, req)
+	resp, err := client.AccessSecretVersion(ctx, req)
 	if err != nil {
 		return
 	}

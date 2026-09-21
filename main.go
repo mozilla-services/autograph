@@ -9,6 +9,7 @@ package main
 //go:generate ./version.sh
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"flag"
@@ -38,6 +39,8 @@ import (
 	"github.com/mozilla-services/autograph/signer/gpg2"
 	"github.com/mozilla-services/autograph/signer/mar"
 	"github.com/mozilla-services/autograph/signer/xpi"
+
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 
 	sops "github.com/getsops/sops/v3"
 	"github.com/getsops/sops/v3/decrypt"
@@ -239,13 +242,30 @@ func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, e
 }
 
 func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
+	if gcpProjectId == "" {
+		log.Warn("No gcpProjectId configured. Skipping loadSignerSecrets.")
+		return nil
+	}
+
+	if len(signerConf.Signers) < 1 {
+		log.Warn("No signers to check secrets for. . Skipping loadSignerSecrets.")
+		return nil
+	}
+
+	ctx := context.Background()
+	gcpClient, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return err
+	}
+	defer gcpClient.Close()
+
 	var errs []error
 	for i := range signerConf.Signers {
 		if signerConf.Signers[i].Secret == "" || signerConf.Signers[i].SecretLoaded {
 			continue
 		}
 
-		secret, err := getSecretMap(gcpProjectId, signerConf.Signers[i].Secret)
+		secret, err := getSecretMap(gcpClient, ctx, gcpProjectId, signerConf.Signers[i].Secret)
 		if err != nil {
 			errs = append(errs, err)
 		}
