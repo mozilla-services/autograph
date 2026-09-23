@@ -65,7 +65,7 @@ func TestServiceConfigLoad(t *testing.T) {
 	}{
 		{"simple service", true, []byte(`
 server:
-    listen: "localhost:8000"
+    listen: "localhost:8888"
     noncecachesize: 64
 
 heartbeat:
@@ -462,18 +462,18 @@ signers:
 	os.Remove(filename)
 }
 
-func TestDefaultPort(t *testing.T) {
-	expected := "0.0.0.0:8000"
-	_, _, listen, _ := parseArgsAndLoadConfig([]string{})
-	if listen != expected {
-		t.Errorf("expected listen %s got %s", expected, listen)
+func TestDefaultPortUnset(t *testing.T) {
+	expected := ""
+	_, _, port, _, _ := parseArgs([]string{})
+	if port != expected {
+		t.Errorf("expected listen %s got %s", expected, port)
 	}
 }
 
 func TestPortOverride(t *testing.T) {
-	expected := "0.0.0.0:8080"
-	_, _, listen, _ := parseArgsAndLoadConfig([]string{"-p", "8080"})
-	if listen != expected {
-		t.Errorf("expected listen %s got %s", expected, listen)
+	expected := "8080"
+	_, _, port, _, _ := parseArgs([]string{"-p", "8080"})
+	if port != expected {
+		t.Errorf("expected listen %s got %s", expected, port)
 	}
 }

@@ -1,8 +1,8 @@
 # Configuration
 
-The configuration lives in `autograph-service.yaml` and `autograph-signer.yaml`
-at the default path `/etc/autograph/` (use the flags `-c` and `-s` to provide
-alternate paths).
+The service configuration lives in `autograph-service.yaml` and signer/auth
+configuration lives in the database. (use the flags `-c` to provide an
+alternate path for service config).
 
 ## Server
 
@@ -101,23 +101,17 @@ $ openssl rand -hex 32
 ecf1dbcf7d8b161f51d7f590ea4a4eec8332918276ddcfc657fb0b863b2e37e7
 ```
 
-Then add it to the configuration as follows:
+Then add it to the database config like:
 
-``` yaml
-authorizations:
-    # username 'alice' is allowed to use signers 'appkey1' and 'appkey2'
-    - id: alice
-      key: fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu
-      signers:
-          - appkey1
-          - appkey2
+``` sql
+INSERT INTO auth(id, key)
+VALUES('alice', 'fs5wgcer9qj819kfptdlp8gm227ewxnzvsuj9ztycsx08hfhzu'),
+('bob', '9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d');
 
-    # username 'bob' is only allowed to use signer 'appkey2'
-    - id: bob
-      key: 9vh6bhlc10y63ow2k4zke7k0c3l9hpr8mo96p92jmbfqngs9e7d
-      hawktimestampvalidity: 10m
-      signers:
-          - appkey2
+INSERT INTO auth_signers(auth, signer)
+VALUES('alice', 'appkey1'),
+('alice', 'appkey2'),
+('bob', 'appkey2');
 ```
 
 The configuration above allows `alice` to request signatures from both
@@ -152,7 +146,7 @@ The binary is located in `$GOPATH/bin/autograph` and can be
 started with the configuration file:
 
 ``` bash
-$ $GOPATH/bin/autograph -c autograph-service.yaml -s autograph-signer.yaml
+$ $GOPATH/bin/autograph -c autograph-service.yaml
 {"Timestamp":1453721399358695130,"Type":"app.log","Logger":"Autograph","Hostname":"gator1","EnvVersion":"2.0","Pid":17287,"Fields":{"msg":"main.go:74: Starting Autograph API on localhost:8000"}}
 ```
 

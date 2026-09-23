@@ -1,6 +1,7 @@
 package database
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"sync"
@@ -96,4 +97,67 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 		t.Fatal(err)
 	}
 	return label
+}
+
+// simplified test types
+type signerConfig struct {
+	Signers        []signer        `json:"signers"`
+	Authorizations []authorization `json:"authorizations"`
+}
+
+type authorization struct {
+	ID      string   `json:"id"`
+	Key     string   `json:"key"`
+	Signers []string `json:"signers"`
+}
+
+type signer struct {
+	ID     string `json:"id"`
+	Type   string `json:"type"`
+	Mode   string `json:"mode"`
+	Secret string `json:"secret,omitempty"`
+	Foo    string `json:"foo,omitempty"`
+}
+
+func TestSignerConfigLoad(t *testing.T) {
+	host := GetTestDBHost()
+	db, err := Connect(Config{
+		Name:                "autograph",
+		User:                "myautographdbuser",
+		Password:            "myautographdbpassword",
+		Host:                host + ":5432",
+		MonitorPollInterval: 10 * time.Second,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	str, err := db.GetSignerConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var conf signerConfig
+	err = json.Unmarshal([]byte(str), &conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(conf.Authorizations) != 4 {
+		t.Fatalf("Should have 4 authorizations configured, found %d", len(conf.Authorizations))
+	}
+
+	if len(conf.Signers) != 24 {
+		t.Fatalf("Should have 24 signers configured, found %d", len(conf.Signers))
+	}
+
+	var totalAuthSigners = 0
+	for _, auth := range conf.Authorizations {
+		totalAuthSigners += len(auth.Signers)
+	}
+	if totalAuthSigners != 27 {
+		t.Fatalf("Should have 27 auth_signers, found %d", totalAuthSigners)
+	}
+
+	t.Log("successfully read signer config from database")
 }

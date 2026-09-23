@@ -15,16 +15,23 @@ services:
     command: postgres -c 'ssl=on' -c 'ssl_cert_file=/opt/server.crt' -c 'ssl_key_file=/opt/server.key'
     volumes:
       - ./database/unittest-setup.sql:/docker-entrypoint-initdb.d/unittest-setup.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "autograph"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   app:
     container_name: autograph-app
     image: autograph-app
     build:
       context: .
-    environment:
-      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
     links:
       - db
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
       - "2112:2112"
@@ -41,8 +48,6 @@ services:
     image: autograph-app-hsm
     build:
       context: tools/softhsm/
-    environment:
-      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/opt/db-root.crt
     links:
       - db
     ports:
@@ -50,18 +55,8 @@ services:
     volumes:
       - hsmtmpdir:/tmp/
     depends_on:
-      - db
-    command:
-      [
-        "/app/src/autograph/bin/wait-for-it.sh",
-        "db:5432",
-        "--",
-        "autograph",
-        "-c",
-        "/app/autograph.softhsm-service.yaml",
-        "-s",
-        "/app/autograph.softhsm-signer.yaml",
-      ]
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/__heartbeat__"]
       interval: 60s
@@ -117,6 +112,9 @@ services:
       - CIRCLE_PR_NUMBER
     links:
       - db
+    depends_on:
+      db:
+        condition: service_healthy
     user: "0"
     working_dir: "/app/src/autograph/"
     command: ["./bin/run_unit_tests.sh"]

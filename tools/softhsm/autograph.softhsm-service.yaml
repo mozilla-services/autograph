@@ -33,8 +33,8 @@ database:
   user: myautographdbuser
   password: myautographdbpassword
   host: db:5432
-  sslmode: verify-full
-  sslrootcert: /opt/db-root.crt
+  # sslmode: verify-full
+  # sslrootcert: /opt/db-root.crt
   maxopenconns: 100
   maxidleconns: 10
   monitorpollinterval: 10s

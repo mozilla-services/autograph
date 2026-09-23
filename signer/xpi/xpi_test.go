@@ -884,8 +884,8 @@ IFC4rSF6QSdQoR0wjFpM0Pwt4wWAKHs=
 				"recommended": true,
 			},
 			FilePath:              "test-recommendations.json",
-			ValidityRelativeStart: time.Minute,
-			ValidityDuration:      5 * 365 * time.Hour,
+			ValidityRelativeStart: signer.Duration(time.Minute),
+			ValidityDuration:      signer.Duration(5 * 365 * time.Hour),
 		},
 		Certificate: `
 -----BEGIN CERTIFICATE-----
