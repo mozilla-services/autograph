@@ -14,11 +14,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
 	"regexp"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -210,6 +212,7 @@ func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, e
 			}
 		}
 		if missing {
+			log.Infof("Auth %s in file config but not database. Adding to live config.", fa.ID)
 			authsToAdd = append(authsToAdd, fa)
 		}
 	}
@@ -226,6 +229,7 @@ func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, e
 			}
 		}
 		if missing {
+			log.Infof("Signer %s in file config but not database. Adding to live config.", fs.ID)
 			signersToAdd = append(signersToAdd, fs)
 		}
 	}
@@ -235,11 +239,6 @@ func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, e
 }
 
 func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
-	if gcpProjectId == "" {
-		log.Warn("No gcpProjectId configured. Skipping loadSignerSecrets.")
-		return nil
-	}
-
 	if len(signerConf.Signers) < 1 {
 		log.Warn("No signers to check secrets for. . Skipping loadSignerSecrets.")
 		return nil
@@ -265,14 +264,22 @@ func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
 
 		if val, ok := secret["privatekey"]; ok {
 			signerConf.Signers[i].PrivateKey = val
+			delete(secret, "privatekey")
 		}
 		if val, ok := secret["passphrase"]; ok {
 			signerConf.Signers[i].Passphrase = val
+			delete(secret, "passphrase")
 		}
 		if val, ok := secret["issuerprivkey"]; ok {
 			signerConf.Signers[i].IssuerPrivKey = val
+			delete(secret, "issuerprivkey")
 		}
 		signerConf.Signers[i].SecretLoaded = true
+
+		leftovers := slices.Collect(maps.Keys(secret))
+		if len(leftovers) > 0 {
+			log.Warnf("Secret %s has unmapped keys %s.", signerConf.Signers[i].Secret, leftovers)
+		}
 	}
 
 	if len(errs) > 0 {
@@ -305,6 +312,8 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 		if err != nil {
 			log.Errorf("Failed to retrieve some signer secrets! %s", err)
 		}
+	} else {
+		log.Warn("No GCP Project ID configured. Unable to load secrets.")
 	}
 
 	// initialize the hsm if a configuration is defined

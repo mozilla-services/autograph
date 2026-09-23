@@ -123,7 +123,7 @@ func (db *Handler) GetSignerConfig() (cfg string, err error) {
 			'id', s.id,
 			'type', s.type,
 			'mode', s.mode,
-			'secret', secret
+			'secret', s.secret
 		) signer
 		from signer s
 	) select jsonb_build_object(
