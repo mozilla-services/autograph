@@ -179,7 +179,7 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 			// close the transaction
 			txErr := tx.End()
 			if err != nil {
-				return fmt.Errorf("contentsignaturepki %q: failed to complete end-entity operations in database: %w", s.ID, txErr)
+				return fmt.Errorf("contentsignaturepki %q: failed to complete end-entity operations in database: %w", s.ID, err)
 			}
 			if txErr != nil {
 				return fmt.Errorf("contentsignaturepki %q: failed to commit end-entity operations in database: %w", s.ID, txErr)
