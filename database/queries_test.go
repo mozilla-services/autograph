@@ -99,7 +99,7 @@ func waitAndMakeEE(j int, db *Handler, wg *sync.WaitGroup, t *testing.T, signerI
 	return label
 }
 
-// simplified test types
+// simplified test types, copied from main.go, authorization.go, and signer.go
 type signerConfig struct {
 	Signers        []signer        `json:"signers"`
 	Authorizations []authorization `json:"authorizations"`

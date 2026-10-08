@@ -101,7 +101,7 @@ $ openssl rand -hex 32
 ecf1dbcf7d8b161f51d7f590ea4a4eec8332918276ddcfc657fb0b863b2e37e7
 ```
 
-Then add it to the database config like:
+Then add it to the `auth` and `auth_signer` tables in the database like:
 
 ``` sql
 INSERT INTO auth(id, key)

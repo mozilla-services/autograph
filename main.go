@@ -131,7 +131,7 @@ func main() {
 func parseArgs(args []string) (serviceFile string, signerFile string, port string, debug bool, err error) {
 	var (
 		logLevel string
-		fset     = flag.NewFlagSet("parseArgsAndLoadConfig", flag.ContinueOnError)
+		fset     = flag.NewFlagSet("parseArgs", flag.ContinueOnError)
 	)
 
 	fset.StringVar(&serviceFile, "c", "autograph-service.yaml", "Path to service configuration file")
@@ -299,7 +299,7 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 	ag = newAutographer(serviceConf.Server.NonceCacheSize)
 	ag.heartbeatConf = &serviceConf.Heartbeat
 
-	_ = ag.addDB(serviceConf.Database)
+	ag.addDB(serviceConf.Database)
 
 	signerConf, err := loadSignerConfig(ag.db, signerFile)
 	if err != nil {
@@ -313,7 +313,7 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 			log.Errorf("Failed to retrieve some signer secrets! %s", err)
 		}
 	} else {
-		log.Warn("No GCP Project ID configured. Unable to load secrets.")
+		log.Error("No GCP Project ID configured. Unable to load secrets.")
 	}
 
 	// initialize the hsm if a configuration is defined

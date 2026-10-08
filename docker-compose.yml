@@ -99,7 +99,7 @@ services:
     build:
       context: .
     environment:
-      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslmode=verify-full sslrootcert=/app/src/autograph/tools/softhsm/db-root.crt
+      - AUTOGRAPH_DB_DSN=host=db user=myautographdbuser dbname=autograph password=myautographdbpassword sslrootcert=/app/src/autograph/tools/softhsm/db-root.crt
       - AUTOGRAPH_DB_HOST=db
       # env var to tell script to report coverage
       - CI

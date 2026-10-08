@@ -7,7 +7,6 @@ RUN apt-get update && \
     apt-get clean
 
 # copy the config
-ADD soft-hsm-schema.sql /app/
 ADD autograph.softhsm-service.yaml /app/
 ADD soft-hsm-schema.sql /app/
 

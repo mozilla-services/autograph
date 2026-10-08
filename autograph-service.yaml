@@ -22,8 +22,6 @@ database:
     user: myautographdbuser
     password: myautographdbpassword
     host: db:5432
-    # sslmode: verify-full
-    # sslrootcert: /etc/ssl/certs/db-root.crt
     maxopenconns: 100
     maxidleconns: 10
     monitorpollinterval: 10s
@@ -45,5 +43,5 @@ monitoring:
     key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
 
 # optional, allows retrieving sensitive signer props from GCP secret manager
-gcp:
-    projectid: moz-fx-autograph-nonprod
+# gcp:
+#     projectid: autograph-project-id

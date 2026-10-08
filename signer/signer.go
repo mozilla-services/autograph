@@ -27,6 +27,8 @@ import (
 	"github.com/mozilla-services/autograph/formats"
 
 	"github.com/mozilla-services/autograph/crypto11"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // IDFormat is a regex for the format IDs must follow
@@ -36,9 +38,13 @@ const IDFormat = `^[a-zA-Z0-9-_]{1,64}$`
 type Duration time.Duration
 
 func (d *Duration) UnmarshalJSON(b []byte) error {
+	if len(b) < 1 {
+		return nil
+	}
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
-		// null or invalid string value
+		// invalid value
+		log.Debugf("Invalid duration value: %s", b)
 		return nil
 	}
 	if s == "" {
@@ -50,7 +56,8 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 }
 func (d *Duration) MarshalJSON() ([]byte, error) {
 	if *d == 0 {
-		// return empty byte array for unset duration, only possible in unit tests
+		// return empty byte array for unset duration, default is 0s normally
+		// this would impact several unit tests that do test config loads with empty values
 		return json.Marshal(0)
 	}
 	return json.Marshal(time.Duration(*d).String())

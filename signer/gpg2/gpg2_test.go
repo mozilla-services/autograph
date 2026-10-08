@@ -680,7 +680,7 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 	}
 }
 
-// signer configs from the test config
+// signer configs from the test signer config in `database/schema.sql`
 
 //go:embed "test/fixtures/randompgp.key"
 var randompgpPrivateKey string
