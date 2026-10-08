@@ -259,7 +259,7 @@ func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
 
 		secret, err := getSecretMap(gcpClient, ctx, gcpProjectId, signerConf.Signers[i].Secret)
 		if err != nil {
-			errs = append(errs, err)
+			errs = append(errs, fmt.Errorf("Error retrieving secret for signer %s. %s", signerConf.Signers[i].ID, err))
 		}
 
 		if val, ok := secret["privatekey"]; ok {
@@ -367,7 +367,6 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 	router.HandleFunc("/sign/hash", apiStatsMiddleware(ag.handleSignature, "http.api.sign/hash")).Methods("POST")
 	router.HandleFunc("/auths/{auth_id:[a-zA-Z0-9-_]{1,255}}/keyids", apiStatsMiddleware(ag.handleGetAuthKeyIDs, "http.api.getauthkeyids")).Methods("GET")
 
-	// TODO: START HERE ALEX
 	// For each signer with a local chain upload location (eg: using the file
 	// scheme) create an handler to serve that directory at the path /x5u/keyid/
 	for _, signer := range signerConf.Signers {

@@ -85,7 +85,7 @@ type RecommendationConfig struct {
 
 	// ValidityRelativeStart is when to set the recommendation
 	// validity not_before relative to now
-	ValidityRelativeStart Duration `json:"relative_start,omitempty" yaml:"relative_start,omitempty"`
+	ValidityRelativeStart Duration `json:"relativestart,omitempty" yaml:"relativestart,omitempty"`
 
 	// ValidityDuration is when to set the recommendation validity
 	// not_after relative to now
