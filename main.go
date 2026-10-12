@@ -97,6 +97,9 @@ type autographer struct {
 	authBackend          authBackend
 	hawkMaxTimestampSkew time.Duration
 
+	signersLoaded bool
+	authsLoaded   bool
+
 	// Used to signal the monitor on exit of the autographer instance.
 	exit chan interface{}
 }
@@ -358,7 +361,7 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", statsMiddleware(ag.handleHeartbeat, "http.nonapi.heartbeat")).Methods("GET")
-	router.HandleFunc("/__lbheartbeat__", statsMiddleware(handleLBHeartbeat, "http.nonapi.lbheartbeat")).Methods("GET")
+	router.HandleFunc("/__lbheartbeat__", statsMiddleware(ag.handleLBHeartbeat, "http.nonapi.lbheartbeat")).Methods("GET")
 	router.HandleFunc("/__version__", statsMiddleware(handleVersion, "http.nonapi.version")).Methods("GET")
 	router.HandleFunc("/__monitor__", statsMiddleware(monitor.handleMonitor, "http.nonapi.monitor")).Methods("GET")
 	router.HandleFunc("/sign/files", apiStatsMiddleware(ag.handleSignature, "http.api.sign/files")).Methods("POST")
@@ -694,6 +697,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 			a.addSigner(s)
 		}
 	}
+	a.signersLoaded = true
 	return nil
 }
 
@@ -713,9 +717,10 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 	for _, auth := range auths {
 		err = a.authBackend.addAuth(&auth)
 		if err != nil {
-			return
+			log.Errorf("Failed to add authorization for %s. Err: %s", auth.ID, err)
 		}
 	}
+	a.authsLoaded = true
 	return
 }
 
