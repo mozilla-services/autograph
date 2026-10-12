@@ -60,7 +60,7 @@ func hashSHA256AsHex(toHash []byte) string {
 	return fmt.Sprintf("%X", h.Sum(nil))
 }
 
-func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.SignatureResponse, rid, userid, inputHash string, inputHashes []string, starttime time.Time, err error) {
+func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.SignatureResponse, rid string, userid string, reqSize int, inputHash string, inputHashes []string, starttime time.Time, err error) {
 	log.WithFields(log.Fields{
 		"rid":                 rid,
 		"options":             sigreq.Options,
@@ -74,6 +74,7 @@ func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.S
 		"output_hash":         nil,
 		"output_hashes":       nil,
 		"user_id":             userid,
+		"size":                reqSize,
 		"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 	}).Info(fmt.Sprintf("signing operation failed with error: %v", err))
 }
@@ -121,7 +122,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusBadRequest, "invalid content type, expected application/json")
 		return
 	}
-	if len(body) < 10 {
+	requestBodySize := len(body)
+	if requestBodySize < 10 {
 		// it's impossible to have a valid request body smaller than 10 bytes
 		httpError(w, r, http.StatusBadRequest, "empty or invalid request request body")
 		return
@@ -135,7 +137,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	maxBodySizeBytes := maxBodySizeMB * 1000000
-	if int64(len(body)) > maxBodySizeBytes {
+	if int64(requestBodySize) > maxBodySizeBytes {
 		httpError(w, r, http.StatusBadRequest, "request exceeded max size of %d B", maxBodySizeBytes)
 		return
 	}
@@ -261,7 +263,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 			sig, err = hashSigner.SignHash(input, sigreq.Options)
 			if err != nil {
-				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, inputHashes, starttime, err)
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, requestBodySize, inputHash, inputHashes, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
@@ -282,7 +284,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 			sig, err = dataSigner.SignData(input, sigreq.Options)
 			if err != nil {
-				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, inputHashes, starttime, err)
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, requestBodySize, inputHash, inputHashes, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
@@ -303,7 +305,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 			signedfile, err = fileSigner.SignFile(input, sigreq.Options)
 			if err != nil {
-				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, inputHashes, starttime, err)
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, requestBodySize, inputHash, inputHashes, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
@@ -322,7 +324,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 			signedfiles, err = multiFileSigner.SignFiles(unsignedNamedFiles, sigreq.Options)
 			if err != nil {
-				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, inputHash, inputHashes, starttime, err)
+				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, requestBodySize, inputHash, inputHashes, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
@@ -345,6 +347,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"output_hash":         outputHash,
 			"output_hashes":       outputHashes,
 			"user_id":             userid,
+			"size":                requestBodySize,
 			"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("signing operation succeeded")
 	}
