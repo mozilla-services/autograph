@@ -369,11 +369,16 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleLBHeartbeat returns a simple message indicating that the API is alive and well
-func handleLBHeartbeat(w http.ResponseWriter, r *http.Request) {
+func (a *autographer) handleLBHeartbeat(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
 		return
 	}
+
+	if !a.authsLoaded || !a.signersLoaded {
+		httpError(w, r, http.StatusRequestTimeout, "Auths and signers not yet loaded")
+	}
+
 	_, err := w.Write([]byte("ohai"))
 	if err != nil {
 		log.Errorf("error writing response: %v", err)
