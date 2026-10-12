@@ -18,7 +18,7 @@ func TestLogLevelParsing(t *testing.T) {
 	if !(debug == true && log.GetLevel() == log.DebugLevel) {
 		t.Errorf("failed to set debug flag for debug log level")
 	}
-		_, _, debug, _ = parseArgs([]string{"-D"})
+	_, _, debug, _ = parseArgs([]string{"-D"})
 	if !(debug == true && log.GetLevel() == log.DebugLevel) {
 		t.Errorf("failed to set debug log level for debug flag")
 	}
