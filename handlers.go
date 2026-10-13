@@ -530,7 +530,7 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 	}
 	_, headerAuthID, err := a.authorizeHeader(r)
 	if err != nil {
-		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
+		httpError(w, r, http.StatusUnauthorized, "%q user authorization verification failed: %v", headerAuthID, err)
 		return
 	}
 
