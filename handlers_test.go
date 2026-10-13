@@ -780,7 +780,7 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 			urlRouteVars:    map[string]string{"auth_id": "alice"},
 			nilBody:         true,
 			expectedStatus:  http.StatusUnauthorized,
-			expectedBody:    " user authorization verification failed: missing Authorization header\r\nrequest-id: -\n",
+			expectedBody:    "Extracting authorization info from header failed: missing Authorization header\r\nrequest-id: -\n",
 			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
 		},
 		{
@@ -791,7 +791,7 @@ func TestHandleGetAuthKeyIDs(t *testing.T) {
 			headers:         &http.Header{"Authorization": []string{`Hawk id="dh37fgj492je", ts="1353832234", nonce="j4h3g2", ext="some-app-ext-data", mac="6R4rV5iE+NPoym+WwjeHzjAGXUtLNIxmo1vpMofpLAE="`}},
 			nilBody:         true,
 			expectedStatus:  http.StatusUnauthorized,
-			expectedBody:    "dh37fgj492je user authorization verification failed: hawk: credential error with id dh37fgj492je and app : unknown id\r\nrequest-id: -\n",
+			expectedBody:    "Extracting authorization info from header failed: hawk: credential error with id dh37fgj492je and app : unknown id\r\nrequest-id: -\n",
 			expectedHeaders: http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
 		},
 		{
