@@ -1,10 +1,13 @@
 # Configuration
 
-The service configuration lives in `autograph-service.yaml` and signer/auth
-configuration lives in the database. (use the flags `-c` to provide an
-alternate path for service config).
+Autogrpah's configuration is split between Service level configuration and
+authorization/signer configuration.
 
-## Server
+## Service Configuration
+The service configuration lives in `autograph-service.yaml`. Use the flag
+`-c` to provide an alternate path for service config.
+
+### Server
 
 Define an address and port for the API to listen on and an optional HAWK
 nonce cache size to prevent replay attacks:
@@ -21,9 +24,9 @@ server:
 Use flag `-p` to provide an alternate port and override any
 port specified in the config.
 
-## Database
+### Database
 
-Optionally, configure postgres using the sample below. Use the schema in
+Configure postgres using the sample below. Use the schema in
 database/schema.sql to initialize the db. Make sure to set a user with
 limited grants in the configuration.
 
@@ -45,7 +48,7 @@ heartbeat:
 `heartbeat.dbchecktimeout` is how long the heartbeat handler
 should wait for the DB to return a response before erroring.
 
-## Hardware Security Module (HSM)
+### Hardware Security Module (HSM)
 
 Several signers support key operations using an HSM. To configure it
 globally, set the following config where:
@@ -70,26 +73,38 @@ of the HSM.
 `heartbeat.hsmchecktimeout` is how long the heartbeat
 handler should wait for the HSM to return a response before erroring.
 
-## Signers
+### GCP
+Allows for the setting of a `projectid` to retrieve secret values from.
+Required for GCP Secret Manager support.
+
+## Signer and Auth Configuration
+Signer and Auth configuration lives in the database in the `signer`,
+`auth`, and `auth_signers` tables. Autograph also supports loading
+certain sensitive data from GCP Secret Manager that is not storable
+in KMS/HSM.
+
+### Signers
 
 The detailed configuration for each signer is described in their
 respective README under the
 [autograph/signer/](https://github.com/mozilla-services/autograph/tree/main/signer)
 directory.
 
-All signers share the common field `id`, which is a name
-unique to the installation to identify each signer. The `id`
-is used in the authorization configurations for both
-autograph and autograph edge.
+Every signer is expected to have at least an `id` and `type`  defined. See
+your specific signers documentation to know which properties need to be
+defined.
 
-``` yaml
-signer:
-    # installation unigue name for this signer/key/attributes combination
-    - id: apk_signer_for_focus
-    # rest of object depends on the signer type
+Example:
+``` sql
+INSERT INTO signer(id, type, mode, comments, secret, public)
+VALUES('apk_signer_for_focus', 'apk2', 'v3enabled', 'for focus android signing', 'apk-signer-focus-secrets', jsonb_build_object(
+  'certificate', '-----BEGIN CERTIFICATE-----
+NOT-REAL-CERT
+-----END CERTIFICATE-----')
+);
 ```
 
-## Authorizations
+### Authorizations
 
 Authorizations map an arbitrary username and key to a list of signers.
 The key does not need to be generated in any special way. You can use
@@ -124,15 +139,16 @@ autograph will use the first signer in the list. For example, if alice
 requests a signature without providing a key id, the private key from
 `appkey1` will be used to sign her request.
 
-The optional key `hawktimestampvalidity` maps to a string
-[parsed as a time.Duration](https://golang.org/pkg/time/#ParseDuration)
-and allows for different HAWK timestamp skews than the default of 1
-minute.
 
-The following diagram shows how the authentication and signer ids are
-linked in the configurations.
+### Secret Signer Data
+You shouldn't store private key's or passphrases in the database. For
+things that cannot be stored in KMS/HSM but must be kept secure and
+have access audited, we support storing them in GCP Secret Manager.
 
-![image of relationships between authorization objects](statics/a-h-s.dot.svg?sanitize=true)
+Currently we support 'privatekey', 'passphrase', and 'issuerprivkey'
+values to be retrieved and mapped into the resulting signer config.
+The GCP Project Id needs to be defined in service config, then
+`secret` column value needs to point at a valid GCP secret.
 
 ## Building and running
 

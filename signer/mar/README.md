@@ -8,15 +8,14 @@ MAR is Firefox\'s update file format. For a full description, see
 The only thing needed to configure a MAR signer is a private key, either
 RSA or ECDSA P256/P384.
 
-``` yaml
-signers:
-- id: testmar
-  type: mar
-  privatekey: |
-      -----BEGIN PRIVATE KEY-----
-      MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
-      ...
-      -----END PRIVATE KEY-----
+``` sql
+INSERT INTO signer(id, type, public)
+VALUES('testmar', 'mar', jsonb_build_object(
+  'privatekey', '-----BEGIN PRIVATE KEY-----
+MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
+...
+-----END PRIVATE KEY-----'
+));
 ```
 
 ## Signature request

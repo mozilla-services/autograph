@@ -47,25 +47,22 @@ break.
 
 For example:
 
-``` yaml
-signers:
-- id: some-rsa-key
-  type: genericrsa
-  mode: pss
-  hash: sha256
-  saltlength: -1
-  privatekey: |
-    -----BEGIN RSA PRIVATE KEY-----
-    MIIEpAIBAAKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE
-    ...
-    TDd4Me4PP+sTZeJ3RKvArDiMzEncDeMGZZnd4dBdi3LjzCNGTANAGw==
-    -----END RSA PRIVATE KEY-----
-  publickey: |
-    -----BEGIN PUBLIC KEY-----
-    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYu
-    ...
-    mwIDAQAB
-    -----END PUBLIC KEY-----
+``` sql
+INSERT INTO signer(id, type, mode, public)
+VALUES('some-rsa-key', 'genericrsa', 'pss', jsonb_build_object(
+  'hash', 'sha256',
+  'saltlength', -1,
+  'privatekey', '-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAtEM/Vdfd4Vl9wmeVdCYuWYnQl0Zc9RW5hLE4hFA+c277qanE
+...
+TDd4Me4PP+sTZeJ3RKvArDiMzEncDeMGZZnd4dBdi3LjzCNGTANAGw==
+-----END RSA PRIVATE KEY-----',
+  'publickey', '-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtEM/Vdfd4Vl9wmeVdCYu
+...
+mwIDAQAB
+-----END PUBLIC KEY-----'
+));
 ```
 
 Where:
