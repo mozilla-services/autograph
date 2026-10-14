@@ -110,7 +110,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		signerRequestsTiming.With(prometheus.Labels{
 			"step": "hawk_authorize_header_failed",
 		}).Observe(float64(time.Since(starttime).Milliseconds()))
-		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
+		httpError(w, r, http.StatusUnauthorized, "Extracting authorization info from header failed: %v", err)
 		return
 	}
 	body, err := io.ReadAll(r.Body)
@@ -146,7 +146,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		"step": "authorize_finished",
 	}).Observe(float64(time.Since(starttime).Milliseconds()))
 	if err != nil {
-		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
+		httpError(w, r, http.StatusUnauthorized, "%q user authorization verification failed: %v", userid, err)
 		return
 	}
 	var sigreqs []formats.SignatureRequest
@@ -533,7 +533,7 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 	}
 	_, headerAuthID, err := a.authorizeHeader(r)
 	if err != nil {
-		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
+		httpError(w, r, http.StatusUnauthorized, "Extracting authorization info from header failed: %v", err)
 		return
 	}
 

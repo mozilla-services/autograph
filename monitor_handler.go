@@ -20,7 +20,7 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	starttime := time.Now()
 	userid, err := m.authorize(r, []byte(""))
 	if err != nil {
-		httpError(w, r, http.StatusUnauthorized, "authorization verification failed: %v", err)
+		httpError(w, r, http.StatusUnauthorized, "%q user authorization verification failed: %v", userid, err)
 		return
 	}
 	if userid != monitorAuthID {
