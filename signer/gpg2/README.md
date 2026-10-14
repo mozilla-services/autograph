@@ -43,50 +43,46 @@ Add a signer to the `signer` table with the following **required** fields
 
 For example:
 
-``` yaml
-signers:
-- id: some-pgp-key
-  type: gpg2
-  keyid: 0xE09F6B4F9E6FDCCB
-  passphrase: abcdef123
-  privatekey: |
-    -----BEGIN PGP PRIVATE KEY BLOCK-----
+``` sql
+INSERT INTO signer(id, type, public)
+VALUES('some-pgp-key', 'gpg2', jsonb_build_object(
+  'keyid', '0xE09F6B4F9E6FDCCB',
+  'passphrase', 'abcdef123',
+  'privatekey', '-----BEGIN PGP PRIVATE KEY BLOCK-----
 
-    lQOYBFuW9xABCACzCLYHwgGba7hi+lwhD/Hr5qqpg+UuN+88NclYgLWyl1nPpx2D
-    ...
-    HQASoA7mirON
-    =vJUu
-    -----END PGP PRIVATE KEY BLOCK-----
-  publickey: |
-    -----BEGIN PGP PUBLIC KEY BLOCK-----
-    ...
-    =459B
-    -----END PGP PUBLIC KEY BLOCK-----
+lQOYBFuW9xABCACzCLYHwgGba7hi+lwhD/Hr5qqpg+UuN+88NclYgLWyl1nPpx2D
+...
+HQASoA7mirON
+=vJUu
+-----END PGP PRIVATE KEY BLOCK-----',
+  'publickey', '-----BEGIN PGP PUBLIC KEY BLOCK-----
+...
+=459B
+-----END PGP PUBLIC KEY BLOCK-----'
+));
 ```
 
 The **optional** field `mode` can be `gpg2`, `debsign`, or `rpmsign`.
 When empty or missing it defaults to `gpg2` and should use
 the full key fingerprint in the `keyid` field. For example:
 
-```yaml
-- id: some-pgp-key
-  type: gpg2
-  mode: debsign
-  keyid: A2910E4FBEA076009BCDE536DD0A5D99AAAB1F1A
-  passphrase: abcdef123
-  privatekey: |
-    -----BEGIN PGP PRIVATE KEY BLOCK-----
+``` sql
+INSERT INTO signer(id, type, mode, public)
+VALUES('some-pgp-key', 'gpg2', 'debsign', jsonb_build_object(
+  'keyid', '0xE09F6B4F9E6FDCCB',
+  'passphrase', 'abcdef123',
+  'privatekey', '-----BEGIN PGP PRIVATE KEY BLOCK-----
 
-    lQOYBFuW9xABCACzCLYHwgGba7hi+lwhD/Hr5qqpg+UuN+88NclYgLWyl1nPpx2D
-    ...
-    HQASoA7mirON
-    =vJUu
-    -----END PGP PRIVATE KEY BLOCK-----
-  publickey: |
-    -----BEGIN PGP PUBLIC KEY BLOCK-----
-    ...
-    =459B
-    -----END PGP PUBLIC KEY BLOCK-----
+lQOYBFuW9xABCACzCLYHwgGba7hi+lwhD/Hr5qqpg+UuN+88NclYgLWyl1nPpx2D
+...
+HQASoA7mirON
+=vJUu
+-----END PGP PRIVATE KEY BLOCK-----',
+  'publickey', '-----BEGIN PGP PUBLIC KEY BLOCK-----
+...
+=459B
+-----END PGP PUBLIC KEY BLOCK-----'
+));
 ```
 
 ## Signature request

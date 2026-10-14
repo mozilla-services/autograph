@@ -41,21 +41,18 @@ keytool -exportcert -keystore testkeystore.jks -alias testapp|openssl x509 -info
 You can then place the certificate and private key in GCP secret manager,
 KMS, or the database for small testing. Example config:
 
-``` yaml
-signers:
-- id: some-android-app
-  type: apk2
-  mode: v3enabled
-  certificate: |
-      -----BEGIN CERTIFICATE-----
-      MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
-      ...
-      -----END CERTIFICATE-----
-  privatekey: |
-      -----BEGIN PRIVATE KEY-----
-      MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
-      ...
-      -----END PRIVATE KEY-----
+``` sql
+INSERT INTO signer(id, type, mode, public)
+VALUES('some-android-app', 'apk2', 'v3enabled', jsonb_build_object(
+  'certificate', '-----BEGIN CERTIFICATE-----
+MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
+...
+-----END CERTIFICATE-----',
+  'privatekey', '-----BEGIN PRIVATE KEY-----
+MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
+...
+-----END PRIVATE KEY-----'
+));
 ```
 
 Set the optional `mode` field to `v3enabled` to

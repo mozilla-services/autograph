@@ -123,62 +123,59 @@ from a CDN or the volume's bucket address).
 If this entire procedure succeeds, the signer is initialized with the
 end-entity and starts processing requests.
 
-``` yaml
-signers:
-- id: normandy
-  type: contentsignaturepki
+``` sql
+INSERT INTO signer(id, type, public)
+VALUES('normandy', 'contentsignaturepki', jsonb_build_object(
+  -- rotate certs every 29.5 days, a lunar month
+  'validity', '708h',
+  
+  -- give +/- 30d of validity room for clients with bad clocks
+  'clockskewtolerance', '720h',
+  
+  -- store cert chains to this location
+  'chainlocation', '/tmp/chains/',
+  
+  -- x5u is the path to the public dir where chains are stored. This MUST end
+  -- with a trailing slash because filenames will be appended to it.
+  -- x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
+  'x5u', 'file:///tmp/chains/',
+  
+  -- label of the intermediate's private key in the HSM
+  'issuerprivkey', 'csinter1550858489',
+  
+  -- public certificate of the intermediate
+  'issuercert', '-----BEGIN CERTIFICATE-----
+MIICXDCCAeKgAwIBAgIIFYXBlGIHbWAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU4NDg5MB4XDTE4MTIyMTE4
+MDEyOVoXDTI5MDIyMjE4MDEyOVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
+VQQDExFjc2ludGVyMTU1MDg1ODQ4OTB2MBAGByqGSM49AgEGBSuBBAAiA2IABLW8
+5oxfe3iBBaw/tvb/DrBfzCL3i3fHxngkahC2LASsEfUhKPQEwE88pOyREcAjCXCo
+FSrv34Cx7H9FiItOpu837Z5d+Qax1tWHJg2qrNTm3A5VL0F14RbHbc665H0WQaNq
+MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
+/wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
+b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjAyFx5dWkW1CMmAAatNH3tlFMuv
+UqjZk9QGiisGU7LGpsEs2GFK4k7Qs1fFNVVzHicCMQCX5GfEa/zBc7fJL+IP+XIZ
+AhaDpVhf9tReXSzilurgSy4u4gAE6nwdUFezm9iOsFg=
+-----END CERTIFICATE-----',
 
-  # rotate certs every 29.5 days, a lunar month
-  validity: 708h
-
-  # give +/- 30d of validity room for clients with bad clocks
-  clockskewtolerance: 10m
-
-  # store cert chains to this location
-  chainlocation: /tmp/chains/
-
-  # x5u is the path to the public dir where chains are stored. This MUST end
-  # with a trailing slash because filenames will be appended to it.
-  # x5u: https://s3.amazonaws.com/net-mozaws-dev-content-signature/chains/
-  x5u: file:///tmp/chains/
-
-  # label of the intermediate's private key in the HSM
-  issuerprivkey: csinter1550858489
-
-  # public certificate of the intermediate
-  issuercert: |
-    -----BEGIN CERTIFICATE-----
-    MIICXDCCAeKgAwIBAgIIFYXBlGIHbWAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
-    VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-    EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU4NDg5MB4XDTE4MTIyMTE4
-    MDEyOVoXDTI5MDIyMjE4MDEyOVowYDELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
-    MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRowGAYD
-    VQQDExFjc2ludGVyMTU1MDg1ODQ4OTB2MBAGByqGSM49AgEGBSuBBAAiA2IABLW8
-    5oxfe3iBBaw/tvb/DrBfzCL3i3fHxngkahC2LASsEfUhKPQEwE88pOyREcAjCXCo
-    FSrv34Cx7H9FiItOpu837Z5d+Qax1tWHJg2qrNTm3A5VL0F14RbHbc665H0WQaNq
-    MGgwDgYDVR0PAQH/BAQDAgGGMBMGA1UdJQQMMAoGCCsGAQUFBwMDMA8GA1UdEwEB
-    /wQFMAMBAf8wMAYDVR0eAQH/BCYwJKAiMCCCHi5jb250ZW50LXNpZ25hdHVyZS5t
-    b3ppbGxhLm9yZzAKBggqhkjOPQQDAwNoADBlAjAyFx5dWkW1CMmAAatNH3tlFMuv
-    UqjZk9QGiisGU7LGpsEs2GFK4k7Qs1fFNVVzHicCMQCX5GfEa/zBc7fJL+IP+XIZ
-    AhaDpVhf9tReXSzilurgSy4u4gAE6nwdUFezm9iOsFg=
-    -----END CERTIFICATE-----
-
-  # public certificate of the root CA
-  cacert: |
-    -----BEGIN CERTIFICATE-----
-    MIICKDCCAa+gAwIBAgIIFYXBlGCX7CAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
-    VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
-    EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU4NDg5MB4XDTE4MTIyMDE4
-    MDEyOVoXDTQ5MDIyMjE4MDEyOVowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
-    MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
-    VQQDExBjc3Jvb3QxNTUwODU4NDg5MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVtXP
-    Dx+XtUydct/YtvcOZDtndtLGu5kQtelIOS9TNISxbFbeJpa2dwuDQ+fvQ1Q1WNMY
-    BHiOgWIoTKc+387yp6uijDxZBXAppIWUsMamdHKDiAyVHzFXpAiaXp69+Gvzozgw
-    NjAOBgNVHQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/
-    BAUwAwEB/zAKBggqhkjOPQQDAwNnADBkAjAuO8xbda+w4dq8iATflp4H5/0ubUcr
-    9F24ABbpLdWtoMfyBJWeWPO61Qn0W+dNmqoCMHwSYgZMDvZK+uy9nqIyf+1h2eA4
-    2OqlM2hZQeI/FpHm2ZevdMYcyqmQD0uBE1DTcg==
-    -----END CERTIFICATE-----
+  -- public certificate of the root CA
+  'cacert', '-----BEGIN CERTIFICATE-----
+MIICKDCCAa+gAwIBAgIIFYXBlGCX7CAwCgYIKoZIzj0EAwMwXzELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQK
+EwdNb3ppbGxhMRkwFwYDVQQDExBjc3Jvb3QxNTUwODU4NDg5MB4XDTE4MTIyMDE4
+MDEyOVoXDTQ5MDIyMjE4MDEyOVowXzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNB
+MRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRAwDgYDVQQKEwdNb3ppbGxhMRkwFwYD
+VQQDExBjc3Jvb3QxNTUwODU4NDg5MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVtXP
+Dx+XtUydct/YtvcOZDtndtLGu5kQtelIOS9TNISxbFbeJpa2dwuDQ+fvQ1Q1WNMY
+BHiOgWIoTKc+387yp6uijDxZBXAppIWUsMamdHKDiAyVHzFXpAiaXp69+Gvzozgw
+NjAOBgNVHQ8BAf8EBAMCAYYwEwYDVR0lBAwwCgYIKwYBBQUHAwMwDwYDVR0TAQH/
+BAUwAwEB/zAKBggqhkjOPQQDAwNnADBkAjAuO8xbda+w4dq8iATflp4H5/0ubUcr
+9F24ABbpLdWtoMfyBJWeWPO61Qn0W+dNmqoCMHwSYgZMDvZK+uy9nqIyf+1h2eA4
+2OqlM2hZQeI/FpHm2ZevdMYcyqmQD0uBE1DTcg==
+-----END CERTIFICATE-----'
+));
 ```
 
 ## Signature requests

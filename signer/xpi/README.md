@@ -38,50 +38,45 @@ key is thrown away right after the signature is issued. Note that if one
 XPI signer is including a recommendations file the other XPI signers
 should reserve that file path.
 
-``` yaml
-signers:
-  - id: webextensions-rsa
-    type: xpi
-    mode: add-on
-    recommendation:
-      path: "recommendation.json"
-    certificate: |
-        -----BEGIN CERTIFICATE-----
-        MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
-        ...
-        -----END CERTIFICATE-----
-    privatekey: |
-        -----BEGIN PRIVATE KEY-----
-        MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
-        ...
-        -----END PRIVATE KEY-----
+``` sql
+INSERT INTO signer(id, type, mode, public)
+VALUES('webextensions-rsa', 'xpi', 'add-on', jsonb_build_object(
+  'recommendation', jsonb_build_object('path', 'recommendation.json'),
+  'certificate', '-----BEGIN CERTIFICATE-----
+MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
+...
+-----END CERTIFICATE-----',
+  'privatekey', '-----BEGIN PRIVATE KEY-----
+MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
+...
+-----END PRIVATE KEY-----'
+));
 ```
 
 The signer can also include optional config params for a recommendations file:
 
-``` yaml
-signers:
-  - id: webextensions-rsa
-    type: xpi
-    mode: add-on
-    recommendation:
-      path: "recommendation.json"
-      states:
-        standard: true
-        recommended: true
-        partner: true
-      relative_start: 0h
-      duration: 26298h
-    certificate: |
-        -----BEGIN CERTIFICATE-----
-        MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
-        ...
-        -----END CERTIFICATE-----
-    privatekey: |
-        -----BEGIN PRIVATE KEY-----
-        MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
-        ...
-        -----END PRIVATE KEY-----
+``` sql
+INSERT INTO signer(id, type, mode, public)
+VALUES('webextensions-rsa', 'xpi', 'add-on', jsonb_build_object(
+  'recommendation', jsonb_build_object(
+    'path', 'recommendation.json',
+    'relative_start', '0h',
+    'duration', '26298h',
+    'states', jsonb_build_object(
+      'standard', true,
+      'recommended', true,
+      'partner', true
+    )
+  ),
+  'certificate', '-----BEGIN CERTIFICATE-----
+MIIH0zCCBbugAwIBAgIBATANBgkqhkiG9w0BAQsFADCBvDELMAkGA1UEBhMCVVMx
+...
+-----END CERTIFICATE-----',
+  'privatekey', '-----BEGIN PRIVATE KEY-----
+MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDHV+bKFLr1p5FR
+...
+-----END PRIVATE KEY-----'
+));
 ```
 
 ## Signature Request

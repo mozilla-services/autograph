@@ -111,20 +111,19 @@ ZosSXJrWEeyFmlp8GvDlOoZqd7xpW08=
 The output from OpenSSL must be copied under the
 `privatekey` section of the signer, as follows:
 
-``` yaml
-signers:
-- id: appkey1
-  type: contentsignature
-  privatekey: |
-      -----BEGIN EC PARAMETERS-----
-      BgUrgQQAIg==
-      -----END EC PARAMETERS-----
-      -----BEGIN EC PRIVATE KEY-----
-      MIGkAgEBBDART/nn3fKlhyENdc2u3klbvRJ5+odP0kWzt9p+v5hDyggbtVA4M1Mb
-      fL9KoaiAAv2gBwYFK4EEACKhZANiAATugz97A6HPqq0fJCGom9PdKJ58Y9aobARQ
-      BkZWS5IjC+15Uqt3yOcCMdjIJpikiD1WjXRaeFe+b3ovcoBs4ToLK7d8y0qFlkgx
-      /5Cp6z37rpp781N4haUOIauM14P4KUw=
-      -----END EC PRIVATE KEY-----
+``` sql
+INSERT INTO signer(id, type, public)
+VALUES('appkey1', 'contentsignature', jsonb_build_object(
+  'privatekey', '-----BEGIN EC PARAMETERS-----
+BgUrgQQAIg==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDART/nn3fKlhyENdc2u3klbvRJ5+odP0kWzt9p+v5hDyggbtVA4M1Mb
+fL9KoaiAAv2gBwYFK4EEACKhZANiAATugz97A6HPqq0fJCGom9PdKJ58Y9aobARQ
+BkZWS5IjC+15Uqt3yOcCMdjIJpikiD1WjXRaeFe+b3ovcoBs4ToLK7d8y0qFlkgx
+/5Cp6z37rpp781N4haUOIauM14P4KUw=
+-----END EC PRIVATE KEY-----'
+));
 ```
 
 Based on the `privatekey`, autograph will return the
@@ -146,14 +145,13 @@ Store the CRT on
 `http://example.net/certs/autograph-dev.crt` and set the x5u
 value in the database. Example config:
 
-``` yaml
-signers:
-- id: appkey2
-  x5u: "http://example.net/certs/autograph-dev.crt"
-  type: contentsignature
-  privatekey: |
-      -----BEGIN EC PARAMETERS-----
-      .....
+``` sql
+INSERT INTO signer(id, type, public)
+VALUES('appkey2', 'contentsignature', jsonb_build_object(
+  'x5u', 'http://example.net/certs/autograph-dev.crt',
+  'privatekey', '-----BEGIN EC PARAMETERS-----
+.....'
+));
 ```
 
 ## Signature requests
