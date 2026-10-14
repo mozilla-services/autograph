@@ -10,7 +10,6 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -43,9 +42,6 @@ import (
 	"github.com/mozilla-services/autograph/signer/xpi"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-
-	sops "github.com/getsops/sops/v3"
-	"github.com/getsops/sops/v3/decrypt"
 
 	"github.com/mozilla-services/autograph/crypto11"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -110,7 +106,7 @@ func main() {
 	if len(args) > 0 {
 		args = os.Args[1:]
 	}
-	serviceFile, signerFile, port, debug, err := parseArgs(args)
+	serviceFile, port, debug, err := parseArgs(args)
 	if err != nil {
 		log.Fatalf("Failed to parse args. %s", err)
 	}
@@ -128,17 +124,16 @@ func main() {
 		listen = serviceConf.Server.Listen
 	}
 
-	run(serviceConf, signerFile, listen, debug)
+	run(serviceConf, listen, debug)
 }
 
-func parseArgs(args []string) (serviceFile string, signerFile string, port string, debug bool, err error) {
+func parseArgs(args []string) (serviceFile string, port string, debug bool, err error) {
 	var (
 		logLevel string
 		fset     = flag.NewFlagSet("parseArgs", flag.ContinueOnError)
 	)
 
 	fset.StringVar(&serviceFile, "c", "autograph-service.yaml", "Path to service configuration file")
-	fset.StringVar(&signerFile, "s", "", "Path to signer configuration file")
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	// https://github.com/sirupsen/logrus#level-logging
 	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
@@ -179,7 +174,7 @@ func loadServiceConfig(serviceFile string) (serviceConf serviceConfig, err error
 	return
 }
 
-func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, error) {
+func loadSignerConfig(db *database.Handler) (*signerConfig, error) {
 	cfg, err := db.GetSignerConfig()
 
 	if err != nil {
@@ -191,52 +186,6 @@ func loadSignerConfig(db *database.Handler, signerFile string) (*signerConfig, e
 	if err != nil {
 		return nil, err
 	}
-
-	// return just dbConf if there is no file to load
-	if signerFile == "" {
-		return &dbConf, nil
-	}
-
-	// otherwise load and merge the two config sources
-	var fileConf signerConfig
-	err = fileConf.loadFromFile(signerFile)
-	if err != nil {
-		return &dbConf, err
-	}
-
-	// add any missing authorizations from fileConf to dbConf
-	var authsToAdd []authorization
-	for _, fa := range fileConf.Authorizations {
-		var missing bool = true
-		for _, da := range dbConf.Authorizations {
-			if da.ID == fa.ID {
-				missing = false
-				break
-			}
-		}
-		if missing {
-			log.Infof("Auth %s in file config but not database. Adding to live config.", fa.ID)
-			authsToAdd = append(authsToAdd, fa)
-		}
-	}
-	dbConf.Authorizations = append(dbConf.Authorizations, authsToAdd...)
-
-	// add any missing signers from fileConf to dbConf
-	var signersToAdd []signer.Configuration
-	for _, fs := range fileConf.Signers {
-		var missing bool = true
-		for _, ds := range dbConf.Signers {
-			if ds.ID == fs.ID {
-				missing = false
-				break
-			}
-		}
-		if missing {
-			log.Infof("Signer %s in file config but not database. Adding to live config.", fs.ID)
-			signersToAdd = append(signersToAdd, fs)
-		}
-	}
-	dbConf.Signers = append(dbConf.Signers, signersToAdd...)
 
 	return &dbConf, nil
 }
@@ -291,7 +240,7 @@ func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
 	return nil
 }
 
-func run(serviceConf serviceConfig, signerFile string, listen string, debug bool) {
+func run(serviceConf serviceConfig, listen string, debug bool) {
 	var (
 		ag  *autographer
 		err error
@@ -304,7 +253,7 @@ func run(serviceConf serviceConfig, signerFile string, listen string, debug bool
 
 	ag.addDB(serviceConf.Database)
 
-	signerConf, err := loadSignerConfig(ag.db, signerFile)
+	signerConf, err := loadSignerConfig(ag.db)
 	if err != nil {
 		log.Fatalf("Failed to load signer config! %s", err)
 	}
@@ -455,41 +404,6 @@ func (c *serviceConfig) loadFromFile(path string) error {
 
 	if c.Heartbeat.DBCheckTimeout == time.Duration(uint64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(uint64(0)) {
 		return fmt.Errorf("missing required heartbeat config section with non-zero timeouts")
-	}
-	return nil
-}
-
-// read a possibly SOPS encrypted signerConfig from a local file
-func (c *signerConfig) loadFromFile(path string) error {
-	var (
-		data, confData []byte
-		confSHA        [32]byte
-		err            error
-	)
-	data, err = os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	confSHA = sha256.Sum256(data)
-
-	// Try to decrypt the conf using sops or load it as plaintext.
-	// If the configuration is not encrypted with sops, the error
-	// sops.MetadataNotFound will be returned, in which case we
-	// ignore it and continue loading the conf.
-	confData, err = decrypt.Data(data, "yaml")
-	if err == nil {
-		log.Infof("loaded encrypted config from %s with sha256sum %x", path, confSHA)
-	} else if err == sops.MetadataNotFound {
-		log.Infof("loaded unencrypted config from %s with sha256sum %x", path, confSHA)
-		// not an encrypted file
-		confData = data
-	} else {
-		return fmt.Errorf("failed to load sops encrypted configuration: %w", err)
-	}
-
-	err = yaml.Unmarshal(confData, &c)
-	if err != nil {
-		return err
 	}
 	return nil
 }
