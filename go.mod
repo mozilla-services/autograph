@@ -2,6 +2,10 @@ module github.com/mozilla-services/autograph
 
 go 1.26.0
 
+godebug (
+  cryptocustomrand=1 // required since 1.26 so we can have a custom rand reader, from our HSM or in a unit test
+)
+
 require (
 	cloud.google.com/go/secretmanager v1.16.0
 	github.com/google/uuid v1.6.0
