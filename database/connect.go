@@ -59,7 +59,7 @@ func Connect(config Config) (*Handler, error) {
 	}
 	dbfd, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database connection: %w", err)
+		return nil, fmt.Errorf("database/Connect: failed to open database connection: %w", err)
 	}
 	if config.MaxOpenConns > 0 {
 		dbfd.SetMaxOpenConns(config.MaxOpenConns)
@@ -80,10 +80,10 @@ func (db *Handler) CheckConnectionContext(ctx context.Context) error {
 	var one uint
 	err := db.QueryRowContext(ctx, "SELECT 1").Scan(&one)
 	if err != nil {
-		return fmt.Errorf("database connection failed: %w", err)
+		return fmt.Errorf("database/Connect: database connection failed: %w", err)
 	}
 	if one != 1 {
-		return fmt.Errorf("apparently the database doesn't know the meaning of one anymore")
+		return fmt.Errorf("database/Connect: apparently the database doesn't know the meaning of one anymore")
 	}
 	return nil
 }
@@ -92,7 +92,7 @@ func (db *Handler) CheckConnectionContext(ctx context.Context) error {
 // quit signal logging an error when the test query fails. It can be
 // used in a goroutine to check when the database becomes unavailable.
 func (db *Handler) Monitor(pollInterval time.Duration, quit chan bool) {
-	log.Infof("starting DB monitor polling every %s", pollInterval)
+	log.Infof("database/Monitor: starting DB monitor polling every %s", pollInterval)
 	for {
 		select {
 		case <-time.After(pollInterval):
@@ -101,7 +101,7 @@ func (db *Handler) Monitor(pollInterval time.Duration, quit chan bool) {
 				log.Error(err)
 			}
 		case <-quit:
-			log.Info("Shutting down DB monitor")
+			log.Info("database/Monitor: Shutting down DB monitor")
 			return
 		}
 	}
@@ -113,9 +113,9 @@ func GetTestDBHost() string {
 	host, ok := os.LookupEnv("AUTOGRAPH_DB_HOST")
 	if !ok {
 		host = "127.0.0.1"
-		log.Printf("Using default AUTOGRAPH_DB_HOST=%s", host)
+		log.Printf("database/Monitor: Using default AUTOGRAPH_DB_HOST=%s", host)
 	} else {
-		log.Printf("Using AUTOGRAPH_DB_HOST=%s", host)
+		log.Printf("database/Monitor: Using AUTOGRAPH_DB_HOST=%s", host)
 	}
 	return host
 }

@@ -111,7 +111,7 @@ var hmacInfos = map[int]*hmacInfo{
 }
 
 // ErrHmacClosed is called if an HMAC is updated after it has finished.
-var ErrHmacClosed = errors.New("already called Sum()")
+var ErrHmacClosed = errors.New("crypto11/hmac: already called Sum()")
 
 // NewHMAC returns a new HMAC hash using the given PKCS#11 mechanism
 // and key.
@@ -151,7 +151,7 @@ func (hi *hmacImplementation) initialize() (err error) {
 	// TODO refactor with newBlockModeCloser
 	sessionPool := pool.Get(hi.key.Slot)
 	if sessionPool == nil {
-		err = fmt.Errorf("crypto11: no session for slot %d", hi.key.Slot)
+		err = fmt.Errorf("crypto11/hmac/initialize: no session for slot %d", hi.key.Slot)
 		return
 	}
 	ctx := context.Background()

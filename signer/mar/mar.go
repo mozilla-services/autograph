@@ -34,24 +34,24 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 	s = new(MARSigner)
 
 	if conf.Type != Type {
-		return nil, fmt.Errorf("mar: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("signer/mar: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, fmt.Errorf("mar: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("signer/mar: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 
 	if conf.PrivateKey == "" {
-		return nil, fmt.Errorf("mar: missing private key in signer configuration")
+		return nil, fmt.Errorf("signer/mar: missing private key in signer configuration")
 	}
 
 	s.PrivateKey = conf.PrivateKey
 	s.rand = conf.GetRand()
 	s.signingKey, s.publicKey, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, fmt.Errorf("mar: failed to get keys: %w", err)
+		return nil, fmt.Errorf("signer/mar: failed to get keys: %w", err)
 	}
 
 	// select the default signature algorithm depending on the public key type
@@ -65,10 +65,10 @@ func New(conf signer.Configuration) (s *MARSigner, err error) {
 		case elliptic.P384().Params().Name:
 			s.defaultSigAlg = margo.SigAlgEcdsaP384Sha384
 		default:
-			return nil, fmt.Errorf("mar: elliptic curve %q is not supported", pubKey.Params().Name)
+			return nil, fmt.Errorf("signer/mar: elliptic curve %q is not supported", pubKey.Params().Name)
 		}
 	default:
-		return nil, fmt.Errorf("mar: unsupported public key type %T", s.signingKey)
+		return nil, fmt.Errorf("signer/mar: unsupported public key type %T", s.signingKey)
 	}
 	return
 }
@@ -88,7 +88,7 @@ func (s *MARSigner) SignFile(input []byte, options interface{}) (signer.SignedFi
 	var marFile margo.File
 	err := margo.Unmarshal(input, &marFile)
 	if err != nil {
-		return nil, fmt.Errorf("mar: failed to unmarshal input file: %w", err)
+		return nil, fmt.Errorf("signer/mar: failed to unmarshal input file: %w", err)
 	}
 
 	// flush the signatures if any is present, we'll make new ones
@@ -96,17 +96,17 @@ func (s *MARSigner) SignFile(input []byte, options interface{}) (signer.SignedFi
 	marFile.Signatures = nil
 	err = marFile.PrepareSignature(s.signingKey, s.publicKey)
 	if err != nil {
-		return nil, fmt.Errorf("mar: failed to prepare signature: %w", err)
+		return nil, fmt.Errorf("signer/mar: failed to prepare signature: %w", err)
 	}
 	err = marFile.FinalizeSignatures()
 	if err != nil {
-		return nil, fmt.Errorf("mar: failed to finalize signature: %w", err)
+		return nil, fmt.Errorf("signer/mar: failed to finalize signature: %w", err)
 	}
 
 	// write out the MAR file
 	output, err := marFile.Marshal()
 	if err != nil {
-		return nil, fmt.Errorf("mar: failed to marshal signed file: %w", err)
+		return nil, fmt.Errorf("signer/mar: failed to marshal signed file: %w", err)
 	}
 	return output, nil
 }
@@ -120,7 +120,7 @@ func (s *MARSigner) SignFile(input []byte, options interface{}) (signer.SignedFi
 func (s *MARSigner) SignData(data []byte, options interface{}) (signer.Signature, error) {
 	opt, err := GetOptions(options)
 	if err != nil {
-		return nil, fmt.Errorf("mar: failed to get options: %w", err)
+		return nil, fmt.Errorf("signer/mar: failed to get options: %w", err)
 	}
 	// if no options were defined, use the default value from the signer
 	if opt.SigAlg == 0 {
@@ -128,7 +128,7 @@ func (s *MARSigner) SignData(data []byte, options interface{}) (signer.Signature
 	}
 	hashed, _, err := margo.Hash(data, opt.SigAlg)
 	if err != nil {
-		return nil, fmt.Errorf("mar: failed to hash input: %w", err)
+		return nil, fmt.Errorf("signer/mar: failed to hash input: %w", err)
 	}
 	return s.SignHash(hashed, options)
 }
@@ -137,7 +137,7 @@ func (s *MARSigner) SignData(data []byte, options interface{}) (signer.Signature
 func (s *MARSigner) SignHash(hashed []byte, options interface{}) (signer.Signature, error) {
 	opt, err := GetOptions(options)
 	if err != nil {
-		return nil, fmt.Errorf("mar: failed to get options: %w", err)
+		return nil, fmt.Errorf("signer/mar: failed to get options: %w", err)
 	}
 	// if no options were defined, use the default value from the signer
 	if opt.SigAlg == 0 {
@@ -146,7 +146,7 @@ func (s *MARSigner) SignHash(hashed []byte, options interface{}) (signer.Signatu
 	sig := new(Signature)
 	sig.Data, err = margo.Sign(s.signingKey, s.rand, hashed, opt.SigAlg)
 	if err != nil {
-		return nil, fmt.Errorf("mar: failed to sign: %w", err)
+		return nil, fmt.Errorf("signer/mar: failed to sign: %w", err)
 	}
 	return sig, nil
 }

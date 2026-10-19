@@ -111,7 +111,7 @@ func (key *PKCS11SecretKey) newBlockModeCloser(mech uint, mode int, iv []byte, s
 	// TODO maybe refactor with withSession()
 	sessionPool := pool.Get(key.Slot)
 	if sessionPool == nil {
-		err = fmt.Errorf("crypto11: no session for slot %d", key.Slot)
+		err = fmt.Errorf("crypto11/blockmode/newBlockModeCloser: no session for slot %d", key.Slot)
 		return
 	}
 	ctx := context.Background()

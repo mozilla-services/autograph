@@ -44,7 +44,7 @@ func abs(d time.Duration) time.Duration {
 // validation was successful.
 func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid string, err error) {
 	if r.Header.Get("Authorization") == "" {
-		return nil, "", fmt.Errorf("missing Authorization header")
+		return nil, "", fmt.Errorf("autographer/authorizeHeader: missing Authorization header")
 	}
 	auth, err = hawk.ParseRequestHeader(r.Header.Get("Authorization"))
 	signerRequestsTiming.With(prometheus.Labels{
@@ -63,7 +63,7 @@ func (a *autographer) authorizeHeader(r *http.Request) (auth *hawk.Auth, userid 
 	}
 	_, err = a.getAuthByID(userid)
 	if err != nil {
-		return nil, "", fmt.Errorf("error finding auth for id %s for hawk.MaxTimestampSkew: %w", userid, err)
+		return nil, "", fmt.Errorf("autographer/authorizeHeader: error finding auth for id %s for hawk.MaxTimestampSkew: %w", userid, err)
 	}
 	hawk.MaxTimestampSkew = a.hawkMaxTimestampSkew
 	err = auth.Valid()
@@ -90,7 +90,7 @@ func (a *autographer) authorizeBody(auth *hawk.Auth, r *http.Request, body []byt
 		"step": "hawk_payload_hashed",
 	}).Observe(float64(time.Since(getRequestStartTime(r)).Milliseconds()))
 	if !auth.ValidHash(payloadhash) {
-		return fmt.Errorf("payload validation failed")
+		return fmt.Errorf("autographer/authorizeBody: payload validation failed")
 	}
 	return nil
 }

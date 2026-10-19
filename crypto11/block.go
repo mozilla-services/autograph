@@ -51,7 +51,7 @@ func (key *PKCS11SecretKey) Decrypt(dst, src []byte) {
 			return
 		}
 		if len(result) != key.Cipher.BlockSize {
-			err = fmt.Errorf("C_Decrypt: returned %v bytes, wanted %v", len(result), key.Cipher.BlockSize)
+			err = fmt.Errorf("crypto11/block/Decrypt: C_Decrypt: returned %v bytes, wanted %v", len(result), key.Cipher.BlockSize)
 			return
 		}
 		return
@@ -79,7 +79,7 @@ func (key *PKCS11SecretKey) Encrypt(dst, src []byte) {
 			return
 		}
 		if len(result) != key.Cipher.BlockSize {
-			err = fmt.Errorf("C_Encrypt: unexpectedly returned %v bytes, wanted %v", len(result), key.Cipher.BlockSize)
+			err = fmt.Errorf("crypto11/block/Encrypt: C_Encrypt: unexpectedly returned %v bytes, wanted %v", len(result), key.Cipher.BlockSize)
 			return
 		}
 		return

@@ -44,7 +44,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
 		// invalid value
-		log.Debugf("Invalid duration value: %s", b)
+		log.Debugf("signer/UnmarshalJSON: Invalid duration value: %s", b)
 		return nil
 	}
 	if s == "" {
@@ -239,18 +239,18 @@ type NamedSignedFile namedFile
 // isValidUnsignedFilename
 func isValidUnsignedFilename(filename string) error {
 	if !regexp.MustCompile(`^[a-zA-Z0-9]`).MatchString(filename) {
-		return fmt.Errorf("unsigned filename must start with an alphanumeric character")
+		return fmt.Errorf("signer/isValidUnsignedFilename: unsigned filename must start with an alphanumeric character")
 	}
 	if !regexp.MustCompile(`[a-zA-Z0-9]$`).MatchString(filename) {
-		return fmt.Errorf("unsigned filename must end with an alphanumeric character")
+		return fmt.Errorf("signer/isValidUnsignedFilename: unsigned filename must end with an alphanumeric character")
 	}
 	// support debian version conventions as documented at:
 	//    https://www.debian.org/doc/debian-policy/ch-controlfields.html#version
 	if !regexp.MustCompile(`^[-_\.+~a-zA-Z0-9]{1,256}$`).MatchString(filename) {
-		return fmt.Errorf(`unsigned filename must match ^[-_\.+~a-zA-Z0-9]{1,256}$`)
+		return fmt.Errorf(`signer/isValidUnsignedFilename: unsigned filename must match ^[-_\.+~a-zA-Z0-9]{1,256}$`)
 	}
 	if regexp.MustCompile(`\.\.`).MatchString(filename) {
-		return fmt.Errorf("unsigned filename must not include '..'")
+		return fmt.Errorf("signer/isValidUnsignedFilename: unsigned filename must not include '..'")
 	}
 	return nil
 }
@@ -260,7 +260,7 @@ func isValidUnsignedFilename(filename string) error {
 // the REST SigningFile.Content into NamedUnsignedFile.Bytes.
 func NewNamedUnsignedFile(restSigningFile formats.SigningFile) (*NamedUnsignedFile, error) {
 	if err := isValidUnsignedFilename(restSigningFile.Name); err != nil {
-		return nil, fmt.Errorf("invalid named file name: %w", err)
+		return nil, fmt.Errorf("signer/NewNamedUnsignedFile: invalid named file name: %w", err)
 	}
 	fileBytes, err := base64.StdEncoding.DecodeString(restSigningFile.Content)
 	if err != nil {
@@ -329,18 +329,18 @@ func (cfg *Configuration) GetKeys() (priv crypto.PrivateKey, pub crypto.PublicKe
 		unmarshaledPub = privateKey.PubKey.(*rsa.PublicKey)
 
 	default:
-		err = fmt.Errorf("unsupported private key type %T", priv)
+		err = fmt.Errorf("signerConfig/GetKeys: unsupported private key type %T", priv)
 		return
 	}
 
 	publicKeyBytes, err = x509.MarshalPKIXPublicKey(unmarshaledPub)
 	if err != nil {
-		err = fmt.Errorf("failed to asn1 marshal %T public key: %w", unmarshaledPub, err)
+		err = fmt.Errorf("signerConfig/GetKeys: failed to asn1 marshal %T public key: %w", unmarshaledPub, err)
 		return
 	}
 	publicKey = base64.StdEncoding.EncodeToString(publicKeyBytes)
 	if len(publicKey) < 50 {
-		err = fmt.Errorf("encoded public key is shorter than 50char, which is impossible: %q", publicKey)
+		err = fmt.Errorf("signerConfig/GetKeys: encoded public key is shorter than 50char, which is impossible: %q", publicKey)
 		return
 	}
 	return
@@ -365,7 +365,7 @@ func (cfg *Configuration) GetPrivateKey() (crypto.PrivateKey, error) {
 		}
 		return key, nil
 	}
-	return nil, fmt.Errorf("no suitable key found")
+	return nil, fmt.Errorf("signerConfig/GetPrivateKey: no suitable key found")
 }
 
 // ParsePrivateKey takes a PEM blocks are returns a crypto.PrivateKey
@@ -380,9 +380,9 @@ func ParsePrivateKey(keyPEMBlock []byte) (key crypto.PrivateKey, err error) {
 		keyDERBlock, keyPEMBlock = pem.Decode(keyPEMBlock)
 		if keyDERBlock == nil {
 			if len(skippedBlockTypes) == 1 && skippedBlockTypes[0] == "CERTIFICATE" {
-				return nil, fmt.Errorf("signer: found a certificate rather than a key in the PEM for the private key")
+				return nil, fmt.Errorf("signer/ParsePrivateKey: found a certificate rather than a key in the PEM for the private key")
 			}
-			return nil, fmt.Errorf("signer: failed to find PEM block with type ending in \"PRIVATE KEY\" in key input after skipping PEM blocks of the following types: %v", skippedBlockTypes)
+			return nil, fmt.Errorf("signer/ParsePrivateKey: failed to find PEM block with type ending in \"PRIVATE KEY\" in key input after skipping PEM blocks of the following types: %v", skippedBlockTypes)
 
 		}
 		if strings.HasSuffix(keyDERBlock.Type, "PRIVATE KEY") {
@@ -412,7 +412,7 @@ func ParsePrivateKey(keyPEMBlock []byte) (key crypto.PrivateKey, err error) {
 	}
 	savedErr = append(savedErr, "ecdsa: "+err.Error())
 
-	return nil, errors.New("failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for ECDSA. errors: " + strings.Join(savedErr, ";;; "))
+	return nil, errors.New("signer/ParsePrivateKey: failed to parse private key, make sure to use PKCS1 for RSA and PKCS8 for ECDSA. errors: " + strings.Join(savedErr, ";;; "))
 }
 
 func removePrivateKeyNewlines(confPrivateKey string) string {
@@ -438,15 +438,15 @@ func (cfg *Configuration) PrivateKeyHasPEMPrefix() bool {
 // the label of a key on the HSM, which is part of the Configuration
 func (cfg *Configuration) CheckHSMConnection() error {
 	if cfg.PrivateKeyHasPEMPrefix() {
-		return fmt.Errorf("private key for signer %s has a PEM prefix and is not an HSM key label", cfg.ID)
+		return fmt.Errorf("signerConfig/CheckHSMConnection: private key for signer %s has a PEM prefix and is not an HSM key label", cfg.ID)
 	}
 	if !cfg.isHsmAvailable {
-		return fmt.Errorf("HSM is not available for signer %s", cfg.ID)
+		return fmt.Errorf("signerConfig/CheckHSMConnection: HSM is not available for signer %s", cfg.ID)
 	}
 
 	_, err := cfg.GetPrivateKey()
 	if err != nil {
-		return fmt.Errorf("error fetching private key for signer %s: %w", cfg.ID, err)
+		return fmt.Errorf("signerConfig/CheckHSMConnection: error fetching private key for signer %s: %w", cfg.ID, err)
 	}
 	return nil
 }
@@ -467,11 +467,11 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		case "P-384":
 			priv, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		default:
-			return nil, nil, fmt.Errorf("unsupported curve %q",
+			return nil, nil, fmt.Errorf("signerConfig/MakeKey: unsupported curve %q",
 				keyTpl.(*ecdsa.PublicKey).Params().Name)
 		}
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to generate ecdsa key in memory: %w", err)
+			return nil, nil, fmt.Errorf("signerConfig/MakeKey: failed to generate ecdsa key in memory: %w", err)
 		}
 		pub = priv.(*ecdsa.PrivateKey).Public()
 		return
@@ -479,11 +479,11 @@ func (cfg *Configuration) MakeKey(keyTpl interface{}, keyName string) (priv cryp
 		keySize := keyTplType.Size()
 		priv, err = rsa.GenerateKey(rand.Reader, max(keySize, 2048))
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to generate rsa key in memory: %w", err)
+			return nil, nil, fmt.Errorf("signerConfig/MakeKey: failed to generate rsa key in memory: %w", err)
 		}
 		pub = priv.(*rsa.PrivateKey).Public()
 		return
 	default:
-		return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
+		return nil, nil, fmt.Errorf("signerConfig/MakeKey: making key of type %T is not supported", keyTpl)
 	}
 }

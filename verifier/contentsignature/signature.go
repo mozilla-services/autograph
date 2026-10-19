@@ -75,10 +75,10 @@ func (sig *ContentSignature) VerifyHash(hash []byte, pubKey *ecdsa.PublicKey) bo
 // following DL/ECSSA format spec from IEEE Std 1363-2000.
 func (sig *ContentSignature) Marshal() (str string, err error) {
 	if !sig.Finished {
-		return "", fmt.Errorf("contentsignature.Marshal: unfinished cannot be encoded")
+		return "", fmt.Errorf("ContentSignature/Marshal: unfinished cannot be encoded")
 	}
 	if sig.Len != P256ECDSABYTESIZE && sig.Len != P384ECDSABYTESIZE && sig.Len != P521ECDSABYTESIZE {
-		return "", fmt.Errorf("contentsignature.Marshal: invalid signature length %d", sig.Len)
+		return "", fmt.Errorf("ContentSignature/Marshal: invalid signature length %d", sig.Len)
 	}
 	// write R and S into a slice of len
 	// both R and S are zero-padded to the left to be exactly
@@ -100,12 +100,12 @@ func (sig *ContentSignature) Marshal() (str string, err error) {
 // Note this function does not set the X5U value of a signature.
 func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	if len(signature) < 30 {
-		return nil, fmt.Errorf("contentsignature: signature cannot be shorter than 30 characters, got %d", len(signature))
+		return nil, fmt.Errorf("ContentSignature/Unmarshal: signature cannot be shorter than 30 characters, got %d", len(signature))
 	}
 	// decode the actual signature into its R and S values
 	data, err := base64.RawURLEncoding.DecodeString(signature)
 	if err != nil {
-		return nil, fmt.Errorf("contentsignature: error decoding %w", err)
+		return nil, fmt.Errorf("ContentSignature/Unmarshal: error decoding %w", err)
 	}
 	// Use the length to determine the mode
 	sig = new(ContentSignature)
@@ -118,7 +118,7 @@ func Unmarshal(signature string) (sig *ContentSignature, err error) {
 	case P521ECDSABYTESIZE:
 		sig.Mode = P521ECDSA
 	default:
-		return nil, fmt.Errorf("contentsignature: unknown signature length %d", len(data))
+		return nil, fmt.Errorf("ContentSignature/Unmarshal: unknown signature length %d", len(data))
 	}
 	sig.HashName = getSignatureHash(sig.Mode)
 	// parse the signature into R and S value by splitting it in the middle

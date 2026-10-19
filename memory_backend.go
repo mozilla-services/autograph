@@ -42,16 +42,16 @@ func newInMemoryAuthBackend() (backend *inMemoryBackend) {
 // addAuth adds an authorization to the auth map or errors
 func (b *inMemoryBackend) addAuth(auth *authorization) (err error) {
 	if !authIDFormatRegexp.MatchString(auth.ID) {
-		return fmt.Errorf("authorization id '%s' is invalid, it must match %s", auth.ID, authIDFormat)
+		return fmt.Errorf("inMemoryBackend/addAuth: authorization id '%s' is invalid, it must match %s", auth.ID, authIDFormat)
 	}
 	_, getAuthErr := b.getAuthByID(auth.ID)
 	switch getAuthErr {
 	case nil:
-		return fmt.Errorf("authorization id '%s' already defined, duplicates are not permitted", auth.ID)
+		return fmt.Errorf("inMemoryBackend/addAuth: authorization id '%s' already defined, duplicates are not permitted", auth.ID)
 	case ErrAuthNotFound:
 		// this is what we want
 	default:
-		return fmt.Errorf("error finding auth with id '%s': %w", auth.ID, getAuthErr)
+		return fmt.Errorf("inMemoryBackend/addAuth: error finding auth with id '%s': %w", auth.ID, getAuthErr)
 	}
 	b.auths[auth.ID] = *auth
 	return b.addAuthToSignerIndex(auth)
@@ -73,9 +73,9 @@ func (b *inMemoryBackend) addMonitoringAuth(monitorKey string) error {
 	switch err {
 	case ErrAuthNotFound:
 	case nil:
-		return fmt.Errorf("user 'monitor' is reserved for monitoring, duplication is not permitted")
+		return fmt.Errorf("inMemoryBackend/addMonitoringAuth: user 'monitor' is reserved for monitoring, duplication is not permitted")
 	default:
-		return fmt.Errorf("error fetching 'monitor' auth: %q", err)
+		return fmt.Errorf("inMemoryBackend/addMonitoringAuth: error fetching 'monitor' auth: %q", err)
 	}
 	return b.addAuth(&authorization{
 		ID:  monitorAuthID,
@@ -90,9 +90,9 @@ func (b *inMemoryBackend) getSignerID(userid, keyid string) (int, error) {
 	tag := getSignerIndexTag(userid, keyid)
 	if _, ok := b.signerIndex[tag]; !ok {
 		if keyid == "" {
-			return -1, fmt.Errorf("%q does not have a default signing key", userid)
+			return -1, fmt.Errorf("inMemoryBackend/getSignerID: %q does not have a default signing key", userid)
 		}
-		return -1, fmt.Errorf("%s is not authorized to sign with key ID %s", userid, keyid)
+		return -1, fmt.Errorf("inMemoryBackend/getSignerID: %s is not authorized to sign with key ID %s", userid, keyid)
 	}
 	return b.signerIndex[tag], nil
 }
@@ -151,7 +151,7 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth *authorization) error {
 	}
 	// authorization must have a signer configured
 	if len(auth.Signers) < 1 {
-		return fmt.Errorf("auth id %q must have at least one signer configured", auth.ID)
+		return fmt.Errorf("inMemoryBackend/addAuthToSignerIndex: auth id %q must have at least one signer configured", auth.ID)
 	}
 	// add an authid+signerid entry for each signer the auth grants access to
 	for _, sid := range auth.Signers {
@@ -161,20 +161,20 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth *authorization) error {
 		for pos, s := range b.signers {
 			if sid == s.Config().ID {
 				sidExists = true
-				log.Printf("Mapping auth id %q and signer id %q to signer %d", auth.ID, s.Config().ID, pos)
+				log.Printf("inMemoryBackend/addAuthToSignerIndex: Mapping auth id %q and signer id %q to signer %d", auth.ID, s.Config().ID, pos)
 				b.signerIndex[getSignerIndexTag(auth.ID, s.Config().ID)] = pos
 			}
 		}
 
 		if !sidExists {
-			return fmt.Errorf("in auth id %q, signer id %q was not found in the list of known signers", auth.ID, sid)
+			return fmt.Errorf("inMemoryBackend/addAuthToSignerIndex: in auth id %q, signer id %q was not found in the list of known signers", auth.ID, sid)
 		}
 	}
 	// add a default entry for the signer, such that if none is provided in
 	// the signing request, the default is used
 	for pos, signer := range b.signers {
 		if auth.Signers[0] == signer.Config().ID {
-			log.Printf("Mapping auth id %q to default signer %d", auth.ID, pos)
+			log.Printf("inMemoryBackend/addAuthToSignerIndex: Mapping auth id %q to default signer %d", auth.ID, pos)
 			tag := auth.ID + "+"
 			b.signerIndex[tag] = pos
 			break

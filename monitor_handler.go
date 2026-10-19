@@ -20,11 +20,11 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	starttime := time.Now()
 	userid, err := m.authorize(r, []byte(""))
 	if err != nil {
-		httpError(w, r, http.StatusUnauthorized, "%q user authorization verification failed: %v", userid, err)
+		httpError(w, r, http.StatusUnauthorized, "monitor/handleMonitor: %q user authorization verification failed: %v", userid, err)
 		return
 	}
 	if userid != monitorAuthID {
-		httpError(w, r, http.StatusUnauthorized, "user is not permitted to call this endpoint")
+		httpError(w, r, http.StatusUnauthorized, "monitor/handleMonitor: user is not permitted to call this endpoint")
 		return
 	}
 
@@ -43,11 +43,11 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(failures) > 0 {
-		httpError(w, r, http.StatusInternalServerError, "Errors encountered during signing: %s", strings.Join(failures, "\n"))
+		httpError(w, r, http.StatusInternalServerError, "monitor/handleMonitor: Errors encountered during signing: %s", strings.Join(failures, "\n"))
 		return
 	}
 
-	log.Debugf("signature response: %s", m.sigresps)
+	log.Debugf("monitor/handleMonitor: signature response: %s", m.sigresps)
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -56,7 +56,7 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 	for _, response := range m.sigresps {
 		response.X5U = rewriteLocalX5U(r, response.SignerID, response.X5U)
 		if err := enc.Encode(&response); err != nil {
-			httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
+			httpError(w, r, http.StatusInternalServerError, "monitor/handleMonitor: encoding failed with error: %v", err)
 			return
 		}
 	}
@@ -65,5 +65,5 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 		"rid":     rid,
 		"user_id": userid,
 		"t":       int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
-	}).Info("monitoring operation succeeded")
+	}).Info("monitor/handleMonitor: monitoring operation succeeded")
 }

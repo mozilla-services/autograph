@@ -39,7 +39,7 @@ type monitor struct {
 func (m *monitor) start(duration time.Duration) {
 	if duration.Nanoseconds() <= 0 {
 		duration = 5 * time.Minute
-		log.Infof("monitor: using 5m instead of invalid interval %q", duration)
+		log.Infof("monitor/start: using 5m instead of invalid interval %q", duration)
 	}
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()

@@ -44,23 +44,23 @@ func setRuntimeConfig() (err error) {
 	if ok {
 		blockProfileRate, err = strconv.Atoi(val)
 		if err != nil {
-			return fmt.Errorf("failed to parse BLOCK_PROFILE_RATE as int: %w", err)
+			return fmt.Errorf("profiler/setRuntimeConfig: failed to parse BLOCK_PROFILE_RATE as int: %w", err)
 		}
 		runtime.SetBlockProfileRate(blockProfileRate)
-		log.Infof("SetBlockProfileRate to %d", blockProfileRate)
+		log.Infof("profiler/setRuntimeConfig: SetBlockProfileRate to %d", blockProfileRate)
 	} else {
-		log.Infof("Did not SetBlockProfileRate. BLOCK_PROFILE_RATE is not set.")
+		log.Infof("profiler/setRuntimeConfig: Did not SetBlockProfileRate. BLOCK_PROFILE_RATE is not set.")
 	}
 	val, ok = os.LookupEnv("MUTEX_PROFILE_FRACTION")
 	if ok {
 		mutexProfileFraction, err = strconv.Atoi(val)
 		if err != nil {
-			return fmt.Errorf("failed to parse MUTEX_PROFILE_FRACTION as int: %w", err)
+			return fmt.Errorf("profiler/setRuntimeConfig: failed to parse MUTEX_PROFILE_FRACTION as int: %w", err)
 		}
 		runtime.SetMutexProfileFraction(mutexProfileFraction)
-		log.Infof("SetMutexProfileFraction to %d", mutexProfileFraction)
+		log.Infof("profiler/setRuntimeConfig: SetMutexProfileFraction to %d", mutexProfileFraction)
 	} else {
-		log.Infof("Did not SetMutexProfileFraction. MUTEX_PROFILE_FRACTION is not set.")
+		log.Infof("profiler/setRuntimeConfig: Did not SetMutexProfileFraction. MUTEX_PROFILE_FRACTION is not set.")
 	}
 	return nil
 }

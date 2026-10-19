@@ -8,7 +8,7 @@ import (
 
 var (
 	// ErrNoSuitableEEFound is returned when no suitable key is found in database
-	ErrNoSuitableEEFound = fmt.Errorf("no suitable key found in database")
+	ErrNoSuitableEEFound = fmt.Errorf("database/queries: no suitable key found in database")
 )
 
 // BeginEndEntityOperations creates a database transaction that locks the endentities table,
@@ -21,13 +21,13 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 	// if a db is present, first create a db transaction to lock the row for update
 	tx, err := db.Begin()
 	if err != nil {
-		err = fmt.Errorf("failed to create transaction: %w", err)
+		err = fmt.Errorf("Handler/BeginEndEntityOperations: failed to create transaction: %w", err)
 		return nil, err
 	}
 	// lock the table
 	_, err = tx.Exec("LOCK TABLE endentities_lock IN ACCESS EXCLUSIVE MODE")
 	if err != nil {
-		err = fmt.Errorf("failed to lock endentities table: %w", err)
+		err = fmt.Errorf("Handler/BeginEndEntityOperations: failed to lock endentities table: %w", err)
 		// We ignore the error from tx.Rollback() because according to the Go documentation,
 		// if tx.Rollback() returns an error, the transaction is no longer valid nor
 		// committed to the database.
@@ -40,7 +40,7 @@ func (db *Handler) BeginEndEntityOperations() (*Transaction, error) {
 		true).Scan(&id)
 	if err != nil {
 		_ = tx.Rollback()
-		err = fmt.Errorf("failed to lock endentities table: %w", err)
+		err = fmt.Errorf("Handler/BeginEndEntityOperations: failed to lock endentities table: %w", err)
 		return nil, err
 	}
 	return &Transaction{tx, id}, nil
@@ -76,14 +76,14 @@ func (tx *Transaction) InsertEE(x5u, label, signerID string) (err error) {
 				VALUES ($1, $2, $3, $4, $5)`, x5u, label, signerID, -1, true)
 	if err != nil {
 		_ = tx.Rollback()
-		err = fmt.Errorf("failed to insert new key in database: %w", err)
+		err = fmt.Errorf("Transaction/InsertEE: failed to insert new key in database: %w", err)
 		return
 	}
 	// mark all other keys for this signer as no longer current
 	_, err = tx.Exec("UPDATE endentities SET is_current=FALSE WHERE signer_id=$1 and label!=$2",
 		signerID, label)
 	if err != nil {
-		err = fmt.Errorf("failed to update is_current status of keys in database: %w", err)
+		err = fmt.Errorf("Transaction/InsertEE: failed to update is_current status of keys in database: %w", err)
 		_ = tx.Rollback()
 		return
 	}
@@ -94,13 +94,13 @@ func (tx *Transaction) InsertEE(x5u, label, signerID string) (err error) {
 func (tx *Transaction) End() error {
 	_, err := tx.Exec("UPDATE endentities_lock SET is_locked=FALSE, freed_at=NOW() WHERE id=$1", tx.ID)
 	if err != nil {
-		err = fmt.Errorf("failed to update is_current status of keys in database: %w", err)
+		err = fmt.Errorf("Transaction/End: failed to update is_current status of keys in database: %w", err)
 		_ = tx.Rollback()
 		return err
 	}
 	err = tx.Commit()
 	if err != nil {
-		err = fmt.Errorf("failed to commit transaction in database: %w", err)
+		err = fmt.Errorf("Transaction/End: failed to commit transaction in database: %w", err)
 		_ = tx.Rollback()
 		return err
 	}
@@ -131,7 +131,7 @@ func (db *Handler) GetSignerConfig() (cfg string, err error) {
   'authorizations', (select jsonb_agg(auth) from authQuery)
 	);`).Scan(&cfg)
 	if err != nil {
-		err = fmt.Errorf("Failed to retrieve signer config from database: %w", err)
+		err = fmt.Errorf("Handler/GetSignerConfig: Failed to retrieve signer config from database: %w", err)
 	}
 	return
 }

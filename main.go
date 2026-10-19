@@ -107,18 +107,18 @@ func main() {
 	}
 	serviceFile, port, err := parseArgs(args)
 	if err != nil {
-		log.Fatalf("Failed to parse args. %s", err)
+		log.Fatalf("main/main: Failed to parse args. %s", err)
 	}
 	serviceConf, err := loadServiceConfig(serviceFile)
 	if err != nil {
-		log.Fatalf("Failed to load service config. %s", err)
+		log.Fatalf("main/main: Failed to load service config. %s", err)
 	}
 
 	confListen := strings.Split(serviceConf.Server.Listen, ":")
 	var listen string
 	if len(confListen) > 1 && port != "" && port != confListen[1] {
 		listen = fmt.Sprintf("%s:%s", confListen[0], port)
-		log.Infof("Overriding listen addr from config %s with new port from the commandline: %s", serviceConf.Server.Listen, listen)
+		log.Infof("main/main: Overriding listen addr from config %s with new port from the commandline: %s", serviceConf.Server.Listen, listen)
 	} else {
 		listen = serviceConf.Server.Listen
 	}
@@ -138,15 +138,15 @@ func parseArgs(args []string) (serviceFile string, port string, err error) {
 	fset.StringVar(&logLevel, "l", "warning", "Set the logging level. Optional defaulting to info. Options: panic, fatal, error, warning, info, debug, and trace")
 	err = fset.Parse(args)
 	if err != nil {
-		log.Fatalf("Failed to parse flags: %v", err)
+		log.Fatalf("main/parseArgs: Failed to parse flags: %v", err)
 	}
 	if logLevel != "" {
 		level, err := log.ParseLevel(logLevel)
 		if err != nil {
-			log.Fatalf("Error parsing log level: %s", err)
+			log.Fatalf("main/parseArgs: Error parsing log level: %s", err)
 		}
 		log.SetLevel(level)
-		log.Infof("Set logging level to %s", level)
+		log.Infof("main/parseArgs: Set logging level to %s", level)
 	}
 	return
 }
@@ -154,7 +154,7 @@ func parseArgs(args []string) (serviceFile string, port string, err error) {
 func loadServiceConfig(serviceFile string) (serviceConf serviceConfig, err error) {
 	err = serviceConf.loadFromFile(serviceFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("main/loadServiceConfig: %s", err)
 	}
 
 	return
@@ -178,7 +178,7 @@ func loadSignerConfig(db *database.Handler) (*signerConfig, error) {
 
 func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
 	if len(signerConf.Signers) < 1 {
-		log.Warn("No signers to check secrets for. . Skipping loadSignerSecrets.")
+		log.Warn("main/loadSignerSecrets: No signers to check secrets for. . Skipping loadSignerSecrets.")
 		return nil
 	}
 
@@ -216,12 +216,12 @@ func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
 
 		leftovers := slices.Collect(maps.Keys(secret))
 		if len(leftovers) > 0 {
-			log.Warnf("Secret %s has unmapped keys %s.", signerConf.Signers[i].Secret, leftovers)
+			log.Warnf("main/loadSignerSecrets: Secret %s has unmapped keys %s.", signerConf.Signers[i].Secret, leftovers)
 		}
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("Failed to retrieve %d secrets. Errors: %s", len(errs), errs)
+		return fmt.Errorf("main/loadSignerSecrets: Failed to retrieve %d secrets. Errors: %s", len(errs), errs)
 	}
 	return nil
 }
@@ -241,49 +241,49 @@ func run(serviceConf serviceConfig, listen string) {
 
 	signerConf, err := loadSignerConfig(ag.db)
 	if err != nil {
-		log.Fatalf("Failed to load signer config! %s", err)
+		log.Fatalf("main/run: Failed to load signer config! %s", err)
 	}
 
 	// retrieve secrets for signer config as needed
 	if serviceConf.GCP.ProjectId != "" {
 		err = loadSignerSecrets(serviceConf.GCP.ProjectId, *signerConf)
 		if err != nil {
-			log.Errorf("Failed to retrieve some signer secrets! %s", err)
+			log.Errorf("main/run: Failed to retrieve some signer secrets! %s", err)
 		}
 	} else {
-		log.Error("No GCP Project ID configured. Unable to load secrets.")
+		log.Error("main/run: No GCP Project ID configured. Unable to load secrets.")
 	}
 
 	// initialize the hsm if a configuration is defined
 	if serviceConf.HSM.Path != "" {
 		err = ag.initHSM(serviceConf, *signerConf)
 		if err != nil {
-			log.Fatalf("main.run: %s", err)
+			log.Fatalf("main/run: Failed to init HSM. %s", err)
 		}
 	}
 
 	err = ag.addSigners(signerConf.Signers)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("main/run: Failed to add signers. %s", err)
 	}
 	err = ag.addAuthorizations(signerConf.Authorizations)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("main/run: Failed to add authorizations. %s", err)
 	}
 	err = ag.addMonitoring(serviceConf.Monitoring)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("main/run: Failed to add monitoring. %s", err)
 	}
 
 	if serviceConf.HawkTimestampValidity != "" {
 		ag.hawkMaxTimestampSkew, err = time.ParseDuration(serviceConf.HawkTimestampValidity)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("main/run: Failed to set hawkMaxTimestampSkew. %s", err)
 		}
 	} else {
 		ag.hawkMaxTimestampSkew = time.Minute
 	}
-	log.Infof("setting hawk timestamp skew to %s", ag.hawkMaxTimestampSkew)
+	log.Infof("main/run: setting hawk timestamp skew to %s", ag.hawkMaxTimestampSkew)
 
 	ag.startCleanupHandler()
 
@@ -315,7 +315,7 @@ func run(serviceConf serviceConfig, listen string) {
 	}
 
 	if serviceConf.DebugServer.Listen != "" {
-		log.Infof("starting debug server on %s", serviceConf.DebugServer.Listen)
+		log.Infof("main/run: starting debug server on %s", serviceConf.DebugServer.Listen)
 		go func() {
 			mux := mux.NewRouter()
 			mux.Handle("/metrics", promhttp.Handler())
@@ -323,10 +323,10 @@ func run(serviceConf serviceConfig, listen string) {
 			if os.Getenv("AUTOGRAPH_PROFILE") == "1" {
 				err = setRuntimeConfig()
 				if err != nil {
-					log.Fatal(err)
+					log.Fatalf("main/run: Failed to set runtime config. %s", err)
 				}
 				addProfilerHandlers(router)
-				log.Infof("enabled HTTP perf profiler")
+				log.Infof("main/run: enabled HTTP perf profiler")
 			}
 
 			srv := http.Server{
@@ -339,7 +339,7 @@ func run(serviceConf serviceConfig, listen string) {
 
 			err := srv.ListenAndServe()
 			if err != nil {
-				log.Fatalf("unable to start up debug server on %s: %s", serviceConf.DebugServer.Listen, err)
+				log.Fatalf("main/run: unable to start up debug server on %s: %s", serviceConf.DebugServer.Listen, err)
 			}
 		}()
 	}
@@ -358,10 +358,10 @@ func run(serviceConf serviceConfig, listen string) {
 		),
 	}
 
-	log.Infof("starting autograph on %s with timeouts: idle %s read %s write %s", listen, serviceConf.Server.IdleTimeout, serviceConf.Server.ReadTimeout, serviceConf.Server.WriteTimeout)
+	log.Infof("main/run: starting autograph on %s with timeouts: idle %s read %s write %s", listen, serviceConf.Server.IdleTimeout, serviceConf.Server.ReadTimeout, serviceConf.Server.WriteTimeout)
 	err = server.ListenAndServe()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("main/run: Failed to listen and serve. %s", err)
 	}
 
 	// Shutdown the monitor.
@@ -385,7 +385,7 @@ func (c *serviceConfig) loadFromFile(path string) error {
 	}
 
 	if c.Heartbeat.DBCheckTimeout == time.Duration(uint64(0)) || c.Heartbeat.HSMCheckTimeout == time.Duration(uint64(0)) {
-		return fmt.Errorf("missing required heartbeat config section with non-zero timeouts")
+		return fmt.Errorf("serviceConfig/loadFromFile: missing required heartbeat config section with non-zero timeouts")
 	}
 	return nil
 }
@@ -398,7 +398,7 @@ func newAutographer(cachesize int) (a *autographer) {
 	a.nonces, err = lru.New[string, time.Time](cachesize)
 	a.exit = make(chan interface{})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("autographer/newAutographer: %s", err)
 	}
 	return a
 }
@@ -417,7 +417,7 @@ func (a *autographer) startCleanupHandler() {
 
 	go func() {
 		sig := <-c
-		log.Infof("main: received signal %s; cleaning up signers", sig)
+		log.Infof("autographer/startCleanupHandler: received signal %s; cleaning up signers", sig)
 		for _, s := range a.getSigners() {
 			statefulSigner, ok := s.(signer.StatefulSigner)
 			if !ok {
@@ -425,7 +425,7 @@ func (a *autographer) startCleanupHandler() {
 			}
 			err := statefulSigner.AtExit()
 			if err != nil {
-				log.Errorf("main: error in signer %s AtExit fn: %s", s.Config().ID, err)
+				log.Errorf("autographer/startCleanupHandler: error in signer %s AtExit fn: %s", s.Config().ID, err)
 			}
 		}
 
@@ -442,16 +442,16 @@ func (a *autographer) addDB(dbConf database.Config) chan bool {
 	var err error
 	a.db, err = database.Connect(dbConf)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("autographer/addDB: %s", err)
 	}
 	if a.db == nil {
-		log.Fatal("failed to initialize database connection, unknown error")
+		log.Fatal("autographer/addDB: failed to initialize database connection, unknown error")
 	}
 	// start a monitoring function that errors if the db
 	// becomes inaccessible
 	closeDBMonitor := make(chan bool, 1)
 	go a.db.Monitor(dbConf.MonitorPollInterval, closeDBMonitor)
-	log.Print("database connection established")
+	log.Print("autographer/addDB: database connection established")
 	return closeDBMonitor
 }
 
@@ -459,7 +459,7 @@ func (a *autographer) addDB(dbConf database.Config) chan bool {
 func (a *autographer) initHSM(serviceConf serviceConfig, signerConf signerConfig) error {
 	tmpCtx, err := crypto11.Configure(&serviceConf.HSM, crypto11.NewDefaultPKCS11Context)
 	if err != nil {
-		return fmt.Errorf("error in initHSM from crypto11.Configure: %w", err)
+		return fmt.Errorf("autographer/initHSM: error in initHSM from crypto11.Configure: %w", err)
 	}
 	if tmpCtx != nil {
 		var hsm signer.HSM
@@ -501,7 +501,7 @@ func (a *autographer) initHSM(serviceConf serviceConfig, signerConf signerConfig
 
 				err := signerConf.CheckHSMConnection()
 				if err != nil {
-					return fmt.Errorf("hsm connection check failed during initHSM on signer id %#v: %w", signerConf.ID, err)
+					return fmt.Errorf("autographer/initHSM: hsm connection check failed during initHSM on signer id %#v: %w", signerConf.ID, err)
 				}
 			}
 		}
@@ -516,16 +516,16 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 	sids := make(map[string]bool)
 	for _, signerConf := range signerConfs {
 		if !regexp.MustCompile(signer.IDFormat).MatchString(signerConf.ID) {
-			return fmt.Errorf("signer ID %q does not match the permitted format %q",
+			return fmt.Errorf("autographer/addSigners: signer ID %q does not match the permitted format %q",
 				signerConf.ID, signer.IDFormat)
 		}
 		// forbid signers with the same ID
 		if _, exists := sids[signerConf.ID]; exists {
-			return fmt.Errorf("duplicate signer ID %q is not permitted", signerConf.ID)
+			return fmt.Errorf("autographer/addSigners: duplicate signer ID %q is not permitted", signerConf.ID)
 		}
 		// "monitor" is a reserved name
 		if signerConf.ID == monitorAuthID {
-			return fmt.Errorf("'monitor' is a reserved signer name and cannot be used in configuration")
+			return fmt.Errorf("autographer/addSigners: 'monitor' is a reserved signer name and cannot be used in configuration")
 		}
 		sids[signerConf.ID] = true
 		var (
@@ -540,44 +540,44 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		case contentsignature.Type:
 			s, err = contentsignature.New(signerConf)
 			if err != nil {
-				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
+				log.Errorf("autographer/addSigners: failed to add signer %q: %s", signerConf.ID, err)
 			}
 		case contentsignaturepki.Type:
 			s, err = contentsignaturepki.New(signerConf)
 			if err != nil {
-				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
+				log.Errorf("autographer/addSigners: failed to add signer %q: %s", signerConf.ID, err)
 			}
 		case xpi.Type:
 			s, err = xpi.New(signerConf)
 			if err != nil {
-				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
+				log.Errorf("autographer/addSigners: failed to add signer %q: %s", signerConf.ID, err)
 			}
 		case apk2.Type:
 			s, err = apk2.New(signerConf)
 			if err != nil {
-				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
+				log.Errorf("autographer/addSigners: failed to add signer %q: %s", signerConf.ID, err)
 			}
 		case mar.Type:
 			s, err = mar.New(signerConf)
 			if err != nil && strings.HasPrefix(err.Error(), "mar: failed to parse private key: no suitable key found") {
-				log.Infof("Skipping signer %q from HSM", signerConf.ID)
+				log.Infof("autographer/addSigners: Skipping signer %q from HSM", signerConf.ID)
 				continue
 			} else if err != nil {
-				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
+				log.Errorf("autographer/addSigners: failed to add signer %q: %s", signerConf.ID, err)
 			}
 		case gpg2.Type:
 			tmpDirPrefix := fmt.Sprintf("autograph_%s_%s_%s_", signerConf.Type, signerConf.KeyID, signerConf.Mode)
 			s, err = gpg2.New(signerConf, tmpDirPrefix)
 			if err != nil {
-				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
+				log.Errorf("autographer/addSigners: failed to add signer %q: %s", signerConf.ID, err)
 			}
 		case genericrsa.Type:
 			s, err = genericrsa.New(signerConf)
 			if err != nil {
-				log.Error(fmt.Errorf("failed to add signer %q: %w", signerConf.ID, err))
+				log.Errorf("autographer/addSigners: failed to add signer %q: %s", signerConf.ID, err)
 			}
 		default:
-			log.Error(fmt.Errorf("unknown signer type %q", signerConf.Type))
+			log.Errorf("autographer/addSigners: unknown signer type %q on signer %q", signerConf.Type, signerConf.ID)
 		}
 		if err == nil {
 			a.addSigner(s)
@@ -591,7 +591,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 // tools/autograph-monitor
 func (a *autographer) addMonitoring(auth authorization) (err error) {
 	if auth.Key == "" {
-		log.Infof("monitoring is disabled. No key found")
+		log.Infof("autographer/addMonitoring: monitoring is disabled. No key found")
 		return nil
 	}
 	return a.authBackend.addMonitoringAuth(auth.Key)
@@ -603,7 +603,7 @@ func (a *autographer) addAuthorizations(auths []authorization) (err error) {
 	for _, auth := range auths {
 		err = a.authBackend.addAuth(&auth)
 		if err != nil {
-			log.Errorf("Failed to add authorization for %s. Err: %s", auth.ID, err)
+			log.Errorf("autographer/addAuthorizations: Failed to add authorization for %s. Err: %s", auth.ID, err)
 		}
 	}
 	a.authsLoaded = true

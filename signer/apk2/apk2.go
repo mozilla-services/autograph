@@ -47,51 +47,51 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	s = new(APK2Signer)
 
 	if conf.Type != Type {
-		return nil, fmt.Errorf("apk2: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("signer/apk2: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, fmt.Errorf("apk2: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("signer/apk2: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 
 	switch conf.Mode {
 	case ModeV3Enabled:
-		log.Printf("apk2: %s: v3 signing enabled", s.ID)
+		log.Printf("signer/apk2: %s: v3 signing enabled", s.ID)
 		s.v3Enabled = true
 	case "":
 		s.v3Enabled = false
 	default:
-		return nil, fmt.Errorf("apk2: invalid mode in signer configuration (must be empty or %s)", ModeV3Enabled)
+		return nil, fmt.Errorf("signer/apk2: invalid mode in signer configuration (must be empty or %s)", ModeV3Enabled)
 	}
 	s.Mode = conf.Mode
 
 	if conf.PrivateKey == "" {
-		return nil, fmt.Errorf("apk2: missing private key in signer configuration")
+		return nil, fmt.Errorf("signer/apk2: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
 	priv, err := conf.GetPrivateKey()
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to get private key from configuration: %w", err)
+		return nil, fmt.Errorf("signer/apk2: failed to get private key from configuration: %w", err)
 	}
 	switch priv.(type) {
 	case *ecdsa.PrivateKey:
 		// ecdsa is only supported in sdk 18 and higher
 		s.minSdkVersion = "18"
-		log.Printf("apk2: setting min android sdk version to 18 as required to sign with ecdsa")
+		log.Printf("signer/apk2: setting min android sdk version to 18 as required to sign with ecdsa")
 	default:
-		log.Printf("apk2: setting min android sdk version to 9")
+		log.Printf("signer/apk2: setting min android sdk version to 9")
 		s.minSdkVersion = "9"
 	}
 	//apksigner wants a pkcs8 encoded privkey
 	s.pkcs8Key, err = x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to encode private key to pkcs8: %w", err)
+		return nil, fmt.Errorf("signer/apk2: failed to encode private key to pkcs8: %w", err)
 	}
 
 	if conf.Certificate == "" {
-		return nil, fmt.Errorf("apk2: missing public cert in signer configuration")
+		return nil, fmt.Errorf("signer/apk2: missing public cert in signer configuration")
 	}
 	s.Certificate = conf.Certificate
 	return
@@ -112,22 +112,22 @@ func (s *APK2Signer) Config() signer.Configuration {
 func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFile, error) {
 	keyPath, err := os.CreateTemp("", fmt.Sprintf("apk2_%s.key", s.ID))
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to create tempfile with private key: %w", err)
+		return nil, fmt.Errorf("signer/apk2: failed to create tempfile with private key: %w", err)
 	}
 	defer os.Remove(keyPath.Name())
 	err = os.WriteFile(keyPath.Name(), []byte(s.pkcs8Key), 0400)
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to write private key to tempfile: %w", err)
+		return nil, fmt.Errorf("signer/apk2: failed to write private key to tempfile: %w", err)
 	}
 
 	certPath, err := os.CreateTemp("", fmt.Sprintf("apk2_%s.cert", s.ID))
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to create tempfile for input to sign: %w", err)
+		return nil, fmt.Errorf("signer/apk2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer os.Remove(certPath.Name())
 	err = os.WriteFile(certPath.Name(), []byte(s.Certificate), 0400)
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to write public cert to tempfile: %w", err)
+		return nil, fmt.Errorf("signer/apk2: failed to write public cert to tempfile: %w", err)
 	}
 
 	// write the input to a temp file
@@ -135,12 +135,12 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 	h.Write(file)
 	tmpAPKFile, err := os.CreateTemp("", fmt.Sprintf("apk2_input_%x.apk", h.Sum(nil)))
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to create tempfile for input to sign: %w", err)
+		return nil, fmt.Errorf("signer/apk2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer os.Remove(tmpAPKFile.Name())
 	err = os.WriteFile(tmpAPKFile.Name(), file, 0755)
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to write tempfile for input to sign: %w", err)
+		return nil, fmt.Errorf("signer/apk2: failed to write tempfile for input to sign: %w", err)
 	}
 
 	args := []string{
@@ -164,13 +164,13 @@ func (s *APK2Signer) SignFile(file []byte, options interface{}) (signer.SignedFi
 
 	out, err := apkSigCmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to sign\n%s: %w", out, err)
+		return nil, fmt.Errorf("signer/apk2: failed to sign\n%s: %w", out, err)
 	}
-	log.Debugf("signed as:\n%s\n", string(out))
+	log.Debugf("signer/apk2: signed as:\n%s\n", string(out))
 
 	signedApk, err := os.ReadFile(tmpAPKFile.Name())
 	if err != nil {
-		return nil, fmt.Errorf("apk2: failed to read signed file: %w", err)
+		return nil, fmt.Errorf("signer/apk2: failed to read signed file: %w", err)
 	}
 	return signer.SignedFile(signedApk), nil
 }
@@ -202,7 +202,7 @@ type Signature struct {
 // signature formats other than v1 JAR signing
 func (sig *Signature) Verify() error {
 	if !sig.Finished {
-		return fmt.Errorf("apk2.Verify: cannot verify unfinished signature")
+		return fmt.Errorf("signer/apk2: cannot verify unfinished signature")
 	}
 	return sig.p7.Verify()
 }
@@ -210,10 +210,10 @@ func (sig *Signature) Verify() error {
 // Marshal returns the base64 representation of a v1 JAR signature
 func (sig *Signature) Marshal() (string, error) {
 	if !sig.Finished {
-		return "", fmt.Errorf("apk2: cannot marshal unfinished signature")
+		return "", fmt.Errorf("signer/apk2: cannot marshal unfinished signature")
 	}
 	if len(sig.Data) == 0 {
-		return "", fmt.Errorf("apk2: cannot marshal empty signature data")
+		return "", fmt.Errorf("signer/apk2: cannot marshal empty signature data")
 	}
 	return base64.StdEncoding.EncodeToString(sig.Data), nil
 }
@@ -225,11 +225,11 @@ func Unmarshal(signature string, content []byte) (sig *Signature, err error) {
 	sig = new(Signature)
 	sig.Data, err = base64.StdEncoding.DecodeString(signature)
 	if err != nil {
-		return sig, fmt.Errorf("apk2.Unmarshal: failed to decode base64 signature: %w", err)
+		return sig, fmt.Errorf("signer/apk2: failed to decode base64 signature: %w", err)
 	}
 	sig.p7, err = pkcs7.Parse(sig.Data)
 	if err != nil {
-		return sig, fmt.Errorf("apk2.Unmarshal: failed to parse pkcs7 signature: %w", err)
+		return sig, fmt.Errorf("signer/apk2: failed to parse pkcs7 signature: %w", err)
 	}
 	sig.p7.Content = content
 	sig.Finished = true

@@ -56,7 +56,7 @@ type genericAead struct {
 // then you must use cipher.NewGCM; it will be slow.
 func (key *PKCS11SecretKey) NewGCM() (g cipher.AEAD, err error) {
 	if key.Cipher.GCMMech == 0 {
-		err = fmt.Errorf("GCM not implemented for key type %#x", key.Cipher.GenParams[0].KeyType)
+		err = fmt.Errorf("crypto11/aead/NewGCM: GCM not implemented for key type %#x", key.Cipher.GenParams[0].KeyType)
 		return
 	}
 	g = genericAead{
@@ -84,7 +84,7 @@ func (key *PKCS11SecretKey) NewCBC(paddingMode int) (g cipher.AEAD, err error) {
 		nonceSize: key.BlockSize(),
 		makeMech: func(nonce []byte, additionalData []byte) (mech []*pkcs11.Mechanism, error error) {
 			if len(additionalData) > 0 {
-				err = errors.New("additional data not supported for CBC mode")
+				err = errors.New("crypto11/aead/NewCBC: additional data not supported for CBC mode")
 			}
 			var pkcsMech uint
 			switch paddingMode {
@@ -93,11 +93,11 @@ func (key *PKCS11SecretKey) NewCBC(paddingMode int) (g cipher.AEAD, err error) {
 			case PaddingPKCS:
 				pkcsMech = key.Cipher.CBCPKCSMech
 			default:
-				err = errors.New("unrecognized padding mode")
+				err = errors.New("crypto11/aead/NewCBC: unrecognized padding mode")
 				return
 			}
 			if pkcsMech == 0 {
-				err = errors.New("unsupported padding mode")
+				err = errors.New("crypto11/aead/NewCBC: unsupported padding mode")
 				return
 			}
 			mech = []*pkcs11.Mechanism{pkcs11.NewMechanism(pkcsMech, nonce)}
@@ -123,11 +123,11 @@ func (g genericAead) Seal(dst, nonce, plaintext, additionalData []byte) []byte {
 			return
 		}
 		if err = session.Ctx.EncryptInit(session.Handle, mech, g.key.Handle); err != nil {
-			err = fmt.Errorf("C_EncryptInit: %v", err)
+			err = fmt.Errorf("crypto11/aead/Seal: C_EncryptInit: %v", err)
 			return
 		}
 		if result, err = session.Ctx.Encrypt(session.Handle, plaintext); err != nil {
-			err = fmt.Errorf("C_Encrypt: %v", err)
+			err = fmt.Errorf("crypto11/aead/Seal: C_Encrypt: %v", err)
 			return
 		}
 		return
@@ -147,11 +147,11 @@ func (g genericAead) Open(dst, nonce, ciphertext, additionalData []byte) ([]byte
 			return
 		}
 		if err = session.Ctx.DecryptInit(session.Handle, mech, g.key.Handle); err != nil {
-			err = fmt.Errorf("C_DecryptInit: %v", err)
+			err = fmt.Errorf("crypto11/aead/Open: C_DecryptInit: %v", err)
 			return
 		}
 		if result, err = session.Ctx.Decrypt(session.Handle, ciphertext); err != nil {
-			err = fmt.Errorf("C_Decrypt: %v", err)
+			err = fmt.Errorf("crypto11/aead/Open: C_Decrypt: %v", err)
 			return
 		}
 		return
