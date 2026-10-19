@@ -47,9 +47,8 @@ func (m *monitor) handleMonitor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if m.debug {
-		log.Printf("signature response: %s", m.sigresps)
-	}
+	log.Debugf("signature response: %s", m.sigresps)
+
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 

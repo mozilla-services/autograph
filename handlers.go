@@ -178,9 +178,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, r, http.StatusBadRequest, "missing input in signature request %d", i)
 		}
 	}
-	if a.debug {
-		fmt.Printf("signature request\n-----------------\n%s\n", body)
-	}
+	log.Debugf("signature request\n-----------------\n%s\n", body)
+
 	sigReqsCount := len(sigreqs)
 	sigresps := make([]formats.SignatureResponse, sigReqsCount)
 	// Each signature requested in the http request body is processed individually.
@@ -356,9 +355,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
 		return
 	}
-	if a.debug {
-		fmt.Printf("signature response\n------------------\n%s\n", respdata)
-	}
+
+	log.Debugf("signature response\n------------------\n%s\n", respdata)
+
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(respdata)

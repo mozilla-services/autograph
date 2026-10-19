@@ -407,7 +407,7 @@ func TestSignData(t *testing.T) {
 					t.Fatal(err)
 				}
 				defer os.Remove(tmpPublicKeyFile.Name())
-				// fmt.Printf("loading %s\n", s.PublicKey)
+
 				err = os.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
 				if err != nil {
 					t.Fatal(err)

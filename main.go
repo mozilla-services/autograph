@@ -88,7 +88,6 @@ type debugServerConfig struct {
 type autographer struct {
 	db                   *database.Handler
 	nonces               *lru.Cache[string, time.Time]
-	debug                bool
 	heartbeatConf        *heartbeatConfig
 	authBackend          authBackend
 	hawkMaxTimestampSkew time.Duration
@@ -106,7 +105,7 @@ func main() {
 	if len(args) > 0 {
 		args = os.Args[1:]
 	}
-	serviceFile, port, debug, err := parseArgs(args)
+	serviceFile, port, err := parseArgs(args)
 	if err != nil {
 		log.Fatalf("Failed to parse args. %s", err)
 	}
@@ -124,10 +123,10 @@ func main() {
 		listen = serviceConf.Server.Listen
 	}
 
-	run(serviceConf, listen, debug)
+	run(serviceConf, listen)
 }
 
-func parseArgs(args []string) (serviceFile string, port string, debug bool, err error) {
+func parseArgs(args []string) (serviceFile string, port string, err error) {
 	var (
 		logLevel string
 		fset     = flag.NewFlagSet("parseArgs", flag.ContinueOnError)
@@ -136,23 +135,10 @@ func parseArgs(args []string) (serviceFile string, port string, debug bool, err 
 	fset.StringVar(&serviceFile, "c", "autograph-service.yaml", "Path to service configuration file")
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	// https://github.com/sirupsen/logrus#level-logging
-	fset.StringVar(&logLevel, "l", "", "Set the logging level. Optional defaulting to info. Options: trace, debug, info, warning, error, fatal and panic")
-	fset.BoolVar(&debug, "D", false, "Sets the log level to debug to print debug logs.")
+	fset.StringVar(&logLevel, "l", "warning", "Set the logging level. Optional defaulting to info. Options: panic, fatal, error, warning, info, debug, and trace")
 	err = fset.Parse(args)
 	if err != nil {
 		log.Fatalf("Failed to parse flags: %v", err)
-	}
-	switch logLevel {
-	case "debug":
-		debug = true
-	case "":
-		if debug {
-			logLevel = "debug"
-		}
-	default:
-		if debug {
-			log.Fatalf("Got debug true, but conflicting log level: %s", logLevel)
-		}
 	}
 	if logLevel != "" {
 		level, err := log.ParseLevel(logLevel)
@@ -240,7 +226,7 @@ func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
 	return nil
 }
 
-func run(serviceConf serviceConfig, listen string, debug bool) {
+func run(serviceConf serviceConfig, listen string) {
 	var (
 		ag  *autographer
 		err error
@@ -298,10 +284,6 @@ func run(serviceConf serviceConfig, listen string, debug bool) {
 		ag.hawkMaxTimestampSkew = time.Minute
 	}
 	log.Infof("setting hawk timestamp skew to %s", ag.hawkMaxTimestampSkew)
-
-	if debug {
-		ag.enableDebug()
-	}
 
 	ag.startCleanupHandler()
 
@@ -419,16 +401,6 @@ func newAutographer(cachesize int) (a *autographer) {
 		log.Fatal(err)
 	}
 	return a
-}
-
-// enableDebug enables debug logging
-func (a *autographer) enableDebug() {
-	a.debug = true
-}
-
-// disableDebug disables debug logging
-func (a *autographer) disableDebug() {
-	a.debug = false
 }
 
 // getAuthByID returns an authorization if it exists or nil. Call

@@ -686,18 +686,6 @@ func TestContentType(t *testing.T) {
 	}
 }
 
-func TestDebug(t *testing.T) {
-	ag, _, _ := newTestAutographer(t)
-	ag.enableDebug()
-	if !ag.debug {
-		t.Fatalf("expected debug mode to be enabled, but is disabled")
-	}
-	ag.disableDebug()
-	if ag.debug {
-		t.Fatalf("expected debug mode to be disabled, but is enabled")
-	}
-}
-
 func TestHandleGetAuthKeyIDs(t *testing.T) {
 	ag, _, _ := newTestAutographer(t)
 

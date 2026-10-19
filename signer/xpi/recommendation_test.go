@@ -199,7 +199,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to make recommendation file as expected got err: %q", err)
 		}
-		fmt.Printf("%q\n", recFileBytes)
+
 		rec, err := UnmarshalRecommendation(recFileBytes)
 		if err != nil {
 			t.Fatalf("failed to unmarshal recommendation file back to rec got err: %q", err)
@@ -490,7 +490,6 @@ func TestSignFileWithRecommendation(t *testing.T) {
 		if string(rec.AddOnID) != opts.ID {
 			t.Fatalf("failed to use new CN in recommendation file expected %q and got %q", opts.ID, string(rec.AddOnID))
 		}
-		// fmt.Printf("%s\n", recFileBytes)
 	})
 }
 
