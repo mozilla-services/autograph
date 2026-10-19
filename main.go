@@ -118,7 +118,7 @@ func main() {
 	var listen string
 	if len(confListen) > 1 && port != "" && port != confListen[1] {
 		listen = fmt.Sprintf("%s:%s", confListen[0], port)
-		log.Infof("main/main: Overriding listen addr from config %s with new port from the commandline: %s", serviceConf.Server.Listen, listen)
+		log.Debugf("main/main: Overriding listen addr from config %s with new port from the commandline: %s", serviceConf.Server.Listen, listen)
 	} else {
 		listen = serviceConf.Server.Listen
 	}
@@ -135,7 +135,7 @@ func parseArgs(args []string) (serviceFile string, port string, err error) {
 	fset.StringVar(&serviceFile, "c", "autograph-service.yaml", "Path to service configuration file")
 	fset.StringVar(&port, "p", "", "Port to listen on. Overrides the listen var from the config file")
 	// https://github.com/sirupsen/logrus#level-logging
-	fset.StringVar(&logLevel, "l", "warning", "Set the logging level. Optional defaulting to info. Options: panic, fatal, error, warning, info, debug, and trace")
+	fset.StringVar(&logLevel, "l", "info", "Set the logging level. Optional defaulting to info. Options: panic, fatal, error, warning, info, debug, and trace")
 	err = fset.Parse(args)
 	if err != nil {
 		log.Fatalf("main/parseArgs: Failed to parse flags: %v", err)
@@ -146,7 +146,7 @@ func parseArgs(args []string) (serviceFile string, port string, err error) {
 			log.Fatalf("main/parseArgs: Error parsing log level: %s", err)
 		}
 		log.SetLevel(level)
-		log.Infof("main/parseArgs: Set logging level to %s", level)
+		log.Debugf("main/parseArgs: Set logging level to %s", level)
 	}
 	return
 }
@@ -178,7 +178,7 @@ func loadSignerConfig(db *database.Handler) (*signerConfig, error) {
 
 func loadSignerSecrets(gcpProjectId string, signerConf signerConfig) error {
 	if len(signerConf.Signers) < 1 {
-		log.Warn("main/loadSignerSecrets: No signers to check secrets for. . Skipping loadSignerSecrets.")
+		log.Warn("main/loadSignerSecrets: No signers to check secrets for. Skipping loadSignerSecrets.")
 		return nil
 	}
 
@@ -283,7 +283,7 @@ func run(serviceConf serviceConfig, listen string) {
 	} else {
 		ag.hawkMaxTimestampSkew = time.Minute
 	}
-	log.Infof("main/run: setting hawk timestamp skew to %s", ag.hawkMaxTimestampSkew)
+	log.Debugf("main/run: setting hawk timestamp skew to %s", ag.hawkMaxTimestampSkew)
 
 	ag.startCleanupHandler()
 
@@ -315,7 +315,7 @@ func run(serviceConf serviceConfig, listen string) {
 	}
 
 	if serviceConf.DebugServer.Listen != "" {
-		log.Infof("main/run: starting debug server on %s", serviceConf.DebugServer.Listen)
+		log.Debugf("main/run: starting debug server on %s", serviceConf.DebugServer.Listen)
 		go func() {
 			mux := mux.NewRouter()
 			mux.Handle("/metrics", promhttp.Handler())
@@ -326,7 +326,7 @@ func run(serviceConf serviceConfig, listen string) {
 					log.Fatalf("main/run: Failed to set runtime config. %s", err)
 				}
 				addProfilerHandlers(router)
-				log.Infof("main/run: enabled HTTP perf profiler")
+				log.Debugf("main/run: enabled HTTP perf profiler")
 			}
 
 			srv := http.Server{
@@ -358,7 +358,7 @@ func run(serviceConf serviceConfig, listen string) {
 		),
 	}
 
-	log.Infof("main/run: starting autograph on %s with timeouts: idle %s read %s write %s", listen, serviceConf.Server.IdleTimeout, serviceConf.Server.ReadTimeout, serviceConf.Server.WriteTimeout)
+	log.Debugf("main/run: starting autograph on %s with timeouts: idle %s read %s write %s", listen, serviceConf.Server.IdleTimeout, serviceConf.Server.ReadTimeout, serviceConf.Server.WriteTimeout)
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatalf("main/run: Failed to listen and serve. %s", err)
@@ -417,7 +417,7 @@ func (a *autographer) startCleanupHandler() {
 
 	go func() {
 		sig := <-c
-		log.Infof("autographer/startCleanupHandler: received signal %s; cleaning up signers", sig)
+		log.Debugf("autographer/startCleanupHandler: received signal %s; cleaning up signers", sig)
 		for _, s := range a.getSigners() {
 			statefulSigner, ok := s.(signer.StatefulSigner)
 			if !ok {
@@ -560,7 +560,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 		case mar.Type:
 			s, err = mar.New(signerConf)
 			if err != nil && strings.HasPrefix(err.Error(), "mar: failed to parse private key: no suitable key found") {
-				log.Infof("autographer/addSigners: Skipping signer %q from HSM", signerConf.ID)
+				log.Debugf("autographer/addSigners: Skipping signer %q from HSM", signerConf.ID)
 				continue
 			} else if err != nil {
 				log.Errorf("autographer/addSigners: failed to add signer %q: %s", signerConf.ID, err)
@@ -591,7 +591,7 @@ func (a *autographer) addSigners(signerConfs []signer.Configuration) error {
 // tools/autograph-monitor
 func (a *autographer) addMonitoring(auth authorization) (err error) {
 	if auth.Key == "" {
-		log.Infof("autographer/addMonitoring: monitoring is disabled. No key found")
+		log.Debugf("autographer/addMonitoring: monitoring is disabled. No key found")
 		return nil
 	}
 	return a.authBackend.addMonitoringAuth(auth.Key)

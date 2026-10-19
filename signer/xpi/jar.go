@@ -241,7 +241,7 @@ func repackJARWithMetafiles(input []byte, metafiles []Metafile) (output []byte, 
 				log.WithFields(log.Fields{
 					"addon_id":      addonID,
 					"addon_version": version,
-				}).Infof("signer/xpi: repacking addon")
+				}).Debugf("signer/xpi: repacking addon")
 			}
 		}
 		rc.Close()
@@ -408,7 +408,7 @@ func removeFileFromZIP(input []byte, filepath string) (output []byte, err error)
 	// Iterate through the files in the archive,
 	for _, f := range r.File {
 		if f.Name == filepath {
-			log.Infof("signer/xpi: skipping filepath path %q matching reserved name %q", f.Name, filepath)
+			log.Debugf("signer/xpi: skipping filepath path %q matching reserved name %q", f.Name, filepath)
 			continue
 		}
 

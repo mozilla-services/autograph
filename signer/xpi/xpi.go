@@ -177,14 +177,14 @@ func New(conf signer.Configuration) (s *XPISigner, err error) {
 		s.recommendationAllowedStates = conf.RecommendationConfig.AllowedStates
 		s.recommendationValidityRelativeStart = time.Duration(conf.RecommendationConfig.ValidityRelativeStart)
 		s.recommendationValidityDuration = time.Duration(conf.RecommendationConfig.ValidityDuration)
-		log.Infof("signer/xpi: set recommendation options allowed states: %+v, path: %q, start duration: %q duration: %q",
+		log.Debugf("signer/xpi: set recommendation options allowed states: %+v, path: %q, start duration: %q duration: %q",
 			s.recommendationAllowedStates,
 			s.recommendationFilePath,
 			s.recommendationValidityRelativeStart,
 			s.recommendationValidityDuration)
 	}
 	s.recommendationFilePath = conf.RecommendationConfig.FilePath
-	log.Infof("signer/xpi: signer %q is ignoring recommendation file path %q", s.ID, s.recommendationFilePath)
+	log.Debugf("signer/xpi: signer %q is ignoring recommendation file path %q", s.ID, s.recommendationFilePath)
 
 	// If the private key is rsa, sanity check the length
 	if issuerKey, ok := s.issuerKey.(*rsa.PrivateKey); ok {

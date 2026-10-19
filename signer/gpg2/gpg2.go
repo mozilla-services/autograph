@@ -266,7 +266,7 @@ func writeGPGConf(gpgHomeDir string) error {
 func (s *GPG2Signer) AtExit() error {
 	err := os.RemoveAll(s.tmpDir)
 	if err == nil {
-		log.Infof("signer/gpg2: cleaned up %s in exit handler", s.tmpDir)
+		log.Debugf("signer/gpg2: cleaned up %s in exit handler", s.tmpDir)
 	}
 	return err
 }

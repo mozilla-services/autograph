@@ -76,7 +76,7 @@ func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.S
 		"user_id":             userid,
 		"size":                reqSize,
 		"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
-	}).Info(fmt.Sprintf("signing operation failed with error: %v", err))
+	}).Warn(fmt.Sprintf("signing operation failed with error: %v", err))
 }
 
 // rewriteLocalX5U checks for X5U certificate chains using the `file://` scheme
@@ -178,7 +178,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: missing input in signature request %d", i)
 		}
 	}
-	log.Debugf("handlers/handleSignature: signature request\n-----------------\n%s\n", body)
+	log.Tracef("handlers/handleSignature: signature request\n-----------------\n%s\n", body)
 
 	sigReqsCount := len(sigreqs)
 	sigresps := make([]formats.SignatureResponse, sigReqsCount)
@@ -356,7 +356,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf("handlers/handleSignature: signature response\n------------------\n%s\n", respdata)
+	log.Tracef("handlers/handleSignature: signature response\n------------------\n%s\n", respdata)
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -367,7 +367,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	log.WithFields(log.Fields{
 		"rid":                  rid,
 		"num_signing_requests": sigReqsCount,
-	}).Info("handlers/handleSignature: signing request completed successfully")
+	}).Debug("handlers/handleSignature: signing request completed successfully")
 }
 
 // handleLBHeartbeat returns a simple message indicating that the API is alive and well
@@ -432,7 +432,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 				"rid":     rid,
 				"t":       int32(time.Since(hsmHeartbeatStartTs) / time.Millisecond),
 				"timeout": hsmHBTimeout.String(),
-			}).Info("handlers/handleHeartbeat: HSM heartbeat completed successfully")
+			}).Debug("handlers/handleHeartbeat: HSM heartbeat completed successfully")
 			result["hsmAccessible"] = true
 			status = http.StatusOK
 		} else {

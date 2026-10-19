@@ -92,7 +92,7 @@ func (db *Handler) CheckConnectionContext(ctx context.Context) error {
 // quit signal logging an error when the test query fails. It can be
 // used in a goroutine to check when the database becomes unavailable.
 func (db *Handler) Monitor(pollInterval time.Duration, quit chan bool) {
-	log.Infof("database/Monitor: starting DB monitor polling every %s", pollInterval)
+	log.Debugf("database/Monitor: starting DB monitor polling every %s", pollInterval)
 	for {
 		select {
 		case <-time.After(pollInterval):
@@ -101,7 +101,7 @@ func (db *Handler) Monitor(pollInterval time.Duration, quit chan bool) {
 				log.Error(err)
 			}
 		case <-quit:
-			log.Info("database/Monitor: Shutting down DB monitor")
+			log.Debug("database/Monitor: Shutting down DB monitor")
 			return
 		}
 	}

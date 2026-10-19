@@ -88,7 +88,7 @@ func (s *XPISigner) generateCOSEKeyPair(coseAlg *cose.Algorithm) (eeKey crypto.P
 				size = pubKeySize
 			}
 		default:
-			log.Infof("signer/xpi: using default RSA key size %d since issuer key type %T is not RSA", size, key)
+			log.Debugf("signer/xpi: using default RSA key size %d since issuer key type %T is not RSA", size, key)
 		}
 		eeKey, err = s.getRsaKey(size)
 		if err != nil {
