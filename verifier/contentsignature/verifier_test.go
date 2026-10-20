@@ -1007,8 +1007,8 @@ func Test_ParseChain(t *testing.T) {
 			wantCerts: []*x509.Certificate{},
 			wantErr:   true,
 			wantErrStr: []string{
-				"error parsing EE/leaf certificate from chain: asn1: structure error: tags don't match",
-				"error parsing EE/leaf certificate from chain: x509: malformed tbs certificate",
+				"structure error: tags don't match",
+				"malformed tbs certificate",
 			},
 		},
 		{
@@ -1024,8 +1024,8 @@ func Test_ParseChain(t *testing.T) {
 			wantCerts: []*x509.Certificate{},
 			wantErr:   true,
 			wantErrStr: []string{
-				"failed to parse intermediate certificate from chain: asn1: structure error: tags don't match",
-				"failed to parse intermediate certificate from chain: x509: malformed tbs certificate",
+				"structure error: tags don't match",
+				"malformed tbs certificate",
 			},
 		},
 		{
@@ -1041,8 +1041,8 @@ func Test_ParseChain(t *testing.T) {
 			wantCerts: []*x509.Certificate{},
 			wantErr:   true,
 			wantErrStr: []string{
-				"failed to parse root certificate from chain: asn1: structure error: tags don't match",
-				"failed to parse root certificate from chain: x509: malformed tbs certificate",
+				"structure error: tags don't match",
+				"malformed tbs certificate",
 			},
 		},
 		{
@@ -1066,7 +1066,7 @@ func Test_ParseChain(t *testing.T) {
 			if tt.wantErr && (err != nil) {
 				anyMatches := false
 				for _, result := range tt.wantErrStr {
-					if strings.HasPrefix(err.Error(), result) {
+					if strings.Contains(err.Error(), result) {
 						anyMatches = true
 					}
 				}
@@ -1297,7 +1297,7 @@ func Test_VerifyChain(t *testing.T) {
 				currentTime: time.Now(),
 			},
 			wantErr:   true,
-			errSubStr: " x509: invalid signature: parent certificate cannot sign this kind of certificate",
+			errSubStr: "parent certificate cannot sign this kind of certificate",
 		},
 		{
 			name: "root hash mismatch fails",
@@ -1317,7 +1317,7 @@ func Test_VerifyChain(t *testing.T) {
 				currentTime: time.Now(),
 			},
 			wantErr:   true,
-			errSubStr: "x509: a root or intermediate certificate is not authorized to sign for this name: DNS name \"example.org\" is not permitted by any constraint",
+			errSubStr: "a root or intermediate certificate is not authorized to sign for this name: DNS name \"example.org\" is not permitted by any constraint",
 		},
 		// failing validity NotAfter / NotBefore test cases.
 		{

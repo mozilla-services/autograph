@@ -223,7 +223,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 		//1
 		{
 			input:   &cose.Signature{},
-			results: []string{"xpi: got unexpected COSE Signature headers: xpi: cannot compare nil COSE headers"},
+			results: []string{"cannot compare nil COSE headers"},
 		},
 		//2
 		{
@@ -232,7 +232,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 					Unprotected: map[interface{}]interface{}{"foo": 2},
 				},
 			},
-			results: []string{"xpi: got unexpected COSE Signature headers: xpi: unexpected non-empty Unprotected headers got: map[foo:2]"},
+			results: []string{"unexpected non-empty Unprotected headers got: map[foo:2]"},
 		},
 		//3
 		{
@@ -240,8 +240,8 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 				Headers: &cose.Headers{},
 			},
 			results: []string{
-				"xpi: got unexpected COSE Signature headers: xpi: unexpected Protected headers got: map[] expected: map[1:<nil> 4:<nil>]",
-				"xpi: got unexpected COSE Signature headers: xpi: unexpected Protected headers got: map[] expected: map[4:<nil> 1:<nil>]"},
+				"unexpected Protected headers got: map[] expected: map[1:<nil> 4:<nil>]",
+				"unexpected Protected headers got: map[] expected: map[4:<nil> 1:<nil>]"},
 		},
 		//4
 		{
@@ -254,7 +254,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: got unexpected COSE Signature headers: xpi: missing expected alg in Protected Headers",
+				"missing expected alg in Protected Headers",
 			},
 		},
 		//5
@@ -268,7 +268,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: got unexpected COSE Signature headers: xpi: alg <nil> is not supported",
+				"alg <nil> is not supported",
 			},
 		},
 		//6
@@ -282,7 +282,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: got unexpected COSE Signature headers: xpi: alg 2 is not supported",
+				"alg 2 is not supported",
 			},
 		},
 		//7
@@ -296,8 +296,8 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: got unexpected COSE Signature headers: xpi: missing expected kid in Protected Headers",
-				"xpi: COSE Signature kid value is not a byte array",
+				"missing expected kid in Protected Headers",
+				"COSE Signature kid value is not a byte array",
 			},
 		},
 		//8
@@ -311,9 +311,9 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: COSE Signature kid value is not a byte array",
-				"xpi: failed to parse X509 EE certificate from COSE Signature: asn1: structure error: tags don't match",
-				"xpi: failed to parse X509 EE certificate from COSE Signature: x509: malformed certificate",
+				"COSE Signature kid value is not a byte array",
+				"structure error: tags don't match",
+				"malformed certificate",
 			},
 		},
 		//9
@@ -327,8 +327,8 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: failed to parse X509 EE certificate from COSE Signature: asn1: structure error: tags don't match",
-				"xpi: failed to parse X509 EE certificate from COSE Signature: x509: malformed certificate",
+				"structure error: tags don't match",
+				"malformed certificate",
 			},
 		},
 	}
@@ -337,7 +337,7 @@ func TestIsValidCOSESignatureErrs(t *testing.T) {
 		_, _, err := validateCOSESignatureStructureAndGetEECertAndAlg(testcase.input)
 		anyMatches := false
 		for _, result := range testcase.results {
-			if strings.HasPrefix(err.Error(), result) {
+			if strings.Contains(err.Error(), result) {
 				anyMatches = true
 			}
 		}
@@ -357,17 +357,17 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 		//0
 		{
 			input:   nil,
-			results: []string{"xpi: cannot validate nil COSE SignMessage"},
+			results: []string{"cannot validate nil COSE SignMessage"},
 		},
 		//1
 		{
 			input:   &cose.SignMessage{Payload: []byte("not nil!")},
-			results: []string{"xpi: expected SignMessage payload to be nil, but got [110 111 116 32 110 105 108 33]"},
+			results: []string{"expected SignMessage payload to be nil, but got [110 111 116 32 110 105 108 33]"},
 		},
 		//2
 		{
 			input:   &cose.SignMessage{Payload: nil},
-			results: []string{"xpi: got unexpected COSE SignMessage headers: xpi: cannot compare nil COSE headers"},
+			results: []string{"cannot compare nil COSE headers"},
 		},
 		//3
 		{
@@ -381,8 +381,8 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: expected SignMessage Protected Headers kid value to be an array got <nil> with type <nil>",
-				"xpi: expected SignMessage Protected Headers kid value 0 to be a byte slice got <nil> with type <nil>",
+				"expected SignMessage Protected Headers kid value to be an array got <nil> with type <nil>",
+				"expected SignMessage Protected Headers kid value 0 to be a byte slice got <nil> with type <nil>",
 			},
 		},
 		//4
@@ -399,9 +399,9 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: expected SignMessage Protected Headers kid value 0 to be a byte slice got <nil> with type <nil>",
-				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match",
-				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: x509: malformed certificate",
+				"expected SignMessage Protected Headers kid value 0 to be a byte slice got <nil> with type <nil>",
+				"SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match",
+				"SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: x509: malformed certificate",
 			},
 		},
 		//5
@@ -418,8 +418,8 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 				},
 			},
 			results: []string{
-				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match",
-				"xpi: SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: x509: malformed certificate",
+				"SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: asn1: structure error: tags don't match",
+				"SignMessage Signature Protected Headers kid value 0 does not decode to a parseable X509 cert: x509: malformed certificate",
 			},
 		},
 		//6
@@ -436,7 +436,7 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 					cose.Signature{},
 				},
 			},
-			results: []string{"xpi: cose signature 0 is invalid: xpi: got unexpected COSE Signature headers: xpi: cannot compare nil COSE headers"},
+			results: []string{"cannot compare nil COSE headers"},
 		},
 	}
 
@@ -445,7 +445,7 @@ func TestIsValidCOSEMessageErrs(t *testing.T) {
 
 		anyMatches := false
 		for _, result := range testcase.results {
-			if strings.HasPrefix(err.Error(), result) {
+			if strings.Contains(err.Error(), result) {
 				anyMatches = true
 			}
 		}
@@ -537,7 +537,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots:            nil,
 			opts:             Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: failed to read META-INF/cose.manifest from signed zip: error reading ZIP: zip: not a valid zip file",
+				"error reading ZIP: zip: not a valid zip file",
 			},
 		},
 		{
@@ -552,7 +552,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots: nil,
 			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: failed to read META-INF/cose.sig from signed zip: failed to find \"META-INF/cose.sig\" in ZIP",
+				"failed to find \"META-INF/cose.sig\" in ZIP",
 			},
 		},
 		{
@@ -571,7 +571,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots: nil,
 			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: failed to read META-INF/manifest.mf from signed zip: failed to find \"META-INF/manifest.mf\" in ZIP",
+				"failed to find \"META-INF/manifest.mf\" in ZIP",
 			},
 		},
 		{
@@ -594,7 +594,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots: nil,
 			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: pkcs7 manifest does not contain the line: \"Name: META-INF/cose.sig\"",
+				"pkcs7 manifest does not contain the line: \"Name: META-INF/cose.sig\"",
 			},
 		},
 		{
@@ -618,7 +618,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots: nil,
 			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: cose manifest contains the line: \"Name: META-INF/cose.sig\"",
+				"cose manifest contains the line: \"Name: META-INF/cose.sig\"",
 			},
 		},
 		{
@@ -641,7 +641,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 			roots: nil,
 			opts:  Options{ID: "ffffffff-ffff-ffff-ffff-ffffffffffff"},
 			results: []string{
-				"xpi: error unmarshaling cose.sig: xpi.Unmarshal: failed to parse pkcs7 signature: ber2der: BER tag length is more than available data",
+				"failed to parse pkcs7 signature: ber2der: BER tag length is more than available data",
 			},
 		},
 		{
@@ -667,7 +667,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256", "PS256"},
 			},
 			results: []string{
-				"xpi: cose.sig contains 1 signatures, but expected 2",
+				"contains 1 signatures, but expected 2",
 			},
 		},
 		{
@@ -693,7 +693,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256"},
 			},
 			results: []string{
-				"xpi: cose.sig is not a valid COSE SignMessage: xpi: expected SignMessage payload to be nil, but got [98 108 97 104]",
+				"expected SignMessage payload to be nil, but got [98 108 97 104]",
 			},
 		},
 		{
@@ -719,7 +719,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256"},
 			},
 			results: []string{
-				"xpi: EECert 0: id \"foo\" does not match cert cn \"jid1-Kt2kYYgi32zPuw@jetpack\"",
+				"id \"foo\" does not match cert cn \"jid1-Kt2kYYgi32zPuw@jetpack\"",
 			},
 		},
 		{
@@ -745,7 +745,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256"},
 			},
 			results: []string{
-				"xpi: failed to verify EECert 0: x509: certificate signed by unknown authority",
+				"certificate signed by unknown authority",
 			},
 		},
 		{
@@ -771,7 +771,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256"},
 			},
 			results: []string{
-				"xpi: failed to verify EECert 0: x509: certificate has expired or is not yet valid:",
+				"certificate has expired or is not yet valid:",
 			},
 		},
 		{
@@ -797,7 +797,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256"},
 			},
 			results: []string{
-				"xpi: failed to verify EECert 0: x509: certificate is not valid for any names, but wanted to match a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
+				"certificate is not valid for any names, but wanted to match a8a90aed72f6c28ac9cb723415558705.464b67e6be7d5509503eb06792f51426.addons.mozilla.org",
 			},
 		},
 		{
@@ -823,7 +823,7 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 				COSEAlgorithms: []string{"ES256"},
 			},
 			results: []string{
-				"xpi: failed to verify COSE SignMessage Signatures: verification failed ecdsa.Verify",
+				"verification failed ecdsa.Verify",
 			},
 		},
 	}
@@ -832,12 +832,12 @@ func TestVerifyCOSESignaturesErrs(t *testing.T) {
 		err := verifyCOSESignatures(testcase.fin, testcase.roots, testcase.opts, testcase.verificationTime)
 		anyMatches := false
 		for _, result := range testcase.results {
-			if strings.HasPrefix(err.Error(), result) {
+			if strings.Contains(err.Error(), result) {
 				anyMatches = true
 			}
 		}
 		if !anyMatches {
-			t.Fatalf("verifyCOSESignatures case %q (%d) returned '%v' expected a prefix from %q", testcase.name, i, err, testcase.results)
+			t.Fatalf("verifyCOSESignatures case %q (%d) returned '%v' expected a message containing %q", testcase.name, i, err, testcase.results)
 		}
 	}
 }

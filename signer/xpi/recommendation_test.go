@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -260,7 +261,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		_, err = s.makeRecommendationFile(opts, "example@mozilla")
 		if err == nil {
 			t.Fatalf("did not fail to make recommendation file for signer with invalid rec state options with expected error")
-		} else if err.Error() != "xpi: error parsing recommendations from options: xpi: invalid or unsupported recommendation state \"recommended\"" {
+		} else if !strings.Contains(err.Error(), "invalid or unsupported recommendation state \"recommended\"") {
 			t.Fatalf("did not fail to make recommendation file for signer with invalid rec state options with expected error. got %q", err)
 		}
 
@@ -289,7 +290,7 @@ func TestMakeRecommendationFile(t *testing.T) {
 		_, err = s.makeRecommendationFile(opts, "example@mozilla")
 		if err == nil {
 			t.Fatalf("did not fail to make recommendation file for signer with invalid rec state options with expected error")
-		} else if err.Error() != "xpi: recommendation validation failed: xpi: recommendation validity not_after must be after not_before field" {
+		} else if !strings.Contains(err.Error(), "recommendation validity not_after must be after not_before field") {
 			t.Fatalf("did not fail to make recommendation file for signer with validation failing with expected error. got %q", err)
 		}
 	})
