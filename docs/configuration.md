@@ -194,3 +194,14 @@ be used with the following self-signed certificate:
 >     vxT5RAdzQRp9/l3OqnUP+kK42tRk05c9UGDFXLLVH/4CMH/ZmcpvtM0sCjeAWzGs
 >     gnw91z0443965WZmaeBKpbinxB1PpnNMCnPhd9J/Hz40+Q==
 >     -----END CERTIFICATE-----
+
+
+
+## Running autograph locally or in automated tests with your client application
+
+A minimal example using docker compose that will run autograph with a test
+signer can be found under [docs/local-example](./local-example/docker-compose.yml).
+You can use this as a reference implementation to run a local autograph
+instance for local dev or integration testing with your application.
+
+Example added in [PR 1267](https://github.com/mozilla-services/autograph/pull/1267/changes).

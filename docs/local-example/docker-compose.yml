@@ -1,0 +1,32 @@
+services:
+  autograph-db:
+    image: postgres:18
+    environment:
+      - POSTGRES_DB=autograph
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      # initdb scripts are ran in alphabetical order
+      - ./pg-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "autograph"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  autograph-app:
+    image: mozilla/autograph
+    ports:
+      - 8000:8000
+    depends_on:
+      autograph-db:
+        condition: service_healthy
+    volumes:
+      - ./my-service-config.yml:/app/my-service-config.yml
+    command: /go/bin/autograph -c /app/my-service-config.yml
+    # overriding default unit test config with ours
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/__heartbeat__"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
