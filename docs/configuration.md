@@ -197,8 +197,9 @@ be used with the following self-signed certificate:
 
 
 
-## Running autograph with your client application
+## Running autograph locally or in automated tests with your client application
 
-You can run run autograph with your client application locally or in automated
-tests. A minimal example using docker compose that will run autograph with a
-test signer can be found under [docs/local-example](./local-example/docker-compose.yml).
+A minimal example using docker compose that will run autograph with a test
+signer can be found under [docs/local-example](./local-example/docker-compose.yml).
+You can use this as a reference implementation to run a local autograph
+instance for dev or testing.
