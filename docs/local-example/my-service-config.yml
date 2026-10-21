@@ -1,0 +1,21 @@
+server:
+    listen: "0.0.0.0:8000"
+    noncecachesize: 524288
+    idletimeout: 60s
+    readtimeout: 60s
+    writetimeout: 60s
+
+database:
+    name: autograph
+    user: myautographdbuser
+    password: myautographdbpassword
+    host: autograph-db:5432
+    maxopenconns: 100
+    maxidleconns: 10
+    monitorpollinterval: 10s
+
+heartbeat:
+    hsmchecktimeout: 100ms
+    dbchecktimeout: 150ms
+
+hawktimestampvalidity: 10m
