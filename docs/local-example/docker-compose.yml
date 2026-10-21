@@ -15,7 +15,6 @@ services:
       start_period: 5s
 
   autograph-app:
-    platform: linux/amd64
     image: mozilla/autograph
     ports:
       - 8000:8000
