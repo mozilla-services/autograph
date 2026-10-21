@@ -24,6 +24,7 @@ services:
     volumes:
       - ./my-service-config.yml:/app/my-service-config.yml
     command: /go/bin/autograph -c /app/my-service-config.yml
+    # overriding default unit test config with ours
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/__heartbeat__"]
       interval: 60s
