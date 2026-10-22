@@ -37,6 +37,7 @@ import (
 
 	"github.com/googleapis/gax-go/v2/apierror"
 	"github.com/googleapis/gax-go/v2/callctx"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // APICall is a user defined call stub.
@@ -77,7 +78,7 @@ func Sleep(ctx context.Context, d time.Duration) error {
 type sleeper func(ctx context.Context, d time.Duration) error
 
 // invoke implements Invoke, taking an additional sleeper argument for testing.
-func invoke(ctx context.Context, call APICall, settings CallSettings, sp sleeper) error {
+func invoke(ctx context.Context, call APICall, settings CallSettings, sp sleeper) (err error) {
 	var retryer Retryer
 
 	// Only use the value provided via WithTimeout if the context doesn't
@@ -89,15 +90,48 @@ func invoke(ctx context.Context, call APICall, settings CallSettings, sp sleeper
 		ctx = c
 	}
 
-	retryCount := 0
-	// Feature gate: GOOGLE_SDK_GO_EXPERIMENTAL_TRACING=true
+	metricsEnabled := IsFeatureEnabled("METRICS")
 	tracingEnabled := IsFeatureEnabled("TRACING")
+	loggingEnabled := IsFeatureEnabled("LOGGING")
+
+	retryCount := 0
+	if metricsEnabled || tracingEnabled || loggingEnabled {
+		var start time.Time
+		if metricsEnabled {
+			start = time.Now()
+		}
+		if ExtractTransportTelemetry(ctx) == nil {
+			ctx = InjectTransportTelemetry(ctx, &TransportTelemetryData{})
+		}
+
+		var span trace.Span
+		if tracingEnabled {
+			ctx, span = startSpan(ctx, settings.clientTracing)
+		}
+
+		defer func() {
+			if !metricsEnabled && !tracingEnabled && err == nil {
+				return
+			}
+			errInfo := ExtractTelemetryErrorInfo(ctx, err)
+			if metricsEnabled {
+				recordMetricWithInfo(ctx, settings, time.Since(start), &errInfo)
+			}
+			if tracingEnabled {
+				endSpan(ctx, span, &errInfo, err)
+			}
+			if loggingEnabled && err != nil {
+				recordActionableLog(ctx, settings.clientLogging, &errInfo, retryCount, err)
+			}
+		}()
+	}
+
 	for {
 		ctxToUse := ctx
 		if tracingEnabled {
 			ctxToUse = withRetryCount(ctx, retryCount)
 		}
-		err := call(ctxToUse, settings)
+		err = call(ctxToUse, settings)
 		if err == nil {
 			return nil
 		}
