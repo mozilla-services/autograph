@@ -65,23 +65,23 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	s.PrivateKey = conf.PrivateKey
 	s.X5U = conf.X5U
 	if conf.Type != Type {
-		return nil, fmt.Errorf("contentsignature: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("signer/contentsignature: invalid type %q, must be %q", conf.Type, Type)
 	}
 	if conf.ID == "" {
-		return nil, fmt.Errorf("contentsignature: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("signer/contentsignature: missing signer ID in signer configuration")
 	}
 	if conf.PrivateKey == "" {
-		return nil, fmt.Errorf("contentsignature: missing private key in signer configuration")
+		return nil, fmt.Errorf("signer/contentsignature: missing private key in signer configuration")
 	}
 	s.rand = conf.GetRand()
 	s.priv, s.pub, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		return nil, fmt.Errorf("contentsignature: failed to retrieve signer: %w", err)
+		return nil, fmt.Errorf("signer/contentsignature: failed to retrieve signer: %w", err)
 	}
 	switch s.pub.(type) {
 	case *ecdsa.PublicKey:
 	default:
-		return nil, fmt.Errorf("contentsignature: invalid private key algorithm, must be ecdsa")
+		return nil, fmt.Errorf("signer/contentsignature: invalid private key algorithm, must be ecdsa")
 	}
 	s.Mode = s.getModeFromCurve()
 	return
@@ -103,7 +103,7 @@ func (s *ContentSigner) Config() signer.Configuration {
 // The returned signature is of type ContentSignature and ready to be Marshalled.
 func (s *ContentSigner) SignData(input []byte, options interface{}) (signer.Signature, error) {
 	if len(input) < 10 {
-		return nil, fmt.Errorf("contentsignature: refusing to sign input data shorter than 10 bytes")
+		return nil, fmt.Errorf("signer/contentsignature: refusing to sign input data shorter than 10 bytes")
 	}
 
 	alg, hash := makeTemplatedHash(input, s.Mode)
@@ -145,7 +145,7 @@ func makeTemplatedHash(data []byte, curvename string) (alg string, out []byte) {
 // has already been hashed with something like sha384
 func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Signature, error) {
 	if len(input) != 32 && len(input) != 48 && len(input) != 64 {
-		return nil, fmt.Errorf("contentsignature: refusing to sign input hash. length %d, expected 32, 48 or 64", len(input))
+		return nil, fmt.Errorf("signer/contentsignature: refusing to sign input hash. length %d, expected 32, 48 or 64", len(input))
 	}
 	var (
 		err  error
@@ -160,12 +160,12 @@ func (s *ContentSigner) SignHash(input []byte, options interface{}) (signer.Sign
 
 	asn1Sig, err := s.priv.(crypto.Signer).Sign(s.rand, input, nil)
 	if err != nil {
-		return nil, fmt.Errorf("contentsignature: failed to sign hash: %w", err)
+		return nil, fmt.Errorf("signer/contentsignature: failed to sign hash: %w", err)
 	}
 	var ecdsaSig ecdsaAsn1Signature
 	_, err = asn1.Unmarshal(asn1Sig, &ecdsaSig)
 	if err != nil {
-		return nil, fmt.Errorf("contentsignature: failed to parse signature: %w", err)
+		return nil, fmt.Errorf("signer/contentsignature: failed to parse signature: %w", err)
 	}
 	csig.R = ecdsaSig.R
 	csig.S = ecdsaSig.S
@@ -178,7 +178,7 @@ func VerifyResponseHash(hash []byte, sr formats.SignatureResponse) error {
 	// parse the encoded ECDSA signature
 	sig, err := verifier.Unmarshal(sr.Signature)
 	if err != nil {
-		return fmt.Errorf("error unmarshal content signature: %w", err)
+		return fmt.Errorf("signer/contentsignature: error unmarshal content signature: %w", err)
 	}
 
 	// Parse the ECDSA public key
@@ -194,7 +194,7 @@ func VerifyResponseHash(hash []byte, sr formats.SignatureResponse) error {
 
 	// Verify the signature
 	if !ecdsa.Verify(pubKey, hash, sig.R, sig.S) {
-		return fmt.Errorf("ecdsa signature verification failed")
+		return fmt.Errorf("signer/contentsignature: ecdsa signature verification failed")
 	}
 	return nil
 }

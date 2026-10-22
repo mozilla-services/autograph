@@ -31,7 +31,7 @@ func httpError(w http.ResponseWriter, r *http.Request, errorCode int, errorMessa
 	if r.Body != nil {
 		_, err := io.Copy(io.Discard, r.Body)
 		if err != nil {
-			log.Errorf("error while copying discard: %v", err)
+			log.Errorf("errors/httpError: error while copying discard: %v", err)
 		}
 		r.Body.Close()
 	}

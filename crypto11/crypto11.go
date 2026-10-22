@@ -274,7 +274,7 @@ func Configure(config *PKCS11Config, factory PKCS11ContextFactory) (PKCS11Contex
 		return nil, ErrNotConfigured
 	}
 	if instance.ctx != nil {
-		log.Printf("PKCS#11 library already configured")
+		log.Printf("crypto11/Configure: PKCS#11 library already configured")
 		return instance.ctx, nil
 	}
 
@@ -289,17 +289,17 @@ func Configure(config *PKCS11Config, factory PKCS11ContextFactory) (PKCS11Contex
 
 	instance.ctx = p11Ctx
 	if err = instance.ctx.Initialize(); err != nil {
-		log.Printf("Failed to initialize PKCS#11 library: %s", err.Error())
+		log.Printf("crypto11/Configure: Failed to initialize PKCS#11 library: %s", err.Error())
 		return nil, err
 	}
 	if slots, err = instance.ctx.GetSlotList(true); err != nil {
-		log.Printf("Failed to list PKCS#11 Slots: %s", err.Error())
+		log.Printf("crypto11/Configure: Failed to list PKCS#11 Slots: %s", err.Error())
 		return nil, err
 	}
 
 	instance.slot, instance.token, err = findToken(slots, config.TokenSerial, config.TokenLabel)
 	if err != nil {
-		log.Printf("Failed to find Token in any Slot: %s", err.Error())
+		log.Printf("crypto11/Configure: Failed to find Token in any Slot: %s", err.Error())
 		return nil, err
 	}
 
@@ -335,7 +335,7 @@ func Configure(config *PKCS11Config, factory PKCS11ContextFactory) (PKCS11Contex
 func ConfigureFromFile(configLocation string) (PKCS11Context, error) {
 	file, err := os.Open(configLocation)
 	if err != nil {
-		log.Printf("Could not open config file: %s", configLocation)
+		log.Printf("crypto11/ConfigureFromFile: Could not open config file: %s", configLocation)
 		return nil, err
 	}
 	defer func() {
@@ -349,7 +349,7 @@ func ConfigureFromFile(configLocation string) (PKCS11Context, error) {
 	config := &PKCS11Config{}
 	err = configDecoder.Decode(config)
 	if err != nil {
-		log.Printf("Could decode config file: %s", err.Error())
+		log.Printf("crypto11/ConfigureFromFile: Could decode config file: %s", err.Error())
 		return nil, err
 	}
 	return Configure(config, NewDefaultPKCS11Context)

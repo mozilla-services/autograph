@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
+	"strings"
 	"testing"
 
 	"github.com/mozilla-services/autograph/signer"
@@ -112,7 +113,7 @@ func TestSignDataWithBadSigAlg(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected to fail signing but succeeded")
 	}
-	if err.Error() != "mar: failed to hash input: unsupported signature algorithm" {
+	if !strings.Contains(err.Error(), "failed to hash input: unsupported signature algorithm") {
 		t.Fatalf("expected to fail with unsupported signature algorithm but failed with: %v", err)
 	}
 }
@@ -135,7 +136,7 @@ BLzIeIhb7Kx//dd/6o+W7wd/X9kpA1nQpNy+uAZEbg==
 	if err == nil {
 		t.Fatal("expected to fail on unknown curve but succeeded")
 	}
-	if err.Error() != `mar: elliptic curve "P-521" is not supported` {
+	if !strings.Contains(err.Error(), `elliptic curve "P-521" is not supported`) {
 		t.Fatalf("expected to fail on unsupported P-521 curve but failed with: %v", err)
 	}
 }

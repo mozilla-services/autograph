@@ -41,7 +41,7 @@ func (s *ContentSigner) findAndSetEE(conf signer.Configuration) (err error) {
 	s.rand = conf.GetRand()
 	s.eePriv, s.eePub, s.PublicKey, err = conf.GetKeys()
 	if err != nil {
-		err = fmt.Errorf("found suitable end-entity labeled %q in database but not in hsm: %w", s.eeLabel, err)
+		err = fmt.Errorf("signer/contentsignaturepki: found suitable end-entity labeled %q in database but not in hsm: %w", s.eeLabel, err)
 		return
 	}
 	return
@@ -53,19 +53,19 @@ func (s *ContentSigner) makeAndSaveChain() (err error) {
 	var fullChain, chainName string
 	fullChain, chainName, err = s.makeChain()
 	if err != nil {
-		return fmt.Errorf("failed to make chain: %w", err)
+		return fmt.Errorf("signer/contentsignaturepki: failed to make chain: %w", err)
 	}
 	err = os.MkdirAll(s.chainLocation, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create chain directory: %w", err)
+		return fmt.Errorf("signer/contentsignaturepki: failed to create chain directory: %w", err)
 	}
 	err = os.WriteFile(path.Join(s.chainLocation, chainName), []byte(fullChain), 0644)
 	if err != nil {
-		return fmt.Errorf("failed to write chain: %w", err)
+		return fmt.Errorf("signer/contentsignaturepki: failed to write chain: %w", err)
 	}
 	newX5U, err := url.JoinPath(s.X5U, chainName)
 	if err != nil {
-		return fmt.Errorf("Invalid x5u URI: %w", err)
+		return fmt.Errorf("signer/contentsignaturepki: Invalid x5u URI: %w", err)
 	}
 	s.X5U = newX5U
 	return
@@ -77,7 +77,7 @@ func (s *ContentSigner) makeAndSaveChain() (err error) {
 func GetX5U(client *http.Client, x5u string) (body []byte, certs []*x509.Certificate, err error) {
 	parsedURL, err := url.Parse(x5u)
 	if err != nil {
-		err = fmt.Errorf("failed to parse chain upload location: %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to parse chain upload location: %w", err)
 		return
 	}
 	if parsedURL.Scheme == "file" {
@@ -87,28 +87,28 @@ func GetX5U(client *http.Client, x5u string) (body []byte, certs []*x509.Certifi
 	}
 	resp, err := client.Get(x5u)
 	if err != nil {
-		err = fmt.Errorf("failed to retrieve x5u: %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to retrieve x5u: %w", err)
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("failed to retrieve x5u from %s: %s", x5u, resp.Status)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to retrieve x5u from %s: %s", x5u, resp.Status)
 		return
 	}
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
-		err = fmt.Errorf("failed to parse x5u body: %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to parse x5u body: %w", err)
 		return
 	}
 	certs, err = verifier.ParseChain(body)
 	if err != nil {
-		err = fmt.Errorf("failed to parse x5u : %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to parse x5u : %w", err)
 		return
 	}
 	rootHash := strings.ToUpper(fmt.Sprintf("%x", sha256.Sum256(certs[2].Raw)))
 	err = verifier.VerifyChain([]string{rootHash}, certs, time.Now())
 	if err != nil {
-		err = fmt.Errorf("failed to verify certificate chain: %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to verify certificate chain: %w", err)
 		return
 	}
 	return
@@ -130,12 +130,12 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 
 	block, _ := pem.Decode([]byte(s.IssuerCert))
 	if block == nil || block.Type != "CERTIFICATE" {
-		err = fmt.Errorf("no pem block found in signer public key configuration")
+		err = fmt.Errorf("signer/contentsignaturepki: no pem block found in signer public key configuration")
 		return
 	}
 	issuer, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		err = fmt.Errorf("failed to parse issuer certificate from chain: %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to parse issuer certificate from chain: %w", err)
 		return
 	}
 	crtTpl := &x509.Certificate{
@@ -158,14 +158,14 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 
 	certBytes, err := x509.CreateCertificate(s.rand, crtTpl, issuer, s.eePub, s.issuerPriv)
 	if err != nil {
-		err = fmt.Errorf("failed to issue end-entity cert: %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to issue end-entity cert: %w", err)
 		return
 	}
 
 	var certPem bytes.Buffer
 	err = pem.Encode(&certPem, &pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
 	if err != nil {
-		err = fmt.Errorf("failed to PEM encode end-entity cert: %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to PEM encode end-entity cert: %w", err)
 		return
 	}
 
@@ -174,7 +174,7 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	root := x509.NewCertPool()
 	ok := root.AppendCertsFromPEM([]byte(s.caCert))
 	if !ok {
-		err = fmt.Errorf("failed to load root cert")
+		err = fmt.Errorf("signer/contentsignaturepki: failed to load root cert")
 		return
 	}
 	inter := x509.NewCertPool()
@@ -186,12 +186,12 @@ func (s *ContentSigner) makeChain() (chain string, name string, err error) {
 	}
 	cert, err := x509.ParseCertificate(certBytes)
 	if err != nil {
-		err = fmt.Errorf("failed to parse end-entity certificate: %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to parse end-entity certificate: %w", err)
 		return
 	}
 	_, err = cert.Verify(opts)
 	if err != nil {
-		err = fmt.Errorf("failed to verify certificate: %w", err)
+		err = fmt.Errorf("signer/contentsignaturepki: failed to verify certificate: %w", err)
 		return
 	}
 

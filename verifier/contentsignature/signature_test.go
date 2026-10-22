@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/big"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -105,7 +106,7 @@ func TestContentSignature_Marshal(t *testing.T) {
 			},
 			wantStr:    "",
 			wantErr:    true,
-			wantErrStr: "contentsignature.Marshal: unfinished cannot be encoded",
+			wantErrStr: "unfinished cannot be encoded",
 		},
 		{
 			name: "Marshal invalid signature length errs",
@@ -115,13 +116,13 @@ func TestContentSignature_Marshal(t *testing.T) {
 			},
 			wantStr:    "",
 			wantErr:    true,
-			wantErrStr: "contentsignature.Marshal: invalid signature length 1",
+			wantErrStr: "invalid signature length 1",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotStr, err := tt.sig.Marshal()
-			if tt.wantErr && (err != nil) && err.Error() != tt.wantErrStr {
+			if tt.wantErr && (err != nil) && !strings.Contains(err.Error(), tt.wantErrStr) {
 				t.Errorf("Unmarshal() error.Error() = '%s', wanted wantErrStr '%s'", err, tt.wantErrStr)
 			}
 			if (err != nil) != tt.wantErr {
@@ -181,7 +182,7 @@ func TestUnmarshal(t *testing.T) {
 			},
 			wantSig:    nil,
 			wantErr:    true,
-			wantErrStr: "contentsignature: signature cannot be shorter than 30 characters, got 0",
+			wantErrStr: "signature cannot be shorter than 30 characters, got 0",
 		},
 		{
 			name: "short signature errors",
@@ -190,7 +191,7 @@ func TestUnmarshal(t *testing.T) {
 			},
 			wantSig:    nil,
 			wantErr:    true,
-			wantErrStr: "contentsignature: signature cannot be shorter than 30 characters, got 15",
+			wantErrStr: "signature cannot be shorter than 30 characters, got 15",
 		},
 		{
 			name: "invalid base64 signature errors",
@@ -199,7 +200,7 @@ func TestUnmarshal(t *testing.T) {
 			},
 			wantSig:    nil,
 			wantErr:    true,
-			wantErrStr: "contentsignature: error decoding illegal base64 data at input byte 64",
+			wantErrStr: "error decoding illegal base64 data at input byte 64",
 		},
 		{
 			name: "unknown signature length errors",
@@ -208,13 +209,13 @@ func TestUnmarshal(t *testing.T) {
 			},
 			wantSig:    nil,
 			wantErr:    true,
-			wantErrStr: "contentsignature: unknown signature length 192",
+			wantErrStr: "unknown signature length 192",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotSig, err := Unmarshal(tt.args.signature)
-			if tt.wantErr && (err != nil) && err.Error() != tt.wantErrStr {
+			if tt.wantErr && (err != nil) && !strings.Contains(err.Error(), tt.wantErrStr) {
 				t.Errorf("Unmarshal() error.Error() = '%s', wanted wantErrStr '%s'", err, tt.wantErrStr)
 			}
 			if (err != nil) != tt.wantErr {

@@ -76,7 +76,7 @@ func logSigningRequestFailure(sigreq formats.SignatureRequest, sigresp formats.S
 		"user_id":             userid,
 		"size":                reqSize,
 		"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
-	}).Info(fmt.Sprintf("signing operation failed with error: %v", err))
+	}).Warn(fmt.Sprintf("signing operation failed with error: %v", err))
 }
 
 // rewriteLocalX5U checks for X5U certificate chains using the `file://` scheme
@@ -110,22 +110,22 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		signerRequestsTiming.With(prometheus.Labels{
 			"step": "hawk_authorize_header_failed",
 		}).Observe(float64(time.Since(starttime).Milliseconds()))
-		httpError(w, r, http.StatusUnauthorized, "Extracting authorization info from header failed: %v", err)
+		httpError(w, r, http.StatusUnauthorized, "handlers/handleSignature: Extracting authorization info from header failed: %v", err)
 		return
 	}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
+		httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: failed to read request body: %s", err)
 		return
 	}
 	if r.Header.Get("Content-Type") != "application/json" {
-		httpError(w, r, http.StatusBadRequest, "invalid content type, expected application/json")
+		httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: invalid content type, expected application/json")
 		return
 	}
 	requestBodySize := len(body)
 	if requestBodySize < 10 {
 		// it's impossible to have a valid request body smaller than 10 bytes
-		httpError(w, r, http.StatusBadRequest, "empty or invalid request request body")
+		httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: empty or invalid request request body")
 		return
 	}
 	// Default max request body size set to 1.5GB
@@ -133,12 +133,12 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("MAX_BODY_SIZE_IN_MB") != "" {
 		maxBodySizeMB, err = strconv.ParseInt(os.Getenv("MAX_BODY_SIZE_IN_MB"), 10, 0)
 		if err != nil {
-			log.Fatalf("Error parsing environment variable MAX_BODY_SIZE_IN_MB: %s", err)
+			log.Fatalf("handlers/handleSignature: Error parsing environment variable MAX_BODY_SIZE_IN_MB: %s", err)
 		}
 	}
 	maxBodySizeBytes := maxBodySizeMB * 1000000
 	if int64(requestBodySize) > maxBodySizeBytes {
-		httpError(w, r, http.StatusBadRequest, "request exceeded max size of %d B", maxBodySizeBytes)
+		httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: request exceeded max size of %d B", maxBodySizeBytes)
 		return
 	}
 	err = a.authorizeBody(auth, r, body)
@@ -146,7 +146,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		"step": "authorize_finished",
 	}).Observe(float64(time.Since(starttime).Milliseconds()))
 	if err != nil {
-		httpError(w, r, http.StatusUnauthorized, "%q user authorization verification failed: %v", userid, err)
+		httpError(w, r, http.StatusUnauthorized, "handlers/handleSignature: %q user authorization verification failed: %v", userid, err)
 		return
 	}
 	var sigreqs []formats.SignatureRequest
@@ -155,32 +155,31 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		"step": "body_unmarshaled",
 	}).Observe(float64(time.Since(starttime).Milliseconds()))
 	if err != nil {
-		httpError(w, r, http.StatusBadRequest, "failed to parse request body: %v", err)
+		httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: failed to parse request body: %v", err)
 		return
 	}
 
 	for i, sigreq := range sigreqs {
 		if r.URL.RequestURI() == "/sign/files" {
 			if sigreq.Input != "" {
-				httpError(w, r, http.StatusBadRequest, "input should be empty in sign files signature request %d", i)
+				httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: input should be empty in sign files signature request %d", i)
 			}
 			if sigreq.Files == nil {
-				httpError(w, r, http.StatusBadRequest, "missing Files in sign files signature request %d", i)
+				httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: missing Files in sign files signature request %d", i)
 			}
 			if len(sigreq.Files) < MinNamedFiles {
-				httpError(w, r, http.StatusBadRequest, "Did not receive enough files to sign. Need at least %d", MinNamedFiles)
+				httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: Did not receive enough files to sign. Need at least %d", MinNamedFiles)
 				return
 			} else if len(sigreq.Files) > MaxNamedFiles {
-				httpError(w, r, http.StatusBadRequest, "Received too many files to sign (max is %d)", MaxNamedFiles)
+				httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: Received too many files to sign (max is %d)", MaxNamedFiles)
 				return
 			}
 		} else if sigreq.Input == "" {
-			httpError(w, r, http.StatusBadRequest, "missing input in signature request %d", i)
+			httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: missing input in signature request %d", i)
 		}
 	}
-	if a.debug {
-		fmt.Printf("signature request\n-----------------\n%s\n", body)
-	}
+	log.Tracef("handlers/handleSignature: signature request\n-----------------\n%s\n", body)
+
 	sigReqsCount := len(sigreqs)
 	sigresps := make([]formats.SignatureResponse, sigReqsCount)
 	// Each signature requested in the http request body is processed individually.
@@ -199,21 +198,21 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 		if r.URL.RequestURI() == "/sign/files" {
 			for i, inputFile := range sigreq.Files {
-				log.Debugf("base64 decoding file %d", i)
+				log.Debugf("handlers/handleSignature: base64 decoding file %d", i)
 				unsignedNamedFile, err := signer.NewNamedUnsignedFile(inputFile)
 				if err != nil {
-					httpError(w, r, http.StatusBadRequest, "%q", err)
+					httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: error loading unsigned file. %q", err)
 					return
 				}
-				log.Debugf("base64 decoded unsigned named file %d: %s", i, unsignedNamedFile.Name)
+				log.Debugf("handlers/handleSignature: base64 decoded unsigned named file %d: %s", i, unsignedNamedFile.Name)
 				unsignedNamedFiles = append(unsignedNamedFiles, *unsignedNamedFile)
 			}
-			log.Debugf("signing %d unsigned named files", len(unsignedNamedFiles))
+			log.Debugf("handlers/handleSignature: signing %d unsigned named files", len(unsignedNamedFiles))
 		} else {
 			// Decode the base64 input data
 			input, err = base64.StdEncoding.DecodeString(sigreq.Input)
 			if err != nil {
-				httpError(w, r, http.StatusBadRequest, "%v", err)
+				httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: error decoding string %v", err)
 				return
 			}
 		}
@@ -222,7 +221,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		// the user is not allowed to use this signer
 		requestedSigner, err := a.authBackend.getSignerForUser(userid, sigreq.KeyID)
 		if err != nil {
-			httpError(w, r, http.StatusUnauthorized, "%v", err)
+			httpError(w, r, http.StatusUnauthorized, "handlers/handleSignature: error getting signer for user %s . %v", userid, err)
 			return
 		}
 		requestedSignerConfig := requestedSigner.Config()
@@ -255,7 +254,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		case "/sign/hash":
 			hashSigner, ok := requestedSigner.(signer.HashSigner)
 			if !ok {
-				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement hash signing", requestedSignerConfig.ID)
+				httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: requested signer %q does not implement hash signing", requestedSignerConfig.ID)
 				return
 			}
 			// the input is already a hash just convert it to hex
@@ -264,19 +263,19 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			sig, err = hashSigner.SignHash(input, sigreq.Options)
 			if err != nil {
 				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, requestBodySize, inputHash, inputHashes, starttime, err)
-				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
+				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
 			sigresps[i].Signature, err = sig.Marshal()
 			if err != nil {
-				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
+				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: encoding failed with error: %v", err)
 				return
 			}
 			outputHash = "unimplemented"
 		case "/sign/data":
 			dataSigner, ok := requestedSigner.(signer.DataSigner)
 			if !ok {
-				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement data signing", requestedSignerConfig.ID)
+				httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: requested signer %q does not implement data signing", requestedSignerConfig.ID)
 				return
 			}
 			// calculate a hash of the input to store in the signing logs
@@ -285,19 +284,19 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			sig, err = dataSigner.SignData(input, sigreq.Options)
 			if err != nil {
 				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, requestBodySize, inputHash, inputHashes, starttime, err)
-				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
+				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
 			sigresps[i].Signature, err = sig.Marshal()
 			if err != nil {
-				httpError(w, r, http.StatusInternalServerError, "encoding failed with error: %v", err)
+				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: encoding failed with error: %v", err)
 				return
 			}
 			outputHash = hashSHA256AsHex([]byte(sigresps[i].Signature))
 		case "/sign/file":
 			fileSigner, ok := requestedSigner.(signer.FileSigner)
 			if !ok {
-				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement file signing", requestedSignerConfig.ID)
+				httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: requested signer %q does not implement file signing", requestedSignerConfig.ID)
 				return
 			}
 			// calculate a hash of the input to store in the signing logs
@@ -306,7 +305,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			signedfile, err = fileSigner.SignFile(input, sigreq.Options)
 			if err != nil {
 				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, requestBodySize, inputHash, inputHashes, starttime, err)
-				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
+				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
 			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
@@ -314,7 +313,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		case "/sign/files":
 			multiFileSigner, ok := requestedSigner.(signer.MultipleFileSigner)
 			if !ok {
-				httpError(w, r, http.StatusBadRequest, "requested signer %q does not implement multiple file signing", requestedSignerConfig.ID)
+				httpError(w, r, http.StatusBadRequest, "handlers/handleSignature: requested signer %q does not implement multiple file signing", requestedSignerConfig.ID)
 				return
 			}
 			// calculate a hash of the input files to log
@@ -325,7 +324,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			signedfiles, err = multiFileSigner.SignFiles(unsignedNamedFiles, sigreq.Options)
 			if err != nil {
 				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, requestBodySize, inputHash, inputHashes, starttime, err)
-				httpError(w, r, http.StatusInternalServerError, "signing request %s failed with error: %v", sigresps[i].Ref, err)
+				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
 			for _, signedFile := range signedfiles {
@@ -349,42 +348,42 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"user_id":             userid,
 			"size":                requestBodySize,
 			"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
-		}).Info("signing operation succeeded")
+		}).Info("handlers/handleSignature: signing operation succeeded")
 	}
 	respdata, err := json.Marshal(sigresps)
 	if err != nil {
-		httpError(w, r, http.StatusInternalServerError, "signing failed with error: %v", err)
+		httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: signing failed with error: %v", err)
 		return
 	}
-	if a.debug {
-		fmt.Printf("signature response\n------------------\n%s\n", respdata)
-	}
+
+	log.Tracef("handlers/handleSignature: signature response\n------------------\n%s\n", respdata)
+
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(respdata)
 	if err != nil {
-		log.Errorf("error writing response: %v", err)
+		log.Errorf("handlers/handleSignature: error writing response: %v", err)
 	}
 	log.WithFields(log.Fields{
 		"rid":                  rid,
 		"num_signing_requests": sigReqsCount,
-	}).Info("signing request completed successfully")
+	}).Debug("handlers/handleSignature: signing request completed successfully")
 }
 
 // handleLBHeartbeat returns a simple message indicating that the API is alive and well
 func (a *autographer) handleLBHeartbeat(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		httpError(w, r, http.StatusMethodNotAllowed, "handlers/handleLBHeartbeat: %s method not allowed; endpoint accepts GET only", r.Method)
 		return
 	}
 
 	if !a.authsLoaded || !a.signersLoaded {
-		httpError(w, r, http.StatusRequestTimeout, "Auths and signers not yet loaded")
+		httpError(w, r, http.StatusRequestTimeout, "handlers/handleLBHeartbeat: Auths and signers not yet loaded")
 	}
 
 	_, err := w.Write([]byte("ohai"))
 	if err != nil {
-		log.Errorf("error writing response: %v", err)
+		log.Errorf("handlers/handleLBHeartbeat: error writing response: %v", err)
 	}
 }
 
@@ -393,11 +392,11 @@ func (a *autographer) handleLBHeartbeat(w http.ResponseWriter, r *http.Request) 
 // aren't. Currently it only checks whether the HSM is accessible.
 func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		httpError(w, r, http.StatusMethodNotAllowed, "handlers/handleHeartbeat: %s method not allowed; endpoint accepts GET only", r.Method)
 		return
 	}
 	if a.heartbeatConf == nil {
-		httpError(w, r, http.StatusInternalServerError, "Missing heartbeat config")
+		httpError(w, r, http.StatusInternalServerError, "handlers/handleHeartbeat: Missing heartbeat config")
 		return
 	}
 	var (
@@ -424,7 +423,7 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 		}()
 		select {
 		case <-time.After(hsmHBTimeout):
-			err = fmt.Errorf("checking HSM connection for signer %s private key timed out", hsmSignerConf.ID)
+			err = fmt.Errorf("handlers/handleHeartbeat: checking HSM connection for signer %s private key timed out", hsmSignerConf.ID)
 		case err = <-checkResult:
 		}
 
@@ -433,11 +432,11 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 				"rid":     rid,
 				"t":       int32(time.Since(hsmHeartbeatStartTs) / time.Millisecond),
 				"timeout": hsmHBTimeout.String(),
-			}).Info("HSM heartbeat completed successfully")
+			}).Debug("handlers/handleHeartbeat: HSM heartbeat completed successfully")
 			result["hsmAccessible"] = true
 			status = http.StatusOK
 		} else {
-			log.Errorf("error checking HSM connection for signer %s: %s", hsmSignerConf.ID, err)
+			log.Errorf("handlers/handleHeartbeat: error checking HSM connection for signer %s: %s", hsmSignerConf.ID, err)
 			result["hsmAccessible"] = false
 			status = http.StatusInternalServerError
 		}
@@ -456,47 +455,47 @@ func (a *autographer) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 				"rid":     rid,
 				"t":       int32(time.Since(dbHeartbeatStartTs) / time.Millisecond),
 				"timeout": a.heartbeatConf.DBCheckTimeout.String(),
-			}).Info("DB heartbeat completed successfully")
+			}).Info("handlers/handleHeartbeat: DB heartbeat completed successfully")
 			result["dbAccessible"] = true
 		} else {
-			log.Errorf("error checking DB connection: %s", err)
+			log.Errorf("handlers/handleHeartbeat: error checking DB connection: %s", err)
 			result["dbAccessible"] = false
 		}
 	}
 
 	respdata, err := json.Marshal(result)
 	if err != nil {
-		log.Errorf("heartbeat failed to marshal JSON with error: %s", err)
-		httpError(w, r, http.StatusInternalServerError, "error marshaling response JSON")
+		log.Errorf("handlers/handleHeartbeat: heartbeat failed to marshal JSON with error: %s", err)
+		httpError(w, r, http.StatusInternalServerError, "handlers/handleHeartbeat: error marshaling response JSON")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_, err = w.Write(respdata)
 	if err != nil {
-		log.Errorf("error writing response: %v", err)
+		log.Errorf("handlers/handleHeartbeat: error writing response: %v", err)
 	}
 }
 
 func handleVersion(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		httpError(w, r, http.StatusMethodNotAllowed, "handlers/handleVersion: %s method not allowed; endpoint accepts GET only", r.Method)
 		return
 	}
 	dir, err := os.Getwd()
 	if err != nil {
-		httpError(w, r, http.StatusInternalServerError, "Could not get CWD")
+		httpError(w, r, http.StatusInternalServerError, "handlers/handleVersion: Could not get CWD")
 		return
 	}
 	filename := path.Clean(dir + string(os.PathSeparator) + "version.json")
 	f, err := os.Open(filename)
 	if err != nil {
-		httpError(w, r, http.StatusNotFound, "version.json file not found")
+		httpError(w, r, http.StatusNotFound, "handlers/handleVersion: version.json file not found")
 		return
 	}
 	stat, err := f.Stat()
 	if err != nil {
-		httpError(w, r, http.StatusInternalServerError, "stat failed on version.json")
+		httpError(w, r, http.StatusInternalServerError, "handlers/handleVersion: stat failed on version.json")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -507,45 +506,45 @@ func handleVersion(w http.ResponseWriter, r *http.Request) {
 // for the authenticated user
 func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		httpError(w, r, http.StatusMethodNotAllowed, "%s method not allowed; endpoint accepts GET only", r.Method)
+		httpError(w, r, http.StatusMethodNotAllowed, "handlers/handleGetAuthKeyIDs: %s method not allowed; endpoint accepts GET only", r.Method)
 		return
 	}
 	if r.Body != nil {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			httpError(w, r, http.StatusBadRequest, "failed to read request body: %s", err)
+			httpError(w, r, http.StatusBadRequest, "handlers/handleGetAuthKeyIDs: failed to read request body: %s", err)
 			return
 		}
 		if len(body) > 0 {
-			httpError(w, r, http.StatusBadRequest, "endpoint received unexpected request body")
+			httpError(w, r, http.StatusBadRequest, "handlers/handleGetAuthKeyIDs: endpoint received unexpected request body")
 			return
 		}
 	}
 
 	pathAuthID, ok := mux.Vars(r)["auth_id"]
 	if !ok {
-		httpError(w, r, http.StatusInternalServerError, "route is improperly configured")
+		httpError(w, r, http.StatusInternalServerError, "handlers/handleGetAuthKeyIDs: route is improperly configured")
 		return
 	}
 	if !authIDFormatRegexp.MatchString(pathAuthID) {
-		httpError(w, r, http.StatusBadRequest, "auth_id in URL path '%s' is invalid, it must match %s", pathAuthID, authIDFormat)
+		httpError(w, r, http.StatusBadRequest, "handlers/handleGetAuthKeyIDs: auth_id in URL path '%s' is invalid, it must match %s", pathAuthID, authIDFormat)
 		return
 	}
 	_, headerAuthID, err := a.authorizeHeader(r)
 	if err != nil {
-		httpError(w, r, http.StatusUnauthorized, "Extracting authorization info from header failed: %v", err)
+		httpError(w, r, http.StatusUnauthorized, "handlers/handleGetAuthKeyIDs: Extracting authorization info from header failed: %v", err)
 		return
 	}
 
 	if headerAuthID != pathAuthID {
-		httpError(w, r, http.StatusForbidden, "Authorized user %q cannot request keyids for user %q", headerAuthID, pathAuthID)
+		httpError(w, r, http.StatusForbidden, "handlers/handleGetAuthKeyIDs: Authorized user %q cannot request keyids for user %q", headerAuthID, pathAuthID)
 		return
 	}
 
 	signerIDsJSON, err := json.Marshal(a.authBackend.getSignerIDsForUser(pathAuthID))
 	if err != nil {
-		log.Errorf("handleGetAuthKeyIDs failed to marshal JSON with error: %s", err)
-		httpError(w, r, http.StatusInternalServerError, "error marshaling response JSON")
+		log.Errorf("handlers/handleGetAuthKeyIDs: failed to marshal JSON with error: %s", err)
+		httpError(w, r, http.StatusInternalServerError, "handlers/handleGetAuthKeyIDs: error marshaling response JSON")
 		return
 	}
 
@@ -553,6 +552,6 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(signerIDsJSON)
 	if err != nil {
-		log.Errorf("error writing response: %v", err)
+		log.Errorf("handlers/handleGetAuthKeyIDs: error writing response: %v", err)
 	}
 }

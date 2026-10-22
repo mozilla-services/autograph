@@ -40,17 +40,17 @@ func (hsm *AWSHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKe
 	var slots []uint
 	slots, err := hsm.ctx.GetSlotList(true)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to list PKCS#11 Slots: %w", err)
+		return nil, nil, fmt.Errorf("AWSHSM/MakeKey: failed to list PKCS#11 Slots: %w", err)
 	}
 	if len(slots) < 1 {
-		return nil, nil, fmt.Errorf("failed to find a usable slot in hsm context")
+		return nil, nil, fmt.Errorf("AWSHSM/MakeKey: failed to find a usable slot in hsm context")
 	}
 	keyNameBytes := []byte(keyName)
 	switch keyTplType := keyTpl.(type) {
 	case *ecdsa.PublicKey:
 		priv, err := crypto11.GenerateECDSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keyTplType)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to generate ecdsa key in hsm: %w", err)
+			return nil, nil, fmt.Errorf("AWSHSM/MakeKey: failed to generate ecdsa key in hsm: %w", err)
 		}
 		pub := priv.PubKey.(*ecdsa.PublicKey)
 		return priv, pub, nil
@@ -58,12 +58,12 @@ func (hsm *AWSHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKe
 		keySize := keyTplType.Size()
 		priv, err := crypto11.GenerateRSAKeyPairOnSlot(slots[0], keyNameBytes, keyNameBytes, keySize)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to generate rsa key in hsm: %w", err)
+			return nil, nil, fmt.Errorf("AWSHSM/MakeKey: failed to generate rsa key in hsm: %w", err)
 		}
 		pub := priv.PubKey.(*rsa.PublicKey)
 		return priv, pub, nil
 	default:
-		return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
+		return nil, nil, fmt.Errorf("AWSHSM/MakeKey: making key of type %T is not supported", keyTpl)
 	}
 }
 
@@ -124,10 +124,10 @@ func (hsm *GCPHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKe
 	var slots []uint
 	slots, err := hsm.ctx.GetSlotList(true)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to list PKCS#11 Slots: %w", err)
+		return nil, nil, fmt.Errorf("GCPHSM/MakeKey: failed to list PKCS#11 Slots: %w", err)
 	}
 	if len(slots) < 1 {
-		return nil, nil, fmt.Errorf("failed to find a usable slot in hsm context")
+		return nil, nil, fmt.Errorf("GCPHSM/MakeKey: failed to find a usable slot in hsm context")
 	}
 	publicKeyTemplate := []*pkcs11.Attribute{}
 	privateKeyTemplate := []*pkcs11.Attribute{
@@ -142,12 +142,12 @@ func (hsm *GCPHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKe
 		case 384:
 			privateKeyTemplate = append(privateKeyTemplate, pkcs11.NewAttribute(CKA_GOOGLE_DEFINED_KMS_ALGORITHM, KMS_ALGORITHM_EC_SIGN_P384_SHA384))
 		default:
-			return nil, nil, fmt.Errorf("invalid elliptic curve: must be p256 or p384")
+			return nil, nil, fmt.Errorf("GCPHSM/MakeKey: invalid elliptic curve: must be p256 or p384")
 		}
 
 		priv, err := crypto11.GenerateECDSAKeyPairOnSlotWithProvidedAttributes(slots[0], publicKeyTemplate, privateKeyTemplate)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to generate ecdsa key in hsm: %w", err)
+			return nil, nil, fmt.Errorf("GCPHSM/MakeKey: failed to generate ecdsa key in hsm: %w", err)
 		}
 		pub := priv.PubKey.(*ecdsa.PublicKey)
 		return priv, pub, nil
@@ -162,18 +162,18 @@ func (hsm *GCPHSM) MakeKey(keyTpl interface{}, keyName string) (crypto.PrivateKe
 		case 512:
 			privateKeyTemplate = append(privateKeyTemplate, pkcs11.NewAttribute(CKA_GOOGLE_DEFINED_KMS_ALGORITHM, KMS_ALGORITHM_RSA_SIGN_PKCS1_4096_SHA256))
 		default:
-			return nil, nil, fmt.Errorf("invalid rsa key size: got: %d", keySizeBytes)
+			return nil, nil, fmt.Errorf("GCPHSM/MakeKey: invalid rsa key size: got: %d", keySizeBytes)
 		}
 
 		priv, err := crypto11.GenerateRSAKeyPairOnSlotWithProvidedAttributes(slots[0], publicKeyTemplate, privateKeyTemplate)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to generate rsa key in hsm: %w", err)
+			return nil, nil, fmt.Errorf("GCPHSM/MakeKey: failed to generate rsa key in hsm: %w", err)
 		}
 		pub := priv.PubKey.(*rsa.PublicKey)
 		return priv, pub, nil
 	}
 
-	return nil, nil, fmt.Errorf("making key of type %T is not supported", keyTpl)
+	return nil, nil, fmt.Errorf("GCPHSM/MakeKey: making key of type %T is not supported", keyTpl)
 }
 
 func NewGCPHSM(ctx crypto11.PKCS11Context) *GCPHSM {
