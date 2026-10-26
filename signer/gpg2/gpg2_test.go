@@ -649,6 +649,8 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 					t.Errorf("GPG2Signer.SignFiles() error = %v, wantErr %v", err, tt.wantErr)
 				} else if !strings.Contains(err.Error(), tt.wantErrStr) {
 					t.Errorf("GPG2Signer.SignFiles() error.Error() = %q, wantErrStr %q", err.Error(), tt.wantErrStr)
+				} else if !strings.Contains(err.Error(), "signer/gpg2:") {
+					t.Fatalf("expected error to contain 'signer/gpg2:' %s", err)
 				}
 				return
 			}

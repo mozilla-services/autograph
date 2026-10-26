@@ -261,6 +261,9 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 		if !strings.Contains(err.Error(), testcase.err) {
 			t.Fatalf("expected to fail with '%s' but failed with '%s' instead", testcase.err, err)
 		}
+		if !strings.Contains(err.Error(), "signer/contentsignaturepki:") {
+			t.Fatalf("expected error to contain 'signer/contentsignaturepki:' %s", err)
+		}
 		if err == nil {
 			t.Fatalf("expected to fail with '%v' but succeeded", testcase.err)
 		}

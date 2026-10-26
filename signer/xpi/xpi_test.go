@@ -272,6 +272,8 @@ func TestNewFailure(t *testing.T) {
 			t.Fatalf("testcase %d expected to fail with '%v' but succeeded", i, testcase.err)
 		} else if !strings.Contains(err.Error(), testcase.err) {
 			t.Fatalf("testcase %d expected to fail with '%v' but failed with '%v' instead", i, testcase.err, err)
+		} else if !strings.Contains(err.Error(), "signer/xpi:") {
+			t.Fatalf("testcase %d expected to fail with a 'signer/xpi:' prefix but failed with '%v' instead", i, err)
 		}
 	}
 }

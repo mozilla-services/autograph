@@ -200,6 +200,9 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 		if !strings.Contains(err.Error(), testcase.err) {
 			t.Fatalf("expected to fail with '%v' but failed with '%v' instead", testcase.err, err)
 		}
+		if !strings.Contains(err.Error(), "signer/contentsignature:") {
+			t.Fatalf("expected error to contain 'signer/contentsignature:' %s", err)
+		}
 		if err == nil {
 			t.Fatalf("expected to fail with '%v' but succeeded", testcase.err)
 		}
@@ -215,7 +218,7 @@ func TestNoShortData(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected to fail with input data too short but succeeded")
 	}
-	if !strings.Contains(err.Error(), "refusing to sign input data shorter than 10 bytes") {
+	if !strings.Contains(err.Error(), "signer/contentsignature: refusing to sign input data shorter than 10 bytes") {
 		t.Fatalf("expected to fail with input data too short but failed with: %v", err)
 	}
 }

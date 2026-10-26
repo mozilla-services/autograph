@@ -136,7 +136,7 @@ BLzIeIhb7Kx//dd/6o+W7wd/X9kpA1nQpNy+uAZEbg==
 	if err == nil {
 		t.Fatal("expected to fail on unknown curve but succeeded")
 	}
-	if !strings.Contains(err.Error(), `elliptic curve "P-521" is not supported`) {
+	if !strings.Contains(err.Error(), `signer/mar: elliptic curve "P-521" is not supported`) {
 		t.Fatalf("expected to fail on unsupported P-521 curve but failed with: %v", err)
 	}
 }
