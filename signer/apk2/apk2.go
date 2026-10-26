@@ -58,7 +58,7 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 
 	switch conf.Mode {
 	case ModeV3Enabled:
-		log.Printf("signer/apk2: %s: v3 signing enabled", s.ID)
+		log.Debugf("signer/apk2: %s: v3 signing enabled", s.ID)
 		s.v3Enabled = true
 	case "":
 		s.v3Enabled = false
@@ -79,9 +79,9 @@ func New(conf signer.Configuration) (s *APK2Signer, err error) {
 	case *ecdsa.PrivateKey:
 		// ecdsa is only supported in sdk 18 and higher
 		s.minSdkVersion = "18"
-		log.Printf("signer/apk2: setting min android sdk version to 18 as required to sign with ecdsa")
+		log.Debugf("signer/apk2: setting min android sdk version to 18 as required to sign with ecdsa")
 	default:
-		log.Printf("signer/apk2: setting min android sdk version to 9")
+		log.Debugf("signer/apk2: setting min android sdk version to 9")
 		s.minSdkVersion = "9"
 	}
 	//apksigner wants a pkcs8 encoded privkey

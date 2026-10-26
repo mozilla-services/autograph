@@ -25,7 +25,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sync"
 
 	"github.com/miekg/pkcs11"
@@ -186,11 +186,11 @@ func loginToken(s *PKCS11Session) error {
 		if code, ok := err.(pkcs11.Error); ok && code == pkcs11.CKR_USER_ALREADY_LOGGED_IN {
 			return nil
 		}
-		log.Printf("crypto11/loginToken: Failed to open PKCS#11 Session: %s", err.Error())
+		log.Debugf("crypto11/loginToken: Failed to open PKCS#11 Session: %s", err.Error())
 
 		closeErr := s.CloseSession()
 		if closeErr != nil {
-			log.Printf("crypto11/loginToken: Failed to close session: %s", closeErr.Error())
+			log.Debugf("crypto11/loginToken: Failed to close session: %s", closeErr.Error())
 		}
 
 		// Return the first error we encountered

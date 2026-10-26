@@ -105,7 +105,7 @@ func New(conf signer.Configuration) (s *ContentSigner, err error) {
 	}
 	// if validity is undef, default to 30 days
 	if s.validity == 0 {
-		log.Printf("signer/contentsignaturepki: %q: no validity configured, defaulting to 30 days", s.ID)
+		log.Debugf("signer/contentsignaturepki: %q: no validity configured, defaulting to 30 days", s.ID)
 		s.validity = 720 * time.Hour
 	}
 
@@ -130,10 +130,10 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 	err := s.findAndSetEE(conf)
 	switch err {
 	case nil:
-		log.Printf("signer/contentsignaturepki: %q: reusing existing EE %q", s.ID, s.eeLabel)
+		log.Debugf("signer/contentsignaturepki: %q: reusing existing EE %q", s.ID, s.eeLabel)
 	case database.ErrNoSuitableEEFound:
 		// No suitable end-entity found, making a new chain
-		log.Printf("signer/contentsignaturepki: %q: making new end-entity", s.ID)
+		log.Infof("signer/contentsignaturepki: %q: making new end-entity", s.ID)
 		var tx *database.Transaction
 		if s.db != nil {
 			tx, err = s.db.BeginEndEntityOperations()
@@ -172,7 +172,7 @@ func (s *ContentSigner) initEE(conf signer.Configuration) error {
 				err = fmt.Errorf("signer/contentsignaturepki: %q: failed to insert EE into database: %w", s.ID, err)
 				goto releaseLock
 			}
-			log.Printf("signer/contentsignaturepki: %q: generated private key labeled %q with x5u %q", s.ID, s.eeLabel, s.X5U)
+			log.Infof("signer/contentsignaturepki: %q: generated private key labeled %q with x5u %q", s.ID, s.eeLabel, s.X5U)
 		}
 	releaseLock:
 		if tx != nil {

@@ -451,7 +451,7 @@ func (a *autographer) addDB(dbConf database.Config) chan bool {
 	// becomes inaccessible
 	closeDBMonitor := make(chan bool, 1)
 	go a.db.Monitor(dbConf.MonitorPollInterval, closeDBMonitor)
-	log.Print("autographer/addDB: database connection established")
+	log.Debug("autographer/addDB: database connection established")
 	return closeDBMonitor
 }
 

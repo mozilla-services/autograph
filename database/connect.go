@@ -113,9 +113,9 @@ func GetTestDBHost() string {
 	host, ok := os.LookupEnv("AUTOGRAPH_DB_HOST")
 	if !ok {
 		host = "127.0.0.1"
-		log.Printf("database/Monitor: Using default AUTOGRAPH_DB_HOST=%s", host)
+		log.Debugf("database/Monitor: Using default AUTOGRAPH_DB_HOST=%s", host)
 	} else {
-		log.Printf("database/Monitor: Using AUTOGRAPH_DB_HOST=%s", host)
+		log.Debugf("database/Monitor: Using AUTOGRAPH_DB_HOST=%s", host)
 	}
 	return host
 }

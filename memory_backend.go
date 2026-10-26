@@ -161,7 +161,7 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth *authorization) error {
 		for pos, s := range b.signers {
 			if sid == s.Config().ID {
 				sidExists = true
-				log.Printf("inMemoryBackend/addAuthToSignerIndex: Mapping auth id %q and signer id %q to signer %d", auth.ID, s.Config().ID, pos)
+				log.Debugf("inMemoryBackend/addAuthToSignerIndex: Mapping auth id %q and signer id %q to signer %d", auth.ID, s.Config().ID, pos)
 				b.signerIndex[getSignerIndexTag(auth.ID, s.Config().ID)] = pos
 			}
 		}
@@ -174,7 +174,7 @@ func (b *inMemoryBackend) addAuthToSignerIndex(auth *authorization) error {
 	// the signing request, the default is used
 	for pos, signer := range b.signers {
 		if auth.Signers[0] == signer.Config().ID {
-			log.Printf("inMemoryBackend/addAuthToSignerIndex: Mapping auth id %q to default signer %d", auth.ID, pos)
+			log.Debugf("inMemoryBackend/addAuthToSignerIndex: Mapping auth id %q to default signer %d", auth.ID, pos)
 			tag := auth.ID + "+"
 			b.signerIndex[tag] = pos
 			break
