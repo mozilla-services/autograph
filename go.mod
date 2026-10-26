@@ -5,7 +5,7 @@ go 1.26.0
 godebug cryptocustomrand=1 // required since 1.26 so we can have a custom rand reader, from our HSM or in a unit test
 
 require (
-	cloud.google.com/go/secretmanager v1.20.0
+	cloud.google.com/go/secretmanager v1.23.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/golang-lru/v2 v2.0.7
