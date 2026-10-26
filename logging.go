@@ -34,7 +34,7 @@ func logRequest() Middleware {
 				"ua":                 r.UserAgent(),
 				"rid":                rid,
 				"t":                  procTs / time.Millisecond,
-			}).Info("request")
+			}).Info("logging/logRequestMiddleware: request")
 		})
 	}
 }

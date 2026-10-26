@@ -31,9 +31,6 @@ type monitor struct {
 	// Proxy to autographer.authorize.
 	authorize func(r *http.Request, body []byte) (userid string, err error)
 
-	// Copy of autographer.debug.
-	debug bool
-
 	// Closed on exit of the autographer instance.
 	exit chan interface{}
 }
@@ -42,7 +39,7 @@ type monitor struct {
 func (m *monitor) start(duration time.Duration) {
 	if duration.Nanoseconds() <= 0 {
 		duration = 5 * time.Minute
-		log.Infof("monitor: using 5m instead of invalid interval %q", duration)
+		log.Debugf("monitor/start: using 5m instead of invalid interval %q", duration)
 	}
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()
@@ -139,7 +136,6 @@ func newMonitor(ag *autographer, duration time.Duration) *monitor {
 	m.sigresps = make([]formats.SignatureResponse, len(signers))
 	m.initialized = make(chan interface{})
 	m.exit = ag.exit
-	m.debug = ag.debug
 
 	go m.start(duration)
 

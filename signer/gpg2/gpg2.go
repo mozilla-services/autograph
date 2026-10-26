@@ -93,12 +93,12 @@ func New(conf signer.Configuration, tmpDirPrefix string) (s *GPG2Signer, err err
 	s = new(GPG2Signer)
 
 	if conf.Type != Type {
-		return nil, fmt.Errorf("gpg2: invalid type %q, must be %q", conf.Type, Type)
+		return nil, fmt.Errorf("signer/gpg2: invalid type %q, must be %q", conf.Type, Type)
 	}
 	s.Type = conf.Type
 
 	if conf.ID == "" {
-		return nil, fmt.Errorf("gpg2: missing signer ID in signer configuration")
+		return nil, fmt.Errorf("signer/gpg2: missing signer ID in signer configuration")
 	}
 	s.ID = conf.ID
 
@@ -109,27 +109,27 @@ func New(conf signer.Configuration, tmpDirPrefix string) (s *GPG2Signer, err err
 	case "": // default to signing in gpg2 mode to preserve backwards compat with old config files
 		conf.Mode = ModeGPG2
 	default:
-		return nil, fmt.Errorf("gpg2: unknown signer mode %q, must be 'gpg2', 'debsign', or 'rpmsign'", conf.Mode)
+		return nil, fmt.Errorf("signer/gpg2: unknown signer mode %q, must be 'gpg2', 'debsign', or 'rpmsign'", conf.Mode)
 	}
 	s.Mode = conf.Mode
 
 	if conf.PrivateKey == "" {
-		return nil, fmt.Errorf("gpg2: missing private key in signer configuration")
+		return nil, fmt.Errorf("signer/gpg2: missing private key in signer configuration")
 	}
 	s.PrivateKey = conf.PrivateKey
 
 	if conf.PublicKey == "" {
-		return nil, fmt.Errorf("gpg2: missing public key in signer configuration")
+		return nil, fmt.Errorf("signer/gpg2: missing public key in signer configuration")
 	}
 	s.PublicKey = conf.PublicKey
 
 	if conf.KeyID == "" {
-		return nil, fmt.Errorf("gpg2: missing gpg key ID in signer configuration")
+		return nil, fmt.Errorf("signer/gpg2: missing gpg key ID in signer configuration")
 	}
 	// validate KeyID since it is injected into the temp dir
 	// prefix and could be used for command injection
 	if !isAlphanumeric(conf.KeyID) {
-		return nil, fmt.Errorf("gpg2: non-alphanumeric key ID in signer configuration")
+		return nil, fmt.Errorf("signer/gpg2: non-alphanumeric key ID in signer configuration")
 	}
 	s.KeyID = conf.KeyID
 
@@ -137,7 +137,7 @@ func New(conf signer.Configuration, tmpDirPrefix string) (s *GPG2Signer, err err
 
 	s.tmpDir, err = createKeyRing(s, tmpDirPrefix)
 	if err != nil {
-		return nil, fmt.Errorf("gpg2: error creating keyring: %w", err)
+		return nil, fmt.Errorf("signer/gpg2: error creating keyring: %w", err)
 	}
 
 	// debsign and rpmsign invoke GPG for signing. We configure GPG
@@ -145,7 +145,7 @@ func New(conf signer.Configuration, tmpDirPrefix string) (s *GPG2Signer, err err
 	if s.Mode == ModeDebsign || s.Mode == ModeRPMSign {
 		// write gpg.conf after importing keys, so gpg doesn't try to read stdin for key imports
 		if err = writeGPGConf(s.tmpDir); err != nil {
-			return nil, fmt.Errorf("error writing gpg conf: %w", err)
+			return nil, fmt.Errorf("signer/gpg2: error writing gpg conf: %w", err)
 		}
 	}
 	return
@@ -160,45 +160,45 @@ func New(conf signer.Configuration, tmpDirPrefix string) (s *GPG2Signer, err err
 func createKeyRing(s *GPG2Signer, tmpDirPrefix string) (dir string, err error) {
 	dir, err = os.MkdirTemp("", tmpDirPrefix)
 	if err != nil {
-		return "", fmt.Errorf("gpg2: error creating tempdir for keyring: %w", err)
+		return "", fmt.Errorf("signer/gpg2: error creating tempdir for keyring: %w", err)
 	}
 
 	// write the public key to a temp file in our signer's temp dir
 	tmpPublicKeyFile, err := os.CreateTemp(dir, "gpg2_publickey")
 	if err != nil {
-		err = fmt.Errorf("gpg2: error creating tempfile for public key: %w", err)
+		err = fmt.Errorf("signer/gpg2: error creating tempfile for public key: %w", err)
 		return "", err
 	}
 	defer func() {
 		cleanErr := os.Remove(tmpPublicKeyFile.Name())
 		// only clobber the original error when it's nil
 		if err == nil && cleanErr != nil {
-			err = fmt.Errorf("gpg2: error removing temp pubkey file %q: %w", tmpPublicKeyFile.Name(), cleanErr)
+			err = fmt.Errorf("signer/gpg2: error removing temp pubkey file %q: %w", tmpPublicKeyFile.Name(), cleanErr)
 		}
 	}()
 
 	err = os.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
 	if err != nil {
-		err = fmt.Errorf("gpg2: error writing public key to tempfile: %w", err)
+		err = fmt.Errorf("signer/gpg2: error writing public key to tempfile: %w", err)
 		return "", err
 	}
 
 	// write the private key to a temp file in our signer's temp dir
 	tmpPrivateKeyFile, err := os.CreateTemp(dir, "gpg2_privatekey")
 	if err != nil {
-		err = fmt.Errorf("gpg2: error creating tempfile for private key: %w", err)
+		err = fmt.Errorf("signer/gpg2: error creating tempfile for private key: %w", err)
 		return "", err
 	}
 	defer func() {
 		cleanErr := os.Remove(tmpPrivateKeyFile.Name())
 		// only clobber the original error when it's nil
 		if err == nil && cleanErr != nil {
-			err = fmt.Errorf("gpg2: error removing temp private key file %q %w", tmpPrivateKeyFile.Name(), cleanErr)
+			err = fmt.Errorf("signer/gpg2: error removing temp private key file %q %w", tmpPrivateKeyFile.Name(), cleanErr)
 		}
 	}()
 	err = os.WriteFile(tmpPrivateKeyFile.Name(), []byte(s.PrivateKey), 0755)
 	if err != nil {
-		err = fmt.Errorf("gpg2: error writing private key to tempfile: %w", err)
+		err = fmt.Errorf("signer/gpg2: error writing private key to tempfile: %w", err)
 		return "", err
 	}
 
@@ -219,10 +219,10 @@ func createKeyRing(s *GPG2Signer, tmpDirPrefix string) (dir string, err error) {
 	gpgLoadPublicKey.Dir = dir
 	out, err := gpgLoadPublicKey.CombinedOutput()
 	if err != nil {
-		err = fmt.Errorf("gpg2: failed to load public key into keyring: %s\n%s", err, out)
+		err = fmt.Errorf("signer/gpg2: failed to load public key into keyring: %s\n%s", err, out)
 		return "", err
 	}
-	log.Debugf("gpg2: loaded public key %s", string(out))
+	log.Debugf("signer/gpg2: loaded public key %s", string(out))
 
 	// call gpg to load the private key in it
 	gpgLoadPrivateKey := exec.Command("gpg", "--no-default-keyring",
@@ -237,10 +237,10 @@ func createKeyRing(s *GPG2Signer, tmpDirPrefix string) (dir string, err error) {
 	gpgLoadPrivateKey.Dir = dir
 	out, err = gpgLoadPrivateKey.CombinedOutput()
 	if err != nil {
-		err = fmt.Errorf("gpg2: failed to load private key into keyring: %s\n%s", err, out)
+		err = fmt.Errorf("signer/gpg2: failed to load private key into keyring: %s\n%s", err, out)
 		return "", err
 	}
-	log.Debugf("gpg2: loaded private key %s", string(out))
+	log.Debugf("signer/gpg2: loaded private key %s", string(out))
 
 	return dir, nil
 }
@@ -257,7 +257,7 @@ func writeGPGConf(gpgHomeDir string) error {
 	if err != nil {
 		return err
 	}
-	log.Debugf("gpg2: wrote config to %s with contents: %s", gpgConfPath, gpgConfContents)
+	log.Debugf("signer/gpg2: wrote config to %s with contents: %s", gpgConfPath, gpgConfContents)
 	return nil
 }
 
@@ -266,7 +266,7 @@ func writeGPGConf(gpgHomeDir string) error {
 func (s *GPG2Signer) AtExit() error {
 	err := os.RemoveAll(s.tmpDir)
 	if err == nil {
-		log.Infof("gpg2: cleaned up %s in exit handler", s.tmpDir)
+		log.Debugf("signer/gpg2: cleaned up %s in exit handler", s.tmpDir)
 	}
 	return err
 }
@@ -285,23 +285,23 @@ func (s *GPG2Signer) Config() signer.Configuration {
 // SignData takes data and returns an armored signature with pgp header and footer
 func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signature, error) {
 	if s.Mode != ModeGPG2 && !bytes.Equal(data, monitoringInputData) {
-		return nil, fmt.Errorf("gpg2: can only sign monitor data in %s mode", ModeGPG2)
+		return nil, fmt.Errorf("signer/gpg2: can only sign monitor data in %s mode", ModeGPG2)
 	}
 	keyRingPath := filepath.Join(s.tmpDir, keyRingFilename)
 
 	// write the input to a temp file
 	tmpContentFile, err := os.CreateTemp(s.tmpDir, fmt.Sprintf("gpg2_%s_input", s.ID))
 	if err != nil {
-		return nil, fmt.Errorf("gpg2: failed to create tempfile for input to sign: %w", err)
+		return nil, fmt.Errorf("signer/gpg2: failed to create tempfile for input to sign: %w", err)
 	}
 	defer func() {
 		if err := os.Remove(tmpContentFile.Name()); err != nil {
-			log.Warnf("gpg2: error removing content file %q: %q", tmpContentFile.Name(), err)
+			log.Warnf("signer/gpg2: error removing content file %q: %q", tmpContentFile.Name(), err)
 		}
 	}()
 	err = os.WriteFile(tmpContentFile.Name(), data, 0755)
 	if err != nil {
-		return nil, fmt.Errorf("gpg2: failed to write tempfile for input to sign: %w", err)
+		return nil, fmt.Errorf("signer/gpg2: failed to write tempfile for input to sign: %w", err)
 	}
 
 	// take a mutex to prevent multiple invocations of gpg in parallel
@@ -327,19 +327,19 @@ func (s *GPG2Signer) SignData(data []byte, options interface{}) (signer.Signatur
 	gpgDetachSign.Dir = s.tmpDir
 	stdin, err := gpgDetachSign.StdinPipe()
 	if err != nil {
-		return nil, fmt.Errorf("gpg2: failed to create stdin pipe for sign cmd: %w", err)
+		return nil, fmt.Errorf("signer/gpg2: failed to create stdin pipe for sign cmd: %w", err)
 	}
 	if _, err = io.WriteString(stdin, s.passphrase); err != nil {
-		return nil, fmt.Errorf("gpg2: failed to write passphrase to stdin pipe for sign cmd: %w", err)
+		return nil, fmt.Errorf("signer/gpg2: failed to write passphrase to stdin pipe for sign cmd: %w", err)
 	}
 	if err = stdin.Close(); err != nil {
-		return nil, fmt.Errorf("gpg2: failed to close to stdin pipe for sign cmd: %w", err)
+		return nil, fmt.Errorf("signer/gpg2: failed to close to stdin pipe for sign cmd: %w", err)
 	}
 	out, err := gpgDetachSign.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("gpg2: failed to sign input %s\n%s", err, out)
+		return nil, fmt.Errorf("signer/gpg2: failed to sign input %s\n%s", err, out)
 	}
-	log.Debugf("signed as:\n%s\n", string(out))
+	log.Debugf("signer/gpg2: signed as:\n%s\n", string(out))
 
 	sig := new(Signature)
 	sig.Data = out
@@ -380,7 +380,7 @@ func (s *GPG2Signer) GetDefaultOptions() interface{} {
 // In rpmsign mode: signs *.rpm files (embedded signature)
 func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interface{}) (signedFiles []signer.NamedSignedFile, err error) {
 	if s.Mode != ModeDebsign && s.Mode != ModeRPMSign {
-		err = fmt.Errorf("gpg2: can only sign multiple files in %s or %s mode", ModeDebsign, ModeRPMSign)
+		err = fmt.Errorf("signer/gpg2: can only sign multiple files in %s or %s mode", ModeDebsign, ModeRPMSign)
 		return
 	}
 
@@ -389,12 +389,12 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 	// of this directory.
 	inputsTmpDir, err := os.MkdirTemp(s.tmpDir, "sign_files")
 	if err != nil {
-		err = fmt.Errorf("gpg2: error creating tempdir for %s signing: %w", s.Mode, err)
+		err = fmt.Errorf("signer/gpg2: error creating tempdir for %s signing: %w", s.Mode, err)
 		return
 	}
 	defer func() {
 		if err := os.RemoveAll(inputsTmpDir); err != nil {
-			log.Warnf("gpg2: error removing sign files inputs directory %q: %q", inputsTmpDir, err)
+			log.Warnf("signer/gpg2: error removing sign files inputs directory %q: %q", inputsTmpDir, err)
 		}
 	}()
 
@@ -405,17 +405,17 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 		switch s.Mode {
 		case ModeDebsign:
 			if !(ext == ".buildinfo" || ext == ".dsc" || ext == ".changes") {
-				return nil, fmt.Errorf("gpg2: cannot sign file %d. File missing extension .buildinfo, .dsc, or .changes", i)
+				return nil, fmt.Errorf("signer/gpg2: cannot sign file %d. File missing extension .buildinfo, .dsc, or .changes", i)
 			}
 		case ModeRPMSign:
 			if ext != ".rpm" {
-				return nil, fmt.Errorf("gpg2: cannot sign file %d. File missing extension .rpm", i)
+				return nil, fmt.Errorf("signer/gpg2: cannot sign file %d. File missing extension .rpm", i)
 			}
 		}
 		inputFilePath := filepath.Join(inputsTmpDir, input.Name)
 		err := os.WriteFile(inputFilePath, input.Bytes, 0644)
 		if err != nil {
-			return nil, fmt.Errorf("gpg2: failed to write tempfile %d for %s to sign: %w", i, s.Mode, err)
+			return nil, fmt.Errorf("signer/gpg2: failed to write tempfile %d for %s to sign: %w", i, s.Mode, err)
 		}
 		inputFilePaths = append(inputFilePaths, inputFilePath)
 	}
@@ -466,7 +466,7 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 
 	passphraseReader, passphraseWriter, err := os.Pipe()
 	if err != nil {
-		return nil, fmt.Errorf("gpg2: failed to create %s passphrase pipe: %w", s.Mode, err)
+		return nil, fmt.Errorf("signer/gpg2: failed to create %s passphrase pipe: %w", s.Mode, err)
 	}
 	defer passphraseReader.Close()
 
@@ -474,7 +474,7 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 	passphrases := strings.Repeat(fmt.Sprintf("%s\n", s.passphrase), passphraseRepeat)
 	if _, err = io.WriteString(passphraseWriter, passphrases); err != nil {
 		passphraseWriter.Close()
-		return nil, fmt.Errorf("gpg2: failed to write %s passphrase to pipe: %w", s.Mode, err)
+		return nil, fmt.Errorf("signer/gpg2: failed to write %s passphrase to pipe: %w", s.Mode, err)
 	}
 	passphraseWriter.Close()
 
@@ -487,20 +487,20 @@ func (s *GPG2Signer) SignFiles(inputs []signer.NamedUnsignedFile, options interf
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("gpg2: failed to %s inputs: %w\n%s", s.Mode, err, out)
+		return nil, fmt.Errorf("signer/gpg2: failed to %s inputs: %w\n%s", s.Mode, err, out)
 	}
 
 	// read the signed tempfiles
 	for i, inputFilePath := range inputFilePaths {
 		signedFileBytes, err := os.ReadFile(inputFilePath)
 		if err != nil {
-			return nil, fmt.Errorf("gpg2: failed to read %d %q signed by %s: %w", i, inputFilePath, s.Mode, err)
+			return nil, fmt.Errorf("signer/gpg2: failed to read %d %q signed by %s: %w", i, inputFilePath, s.Mode, err)
 		}
 		signedFiles = append(signedFiles, signer.NamedSignedFile{
 			Name:  inputs[i].Name,
 			Bytes: signedFileBytes,
 		})
 	}
-	log.Debugf("%s output:\n%s\n", s.Mode, string(out))
+	log.Debugf("signer/gpg2: %s output:\n%s\n", s.Mode, string(out))
 	return signedFiles, nil
 }

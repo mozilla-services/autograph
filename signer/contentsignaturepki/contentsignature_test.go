@@ -237,11 +237,11 @@ func TestNewFailure(t *testing.T) {
 		err string
 		cfg signer.Configuration
 	}{
-		{err: `contentsignaturepki "": invalid type`, cfg: signer.Configuration{Type: ""}},
-		{err: `contentsignaturepki "": missing signer ID in signer configuration`, cfg: signer.Configuration{Type: Type, ID: ""}},
-		{err: `contentsignaturepki "bob": missing issuer private key in signer configuration`, cfg: signer.Configuration{Type: Type, ID: "bob"}},
-		{err: `contentsignaturepki "bob": failed to get keys`, cfg: signer.Configuration{Type: Type, ID: "bob", IssuerPrivKey: "Ym9iCg=="}},
-		{err: `contentsignaturepki "abcd": invalid public key type for issuer, must be ecdsa`, cfg: signer.Configuration{
+		{err: `invalid type`, cfg: signer.Configuration{Type: ""}},
+		{err: `missing signer ID in signer configuration`, cfg: signer.Configuration{Type: Type, ID: ""}},
+		{err: `missing issuer private key in signer configuration`, cfg: signer.Configuration{Type: Type, ID: "bob"}},
+		{err: `failed to get keys`, cfg: signer.Configuration{Type: Type, ID: "bob", IssuerPrivKey: "Ym9iCg=="}},
+		{err: `invalid public key type for issuer, must be ecdsa`, cfg: signer.Configuration{
 			Type: Type,
 			ID:   "abcd",
 			IssuerPrivKey: `
@@ -261,6 +261,9 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 		if !strings.Contains(err.Error(), testcase.err) {
 			t.Fatalf("expected to fail with '%s' but failed with '%s' instead", testcase.err, err)
 		}
+		if !strings.Contains(err.Error(), "signer/contentsignaturepki:") {
+			t.Fatalf("expected error to contain 'signer/contentsignaturepki:' %s", err)
+		}
 		if err == nil {
 			t.Fatalf("expected to fail with '%v' but succeeded", testcase.err)
 		}
@@ -276,7 +279,7 @@ func TestNoShortData(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected to fail with input data too short but succeeded")
 	}
-	if err.Error() != `contentsignaturepki "testsigner0": refusing to sign input data shorter than 10 bytes` {
+	if !strings.Contains(err.Error(), `refusing to sign input data shorter than 10 bytes`) {
 		t.Fatalf("expected to fail with input data too short but failed with: %v", err)
 	}
 }

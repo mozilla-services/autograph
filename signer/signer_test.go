@@ -11,6 +11,7 @@ import (
 	"crypto/rsa"
 	"encoding/asn1"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/miekg/pkcs11"
@@ -215,7 +216,7 @@ func TestNoSuitableKeyFound(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected to fail with no suitable key found but succeeded")
 	}
-	if err.Error() != "no suitable key found" {
+	if !strings.Contains(err.Error(), "no suitable key found") {
 		t.Fatalf("expected to fail with no suitable key found but failed with: %v", err)
 	}
 }

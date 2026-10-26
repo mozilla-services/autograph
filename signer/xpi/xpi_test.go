@@ -272,6 +272,8 @@ func TestNewFailure(t *testing.T) {
 			t.Fatalf("testcase %d expected to fail with '%v' but succeeded", i, testcase.err)
 		} else if !strings.Contains(err.Error(), testcase.err) {
 			t.Fatalf("testcase %d expected to fail with '%v' but failed with '%v' instead", i, testcase.err, err)
+		} else if !strings.Contains(err.Error(), "signer/xpi:") {
+			t.Fatalf("testcase %d expected to fail with a 'signer/xpi:' prefix but failed with '%v' instead", i, err)
 		}
 	}
 }
@@ -324,7 +326,7 @@ func TestNoID(t *testing.T) {
 	_, err = s.SignData(input, struct{ Foo string }{Foo: "bar"})
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if err.Error() != "xpi: missing common name" {
+	} else if !strings.Contains(err.Error(), "missing common name") {
 		t.Fatalf("expected to fail with missing CN but got error '%v'", err)
 	}
 }
@@ -344,10 +346,10 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 		PKCS7Digest:    "SHA1",
 		COSEAlgorithms: []string{"bar"},
 	})
-	expectedErr := "xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead"
+	expectedErr := "cannot use /sign/data for COSE signatures. Use /sign/file instead"
 	if err == nil {
 		t.Fatal("bad COSE Algs should have errored by didn't")
-	} else if err.Error() != expectedErr {
+	} else if !strings.Contains(err.Error(), expectedErr) {
 		t.Fatalf("bad COSE Algs should have failed with %q but failed with %q instead", expectedErr, err.Error())
 	}
 
@@ -357,10 +359,10 @@ func TestBadCOSEAlgsErrs(t *testing.T) {
 		PKCS7Digest:    "SHA1",
 		COSEAlgorithms: []string{"ES256"},
 	})
-	expectedErr = "xpi: cannot use /sign/data for COSE signatures. Use /sign/file instead"
+	expectedErr = "cannot use /sign/data for COSE signatures. Use /sign/file instead"
 	if err == nil {
 		t.Fatal("bad COSE Algs should have errored by didn't")
-	} else if err.Error() != expectedErr {
+	} else if !strings.Contains(err.Error(), expectedErr) {
 		t.Fatalf("bad COSE Algs should have failed with %q but failed with %q instead", expectedErr, err.Error())
 	}
 }
@@ -379,10 +381,10 @@ func TestBadPKCS7DigestErrs(t *testing.T) {
 		ID:          "ffffffff-ffff-ffff-ffff-ffffffffffff",
 		PKCS7Digest: "SHA9000",
 	})
-	expectedErr := "xpi: can only use SHA1 digests with /sign/data. Use /sign/file instead"
+	expectedErr := "can only use SHA1 digests with /sign/data. Use /sign/file instead"
 	if err == nil {
 		t.Fatal("bad PKCS7 digest should have errored by didn't")
-	} else if err.Error() != expectedErr {
+	} else if !strings.Contains(err.Error(), expectedErr) {
 		t.Fatalf("bad PKCS7 digest should have failed with %q but failed with %q instead", expectedErr, err.Error())
 	}
 }
@@ -405,7 +407,7 @@ func TestMarshalUnfinishedSignature(t *testing.T) {
 	_, err = sig.Marshal()
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if err.Error() != "xpi: cannot marshal unfinished signature" {
+	} else if !strings.Contains(err.Error(), "xpi: cannot marshal unfinished signature") {
 		t.Fatalf("expected to fail marshalling unfinished signature but got error '%v'", err)
 	}
 }
@@ -428,7 +430,7 @@ func TestMarshalEmptySignature(t *testing.T) {
 	_, err = sig.Marshal()
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if err.Error() != "xpi: cannot marshal empty signature data" {
+	} else if !strings.Contains(err.Error(), "cannot marshal empty signature data") {
 		t.Fatalf("expected to fail marshalling empty signature but got error '%v'", err)
 	}
 }
@@ -439,7 +441,7 @@ func TestUnmarshalBadSignatureBase64(t *testing.T) {
 	_, err := Unmarshal(`{{{{{`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if !strings.HasPrefix(err.Error(), "xpi.Unmarshal: failed to decode base64 signature") {
+	} else if !strings.Contains(err.Error(), "failed to decode base64 signature") {
 		t.Fatalf("expected to fail unmarshalling invalid base64 but got error '%v'", err)
 	}
 }
@@ -450,7 +452,7 @@ func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
 	_, err := Unmarshal(`Y2FyaWJvdW1hdXJpY2UK`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if !strings.HasPrefix(err.Error(), "xpi.Unmarshal: failed to parse pkcs7 signature") {
+	} else if !strings.Contains(err.Error(), "failed to parse pkcs7 signature") {
 		t.Fatalf("expected to fail parsing bad pkcs7 but got error '%v'", err)
 	}
 }
@@ -473,7 +475,7 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 	err = sig.(*Signature).VerifyWithChain(nil)
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if err.Error() != "xpi.VerifyWithChain: cannot verify unfinished signature" {
+	} else if !strings.Contains(err.Error(), "cannot verify unfinished signature") {
 		t.Fatalf("expected to fail verify unfinished signature but got error '%v'", err)
 	}
 }
@@ -1090,11 +1092,11 @@ var invalidSignerConfigs = []struct {
 	err string
 	cfg signer.Configuration
 }{
-	{err: "xpi: invalid type", cfg: signer.Configuration{Type: ""}},
-	{err: "xpi: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
-	{err: "xpi: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
-	{err: "xpi: GetKeys failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
-	{err: "xpi: failed to parse certificate PEM", cfg: signer.Configuration{
+	{err: "invalid type", cfg: signer.Configuration{Type: ""}},
+	{err: "missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
+	{err: "missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
+	{err: "no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+	{err: "failed to parse certificate PEM", cfg: signer.Configuration{
 		Type:        Type,
 		ID:          "abcd",
 		Certificate: "foo",
@@ -1109,7 +1111,7 @@ M1ZxulpMFD86/QECIAY+AuNXfbhE6gX7xoedPYB3AML5oTmvdzTsL2IePSZpAiBl
 w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 -----END RSA PRIVATE KEY-----`,
 	}},
-	{err: "xpi: signer certificate must have CA constraint set to true", cfg: signer.Configuration{
+	{err: "signer certificate must have CA constraint set to true", cfg: signer.Configuration{
 		Type: Type,
 		ID:   "abcd",
 		Certificate: `
@@ -1149,7 +1151,7 @@ M1ZxulpMFD86/QECIAY+AuNXfbhE6gX7xoedPYB3AML5oTmvdzTsL2IePSZpAiBl
 w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 -----END RSA PRIVATE KEY-----`,
 	}},
-	{err: "xpi: signer certificate is missing certificate signing key usage", cfg: signer.Configuration{
+	{err: "signer certificate is missing certificate signing key usage", cfg: signer.Configuration{
 		Type: Type,
 		ID:   "abcd",
 		Certificate: `
@@ -1176,7 +1178,7 @@ M1ZxulpMFD86/QECIAY+AuNXfbhE6gX7xoedPYB3AML5oTmvdzTsL2IePSZpAiBl
 w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 -----END RSA PRIVATE KEY-----`,
 	}},
-	{err: `xpi: unknown signer mode "InvalidMode", must be 'add-on', 'extension', 'system add-on' or 'hotfix'`, cfg: signer.Configuration{
+	{err: `unknown signer mode "InvalidMode", must be 'add-on', 'extension', 'system add-on' or 'hotfix'`, cfg: signer.Configuration{
 		ID:   "rsa addon",
 		Type: Type,
 		Mode: "InvalidMode",
@@ -1279,7 +1281,7 @@ s/YksP6cxveae4b7soN4rD/vnfsmKcG+DnTf6B8Zbm6tI2TneYOfFSCryp+yDnaJ
 PIDNiTxNecePOmrD+1ivAEXcoL+e1w==
 -----END PRIVATE KEY-----`,
 	}},
-	{err: "xpi: issuer RSA key must be at least 2048 bits", cfg: signer.Configuration{
+	{err: "issuer RSA key must be at least 2048 bits", cfg: signer.Configuration{
 		ID:   "short-rsa-1024-addon",
 		Type: Type,
 		Mode: ModeAddOn,
@@ -1320,7 +1322,7 @@ a05oGDnmq7R+
 -----END PRIVATE KEY-----
 `,
 	}},
-	{err: "xpi: signer certificate does not have code signing EKU", cfg: signer.Configuration{
+	{err: "signer certificate does not have code signing EKU", cfg: signer.Configuration{
 		ID:   "rsa-no-eku-addon",
 		Type: Type,
 		Mode: ModeAddOn,
@@ -1379,7 +1381,7 @@ eT6Q43/gPKpGi5Sq1heGugQ=
 `,
 	}},
 	// rsa-no-eku-addon with the second line of the cert removed
-	{err: "xpi: could not parse X.509 certificate:", cfg: signer.Configuration{
+	{err: "could not parse X.509 certificate:", cfg: signer.Configuration{
 		ID:   "rsa-bad-x509",
 		Type: Type,
 		Mode: ModeAddOn,

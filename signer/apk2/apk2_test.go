@@ -210,7 +210,7 @@ func TestMarshalEmptySignature(t *testing.T) {
 	_, err := sig.Marshal()
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if err.Error() != "apk2: cannot marshal empty signature data" {
+	} else if !strings.Contains(err.Error(), "signer/apk2: cannot marshal empty signature data") {
 		t.Fatalf("expected to fail marshalling empty signature but got error '%v'", err)
 	}
 }
@@ -221,7 +221,7 @@ func TestUnmarshalBadSignatureBase64(t *testing.T) {
 	_, err := Unmarshal(`{{{{{`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if !strings.HasPrefix(err.Error(), "apk2.Unmarshal: failed to decode base64 signature") {
+	} else if !strings.Contains(err.Error(), "signer/apk2: failed to decode base64 signature") {
 		t.Fatalf("expected to fail unmarshalling invalid base64 but got error '%v'", err)
 	}
 }
@@ -232,7 +232,7 @@ func TestUnmarshalBadSignaturePKCS7(t *testing.T) {
 	_, err := Unmarshal(`Y2FyaWJvdW1hdXJpY2UK`, []byte("foo"))
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if !strings.HasPrefix(err.Error(), "apk2.Unmarshal: failed to parse pkcs7 signature") {
+	} else if !strings.Contains(err.Error(), "signer/apk2: failed to parse pkcs7 signature") {
 		t.Fatalf("expected to fail parsing bad pkcs7 but got error '%v'", err)
 	}
 }
@@ -247,7 +247,7 @@ func TestVerifyUnfinishedSignature(t *testing.T) {
 	err := sig.Verify()
 	if err == nil {
 		t.Fatal("should have errored by didn't")
-	} else if err.Error() != "apk2.Verify: cannot verify unfinished signature" {
+	} else if !strings.Contains(err.Error(), "signer/apk2: cannot verify unfinished signature") {
 		t.Fatalf("expected to fail verify unfinished signature but got error '%v'", err)
 	}
 }

@@ -144,7 +144,7 @@ heartbeat:
 
 func TestDefaultPortUnset(t *testing.T) {
 	expected := ""
-	_, port, _, _ := parseArgs([]string{})
+	_, port, _ := parseArgs([]string{})
 	if port != expected {
 		t.Errorf("expected listen %s got %s", expected, port)
 	}
@@ -152,7 +152,7 @@ func TestDefaultPortUnset(t *testing.T) {
 
 func TestPortOverride(t *testing.T) {
 	expected := "8080"
-	_, port, _, _ := parseArgs([]string{"-p", "8080"})
+	_, port, _ := parseArgs([]string{"-p", "8080"})
 	if port != expected {
 		t.Errorf("expected listen %s got %s", expected, port)
 	}

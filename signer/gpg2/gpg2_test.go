@@ -407,7 +407,7 @@ func TestSignData(t *testing.T) {
 					t.Fatal(err)
 				}
 				defer os.Remove(tmpPublicKeyFile.Name())
-				// fmt.Printf("loading %s\n", s.PublicKey)
+
 				err = os.WriteFile(tmpPublicKeyFile.Name(), []byte(s.PublicKey), 0755)
 				if err != nil {
 					t.Fatal(err)
@@ -453,12 +453,11 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 		options interface{}
 	}
 	tests := []struct {
-		name          string
-		fields        fields
-		args          args
-		wantErr       bool
-		wantErrStr    string
-		wantErrPrefix string
+		name       string
+		fields     fields
+		args       args
+		wantErr    bool
+		wantErrStr string
 	}{
 		{
 			name: fmt.Sprintf("signer %s in mode %s errors", randompgpGPG2SignerConf.ID, randompgpGPG2SignerConf.Mode),
@@ -466,7 +465,7 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				Configuration: randompgpGPG2SignerConf,
 			},
 			wantErr:    true,
-			wantErrStr: "gpg2: can only sign multiple files in debsign or rpmsign mode",
+			wantErrStr: "can only sign multiple files in debsign or rpmsign mode",
 		},
 		{
 			name: "debsign errors for invalid file extensions",
@@ -487,7 +486,7 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				options: nil,
 			},
 			wantErr:    true,
-			wantErrStr: "gpg2: cannot sign file 1. File missing extension .buildinfo, .dsc, or .changes",
+			wantErrStr: "cannot sign file 1. File missing extension .buildinfo, .dsc, or .changes",
 		},
 		{
 			name: "rpmsign errors for invalid file extensions",
@@ -508,7 +507,7 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				options: nil,
 			},
 			wantErr:    true,
-			wantErrStr: "gpg2: cannot sign file 1. File missing extension .rpm",
+			wantErrStr: "cannot sign file 1. File missing extension .rpm",
 		},
 		{
 			name: "rpmsign errors for .dsc file",
@@ -525,7 +524,7 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				options: nil,
 			},
 			wantErr:    true,
-			wantErrStr: "gpg2: cannot sign file 0. File missing extension .rpm",
+			wantErrStr: "File missing extension .rpm",
 		},
 		{
 			name: "errors for unsupported .commands file",
@@ -542,7 +541,7 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				options: nil,
 			},
 			wantErr:    true,
-			wantErrStr: "gpg2: cannot sign file 0. Files missing extension .buildinfo, .dsc, or .changes",
+			wantErrStr: "File missing extension .buildinfo, .dsc, or .changes",
 		},
 		{
 			name: "errors for debsign error on invalid .changes file",
@@ -558,8 +557,8 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				},
 				options: nil,
 			},
-			wantErr:       true,
-			wantErrPrefix: "gpg2: failed to debsign inputs: exit status 1\ndebsign: Can't find or can't read dsc file",
+			wantErr:    true,
+			wantErrStr: "failed to debsign inputs: exit status 1\ndebsign: Can't find or can't read dsc file",
 		},
 		{
 			name: "debsign empty files ok",
@@ -597,8 +596,8 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 				},
 				options: nil,
 			},
-			wantErr:       true,
-			wantErrPrefix: "gpg2: failed to rpmsign inputs",
+			wantErr:    true,
+			wantErrStr: "failed to rpmsign inputs",
 		},
 		{
 			name: fmt.Sprintf("signer %s in mode %s ok", randompgpDebsignSignerConf.ID, randompgpDebsignSignerConf.Mode),
@@ -648,8 +647,10 @@ func TestGPG2Signer_SignFiles(t *testing.T) {
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("GPG2Signer.SignFiles() error = %v, wantErr %v", err, tt.wantErr)
-				} else if !(err.Error() == tt.wantErrStr || strings.HasPrefix(err.Error(), tt.wantErrPrefix)) {
-					t.Errorf("GPG2Signer.SignFiles() error.Error() = %q, wantErrStr %q or prefix %q", err.Error(), tt.wantErrStr, tt.wantErrPrefix)
+				} else if !strings.Contains(err.Error(), tt.wantErrStr) {
+					t.Errorf("GPG2Signer.SignFiles() error.Error() = %q, wantErrStr %q", err.Error(), tt.wantErrStr)
+				} else if !strings.Contains(err.Error(), "signer/gpg2:") {
+					t.Fatalf("expected error to contain 'signer/gpg2:' %s", err)
 				}
 				return
 			}

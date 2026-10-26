@@ -21,36 +21,36 @@ import (
 func ParseChain(chain []byte) (certs []*x509.Certificate, err error) {
 	block, rest := pem.Decode(chain)
 	if block == nil || block.Type != "CERTIFICATE" {
-		return nil, fmt.Errorf("failed to PEM decode EE/leaf certificate from chain")
+		return nil, fmt.Errorf("verifier/ParseChain: failed to PEM decode EE/leaf certificate from chain")
 	}
 	ee, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing EE/leaf certificate from chain: %w", err)
+		return nil, fmt.Errorf("verifier/ParseChain: error parsing EE/leaf certificate from chain: %w", err)
 	}
 	certs = append(certs, ee)
 
 	// the second cert is the intermediate
 	block, rest = pem.Decode(rest)
 	if block == nil || block.Type != "CERTIFICATE" {
-		return nil, fmt.Errorf("failed to PEM decode intermediate certificate from chain")
+		return nil, fmt.Errorf("verifier/ParseChain: failed to PEM decode intermediate certificate from chain")
 	}
 	inter, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse intermediate certificate from chain: %w", err)
+		return nil, fmt.Errorf("verifier/ParseChain: failed to parse intermediate certificate from chain: %w", err)
 	}
 	certs = append(certs, inter)
 
 	// the third and last cert is the root
 	block, rest = pem.Decode(rest)
 	if block == nil || block.Type != "CERTIFICATE" {
-		return nil, fmt.Errorf("failed to PEM decode root certificate from chain")
+		return nil, fmt.Errorf("verifier/ParseChain: failed to PEM decode root certificate from chain")
 	}
 	root, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse root certificate from chain: %w", err)
+		return nil, fmt.Errorf("verifier/ParseChain: failed to parse root certificate from chain: %w", err)
 	}
 	if len(rest) != 0 {
-		return nil, fmt.Errorf("found trailing data after root certificate in chain")
+		return nil, fmt.Errorf("verifier/ParseChain: found trailing data after root certificate in chain")
 	}
 	certs = append(certs, root)
 	return certs, nil
@@ -68,13 +68,13 @@ func ParseChain(chain []byte) (certs []*x509.Certificate, err error) {
 func verifyRoot(rootHashes []string, cert *x509.Certificate) error {
 	// this is the last cert, it should be self signed
 	if !bytes.Equal(cert.RawSubject, cert.RawIssuer) {
-		return fmt.Errorf("subject does not match issuer, should be equal")
+		return fmt.Errorf("verifier/verifyRoot: subject does not match issuer, should be equal")
 	}
 	if !cert.IsCA {
-		return fmt.Errorf("missing IS CA extension")
+		return fmt.Errorf("verifier/verifyRoot: missing IS CA extension")
 	}
 	if len(rootHashes) < 1 {
-		return fmt.Errorf("rootHashes must not be empty")
+		return fmt.Errorf("verifier/verifyRoot: rootHashes must not be empty")
 	}
 	// We're configure to check the root hash matches expected value
 	h := sha256.Sum256(cert.Raw)
@@ -83,7 +83,7 @@ func verifyRoot(rootHashes []string, cert *x509.Certificate) error {
 		return certHash == strings.Replace(rootHash, ":", "", -1)
 	})
 	if !matchFound {
-		return fmt.Errorf("hash does not match an expected root hash: calculated=%s", certHash)
+		return fmt.Errorf("verifier/verifyRoot: hash does not match an expected root hash: calculated=%s", certHash)
 	}
 
 	hasCodeSigningExtension := false
@@ -94,7 +94,7 @@ func verifyRoot(rootHashes []string, cert *x509.Certificate) error {
 		}
 	}
 	if !hasCodeSigningExtension {
-		return fmt.Errorf("missing codeSigning key usage extension")
+		return fmt.Errorf("verifier/verifyRoot: missing codeSigning key usage extension")
 	}
 	return nil
 }
@@ -106,7 +106,7 @@ func verifyRoot(rootHashes []string, cert *x509.Certificate) error {
 // 3) the chain follows name constraints and extended key usage as checked by x509 Certificate.Verify
 func VerifyChain(rootHashes []string, certs []*x509.Certificate, currentTime time.Time) error {
 	if len(certs) != 3 {
-		return fmt.Errorf("can only verify 3 certificate chain, got %d certs", len(certs))
+		return fmt.Errorf("verifier/VerifyChain: can only verify 3 certificate chain, got %d certs", len(certs))
 	}
 
 	var (
@@ -119,18 +119,18 @@ func VerifyChain(rootHashes []string, certs []*x509.Certificate, currentTime tim
 			timeToValid      = cert.NotBefore.Sub(currentTime)
 		)
 		if timeToExpiration < -time.Nanosecond {
-			return fmt.Errorf("certificate %d %q expired: notAfter=%s",
+			return fmt.Errorf("verifier/VerifyChain: certificate %d %q expired: notAfter=%s",
 				i, cert.Subject.CommonName, cert.NotAfter)
 		}
 		if timeToValid > time.Nanosecond {
-			return fmt.Errorf("certificate %d %q is not yet valid: notBefore=%s",
+			return fmt.Errorf("verifier/VerifyChain: certificate %d %q is not yet valid: notBefore=%s",
 				i, cert.Subject.CommonName, cert.NotBefore)
 		}
 		switch i {
 		case 2: // the last cert is the root
 			err := verifyRoot(rootHashes, cert)
 			if err != nil {
-				return fmt.Errorf("certificate %d %q is root but fails validation: %w",
+				return fmt.Errorf("verifier/VerifyChain: certificate %d %q is root but fails validation: %w",
 					i, cert.Subject.CommonName, err)
 			}
 			roots.AddCert(cert)
@@ -143,7 +143,7 @@ func VerifyChain(rootHashes []string, certs []*x509.Certificate, currentTime tim
 			// check that cert is signed by parent
 			err := cert.CheckSignatureFrom(certs[i+1])
 			if err != nil {
-				return fmt.Errorf("certificate %d %q is not signed by parent certificate %d %q: %v",
+				return fmt.Errorf("verifier/VerifyChain: certificate %d %q is not signed by parent certificate %d %q: %v",
 					i, cert.Subject.CommonName, i+1, certs[i+1].Subject.CommonName, err)
 			}
 		}
@@ -156,7 +156,7 @@ func VerifyChain(rootHashes []string, certs []*x509.Certificate, currentTime tim
 	}
 	_, err := certs[0].Verify(opts)
 	if err != nil {
-		return fmt.Errorf("error verifying certificate chain: %w", err)
+		return fmt.Errorf("verifier/VerifyChain: error verifying certificate chain: %w", err)
 	}
 	return nil
 }
@@ -177,26 +177,26 @@ func VerifyChain(rootHashes []string, certs []*x509.Certificate, currentTime tim
 func Verify(input, certChain []byte, signature string, rootHashes []string) error {
 	certs, err := ParseChain(certChain)
 	if err != nil {
-		return fmt.Errorf("error parsing cert chain: %w", err)
+		return fmt.Errorf("verifier/Verify: error parsing cert chain: %w", err)
 	}
 	// Get the public key from the end-entity (certs[0] is the end entity)
 	key, ok := certs[0].PublicKey.(*ecdsa.PublicKey)
 	if !ok {
-		return fmt.Errorf("cannot verify EE/leaf cert with non-ECDSA public key type: %T", certs[0].PublicKey)
+		return fmt.Errorf("verifier/Verify: cannot verify EE/leaf cert with non-ECDSA public key type: %T", certs[0].PublicKey)
 	}
 	// parse the json signature
 	sig, err := Unmarshal(signature)
 	if err != nil {
-		return fmt.Errorf("error unmarshal content signature: %w", err)
+		return fmt.Errorf("verifier/Verify: error unmarshal content signature: %w", err)
 	}
 	// make a templated hash
 	if !sig.VerifyData(input, key) {
-		return fmt.Errorf("ecdsa signature verification failed")
+		return fmt.Errorf("verifier/Verify: ecdsa signature verification failed")
 	}
 
 	err = VerifyChain(rootHashes, certs, time.Now())
 	if err != nil {
-		return fmt.Errorf("error verifying content signature certificate chain: %w", err)
+		return fmt.Errorf("verifier/Verify: error verifying content signature certificate chain: %w", err)
 	}
 	return nil
 }

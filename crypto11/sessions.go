@@ -25,8 +25,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/miekg/pkcs11"
 	"github.com/youtube/vitess/go/pools"
@@ -48,10 +49,10 @@ type sessionPool struct {
 var pool = newSessionPool()
 
 // Error specifies an event when the requested slot is already set in the sessions pool
-var errSlotBusy = errors.New("pool slot busy")
+var errSlotBusy = errors.New("crypto11/sessions: pool slot busy")
 
 // Error when there is no pool at specific slot in the sessions pool
-var errPoolNotFound = errors.New("pool not found")
+var errPoolNotFound = errors.New("crypto11/sessions: pool not found")
 
 // Create a new session for a given slot
 func newSession(ctx PKCS11Context, slot uint) (*PKCS11Session, error) {
@@ -109,7 +110,7 @@ func (p *sessionPool) PutIfAbsent(slot uint, pool *pools.ResourcePool) error {
 func withSession(slot uint, f func(session *PKCS11Session) error) error {
 	sessionPool := pool.Get(slot)
 	if sessionPool == nil {
-		return fmt.Errorf("crypto11: no session for slot %d", slot)
+		return fmt.Errorf("crypto11/sessions/withSession: no session for slot %d", slot)
 	}
 
 	ctx := context.Background()
@@ -186,11 +187,11 @@ func loginToken(s *PKCS11Session) error {
 		if code, ok := err.(pkcs11.Error); ok && code == pkcs11.CKR_USER_ALREADY_LOGGED_IN {
 			return nil
 		}
-		log.Printf("Failed to open PKCS#11 Session: %s", err.Error())
+		log.Debugf("crypto11/loginToken: Failed to open PKCS#11 Session: %s", err.Error())
 
 		closeErr := s.CloseSession()
 		if closeErr != nil {
-			log.Printf("Failed to close session: %s", closeErr.Error())
+			log.Debugf("crypto11/loginToken: Failed to close session: %s", closeErr.Error())
 		}
 
 		// Return the first error we encountered

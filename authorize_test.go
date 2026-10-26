@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,7 +30,7 @@ func TestMissingAuthorization(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected auth to fail with missing authorization but succeeded")
 	}
-	if err.Error() != "missing Authorization header" {
+	if !strings.Contains(err.Error(), "missing Authorization header") {
 		t.Errorf("expected auth to fail with missing authorization but got error: %v", err)
 	}
 }
@@ -48,7 +49,7 @@ func TestBogusAuthorization(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected auth to fail with invalid authorization but succeeded")
 	}
-	if err.Error() != "hawk: invalid mac, missing or empty" {
+	if !strings.Contains(err.Error(), "hawk: invalid mac, missing or empty") {
 		t.Errorf("expected auth to fail with no authorization but got error: %v", err)
 	}
 }
@@ -72,7 +73,7 @@ func TestBadPayload(t *testing.T) {
 	if err == nil {
 		t.Errorf("expected auth to fail with payload validation failed but succeeded")
 	}
-	if err.Error() != "payload validation failed" {
+	if !strings.Contains(err.Error(), "payload validation failed") {
 		t.Errorf("expected auth to fail with payload validation failed but got error: %v", err)
 	}
 }
@@ -282,7 +283,7 @@ func TestAutographerAddAuthorizationsFails(t *testing.T) {
 			if err == nil {
 				t.Fatalf("%s: addAuthorizations did not fail as expected", testcase.name)
 			}
-			if err.Error() != testcase.errStr {
+			if !strings.Contains(err.Error(), testcase.errStr) {
 				t.Fatalf("%s: addAuthorizations failed with %q instead of expected error %q", testcase.name, err.Error(), testcase.errStr)
 			}
 		})

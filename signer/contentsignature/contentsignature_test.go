@@ -176,11 +176,11 @@ func TestNewFailure(t *testing.T) {
 		err string
 		cfg signer.Configuration
 	}{
-		{err: "contentsignature: invalid type", cfg: signer.Configuration{Type: ""}},
-		{err: "contentsignature: missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
-		{err: "contentsignature: missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
-		{err: "contentsignature: failed to retrieve signer: no suitable key found", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
-		{err: "contentsignature: invalid private key algorithm, must be ecdsa", cfg: signer.Configuration{
+		{err: "invalid type", cfg: signer.Configuration{Type: ""}},
+		{err: "missing signer ID in signer configuration", cfg: signer.Configuration{Type: Type, ID: ""}},
+		{err: "missing private key in signer configuration", cfg: signer.Configuration{Type: Type, ID: "bob"}},
+		{err: "failed to retrieve signer", cfg: signer.Configuration{Type: Type, ID: "bob", PrivateKey: "Ym9iCg=="}},
+		{err: "invalid private key algorithm, must be ecdsa", cfg: signer.Configuration{
 			Type: Type,
 			ID:   "abcd",
 			PrivateKey: `
@@ -200,6 +200,9 @@ w2hKSJpdD11n9tJEQ7MieRzrqr58rqm9tymUH0rKIg==
 		if !strings.Contains(err.Error(), testcase.err) {
 			t.Fatalf("expected to fail with '%v' but failed with '%v' instead", testcase.err, err)
 		}
+		if !strings.Contains(err.Error(), "signer/contentsignature:") {
+			t.Fatalf("expected error to contain 'signer/contentsignature:' %s", err)
+		}
 		if err == nil {
 			t.Fatalf("expected to fail with '%v' but succeeded", testcase.err)
 		}
@@ -215,7 +218,7 @@ func TestNoShortData(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected to fail with input data too short but succeeded")
 	}
-	if err.Error() != "contentsignature: refusing to sign input data shorter than 10 bytes" {
+	if !strings.Contains(err.Error(), "signer/contentsignature: refusing to sign input data shorter than 10 bytes") {
 		t.Fatalf("expected to fail with input data too short but failed with: %v", err)
 	}
 }
