@@ -25,8 +25,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/miekg/pkcs11"
 	"github.com/youtube/vitess/go/pools"
