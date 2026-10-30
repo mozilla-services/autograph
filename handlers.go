@@ -346,6 +346,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"output_hash":         outputHash,
 			"output_hashes":       outputHashes,
 			"user_id":             userid,
+			"resp_size":           len(sigresps),
 			"size":                requestBodySize,
 			"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("handlers/handleSignature: signing operation succeeded")
