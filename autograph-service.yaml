@@ -39,6 +39,9 @@ hawktimestampvalidity: 10m
 # optional refresh rate for cached monitor data
 monitorinterval: 5m
 
+# optional frequency for tmpreaper calls
+tmpcleaninterval: 5m
+
 monitoring:
     key: 19zd4w3xirb5syjgdx8atq6g91m03bdsmzjifs2oddivswlu9qs
 
