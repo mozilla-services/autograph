@@ -248,6 +248,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			X5U:        rewriteLocalX5U(r, requestedSignerConfig.ID, requestedSignerConfig.X5U),
 			SignerOpts: requestedSignerConfig.SignerOpts,
 		}
+		var sigSize int
 
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {
@@ -271,6 +272,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: encoding failed with error: %v", err)
 				return
 			}
+			sigSize = len(sigresps[i].Signature)
 			outputHash = "unimplemented"
 		case "/sign/data":
 			dataSigner, ok := requestedSigner.(signer.DataSigner)
@@ -292,6 +294,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: encoding failed with error: %v", err)
 				return
 			}
+			sigSize = len(sigresps[i].Signature)
 			outputHash = hashSHA256AsHex([]byte(sigresps[i].Signature))
 		case "/sign/file":
 			fileSigner, ok := requestedSigner.(signer.FileSigner)
@@ -309,6 +312,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
+			sigSize = len(sigresps[i].SignedFile)
 			outputHash = hashSHA256AsHex(signedfile)
 		case "/sign/files":
 			multiFileSigner, ok := requestedSigner.(signer.MultipleFileSigner)
@@ -329,6 +333,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 			for _, signedFile := range signedfiles {
 				outputHashes = append(outputHashes, hashSHA256AsHex(signedFile.Bytes))
+				// TODO: get the total size of the signed files
 				sigresps[i].SignedFiles = append(sigresps[i].SignedFiles, *signedFile.RESTSigningFile())
 			}
 		}
@@ -346,8 +351,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"output_hash":         outputHash,
 			"output_hashes":       outputHashes,
 			"user_id":             userid,
-			"resp_size":           len(sigresps),
-			"size":                requestBodySize,
+			"signed_size":         sigSize,                                         //  just the size of the signed data
+			"size":                sigreq,                                          //  TODO: get the size of the object being signed
 			"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("handlers/handleSignature: signing operation succeeded")
 	}
