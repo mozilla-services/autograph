@@ -33,10 +33,11 @@ func (r *tmpreaper) schedule(duration time.Duration) {
 
 func (r *tmpreaper) cleanTmp() {
 	// Remove temp files that have not been accessed in the last 15 minutes
-	cmd := exec.Command("tmpreaper", "-a", "15m", os.TempDir())
-	err := cmd.Run()
+	cmd := exec.Command("tmpreaper", "-a", "--showdeleted", "15m", os.TempDir())
+	out, err := cmd.CombinedOutput()
+	log.Debugf("tmpreaper/cleanTmp: output: %s", out)
 	if err != nil {
-		log.Errorf("tmpreaper/cleanTmp: %s", err)
+		log.Errorf("tmpreaper/cleanTmp: error: %s", err)
 	}
 }
 
