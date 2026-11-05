@@ -65,6 +65,7 @@ type serviceConfig struct {
 	Heartbeat             heartbeatConfig
 	HawkTimestampValidity string
 	MonitorInterval       time.Duration
+	TmpCleanInterval      time.Duration
 
 	GCP struct {
 		ProjectId string
@@ -290,6 +291,9 @@ func run(serviceConf serviceConfig, listen string) {
 	// Initialize a monitor.
 	monitor := newMonitor(ag, serviceConf.MonitorInterval)
 
+	// Initialize temp cleanup job
+	newTmpReaper(ag, serviceConf.TmpCleanInterval)
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", statsMiddleware(ag.handleHeartbeat, "http.nonapi.heartbeat")).Methods("GET")
 	router.HandleFunc("/__lbheartbeat__", statsMiddleware(ag.handleLBHeartbeat, "http.nonapi.lbheartbeat")).Methods("GET")
@@ -364,7 +368,7 @@ func run(serviceConf serviceConfig, listen string) {
 		log.Fatalf("main/run: Failed to listen and serve. %s", err)
 	}
 
-	// Shutdown the monitor.
+	// Shutdown the scheduled routines.
 	close(ag.exit)
 }
 
