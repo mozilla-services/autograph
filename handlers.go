@@ -337,8 +337,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			for _, signedFile := range signedfiles {
+				sigSize += len(signedFile.Bytes)
 				outputHashes = append(outputHashes, hashSHA256AsHex(signedFile.Bytes))
-				// TODO: get the total size of the signed files
 				sigresps[i].SignedFiles = append(sigresps[i].SignedFiles, *signedFile.RESTSigningFile())
 			}
 		}
