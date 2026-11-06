@@ -369,13 +369,13 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 	log.Tracef("handlers/handleSignature: signature response\n------------------\n%s\n", respdata)
 	log.WithFields(log.Fields{
-		"rid":         rid,
-		"request_uri": r.URL.RequestURI(),
-		"user_id":     userid,
-		"num_signing_requests": sigReqsCount
-		"resp_size":   len(respdata),
-		"req_size":    requestBodySize,
-		"t":           int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
+		"rid":                  rid,
+		"request_uri":          r.URL.RequestURI(),
+		"user_id":              userid,
+		"num_signing_requests": sigReqsCount,
+		"resp_size":            len(respdata),
+		"req_size":             requestBodySize,
+		"t":                    int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 	}).Info("handlers/handleSignature: signing request succeeded")
 
 	w.Header().Add("Content-Type", "application/json")
