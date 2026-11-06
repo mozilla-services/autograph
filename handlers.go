@@ -249,6 +249,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			SignerOpts: requestedSignerConfig.SignerOpts,
 		}
 		var sigSize int
+		var inputSize int
 
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {
@@ -272,6 +273,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: encoding failed with error: %v", err)
 				return
 			}
+			inputSize = len(input)
 			sigSize = len(sigresps[i].Signature)
 			outputHash = "unimplemented"
 		case "/sign/data":
@@ -294,6 +296,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: encoding failed with error: %v", err)
 				return
 			}
+			inputSize = len(input)
 			sigSize = len(sigresps[i].Signature)
 			outputHash = hashSHA256AsHex([]byte(sigresps[i].Signature))
 		case "/sign/file":
@@ -312,6 +315,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			sigresps[i].SignedFile = base64.StdEncoding.EncodeToString(signedfile)
+			inputSize = len(input)
 			sigSize = len(sigresps[i].SignedFile)
 			outputHash = hashSHA256AsHex(signedfile)
 		case "/sign/files":
@@ -322,6 +326,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 			// calculate a hash of the input files to log
 			for _, inputFile := range unsignedNamedFiles {
+				inputSize += len(inputFile.Bytes)
 				inputHashes = append(inputHashes, hashSHA256AsHex(inputFile.Bytes))
 			}
 
@@ -351,8 +356,8 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"output_hash":         outputHash,
 			"output_hashes":       outputHashes,
 			"user_id":             userid,
-			"signed_size":         sigSize,                                         //  just the size of the signed data
-			"size":                sigreq,                                          //  TODO: get the size of the object being signed
+			"signed_size":         sigSize,
+			"size":                inputSize,
 			"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("handlers/handleSignature: signing operation succeeded")
 	}
