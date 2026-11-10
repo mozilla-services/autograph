@@ -84,6 +84,7 @@ jobs:
       - name: Build and push to Google Artifact Registry for each commit on main
         # On pushes to `main`, we build and push a new image, so we can simply
         # use the `docker/build-push-action` action.
+        if: ${{ github.event_name == 'push' }}
         uses: docker/build-push-action@v6
         with:
           push: true

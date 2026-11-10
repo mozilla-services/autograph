@@ -26,8 +26,7 @@ RUN apt update && \
         pkg-config \
         curl \
         jq \
-        libengine-pkcs11-openssl \
-        tmpreaper
+        libengine-pkcs11-openssl
 
 # Cleanup after package installation
 RUN apt clean && rm -rf /var/lib/apt/lists/*
