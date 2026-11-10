@@ -60,6 +60,8 @@ func cleanFolder(folder string, minTime time.Time) {
 			if err != nil {
 				log.Warnf("tmpcleaner/cleanFolder: Error when retrieving stats for %s . %s", fullPath, err)
 			}
+
+			// This will not work on windows, where there is no concept of atime
 			stat := fs.Sys().(*syscall.Stat_t)
 			atime := time.Unix(int64(stat.Atim.Sec), int64(stat.Atim.Nsec))
 
