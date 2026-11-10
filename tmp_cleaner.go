@@ -10,12 +10,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type tmpcleaner struct {
+type tmpCleaner struct {
 	ticker *time.Ticker
 	exit   chan interface{}
 }
 
-func (r *tmpcleaner) schedule(duration time.Duration) {
+func (r *tmpCleaner) schedule(duration time.Duration) {
 	if duration.Seconds() <= 0 {
 		log.Warn("tmpcleaner/schedule: No duration provided, not scheduling")
 		return
@@ -34,7 +34,7 @@ func (r *tmpcleaner) schedule(duration time.Duration) {
 	}
 }
 
-func (r *tmpcleaner) cleanTmp() {
+func (r *tmpCleaner) cleanTmp() {
 	minTime := time.Now().Add(time.Minute * -15)
 	cleanFolder(os.TempDir(), minTime)
 }
@@ -76,8 +76,8 @@ func cleanFolder(folder string, minTime time.Time) {
 	}
 }
 
-func newtmpcleaner(ag *autographer, duration time.Duration) *tmpcleaner {
-	r := new(tmpcleaner)
+func newTmpCleaner(ag *autographer, duration time.Duration) *tmpCleaner {
+	r := new(tmpCleaner)
 	r.exit = ag.exit
 	go r.schedule(duration)
 	return r
