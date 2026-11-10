@@ -292,7 +292,7 @@ func run(serviceConf serviceConfig, listen string) {
 	monitor := newMonitor(ag, serviceConf.MonitorInterval)
 
 	// Initialize temp cleanup job
-	newTmpReaper(ag, serviceConf.TmpCleanInterval)
+	newTmpCleaner(ag, serviceConf.TmpCleanInterval)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/__heartbeat__", statsMiddleware(ag.handleHeartbeat, "http.nonapi.heartbeat")).Methods("GET")
