@@ -187,7 +187,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 	// Variables for testing key agility on content signature PKI type Remote Settings signer
 	keyAgilitySignerIds := os.Getenv("KEY_AGILITY_SIGNER_IDS")
-	testKeyAgility, err := strconv.ParseInt(os.Getenv("KEY_AGILITY_PROBABILITY"), 10, 0)
+	testKeyAgility, err := strconv.Atoi(os.Getenv("KEY_AGILITY_PROBABILITY"))
 	if err != nil {
 		log.Errorf("handlers/handleSignature: Error parsing environment variable KEY_AGILITY_PROBABILITY: %s", err)
 		testKeyAgility = 0
@@ -261,6 +261,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 		}
 		var sigSize int
 		var inputSize int
+		multiSigning := false
 
 		// Make sure the signer implements the right interface, then sign the data
 		switch r.URL.RequestURI() {
@@ -304,10 +305,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Random testing added latency due to multi-signing for key agility
-			multiSigning := False
 			if strings.Contains(keyAgilitySignerIds, requestedSignerConfig.ID) && testKeyAgility > 0 && rand.Intn(testKeyAgility) > 0 {
 				a.secondarySignData(userid, sigreq, input, sigresps[i].Ref)
-				multiSigning := True
+				multiSigning = true
 			}
 			sigresps[i].Signature, err = sig.Marshal()
 			if err != nil {
@@ -592,5 +592,33 @@ func (a *autographer) handleGetAuthKeyIDs(w http.ResponseWriter, r *http.Request
 	_, err = w.Write(signerIDsJSON)
 	if err != nil {
 		log.Errorf("handlers/handleGetAuthKeyIDs: error writing response: %v", err)
+	}
+}
+
+func (a *autographer) secondarySignData(userid string, sigreq formats.SignatureRequest, input []byte, sigRespRef string) {
+	secondarySignerID := os.Getenv("SECONDARY_SIGNER_ID")
+	if secondarySignerID == "" {
+		log.Error("handlers/secondarySignData: no signer ID set in environment variable SECONDARY_SIGNER_ID.")
+		return
+	}
+	// returns an error if the signer is not found or if
+	// the user is not allowed to use this signer
+	requestedSecondarySigner, err := a.authBackend.getSignerForUser(userid, secondarySignerID)
+	if err != nil {
+		log.Errorf("handlers/secondarySignData: error getting signer for user %s . %v", userid, err)
+		return
+	}
+	requestedSignerConfig := requestedSecondarySigner.Config()
+
+	dataSigner, ok := requestedSecondarySigner.(signer.DataSigner)
+	if !ok {
+		log.Errorf("handlers/secondarySignData: requested signer %q does not implement data signing", requestedSignerConfig.ID)
+		return
+	}
+
+	_, err = dataSigner.SignData(input, sigreq.Options)
+	if err != nil {
+		log.Errorf("handlers/secondarySignData: signing request %s failed with error: %v", sigRespRef, err)
+		return
 	}
 }
