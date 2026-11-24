@@ -302,8 +302,12 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
 			}
+
+			// Random testing added latency due to multi-signing for key agility
+			multiSigning := False
 			if strings.Contains(keyAgilitySignerIds, requestedSignerConfig.ID) && testKeyAgility > 0 && rand.Intn(testKeyAgility) > 0 {
 				a.secondarySignData(userid, sigreq, input, sigresps[i].Ref)
+				multiSigning := True
 			}
 			sigresps[i].Signature, err = sig.Marshal()
 			if err != nil {
@@ -372,6 +376,7 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 			"user_id":             userid,
 			"signed_size":         sigSize,
 			"size":                inputSize,
+			"multi_signing":       multiSigning,
 			"t":                   int32(time.Since(starttime) / time.Millisecond), //  request processing time in ms
 		}).Info("handlers/handleSignature: signing operation succeeded")
 	}
