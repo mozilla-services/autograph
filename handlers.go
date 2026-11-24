@@ -182,6 +182,15 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 
 	sigReqsCount := len(sigreqs)
 	sigresps := make([]formats.SignatureResponse, sigReqsCount)
+
+	// Variables for testing key agility on content signature PKI type Remote Settings signer
+	keyAgilitySignerIds := os.Getenv("KEY_AGILITY_SIGNER_IDS")
+	testKeyAgility, err := strconv.ParseInt(os.Getenv("KEY_AGILITY_PROBABILITY"), 10, 0)
+	if err != nil {
+		log.Errorf("handlers/handleSignature: Error parsing environment variable KEY_AGILITY_PROBABILITY: %s", err)
+		testKeyAgility = 0
+	}
+
 	// Each signature requested in the http request body is processed individually.
 	// For each, a signer is looked up, and used to compute a raw signature
 	// the signature is then encoded appropriately, and added to the response slice
