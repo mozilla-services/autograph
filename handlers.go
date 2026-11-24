@@ -13,11 +13,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -299,6 +301,9 @@ func (a *autographer) handleSignature(w http.ResponseWriter, r *http.Request) {
 				logSigningRequestFailure(sigreq, sigresps[i], rid, userid, requestBodySize, inputHash, inputHashes, starttime, err)
 				httpError(w, r, http.StatusInternalServerError, "handlers/handleSignature: signing request %s failed with error: %v", sigresps[i].Ref, err)
 				return
+			}
+			if strings.Contains(keyAgilitySignerIds, requestedSignerConfig.ID) && testKeyAgility > 0 && rand.Intn(testKeyAgility) > 0 {
+				a.secondarySignData(userid, sigreq, input, sigresps[i].Ref)
 			}
 			sigresps[i].Signature, err = sig.Marshal()
 			if err != nil {
