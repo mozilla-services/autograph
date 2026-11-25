@@ -48,6 +48,7 @@ tools/makecsr/make-ev-csr/make-ev-csr
 tools/softhsm/softhsm
 tools/softhsm/genkeys/genkeys
 tools/softhsm/genrsa/genrsa
+tools/rcodesign/target
 
 # Python dev stuff
 **/.venv*

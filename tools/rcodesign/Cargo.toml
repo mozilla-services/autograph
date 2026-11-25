@@ -1,0 +1,12 @@
+[package]
+name = "rcodesign-api"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-files = "0.7.5"
+actix-multipart = "0.8.9"
+actix-web = "4.20.0"
+serde = "1.0.229"
+serde_derive = "1.0.229"
+tempfile = "3.27.0"
